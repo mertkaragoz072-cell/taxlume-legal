@@ -29,7 +29,7 @@ const HISTORY_LEN = 40;
 export const TICK_MS = 1500;
 const EVENT_LOG_CAP = 8;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
-export const DEFAULT_TOWN_NAME = "Taxlume Kasabası";
+export const DEFAULT_TOWN_NAME = "Altın Kasaba";
 export const TOWN_NAME_MAX_LENGTH = 24;
 const DAILY_QUEST_COUNT = 3;
 

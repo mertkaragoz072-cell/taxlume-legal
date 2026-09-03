@@ -13,7 +13,7 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     icon: "🏘️",
-    title: "Taxlume Kasabasına Hoş Geldin",
+    title: "Altın Kasaba'ya Hoş Geldin",
     body: "Bu kasabanın yöneticisi sensin. Ekonomiyi büyüt, halkı memnun tut ve enflasyonu kontrolden çıkarma — hiperenflasyon kasabayı çökertir.",
   },
   {
