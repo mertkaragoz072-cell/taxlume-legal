@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
+import { CARD_GRADIENT, cardShadow } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { VillagerIllustration } from "./VillagerIllustration";
 
@@ -51,6 +53,7 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
           </Animated.View>
 
           <View style={styles.card}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
             <Text style={styles.title}>Köylü Ricası</Text>
             <Text style={styles.description}>
               Bir köylü {request.qty} {good.icon} {good.name} rica ediyor. Verirsen halk memnun olur,
@@ -102,13 +105,14 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: "#2a2016",
     borderRadius: 18,
     paddingVertical: 20,
     paddingRight: 20,
     paddingLeft: 30,
     alignItems: "center",
+    overflow: "hidden",
     zIndex: 1,
+    ...cardShadow,
   },
   title: { color: "#f0e3c8", fontSize: 17, fontWeight: "800", marginBottom: 8, textAlign: "center" },
   description: {

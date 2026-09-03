@@ -1,6 +1,8 @@
 import React from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
+import { CARD_GRADIENT, cardShadow } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -15,6 +17,7 @@ export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.title}>Yeni Oyun Başlat</Text>
           <Text style={styles.subtitle}>
             Bir zorluk seviyesi seç. Mevcut kasaba ilerlemenin üzerine yazılacak.
@@ -62,9 +65,10 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 360,
-    backgroundColor: "#2a2016",
     borderRadius: 18,
     padding: 18,
+    overflow: "hidden",
+    ...cardShadow,
   },
   title: { color: "#f0e3c8", fontSize: 16, fontWeight: "800", marginBottom: 4 },
   subtitle: { color: "#a0917a", fontSize: 12, marginBottom: 14 },

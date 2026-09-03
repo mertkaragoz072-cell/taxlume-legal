@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Good, GoodState } from "../economy/types";
+import { CARD_GRADIENT, cardShadow, GREEN_GRADIENT, RED_GRADIENT } from "../theme";
+import { GradientFill } from "./GradientFill";
+import { ScalePressable } from "./ScalePressable";
 
 interface Props {
   good: Good;
@@ -23,6 +26,7 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
 
   return (
     <View style={styles.wrap}>
+      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
       <View style={styles.sideToggle}>
         <Pressable
           style={[styles.sideBtn, side === "buy" && styles.sideBtnActiveBuy]}
@@ -57,28 +61,27 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
         <Text style={styles.summaryTotal}>{total.toFixed(1)} 🪙</Text>
       </View>
 
-      <Pressable
+      <ScalePressable
         disabled={disabled}
         onPress={() => onTrade(side, resolvedQty)}
-        style={[
-          styles.confirmBtn,
-          { backgroundColor: side === "buy" ? "#3fae5c" : "#c94b4b" },
-          disabled && styles.confirmBtnDisabled,
-        ]}
+        style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
+        scaleTo={0.97}
       >
+        <GradientFill colors={side === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
         <Text style={styles.confirmBtnText}>
           {side === "buy" ? "SATIN AL" : "SAT"} {good.icon}
         </Text>
-      </Pressable>
+      </ScalePressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: "#2a2016",
     borderRadius: 16,
     padding: 12,
+    overflow: "hidden",
+    ...cardShadow,
   },
   sideToggle: {
     flexDirection: "row",
@@ -112,7 +115,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: { color: "#a0917a", fontSize: 12 },
   summaryTotal: { color: "#e8c777", fontSize: 13, fontWeight: "700" },
-  confirmBtn: { borderRadius: 12, paddingVertical: 12, alignItems: "center" },
+  confirmBtn: { borderRadius: 12, paddingVertical: 12, alignItems: "center", overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.35 },
   confirmBtnText: { color: "#fff", fontWeight: "800", fontSize: 14 },
 });

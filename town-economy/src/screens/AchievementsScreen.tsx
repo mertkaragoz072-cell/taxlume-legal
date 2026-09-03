@@ -1,8 +1,10 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { GradientFill } from "../components/GradientFill";
 import { ACHIEVEMENTS } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
+import { CARD_GRADIENT, cardShadow, UNLOCKED_CARD_GRADIENT } from "../theme";
 
 export function AchievementsScreen() {
   const { state, netWorth } = useEconomyContext();
@@ -12,6 +14,7 @@ export function AchievementsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.summaryCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.summaryRow}>
           <Text style={styles.summaryBig}>
             {unlockedCount} / {ACHIEVEMENTS.length}
@@ -42,6 +45,13 @@ export function AchievementsScreen() {
         const pct = q.target > 0 ? Math.min(1, current / q.target) : q.completed ? 1 : 0;
         return (
           <View key={q.id} style={[styles.card, q.completed && styles.cardUnlocked]}>
+            <GradientFill
+              colors={q.completed ? UNLOCKED_CARD_GRADIENT : CARD_GRADIENT}
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="1"
+            />
             <Text style={[styles.icon, !q.completed && styles.iconLocked]}>
               {q.completed ? "✅" : template.icon}
             </Text>
@@ -75,6 +85,13 @@ export function AchievementsScreen() {
         const pct = a.target > 0 ? Math.min(1, current / a.target) : unlocked ? 1 : 0;
         return (
           <View key={a.id} style={[styles.card, unlocked && styles.cardUnlocked]}>
+            <GradientFill
+              colors={unlocked ? UNLOCKED_CARD_GRADIENT : CARD_GRADIENT}
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="1"
+            />
             <Text style={[styles.icon, !unlocked && styles.iconLocked]}>
               {unlocked ? a.icon : "🔒"}
             </Text>
@@ -104,7 +121,13 @@ export function AchievementsScreen() {
 
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 40 },
-  summaryCard: { backgroundColor: "#2a2016", borderRadius: 16, padding: 16, marginBottom: 20 },
+  summaryCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   summaryRow: { flexDirection: "row", alignItems: "baseline", marginBottom: 8 },
   summaryBig: { color: "#e8c777", fontSize: 22, fontWeight: "800", marginRight: 8 },
   summaryLabel: { color: "#a0917a", fontSize: 12 },
@@ -129,13 +152,13 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: "row",
-    backgroundColor: "#2a2016",
     borderRadius: 14,
     padding: 12,
     marginBottom: 10,
     opacity: 0.7,
+    overflow: "hidden",
   },
-  cardUnlocked: { opacity: 1, borderWidth: 1, borderColor: "#e8c777" },
+  cardUnlocked: { opacity: 1, borderWidth: 1, borderColor: "#e8c777", ...cardShadow },
   icon: { fontSize: 26, marginRight: 12 },
   iconLocked: { opacity: 0.5 },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

@@ -4,8 +4,10 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { estimateTaxIncomePerTick, TAX_RATE_STEPS } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
+import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -34,6 +36,7 @@ export function TownScreen() {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.moodCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.moodEmoji}>{mood.emoji}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.moodLabel}>Kasaba Hissiyatı</Text>
@@ -46,6 +49,7 @@ export function TownScreen() {
       </View>
 
       <View style={styles.moodCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.moodEmoji}>{happy.emoji}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.moodLabel}>Halk Memnuniyeti</Text>
@@ -66,6 +70,7 @@ export function TownScreen() {
       </View>
 
       <View style={styles.taxCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.taxHeaderRow}>
           <Text style={styles.taxTitle}>💰 Vergi Politikası</Text>
           <Text style={styles.taxIncome}>
@@ -95,6 +100,7 @@ export function TownScreen() {
       </View>
 
       <View style={styles.chartCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.chartTitle}>📊 Enflasyon Geçmişi</Text>
         <PriceChart
           history={state.inflationHistory}
@@ -113,6 +119,7 @@ export function TownScreen() {
         const disabled = maxed || state.cash < cost;
         return (
           <View key={u.id} style={styles.upgradeCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
             <Text style={styles.upgradeIcon}>{u.icon}</Text>
             <View style={{ flex: 1 }}>
               <View style={styles.upgradeTitleRow}>
@@ -138,6 +145,7 @@ export function TownScreen() {
               style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
               scaleTo={0.95}
             >
+              {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
               <Text style={styles.upgradeBtnText}>
                 {maxed ? "MAKS" : `${cost} 🪙`}
               </Text>
@@ -154,6 +162,7 @@ export function TownScreen() {
           const pct = Math.max(0, Math.min(1, (ratio - 0.6) / (1.8 - 0.6)));
           return (
             <View key={g.id} style={styles.buildingCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <Text style={styles.buildingIcon}>{g.icon}</Text>
               <Text style={styles.buildingName}>{g.producer}</Text>
               <View style={styles.buildingTrack}>
@@ -185,6 +194,7 @@ export function TownScreen() {
             },
           ]}
         >
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.eventText}>{event.message}</Text>
         </View>
       ))}
@@ -197,10 +207,11 @@ const styles = StyleSheet.create({
   moodCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2016",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    overflow: "hidden",
+    ...cardShadow,
   },
   moodEmoji: { fontSize: 32, marginRight: 12 },
   moodLabel: { color: "#a0917a", fontSize: 11 },
@@ -215,7 +226,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   happinessFill: { height: "100%", borderRadius: 3 },
-  taxCard: { backgroundColor: "#2a2016", borderRadius: 16, padding: 16, marginBottom: 20 },
+  taxCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   taxHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   taxTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
   taxIncome: { color: "#e8c777", fontWeight: "700", fontSize: 12 },
@@ -234,7 +251,13 @@ const styles = StyleSheet.create({
   taxBtnActive: { borderColor: "#e8c777" },
   taxBtnText: { color: "#a0917a", fontWeight: "700", fontSize: 12 },
   taxBtnTextActive: { color: "#e8c777" },
-  chartCard: { backgroundColor: "#2a2016", borderRadius: 16, padding: 16, marginBottom: 20 },
+  chartCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   chartTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13, marginBottom: 6 },
   sectionLabel: {
     color: "#a0917a",
@@ -246,10 +269,10 @@ const styles = StyleSheet.create({
   buildingsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
   buildingCard: {
     width: "31%",
-    backgroundColor: "#2a2016",
     borderRadius: 14,
     padding: 10,
     alignItems: "center",
+    overflow: "hidden",
   },
   buildingIcon: { fontSize: 22 },
   buildingName: { color: "#f0e3c8", fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
@@ -266,20 +289,20 @@ const styles = StyleSheet.create({
   buildingRatio: { color: "#a0917a", fontSize: 10, marginTop: 6 },
   emptyText: { color: "#a0917a", fontSize: 12, marginBottom: 10 },
   eventRow: {
-    backgroundColor: "#2a2016",
     borderRadius: 10,
     borderLeftWidth: 3,
     padding: 10,
     marginBottom: 8,
+    overflow: "hidden",
   },
   eventText: { color: "#f0e3c8", fontSize: 12 },
   upgradeCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2016",
     borderRadius: 14,
     padding: 12,
     marginBottom: 10,
+    overflow: "hidden",
   },
   upgradeIcon: { fontSize: 24, marginRight: 12 },
   upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
@@ -297,11 +320,11 @@ const styles = StyleSheet.create({
   },
   upgradeLevelPipFilled: { backgroundColor: "#e8c777" },
   upgradeBtn: {
-    backgroundColor: "#e8c777",
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 10,
     marginLeft: 10,
+    overflow: "hidden",
   },
   upgradeBtnDisabled: { backgroundColor: "#4a4032" },
   upgradeBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 12 },

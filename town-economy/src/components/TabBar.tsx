@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { ScalePressable } from "./ScalePressable";
 
 export type ScreenId = "market" | "inventory" | "trade" | "town" | "achievements";
@@ -18,8 +18,32 @@ interface Props {
 }
 
 export function TabBar({ active, onChange }: Props) {
+  const activeIndex = TABS.findIndex((t) => t.id === active);
+  const indicatorAnim = useRef(new Animated.Value(activeIndex)).current;
+
+  useEffect(() => {
+    // Animating a percentage "left" string can't use the native driver.
+    Animated.spring(indicatorAnim, {
+      toValue: activeIndex,
+      useNativeDriver: false,
+      friction: 8,
+      tension: 60,
+    }).start();
+  }, [activeIndex, indicatorAnim]);
+
+  const indicatorLeft = indicatorAnim.interpolate({
+    inputRange: TABS.map((_, i) => i),
+    outputRange: TABS.map((_, i) => `${(i / TABS.length) * 100}%`),
+  });
+
   return (
     <View style={styles.wrap}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.indicatorSlot, { left: indicatorLeft, width: `${100 / TABS.length}%` }]}
+      >
+        <View style={styles.indicatorPill} />
+      </Animated.View>
       {TABS.map((tab) => {
         const isActive = tab.id === active;
         return (
@@ -41,6 +65,21 @@ const styles = StyleSheet.create({
     borderTopColor: "#3a2d1e",
     paddingBottom: 6,
     paddingTop: 6,
+  },
+  indicatorSlot: {
+    position: "absolute",
+    top: 2,
+    bottom: 2,
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  indicatorPill: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 14,
+    backgroundColor: "rgba(232,199,119,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(232,199,119,0.35)",
   },
   tab: { flex: 1, alignItems: "center", paddingVertical: 4 },
   icon: { fontSize: 18, opacity: 0.5 },

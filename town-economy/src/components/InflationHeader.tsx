@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
+import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 
 interface Props {
@@ -42,6 +43,8 @@ export function InflationHeader({
   const difficultyConfig = DIFFICULTIES[difficulty];
   return (
     <View style={styles.wrap}>
+      <GradientFill colors={["#241c12", "#140f0a"]} x1="0" y1="0" x2="0" y2="1" />
+      <View style={styles.goldLine} />
       <View style={styles.topLine}>
         <View style={styles.townRow}>
           <Pressable onPress={onEditName} style={styles.townNamePressable}>
@@ -111,12 +114,19 @@ export function InflationHeader({
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: "#1a1410",
     paddingTop: 8,
     paddingBottom: 10,
     paddingHorizontal: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#3a2d1e",
+    overflow: "hidden",
+  },
+  goldLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2,
+    backgroundColor: "#e8c777",
+    opacity: 0.55,
   },
   topLine: {
     flexDirection: "row",

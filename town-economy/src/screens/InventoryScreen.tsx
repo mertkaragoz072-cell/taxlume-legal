@@ -1,7 +1,9 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { GradientFill } from "../components/GradientFill";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
+import { CARD_GRADIENT, cardShadow } from "../theme";
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth } = useEconomyContext();
@@ -12,6 +14,7 @@ export function InventoryScreen() {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.summaryCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Nakit</Text>
           <Text style={styles.summaryValue}>{state.cash.toFixed(1)} 🪙</Text>
@@ -29,6 +32,7 @@ export function InventoryScreen() {
       <Text style={styles.sectionLabel}>SAHİP OLDUKLARIN</Text>
       {holdings.length === 0 && (
         <View style={styles.emptyBox}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.emptyText}>Henüz hiçbir şey satın almadın.</Text>
           <Text style={styles.emptySub}>Piyasa sekmesinden ürün al, burada birikimini gör.</Text>
         </View>
@@ -38,6 +42,8 @@ export function InventoryScreen() {
         const share = portfolioValue > 0 ? (value / portfolioValue) * 100 : 0;
         return (
           <View key={good.id} style={styles.row}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
             <Text style={styles.rowIcon}>{good.icon}</Text>
             <View style={styles.rowMain}>
               <Text style={styles.rowName}>{good.name}</Text>
@@ -62,10 +68,11 @@ export function InventoryScreen() {
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 40 },
   summaryCard: {
-    backgroundColor: "#2a2016",
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
   },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   summaryLabel: { color: "#a0917a", fontSize: 13 },
@@ -80,17 +87,24 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 10,
   },
-  emptyBox: { backgroundColor: "#2a2016", borderRadius: 14, padding: 20, alignItems: "center" },
+  emptyBox: {
+    borderRadius: 14,
+    padding: 20,
+    alignItems: "center",
+    overflow: "hidden",
+  },
   emptyText: { color: "#f0e3c8", fontWeight: "600", marginBottom: 4 },
   emptySub: { color: "#a0917a", fontSize: 12, textAlign: "center" },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2016",
     borderRadius: 14,
     padding: 12,
+    paddingLeft: 15,
     marginBottom: 10,
+    overflow: "hidden",
   },
+  accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
   rowIcon: { fontSize: 26, marginRight: 12 },
   rowMain: { flex: 1, marginRight: 10 },
   rowName: { color: "#f0e3c8", fontWeight: "700", fontSize: 14 },

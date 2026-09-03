@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
+import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, GoodId } from "../economy/types";
 import { UPGRADES_BY_ID } from "../economy/upgrades";
+import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -58,6 +60,7 @@ export function TradeScreen({ sounds }: Props) {
               onPress={() => setTownId(t.id)}
               style={[styles.townPill, selected && styles.townPillActive]}
             >
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <Text style={styles.townIcon}>{t.icon}</Text>
               <Text style={styles.townName}>{t.name}</Text>
               <Text style={styles.townMeta}>
@@ -82,6 +85,7 @@ export function TradeScreen({ sounds }: Props) {
               style={[styles.goodRow, selected && { borderColor: g.color, borderWidth: 2 }]}
               scaleTo={0.98}
             >
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <Text style={styles.goodIcon}>{g.icon}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.goodName}>{g.name}</Text>
@@ -99,6 +103,7 @@ export function TradeScreen({ sounds }: Props) {
       </View>
 
       <View style={styles.panel}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.sideToggle}>
           <ScalePressable
             style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
@@ -151,12 +156,16 @@ export function TradeScreen({ sounds }: Props) {
             if (direction === "export") sounds.playSell();
             else sounds.playBuy();
           }}
-          style={[
-            styles.confirmBtn,
-            { backgroundColor: direction === "export" ? "#3fae5c" : "#4a90c9" },
-            disabled && styles.confirmBtnDisabled,
-          ]}
+          style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
+          scaleTo={0.97}
         >
+          <GradientFill
+            colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          />
           <Text style={styles.confirmBtnText}>
             Kervanı Yola Çıkar {good.icon}
           </Text>
@@ -178,6 +187,7 @@ export function TradeScreen({ sounds }: Props) {
           const remaining = Math.max(0, c.arrivesAtTick - state.tick);
           return (
             <View key={c.id} style={styles.caravanCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <View style={styles.caravanHeader}>
                 <Text style={styles.caravanTitle}>
                   {c.direction === "export" ? "📤" : "📥"} {t.icon} {t.name}
@@ -212,13 +222,14 @@ const styles = StyleSheet.create({
   },
   townRow: { marginBottom: 20 },
   townPill: {
-    backgroundColor: "#2a2016",
     borderRadius: 14,
     padding: 12,
     marginRight: 10,
     width: 128,
     borderWidth: 2,
     borderColor: "transparent",
+    overflow: "hidden",
+    ...cardShadow,
   },
   townPillActive: { borderColor: "#e8c777" },
   townIcon: { fontSize: 22, marginBottom: 4 },
@@ -228,18 +239,18 @@ const styles = StyleSheet.create({
   goodRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2016",
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
     borderWidth: 2,
     borderColor: "transparent",
+    overflow: "hidden",
   },
   goodIcon: { fontSize: 22, marginRight: 10 },
   goodName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
   goodPrices: { color: "#a0917a", fontSize: 11, marginTop: 2 },
   goodDelta: { fontWeight: "800", fontSize: 13 },
-  panel: { backgroundColor: "#2a2016", borderRadius: 16, padding: 12, marginBottom: 20 },
+  panel: { borderRadius: 16, padding: 12, marginBottom: 20, overflow: "hidden", ...cardShadow },
   sideToggle: {
     flexDirection: "row",
     backgroundColor: "#1a1410",
@@ -268,11 +279,11 @@ const styles = StyleSheet.create({
   summaryLabel: { color: "#a0917a", fontSize: 11, flex: 1, marginRight: 8 },
   summaryTotal: { color: "#e8c777", fontSize: 13, fontWeight: "700" },
   etaText: { color: "#a0917a", fontSize: 10, marginTop: 6, marginBottom: 10, paddingHorizontal: 2 },
-  confirmBtn: { borderRadius: 12, paddingVertical: 12, alignItems: "center" },
+  confirmBtn: { borderRadius: 12, paddingVertical: 12, alignItems: "center", overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.35 },
   confirmBtnText: { color: "#fff", fontWeight: "800", fontSize: 13 },
   emptyText: { color: "#a0917a", fontSize: 12, marginBottom: 10 },
-  caravanCard: { backgroundColor: "#2a2016", borderRadius: 12, padding: 12, marginBottom: 10 },
+  caravanCard: { borderRadius: 12, padding: 12, marginBottom: 10, overflow: "hidden" },
   caravanHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
   caravanTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 12 },
   caravanEta: { color: "#e8c777", fontWeight: "700", fontSize: 11 },

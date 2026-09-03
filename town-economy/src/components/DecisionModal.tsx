@@ -2,6 +2,8 @@ import React from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { DECISION_TEMPLATES_BY_ID } from "../economy/decisions";
 import { PendingDecision } from "../economy/types";
+import { CARD_GRADIENT, cardShadow } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -18,6 +20,7 @@ export function DecisionModal({ decision, onResolve }: Props) {
     <Modal visible transparent animationType="fade">
       <View style={styles.backdrop}>
         <View style={styles.card}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.icon}>{template.icon}</Text>
           <Text style={styles.title}>{template.title}</Text>
           <Text style={styles.description}>{template.description}</Text>
@@ -50,10 +53,11 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 360,
-    backgroundColor: "#2a2016",
     borderRadius: 18,
     padding: 20,
     alignItems: "center",
+    overflow: "hidden",
+    ...cardShadow,
   },
   icon: { fontSize: 40, marginBottom: 8 },
   title: { color: "#f0e3c8", fontSize: 17, fontWeight: "800", marginBottom: 8, textAlign: "center" },

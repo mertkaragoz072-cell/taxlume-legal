@@ -5,8 +5,10 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
+import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
+import { cardShadow, CARD_GRADIENT } from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -31,6 +33,7 @@ export function MarketScreen({ sounds }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.chartCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity: flashOpacity }]}
@@ -96,11 +99,11 @@ export function MarketScreen({ sounds }: Props) {
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 40 },
   chartCard: {
-    backgroundColor: "#2a2016",
     borderRadius: 18,
     padding: 16,
     marginBottom: 18,
     overflow: "hidden",
+    ...cardShadow,
   },
   chartHeaderRow: {
     flexDirection: "row",

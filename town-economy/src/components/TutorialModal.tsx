@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
 interface Slide {
@@ -71,6 +73,7 @@ export function TutorialModal({ visible, onFinish }: Props) {
     <Modal visible transparent animationType="fade">
       <View style={styles.backdrop}>
         <View style={styles.card}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.icon}>{slide.icon}</Text>
           <Text style={styles.title}>{slide.title}</Text>
           <Text style={styles.body}>{slide.body}</Text>
@@ -82,6 +85,7 @@ export function TutorialModal({ visible, onFinish }: Props) {
           </View>
 
           <ScalePressable onPress={next} style={styles.nextBtn} scaleTo={0.96}>
+            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
             <Text style={styles.nextBtnText}>{isLast ? "Başla!" : "İleri"}</Text>
           </ScalePressable>
 
@@ -107,10 +111,11 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 360,
-    backgroundColor: "#2a2016",
     borderRadius: 18,
     padding: 22,
     alignItems: "center",
+    overflow: "hidden",
+    ...cardShadow,
   },
   icon: { fontSize: 44, marginBottom: 10 },
   title: { color: "#f0e3c8", fontSize: 18, fontWeight: "800", marginBottom: 10, textAlign: "center" },
@@ -126,10 +131,10 @@ const styles = StyleSheet.create({
   dotActive: { backgroundColor: "#e8c777", width: 18 },
   nextBtn: {
     width: "100%",
-    backgroundColor: "#e8c777",
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
+    overflow: "hidden",
   },
   nextBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
   skipBtn: { marginTop: 10, paddingVertical: 6 },

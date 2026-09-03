@@ -2,6 +2,8 @@ import React from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { Good, GoodState } from "../economy/types";
 import { usePriceFlash } from "../hooks/usePriceFlash";
+import { cardShadow, CARD_GRADIENT } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { ScalePressable } from "./ScalePressable";
 
@@ -30,6 +32,8 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
       onPress={onPress}
       style={[styles.card, selected && { borderColor: good.color, borderWidth: 2 }]}
     >
+      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
@@ -52,14 +56,22 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     width: 108,
-    backgroundColor: "#2a2016",
     borderRadius: 14,
     borderWidth: 2,
     borderColor: "transparent",
     padding: 10,
+    paddingTop: 13,
     marginRight: 10,
     alignItems: "center",
     overflow: "hidden",
+    ...cardShadow,
+  },
+  accentStripe: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
   },
   flashOverlay: {
     borderRadius: 14,

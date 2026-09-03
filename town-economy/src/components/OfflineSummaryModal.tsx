@@ -1,6 +1,8 @@
 import React from "react";
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { OfflineSummary } from "../economy/types";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -24,6 +26,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.title}>🌙 Sen Yokken...</Text>
           <Text style={styles.subtitle}>{formatElapsed(summary.elapsedMs)} boyunca kasaban kendi başına işledi.</Text>
 
@@ -96,6 +99,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
           </ScrollView>
 
           <ScalePressable onPress={onDismiss} style={styles.confirmBtn} scaleTo={0.96}>
+            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
             <Text style={styles.confirmBtnText}>Kasabaya Dön</Text>
           </ScalePressable>
         </View>
@@ -116,9 +120,10 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 360,
     maxHeight: "85%",
-    backgroundColor: "#2a2016",
     borderRadius: 18,
     padding: 18,
+    overflow: "hidden",
+    ...cardShadow,
   },
   title: { color: "#f0e3c8", fontSize: 18, fontWeight: "800", marginBottom: 4 },
   subtitle: { color: "#a0917a", fontSize: 12, marginBottom: 14 },
@@ -140,11 +145,11 @@ const styles = StyleSheet.create({
   achievementText: { color: "#e8c777", fontSize: 12, fontWeight: "700", marginBottom: 4 },
   eventText: { color: "#f0e3c8", fontSize: 11, marginBottom: 4 },
   confirmBtn: {
-    backgroundColor: "#e8c777",
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
     marginTop: 18,
+    overflow: "hidden",
   },
   confirmBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
 });
