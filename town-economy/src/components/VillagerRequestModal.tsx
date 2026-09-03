@@ -1,8 +1,9 @@
-import React from "react";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
 import { ScalePressable } from "./ScalePressable";
+import { VillagerIllustration } from "./VillagerIllustration";
 
 interface Props {
   request: VillagerRequest | null;
@@ -11,6 +12,20 @@ interface Props {
 }
 
 export function VillagerRequestModal({ request, holding, onResolve }: Props) {
+  const enterAnim = useRef(new Animated.Value(0)).current;
+  const requestId = request?.id;
+
+  useEffect(() => {
+    if (requestId == null) return;
+    enterAnim.setValue(0);
+    Animated.spring(enterAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 7,
+      tension: 55,
+    }).start();
+  }, [requestId, enterAnim]);
+
   if (!request) return null;
   const good = GOODS_BY_ID[request.goodId];
   const canGive = (holding?.holding ?? 0) >= request.qty;
@@ -18,31 +33,48 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
   return (
     <Modal visible transparent animationType="fade">
       <View style={styles.backdrop}>
-        <View style={styles.card}>
-          <Text style={styles.icon}>🙋</Text>
-          <Text style={styles.title}>Köylü Ricası</Text>
-          <Text style={styles.description}>
-            Bir köylü {request.qty} {good.icon} {good.name} rica ediyor. Verirsen halk memnun olur,
-            reddedersen üzülür.
-          </Text>
-
-          <ScalePressable
-            onPress={() => onResolve(true)}
-            style={[styles.option, !canGive && styles.optionDisabled]}
-            scaleTo={0.96}
+        <View style={styles.stage}>
+          <Animated.View
+            style={[
+              styles.villagerWrap,
+              {
+                opacity: enterAnim,
+                transform: [
+                  {
+                    translateX: enterAnim.interpolate({ inputRange: [0, 1], outputRange: [-40, 0] }),
+                  },
+                ],
+              },
+            ]}
           >
-            <Text style={styles.optionLabel}>
-              Ver ({request.qty} {good.icon})
-            </Text>
-            <Text style={styles.optionHint}>
-              {canGive ? "😊 mutluluk artar" : `elinde yeterli ${good.name} yok`}
-            </Text>
-          </ScalePressable>
+            <VillagerIllustration size={76} />
+          </Animated.View>
 
-          <ScalePressable onPress={() => onResolve(false)} style={styles.option} scaleTo={0.96}>
-            <Text style={styles.optionLabel}>Reddet</Text>
-            <Text style={styles.optionHint}>😞 mutluluk azalır</Text>
-          </ScalePressable>
+          <View style={styles.card}>
+            <Text style={styles.title}>Köylü Ricası</Text>
+            <Text style={styles.description}>
+              Bir köylü {request.qty} {good.icon} {good.name} rica ediyor. Verirsen halk memnun olur,
+              reddedersen üzülür.
+            </Text>
+
+            <ScalePressable
+              onPress={() => onResolve(true)}
+              style={[styles.option, !canGive && styles.optionDisabled]}
+              scaleTo={0.96}
+            >
+              <Text style={styles.optionLabel}>
+                Ver ({request.qty} {good.icon})
+              </Text>
+              <Text style={styles.optionHint}>
+                {canGive ? "😊 mutluluk artar" : `elinde yeterli ${good.name} yok`}
+              </Text>
+            </ScalePressable>
+
+            <ScalePressable onPress={() => onResolve(false)} style={styles.option} scaleTo={0.96}>
+              <Text style={styles.optionLabel}>Reddet</Text>
+              <Text style={styles.optionHint}>😞 mutluluk azalır</Text>
+            </ScalePressable>
+          </View>
         </View>
       </View>
     </Modal>
@@ -57,15 +89,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
-  card: {
+  stage: {
     width: "100%",
     maxWidth: 360,
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  villagerWrap: {
+    marginRight: -22,
+    marginBottom: 14,
+    zIndex: 2,
+  },
+  card: {
+    flex: 1,
     backgroundColor: "#2a2016",
     borderRadius: 18,
-    padding: 20,
+    paddingVertical: 20,
+    paddingRight: 20,
+    paddingLeft: 30,
     alignItems: "center",
+    zIndex: 1,
   },
-  icon: { fontSize: 40, marginBottom: 8 },
   title: { color: "#f0e3c8", fontSize: 17, fontWeight: "800", marginBottom: 8, textAlign: "center" },
   description: {
     color: "#a0917a",
