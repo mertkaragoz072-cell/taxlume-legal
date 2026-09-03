@@ -13,6 +13,7 @@ import {
   VILLAGER_REQUEST_GIVE_HAPPINESS,
   VILLAGER_REQUEST_REFUSE_HAPPINESS,
 } from "./villagerRequests";
+import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
 import {
   Caravan,
   CaravanDirection,
@@ -29,7 +30,6 @@ const HISTORY_LEN = 40;
 export const TICK_MS = 1500;
 const EVENT_LOG_CAP = 8;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
-export const DEFAULT_TOWN_NAME = "Altın Kasaba";
 export const TOWN_NAME_MAX_LENGTH = 24;
 const DAILY_QUEST_COUNT = 3;
 
@@ -139,7 +139,8 @@ type Action =
   | { type: "DISMISS_OFFLINE_SUMMARY" }
   | { type: "RESOLVE_DECISION"; optionId: string }
   | { type: "RESOLVE_REQUEST"; give: boolean }
-  | { type: "SET_TOWN_NAME"; name: string };
+  | { type: "SET_TOWN_NAME"; name: string }
+  | { type: "SET_LANGUAGE"; language: Language };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -171,18 +172,22 @@ function makeDailyQuests(dateSeed: string): EconomyState["dailyQuests"] {
   }));
 }
 
-function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomyState {
+function initialState(
+  difficulty: DifficultyId = DEFAULT_DIFFICULTY,
+  language: Language = DEFAULT_LANGUAGE
+): EconomyState {
   const config = DIFFICULTIES[difficulty];
   const goods = {} as EconomyState["goods"];
   for (const g of GOODS) {
     goods[g.id] = makeInitialGoodState(g);
   }
   const foreignTowns = {} as EconomyState["foreignTowns"];
-  for (const t of TOWNS) {
-    foreignTowns[t.id] = makeInitialForeignTownState(t.id);
+  for (const town of TOWNS) {
+    foreignTowns[town.id] = makeInitialForeignTownState(town.id);
   }
   return {
-    townName: DEFAULT_TOWN_NAME,
+    townName: t(language, "app.defaultTownName"),
+    language,
     difficulty,
     cash: config.startingCash,
     tick: 0,
@@ -293,7 +298,11 @@ function tick(state: EconomyState): EconomyState {
     if (template.good && template.supplyShockPct) {
       supplyShocks[template.good] = template.supplyShockPct * eventSeverity;
     }
-    newEvents.push({ id: nextId++, message: template.message, tone: template.tone });
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, template.messageKey),
+      tone: template.tone,
+    });
   }
 
   let pendingDecision: EconomyState["pendingDecision"] = state.pendingDecision;
@@ -302,7 +311,7 @@ function tick(state: EconomyState): EconomyState {
     pendingDecision = { id: nextId, templateId: template.id, triggeredAtTick: state.tick + 1 };
     newEvents.push({
       id: nextId++,
-      message: `📢 ${template.title}: kasabanı ilgilendiren bir karar bekliyor.`,
+      message: t(state.language, "msg.decisionPending", { title: t(state.language, template.titleKey) }),
       tone: "neutral",
     });
   }
@@ -314,7 +323,10 @@ function tick(state: EconomyState): EconomyState {
     const good = GOODS_BY_ID[goodId];
     newEvents.push({
       id: nextId++,
-      message: `🙋 Bir köylü ${qty} ${good.name} rica ediyor.`,
+      message: t(state.language, "msg.villagerRequestPending", {
+        qty,
+        good: t(state.language, good.nameKey),
+      }),
       tone: "neutral",
     });
   }
@@ -325,14 +337,14 @@ function tick(state: EconomyState): EconomyState {
     taxCashDelta -= penalty;
     newEvents.push({
       id: nextId++,
-      message: `😡 Köylüler vergiden bıktı, ayaklandı! -${penalty.toFixed(1)} 🪙 zarar.`,
+      message: t(state.language, "msg.angryUprising", { amount: penalty.toFixed(1) }),
       tone: "bad",
     });
   } else if (happiness >= CONTENT_THRESHOLD && Math.random() < CONTENT_EVENT_CHANCE) {
     taxCashDelta += CONTENT_CASH_BONUS;
     newEvents.push({
       id: nextId++,
-      message: `😊 Köylüler adil vergiden memnun, gönüllü bağış yaptılar! +${CONTENT_CASH_BONUS} 🪙.`,
+      message: t(state.language, "msg.contentDonation", { amount: CONTENT_CASH_BONUS }),
       tone: "good",
     });
   }
@@ -403,7 +415,12 @@ function tick(state: EconomyState): EconomyState {
       dailyCashEarned += caravan.amount;
       newEvents.push({
         id: nextId++,
-        message: `🚚 Kervan ${town.name}'dan döndü: +${caravan.amount.toFixed(1)} 🪙 (${caravan.qty} ${good.name})`,
+        message: t(state.language, "msg.caravanReturnedExport", {
+          town: t(state.language, town.nameKey),
+          amount: caravan.amount.toFixed(1),
+          qty: caravan.qty,
+          good: t(state.language, good.nameKey),
+        }),
         tone: "good",
       });
     } else {
@@ -411,7 +428,11 @@ function tick(state: EconomyState): EconomyState {
       goods[caravan.goodId] = { ...gs, holding: gs.holding + caravan.amount };
       newEvents.push({
         id: nextId++,
-        message: `🚚 Kervan ${town.name}'dan döndü: ${caravan.amount} ${good.name} teslim edildi`,
+        message: t(state.language, "msg.caravanReturnedImport", {
+          town: t(state.language, town.nameKey),
+          qty: caravan.amount,
+          good: t(state.language, good.nameKey),
+        }),
         tone: "good",
       });
     }
@@ -421,7 +442,7 @@ function tick(state: EconomyState): EconomyState {
   if (gameOver && !state.gameOver) {
     newEvents.push({
       id: nextId++,
-      message: "Hiperenflasyon! Kasaba ekonomisi çöktü. Yeniden başlat.",
+      message: t(state.language, "msg.hyperinflationGameOver"),
       tone: "bad",
     });
   }
@@ -648,8 +669,8 @@ function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) +
     bankBonus;
   const message = prevDate
-    ? `🌅 Hoş geldin! ${count}. gün üst üste giriş serisi. +${bonus} 🪙 günlük bonus.`
-    : `🌅 Kasabana hoş geldin! Günlük giriş serin başladı. +${bonus} 🪙 bonus.`;
+    ? t(state.language, "msg.dailyCheckInReturning", { count, bonus })
+    : t(state.language, "msg.dailyCheckInFirst", { bonus });
   const event: EconomyEvent = { id: state.nextId, message, tone: "good" };
 
   return {
@@ -695,6 +716,10 @@ function setTownName(state: EconomyState, name: string): EconomyState {
   return { ...state, townName: trimmed };
 }
 
+function setLanguage(state: EconomyState, language: Language): EconomyState {
+  return { ...state, language };
+}
+
 function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
@@ -716,7 +741,11 @@ function applyAchievements(state: EconomyState): EconomyState {
     cash += a.reward;
     newEvents.push({
       id: nextId++,
-      message: `🏆 Başarım kazanıldı: ${a.icon} ${a.title} (+${a.reward} 🪙)`,
+      message: t(state.language, "msg.achievementUnlocked", {
+        icon: a.icon,
+        title: t(state.language, a.titleKey),
+        reward: a.reward,
+      }),
       tone: "good",
     });
   }
@@ -748,7 +777,11 @@ function applyDailyQuests(state: EconomyState): EconomyState {
     cash += q.reward;
     newEvents.push({
       id: nextId++,
-      message: `✅ Görev tamamlandı: ${template.icon} ${template.title} (+${q.reward} 🪙)`,
+      message: t(state.language, "msg.questCompleted", {
+        icon: template.icon,
+        title: t(state.language, template.titleKey),
+        reward: q.reward,
+      }),
       tone: "good",
     });
   }
@@ -782,13 +815,15 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
 
   const newAchievements = s.unlockedAchievements
     .filter((id) => !beforeAchievements.includes(id))
-    .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.title)
-    .filter((title): title is string => !!title);
+    .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.titleKey)
+    .filter((titleKey): titleKey is string => !!titleKey)
+    .map((titleKey) => t(s.language, titleKey));
 
   const newQuests = s.dailyQuests
     .filter((q) => q.completed && !beforeCompletedQuests.includes(q.id))
-    .map((q) => QUEST_TEMPLATES_BY_ID[q.templateId]?.title)
-    .filter((title): title is string => !!title);
+    .map((q) => QUEST_TEMPLATES_BY_ID[q.templateId]?.titleKey)
+    .filter((titleKey): titleKey is string => !!titleKey)
+    .map((titleKey) => t(s.language, titleKey));
 
   const summary = {
     elapsedMs,
@@ -822,8 +857,13 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
   const good = GOODS_BY_ID[request.goodId];
   const gs = state.goods[request.goodId];
 
-  function outcome(message: string, tone: EconomyEvent["tone"], patch: Partial<EconomyState>) {
-    const event: EconomyEvent = { id: state.nextId, message, tone };
+  function outcome(
+    messageKey: string,
+    params: Record<string, string | number> | undefined,
+    tone: EconomyEvent["tone"],
+    patch: Partial<EconomyState>
+  ) {
+    const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
     return {
       ...state,
       ...patch,
@@ -834,12 +874,15 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
     };
   }
 
+  const goodName = t(state.language, good.nameKey);
+
   if (give) {
     if (gs.holding < request.qty) {
-      return outcome(`🙋 İstediği kadar ${good.name} elinde yoktu, köylüyü boş çevirdin.`, "neutral", {});
+      return outcome("msg.villagerGiveInsufficient", { good: goodName }, "neutral", {});
     }
     return outcome(
-      `🙋 ${request.qty} ${good.name} verdin, köylüler minnettar kaldı. (+${VILLAGER_REQUEST_GIVE_HAPPINESS} mutluluk)`,
+      "msg.villagerGiveSuccess",
+      { qty: request.qty, good: goodName, amount: VILLAGER_REQUEST_GIVE_HAPPINESS },
       "good",
       {
         goods: { ...state.goods, [request.goodId]: { ...gs, holding: gs.holding - request.qty } },
@@ -849,7 +892,8 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
   }
 
   return outcome(
-    `🙋 İsteği reddettin, köylüler hayal kırıklığına uğradı. (-${VILLAGER_REQUEST_REFUSE_HAPPINESS} mutluluk)`,
+    "msg.villagerRefuse",
+    { amount: VILLAGER_REQUEST_REFUSE_HAPPINESS },
     "bad",
     { happiness: clamp(state.happiness - VILLAGER_REQUEST_REFUSE_HAPPINESS, 0, 100) }
   );
@@ -869,8 +913,11 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "RESET":
       // A new difficulty starts the economy over, but the player's
-      // chosen town name is an identity, not run state — keep it.
-      return { ...initialState(action.difficulty), townName: state.townName };
+      // chosen town name and language are identity, not run state — keep them.
+      return {
+        ...initialState(action.difficulty, state.language),
+        townName: state.townName,
+      };
     case "HYDRATE":
       return action.state;
     case "DAILY_CHECKIN":
@@ -889,6 +936,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return resolveVillagerRequest(state, action.give);
     case "SET_TOWN_NAME":
       return setTownName(state, action.name);
+    case "SET_LANGUAGE":
+      return setLanguage(state, action.language);
     default:
       return state;
   }
@@ -970,6 +1019,14 @@ export function useEconomy() {
     []
   );
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
+  const setLanguage_ = useCallback(
+    (language: Language) => dispatch({ type: "SET_LANGUAGE", language }),
+    []
+  );
+  const translate = useCallback(
+    (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
+    [state.language]
+  );
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -990,6 +1047,8 @@ export function useEconomy() {
     resolveDecision: resolveDecision_,
     resolveRequest,
     setTownName,
+    setLanguage: setLanguage_,
+    t: translate,
     portfolioValue,
     netWorth,
     hydrated,

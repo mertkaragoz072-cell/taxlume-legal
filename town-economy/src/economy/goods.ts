@@ -8,8 +8,8 @@ import { Good } from "./types";
 export const GOODS: Good[] = [
   {
     id: "bread",
-    name: "Ekmek",
-    producer: "Fırın",
+    nameKey: "good.bread.name",
+    producerKey: "good.bread.producer",
     icon: "🍞",
     color: "#c97b3d",
     basePrice: 6.4,
@@ -19,8 +19,8 @@ export const GOODS: Good[] = [
   },
   {
     id: "milk",
-    name: "Süt",
-    producer: "Çiftlik",
+    nameKey: "good.milk.name",
+    producerKey: "good.milk.producer",
     icon: "🥛",
     color: "#e3d6b8",
     basePrice: 4.2,
@@ -30,8 +30,8 @@ export const GOODS: Good[] = [
   },
   {
     id: "wood",
-    name: "Odun",
-    producer: "Kereste",
+    nameKey: "good.wood.name",
+    producerKey: "good.wood.producer",
     icon: "🪵",
     color: "#8a5a34",
     basePrice: 9.1,
@@ -41,8 +41,8 @@ export const GOODS: Good[] = [
   },
   {
     id: "iron",
-    name: "Demir",
-    producer: "Maden",
+    nameKey: "good.iron.name",
+    producerKey: "good.iron.producer",
     icon: "⛏️",
     color: "#7c8592",
     basePrice: 15.8,
@@ -52,8 +52,8 @@ export const GOODS: Good[] = [
   },
   {
     id: "cloth",
-    name: "Kumaş",
-    producer: "Dokumahane",
+    nameKey: "good.cloth.name",
+    producerKey: "good.cloth.producer",
     icon: "🧵",
     color: "#b5486b",
     basePrice: 11.3,

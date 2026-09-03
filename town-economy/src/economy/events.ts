@@ -1,7 +1,7 @@
 import { GoodId } from "./types";
 
 export interface EventTemplate {
-  message: string;
+  messageKey: string;
   tone: "good" | "bad" | "neutral";
   inflationDelta: number; // one-off nudge to the town-wide inflation rate
   good?: GoodId; // optional: also shocks one good's local supply
@@ -18,60 +18,60 @@ export interface EventTemplate {
 // is modest by comparison.
 export const EVENT_TEMPLATES: EventTemplate[] = [
   {
-    message: "Belediye vergileri artırdı! Fiyatlar geneline zam geldi.",
+    messageKey: "event.taxHike",
     tone: "bad",
     inflationDelta: 0.003,
   },
   {
-    message: "Kuraklık tahılı vurdu. Ekmek fiyatları fırladı.",
+    messageKey: "event.drought",
     tone: "bad",
     inflationDelta: 0.0005,
     good: "bread",
     supplyShockPct: -0.32,
   },
   {
-    message: "Bereketli hasat! Süt bolluğu fiyatları düşürdü.",
+    messageKey: "event.goodHarvest",
     tone: "good",
     inflationDelta: -0.0005,
     good: "milk",
     supplyShockPct: 0.3,
   },
   {
-    message: "Ormanda yangın çıktı, odun arzı azaldı.",
+    messageKey: "event.forestFire",
     tone: "bad",
     inflationDelta: 0,
     good: "wood",
     supplyShockPct: -0.3,
   },
   {
-    message: "Yeni maden damarı bulundu, demir ucuzladı.",
+    messageKey: "event.newOreVein",
     tone: "good",
     inflationDelta: 0,
     good: "iron",
     supplyShockPct: 0.32,
   },
   {
-    message: "Komşu kasabayla ticaret anlaşması enflasyonu yumuşattı.",
+    messageKey: "event.tradeDeal",
     tone: "good",
     inflationDelta: -0.0025,
   },
   {
-    message: "Kasaba festivali talebi patlattı, her şey pahalandı.",
+    messageKey: "event.festival",
     tone: "bad",
     inflationDelta: 0.002,
   },
   {
-    message: "Merkez hazine para bastı. Enflasyon hızlandı.",
+    messageKey: "event.moneyPrinting",
     tone: "bad",
     inflationDelta: 0.004,
   },
   {
-    message: "Sıkı bütçe önlemleri enflasyonu dizginledi.",
+    messageKey: "event.austerity",
     tone: "good",
     inflationDelta: -0.0035,
   },
   {
-    message: "Dokumahanede grev, kumaş fiyatı yükseldi.",
+    messageKey: "event.weaversStrike",
     tone: "bad",
     inflationDelta: 0,
     good: "cloth",

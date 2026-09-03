@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { Good, GoodState } from "../economy/types";
 import { CARD_GRADIENT, cardShadow, GREEN_GRADIENT, RED_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
@@ -15,6 +16,7 @@ interface Props {
 type Qty = 1 | 5 | "ALL";
 
 export function BuySellPanel({ good, state, cash, onTrade }: Props) {
+  const { t } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [qtyOption, setQtyOption] = useState<Qty>(1);
 
@@ -32,13 +34,17 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
           style={[styles.sideBtn, side === "buy" && styles.sideBtnActiveBuy]}
           onPress={() => setSide("buy")}
         >
-          <Text style={[styles.sideBtnText, side === "buy" && styles.sideBtnTextActive]}>AL</Text>
+          <Text style={[styles.sideBtnText, side === "buy" && styles.sideBtnTextActive]}>
+            {t("market.buyShort")}
+          </Text>
         </Pressable>
         <Pressable
           style={[styles.sideBtn, side === "sell" && styles.sideBtnActiveSell]}
           onPress={() => setSide("sell")}
         >
-          <Text style={[styles.sideBtnText, side === "sell" && styles.sideBtnTextActive]}>SAT</Text>
+          <Text style={[styles.sideBtnText, side === "sell" && styles.sideBtnTextActive]}>
+            {t("market.sellShort")}
+          </Text>
         </Pressable>
       </View>
 
@@ -49,14 +55,14 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
             style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
             onPress={() => setQtyOption(q)}
           >
-            <Text style={styles.qtyBtnText}>{q === "ALL" ? "TÜMÜ" : q}</Text>
+            <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
           </Pressable>
         ))}
       </View>
 
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>
-          {resolvedQty} x {good.name} @ {state.price.toFixed(2)}
+          {resolvedQty} x {t(good.nameKey)} @ {state.price.toFixed(2)}
         </Text>
         <Text style={styles.summaryTotal}>{total.toFixed(1)} 🪙</Text>
       </View>
@@ -69,7 +75,7 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
       >
         <GradientFill colors={side === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
         <Text style={styles.confirmBtnText}>
-          {side === "buy" ? "SATIN AL" : "SAT"} {good.icon}
+          {side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} {good.icon}
         </Text>
       </ScalePressable>
     </View>

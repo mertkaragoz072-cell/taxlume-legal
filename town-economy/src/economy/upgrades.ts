@@ -2,61 +2,62 @@ import { UpgradeId } from "./types";
 
 export interface UpgradeDef {
   id: UpgradeId;
-  name: string;
+  nameKey: string;
   icon: string;
-  description: string;
+  descriptionKey: string;
   maxLevel: number;
   baseCost: number;
   costGrowth: number;
   /** meaning depends on the upgrade — see effectLabel */
   effectPerLevel: number;
-  effectLabel: (level: number) => string;
+  /** an i18n key + the number to interpolate into it — see t.ts */
+  effectLabel: (level: number) => { key: string; params: Record<string, number> };
 }
 
 export const UPGRADES: UpgradeDef[] = [
   {
     id: "market",
-    name: "Pazar Yeri",
+    nameKey: "upgrade.market.name",
     icon: "🏪",
-    description: "Alım satımların fiyatlar üzerindeki ani etkisini yumuşatır.",
+    descriptionKey: "upgrade.market.description",
     maxLevel: 5,
     baseCost: 80,
     costGrowth: 1.6,
     effectPerLevel: 0.15,
-    effectLabel: (level) => `Piyasa etkisi -%${Math.round(level * 15)}`,
+    effectLabel: (level) => ({ key: "upgrade.market.effect", params: { pct: Math.round(level * 15) } }),
   },
   {
     id: "caravanserai",
-    name: "Kervansaray",
+    nameKey: "upgrade.caravanserai.name",
     icon: "🏕️",
-    description: "Komşu kasabalarla ticarette gümrük vergisini düşürür.",
+    descriptionKey: "upgrade.caravanserai.description",
     maxLevel: 5,
     baseCost: 100,
     costGrowth: 1.6,
     effectPerLevel: 0.01,
-    effectLabel: (level) => `Gümrük vergisi -%${level}`,
+    effectLabel: (level) => ({ key: "upgrade.caravanserai.effect", params: { pct: level } }),
   },
   {
     id: "townhall",
-    name: "Belediye Binası",
+    nameKey: "upgrade.townhall.name",
     icon: "🏛️",
-    description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.",
+    descriptionKey: "upgrade.townhall.description",
     maxLevel: 5,
     baseCost: 120,
     costGrowth: 1.7,
     effectPerLevel: 0.1,
-    effectLabel: (level) => `Kriz şiddeti -%${Math.round(level * 10)}`,
+    effectLabel: (level) => ({ key: "upgrade.townhall.effect", params: { pct: Math.round(level * 10) } }),
   },
   {
     id: "bank",
-    name: "Banka",
+    nameKey: "upgrade.bank.name",
     icon: "🏦",
-    description: "Günlük giriş bonusunu artırır.",
+    descriptionKey: "upgrade.bank.description",
     maxLevel: 5,
     baseCost: 90,
     costGrowth: 1.6,
     effectPerLevel: 6,
-    effectLabel: (level) => `Günlük bonus +${level * 6} 🪙`,
+    effectLabel: (level) => ({ key: "upgrade.bank.effect", params: { amount: level * 6 } }),
   },
 ];
 

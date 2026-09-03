@@ -43,6 +43,8 @@ function Game() {
     resolveDecision,
     resolveRequest,
     setTownName,
+    setLanguage,
+    t,
     netWorth,
   } = useEconomyContext();
   const sounds = useSoundEffects();
@@ -97,8 +99,11 @@ function Game() {
         muted={sounds.muted}
         streakCount={state.streak.count}
         difficulty={state.difficulty}
+        language={state.language}
+        t={t}
         onTogglePause={togglePause}
         onToggleMuted={sounds.toggleMuted}
+        onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
         onReset={() => setDifficultyModalVisible(true)}
         onHelp={() => setTutorialVisible(true)}
         onEditName={() => setNameModalVisible(true)}

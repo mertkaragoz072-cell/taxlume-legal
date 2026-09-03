@@ -17,7 +17,7 @@ interface Props {
 type QtyOption = 1 | 5 | "ALL";
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan } = useEconomyContext();
+  const { state, sendCaravan, t } = useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
@@ -46,32 +46,34 @@ export function TradeScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionLabel}>KOMŞU KASABALAR</Text>
+      <Text style={styles.sectionLabel}>{t("trade.neighborsSectionLabel")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-        {TOWNS.map((t) => {
-          const selected = t.id === townId;
+        {TOWNS.map((tn) => {
+          const selected = tn.id === townId;
           const effectiveTariff = Math.max(
             0,
-            t.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
+            tn.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
           );
           return (
             <ScalePressable
-              key={t.id}
-              onPress={() => setTownId(t.id)}
+              key={tn.id}
+              onPress={() => setTownId(tn.id)}
               style={[styles.townPill, selected && styles.townPillActive]}
             >
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <Text style={styles.townIcon}>{t.icon}</Text>
-              <Text style={styles.townName}>{t.name}</Text>
+              <Text style={styles.townIcon}>{tn.icon}</Text>
+              <Text style={styles.townName}>{t(tn.nameKey)}</Text>
               <Text style={styles.townMeta}>
-                {t.distanceTicks} tur · %{(effectiveTariff * 100).toFixed(0)} vergi
+                {t("trade.townMeta", { ticks: tn.distanceTicks, tariff: (effectiveTariff * 100).toFixed(0) })}
               </Text>
             </ScalePressable>
           );
         })}
       </ScrollView>
 
-      <Text style={styles.sectionLabel}>{town.name.toUpperCase()} FİYATLARI</Text>
+      <Text style={styles.sectionLabel}>
+        {t("trade.pricesSectionLabel", { town: t(town.nameKey).toUpperCase() })}
+      </Text>
       <View style={styles.goodsTable}>
         {GOODS.map((g) => {
           const home = state.goods[g.id].price;
@@ -88,9 +90,9 @@ export function TradeScreen({ sounds }: Props) {
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <Text style={styles.goodIcon}>{g.icon}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.goodName}>{g.name}</Text>
+                <Text style={styles.goodName}>{t(g.nameKey)}</Text>
                 <Text style={styles.goodPrices}>
-                  Bizde {home.toFixed(2)} 🪙 · Onlarda {there.toFixed(2)} 🪙
+                  {t("trade.priceCompare", { home: home.toFixed(2), there: there.toFixed(2) })}
                 </Text>
               </View>
               <Text style={[styles.goodDelta, { color: delta >= 0 ? "#3fae5c" : "#c94b4b" }]}>
@@ -110,7 +112,7 @@ export function TradeScreen({ sounds }: Props) {
             onPress={() => setDirection("export")}
           >
             <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
-              İHRAÇ ET (Sat)
+              {t("trade.export")}
             </Text>
           </ScalePressable>
           <ScalePressable
@@ -118,7 +120,7 @@ export function TradeScreen({ sounds }: Props) {
             onPress={() => setDirection("import")}
           >
             <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
-              İTHAL ET (Al)
+              {t("trade.import")}
             </Text>
           </ScalePressable>
         </View>
@@ -130,14 +132,19 @@ export function TradeScreen({ sounds }: Props) {
               style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
               onPress={() => setQtyOption(q)}
             >
-              <Text style={styles.qtyBtnText}>{q === "ALL" ? "TÜMÜ" : q}</Text>
+              <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
             </ScalePressable>
           ))}
         </View>
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>
-            {resolvedQty} x {good.name} @ {theirPrice.toFixed(2)} ({town.name})
+            {t("trade.summaryLine", {
+              qty: resolvedQty,
+              good: t(good.nameKey),
+              price: theirPrice.toFixed(2),
+              town: t(town.nameKey),
+            })}
           </Text>
           <Text style={styles.summaryTotal}>
             {direction === "export" ? "+" : "-"}
@@ -145,8 +152,8 @@ export function TradeScreen({ sounds }: Props) {
           </Text>
         </View>
         <Text style={styles.etaText}>
-          🚚 Kervan {town.distanceTicks} turda ulaşır · %{(tariffRate * 100).toFixed(0)} vergi dahil
-          {tariffRate < town.tariffRate ? " (Kervansaray indirimli)" : ""}
+          {t("trade.eta", { ticks: town.distanceTicks, tariff: (tariffRate * 100).toFixed(0) })}
+          {tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""}
         </Text>
 
         <ScalePressable
@@ -167,19 +174,19 @@ export function TradeScreen({ sounds }: Props) {
             y2="1"
           />
           <Text style={styles.confirmBtnText}>
-            Kervanı Yola Çıkar {good.icon}
+            {t("trade.sendCaravanBtn", { icon: good.icon })}
           </Text>
         </ScalePressable>
       </View>
 
-      <Text style={styles.sectionLabel}>AKTİF KERVANLAR</Text>
+      <Text style={styles.sectionLabel}>{t("trade.activeCaravansSectionLabel")}</Text>
       {state.caravans.length === 0 && (
-        <Text style={styles.emptyText}>Yolda kervan yok. Yukarıdan bir sevkiyat başlat.</Text>
+        <Text style={styles.emptyText}>{t("trade.noCaravans")}</Text>
       )}
       {[...state.caravans]
         .sort((a, b) => a.arrivesAtTick - b.arrivesAtTick)
         .map((c) => {
-          const t = TOWNS_BY_ID[c.townId];
+          const cTown = TOWNS_BY_ID[c.townId];
           const g = GOODS_BY_ID[c.goodId];
           const total = c.arrivesAtTick - c.departedTick;
           const elapsed = state.tick - c.departedTick;
@@ -190,12 +197,14 @@ export function TradeScreen({ sounds }: Props) {
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <View style={styles.caravanHeader}>
                 <Text style={styles.caravanTitle}>
-                  {c.direction === "export" ? "📤" : "📥"} {t.icon} {t.name}
+                  {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
                 </Text>
-                <Text style={styles.caravanEta}>{remaining} tur kaldı</Text>
+                <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: remaining })}</Text>
               </View>
               <Text style={styles.caravanSub}>
-                {c.qty} {g.name} {c.direction === "export" ? "gönderildi" : "ithal ediliyor"}
+                {c.direction === "export"
+                  ? t("trade.caravanSentSub", { qty: c.qty, good: t(g.nameKey) })
+                  : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })}
               </Text>
               <View style={styles.progressTrack}>
                 <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />

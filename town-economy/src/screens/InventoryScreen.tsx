@@ -6,7 +6,7 @@ import { GOODS } from "../economy/goods";
 import { CARD_GRADIENT, cardShadow } from "../theme";
 
 export function InventoryScreen() {
-  const { state, portfolioValue, netWorth } = useEconomyContext();
+  const { state, portfolioValue, netWorth, t } = useEconomyContext();
   const holdings = GOODS.map((g) => ({ good: g, gs: state.goods[g.id] })).filter(
     ({ gs }) => gs.holding > 0
   );
@@ -16,25 +16,25 @@ export function InventoryScreen() {
       <View style={styles.summaryCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Nakit</Text>
+          <Text style={styles.summaryLabel}>{t("header.cash")}</Text>
           <Text style={styles.summaryValue}>{state.cash.toFixed(1)} 🪙</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Envanter Değeri</Text>
+          <Text style={styles.summaryLabel}>{t("inventory.portfolioValue")}</Text>
           <Text style={styles.summaryValue}>{portfolioValue.toFixed(1)} 🪙</Text>
         </View>
         <View style={[styles.summaryRow, styles.netRow]}>
-          <Text style={styles.netLabel}>Net Servet</Text>
+          <Text style={styles.netLabel}>{t("header.netWorth")}</Text>
           <Text style={styles.netValue}>{netWorth.toFixed(1)} 🪙</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionLabel}>SAHİP OLDUKLARIN</Text>
+      <Text style={styles.sectionLabel}>{t("inventory.sectionLabel")}</Text>
       {holdings.length === 0 && (
         <View style={styles.emptyBox}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.emptyText}>Henüz hiçbir şey satın almadın.</Text>
-          <Text style={styles.emptySub}>Piyasa sekmesinden ürün al, burada birikimini gör.</Text>
+          <Text style={styles.emptyText}>{t("inventory.emptyTitle")}</Text>
+          <Text style={styles.emptySub}>{t("inventory.emptySubtitle")}</Text>
         </View>
       )}
       {holdings.map(({ good, gs }) => {
@@ -46,9 +46,9 @@ export function InventoryScreen() {
             <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
             <Text style={styles.rowIcon}>{good.icon}</Text>
             <View style={styles.rowMain}>
-              <Text style={styles.rowName}>{good.name}</Text>
+              <Text style={styles.rowName}>{t(good.nameKey)}</Text>
               <Text style={styles.rowSub}>
-                {gs.holding} adet @ {gs.price.toFixed(2)} 🪙
+                {t("inventory.rowSub", { qty: gs.holding, price: gs.price.toFixed(2) })}
               </Text>
               <View style={styles.barTrack}>
                 <View style={[styles.barFill, { width: `${share}%`, backgroundColor: good.color }]} />

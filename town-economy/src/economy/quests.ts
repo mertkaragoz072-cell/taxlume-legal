@@ -3,8 +3,8 @@ import { DailyProgress } from "./types";
 export interface QuestTemplate {
   id: string;
   icon: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   target: number;
   reward: number;
   progress: (daily: DailyProgress) => number;
@@ -14,8 +14,8 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   {
     id: "daily_trade_small",
     icon: "🛒",
-    title: "Küçük Tüccar",
-    description: "Bugün 3 alım-satım işlemi yap.",
+    titleKey: "quest.daily_trade_small.title",
+    descriptionKey: "quest.daily_trade_small.description",
     target: 3,
     reward: 20,
     progress: (d) => d.trades,
@@ -23,8 +23,8 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   {
     id: "daily_trade_big",
     icon: "📊",
-    title: "Aktif Piyasa",
-    description: "Bugün 8 alım-satım işlemi yap.",
+    titleKey: "quest.daily_trade_big.title",
+    descriptionKey: "quest.daily_trade_big.description",
     target: 8,
     reward: 45,
     progress: (d) => d.trades,
@@ -32,8 +32,8 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   {
     id: "daily_caravan",
     icon: "🚚",
-    title: "Kervan Yolu",
-    description: "Bugün bir kervan yola çıkar.",
+    titleKey: "quest.daily_caravan.title",
+    descriptionKey: "quest.daily_caravan.description",
     target: 1,
     reward: 25,
     progress: (d) => d.caravansSent,
@@ -41,8 +41,8 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   {
     id: "daily_two_towns",
     icon: "🗺️",
-    title: "Ticaret Ağı",
-    description: "Bugün 2 farklı kasabayla ticaret yap.",
+    titleKey: "quest.daily_two_towns.title",
+    descriptionKey: "quest.daily_two_towns.description",
     target: 2,
     reward: 35,
     progress: (d) => d.townsTraded.length,
@@ -50,8 +50,8 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   {
     id: "daily_earnings",
     icon: "💰",
-    title: "Kazanç Günü",
-    description: "Bugün 100 🪙 kazan.",
+    titleKey: "quest.daily_earnings.title",
+    descriptionKey: "quest.daily_earnings.description",
     target: 100,
     reward: 30,
     progress: (d) => d.cashEarned,
@@ -59,8 +59,8 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   {
     id: "daily_upgrade",
     icon: "🏗️",
-    title: "Yatırımcı",
-    description: "Bugün bir kasaba geliştirmesi satın al.",
+    titleKey: "quest.daily_upgrade.title",
+    descriptionKey: "quest.daily_upgrade.description",
     target: 1,
     reward: 30,
     progress: (d) => d.upgradesBought,

@@ -4,6 +4,7 @@ import { GOODS_BY_ID } from "../economy/goods";
 import { TICK_MS } from "../economy/useEconomy";
 import { EconomyState } from "../economy/types";
 import { TOWNS_BY_ID } from "../economy/towns";
+import { t } from "../i18n/t";
 
 const CHANNEL_ID = "town-economy-default";
 const UNHAPPY_HAPPINESS_THRESHOLD = 30;
@@ -20,11 +21,11 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function ensureNotificationChannel(): Promise<void> {
+export async function ensureNotificationChannel(language: EconomyState["language"]): Promise<void> {
   if (Platform.OS !== "android") return;
   try {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-      name: "Kasaba Bildirimleri",
+      name: t(language, "notif.channelName"),
       importance: Notifications.AndroidImportance.DEFAULT,
     });
   } catch {
@@ -74,13 +75,15 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
     const seconds = Math.max(MIN_SCHEDULE_SECONDS, Math.round((remainingTicks * TICK_MS) / 1000));
     const town = TOWNS_BY_ID[caravan.townId];
     const good = GOODS_BY_ID[caravan.goodId];
+    const townName = t(state.language, town.nameKey);
+    const goodName = t(state.language, good.nameKey);
     await scheduleSafely({
       content: {
-        title: "🚚 Kervan geldi!",
+        title: t(state.language, "notif.caravanTitle"),
         body:
           caravan.direction === "export"
-            ? `${town.name}'a gönderdiğin ${caravan.qty} ${good.name} satıldı.`
-            : `${town.name}'dan ${caravan.qty} ${good.name} teslim edildi.`,
+            ? t(state.language, "notif.caravanExportBody", { town: townName, qty: caravan.qty, good: goodName })
+            : t(state.language, "notif.caravanImportBody", { town: townName, qty: caravan.qty, good: goodName }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -93,8 +96,8 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
   if (state.happiness < UNHAPPY_HAPPINESS_THRESHOLD && state.taxRate > 0 && !state.gameOver) {
     await scheduleSafely({
       content: {
-        title: "😡 Köylüler sinirli!",
-        body: "Vergi oranını düşürmezsen isyan çıkabilir. Kasabana göz at.",
+        title: t(state.language, "notif.unhappyTitle"),
+        body: t(state.language, "notif.unhappyBody"),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -107,8 +110,8 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
   if (!state.gameOver) {
     await scheduleSafely({
       content: {
-        title: "🏘️ Kasaban seni bekliyor",
-        body: "Günlük bonusunu almayı ve piyasayı kontrol etmeyi unutma!",
+        title: t(state.language, "notif.dailyReminderTitle"),
+        body: t(state.language, "notif.dailyReminderBody"),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,

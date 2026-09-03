@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
 import { CARD_GRADIENT, cardShadow } from "../theme";
 import { GradientFill } from "./GradientFill";
@@ -13,15 +14,14 @@ interface Props {
 }
 
 export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel }: Props) {
+  const { t } = useEconomyContext();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>Yeni Oyun Başlat</Text>
-          <Text style={styles.subtitle}>
-            Bir zorluk seviyesi seç. Mevcut kasaba ilerlemenin üzerine yazılacak.
-          </Text>
+          <Text style={styles.title}>{t("difficultyModal.title")}</Text>
+          <Text style={styles.subtitle}>{t("difficultyModal.subtitle")}</Text>
 
           {DIFFICULTY_ORDER.map((id) => {
             const d = DIFFICULTIES[id];
@@ -36,17 +36,17 @@ export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel
                 <Text style={styles.optionIcon}>{d.icon}</Text>
                 <View style={{ flex: 1 }}>
                   <View style={styles.optionTitleRow}>
-                    <Text style={styles.optionLabel}>{d.label}</Text>
-                    {active && <Text style={styles.optionActiveTag}>ŞU AN</Text>}
+                    <Text style={styles.optionLabel}>{t(d.labelKey)}</Text>
+                    {active && <Text style={styles.optionActiveTag}>{t("difficultyModal.currentTag")}</Text>}
                   </View>
-                  <Text style={styles.optionDesc}>{d.description}</Text>
+                  <Text style={styles.optionDesc}>{t(d.descriptionKey)}</Text>
                 </View>
               </ScalePressable>
             );
           })}
 
           <ScalePressable onPress={onCancel} style={styles.cancelBtn} scaleTo={0.97}>
-            <Text style={styles.cancelText}>Vazgeç</Text>
+            <Text style={styles.cancelText}>{t("common.cancel")}</Text>
           </ScalePressable>
         </View>
       </View>

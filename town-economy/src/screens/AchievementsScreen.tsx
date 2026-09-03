@@ -7,7 +7,7 @@ import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 import { CARD_GRADIENT, cardShadow, UNLOCKED_CARD_GRADIENT } from "../theme";
 
 export function AchievementsScreen() {
-  const { state, netWorth } = useEconomyContext();
+  const { state, netWorth, t } = useEconomyContext();
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
 
@@ -17,27 +17,27 @@ export function AchievementsScreen() {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.summaryRow}>
           <Text style={styles.summaryBig}>
-            {unlockedCount} / {ACHIEVEMENTS.length}
+            {t("achievements.unlockedCount", { count: unlockedCount, total: ACHIEVEMENTS.length })}
           </Text>
-          <Text style={styles.summaryLabel}>başarım kazanıldı</Text>
+          <Text style={styles.summaryLabel}>{t("achievements.unlockedLabel")}</Text>
         </View>
         <View style={styles.streakRow}>
           <Text style={styles.streakEmoji}>🔥</Text>
           <Text style={styles.streakText}>
             {state.streak.count > 0
-              ? `${state.streak.count} gün üst üste giriş serisi`
-              : "Henüz bir giriş serin yok"}
+              ? t("achievements.streak", { count: state.streak.count })
+              : t("achievements.noStreak")}
           </Text>
         </View>
       </View>
 
       <View style={styles.questHeaderRow}>
-        <Text style={styles.sectionLabel}>GÜNLÜK GÖREVLER</Text>
+        <Text style={styles.sectionLabel}>{t("achievements.dailyQuestsLabel")}</Text>
         <Text style={styles.questCount}>
-          {completedQuestCount} / {state.dailyQuests.length} tamamlandı
+          {t("achievements.dailyQuestsCount", { count: completedQuestCount, total: state.dailyQuests.length })}
         </Text>
       </View>
-      <Text style={styles.questNote}>Her gün yeni görevler gelir, yarın tekrar uğra.</Text>
+      <Text style={styles.questNote}>{t("achievements.dailyQuestsNote")}</Text>
       {state.dailyQuests.map((q) => {
         const template = QUEST_TEMPLATES_BY_ID[q.templateId];
         if (!template) return null;
@@ -58,11 +58,11 @@ export function AchievementsScreen() {
             <View style={{ flex: 1 }}>
               <View style={styles.titleRow}>
                 <Text style={[styles.title, q.completed && styles.titleUnlocked]}>
-                  {template.title}
+                  {t(template.titleKey)}
                 </Text>
                 <Text style={styles.reward}>+{q.reward} 🪙</Text>
               </View>
-              <Text style={styles.description}>{template.description}</Text>
+              <Text style={styles.description}>{t(template.descriptionKey)}</Text>
               {!q.completed && (
                 <>
                   <View style={styles.progressTrack}>
@@ -78,7 +78,7 @@ export function AchievementsScreen() {
         );
       })}
 
-      <Text style={styles.sectionLabel}>BAŞARIMLAR</Text>
+      <Text style={styles.sectionLabel}>{t("achievements.sectionLabel")}</Text>
       {ACHIEVEMENTS.map((a) => {
         const unlocked = state.unlockedAchievements.includes(a.id);
         const current = Math.min(a.progress(state, netWorth), a.target);
@@ -97,10 +97,10 @@ export function AchievementsScreen() {
             </Text>
             <View style={{ flex: 1 }}>
               <View style={styles.titleRow}>
-                <Text style={[styles.title, unlocked && styles.titleUnlocked]}>{a.title}</Text>
+                <Text style={[styles.title, unlocked && styles.titleUnlocked]}>{t(a.titleKey)}</Text>
                 <Text style={styles.reward}>+{a.reward} 🪙</Text>
               </View>
-              <Text style={styles.description}>{a.description}</Text>
+              <Text style={styles.description}>{t(a.descriptionKey)}</Text>
               {!unlocked && (
                 <>
                   <View style={styles.progressTrack}>

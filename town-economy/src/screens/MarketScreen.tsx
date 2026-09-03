@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function MarketScreen({ sounds }: Props) {
-  const { state, selectGood, trade } = useEconomyContext();
+  const { state, selectGood, trade, t } = useEconomyContext();
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
   const selectedState = state.goods[selected.id];
   const { opacity: flashOpacity, flashColor } = usePriceFlash(selectedState.price);
@@ -41,9 +41,9 @@ export function MarketScreen({ sounds }: Props) {
         <View style={styles.chartHeaderRow}>
           <View>
             <Text style={styles.chartTitle}>
-              {selected.icon} {selected.name}
+              {selected.icon} {t(selected.nameKey)}
             </Text>
-            <Text style={styles.chartSubtitle}>{selected.producer}</Text>
+            <Text style={styles.chartSubtitle}>{t(selected.producerKey)}</Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={styles.chartPrice}>{selectedState.price.toFixed(2)} 🪙</Text>
@@ -62,7 +62,7 @@ export function MarketScreen({ sounds }: Props) {
         />
       </View>
 
-      <Text style={styles.sectionLabel}>KASABA PİYASASI</Text>
+      <Text style={styles.sectionLabel}>{t("market.sectionLabel")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
         {GOODS.map((g) => (
           <GoodCard
@@ -88,8 +88,8 @@ export function MarketScreen({ sounds }: Props) {
 
       {state.gameOver && (
         <View style={styles.gameOverBox}>
-          <Text style={styles.gameOverText}>💥 Hiperenflasyon kasabayı vurdu! Ekonomi çöktü.</Text>
-          <Text style={styles.gameOverSub}>Yeniden başlamak için üstteki ⟳ butonuna dokun.</Text>
+          <Text style={styles.gameOverText}>{t("market.gameOverTitle")}</Text>
+          <Text style={styles.gameOverSub}>{t("market.gameOverSubtitle")}</Text>
         </View>
       )}
     </ScrollView>

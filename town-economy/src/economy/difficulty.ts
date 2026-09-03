@@ -2,9 +2,9 @@ export type DifficultyId = "easy" | "normal" | "hard";
 
 export interface DifficultyConfig {
   id: DifficultyId;
-  label: string;
+  labelKey: string;
   icon: string;
-  description: string;
+  descriptionKey: string;
   startingCash: number;
   baseInflationDrift: number;
   inflationMin: number;
@@ -19,9 +19,9 @@ export interface DifficultyConfig {
 export const DIFFICULTIES: Record<DifficultyId, DifficultyConfig> = {
   easy: {
     id: "easy",
-    label: "Kolay",
+    labelKey: "difficulty.easy.label",
     icon: "🌱",
-    description: "Daha çok başlangıç sermayesi, yavaş enflasyon, seyrek ve hafif olaylar.",
+    descriptionKey: "difficulty.easy.description",
     startingCash: 400,
     baseInflationDrift: 0.0008,
     inflationMin: -0.004,
@@ -32,9 +32,9 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyConfig> = {
   },
   normal: {
     id: "normal",
-    label: "Orta",
+    labelKey: "difficulty.normal.label",
     icon: "⚖️",
-    description: "Dengeli bir kasaba ekonomisi. Standart oynanış.",
+    descriptionKey: "difficulty.normal.description",
     startingCash: 250,
     baseInflationDrift: 0.0015,
     inflationMin: -0.004,
@@ -45,9 +45,9 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyConfig> = {
   },
   hard: {
     id: "hard",
-    label: "Zor",
+    labelKey: "difficulty.hard.label",
     icon: "🔥",
-    description: "Az sermaye, hızlı enflasyon, sık ve şiddetli krizler. Dikkatli yönet.",
+    descriptionKey: "difficulty.hard.description",
     startingCash: 150,
     baseInflationDrift: 0.0026,
     inflationMin: -0.003,

@@ -1,15 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { ScalePressable } from "./ScalePressable";
 
 export type ScreenId = "market" | "inventory" | "trade" | "town" | "achievements";
 
-const TABS: { id: ScreenId; label: string; icon: string }[] = [
-  { id: "market", label: "Piyasa", icon: "📈" },
-  { id: "inventory", label: "Envanter", icon: "🎒" },
-  { id: "trade", label: "Ticaret", icon: "🚚" },
-  { id: "town", label: "Kasaba", icon: "🏘️" },
-  { id: "achievements", label: "Hedefler", icon: "🏆" },
+const TABS: { id: ScreenId; labelKey: string; icon: string }[] = [
+  { id: "market", labelKey: "tabs.market", icon: "📈" },
+  { id: "inventory", labelKey: "tabs.inventory", icon: "🎒" },
+  { id: "trade", labelKey: "tabs.trade", icon: "🚚" },
+  { id: "town", labelKey: "tabs.town", icon: "🏘️" },
+  { id: "achievements", labelKey: "tabs.achievements", icon: "🏆" },
 ];
 
 interface Props {
@@ -18,7 +19,8 @@ interface Props {
 }
 
 export function TabBar({ active, onChange }: Props) {
-  const activeIndex = TABS.findIndex((t) => t.id === active);
+  const { t } = useEconomyContext();
+  const activeIndex = TABS.findIndex((tab) => tab.id === active);
   const indicatorAnim = useRef(new Animated.Value(activeIndex)).current;
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function TabBar({ active, onChange }: Props) {
         return (
           <ScalePressable key={tab.id} onPress={() => onChange(tab.id)} style={styles.tab} scaleTo={0.9}>
             <Text style={[styles.icon, isActive && styles.iconActive]}>{tab.icon}</Text>
-            <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
+            <Text style={[styles.label, isActive && styles.labelActive]}>{t(tab.labelKey)}</Text>
           </ScalePressable>
         );
       })}

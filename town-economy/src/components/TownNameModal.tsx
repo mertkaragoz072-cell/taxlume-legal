@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { TOWN_NAME_MAX_LENGTH } from "../economy/useEconomy";
 import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function TownNameModal({ visible, currentName, onSave, onCancel }: Props) {
+  const { t } = useEconomyContext();
   const [draft, setDraft] = useState(currentName);
 
   useEffect(() => {
@@ -29,13 +31,13 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>🏘️ Kasabanı Adlandır</Text>
-          <Text style={styles.subtitle}>Kasabana istediğin ismi ver.</Text>
+          <Text style={styles.title}>{t("townNameModal.title")}</Text>
+          <Text style={styles.subtitle}>{t("townNameModal.subtitle")}</Text>
 
           <TextInput
             value={draft}
             onChangeText={(text) => setDraft(text.slice(0, TOWN_NAME_MAX_LENGTH))}
-            placeholder="Kasaba ismi"
+            placeholder={t("townNameModal.placeholder")}
             placeholderTextColor="#6b5f4d"
             style={styles.input}
             maxLength={TOWN_NAME_MAX_LENGTH}
@@ -53,11 +55,11 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
             scaleTo={0.96}
           >
             <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-            <Text style={styles.saveBtnText}>Kaydet</Text>
+            <Text style={styles.saveBtnText}>{t("common.save")}</Text>
           </ScalePressable>
 
           <ScalePressable onPress={onCancel} style={styles.cancelBtn} scaleTo={0.96}>
-            <Text style={styles.cancelBtnText}>Vazgeç</Text>
+            <Text style={styles.cancelBtnText}>{t("common.cancel")}</Text>
           </ScalePressable>
         </View>
       </View>

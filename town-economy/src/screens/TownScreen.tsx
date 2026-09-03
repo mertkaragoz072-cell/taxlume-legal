@@ -12,23 +12,23 @@ import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
 
-function moodFor(rate: number): { label: string; emoji: string; color: string } {
-  if (rate > 0.01) return { label: "Ekonomik kriz", emoji: "🔥", color: "#e0693f" };
-  if (rate > 0.005) return { label: "Isınıyor", emoji: "😰", color: "#e0a13f" };
-  if (rate > -0.001) return { label: "Sakin", emoji: "🙂", color: "#e8c777" };
-  return { label: "Ferahlıyor", emoji: "😌", color: "#3fae5c" };
+function moodFor(rate: number): { labelKey: string; emoji: string; color: string } {
+  if (rate > 0.01) return { labelKey: "town.mood.crisis", emoji: "🔥", color: "#e0693f" };
+  if (rate > 0.005) return { labelKey: "town.mood.heating", emoji: "😰", color: "#e0a13f" };
+  if (rate > -0.001) return { labelKey: "town.mood.calm", emoji: "🙂", color: "#e8c777" };
+  return { labelKey: "town.mood.cooling", emoji: "😌", color: "#3fae5c" };
 }
 
-function happinessFor(h: number): { label: string; emoji: string; color: string } {
-  if (h < 20) return { label: "İsyan eşiğinde", emoji: "😡", color: "#c94b4b" };
-  if (h < 45) return { label: "Huzursuz", emoji: "😠", color: "#e0693f" };
-  if (h < 70) return { label: "İdare eder", emoji: "😐", color: "#e0a13f" };
-  if (h < 90) return { label: "Memnun", emoji: "🙂", color: "#a8c777" };
-  return { label: "Çok memnun", emoji: "😄", color: "#3fae5c" };
+function happinessFor(h: number): { labelKey: string; emoji: string; color: string } {
+  if (h < 20) return { labelKey: "town.happiness.revolt", emoji: "😡", color: "#c94b4b" };
+  if (h < 45) return { labelKey: "town.happiness.unrest", emoji: "😠", color: "#e0693f" };
+  if (h < 70) return { labelKey: "town.happiness.coping", emoji: "😐", color: "#e0a13f" };
+  if (h < 90) return { labelKey: "town.happiness.content", emoji: "🙂", color: "#a8c777" };
+  return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
 }
 
 export function TownScreen() {
-  const { state, upgrade, setTaxRate } = useEconomyContext();
+  const { state, upgrade, setTaxRate, t } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
@@ -39,12 +39,12 @@ export function TownScreen() {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.moodEmoji}>{mood.emoji}</Text>
         <View style={{ flex: 1 }}>
-          <Text style={styles.moodLabel}>Kasaba Hissiyatı</Text>
-          <Text style={[styles.moodValue, { color: mood.color }]}>{mood.label}</Text>
+          <Text style={styles.moodLabel}>{t("town.moodLabel")}</Text>
+          <Text style={[styles.moodValue, { color: mood.color }]}>{t(mood.labelKey)}</Text>
         </View>
         <View style={{ alignItems: "flex-end" }}>
           <Text style={styles.moodIndex}>{state.inflationIndex.toFixed(1)}</Text>
-          <Text style={styles.moodIndexLabel}>Fiyat Endeksi</Text>
+          <Text style={styles.moodIndexLabel}>{t("town.priceIndexLabel")}</Text>
         </View>
       </View>
 
@@ -52,8 +52,8 @@ export function TownScreen() {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.moodEmoji}>{happy.emoji}</Text>
         <View style={{ flex: 1 }}>
-          <Text style={styles.moodLabel}>Halk Memnuniyeti</Text>
-          <Text style={[styles.moodValue, { color: happy.color }]}>{happy.label}</Text>
+          <Text style={styles.moodLabel}>{t("town.happinessLabel")}</Text>
+          <Text style={[styles.moodValue, { color: happy.color }]}>{t(happy.labelKey)}</Text>
           <View style={styles.happinessTrack}>
             <View
               style={[
@@ -65,22 +65,21 @@ export function TownScreen() {
         </View>
         <View style={{ alignItems: "flex-end" }}>
           <Text style={styles.moodIndex}>{Math.round(state.happiness)}</Text>
-          <Text style={styles.moodIndexLabel}>/ 100</Text>
+          <Text style={styles.moodIndexLabel}>{t("town.outOf100")}</Text>
         </View>
       </View>
 
       <View style={styles.taxCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.taxHeaderRow}>
-          <Text style={styles.taxTitle}>💰 Vergi Politikası</Text>
+          <Text style={styles.taxTitle}>{t("town.tax.title")}</Text>
           <Text style={styles.taxIncome}>
-            {taxIncomePerTick > 0 ? `+${taxIncomePerTick.toFixed(2)} 🪙/tur` : "Vergi yok"}
+            {taxIncomePerTick > 0
+              ? t("town.tax.incomePerTurn", { amount: taxIncomePerTick.toFixed(2) })
+              : t("town.tax.none")}
           </Text>
         </View>
-        <Text style={styles.taxDesc}>
-          Köylülerden vergi al, kasaya gelir gelsin. Ama vergi çok yükselirse halk sinirlenir,
-          üretim düşer ve enflasyon hızlanır.
-        </Text>
+        <Text style={styles.taxDesc}>{t("town.tax.description")}</Text>
         <View style={styles.taxRow}>
           {TAX_RATE_STEPS.map((rate) => {
             const selected = Math.abs(state.taxRate - rate) < 0.001;
@@ -101,7 +100,7 @@ export function TownScreen() {
 
       <View style={styles.chartCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <Text style={styles.chartTitle}>📊 Enflasyon Geçmişi</Text>
+        <Text style={styles.chartTitle}>{t("town.chartTitle")}</Text>
         <PriceChart
           history={state.inflationHistory}
           color={mood.color}
@@ -111,7 +110,7 @@ export function TownScreen() {
         />
       </View>
 
-      <Text style={styles.sectionLabel}>KASABA GELİŞTİRMELERİ</Text>
+      <Text style={styles.sectionLabel}>{t("town.upgradesSectionLabel")}</Text>
       {UPGRADES.map((u) => {
         const level = state.upgrades[u.id];
         const maxed = level >= u.maxLevel;
@@ -123,13 +122,17 @@ export function TownScreen() {
             <Text style={styles.upgradeIcon}>{u.icon}</Text>
             <View style={{ flex: 1 }}>
               <View style={styles.upgradeTitleRow}>
-                <Text style={styles.upgradeName}>{u.name}</Text>
+                <Text style={styles.upgradeName}>{t(u.nameKey)}</Text>
                 <Text style={styles.upgradeLevel}>
-                  Lv {level}/{u.maxLevel}
+                  {t("town.upgradeLevel", { level, max: u.maxLevel })}
                 </Text>
               </View>
-              <Text style={styles.upgradeDesc}>{u.description}</Text>
-              {level > 0 && <Text style={styles.upgradeEffect}>{u.effectLabel(level)}</Text>}
+              <Text style={styles.upgradeDesc}>{t(u.descriptionKey)}</Text>
+              {level > 0 &&
+                (() => {
+                  const effect = u.effectLabel(level);
+                  return <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>;
+                })()}
               <View style={styles.upgradeLevelTrack}>
                 {Array.from({ length: u.maxLevel }).map((_, i) => (
                   <View
@@ -147,14 +150,14 @@ export function TownScreen() {
             >
               {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
               <Text style={styles.upgradeBtnText}>
-                {maxed ? "MAKS" : `${cost} 🪙`}
+                {maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}
               </Text>
             </ScalePressable>
           </View>
         );
       })}
 
-      <Text style={styles.sectionLabel}>ESNAF DURUMU</Text>
+      <Text style={styles.sectionLabel}>{t("town.merchantsSectionLabel")}</Text>
       <View style={styles.buildingsGrid}>
         {GOODS.map((g) => {
           const gs = state.goods[g.id];
@@ -164,7 +167,7 @@ export function TownScreen() {
             <View key={g.id} style={styles.buildingCard}>
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <Text style={styles.buildingIcon}>{g.icon}</Text>
-              <Text style={styles.buildingName}>{g.producer}</Text>
+              <Text style={styles.buildingName}>{t(g.producerKey)}</Text>
               <View style={styles.buildingTrack}>
                 <View
                   style={[
@@ -179,9 +182,9 @@ export function TownScreen() {
         })}
       </View>
 
-      <Text style={styles.sectionLabel}>SON OLAYLAR</Text>
+      <Text style={styles.sectionLabel}>{t("town.eventsSectionLabel")}</Text>
       {state.eventLog.length === 0 && (
-        <Text style={styles.emptyText}>Henüz bir olay yaşanmadı, kasaba sakin.</Text>
+        <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>
       )}
       {state.eventLog.map((event) => (
         <View

@@ -4,7 +4,8 @@ export type TownId = "windyhill" | "ironforge" | "portcity";
 
 export interface ForeignTown {
   id: TownId;
-  name: string;
+  /** i18n key resolved via t() — never render directly */
+  nameKey: string;
   icon: string;
   distanceTicks: number; // how many ticks a caravan takes to get there and back
   tariffRate: number; // cut taken on both exports and imports
@@ -15,7 +16,7 @@ export interface ForeignTown {
 export const TOWNS: ForeignTown[] = [
   {
     id: "windyhill",
-    name: "Rüzgar Tepesi",
+    nameKey: "place.windyhill.name",
     icon: "🌾",
     distanceTicks: 4,
     tariffRate: 0.06,
@@ -23,7 +24,7 @@ export const TOWNS: ForeignTown[] = [
   },
   {
     id: "ironforge",
-    name: "Demirocak",
+    nameKey: "place.ironforge.name",
     icon: "⛏️",
     distanceTicks: 6,
     tariffRate: 0.08,
@@ -31,7 +32,7 @@ export const TOWNS: ForeignTown[] = [
   },
   {
     id: "portcity",
-    name: "Liman Şehri",
+    nameKey: "place.portcity.name",
     icon: "⚓",
     distanceTicks: 8,
     tariffRate: 0.04,

@@ -18,8 +18,8 @@ export type AchievementId =
 
 export interface AchievementDef {
   id: AchievementId;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: string;
   reward: number;
   target: number;
@@ -33,8 +33,8 @@ function goodsOwnedCount(state: EconomyState): number {
 export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "first_trade",
-    title: "İlk Adım",
-    description: "Piyasada ilk alım ya da satımını yap.",
+    titleKey: "achievement.first_trade.title",
+    descriptionKey: "achievement.first_trade.description",
     icon: "🥉",
     reward: 10,
     target: 1,
@@ -42,8 +42,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "trader_10",
-    title: "Tüccar Ruhu",
-    description: "10 alım-satım işlemi tamamla.",
+    titleKey: "achievement.trader_10.title",
+    descriptionKey: "achievement.trader_10.description",
     icon: "🥈",
     reward: 25,
     target: 10,
@@ -51,8 +51,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "trader_50",
-    title: "Deneyimli Tüccar",
-    description: "50 alım-satım işlemi tamamla.",
+    titleKey: "achievement.trader_50.title",
+    descriptionKey: "achievement.trader_50.description",
     icon: "🥇",
     reward: 75,
     target: 50,
@@ -60,8 +60,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "first_caravan",
-    title: "İlk Kervan",
-    description: "Komşu bir kasabaya ilk kervanını yolla.",
+    titleKey: "achievement.first_caravan.title",
+    descriptionKey: "achievement.first_caravan.description",
     icon: "🚚",
     reward: 15,
     target: 1,
@@ -69,8 +69,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "caravan_master_10",
-    title: "Yol Ustası",
-    description: "10 kervan seferini tamamla.",
+    titleKey: "achievement.caravan_master_10.title",
+    descriptionKey: "achievement.caravan_master_10.description",
     icon: "🐪",
     reward: 60,
     target: 10,
@@ -78,8 +78,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "three_towns",
-    title: "Üç Kasabanın Dostu",
-    description: "Komşu üç kasabanın hepsiyle ticaret yap.",
+    titleKey: "achievement.three_towns.title",
+    descriptionKey: "achievement.three_towns.description",
     icon: "🗺️",
     reward: 50,
     target: 3,
@@ -87,8 +87,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "diversify",
-    title: "Çeşitlendirici",
-    description: "Aynı anda 5 farklı üründen sahip ol.",
+    titleKey: "achievement.diversify.title",
+    descriptionKey: "achievement.diversify.description",
     icon: "🧺",
     reward: 40,
     target: 5,
@@ -96,8 +96,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "net_1000",
-    title: "İlk Bin",
-    description: "Net servetini 1.000 🪙 üzerine çıkar.",
+    titleKey: "achievement.net_1000.title",
+    descriptionKey: "achievement.net_1000.description",
     icon: "💰",
     reward: 50,
     target: 1000,
@@ -105,8 +105,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "net_5000",
-    title: "Servet Kralı",
-    description: "Net servetini 5.000 🪙 üzerine çıkar.",
+    titleKey: "achievement.net_5000.title",
+    descriptionKey: "achievement.net_5000.description",
     icon: "👑",
     reward: 150,
     target: 5000,
@@ -114,8 +114,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "net_20000",
-    title: "Ekonomi Efsanesi",
-    description: "Net servetini 20.000 🪙 üzerine çıkar.",
+    titleKey: "achievement.net_20000.title",
+    descriptionKey: "achievement.net_20000.description",
     icon: "🏆",
     reward: 400,
     target: 20000,
@@ -123,8 +123,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "survive_100",
-    title: "Sağlam Temel",
-    description: "Çökmeden 100 tur hayatta kal.",
+    titleKey: "achievement.survive_100.title",
+    descriptionKey: "achievement.survive_100.description",
     icon: "🛡️",
     reward: 30,
     target: 100,
@@ -132,8 +132,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "survive_300",
-    title: "Kriz Yönetimi",
-    description: "Çökmeden 300 tur hayatta kal.",
+    titleKey: "achievement.survive_300.title",
+    descriptionKey: "achievement.survive_300.description",
     icon: "🏛️",
     reward: 100,
     target: 300,
@@ -141,8 +141,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "streak_3",
-    title: "Sadık Tüccar",
-    description: "3 gün üst üste kasabana uğra.",
+    titleKey: "achievement.streak_3.title",
+    descriptionKey: "achievement.streak_3.description",
     icon: "🔥",
     reward: 40,
     target: 3,
@@ -150,8 +150,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "streak_7",
-    title: "Kasaba Efsanesi",
-    description: "7 gün üst üste kasabana uğra.",
+    titleKey: "achievement.streak_7.title",
+    descriptionKey: "achievement.streak_7.description",
     icon: "⭐",
     reward: 120,
     target: 7,

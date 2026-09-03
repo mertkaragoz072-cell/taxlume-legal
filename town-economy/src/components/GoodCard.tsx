@@ -1,5 +1,6 @@
 import React from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { Good, GoodState } from "../economy/types";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT } from "../theme";
@@ -23,6 +24,7 @@ function pctChange(history: number[]): number {
 }
 
 export function GoodCard({ good, state, selected, onPress }: Props) {
+  const { t } = useEconomyContext();
   const change = pctChange(state.history);
   const positive = change >= 0;
   const { opacity, flashColor } = usePriceFlash(state.price);
@@ -46,7 +48,7 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
         </Text>
       </View>
       <PriceChart history={state.history} color={good.color} width={92} height={34} strokeWidth={1.5} />
-      <Text style={styles.name}>{good.name}</Text>
+      <Text style={styles.name}>{t(good.nameKey)}</Text>
       <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
       {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
     </ScalePressable>

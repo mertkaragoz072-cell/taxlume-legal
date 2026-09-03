@@ -19,7 +19,8 @@ export function useLocalNotifications(state: EconomyState) {
   stateRef.current = state;
 
   useEffect(() => {
-    ensureNotificationChannel();
+    ensureNotificationChannel(stateRef.current.language);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

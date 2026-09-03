@@ -1,4 +1,5 @@
 import { DifficultyId } from "./difficulty";
+import { Language } from "../i18n/t";
 import { TownId } from "./towns";
 
 export type GoodId = "bread" | "milk" | "wood" | "iron" | "cloth";
@@ -7,8 +8,9 @@ export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank";
 
 export interface Good {
   id: GoodId;
-  name: string;
-  producer: string;
+  /** i18n key resolved via t() — never render directly */
+  nameKey: string;
+  producerKey: string;
   icon: string;
   color: string;
   /** price when supply sits exactly at baseSupply and the town price index is 100 */
@@ -111,6 +113,7 @@ export interface DailyQuest {
 
 export interface EconomyState {
   townName: string;
+  language: Language;
   difficulty: DifficultyId;
   cash: number;
   tick: number;
@@ -133,7 +136,7 @@ export interface EconomyState {
   upgrades: Record<UpgradeId, number>;
   /** villager tax rate, 0 to TAX_RATE_MAX */
   taxRate: number;
-  /** villager contentment, 0 (isyan) to 100 (çok memnun) */
+  /** villager contentment, 0 (revolt) to 100 (very content) */
   happiness: number;
   /** epoch ms of the last time tick() actually ran (i.e. the app was live) */
   lastSavedAt: number;

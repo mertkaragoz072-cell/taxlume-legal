@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
+import { Language } from "../i18n/t";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 
@@ -15,8 +16,11 @@ interface Props {
   muted: boolean;
   streakCount: number;
   difficulty: DifficultyId;
+  language: Language;
+  t: (key: string, params?: Record<string, string | number>) => string;
   onTogglePause: () => void;
   onToggleMuted: () => void;
+  onToggleLanguage: () => void;
   onReset: () => void;
   onHelp: () => void;
   onEditName: () => void;
@@ -33,8 +37,11 @@ export function InflationHeader({
   muted,
   streakCount,
   difficulty,
+  language,
+  t,
   onTogglePause,
   onToggleMuted,
+  onToggleLanguage,
   onReset,
   onHelp,
   onEditName,
@@ -54,7 +61,7 @@ export function InflationHeader({
           </Pressable>
           <View style={styles.streakBadge}>
             <Text style={styles.streakBadgeText}>
-              {difficultyConfig.icon} {difficultyConfig.label}
+              {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
             </Text>
           </View>
           {streakCount > 0 && (
@@ -64,6 +71,9 @@ export function InflationHeader({
           )}
         </View>
         <View style={styles.controls}>
+          <Pressable onPress={onToggleLanguage} style={styles.iconBtn}>
+            <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
+          </Pressable>
           <Pressable onPress={onHelp} style={styles.iconBtn}>
             <Text style={styles.iconBtnText}>❓</Text>
           </Pressable>
@@ -81,21 +91,21 @@ export function InflationHeader({
 
       <View style={styles.statsRow}>
         <View style={styles.stat}>
-          <Text style={styles.statLabel}>Nakit</Text>
+          <Text style={styles.statLabel}>{t("header.cash")}</Text>
           <Text style={styles.statValue}>{cash.toFixed(1)} 🪙</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statLabel}>Net Servet</Text>
+          <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
           <Text style={styles.statValue}>{netWorth.toFixed(1)} 🪙</Text>
         </View>
         <View style={[styles.stat, styles.inflationStat]}>
           <View style={styles.inflationTextCol}>
-            <Text style={styles.statLabel}>Enflasyon (TPI)</Text>
+            <Text style={styles.statLabel}>{t("header.inflation")}</Text>
             <Text style={[styles.statValue, { color: hot ? "#e0693f" : "#e8c777" }]}>
               {inflationIndex.toFixed(1)}{" "}
               <Text style={{ fontSize: 11 }}>
                 ({inflationRate >= 0 ? "+" : ""}
-                {(inflationRate * 100).toFixed(2)}%/tur)
+                {(inflationRate * 100).toFixed(2)}%{t("header.perTurn")})
               </Text>
             </Text>
           </View>
@@ -156,6 +166,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   iconBtnText: { color: "#f0e3c8", fontSize: 13 },
+  langBtnText: { color: "#e8c777", fontSize: 10, fontWeight: "800" },
   statsRow: { flexDirection: "row", justifyContent: "space-between" },
   stat: { flex: 1 },
   statLabel: { color: "#a0917a", fontSize: 10, marginBottom: 2 },

@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { DECISION_TEMPLATES_BY_ID } from "../economy/decisions";
 import { PendingDecision } from "../economy/types";
 import { CARD_GRADIENT, cardShadow } from "../theme";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function DecisionModal({ decision, onResolve }: Props) {
+  const { t } = useEconomyContext();
   if (!decision) return null;
   const template = DECISION_TEMPLATES_BY_ID[decision.templateId];
   if (!template) return null;
@@ -22,8 +24,8 @@ export function DecisionModal({ decision, onResolve }: Props) {
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.icon}>{template.icon}</Text>
-          <Text style={styles.title}>{template.title}</Text>
-          <Text style={styles.description}>{template.description}</Text>
+          <Text style={styles.title}>{t(template.titleKey)}</Text>
+          <Text style={styles.description}>{t(template.descriptionKey)}</Text>
 
           {template.options.map((option) => (
             <ScalePressable
@@ -32,8 +34,8 @@ export function DecisionModal({ decision, onResolve }: Props) {
               style={styles.option}
               scaleTo={0.96}
             >
-              <Text style={styles.optionLabel}>{option.label}</Text>
-              <Text style={styles.optionHint}>{option.hint}</Text>
+              <Text style={styles.optionLabel}>{t(option.labelKey)}</Text>
+              <Text style={styles.optionHint}>{t(option.hintKey)}</Text>
             </ScalePressable>
           ))}
         </View>

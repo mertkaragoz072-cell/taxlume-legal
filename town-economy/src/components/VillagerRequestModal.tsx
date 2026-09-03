@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Modal, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
 import { CARD_GRADIENT, cardShadow } from "../theme";
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function VillagerRequestModal({ request, holding, onResolve }: Props) {
+  const { t } = useEconomyContext();
   const enterAnim = useRef(new Animated.Value(0)).current;
   const requestId = request?.id;
 
@@ -54,10 +56,13 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
 
           <View style={styles.card}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.title}>Köylü Ricası</Text>
+            <Text style={styles.title}>{t("villagerRequest.title")}</Text>
             <Text style={styles.description}>
-              Bir köylü {request.qty} {good.icon} {good.name} rica ediyor. Verirsen halk memnun olur,
-              reddedersen üzülür.
+              {t("villagerRequest.description", {
+                qty: request.qty,
+                icon: good.icon,
+                good: t(good.nameKey),
+              })}
             </Text>
 
             <ScalePressable
@@ -66,16 +71,18 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
               scaleTo={0.96}
             >
               <Text style={styles.optionLabel}>
-                Ver ({request.qty} {good.icon})
+                {t("villagerRequest.giveBtn", { qty: request.qty, icon: good.icon })}
               </Text>
               <Text style={styles.optionHint}>
-                {canGive ? "😊 mutluluk artar" : `elinde yeterli ${good.name} yok`}
+                {canGive
+                  ? t("villagerRequest.giveHint")
+                  : t("villagerRequest.insufficientHint", { good: t(good.nameKey) })}
               </Text>
             </ScalePressable>
 
             <ScalePressable onPress={() => onResolve(false)} style={styles.option} scaleTo={0.96}>
-              <Text style={styles.optionLabel}>Reddet</Text>
-              <Text style={styles.optionHint}>😞 mutluluk azalır</Text>
+              <Text style={styles.optionLabel}>{t("villagerRequest.refuseBtn")}</Text>
+              <Text style={styles.optionHint}>{t("villagerRequest.refuseHint")}</Text>
             </ScalePressable>
           </View>
         </View>

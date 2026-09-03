@@ -1,46 +1,23 @@
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
 import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
 interface Slide {
   icon: string;
-  title: string;
-  body: string;
+  titleKey: string;
+  bodyKey: string;
 }
 
 const SLIDES: Slide[] = [
-  {
-    icon: "🏘️",
-    title: "Altın Kasaba'ya Hoş Geldin",
-    body: "Bu kasabanın yöneticisi sensin. Ekonomiyi büyüt, halkı memnun tut ve enflasyonu kontrolden çıkarma — hiperenflasyon kasabayı çökertir.",
-  },
-  {
-    icon: "📈",
-    title: "Piyasa",
-    body: "Ekmek, süt, odun, demir ve kumaş al-sat. Fiyatlar arz-talebe göre değişir: çok alırsan fiyat yükselir, satarsan düşer. Büyük alımlar piyasayı daha çok etkiler.",
-  },
-  {
-    icon: "🔥",
-    title: "Enflasyon (TPI)",
-    body: "Üstteki Fiyat Endeksi kasabanın genel enflasyonunu gösterir. Çok yükselirse hiperenflasyon patlar ve oyun biter — göstergeyi göz altında tut.",
-  },
-  {
-    icon: "🚚",
-    title: "Ticaret",
-    body: "Komşu kasabalara kervan gönder. Bir ürünü ucuz olan yerden alıp pahalı olan yere satarak kâr et — ama kervan yolculuğu zaman alır.",
-  },
-  {
-    icon: "🏛️",
-    title: "Vergi ve Yönetim",
-    body: "Köylülerden vergi al ama dikkat: çok vergi halkı sinirlendirir, üretimi düşürür ve enflasyonu hızlandırır. Kazandığın parayla kasabanı geliştir.",
-  },
-  {
-    icon: "🏆",
-    title: "Başarımlar ve Günlük Seri",
-    body: "İlerledikçe başarımlar kazan, her gün uğrayarak günlük bonusunu ve serini büyüt. Şimdi kasabanı yönetmeye başla!",
-  },
+  { icon: "🏘️", titleKey: "tutorial.slide1Title", bodyKey: "tutorial.slide1Body" },
+  { icon: "📈", titleKey: "tutorial.slide2Title", bodyKey: "tutorial.slide2Body" },
+  { icon: "🔥", titleKey: "tutorial.slide3Title", bodyKey: "tutorial.slide3Body" },
+  { icon: "🚚", titleKey: "tutorial.slide4Title", bodyKey: "tutorial.slide4Body" },
+  { icon: "🏛️", titleKey: "tutorial.slide5Title", bodyKey: "tutorial.slide5Body" },
+  { icon: "🏆", titleKey: "tutorial.slide6Title", bodyKey: "tutorial.slide6Body" },
 ];
 
 interface Props {
@@ -49,6 +26,7 @@ interface Props {
 }
 
 export function TutorialModal({ visible, onFinish }: Props) {
+  const { t } = useEconomyContext();
   const [index, setIndex] = useState(0);
   if (!visible) return null;
 
@@ -75,8 +53,8 @@ export function TutorialModal({ visible, onFinish }: Props) {
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.icon}>{slide.icon}</Text>
-          <Text style={styles.title}>{slide.title}</Text>
-          <Text style={styles.body}>{slide.body}</Text>
+          <Text style={styles.title}>{t(slide.titleKey)}</Text>
+          <Text style={styles.body}>{t(slide.bodyKey)}</Text>
 
           <View style={styles.dots}>
             {SLIDES.map((_, i) => (
@@ -86,12 +64,12 @@ export function TutorialModal({ visible, onFinish }: Props) {
 
           <ScalePressable onPress={next} style={styles.nextBtn} scaleTo={0.96}>
             <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-            <Text style={styles.nextBtnText}>{isLast ? "Başla!" : "İleri"}</Text>
+            <Text style={styles.nextBtnText}>{isLast ? t("tutorial.start") : t("tutorial.next")}</Text>
           </ScalePressable>
 
           {!isLast && (
             <ScalePressable onPress={skip} style={styles.skipBtn} scaleTo={0.96}>
-              <Text style={styles.skipBtnText}>Atla</Text>
+              <Text style={styles.skipBtnText}>{t("tutorial.skip")}</Text>
             </ScalePressable>
           )}
         </View>
