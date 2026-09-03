@@ -1,3 +1,4 @@
+import { AssetId } from "./assets";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -29,6 +30,15 @@ export interface GoodState {
   /** current stock in the home market; buying drains it, production/selling replenish it */
   supply: number;
   holding: number;
+}
+
+/** a speculative asset (gold, oil, stocks) — price is a random walk, independent of supply/demand */
+export interface AssetState {
+  price: number;
+  history: number[];
+  holding: number;
+  /** cost-basis average price of current holdings; resets to 0 once holding hits 0 */
+  avgCost: number;
 }
 
 export interface EconomyEvent {
@@ -137,6 +147,8 @@ export interface EconomyState {
   tradeUnlocked: boolean;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
   researched: string[];
+  /** speculative assets (gold, oil, stocks) — separate random-walk market, see assets.ts */
+  assets: Record<AssetId, AssetState>;
   upgrades: Record<UpgradeId, number>;
   /** villager tax rate, 0 to TAX_RATE_MAX */
   taxRate: number;

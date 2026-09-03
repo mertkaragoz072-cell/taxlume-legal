@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { Good, GoodState } from "../economy/types";
 import { CARD_GRADIENT, cardShadow, GREEN_GRADIENT, RED_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
+// Loosened to the fields this panel actually needs (rather than the full
+// Good/GoodState shape) so it can double as an asset buy/sell panel in
+// InvestScreen.
 interface Props {
-  good: Good;
-  state: GoodState;
+  good: { nameKey: string; icon: string; color: string };
+  state: { price: number; holding: number };
   cash: number;
   onTrade: (side: "buy" | "sell", qty: number) => void;
 }

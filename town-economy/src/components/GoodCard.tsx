@@ -1,16 +1,17 @@
 import React from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { Good, GoodState } from "../economy/types";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { ScalePressable } from "./ScalePressable";
 
+// Loosened to the fields this card actually renders (rather than the full
+// Good/GoodState shape) so it can double as an asset card in InvestScreen.
 interface Props {
-  good: Good;
-  state: GoodState;
+  good: { nameKey: string; icon: string; color: string };
+  state: { price: number; history: number[]; holding: number };
   selected: boolean;
   onPress: () => void;
 }

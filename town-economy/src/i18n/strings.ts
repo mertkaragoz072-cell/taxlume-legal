@@ -20,6 +20,7 @@ export const STRINGS = {
       trade: "Ticaret",
       town: "Kasaba",
       research: "Araştırma",
+      invest: "Yatırım",
       achievements: "Hedefler",
     },
     market: {
@@ -179,6 +180,12 @@ export const STRINGS = {
       wine: { name: "Şarap", producer: "Şaraphane" },
       leather: { name: "Deri", producer: "Tabakhane" },
     },
+    asset: {
+      gold: { name: "Altın", description: "Güvenli liman — yavaş ama istikrarlı değer kazanır." },
+      oil: { name: "Petrol", description: "Yüksek oynaklık — sert iniş çıkışlar yaşar." },
+      techStock: { name: "Teknoloji Hissesi", description: "Yüksek risk, yüksek getiri potansiyeli olan büyüme hissesi." },
+      bankStock: { name: "Banka Hissesi", description: "Ilımlı oynaklıkta, düzenli getirili bir hisse." },
+    },
     place: {
       windyhill: { name: "Rüzgar Tepesi" },
       ironforge: { name: "Demirocak" },
@@ -229,6 +236,15 @@ export const STRINGS = {
         t1: { name: "Deri Verimliliği", description: "Daha sağlıklı sürülerle deri üretimini artır." },
         t2: { name: "Tabaklama Ustalığı", description: "Usta tabaklama derinin değerini ve üretimini artırır." },
       },
+    },
+    invest: {
+      sectionNote: "Altın, petrol ve hisselere yatırım yap. Fiyatlar arzdan bağımsız dalgalanır — kâr da edebilirsin, zarar da.",
+      portfolioLabel: "Yatırım Değeri",
+      holdingLabel: "Elinde: {qty}",
+      avgCostLabel: "Ort. maliyet {price} 🪙",
+      noHolding: "Bu varlıktan hiç yok",
+      unrealizedProfit: "Kâr +{amount} 🪙",
+      unrealizedLoss: "Zarar -{amount} 🪙",
     },
     difficulty: {
       easy: { label: "Kolay", description: "Daha çok başlangıç sermayesi, yavaş enflasyon, seyrek ve hafif olaylar." },
@@ -346,6 +362,8 @@ export const STRINGS = {
       workerStrike: "⚒️ Grev başladı! {good} üretimi durdu.",
       workerNoStrike: "⚒️ İşçiler bu sefer sabretti, grev çıkmadı.",
       tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
+      investSoldProfit: "📈 {qty} {asset} sattın, +{amount} 🪙 kâr ettin!",
+      investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
     },
   },
   en: {
@@ -369,6 +387,7 @@ export const STRINGS = {
       trade: "Trade",
       town: "Town",
       research: "Research",
+      invest: "Invest",
       achievements: "Goals",
     },
     market: {
@@ -528,6 +547,12 @@ export const STRINGS = {
       wine: { name: "Wine", producer: "Winery" },
       leather: { name: "Leather", producer: "Tannery" },
     },
+    asset: {
+      gold: { name: "Gold", description: "A safe haven — slow but steady value growth." },
+      oil: { name: "Oil", description: "High volatility — sharp swings up and down." },
+      techStock: { name: "Tech Stock", description: "A high-risk, high-reward growth stock." },
+      bankStock: { name: "Bank Stock", description: "Moderate volatility, steady returns." },
+    },
     place: {
       windyhill: { name: "Windy Hill" },
       ironforge: { name: "Ironforge" },
@@ -578,6 +603,15 @@ export const STRINGS = {
         t1: { name: "Leatherworking Efficiency", description: "Healthier herds boost leather production." },
         t2: { name: "Tanning Mastery", description: "Master tanning raises leather's value and production." },
       },
+    },
+    invest: {
+      sectionNote: "Invest in gold, oil, and stocks. Prices move independently of supply — you can profit, or you can lose.",
+      portfolioLabel: "Investment Value",
+      holdingLabel: "You own: {qty}",
+      avgCostLabel: "Avg. cost {price} 🪙",
+      noHolding: "You don't own any of this yet",
+      unrealizedProfit: "Profit +{amount} 🪙",
+      unrealizedLoss: "Loss -{amount} 🪙",
     },
     difficulty: {
       easy: { label: "Easy", description: "More starting capital, slower inflation, rare and mild events." },
@@ -695,6 +729,8 @@ export const STRINGS = {
       workerStrike: "⚒️ A strike broke out! {good} production stopped.",
       workerNoStrike: "⚒️ The workers held off this time — no strike.",
       tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
+      investSoldProfit: "📈 Sold {qty} {asset}, +{amount} 🪙 profit!",
+      investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",
     },
   },
 } as const;

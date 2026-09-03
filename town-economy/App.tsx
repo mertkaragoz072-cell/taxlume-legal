@@ -15,6 +15,7 @@ import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
+import { InvestScreen } from "./src/screens/InvestScreen";
 import { MarketScreen } from "./src/screens/MarketScreen";
 import { ResearchScreen } from "./src/screens/ResearchScreen";
 import { TownScreen } from "./src/screens/TownScreen";
@@ -116,6 +117,7 @@ function Game() {
       {screen === "trade" && <TradeScreen sounds={sounds} />}
       {screen === "town" && <TownScreen />}
       {screen === "research" && <ResearchScreen />}
+      {screen === "invest" && <InvestScreen />}
       {screen === "achievements" && <AchievementsScreen />}
 
       <TabBar active={screen} onChange={setScreen} />

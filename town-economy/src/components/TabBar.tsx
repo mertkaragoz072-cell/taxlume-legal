@@ -3,7 +3,14 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ScalePressable } from "./ScalePressable";
 
-export type ScreenId = "market" | "inventory" | "trade" | "town" | "research" | "achievements";
+export type ScreenId =
+  | "market"
+  | "inventory"
+  | "trade"
+  | "town"
+  | "research"
+  | "invest"
+  | "achievements";
 
 const TABS: { id: ScreenId; labelKey: string; icon: string }[] = [
   { id: "market", labelKey: "tabs.market", icon: "📈" },
@@ -11,6 +18,7 @@ const TABS: { id: ScreenId; labelKey: string; icon: string }[] = [
   { id: "trade", labelKey: "tabs.trade", icon: "🚚" },
   { id: "town", labelKey: "tabs.town", icon: "🏘️" },
   { id: "research", labelKey: "tabs.research", icon: "🔬" },
+  { id: "invest", labelKey: "tabs.invest", icon: "💹" },
   { id: "achievements", labelKey: "tabs.achievements", icon: "🏆" },
 ];
 

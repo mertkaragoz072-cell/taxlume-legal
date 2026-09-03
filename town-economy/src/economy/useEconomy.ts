@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ACHIEVEMENTS } from "./achievements";
+import { ASSETS, ASSETS_BY_ID, AssetId } from "./assets";
 import { DECISION_TEMPLATES, DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
@@ -56,6 +57,14 @@ const EFFICIENCY_MIN = 0.3;
 const EFFICIENCY_MAX = 1.15;
 const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
 const FOREIGN_NOISE = 0.15;
+
+// --- Investable assets (gold, oil, stocks) -----------------------------
+// A pure random walk (drift + noise, occasionally a fatter-tailed spike)
+// bounded so a bad run can't send a price to zero or off to infinity.
+const ASSET_MIN_FACTOR = 0.2;
+const ASSET_MAX_FACTOR = 6;
+const ASSET_SPIKE_CHANCE = 0.03;
+const ASSET_SPIKE_MULT = 5;
 
 export const TAX_RATE_MAX = 0.5;
 export const TAX_RATE_STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
@@ -133,6 +142,7 @@ type Action =
   | { type: "TICK" }
   | { type: "SELECT_GOOD"; goodId: GoodId }
   | { type: "TRADE"; goodId: GoodId; side: "buy" | "sell"; qty: number }
+  | { type: "TRADE_ASSET"; assetId: AssetId; side: "buy" | "sell"; qty: number }
   | { type: "SEND_CARAVAN"; townId: TownId; goodId: GoodId; direction: CaravanDirection; qty: number }
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
@@ -155,6 +165,10 @@ function makeInitialGoodState(good: Good): GoodState {
     supply: good.baseSupply,
     holding: 0,
   };
+}
+
+function makeInitialAssetState(asset: (typeof ASSETS)[number]): EconomyState["assets"][AssetId] {
+  return { price: asset.basePrice, history: [asset.basePrice], holding: 0, avgCost: 0 };
 }
 
 function makeInitialForeignTownState(townId: TownId): ForeignTownState {
@@ -191,6 +205,10 @@ function initialState(
   for (const town of TOWNS) {
     foreignTowns[town.id] = makeInitialForeignTownState(town.id);
   }
+  const assets = {} as EconomyState["assets"];
+  for (const a of ASSETS) {
+    assets[a.id] = makeInitialAssetState(a);
+  }
   return {
     townName: t(language, "app.defaultTownName"),
     language,
@@ -219,6 +237,7 @@ function initialState(
     unlockedAchievements: [],
     tradeUnlocked: false,
     researched: [],
+    assets,
     upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
     taxRate: 0,
     happiness: 100,
@@ -414,6 +433,21 @@ function tick(state: EconomyState): EconomyState {
     foreignTowns[town.id] = { prices, supply };
   }
 
+  const assets = { ...state.assets };
+  for (const asset of ASSETS) {
+    const as = assets[asset.id];
+    let noise = (Math.random() - 0.5) * 2 * asset.volatility;
+    if (Math.random() < ASSET_SPIKE_CHANCE) {
+      noise += (Math.random() - 0.5) * 2 * asset.volatility * ASSET_SPIKE_MULT;
+    }
+    const price = clamp(
+      as.price * (1 + asset.drift + noise),
+      asset.basePrice * ASSET_MIN_FACTOR,
+      asset.basePrice * ASSET_MAX_FACTOR
+    );
+    assets[asset.id] = { ...as, price, history: pushCapped(as.history, price, HISTORY_LEN) };
+  }
+
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
   let cash = state.cash + taxCashDelta;
@@ -478,6 +512,7 @@ function tick(state: EconomyState): EconomyState {
     inflationHistory,
     goods,
     foreignTowns,
+    assets,
     caravans: stillTraveling,
     cash,
     happiness,
@@ -545,6 +580,58 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
       trades: state.dailyProgress.trades + 1,
       cashEarned: state.dailyProgress.cashEarned + proceeds,
     },
+  };
+}
+
+function tradeAsset(
+  state: EconomyState,
+  assetId: AssetId,
+  side: "buy" | "sell",
+  qty: number
+): EconomyState {
+  if (state.gameOver) return state;
+  const as = state.assets[assetId];
+  const price = as.price;
+
+  if (side === "buy") {
+    const affordable = Math.floor(state.cash / price);
+    const amount = Math.min(qty, affordable);
+    if (amount <= 0) return state;
+    const cost = amount * price;
+    const holding = as.holding + amount;
+    const avgCost = (as.avgCost * as.holding + cost) / holding;
+    return {
+      ...state,
+      cash: state.cash - cost,
+      assets: { ...state.assets, [assetId]: { ...as, holding, avgCost } },
+    };
+  }
+
+  const amount = Math.min(qty, as.holding);
+  if (amount <= 0) return state;
+  const proceeds = amount * price;
+  const holding = as.holding - amount;
+  // Realized profit/loss vs. the cost basis, surfaced right in the event
+  // feed — the whole point of a speculative market is seeing whether a
+  // sale landed above or below what was paid for it.
+  const pnl = (price - as.avgCost) * amount;
+  const asset = ASSETS_BY_ID[assetId];
+  const message = t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
+    asset: t(state.language, asset.nameKey),
+    qty: amount,
+    amount: Math.abs(pnl).toFixed(1),
+  });
+  const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
+  return {
+    ...state,
+    cash: state.cash + proceeds,
+    assets: {
+      ...state.assets,
+      [assetId]: { ...as, holding, avgCost: holding > 0 ? as.avgCost : 0 },
+    },
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
   };
 }
 
@@ -754,7 +841,8 @@ function setLanguage(state: EconomyState, language: Language): EconomyState {
 function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
-    GOODS.reduce((sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price, 0)
+    GOODS.reduce((sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price, 0) +
+    ASSETS.reduce((sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price, 0)
   );
 }
 
@@ -956,6 +1044,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return { ...state, selectedGood: action.goodId };
     case "TRADE":
       return trade(state, action.goodId, action.side, action.qty);
+    case "TRADE_ASSET":
+      return tradeAsset(state, action.assetId, action.side, action.qty);
     case "SEND_CARAVAN":
       return sendCaravan(state, action.townId, action.goodId, action.direction, action.qty);
     case "TOGGLE_PAUSE":
@@ -1060,6 +1150,11 @@ export function useEconomy() {
     []
   );
   const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
+  const tradeAsset_ = useCallback(
+    (assetId: AssetId, side: "buy" | "sell", qty: number) =>
+      dispatch({ type: "TRADE_ASSET", assetId, side, qty }),
+    []
+  );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
   const resolveDecision_ = useCallback(
@@ -1084,7 +1179,11 @@ export function useEconomy() {
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
     0
   );
-  const netWorth = state.cash + portfolioValue;
+  const assetsValue = ASSETS.reduce(
+    (sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price,
+    0
+  );
+  const netWorth = state.cash + portfolioValue + assetsValue;
 
   return {
     state,
@@ -1095,6 +1194,7 @@ export function useEconomy() {
     reset,
     upgrade: upgrade_,
     research: research_,
+    tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
     resolveDecision: resolveDecision_,
@@ -1103,6 +1203,7 @@ export function useEconomy() {
     setLanguage: setLanguage_,
     t: translate,
     portfolioValue,
+    assetsValue,
     netWorth,
     hydrated,
   };
