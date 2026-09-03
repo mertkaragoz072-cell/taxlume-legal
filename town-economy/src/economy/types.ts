@@ -77,6 +77,12 @@ export interface OfflineSummary {
   recentEvents: EconomyEvent[];
 }
 
+export interface PendingDecision {
+  id: number;
+  templateId: string;
+  triggeredAtTick: number;
+}
+
 export interface EconomyState {
   difficulty: DifficultyId;
   cash: number;
@@ -106,4 +112,6 @@ export interface EconomyState {
   lastSavedAt: number;
   /** set once after simulating time passed while the app was closed; null once dismissed */
   offlineSummary: OfflineSummary | null;
+  /** a decision event waiting on the player's choice; freezes the tick loop until resolved */
+  pendingDecision: PendingDecision | null;
 }

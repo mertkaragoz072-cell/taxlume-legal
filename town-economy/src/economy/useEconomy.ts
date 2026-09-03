@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ACHIEVEMENTS } from "./achievements";
+import { DECISION_TEMPLATES, DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
@@ -75,6 +76,11 @@ export const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000; // 8 hours
 export const MAX_OFFLINE_TICKS = 240;
 export const MIN_OFFLINE_MS_TO_SHOW = 60 * 1000; // don't pop up for a quick app switch
 
+// Rarer than passive news (EVENT_TEMPLATES) so each one feels like a
+// distinct moment; freezes the tick loop until answered (see the guard
+// at the top of tick()).
+const DECISION_EVENT_CHANCE = 0.02;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -118,7 +124,8 @@ type Action =
   | { type: "UPGRADE"; upgradeId: UpgradeId }
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
-  | { type: "DISMISS_OFFLINE_SUMMARY" };
+  | { type: "DISMISS_OFFLINE_SUMMARY" }
+  | { type: "RESOLVE_DECISION"; optionId: string };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -179,6 +186,7 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     happiness: 100,
     lastSavedAt: Date.now(),
     offlineSummary: null,
+    pendingDecision: null,
   };
 }
 
@@ -193,7 +201,7 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
 }
 
 function tick(state: EconomyState): EconomyState {
-  if (state.paused || state.gameOver) return state;
+  if (state.paused || state.gameOver || state.pendingDecision) return state;
   const config = DIFFICULTIES[state.difficulty];
 
   // Villager tax & happiness: happiness drifts toward a level set by the
@@ -258,6 +266,17 @@ function tick(state: EconomyState): EconomyState {
       supplyShocks[template.good] = template.supplyShockPct * eventSeverity;
     }
     newEvents.push({ id: nextId++, message: template.message, tone: template.tone });
+  }
+
+  let pendingDecision: EconomyState["pendingDecision"] = state.pendingDecision;
+  if (!pendingDecision && Math.random() < DECISION_EVENT_CHANCE) {
+    const template = DECISION_TEMPLATES[Math.floor(Math.random() * DECISION_TEMPLATES.length)];
+    pendingDecision = { id: nextId, templateId: template.id, triggeredAtTick: state.tick + 1 };
+    newEvents.push({
+      id: nextId++,
+      message: `📢 ${template.title}: kasabanı ilgilendiren bir karar bekliyor.`,
+      tone: "neutral",
+    });
   }
 
   let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness });
@@ -389,6 +408,7 @@ function tick(state: EconomyState): EconomyState {
     paused: gameOver ? true : state.paused,
     stats: { ...state.stats, totalCaravansCompleted },
     lastSavedAt: Date.now(),
+    pendingDecision,
   };
 }
 
@@ -671,6 +691,13 @@ function dismissOfflineSummary(state: EconomyState): EconomyState {
   return { ...state, offlineSummary: null };
 }
 
+function resolveDecision(state: EconomyState, optionId: string): EconomyState {
+  if (!state.pendingDecision) return state;
+  const template = DECISION_TEMPLATES_BY_ID[state.pendingDecision.templateId];
+  if (!template) return { ...state, pendingDecision: null };
+  return template.resolve(state, optionId);
+}
+
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
@@ -697,6 +724,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return offlineAdvance(state, action.ticks, action.elapsedMs);
     case "DISMISS_OFFLINE_SUMMARY":
       return dismissOfflineSummary(state);
+    case "RESOLVE_DECISION":
+      return resolveDecision(state, action.optionId);
     default:
       return state;
   }
@@ -769,6 +798,10 @@ export function useEconomy() {
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
+  const resolveDecision_ = useCallback(
+    (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
+    []
+  );
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -786,6 +819,7 @@ export function useEconomy() {
     upgrade: upgrade_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
+    resolveDecision: resolveDecision_,
     portfolioValue,
     netWorth,
     hydrated,

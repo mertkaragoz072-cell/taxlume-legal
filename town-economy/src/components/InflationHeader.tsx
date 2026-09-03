@@ -16,6 +16,7 @@ interface Props {
   onTogglePause: () => void;
   onToggleMuted: () => void;
   onReset: () => void;
+  onHelp: () => void;
 }
 
 export function InflationHeader({
@@ -31,6 +32,7 @@ export function InflationHeader({
   onTogglePause,
   onToggleMuted,
   onReset,
+  onHelp,
 }: Props) {
   const hot = inflationRate > 0.006;
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -51,6 +53,9 @@ export function InflationHeader({
           )}
         </View>
         <View style={styles.controls}>
+          <Pressable onPress={onHelp} style={styles.iconBtn}>
+            <Text style={styles.iconBtnText}>❓</Text>
+          </Pressable>
           <Pressable onPress={onToggleMuted} style={styles.iconBtn}>
             <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
           </Pressable>

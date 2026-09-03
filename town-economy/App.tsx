@@ -2,11 +2,13 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
+import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { EventBanner } from "./src/components/EventBanner";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
+import { TutorialModal } from "./src/components/TutorialModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
@@ -14,6 +16,7 @@ import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { MarketScreen } from "./src/screens/MarketScreen";
 import { TownScreen } from "./src/screens/TownScreen";
 import { TradeScreen } from "./src/screens/TradeScreen";
+import { hasSeenTutorial, markTutorialSeen } from "./src/tutorial/tutorialStorage";
 
 // On web, browsers block audio.play() until the page has seen a user
 // gesture. Our event/hyperinflation sounds can fire from the tick loop
@@ -30,15 +33,32 @@ if (typeof window !== "undefined") {
 }
 
 function Game() {
-  const { state, togglePause, reset, dismissOfflineSummary, netWorth } = useEconomyContext();
+  const { state, togglePause, reset, dismissOfflineSummary, resolveDecision, netWorth } =
+    useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(false);
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
 
   useLocalNotifications(state);
+
+  useEffect(() => {
+    let cancelled = false;
+    hasSeenTutorial().then((seen) => {
+      if (!cancelled && !seen) setTutorialVisible(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const finishTutorial = () => {
+    setTutorialVisible(false);
+    markTutorialSeen();
+  };
 
   useEffect(() => {
     if (state.lastEvent && state.lastEvent.id !== lastEventId.current) {
@@ -68,6 +88,7 @@ function Game() {
         onTogglePause={togglePause}
         onToggleMuted={sounds.toggleMuted}
         onReset={() => setDifficultyModalVisible(true)}
+        onHelp={() => setTutorialVisible(true)}
       />
       <EventBanner event={state.lastEvent} />
 
@@ -90,6 +111,13 @@ function Game() {
       />
 
       <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
+
+      <DecisionModal
+        decision={!state.offlineSummary && !tutorialVisible ? state.pendingDecision : null}
+        onResolve={resolveDecision}
+      />
+
+      <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
     </SafeAreaView>
   );
 }
