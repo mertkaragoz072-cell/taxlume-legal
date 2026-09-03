@@ -5,13 +5,14 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
-import { UPGRADES, UPGRADES_BY_ID, upgradeCost } from "./upgrades";
+import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
   Caravan,
   CaravanDirection,
   EconomyEvent,
   EconomyState,
   ForeignTownState,
+  Good,
   GoodId,
   GoodState,
   UpgradeId,
@@ -19,19 +20,37 @@ import {
 
 const HISTORY_LEN = 40;
 export const TICK_MS = 1500;
-const BUY_IMPACT = 0.006;
 const EVENT_LOG_CAP = 8;
-const FOREIGN_VOLATILITY_FACTOR = 0.6;
-const FOREIGN_INFLATION_FACTOR = 0.5;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
+
+// --- Supply & demand pricing -------------------------------------------
+// price = basePrice * (townPriceIndex / 100) * scarcity(supply)
+// scarcity = clamp((baseSupply / supply) ^ elasticity, SCARCITY_MIN, SCARCITY_MAX)
+// Buying/selling and production/consumption all move `supply`, not price
+// directly — price is always a pure function of supply + the town price
+// index, so every good's price stays proportional to its base price and
+// to the same macro inflation everything else feels.
+const SCARCITY_MIN = 0.5;
+const SCARCITY_MAX = 2.2;
+const SUPPLY_MIN_FACTOR = 0.15;
+const SUPPLY_MAX_FACTOR = 3;
+const PRODUCTION_NOISE = 0.2; // ± fraction of baseProduction, random per tick
+const PRODUCTION_PENALTY_FACTOR = 0.7; // unhappy villagers produce down to 30% of normal
+const PRODUCTION_BONUS_FACTOR = 0.15; // content villagers produce up to 15% more
+const EFFICIENCY_MIN = 0.3;
+const EFFICIENCY_MAX = 1.15;
+const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
+const FOREIGN_NOISE = 0.15;
 
 export const TAX_RATE_MAX = 0.5;
 export const TAX_RATE_STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
-export const TAX_BASE_REVENUE = 6;
+// Tax is levied on the town's real output (production × current price, a
+// GDP-style base) rather than a flat number, so revenue naturally scales
+// with both prices and how much villagers are actually producing.
+export const TAX_OUTPUT_FACTOR = 0.008;
 const HAPPINESS_TARGET_SLOPE = 220;
 const HAPPINESS_EASE = 0.04;
 const PRODUCTION_INFLATION_FACTOR = 0.003;
-const PRODUCTION_MOMENTUM_FACTOR = 0.01;
 const CONTENT_BONUS_FACTOR = 0.001;
 const ANGRY_THRESHOLD = 20;
 const ANGRY_EVENT_CHANCE = 0.1;
@@ -39,6 +58,37 @@ const ANGRY_CASH_PENALTY = 25;
 const CONTENT_THRESHOLD = 85;
 const CONTENT_EVENT_CHANCE = 0.06;
 const CONTENT_CASH_BONUS = 15;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function scarcityFactor(supply: number, baseSupply: number, elasticity: number): number {
+  const ratio = baseSupply / Math.max(supply, 1);
+  return clamp(Math.pow(ratio, elasticity), SCARCITY_MIN, SCARCITY_MAX);
+}
+
+function priceFromSupply(
+  localBasePrice: number,
+  baseSupply: number,
+  elasticity: number,
+  supply: number,
+  inflationIndex: number
+): number {
+  return localBasePrice * (inflationIndex / 100) * scarcityFactor(supply, baseSupply, elasticity);
+}
+
+function supplyBounds(good: Good): { min: number; max: number } {
+  return { min: good.baseSupply * SUPPLY_MIN_FACTOR, max: good.baseSupply * SUPPLY_MAX_FACTOR };
+}
+
+export function estimateTaxIncomePerTick(state: EconomyState): number {
+  const taxableOutput = GOODS.reduce(
+    (sum, g) => sum + g.baseProduction * state.goods[g.id].price,
+    0
+  );
+  return state.taxRate * taxableOutput * TAX_OUTPUT_FACTOR * (state.happiness / 100);
+}
 
 type Action =
   | { type: "TICK" }
@@ -52,11 +102,11 @@ type Action =
   | { type: "UPGRADE"; upgradeId: UpgradeId }
   | { type: "SET_TAX_RATE"; rate: number };
 
-function makeInitialGoodState(basePrice: number): GoodState {
+function makeInitialGoodState(good: Good): GoodState {
   return {
-    price: basePrice,
-    history: [basePrice],
-    momentum: 0,
+    price: good.basePrice,
+    history: [good.basePrice],
+    supply: good.baseSupply,
     holding: 0,
   };
 }
@@ -64,19 +114,19 @@ function makeInitialGoodState(basePrice: number): GoodState {
 function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   const town = TOWNS_BY_ID[townId];
   const prices = {} as Record<GoodId, number>;
-  const momentum = {} as Record<GoodId, number>;
+  const supply = {} as Record<GoodId, number>;
   for (const g of GOODS) {
-    prices[g.id] = g.basePrice * town.multipliers[g.id];
-    momentum[g.id] = 0;
+    supply[g.id] = g.baseSupply;
+    prices[g.id] = g.basePrice * town.specialty[g.id];
   }
-  return { prices, momentum };
+  return { prices, supply };
 }
 
 function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomyState {
   const config = DIFFICULTIES[difficulty];
   const goods = {} as EconomyState["goods"];
   for (const g of GOODS) {
-    goods[g.id] = makeInitialGoodState(g.basePrice);
+    goods[g.id] = makeInitialGoodState(g);
   }
   const foreignTowns = {} as EconomyState["foreignTowns"];
   for (const t of TOWNS) {
@@ -116,10 +166,6 @@ export function todayString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
 function pushCapped(arr: number[], value: number, cap: number): number[] {
   const next = [...arr, value];
   if (next.length > cap) next.shift();
@@ -138,7 +184,7 @@ function tick(state: EconomyState): EconomyState {
 
   let nextId = state.nextId;
   const newEvents: EconomyEvent[] = [];
-  const goodMomentumBoost: Partial<Record<GoodId, number>> = {};
+  const supplyShocks: Partial<Record<GoodId, number>> = {};
 
   const eventSeverity =
     config.eventSeverity * (1 - state.upgrades.townhall * UPGRADES_BY_ID.townhall.effectPerLevel);
@@ -150,17 +196,17 @@ function tick(state: EconomyState): EconomyState {
       config.inflationMin,
       config.inflationMax
     );
-    if (template.good && template.goodMomentum) {
-      goodMomentumBoost[template.good] = template.goodMomentum;
+    if (template.good && template.supplyShockPct) {
+      supplyShocks[template.good] = template.supplyShockPct * eventSeverity;
     }
     newEvents.push({ id: nextId++, message: template.message, tone: template.tone });
   }
 
   // Villager tax & happiness: happiness drifts toward a level set by the
-  // current tax rate; unhappy villagers produce less (a lingering
-  // inflationary drag + extra upward price momentum) while happy ones
-  // ease inflation slightly. Tax revenue itself scales with happiness too,
-  // so an angry populace also under-pays.
+  // current tax rate; unhappy villagers produce less (a real, lingering
+  // supply shortage that pushes prices up through scarcity, plus a small
+  // monetary-inflation drag) while happy ones produce a bit more and ease
+  // inflation slightly.
   const targetHappiness = clamp(100 - state.taxRate * HAPPINESS_TARGET_SLOPE, 0, 100);
   const happiness = clamp(
     state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE,
@@ -169,13 +215,18 @@ function tick(state: EconomyState): EconomyState {
   );
   const productionPenalty = clamp((50 - happiness) / 50, 0, 1);
   const contentBonus = clamp((happiness - 70) / 30, 0, 1);
+  const productionEfficiency = clamp(
+    1 - productionPenalty * PRODUCTION_PENALTY_FACTOR + contentBonus * PRODUCTION_BONUS_FACTOR,
+    EFFICIENCY_MIN,
+    EFFICIENCY_MAX
+  );
   inflationRate = clamp(
     inflationRate + productionPenalty * PRODUCTION_INFLATION_FACTOR - contentBonus * CONTENT_BONUS_FACTOR,
     config.inflationMin,
     config.inflationMax
   );
 
-  let taxCashDelta = state.taxRate * TAX_BASE_REVENUE * (happiness / 100);
+  let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness });
   if (happiness <= ANGRY_THRESHOLD && Math.random() < ANGRY_EVENT_CHANCE) {
     const penalty = Math.min(state.cash + taxCashDelta, ANGRY_CASH_PENALTY);
     taxCashDelta -= penalty;
@@ -199,18 +250,19 @@ function tick(state: EconomyState): EconomyState {
   const goods = { ...state.goods };
   for (const good of GOODS) {
     const gs = goods[good.id];
-    let momentum = gs.momentum * 0.85 + (Math.random() - 0.5) * good.volatility;
-    momentum += goodMomentumBoost[good.id] ?? 0;
-    momentum += productionPenalty * PRODUCTION_MOMENTUM_FACTOR;
-    momentum = clamp(momentum, -0.25, 0.25);
-
-    const pctChange = inflationRate * good.inflationSensitivity + momentum;
-    const price = Math.max(0.2, gs.price * (1 + pctChange));
+    const { min: minSupply, max: maxSupply } = supplyBounds(good);
+    const noise = 1 + (Math.random() - 0.5) * PRODUCTION_NOISE;
+    const production = good.baseProduction * productionEfficiency * noise;
+    let supply = gs.supply + (production - good.baseProduction);
+    const shockPct = supplyShocks[good.id];
+    if (shockPct) supply *= 1 + shockPct;
+    supply = clamp(supply, minSupply, maxSupply);
+    const price = priceFromSupply(good.basePrice, good.baseSupply, good.elasticity, supply, inflationIndex);
 
     goods[good.id] = {
       ...gs,
       price,
-      momentum,
+      supply,
       history: pushCapped(gs.history, price, HISTORY_LEN),
     };
   }
@@ -219,15 +271,25 @@ function tick(state: EconomyState): EconomyState {
   for (const town of TOWNS) {
     const ts = foreignTowns[town.id];
     const prices = { ...ts.prices };
-    const momentum = { ...ts.momentum };
+    const supply = { ...ts.supply };
     for (const good of GOODS) {
-      let m = momentum[good.id] * 0.85 + (Math.random() - 0.5) * good.volatility * FOREIGN_VOLATILITY_FACTOR;
-      m = clamp(m, -0.2, 0.2);
-      const pct = inflationRate * FOREIGN_INFLATION_FACTOR * good.inflationSensitivity + m;
-      prices[good.id] = Math.max(0.15, prices[good.id] * (1 + pct));
-      momentum[good.id] = m;
+      const { min: minSupply, max: maxSupply } = supplyBounds(good);
+      const s = supply[good.id];
+      const reverted =
+        s +
+        (good.baseSupply - s) * FOREIGN_SUPPLY_REVERSION +
+        (Math.random() - 0.5) * good.baseProduction * FOREIGN_NOISE;
+      const clamped = clamp(reverted, minSupply, maxSupply);
+      supply[good.id] = clamped;
+      prices[good.id] = priceFromSupply(
+        good.basePrice * town.specialty[good.id],
+        good.baseSupply,
+        good.elasticity,
+        clamped,
+        inflationIndex
+      );
     }
-    foreignTowns[town.id] = { prices, momentum };
+    foreignTowns[town.id] = { prices, supply };
   }
 
   const nextTick = state.tick + 1;
@@ -297,10 +359,13 @@ function tick(state: EconomyState): EconomyState {
 
 function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: number): EconomyState {
   if (state.gameOver) return state;
+  const good = GOODS_BY_ID[goodId];
   const gs = state.goods[goodId];
   const price = gs.price;
-  const impact =
-    BUY_IMPACT * (1 - state.upgrades.market * UPGRADES_BY_ID.market.effectPerLevel);
+  // A deeper Pazar Yeri means the same order moves supply (and so price)
+  // proportionally less — real market depth, not an arbitrary damper.
+  const marketDepth = 1 + state.upgrades.market * UPGRADES_BY_ID.market.effectPerLevel;
+  const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
   if (side === "buy") {
     const affordable = Math.floor(state.cash / price);
@@ -315,7 +380,7 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
         [goodId]: {
           ...gs,
           holding: gs.holding + amount,
-          momentum: clamp(gs.momentum + amount * impact, -0.25, 0.25),
+          supply: clamp(gs.supply - amount / marketDepth, minSupply, maxSupply),
         },
       },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
@@ -333,7 +398,7 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
       [goodId]: {
         ...gs,
         holding: gs.holding - amount,
-        momentum: clamp(gs.momentum - amount * impact, -0.25, 0.25),
+        supply: clamp(gs.supply + amount / marketDepth, minSupply, maxSupply),
       },
     },
     stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
@@ -349,6 +414,7 @@ function sendCaravan(
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
   const town = TOWNS_BY_ID[townId];
+  const good = GOODS_BY_ID[goodId];
   const townState = state.foreignTowns[townId];
   const price = townState.prices[goodId];
   const gs = state.goods[goodId];
@@ -359,6 +425,7 @@ function sendCaravan(
     0,
     town.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
   );
+  const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
   if (direction === "export") {
     const amount = Math.min(qty, gs.holding);
@@ -379,6 +446,18 @@ function sendCaravan(
       ...state,
       nextId: state.nextId + 1,
       goods: { ...state.goods, [goodId]: { ...gs, holding: gs.holding - amount } },
+      // Dumping goods into their market floods it — their supply rises
+      // and that good gets cheaper there for the next trader.
+      foreignTowns: {
+        ...state.foreignTowns,
+        [townId]: {
+          ...townState,
+          supply: {
+            ...townState.supply,
+            [goodId]: clamp(townState.supply[goodId] + amount, minSupply, maxSupply),
+          },
+        },
+      },
       caravans: [...state.caravans, caravan],
       stats: {
         ...state.stats,
@@ -406,6 +485,18 @@ function sendCaravan(
     ...state,
     nextId: state.nextId + 1,
     cash: state.cash - cost,
+    // Buying out their stock drains their supply — the same good gets
+    // pricier there, so repeatedly importing the same thing gets worse.
+    foreignTowns: {
+      ...state.foreignTowns,
+      [townId]: {
+        ...townState,
+        supply: {
+          ...townState.supply,
+          [goodId]: clamp(townState.supply[goodId] - amount, minSupply, maxSupply),
+        },
+      },
+    },
     caravans: [...state.caravans, caravan],
     stats: {
       ...state.stats,

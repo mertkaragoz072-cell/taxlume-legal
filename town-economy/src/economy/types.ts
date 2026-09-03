@@ -11,15 +11,21 @@ export interface Good {
   producer: string;
   icon: string;
   color: string;
+  /** price when supply sits exactly at baseSupply and the town price index is 100 */
   basePrice: number;
-  volatility: number; // how jumpy the good's own price is
-  inflationSensitivity: number; // how strongly town inflation drags this price up
+  /** reference stock level supply drifts back toward at equilibrium */
+  baseSupply: number;
+  /** units villagers produce (and, at equilibrium, also consume) per tick */
+  baseProduction: number;
+  /** how strongly a supply shortfall/surplus moves price: price ∝ (baseSupply/supply)^elasticity */
+  elasticity: number;
 }
 
 export interface GoodState {
   price: number;
   history: number[];
-  momentum: number; // short-term drift from buy/sell pressure, decays over time
+  /** current stock in the home market; buying drains it, production/selling replenish it */
+  supply: number;
   holding: number;
 }
 
@@ -31,7 +37,7 @@ export interface EconomyEvent {
 
 export interface ForeignTownState {
   prices: Record<GoodId, number>;
-  momentum: Record<GoodId, number>;
+  supply: Record<GoodId, number>;
 }
 
 export type CaravanDirection = "export" | "import";

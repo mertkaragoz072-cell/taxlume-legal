@@ -3,9 +3,10 @@ import { GoodId } from "./types";
 export interface EventTemplate {
   message: string;
   tone: "good" | "bad" | "neutral";
-  inflationDelta: number; // one-off nudge to the inflation rate
-  good?: GoodId; // optional: also jolts one good's momentum
-  goodMomentum?: number;
+  inflationDelta: number; // one-off nudge to the town-wide inflation rate
+  good?: GoodId; // optional: also shocks one good's local supply
+  /** fractional change applied to that good's supply, e.g. -0.3 = a 30% shortage */
+  supplyShockPct?: number;
 }
 
 export const EVENT_TEMPLATES: EventTemplate[] = [
@@ -19,28 +20,28 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     tone: "bad",
     inflationDelta: 0.001,
     good: "bread",
-    goodMomentum: 0.08,
+    supplyShockPct: -0.32,
   },
   {
     message: "Bereketli hasat! Süt bolluğu fiyatları düşürdü.",
     tone: "good",
     inflationDelta: -0.001,
     good: "milk",
-    goodMomentum: -0.07,
+    supplyShockPct: 0.3,
   },
   {
     message: "Ormanda yangın çıktı, odun arzı azaldı.",
     tone: "bad",
     inflationDelta: 0,
     good: "wood",
-    goodMomentum: 0.09,
+    supplyShockPct: -0.3,
   },
   {
     message: "Yeni maden damarı bulundu, demir ucuzladı.",
     tone: "good",
     inflationDelta: 0,
     good: "iron",
-    goodMomentum: -0.08,
+    supplyShockPct: 0.32,
   },
   {
     message: "Komşu kasabayla ticaret anlaşması enflasyonu yumuşattı.",
@@ -67,6 +68,6 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
     tone: "bad",
     inflationDelta: 0,
     good: "cloth",
-    goodMomentum: 0.07,
+    supplyShockPct: -0.28,
   },
 ];

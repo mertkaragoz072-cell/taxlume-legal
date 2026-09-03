@@ -2,7 +2,7 @@ import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
-import { TAX_BASE_REVENUE, TAX_RATE_STEPS } from "../economy/useEconomy";
+import { estimateTaxIncomePerTick, TAX_RATE_STEPS } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
@@ -29,7 +29,7 @@ export function TownScreen() {
   const { state, upgrade, setTaxRate } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
-  const taxIncomePerTick = state.taxRate * TAX_BASE_REVENUE * (state.happiness / 100);
+  const taxIncomePerTick = estimateTaxIncomePerTick(state);
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
