@@ -31,6 +31,10 @@ export const TICK_MS = 1500;
 const EVENT_LOG_CAP = 8;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const TOWN_NAME_MAX_LENGTH = 24;
+// A new town starts local-market-only; once its net worth proves the
+// player can run an economy, inter-city trade (and the caravan/foreign-
+// town system) opens up. Sticky once crossed — see applyTradeUnlock.
+export const TRADE_UNLOCK_NET_WORTH = 500;
 const DAILY_QUEST_COUNT = 3;
 
 // --- Supply & demand pricing -------------------------------------------
@@ -211,6 +215,7 @@ function initialState(
     },
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
+    tradeUnlocked: false,
     upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
     taxRate: 0,
     happiness: 100,
@@ -760,6 +765,24 @@ function applyAchievements(state: EconomyState): EconomyState {
   };
 }
 
+function applyTradeUnlock(state: EconomyState): EconomyState {
+  if (state.tradeUnlocked) return state;
+  if (computeNetWorth(state) < TRADE_UNLOCK_NET_WORTH) return state;
+
+  const event: EconomyEvent = {
+    id: state.nextId,
+    message: t(state.language, "msg.tradeUnlocked"),
+    tone: "good",
+  };
+  return {
+    ...state,
+    tradeUnlocked: true,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+
 function applyDailyQuests(state: EconomyState): EconomyState {
   const newlyCompleted = state.dailyQuests.filter((q) => {
     if (q.completed) return false;
@@ -811,7 +834,7 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
   for (let i = 0; i < ticks; i++) {
     s = tick(s);
   }
-  s = applyDailyQuests(applyAchievements(s));
+  s = applyTradeUnlock(applyDailyQuests(applyAchievements(s)));
 
   const newAchievements = s.unlockedAchievements
     .filter((id) => !beforeAchievements.includes(id))
@@ -946,7 +969,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
 function reducer(state: EconomyState, action: Action): EconomyState {
   const next = baseReducer(state, action);
   if (next === state || action.type === "RESET") return next;
-  return applyDailyQuests(applyAchievements(next));
+  return applyTradeUnlock(applyDailyQuests(applyAchievements(next)));
 }
 
 export function useEconomy() {

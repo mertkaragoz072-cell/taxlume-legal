@@ -8,6 +8,7 @@ import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, GoodId } from "../economy/types";
 import { UPGRADES_BY_ID } from "../economy/upgrades";
+import { TRADE_UNLOCK_NET_WORTH } from "../economy/useEconomy";
 import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
 
 interface Props {
@@ -17,11 +18,36 @@ interface Props {
 type QtyOption = 1 | 5 | "ALL";
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan, t } = useEconomyContext();
+  const { state, sendCaravan, t, netWorth } = useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
   const [qtyOption, setQtyOption] = useState<QtyOption>(5);
+
+  if (!state.tradeUnlocked) {
+    const pct = Math.max(0, Math.min(1, netWorth / TRADE_UNLOCK_NET_WORTH));
+    return (
+      <ScrollView contentContainerStyle={styles.lockedBody} showsVerticalScrollIndicator={false}>
+        <View style={styles.lockedCard}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <Text style={styles.lockedIcon}>🔒</Text>
+          <Text style={styles.lockedTitle}>{t("trade.locked.title")}</Text>
+          <Text style={styles.lockedDesc}>
+            {t("trade.locked.description", { target: TRADE_UNLOCK_NET_WORTH })}
+          </Text>
+          <View style={styles.lockedTrack}>
+            <View style={[styles.lockedFill, { width: `${pct * 100}%` }]} />
+          </View>
+          <Text style={styles.lockedProgress}>
+            {t("trade.locked.progress", {
+              current: Math.floor(netWorth),
+              target: TRADE_UNLOCK_NET_WORTH,
+            })}
+          </Text>
+        </View>
+      </ScrollView>
+    );
+  }
 
   const town = TOWNS_BY_ID[townId];
   const townState = state.foreignTowns[townId];
@@ -222,6 +248,33 @@ function clamp01(v: number): number {
 
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 40 },
+  lockedBody: { flexGrow: 1, padding: 16, justifyContent: "center" },
+  lockedCard: {
+    borderRadius: 20,
+    padding: 28,
+    alignItems: "center",
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  lockedIcon: { fontSize: 40, marginBottom: 10 },
+  lockedTitle: { color: "#f0e3c8", fontSize: 18, fontWeight: "800", marginBottom: 8, textAlign: "center" },
+  lockedDesc: {
+    color: "#a0917a",
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 18,
+  },
+  lockedTrack: {
+    width: "100%",
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#1a1410",
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  lockedFill: { height: "100%", backgroundColor: "#e8c777", borderRadius: 4 },
+  lockedProgress: { color: "#e8c777", fontSize: 12, fontWeight: "700" },
   sectionLabel: {
     color: "#a0917a",
     fontSize: 11,

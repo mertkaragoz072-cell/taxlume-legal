@@ -20,7 +20,7 @@ export const TOWNS: ForeignTown[] = [
     icon: "🌾",
     distanceTicks: 4,
     tariffRate: 0.06,
-    specialty: { bread: 1.3, milk: 1.25, wood: 0.85, iron: 1.1, cloth: 0.95 },
+    specialty: { bread: 1.3, milk: 1.25, wood: 0.85, iron: 1.1, cloth: 0.95, fish: 1.2, wine: 0.8, leather: 1.05 },
   },
   {
     id: "ironforge",
@@ -28,7 +28,7 @@ export const TOWNS: ForeignTown[] = [
     icon: "⛏️",
     distanceTicks: 6,
     tariffRate: 0.08,
-    specialty: { bread: 1.15, milk: 1.2, wood: 0.75, iron: 0.7, cloth: 1.2 },
+    specialty: { bread: 1.15, milk: 1.2, wood: 0.75, iron: 0.7, cloth: 1.2, fish: 1.3, wine: 1.15, leather: 0.85 },
   },
   {
     id: "portcity",
@@ -36,7 +36,7 @@ export const TOWNS: ForeignTown[] = [
     icon: "⚓",
     distanceTicks: 8,
     tariffRate: 0.04,
-    specialty: { bread: 1.05, milk: 1.05, wood: 1.15, iron: 1.1, cloth: 0.65 },
+    specialty: { bread: 1.05, milk: 1.05, wood: 1.15, iron: 1.1, cloth: 0.65, fish: 0.55, wine: 1.05, leather: 1.15 },
   },
 ];
 

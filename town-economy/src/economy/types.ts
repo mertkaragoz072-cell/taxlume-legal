@@ -2,7 +2,7 @@ import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
 
-export type GoodId = "bread" | "milk" | "wood" | "iron" | "cloth";
+export type GoodId = "bread" | "milk" | "wood" | "iron" | "cloth" | "fish" | "wine" | "leather";
 
 export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank";
 
@@ -133,6 +133,8 @@ export interface EconomyState {
   stats: EconomyStats;
   streak: StreakState;
   unlockedAchievements: string[];
+  /** set once the town's net worth first crosses TRADE_UNLOCK_NET_WORTH; sticky, never re-locks */
+  tradeUnlocked: boolean;
   upgrades: Record<UpgradeId, number>;
   /** villager tax rate, 0 to TAX_RATE_MAX */
   taxRate: number;

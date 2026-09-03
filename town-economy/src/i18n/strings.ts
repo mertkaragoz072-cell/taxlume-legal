@@ -53,6 +53,11 @@ export const STRINGS = {
       turnsLeft: "{n} tur kaldı",
       caravanSentSub: "{qty} {good} gönderildi",
       caravanImportingSub: "{qty} {good} ithal ediliyor",
+      locked: {
+        title: "Ticaret Henüz Kilitli",
+        description: "Şehirler arası ticareti açmak için kasabanın net servetini {target} 🪙'ye çıkar.",
+        progress: "{current} / {target} 🪙",
+      },
     },
     town: {
       moodLabel: "Kasaba Hissiyatı",
@@ -169,6 +174,9 @@ export const STRINGS = {
       wood: { name: "Odun", producer: "Kereste" },
       iron: { name: "Demir", producer: "Maden" },
       cloth: { name: "Kumaş", producer: "Dokumahane" },
+      fish: { name: "Balık", producer: "Balıkçı" },
+      wine: { name: "Şarap", producer: "Şaraphane" },
+      leather: { name: "Deri", producer: "Tabakhane" },
     },
     place: {
       windyhill: { name: "Rüzgar Tepesi" },
@@ -296,6 +304,7 @@ export const STRINGS = {
       workerRaiseSuccess: "⚒️ Zam verdin, işçiler memnun.",
       workerStrike: "⚒️ Grev başladı! {good} üretimi durdu.",
       workerNoStrike: "⚒️ İşçiler bu sefer sabretti, grev çıkmadı.",
+      tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
     },
   },
   en: {
@@ -352,6 +361,11 @@ export const STRINGS = {
       turnsLeft: "{n} turns left",
       caravanSentSub: "{qty} {good} sent",
       caravanImportingSub: "{qty} {good} being imported",
+      locked: {
+        title: "Trade Not Unlocked Yet",
+        description: "Grow your town's net worth to {target} 🪙 to unlock trade with neighboring towns.",
+        progress: "{current} / {target} 🪙",
+      },
     },
     town: {
       moodLabel: "Town Mood",
@@ -468,6 +482,9 @@ export const STRINGS = {
       wood: { name: "Wood", producer: "Lumberyard" },
       iron: { name: "Iron", producer: "Mine" },
       cloth: { name: "Cloth", producer: "Weavery" },
+      fish: { name: "Fish", producer: "Fishery" },
+      wine: { name: "Wine", producer: "Winery" },
+      leather: { name: "Leather", producer: "Tannery" },
     },
     place: {
       windyhill: { name: "Windy Hill" },
@@ -595,6 +612,7 @@ export const STRINGS = {
       workerRaiseSuccess: "⚒️ You gave the raise — the workers are pleased.",
       workerStrike: "⚒️ A strike broke out! {good} production stopped.",
       workerNoStrike: "⚒️ The workers held off this time — no strike.",
+      tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
     },
   },
 } as const;
