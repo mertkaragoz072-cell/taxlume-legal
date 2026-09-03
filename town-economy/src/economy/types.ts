@@ -34,5 +34,6 @@ export interface EconomyState {
   selectedGood: GoodId;
   goods: Record<GoodId, GoodState>;
   lastEvent: EconomyEvent | null;
+  eventLog: EconomyEvent[];
   gameOver: boolean;
 }

@@ -9,7 +9,9 @@ interface Props {
   inflationRate: number;
   inflationHistory: number[];
   paused: boolean;
+  muted: boolean;
   onTogglePause: () => void;
+  onToggleMuted: () => void;
   onReset: () => void;
 }
 
@@ -20,7 +22,9 @@ export function InflationHeader({
   inflationRate,
   inflationHistory,
   paused,
+  muted,
   onTogglePause,
+  onToggleMuted,
   onReset,
 }: Props) {
   const hot = inflationRate > 0.006;
@@ -29,6 +33,9 @@ export function InflationHeader({
       <View style={styles.topLine}>
         <Text style={styles.town}>🏘️ TAXLUME KASABASI</Text>
         <View style={styles.controls}>
+          <Pressable onPress={onToggleMuted} style={styles.iconBtn}>
+            <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
+          </Pressable>
           <Pressable onPress={onTogglePause} style={styles.iconBtn}>
             <Text style={styles.iconBtnText}>{paused ? "▶" : "⏸"}</Text>
           </Pressable>

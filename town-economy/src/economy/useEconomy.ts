@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
+import { loadEconomyState, saveEconomyState } from "./persist";
 import { EconomyEvent, EconomyState, GoodId, GoodState } from "./types";
 
 const HISTORY_LEN = 40;
@@ -18,7 +19,8 @@ type Action =
   | { type: "SELECT_GOOD"; goodId: GoodId }
   | { type: "TRADE"; goodId: GoodId; side: "buy" | "sell"; qty: number }
   | { type: "TOGGLE_PAUSE" }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "HYDRATE"; state: EconomyState };
 
 function makeInitialGoodState(basePrice: number): GoodState {
   return {
@@ -44,9 +46,12 @@ function initialState(): EconomyState {
     selectedGood: GOODS[0].id,
     goods,
     lastEvent: null,
+    eventLog: [],
     gameOver: false,
   };
 }
+
+const EVENT_LOG_CAP = 8;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -109,6 +114,11 @@ function tick(state: EconomyState): EconomyState {
     };
   }
 
+  const eventLog =
+    lastEvent && lastEvent.id !== state.lastEvent?.id
+      ? [lastEvent, ...state.eventLog].slice(0, EVENT_LOG_CAP)
+      : state.eventLog;
+
   return {
     ...state,
     tick: state.tick + 1,
@@ -117,6 +127,7 @@ function tick(state: EconomyState): EconomyState {
     inflationHistory,
     goods,
     lastEvent,
+    eventLog,
     gameOver,
     paused: gameOver ? true : state.paused,
   };
@@ -175,6 +186,8 @@ function reducer(state: EconomyState, action: Action): EconomyState {
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "RESET":
       return initialState();
+    case "HYDRATE":
+      return action.state;
     default:
       return state;
   }
@@ -183,6 +196,7 @@ function reducer(state: EconomyState, action: Action): EconomyState {
 export function useEconomy() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     intervalRef.current = setInterval(() => dispatch({ type: "TICK" }), TICK_MS);
@@ -190,6 +204,24 @@ export function useEconomy() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  // Load any previous save once on mount, then start persisting future changes.
+  useEffect(() => {
+    let cancelled = false;
+    loadEconomyState().then((saved) => {
+      if (cancelled) return;
+      if (saved) dispatch({ type: "HYDRATE", state: saved });
+      setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveEconomyState(state);
+  }, [state, hydrated]);
 
   const selectGood = useCallback((goodId: GoodId) => dispatch({ type: "SELECT_GOOD", goodId }), []);
   const trade_ = useCallback(
@@ -205,7 +237,7 @@ export function useEconomy() {
   );
   const netWorth = state.cash + portfolioValue;
 
-  return { state, selectGood, trade: trade_, togglePause, reset, portfolioValue, netWorth };
+  return { state, selectGood, trade: trade_, togglePause, reset, portfolioValue, netWorth, hydrated };
 }
 
 export { GOODS, GOODS_BY_ID };

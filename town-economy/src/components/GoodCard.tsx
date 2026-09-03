@@ -1,7 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { Good, GoodState } from "../economy/types";
+import { usePriceFlash } from "../hooks/usePriceFlash";
 import { PriceChart } from "./PriceChart";
+import { ScalePressable } from "./ScalePressable";
 
 interface Props {
   good: Good;
@@ -21,12 +23,17 @@ function pctChange(history: number[]): number {
 export function GoodCard({ good, state, selected, onPress }: Props) {
   const change = pctChange(state.history);
   const positive = change >= 0;
+  const { opacity, flashColor } = usePriceFlash(state.price);
 
   return (
-    <Pressable
+    <ScalePressable
       onPress={onPress}
       style={[styles.card, selected && { borderColor: good.color, borderWidth: 2 }]}
     >
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
+      />
       <View style={styles.topRow}>
         <Text style={styles.icon}>{good.icon}</Text>
         <Text style={[styles.change, { color: positive ? "#3fae5c" : "#c94b4b" }]}>
@@ -38,7 +45,7 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
       <Text style={styles.name}>{good.name}</Text>
       <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
       {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
-    </Pressable>
+    </ScalePressable>
   );
 }
 
@@ -52,6 +59,10 @@ const styles = StyleSheet.create({
     padding: 10,
     marginRight: 10,
     alignItems: "center",
+    overflow: "hidden",
+  },
+  flashOverlay: {
+    borderRadius: 14,
   },
   topRow: {
     flexDirection: "row",
