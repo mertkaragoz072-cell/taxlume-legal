@@ -61,6 +61,17 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
             )}
           </View>
 
+          {summary.newQuests.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>TAMAMLANAN GÖREVLER</Text>
+              {summary.newQuests.map((title) => (
+                <Text key={title} style={styles.achievementText}>
+                  ✅ {title}
+                </Text>
+              ))}
+            </View>
+          )}
+
           {summary.newAchievements.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>KAZANILAN BAŞARIMLAR</Text>

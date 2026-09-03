@@ -5,6 +5,7 @@ import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { loadEconomyState, saveEconomyState } from "./persist";
+import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
@@ -25,6 +26,7 @@ const EVENT_LOG_CAP = 8;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const DEFAULT_TOWN_NAME = "Taxlume Kasabası";
 export const TOWN_NAME_MAX_LENGTH = 24;
+const DAILY_QUEST_COUNT = 3;
 
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
@@ -150,6 +152,16 @@ function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   return { prices, supply };
 }
 
+function makeDailyQuests(dateSeed: string): EconomyState["dailyQuests"] {
+  return pickDailyQuestTemplates(dateSeed, DAILY_QUEST_COUNT).map((template) => ({
+    id: `${dateSeed}-${template.id}`,
+    templateId: template.id,
+    target: template.target,
+    reward: template.reward,
+    completed: false,
+  }));
+}
+
 function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomyState {
   const config = DIFFICULTIES[difficulty];
   const goods = {} as EconomyState["goods"];
@@ -191,6 +203,8 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     lastSavedAt: Date.now(),
     offlineSummary: null,
     pendingDecision: null,
+    dailyProgress: makeInitialDailyProgress(),
+    dailyQuests: makeDailyQuests("init"),
   };
 }
 
@@ -352,6 +366,7 @@ function tick(state: EconomyState): EconomyState {
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
   let cash = state.cash + taxCashDelta;
+  let dailyCashEarned = state.dailyProgress.cashEarned + Math.max(0, taxCashDelta);
   let totalCaravansCompleted = state.stats.totalCaravansCompleted;
   for (const caravan of state.caravans) {
     if (caravan.arrivesAtTick > nextTick) {
@@ -363,6 +378,7 @@ function tick(state: EconomyState): EconomyState {
     totalCaravansCompleted += 1;
     if (caravan.direction === "export") {
       cash += caravan.amount;
+      dailyCashEarned += caravan.amount;
       newEvents.push({
         id: nextId++,
         message: `🚚 Kervan ${town.name}'dan döndü: +${caravan.amount.toFixed(1)} 🪙 (${caravan.qty} ${good.name})`,
@@ -413,6 +429,7 @@ function tick(state: EconomyState): EconomyState {
     stats: { ...state.stats, totalCaravansCompleted },
     lastSavedAt: Date.now(),
     pendingDecision,
+    dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
 
@@ -443,6 +460,7 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
         },
       },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
+      dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
     };
   }
 
@@ -461,6 +479,11 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
       },
     },
     stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
+    dailyProgress: {
+      ...state.dailyProgress,
+      trades: state.dailyProgress.trades + 1,
+      cashEarned: state.dailyProgress.cashEarned + proceeds,
+    },
   };
 }
 
@@ -480,6 +503,9 @@ function sendCaravan(
   const townsTradedWith = state.stats.townsTradedWith.includes(townId)
     ? state.stats.townsTradedWith
     : [...state.stats.townsTradedWith, townId];
+  const townsTradedToday = state.dailyProgress.townsTraded.includes(townId)
+    ? state.dailyProgress.townsTraded
+    : [...state.dailyProgress.townsTraded, townId];
   const tariffRate = Math.max(
     0,
     town.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
@@ -523,6 +549,11 @@ function sendCaravan(
         totalCaravansSent: state.stats.totalCaravansSent + 1,
         townsTradedWith,
       },
+      dailyProgress: {
+        ...state.dailyProgress,
+        caravansSent: state.dailyProgress.caravansSent + 1,
+        townsTraded: townsTradedToday,
+      },
     };
   }
 
@@ -562,6 +593,11 @@ function sendCaravan(
       totalCaravansSent: state.stats.totalCaravansSent + 1,
       townsTradedWith,
     },
+    dailyProgress: {
+      ...state.dailyProgress,
+      caravansSent: state.dailyProgress.caravansSent + 1,
+      townsTraded: townsTradedToday,
+    },
   };
 }
 
@@ -600,6 +636,10 @@ function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     streak: { count, lastOpenedDate: today },
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    // A genuinely new day (this function only reaches here when one
+    // started) resets the daily quest board and its progress counters.
+    dailyProgress: makeInitialDailyProgress(),
+    dailyQuests: makeDailyQuests(today),
   };
 }
 
@@ -614,6 +654,10 @@ function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
     ...state,
     cash: state.cash - cost,
     upgrades: { ...state.upgrades, [upgradeId]: level + 1 },
+    dailyProgress: {
+      ...state.dailyProgress,
+      upgradesBought: state.dailyProgress.upgradesBought + 1,
+    },
   };
 }
 
@@ -664,11 +708,46 @@ function applyAchievements(state: EconomyState): EconomyState {
   };
 }
 
+function applyDailyQuests(state: EconomyState): EconomyState {
+  const newlyCompleted = state.dailyQuests.filter((q) => {
+    if (q.completed) return false;
+    const template = QUEST_TEMPLATES_BY_ID[q.templateId];
+    return !!template && template.progress(state.dailyProgress) >= q.target;
+  });
+  if (newlyCompleted.length === 0) return state;
+
+  let nextId = state.nextId;
+  let cash = state.cash;
+  const newEvents: EconomyEvent[] = [];
+  const completedIds = new Set(newlyCompleted.map((q) => q.id));
+  for (const q of newlyCompleted) {
+    const template = QUEST_TEMPLATES_BY_ID[q.templateId];
+    cash += q.reward;
+    newEvents.push({
+      id: nextId++,
+      message: `✅ Görev tamamlandı: ${template.icon} ${template.title} (+${q.reward} 🪙)`,
+      tone: "good",
+    });
+  }
+
+  return {
+    ...state,
+    cash,
+    nextId,
+    dailyQuests: state.dailyQuests.map((q) =>
+      completedIds.has(q.id) ? { ...q, completed: true } : q
+    ),
+    lastEvent: newEvents[newEvents.length - 1],
+    eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
+  };
+}
+
 function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): EconomyState {
   if (ticks <= 0) return state;
   const beforeCash = state.cash;
   const beforeNetWorth = computeNetWorth(state);
   const beforeAchievements = state.unlockedAchievements;
+  const beforeCompletedQuests = state.dailyQuests.filter((q) => q.completed).map((q) => q.id);
   const beforeCaravansCompleted = state.stats.totalCaravansCompleted;
   const wasGameOver = state.gameOver;
 
@@ -676,11 +755,16 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
   for (let i = 0; i < ticks; i++) {
     s = tick(s);
   }
-  s = applyAchievements(s);
+  s = applyDailyQuests(applyAchievements(s));
 
   const newAchievements = s.unlockedAchievements
     .filter((id) => !beforeAchievements.includes(id))
     .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.title)
+    .filter((title): title is string => !!title);
+
+  const newQuests = s.dailyQuests
+    .filter((q) => q.completed && !beforeCompletedQuests.includes(q.id))
+    .map((q) => QUEST_TEMPLATES_BY_ID[q.templateId]?.title)
     .filter((title): title is string => !!title);
 
   const summary = {
@@ -690,6 +774,7 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
     netWorthDelta: computeNetWorth(s) - beforeNetWorth,
     caravansCompleted: s.stats.totalCaravansCompleted - beforeCaravansCompleted,
     newAchievements,
+    newQuests,
     hyperinflationHappened: !wasGameOver && s.gameOver,
     recentEvents: s.eventLog.slice(0, 5),
   };
@@ -748,7 +833,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
 function reducer(state: EconomyState, action: Action): EconomyState {
   const next = baseReducer(state, action);
   if (next === state || action.type === "RESET") return next;
-  return applyAchievements(next);
+  return applyDailyQuests(applyAchievements(next));
 }
 
 export function useEconomy() {

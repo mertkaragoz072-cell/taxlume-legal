@@ -9,7 +9,7 @@ const TABS: { id: ScreenId; label: string; icon: string }[] = [
   { id: "inventory", label: "Envanter", icon: "🎒" },
   { id: "trade", label: "Ticaret", icon: "🚚" },
   { id: "town", label: "Kasaba", icon: "🏘️" },
-  { id: "achievements", label: "Başarım", icon: "🏆" },
+  { id: "achievements", label: "Hedefler", icon: "🏆" },
 ];
 
 interface Props {

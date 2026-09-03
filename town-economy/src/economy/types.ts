@@ -73,6 +73,7 @@ export interface OfflineSummary {
   netWorthDelta: number;
   caravansCompleted: number;
   newAchievements: string[];
+  newQuests: string[];
   hyperinflationHappened: boolean;
   recentEvents: EconomyEvent[];
 }
@@ -81,6 +82,23 @@ export interface PendingDecision {
   id: number;
   templateId: string;
   triggeredAtTick: number;
+}
+
+/** counters that reset each day and back the daily quests' progress */
+export interface DailyProgress {
+  trades: number;
+  caravansSent: number;
+  townsTraded: TownId[];
+  cashEarned: number;
+  upgradesBought: number;
+}
+
+export interface DailyQuest {
+  id: string;
+  templateId: string;
+  target: number;
+  reward: number;
+  completed: boolean;
 }
 
 export interface EconomyState {
@@ -115,4 +133,6 @@ export interface EconomyState {
   offlineSummary: OfflineSummary | null;
   /** a decision event waiting on the player's choice; freezes the tick loop until resolved */
   pendingDecision: PendingDecision | null;
+  dailyProgress: DailyProgress;
+  dailyQuests: DailyQuest[];
 }

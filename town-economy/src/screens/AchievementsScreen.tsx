@@ -2,10 +2,12 @@ import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ACHIEVEMENTS } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 
 export function AchievementsScreen() {
   const { state, netWorth } = useEconomyContext();
   const unlockedCount = state.unlockedAchievements.length;
+  const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -25,6 +27,46 @@ export function AchievementsScreen() {
           </Text>
         </View>
       </View>
+
+      <View style={styles.questHeaderRow}>
+        <Text style={styles.sectionLabel}>GÜNLÜK GÖREVLER</Text>
+        <Text style={styles.questCount}>
+          {completedQuestCount} / {state.dailyQuests.length} tamamlandı
+        </Text>
+      </View>
+      <Text style={styles.questNote}>Her gün yeni görevler gelir, yarın tekrar uğra.</Text>
+      {state.dailyQuests.map((q) => {
+        const template = QUEST_TEMPLATES_BY_ID[q.templateId];
+        if (!template) return null;
+        const current = Math.min(template.progress(state.dailyProgress), q.target);
+        const pct = q.target > 0 ? Math.min(1, current / q.target) : q.completed ? 1 : 0;
+        return (
+          <View key={q.id} style={[styles.card, q.completed && styles.cardUnlocked]}>
+            <Text style={[styles.icon, !q.completed && styles.iconLocked]}>
+              {q.completed ? "✅" : template.icon}
+            </Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.titleRow}>
+                <Text style={[styles.title, q.completed && styles.titleUnlocked]}>
+                  {template.title}
+                </Text>
+                <Text style={styles.reward}>+{q.reward} 🪙</Text>
+              </View>
+              <Text style={styles.description}>{template.description}</Text>
+              {!q.completed && (
+                <>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, { width: `${pct * 100}%` }]} />
+                  </View>
+                  <Text style={styles.progressText}>
+                    {Math.floor(current)} / {q.target}
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
+        );
+      })}
 
       <Text style={styles.sectionLabel}>BAŞARIMLAR</Text>
       {ACHIEVEMENTS.map((a) => {
@@ -69,12 +111,21 @@ const styles = StyleSheet.create({
   streakRow: { flexDirection: "row", alignItems: "center" },
   streakEmoji: { fontSize: 16, marginRight: 6 },
   streakText: { color: "#f0e3c8", fontSize: 12 },
+  questHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  questCount: { color: "#e8c777", fontSize: 11, fontWeight: "700" },
+  questNote: { color: "#6b5f4d", fontSize: 10, marginBottom: 10 },
   sectionLabel: {
     color: "#a0917a",
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
     marginBottom: 10,
+    marginTop: 6,
   },
   card: {
     flexDirection: "row",
