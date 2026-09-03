@@ -19,6 +19,7 @@ export const STRINGS = {
       inventory: "Envanter",
       trade: "Ticaret",
       town: "Kasaba",
+      research: "Araştırma",
       achievements: "Hedefler",
     },
     market: {
@@ -189,6 +190,46 @@ export const STRINGS = {
       townhall: { name: "Belediye Binası", description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.", effect: "Kriz şiddeti -%{pct}" },
       bank: { name: "Banka", description: "Günlük giriş bonusunu artırır.", effect: "Günlük bonus +{amount} 🪙" },
     },
+    research: {
+      sectionNote: "Ürünlere yatırım yaparak üretim hızını ve değerini kalıcı olarak artır.",
+      researchedBadge: "✅ Araştırıldı",
+      lockedRequires: "Önce {name} gerekli",
+      effectProduction: "+%{pct} üretim",
+      effectValue: "+%{pct} değer",
+      researchBtn: "Araştır ({cost} 🪙)",
+      bread: {
+        t1: { name: "Ekmek Verimliliği", description: "Daha iyi fırın teknikleriyle ekmek üretimini artır." },
+        t2: { name: "Fırın Ustalığı", description: "Usta fırıncılık ekmeğin hem üretimini hem değerini yükseltir." },
+      },
+      milk: {
+        t1: { name: "Süt Verimliliği", description: "Daha sağlıklı sürülerle süt üretimini artır." },
+        t2: { name: "Mandıra Ustalığı", description: "Gelişmiş mandıracılık sütün değerini ve üretimini artırır." },
+      },
+      wood: {
+        t1: { name: "Odun Verimliliği", description: "Daha keskin baltalar ve testerelerle odun üretimini artır." },
+        t2: { name: "Kereste Ustalığı", description: "Usta marangozluk kerestenin değerini ve üretimini artırır." },
+      },
+      iron: {
+        t1: { name: "Demir Verimliliği", description: "Daha derin galerilerle demir üretimini artır." },
+        t2: { name: "Dökümcü Ustalığı", description: "Usta dökümcülük demirin değerini ve üretimini artırır." },
+      },
+      cloth: {
+        t1: { name: "Kumaş Verimliliği", description: "Daha hızlı tezgahlarla kumaş üretimini artır." },
+        t2: { name: "Dokuma Ustalığı", description: "Usta dokumacılık kumaşın değerini ve üretimini artırır." },
+      },
+      fish: {
+        t1: { name: "Balıkçılık Verimliliği", description: "Daha iyi ağlar ve teknelerle balık avını artır." },
+        t2: { name: "Balık İşleme Ustalığı", description: "Usta işleme balığın değerini ve avını artırır." },
+      },
+      wine: {
+        t1: { name: "Bağcılık Verimliliği", description: "Daha verimli bağlarla üzüm hasadını artır." },
+        t2: { name: "Şarapçılık Ustalığı", description: "Usta şarapçılık şarabın değerini ve üretimini artırır." },
+      },
+      leather: {
+        t1: { name: "Deri Verimliliği", description: "Daha sağlıklı sürülerle deri üretimini artır." },
+        t2: { name: "Tabaklama Ustalığı", description: "Usta tabaklama derinin değerini ve üretimini artırır." },
+      },
+    },
     difficulty: {
       easy: { label: "Kolay", description: "Daha çok başlangıç sermayesi, yavaş enflasyon, seyrek ve hafif olaylar." },
       normal: { label: "Orta", description: "Dengeli bir kasaba ekonomisi. Standart oynanış." },
@@ -327,6 +368,7 @@ export const STRINGS = {
       inventory: "Inventory",
       trade: "Trade",
       town: "Town",
+      research: "Research",
       achievements: "Goals",
     },
     market: {
@@ -496,6 +538,46 @@ export const STRINGS = {
       caravanserai: { name: "Caravanserai", description: "Lowers the tariff on trade with neighboring towns.", effect: "Tariff -{pct}%" },
       townhall: { name: "Town Hall", description: "Good governance softens the severity of economic crises.", effect: "Crisis severity -{pct}%" },
       bank: { name: "Bank", description: "Increases the daily login bonus.", effect: "Daily bonus +{amount} 🪙" },
+    },
+    research: {
+      sectionNote: "Invest in goods to permanently boost their production speed and value.",
+      researchedBadge: "✅ Researched",
+      lockedRequires: "Requires {name} first",
+      effectProduction: "+{pct}% production",
+      effectValue: "+{pct}% value",
+      researchBtn: "Research ({cost} 🪙)",
+      bread: {
+        t1: { name: "Bread Efficiency", description: "Better baking techniques boost bread production." },
+        t2: { name: "Baking Mastery", description: "Master bakers raise both bread's value and production." },
+      },
+      milk: {
+        t1: { name: "Milk Efficiency", description: "Healthier herds boost milk production." },
+        t2: { name: "Dairy Mastery", description: "Advanced dairying raises milk's value and production." },
+      },
+      wood: {
+        t1: { name: "Wood Efficiency", description: "Sharper axes and saws boost wood production." },
+        t2: { name: "Lumber Mastery", description: "Skilled carpentry raises lumber's value and production." },
+      },
+      iron: {
+        t1: { name: "Iron Efficiency", description: "Deeper shafts boost iron production." },
+        t2: { name: "Smelting Mastery", description: "Master smelting raises iron's value and production." },
+      },
+      cloth: {
+        t1: { name: "Cloth Efficiency", description: "Faster looms boost cloth production." },
+        t2: { name: "Weaving Mastery", description: "Master weaving raises cloth's value and production." },
+      },
+      fish: {
+        t1: { name: "Fishing Efficiency", description: "Better nets and boats boost your catch." },
+        t2: { name: "Fish Processing Mastery", description: "Skilled processing raises fish's value and catch." },
+      },
+      wine: {
+        t1: { name: "Viticulture Efficiency", description: "More productive vineyards boost the grape harvest." },
+        t2: { name: "Winemaking Mastery", description: "Master winemaking raises wine's value and production." },
+      },
+      leather: {
+        t1: { name: "Leatherworking Efficiency", description: "Healthier herds boost leather production." },
+        t2: { name: "Tanning Mastery", description: "Master tanning raises leather's value and production." },
+      },
     },
     difficulty: {
       easy: { label: "Easy", description: "More starting capital, slower inflation, rare and mild events." },

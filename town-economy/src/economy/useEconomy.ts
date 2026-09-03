@@ -6,6 +6,7 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
+import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
@@ -138,6 +139,7 @@ type Action =
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
   | { type: "UPGRADE"; upgradeId: UpgradeId }
+  | { type: "RESEARCH"; nodeId: string }
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
@@ -216,6 +218,7 @@ function initialState(
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
     tradeUnlocked: false,
+    researched: [],
     upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
     taxRate: 0,
     happiness: 100,
@@ -362,12 +365,20 @@ function tick(state: EconomyState): EconomyState {
     const gs = goods[good.id];
     const { min: minSupply, max: maxSupply } = supplyBounds(good);
     const noise = 1 + (Math.random() - 0.5) * PRODUCTION_NOISE;
-    const production = good.baseProduction * productionEfficiency * noise;
+    const researchedProductionMult = researchMultiplier(state.researched, good.id, "production");
+    const researchedValueMult = researchMultiplier(state.researched, good.id, "value");
+    const production = good.baseProduction * productionEfficiency * noise * researchedProductionMult;
     let supply = gs.supply + (production - good.baseProduction);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
     supply = clamp(supply, minSupply, maxSupply);
-    const price = priceFromSupply(good.basePrice, good.baseSupply, good.elasticity, supply, inflationIndex);
+    const price = priceFromSupply(
+      good.basePrice * researchedValueMult,
+      good.baseSupply,
+      good.elasticity,
+      supply,
+      inflationIndex
+    );
 
     goods[good.id] = {
       ...gs,
@@ -391,8 +402,9 @@ function tick(state: EconomyState): EconomyState {
         (Math.random() - 0.5) * good.baseProduction * FOREIGN_NOISE;
       const clamped = clamp(reverted, minSupply, maxSupply);
       supply[good.id] = clamped;
+      const researchedValueMult = researchMultiplier(state.researched, good.id, "value");
       prices[good.id] = priceFromSupply(
-        good.basePrice * town.specialty[good.id],
+        good.basePrice * town.specialty[good.id] * researchedValueMult,
         good.baseSupply,
         good.elasticity,
         clamped,
@@ -710,6 +722,20 @@ function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
   };
 }
 
+function research(state: EconomyState, nodeId: string): EconomyState {
+  if (state.gameOver) return state;
+  if (state.researched.includes(nodeId)) return state;
+  const node = RESEARCH_NODES_BY_ID[nodeId];
+  if (!node) return state;
+  if (node.requires && !state.researched.includes(node.requires)) return state;
+  if (state.cash < node.cost) return state;
+  return {
+    ...state,
+    cash: state.cash - node.cost,
+    researched: [...state.researched, nodeId],
+  };
+}
+
 function setTaxRate(state: EconomyState, rate: number): EconomyState {
   if (state.gameOver) return state;
   return { ...state, taxRate: clamp(rate, 0, TAX_RATE_MAX) };
@@ -947,6 +973,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return dailyCheckIn(state, action.today);
     case "UPGRADE":
       return upgrade(state, action.upgradeId);
+    case "RESEARCH":
+      return research(state, action.nodeId);
     case "SET_TAX_RATE":
       return setTaxRate(state, action.rate);
     case "OFFLINE_ADVANCE":
@@ -1031,6 +1059,7 @@ export function useEconomy() {
     (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
     []
   );
+  const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
   const resolveDecision_ = useCallback(
@@ -1065,6 +1094,7 @@ export function useEconomy() {
     togglePause,
     reset,
     upgrade: upgrade_,
+    research: research_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
     resolveDecision: resolveDecision_,

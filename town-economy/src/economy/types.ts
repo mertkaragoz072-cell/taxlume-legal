@@ -135,6 +135,8 @@ export interface EconomyState {
   unlockedAchievements: string[];
   /** set once the town's net worth first crosses TRADE_UNLOCK_NET_WORTH; sticky, never re-locks */
   tradeUnlocked: boolean;
+  /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
+  researched: string[];
   upgrades: Record<UpgradeId, number>;
   /** villager tax rate, 0 to TAX_RATE_MAX */
   taxRate: number;

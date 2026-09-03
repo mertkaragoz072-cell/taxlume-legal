@@ -16,6 +16,7 @@ import { useLocalNotifications } from "./src/notifications/useLocalNotifications
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { MarketScreen } from "./src/screens/MarketScreen";
+import { ResearchScreen } from "./src/screens/ResearchScreen";
 import { TownScreen } from "./src/screens/TownScreen";
 import { TradeScreen } from "./src/screens/TradeScreen";
 import { hasSeenTutorial, markTutorialSeen } from "./src/tutorial/tutorialStorage";
@@ -114,6 +115,7 @@ function Game() {
       {screen === "inventory" && <InventoryScreen />}
       {screen === "trade" && <TradeScreen sounds={sounds} />}
       {screen === "town" && <TownScreen />}
+      {screen === "research" && <ResearchScreen />}
       {screen === "achievements" && <AchievementsScreen />}
 
       <TabBar active={screen} onChange={setScreen} />

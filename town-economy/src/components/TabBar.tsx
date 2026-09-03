@@ -3,13 +3,14 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ScalePressable } from "./ScalePressable";
 
-export type ScreenId = "market" | "inventory" | "trade" | "town" | "achievements";
+export type ScreenId = "market" | "inventory" | "trade" | "town" | "research" | "achievements";
 
 const TABS: { id: ScreenId; labelKey: string; icon: string }[] = [
   { id: "market", labelKey: "tabs.market", icon: "📈" },
   { id: "inventory", labelKey: "tabs.inventory", icon: "🎒" },
   { id: "trade", labelKey: "tabs.trade", icon: "🚚" },
   { id: "town", labelKey: "tabs.town", icon: "🏘️" },
+  { id: "research", labelKey: "tabs.research", icon: "🔬" },
   { id: "achievements", labelKey: "tabs.achievements", icon: "🏆" },
 ];
 
