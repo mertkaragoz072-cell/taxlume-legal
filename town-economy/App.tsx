@@ -8,6 +8,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { MarketScreen } from "./src/screens/MarketScreen";
@@ -36,6 +37,8 @@ function Game() {
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
+
+  useLocalNotifications(state);
 
   useEffect(() => {
     if (state.lastEvent && state.lastEvent.id !== lastEventId.current) {
