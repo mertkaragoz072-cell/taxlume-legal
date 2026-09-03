@@ -2,6 +2,7 @@ import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
+import { TAX_BASE_REVENUE, TAX_RATE_STEPS } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
@@ -16,9 +17,19 @@ function moodFor(rate: number): { label: string; emoji: string; color: string } 
   return { label: "Ferahlıyor", emoji: "😌", color: "#3fae5c" };
 }
 
+function happinessFor(h: number): { label: string; emoji: string; color: string } {
+  if (h < 20) return { label: "İsyan eşiğinde", emoji: "😡", color: "#c94b4b" };
+  if (h < 45) return { label: "Huzursuz", emoji: "😠", color: "#e0693f" };
+  if (h < 70) return { label: "İdare eder", emoji: "😐", color: "#e0a13f" };
+  if (h < 90) return { label: "Memnun", emoji: "🙂", color: "#a8c777" };
+  return { label: "Çok memnun", emoji: "😄", color: "#3fae5c" };
+}
+
 export function TownScreen() {
-  const { state, upgrade } = useEconomyContext();
+  const { state, upgrade, setTaxRate } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
+  const happy = happinessFor(state.happiness);
+  const taxIncomePerTick = state.taxRate * TAX_BASE_REVENUE * (state.happiness / 100);
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -31,6 +42,55 @@ export function TownScreen() {
         <View style={{ alignItems: "flex-end" }}>
           <Text style={styles.moodIndex}>{state.inflationIndex.toFixed(1)}</Text>
           <Text style={styles.moodIndexLabel}>Fiyat Endeksi</Text>
+        </View>
+      </View>
+
+      <View style={styles.moodCard}>
+        <Text style={styles.moodEmoji}>{happy.emoji}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.moodLabel}>Halk Memnuniyeti</Text>
+          <Text style={[styles.moodValue, { color: happy.color }]}>{happy.label}</Text>
+          <View style={styles.happinessTrack}>
+            <View
+              style={[
+                styles.happinessFill,
+                { width: `${state.happiness}%`, backgroundColor: happy.color },
+              ]}
+            />
+          </View>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={styles.moodIndex}>{Math.round(state.happiness)}</Text>
+          <Text style={styles.moodIndexLabel}>/ 100</Text>
+        </View>
+      </View>
+
+      <View style={styles.taxCard}>
+        <View style={styles.taxHeaderRow}>
+          <Text style={styles.taxTitle}>💰 Vergi Politikası</Text>
+          <Text style={styles.taxIncome}>
+            {taxIncomePerTick > 0 ? `+${taxIncomePerTick.toFixed(2)} 🪙/tur` : "Vergi yok"}
+          </Text>
+        </View>
+        <Text style={styles.taxDesc}>
+          Köylülerden vergi al, kasaya gelir gelsin. Ama vergi çok yükselirse halk sinirlenir,
+          üretim düşer ve enflasyon hızlanır.
+        </Text>
+        <View style={styles.taxRow}>
+          {TAX_RATE_STEPS.map((rate) => {
+            const selected = Math.abs(state.taxRate - rate) < 0.001;
+            return (
+              <ScalePressable
+                key={rate}
+                onPress={() => setTaxRate(rate)}
+                style={[styles.taxBtn, selected && styles.taxBtnActive]}
+              >
+                <Text style={[styles.taxBtnText, selected && styles.taxBtnTextActive]}>
+                  %{Math.round(rate * 100)}
+                </Text>
+              </ScalePressable>
+            );
+          })}
         </View>
       </View>
 
@@ -147,6 +207,33 @@ const styles = StyleSheet.create({
   moodValue: { fontSize: 16, fontWeight: "800", marginTop: 2 },
   moodIndex: { color: "#e8c777", fontSize: 16, fontWeight: "800" },
   moodIndexLabel: { color: "#a0917a", fontSize: 10, marginTop: 2 },
+  happinessTrack: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#1a1410",
+    overflow: "hidden",
+    marginTop: 6,
+  },
+  happinessFill: { height: "100%", borderRadius: 3 },
+  taxCard: { backgroundColor: "#2a2016", borderRadius: 16, padding: 16, marginBottom: 20 },
+  taxHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  taxTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
+  taxIncome: { color: "#e8c777", fontWeight: "700", fontSize: 12 },
+  taxDesc: { color: "#a0917a", fontSize: 11, marginTop: 6, marginBottom: 12 },
+  taxRow: { flexDirection: "row", gap: 6 },
+  taxBtn: {
+    flex: 1,
+    backgroundColor: "#1a1410",
+    borderRadius: 10,
+    paddingVertical: 9,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
+    marginRight: 6,
+  },
+  taxBtnActive: { borderColor: "#e8c777" },
+  taxBtnText: { color: "#a0917a", fontWeight: "700", fontSize: 12 },
+  taxBtnTextActive: { color: "#e8c777" },
   chartCard: { backgroundColor: "#2a2016", borderRadius: 16, padding: 16, marginBottom: 20 },
   chartTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13, marginBottom: 6 },
   sectionLabel: {

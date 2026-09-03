@@ -81,4 +81,8 @@ export interface EconomyState {
   streak: StreakState;
   unlockedAchievements: string[];
   upgrades: Record<UpgradeId, number>;
+  /** villager tax rate, 0 to TAX_RATE_MAX */
+  taxRate: number;
+  /** villager contentment, 0 (isyan) to 100 (çok memnun) */
+  happiness: number;
 }

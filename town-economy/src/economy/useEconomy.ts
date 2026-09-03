@@ -25,6 +25,21 @@ const FOREIGN_VOLATILITY_FACTOR = 0.6;
 const FOREIGN_INFLATION_FACTOR = 0.5;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 
+export const TAX_RATE_MAX = 0.5;
+export const TAX_RATE_STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
+export const TAX_BASE_REVENUE = 6;
+const HAPPINESS_TARGET_SLOPE = 220;
+const HAPPINESS_EASE = 0.04;
+const PRODUCTION_INFLATION_FACTOR = 0.003;
+const PRODUCTION_MOMENTUM_FACTOR = 0.01;
+const CONTENT_BONUS_FACTOR = 0.001;
+const ANGRY_THRESHOLD = 20;
+const ANGRY_EVENT_CHANCE = 0.1;
+const ANGRY_CASH_PENALTY = 25;
+const CONTENT_THRESHOLD = 85;
+const CONTENT_EVENT_CHANCE = 0.06;
+const CONTENT_CASH_BONUS = 15;
+
 type Action =
   | { type: "TICK" }
   | { type: "SELECT_GOOD"; goodId: GoodId }
@@ -34,7 +49,8 @@ type Action =
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
-  | { type: "UPGRADE"; upgradeId: UpgradeId };
+  | { type: "UPGRADE"; upgradeId: UpgradeId }
+  | { type: "SET_TAX_RATE"; rate: number };
 
 function makeInitialGoodState(basePrice: number): GoodState {
   return {
@@ -91,6 +107,8 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
     upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
+    taxRate: 0,
+    happiness: 100,
   };
 }
 
@@ -138,6 +156,43 @@ function tick(state: EconomyState): EconomyState {
     newEvents.push({ id: nextId++, message: template.message, tone: template.tone });
   }
 
+  // Villager tax & happiness: happiness drifts toward a level set by the
+  // current tax rate; unhappy villagers produce less (a lingering
+  // inflationary drag + extra upward price momentum) while happy ones
+  // ease inflation slightly. Tax revenue itself scales with happiness too,
+  // so an angry populace also under-pays.
+  const targetHappiness = clamp(100 - state.taxRate * HAPPINESS_TARGET_SLOPE, 0, 100);
+  const happiness = clamp(
+    state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE,
+    0,
+    100
+  );
+  const productionPenalty = clamp((50 - happiness) / 50, 0, 1);
+  const contentBonus = clamp((happiness - 70) / 30, 0, 1);
+  inflationRate = clamp(
+    inflationRate + productionPenalty * PRODUCTION_INFLATION_FACTOR - contentBonus * CONTENT_BONUS_FACTOR,
+    config.inflationMin,
+    config.inflationMax
+  );
+
+  let taxCashDelta = state.taxRate * TAX_BASE_REVENUE * (happiness / 100);
+  if (happiness <= ANGRY_THRESHOLD && Math.random() < ANGRY_EVENT_CHANCE) {
+    const penalty = Math.min(state.cash + taxCashDelta, ANGRY_CASH_PENALTY);
+    taxCashDelta -= penalty;
+    newEvents.push({
+      id: nextId++,
+      message: `😡 Köylüler vergiden bıktı, ayaklandı! -${penalty.toFixed(1)} 🪙 zarar.`,
+      tone: "bad",
+    });
+  } else if (happiness >= CONTENT_THRESHOLD && Math.random() < CONTENT_EVENT_CHANCE) {
+    taxCashDelta += CONTENT_CASH_BONUS;
+    newEvents.push({
+      id: nextId++,
+      message: `😊 Köylüler adil vergiden memnun, gönüllü bağış yaptılar! +${CONTENT_CASH_BONUS} 🪙.`,
+      tone: "good",
+    });
+  }
+
   const inflationIndex = state.inflationIndex * (1 + inflationRate);
   const inflationHistory = pushCapped(state.inflationHistory, inflationIndex, HISTORY_LEN);
 
@@ -146,6 +201,7 @@ function tick(state: EconomyState): EconomyState {
     const gs = goods[good.id];
     let momentum = gs.momentum * 0.85 + (Math.random() - 0.5) * good.volatility;
     momentum += goodMomentumBoost[good.id] ?? 0;
+    momentum += productionPenalty * PRODUCTION_MOMENTUM_FACTOR;
     momentum = clamp(momentum, -0.25, 0.25);
 
     const pctChange = inflationRate * good.inflationSensitivity + momentum;
@@ -176,7 +232,7 @@ function tick(state: EconomyState): EconomyState {
 
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
-  let cash = state.cash;
+  let cash = state.cash + taxCashDelta;
   let totalCaravansCompleted = state.stats.totalCaravansCompleted;
   for (const caravan of state.caravans) {
     if (caravan.arrivesAtTick > nextTick) {
@@ -229,6 +285,7 @@ function tick(state: EconomyState): EconomyState {
     foreignTowns,
     caravans: stillTraveling,
     cash,
+    happiness,
     nextId,
     lastEvent,
     eventLog,
@@ -410,6 +467,11 @@ function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
   };
 }
 
+function setTaxRate(state: EconomyState, rate: number): EconomyState {
+  if (state.gameOver) return state;
+  return { ...state, taxRate: clamp(rate, 0, TAX_RATE_MAX) };
+}
+
 function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
@@ -466,6 +528,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return dailyCheckIn(state, action.today);
     case "UPGRADE":
       return upgrade(state, action.upgradeId);
+    case "SET_TAX_RATE":
+      return setTaxRate(state, action.rate);
     default:
       return state;
   }
@@ -527,6 +591,7 @@ export function useEconomy() {
     (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
     []
   );
+  const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -542,6 +607,7 @@ export function useEconomy() {
     togglePause,
     reset,
     upgrade: upgrade_,
+    setTaxRate: setTaxRate_,
     portfolioValue,
     netWorth,
     hydrated,
