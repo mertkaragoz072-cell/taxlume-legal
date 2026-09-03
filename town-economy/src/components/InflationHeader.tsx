@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { PriceChart } from "./PriceChart";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
   paused: boolean;
   muted: boolean;
   streakCount: number;
+  difficulty: DifficultyId;
   onTogglePause: () => void;
   onToggleMuted: () => void;
   onReset: () => void;
@@ -25,16 +27,23 @@ export function InflationHeader({
   paused,
   muted,
   streakCount,
+  difficulty,
   onTogglePause,
   onToggleMuted,
   onReset,
 }: Props) {
   const hot = inflationRate > 0.006;
+  const difficultyConfig = DIFFICULTIES[difficulty];
   return (
     <View style={styles.wrap}>
       <View style={styles.topLine}>
         <View style={styles.townRow}>
           <Text style={styles.town}>🏘️ TAXLUME KASABASI</Text>
+          <View style={styles.streakBadge}>
+            <Text style={styles.streakBadgeText}>
+              {difficultyConfig.icon} {difficultyConfig.label}
+            </Text>
+          </View>
           {streakCount > 0 && (
             <View style={styles.streakBadge}>
               <Text style={styles.streakBadgeText}>🔥 {streakCount}</Text>

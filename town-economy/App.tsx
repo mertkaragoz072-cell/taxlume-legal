@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
+import { DifficultyModal } from "./src/components/DifficultyModal";
 import { EventBanner } from "./src/components/EventBanner";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { ScreenId, TabBar } from "./src/components/TabBar";
@@ -30,6 +31,7 @@ function Game() {
   const { state, togglePause, reset, netWorth } = useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
+  const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
@@ -58,9 +60,10 @@ function Game() {
         paused={state.paused}
         muted={sounds.muted}
         streakCount={state.streak.count}
+        difficulty={state.difficulty}
         onTogglePause={togglePause}
         onToggleMuted={sounds.toggleMuted}
-        onReset={reset}
+        onReset={() => setDifficultyModalVisible(true)}
       />
       <EventBanner event={state.lastEvent} />
 
@@ -71,6 +74,16 @@ function Game() {
       {screen === "achievements" && <AchievementsScreen />}
 
       <TabBar active={screen} onChange={setScreen} />
+
+      <DifficultyModal
+        visible={difficultyModalVisible}
+        currentDifficulty={state.difficulty}
+        onSelect={(difficulty) => {
+          reset(difficulty);
+          setDifficultyModalVisible(false);
+        }}
+        onCancel={() => setDifficultyModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

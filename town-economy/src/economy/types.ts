@@ -1,3 +1,4 @@
+import { DifficultyId } from "./difficulty";
 import { TownId } from "./towns";
 
 export type GoodId = "bread" | "milk" | "wood" | "iron" | "cloth";
@@ -58,6 +59,7 @@ export interface StreakState {
 }
 
 export interface EconomyState {
+  difficulty: DifficultyId;
   cash: number;
   tick: number;
   paused: boolean;

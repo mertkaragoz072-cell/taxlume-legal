@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ACHIEVEMENTS } from "./achievements";
+import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { loadEconomyState, saveEconomyState } from "./persist";
@@ -16,16 +17,11 @@ import {
 
 const HISTORY_LEN = 40;
 export const TICK_MS = 1500;
-const BASE_INFLATION_DRIFT = 0.0015;
-const INFLATION_MIN = -0.004;
-const INFLATION_MAX = 0.02;
-const EVENT_CHANCE = 0.16;
 const BUY_IMPACT = 0.006;
-const STARTING_CASH = 250;
-const HYPERINFLATION_INDEX = 320;
 const EVENT_LOG_CAP = 8;
 const FOREIGN_VOLATILITY_FACTOR = 0.6;
 const FOREIGN_INFLATION_FACTOR = 0.5;
+const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 
 type Action =
   | { type: "TICK" }
@@ -33,7 +29,7 @@ type Action =
   | { type: "TRADE"; goodId: GoodId; side: "buy" | "sell"; qty: number }
   | { type: "SEND_CARAVAN"; townId: TownId; goodId: GoodId; direction: CaravanDirection; qty: number }
   | { type: "TOGGLE_PAUSE" }
-  | { type: "RESET" }
+  | { type: "RESET"; difficulty: DifficultyId }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string };
 
@@ -57,7 +53,8 @@ function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   return { prices, momentum };
 }
 
-function initialState(): EconomyState {
+function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomyState {
+  const config = DIFFICULTIES[difficulty];
   const goods = {} as EconomyState["goods"];
   for (const g of GOODS) {
     goods[g.id] = makeInitialGoodState(g.basePrice);
@@ -67,12 +64,13 @@ function initialState(): EconomyState {
     foreignTowns[t.id] = makeInitialForeignTownState(t.id);
   }
   return {
-    cash: STARTING_CASH,
+    difficulty,
+    cash: config.startingCash,
     tick: 0,
     paused: false,
     inflationIndex: 100,
     inflationHistory: [100],
-    inflationRate: BASE_INFLATION_DRIFT,
+    inflationRate: config.baseInflationDrift,
     selectedGood: GOODS[0].id,
     goods,
     foreignTowns,
@@ -108,20 +106,25 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
 
 function tick(state: EconomyState): EconomyState {
   if (state.paused || state.gameOver) return state;
+  const config = DIFFICULTIES[state.difficulty];
 
   let inflationRate = clamp(
     state.inflationRate + (Math.random() - 0.5) * 0.0012,
-    INFLATION_MIN,
-    INFLATION_MAX
+    config.inflationMin,
+    config.inflationMax
   );
 
   let nextId = state.nextId;
   const newEvents: EconomyEvent[] = [];
   const goodMomentumBoost: Partial<Record<GoodId, number>> = {};
 
-  if (Math.random() < EVENT_CHANCE) {
+  if (Math.random() < config.eventChance) {
     const template = EVENT_TEMPLATES[Math.floor(Math.random() * EVENT_TEMPLATES.length)];
-    inflationRate = clamp(inflationRate + template.inflationDelta, INFLATION_MIN, INFLATION_MAX);
+    inflationRate = clamp(
+      inflationRate + template.inflationDelta * config.eventSeverity,
+      config.inflationMin,
+      config.inflationMax
+    );
     if (template.good && template.goodMomentum) {
       goodMomentumBoost[template.good] = template.goodMomentum;
     }
@@ -194,7 +197,7 @@ function tick(state: EconomyState): EconomyState {
     }
   }
 
-  const gameOver = inflationIndex >= HYPERINFLATION_INDEX;
+  const gameOver = inflationIndex >= config.hyperinflationIndex;
   if (gameOver && !state.gameOver) {
     newEvents.push({
       id: nextId++,
@@ -426,7 +429,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "RESET":
-      return initialState();
+      return initialState(action.difficulty);
     case "HYDRATE":
       return action.state;
     case "DAILY_CHECKIN":
@@ -484,7 +487,10 @@ export function useEconomy() {
     []
   );
   const togglePause = useCallback(() => dispatch({ type: "TOGGLE_PAUSE" }), []);
-  const reset = useCallback(() => dispatch({ type: "RESET" }), []);
+  const reset = useCallback(
+    (difficulty: DifficultyId) => dispatch({ type: "RESET", difficulty }),
+    []
+  );
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
