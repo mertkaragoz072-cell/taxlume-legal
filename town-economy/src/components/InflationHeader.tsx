@@ -10,6 +10,7 @@ interface Props {
   inflationHistory: number[];
   paused: boolean;
   muted: boolean;
+  streakCount: number;
   onTogglePause: () => void;
   onToggleMuted: () => void;
   onReset: () => void;
@@ -23,6 +24,7 @@ export function InflationHeader({
   inflationHistory,
   paused,
   muted,
+  streakCount,
   onTogglePause,
   onToggleMuted,
   onReset,
@@ -31,7 +33,14 @@ export function InflationHeader({
   return (
     <View style={styles.wrap}>
       <View style={styles.topLine}>
-        <Text style={styles.town}>🏘️ TAXLUME KASABASI</Text>
+        <View style={styles.townRow}>
+          <Text style={styles.town}>🏘️ TAXLUME KASABASI</Text>
+          {streakCount > 0 && (
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakBadgeText}>🔥 {streakCount}</Text>
+            </View>
+          )}
+        </View>
         <View style={styles.controls}>
           <Pressable onPress={onToggleMuted} style={styles.iconBtn}>
             <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
@@ -93,7 +102,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
+  townRow: { flexDirection: "row", alignItems: "center" },
   town: { color: "#e8c777", fontWeight: "800", fontSize: 14, letterSpacing: 0.5 },
+  streakBadge: {
+    backgroundColor: "#2a2016",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginLeft: 8,
+  },
+  streakBadgeText: { color: "#f0e3c8", fontSize: 11, fontWeight: "700" },
   controls: { flexDirection: "row", gap: 8 },
   iconBtn: {
     width: 30,

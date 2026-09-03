@@ -1,5 +1,7 @@
 import React, { useRef } from "react";
-import { Animated, Pressable, PressableProps, StyleProp, ViewStyle } from "react-native";
+import { Animated, GestureResponderEvent, Pressable, PressableProps, StyleProp, ViewStyle } from "react-native";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface Props extends PressableProps {
   style?: StyleProp<ViewStyle>;
@@ -11,18 +13,19 @@ export function ScalePressable({ style, children, scaleTo = 0.94, onPressIn, onP
   const scale = useRef(new Animated.Value(1)).current;
 
   return (
-    <Pressable
-      onPressIn={(e) => {
+    <AnimatedPressable
+      style={[style, { transform: [{ scale }] }]}
+      onPressIn={(e: GestureResponderEvent) => {
         Animated.spring(scale, { toValue: scaleTo, useNativeDriver: true, speed: 40 }).start();
         onPressIn?.(e);
       }}
-      onPressOut={(e) => {
+      onPressOut={(e: GestureResponderEvent) => {
         Animated.spring(scale, { toValue: 1, useNativeDriver: true, friction: 4 }).start();
         onPressOut?.(e);
       }}
       {...rest}
     >
-      <Animated.View style={[style, { transform: [{ scale }] }]}>{children}</Animated.View>
-    </Pressable>
+      {children}
+    </AnimatedPressable>
   );
 }

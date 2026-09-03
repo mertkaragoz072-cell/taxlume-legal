@@ -2,12 +2,14 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ScalePressable } from "./ScalePressable";
 
-export type ScreenId = "market" | "inventory" | "town";
+export type ScreenId = "market" | "inventory" | "trade" | "town" | "achievements";
 
 const TABS: { id: ScreenId; label: string; icon: string }[] = [
   { id: "market", label: "Piyasa", icon: "📈" },
   { id: "inventory", label: "Envanter", icon: "🎒" },
+  { id: "trade", label: "Ticaret", icon: "🚚" },
   { id: "town", label: "Kasaba", icon: "🏘️" },
+  { id: "achievements", label: "Başarım", icon: "🏆" },
 ];
 
 interface Props {

@@ -6,9 +6,11 @@ import { EventBanner } from "./src/components/EventBanner";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { MarketScreen } from "./src/screens/MarketScreen";
 import { TownScreen } from "./src/screens/TownScreen";
+import { TradeScreen } from "./src/screens/TradeScreen";
 
 // On web, browsers block audio.play() until the page has seen a user
 // gesture. Our event/hyperinflation sounds can fire from the tick loop
@@ -55,6 +57,7 @@ function Game() {
         inflationHistory={state.inflationHistory}
         paused={state.paused}
         muted={sounds.muted}
+        streakCount={state.streak.count}
         onTogglePause={togglePause}
         onToggleMuted={sounds.toggleMuted}
         onReset={reset}
@@ -63,7 +66,9 @@ function Game() {
 
       {screen === "market" && <MarketScreen sounds={sounds} />}
       {screen === "inventory" && <InventoryScreen />}
+      {screen === "trade" && <TradeScreen sounds={sounds} />}
       {screen === "town" && <TownScreen />}
+      {screen === "achievements" && <AchievementsScreen />}
 
       <TabBar active={screen} onChange={setScreen} />
     </SafeAreaView>
