@@ -84,6 +84,14 @@ export interface PendingDecision {
   triggeredAtTick: number;
 }
 
+/** a villager asks for a specific amount of a good; give it away or refuse */
+export interface VillagerRequest {
+  id: number;
+  goodId: GoodId;
+  qty: number;
+  triggeredAtTick: number;
+}
+
 /** counters that reset each day and back the daily quests' progress */
 export interface DailyProgress {
   trades: number;
@@ -133,6 +141,8 @@ export interface EconomyState {
   offlineSummary: OfflineSummary | null;
   /** a decision event waiting on the player's choice; freezes the tick loop until resolved */
   pendingDecision: PendingDecision | null;
+  /** a villager asking for goods; freezes the tick loop until given or refused */
+  pendingRequest: VillagerRequest | null;
   dailyProgress: DailyProgress;
   dailyQuests: DailyQuest[];
 }

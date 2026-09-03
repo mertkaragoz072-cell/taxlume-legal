@@ -10,6 +10,7 @@ import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
+import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
@@ -34,8 +35,16 @@ if (typeof window !== "undefined") {
 }
 
 function Game() {
-  const { state, togglePause, reset, dismissOfflineSummary, resolveDecision, setTownName, netWorth } =
-    useEconomyContext();
+  const {
+    state,
+    togglePause,
+    reset,
+    dismissOfflineSummary,
+    resolveDecision,
+    resolveRequest,
+    setTownName,
+    netWorth,
+  } = useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
@@ -119,6 +128,12 @@ function Game() {
       <DecisionModal
         decision={!state.offlineSummary && !tutorialVisible ? state.pendingDecision : null}
         onResolve={resolveDecision}
+      />
+
+      <VillagerRequestModal
+        request={!state.offlineSummary && !tutorialVisible ? state.pendingRequest : null}
+        holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
+        onResolve={resolveRequest}
       />
 
       <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />

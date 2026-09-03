@@ -9,6 +9,11 @@ import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_I
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
+  rollVillagerRequest,
+  VILLAGER_REQUEST_GIVE_HAPPINESS,
+  VILLAGER_REQUEST_REFUSE_HAPPINESS,
+} from "./villagerRequests";
+import {
   Caravan,
   CaravanDirection,
   EconomyEvent,
@@ -84,6 +89,9 @@ export const MIN_OFFLINE_MS_TO_SHOW = 60 * 1000; // don't pop up for a quick app
 // distinct moment; freezes the tick loop until answered (see the guard
 // at the top of tick()).
 const DECISION_EVENT_CHANCE = 0.02;
+// A separate, simpler kind of interruption from decisions: a villager just
+// wants some of one good, not a policy choice with varied outcomes.
+const VILLAGER_REQUEST_CHANCE = 0.018;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -130,6 +138,7 @@ type Action =
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
   | { type: "RESOLVE_DECISION"; optionId: string }
+  | { type: "RESOLVE_REQUEST"; give: boolean }
   | { type: "SET_TOWN_NAME"; name: string };
 
 function makeInitialGoodState(good: Good): GoodState {
@@ -203,6 +212,7 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     lastSavedAt: Date.now(),
     offlineSummary: null,
     pendingDecision: null,
+    pendingRequest: null,
     dailyProgress: makeInitialDailyProgress(),
     dailyQuests: makeDailyQuests("init"),
   };
@@ -219,7 +229,7 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
 }
 
 function tick(state: EconomyState): EconomyState {
-  if (state.paused || state.gameOver || state.pendingDecision) return state;
+  if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest) return state;
   const config = DIFFICULTIES[state.difficulty];
 
   // Villager tax & happiness: happiness drifts toward a level set by the
@@ -293,6 +303,18 @@ function tick(state: EconomyState): EconomyState {
     newEvents.push({
       id: nextId++,
       message: `📢 ${template.title}: kasabanı ilgilendiren bir karar bekliyor.`,
+      tone: "neutral",
+    });
+  }
+
+  let pendingRequest: EconomyState["pendingRequest"] = state.pendingRequest;
+  if (!pendingDecision && !pendingRequest && Math.random() < VILLAGER_REQUEST_CHANCE) {
+    const { goodId, qty } = rollVillagerRequest();
+    pendingRequest = { id: nextId, goodId, qty, triggeredAtTick: state.tick + 1 };
+    const good = GOODS_BY_ID[goodId];
+    newEvents.push({
+      id: nextId++,
+      message: `🙋 Bir köylü ${qty} ${good.name} rica ediyor.`,
       tone: "neutral",
     });
   }
@@ -429,6 +451,7 @@ function tick(state: EconomyState): EconomyState {
     stats: { ...state.stats, totalCaravansCompleted },
     lastSavedAt: Date.now(),
     pendingDecision,
+    pendingRequest,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
@@ -793,6 +816,45 @@ function resolveDecision(state: EconomyState, optionId: string): EconomyState {
   return template.resolve(state, optionId);
 }
 
+function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyState {
+  const request = state.pendingRequest;
+  if (!request) return state;
+  const good = GOODS_BY_ID[request.goodId];
+  const gs = state.goods[request.goodId];
+
+  function outcome(message: string, tone: EconomyEvent["tone"], patch: Partial<EconomyState>) {
+    const event: EconomyEvent = { id: state.nextId, message, tone };
+    return {
+      ...state,
+      ...patch,
+      pendingRequest: null,
+      nextId: state.nextId + 1,
+      lastEvent: event,
+      eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    };
+  }
+
+  if (give) {
+    if (gs.holding < request.qty) {
+      return outcome(`🙋 İstediği kadar ${good.name} elinde yoktu, köylüyü boş çevirdin.`, "neutral", {});
+    }
+    return outcome(
+      `🙋 ${request.qty} ${good.name} verdin, köylüler minnettar kaldı. (+${VILLAGER_REQUEST_GIVE_HAPPINESS} mutluluk)`,
+      "good",
+      {
+        goods: { ...state.goods, [request.goodId]: { ...gs, holding: gs.holding - request.qty } },
+        happiness: clamp(state.happiness + VILLAGER_REQUEST_GIVE_HAPPINESS, 0, 100),
+      }
+    );
+  }
+
+  return outcome(
+    `🙋 İsteği reddettin, köylüler hayal kırıklığına uğradı. (-${VILLAGER_REQUEST_REFUSE_HAPPINESS} mutluluk)`,
+    "bad",
+    { happiness: clamp(state.happiness - VILLAGER_REQUEST_REFUSE_HAPPINESS, 0, 100) }
+  );
+}
+
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
@@ -823,6 +885,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return dismissOfflineSummary(state);
     case "RESOLVE_DECISION":
       return resolveDecision(state, action.optionId);
+    case "RESOLVE_REQUEST":
+      return resolveVillagerRequest(state, action.give);
     case "SET_TOWN_NAME":
       return setTownName(state, action.name);
     default:
@@ -901,6 +965,10 @@ export function useEconomy() {
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
     []
   );
+  const resolveRequest = useCallback(
+    (give: boolean) => dispatch({ type: "RESOLVE_REQUEST", give }),
+    []
+  );
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
 
   const portfolioValue = GOODS.reduce(
@@ -920,6 +988,7 @@ export function useEconomy() {
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
     resolveDecision: resolveDecision_,
+    resolveRequest,
     setTownName,
     portfolioValue,
     netWorth,
