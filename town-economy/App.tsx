@@ -8,6 +8,7 @@ import { EventBanner } from "./src/components/EventBanner";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
+import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
@@ -33,12 +34,13 @@ if (typeof window !== "undefined") {
 }
 
 function Game() {
-  const { state, togglePause, reset, dismissOfflineSummary, resolveDecision, netWorth } =
+  const { state, togglePause, reset, dismissOfflineSummary, resolveDecision, setTownName, netWorth } =
     useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
+  const [nameModalVisible, setNameModalVisible] = useState(false);
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
@@ -76,6 +78,7 @@ function Game() {
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <InflationHeader
+        townName={state.townName}
         cash={state.cash}
         netWorth={netWorth}
         inflationIndex={state.inflationIndex}
@@ -89,6 +92,7 @@ function Game() {
         onToggleMuted={sounds.toggleMuted}
         onReset={() => setDifficultyModalVisible(true)}
         onHelp={() => setTutorialVisible(true)}
+        onEditName={() => setNameModalVisible(true)}
       />
       <EventBanner event={state.lastEvent} />
 
@@ -118,6 +122,16 @@ function Game() {
       />
 
       <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
+
+      <TownNameModal
+        visible={nameModalVisible}
+        currentName={state.townName}
+        onSave={(name) => {
+          setTownName(name);
+          setNameModalVisible(false);
+        }}
+        onCancel={() => setNameModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

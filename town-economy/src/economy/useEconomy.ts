@@ -23,6 +23,8 @@ const HISTORY_LEN = 40;
 export const TICK_MS = 1500;
 const EVENT_LOG_CAP = 8;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
+export const DEFAULT_TOWN_NAME = "Taxlume Kasabası";
+export const TOWN_NAME_MAX_LENGTH = 24;
 
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
@@ -125,7 +127,8 @@ type Action =
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
-  | { type: "RESOLVE_DECISION"; optionId: string };
+  | { type: "RESOLVE_DECISION"; optionId: string }
+  | { type: "SET_TOWN_NAME"; name: string };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -158,6 +161,7 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     foreignTowns[t.id] = makeInitialForeignTownState(t.id);
   }
   return {
+    townName: DEFAULT_TOWN_NAME,
     difficulty,
     cash: config.startingCash,
     tick: 0,
@@ -618,6 +622,12 @@ function setTaxRate(state: EconomyState, rate: number): EconomyState {
   return { ...state, taxRate: clamp(rate, 0, TAX_RATE_MAX) };
 }
 
+function setTownName(state: EconomyState, name: string): EconomyState {
+  const trimmed = name.trim().slice(0, TOWN_NAME_MAX_LENGTH);
+  if (!trimmed) return state;
+  return { ...state, townName: trimmed };
+}
+
 function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
@@ -711,7 +721,9 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "RESET":
-      return initialState(action.difficulty);
+      // A new difficulty starts the economy over, but the player's
+      // chosen town name is an identity, not run state — keep it.
+      return { ...initialState(action.difficulty), townName: state.townName };
     case "HYDRATE":
       return action.state;
     case "DAILY_CHECKIN":
@@ -726,6 +738,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return dismissOfflineSummary(state);
     case "RESOLVE_DECISION":
       return resolveDecision(state, action.optionId);
+    case "SET_TOWN_NAME":
+      return setTownName(state, action.name);
     default:
       return state;
   }
@@ -802,6 +816,7 @@ export function useEconomy() {
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
     []
   );
+  const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -820,6 +835,7 @@ export function useEconomy() {
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
     resolveDecision: resolveDecision_,
+    setTownName,
     portfolioValue,
     netWorth,
     hydrated,

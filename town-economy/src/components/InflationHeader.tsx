@@ -4,6 +4,7 @@ import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { PriceChart } from "./PriceChart";
 
 interface Props {
+  townName: string;
   cash: number;
   netWorth: number;
   inflationIndex: number;
@@ -17,9 +18,11 @@ interface Props {
   onToggleMuted: () => void;
   onReset: () => void;
   onHelp: () => void;
+  onEditName: () => void;
 }
 
 export function InflationHeader({
+  townName,
   cash,
   netWorth,
   inflationIndex,
@@ -33,6 +36,7 @@ export function InflationHeader({
   onToggleMuted,
   onReset,
   onHelp,
+  onEditName,
 }: Props) {
   const hot = inflationRate > 0.006;
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -40,7 +44,11 @@ export function InflationHeader({
     <View style={styles.wrap}>
       <View style={styles.topLine}>
         <View style={styles.townRow}>
-          <Text style={styles.town}>🏘️ TAXLUME KASABASI</Text>
+          <Pressable onPress={onEditName} style={styles.townNamePressable}>
+            <Text style={styles.town} numberOfLines={1}>
+              🏘️ {townName.toUpperCase()} ✏️
+            </Text>
+          </Pressable>
           <View style={styles.streakBadge}>
             <Text style={styles.streakBadgeText}>
               {difficultyConfig.icon} {difficultyConfig.label}
@@ -116,7 +124,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  townRow: { flexDirection: "row", alignItems: "center" },
+  townRow: { flexDirection: "row", alignItems: "center", flexShrink: 1 },
+  townNamePressable: { flexShrink: 1 },
   town: { color: "#e8c777", fontWeight: "800", fontSize: 14, letterSpacing: 0.5 },
   streakBadge: {
     backgroundColor: "#2a2016",

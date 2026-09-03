@@ -84,6 +84,7 @@ export interface PendingDecision {
 }
 
 export interface EconomyState {
+  townName: string;
   difficulty: DifficultyId;
   cash: number;
   tick: number;
