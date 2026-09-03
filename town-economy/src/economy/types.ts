@@ -66,6 +66,17 @@ export interface StreakState {
   lastOpenedDate: string | null;
 }
 
+export interface OfflineSummary {
+  elapsedMs: number;
+  ticksSimulated: number;
+  cashDelta: number;
+  netWorthDelta: number;
+  caravansCompleted: number;
+  newAchievements: string[];
+  hyperinflationHappened: boolean;
+  recentEvents: EconomyEvent[];
+}
+
 export interface EconomyState {
   difficulty: DifficultyId;
   cash: number;
@@ -91,4 +102,8 @@ export interface EconomyState {
   taxRate: number;
   /** villager contentment, 0 (isyan) to 100 (çok memnun) */
   happiness: number;
+  /** epoch ms of the last time tick() actually ran (i.e. the app was live) */
+  lastSavedAt: number;
+  /** set once after simulating time passed while the app was closed; null once dismissed */
+  offlineSummary: OfflineSummary | null;
 }

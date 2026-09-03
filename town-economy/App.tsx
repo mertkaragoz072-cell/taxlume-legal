@@ -5,6 +5,7 @@ import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { EventBanner } from "./src/components/EventBanner";
 import { InflationHeader } from "./src/components/InflationHeader";
+import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
@@ -28,7 +29,7 @@ if (typeof window !== "undefined") {
 }
 
 function Game() {
-  const { state, togglePause, reset, netWorth } = useEconomyContext();
+  const { state, togglePause, reset, dismissOfflineSummary, netWorth } = useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
@@ -84,6 +85,8 @@ function Game() {
         }}
         onCancel={() => setDifficultyModalVisible(false)}
       />
+
+      <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
     </SafeAreaView>
   );
 }

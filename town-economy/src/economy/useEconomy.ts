@@ -48,6 +48,7 @@ export const TAX_RATE_STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 // GDP-style base) rather than a flat number, so revenue naturally scales
 // with both prices and how much villagers are actually producing.
 export const TAX_OUTPUT_FACTOR = 0.008;
+const INFLATION_REVERSION_RATE = 0.035; // pull toward the difficulty's baseline drift, per tick
 const HAPPINESS_TARGET_SLOPE = 220;
 const HAPPINESS_EASE = 0.04;
 const PRODUCTION_INFLATION_FACTOR = 0.003;
@@ -58,6 +59,21 @@ const ANGRY_CASH_PENALTY = 25;
 const CONTENT_THRESHOLD = 85;
 const CONTENT_EVENT_CHANCE = 0.06;
 const CONTENT_CASH_BONUS = 15;
+
+// --- Offline progress ----------------------------------------------------
+// How long the app was closed is capped so a multi-day absence doesn't
+// either freeze the UI simulating tens of thousands of ticks or hand out
+// unbounded free progress; a modest, always-fast catch-up is the goal.
+export const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000; // 8 hours
+// Kept deliberately modest: baseInflationDrift compounds every tick, so
+// thousands of simulated ticks would compound even the mild live-session
+// drift into hyperinflation almost every time — turning "welcome back"
+// into "sorry, it's all gone" regardless of policy. This cap keeps the
+// catch-up meaningful (tax income, a caravan or two, a little price
+// drift) without exposing an absence to a crash a live player wouldn't
+// have hit in the same stretch either.
+export const MAX_OFFLINE_TICKS = 240;
+export const MIN_OFFLINE_MS_TO_SHOW = 60 * 1000; // don't pop up for a quick app switch
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -100,7 +116,9 @@ type Action =
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
   | { type: "UPGRADE"; upgradeId: UpgradeId }
-  | { type: "SET_TAX_RATE"; rate: number };
+  | { type: "SET_TAX_RATE"; rate: number }
+  | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
+  | { type: "DISMISS_OFFLINE_SUMMARY" };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -159,6 +177,8 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
     taxRate: 0,
     happiness: 100,
+    lastSavedAt: Date.now(),
+    offlineSummary: null,
   };
 }
 
@@ -176,8 +196,46 @@ function tick(state: EconomyState): EconomyState {
   if (state.paused || state.gameOver) return state;
   const config = DIFFICULTIES[state.difficulty];
 
+  // Villager tax & happiness: happiness drifts toward a level set by the
+  // current tax rate; unhappy villagers produce less (a real, lingering
+  // supply shortage that pushes prices up through scarcity, plus a small
+  // monetary-inflation drag) while happy ones produce a bit more and ease
+  // inflation slightly. Computed before inflation so both structural
+  // pressures below fold into one target.
+  const targetHappiness = clamp(100 - state.taxRate * HAPPINESS_TARGET_SLOPE, 0, 100);
+  const happiness = clamp(
+    state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE,
+    0,
+    100
+  );
+  const productionPenalty = clamp((50 - happiness) / 50, 0, 1);
+  const contentBonus = clamp((happiness - 70) / 30, 0, 1);
+  const productionEfficiency = clamp(
+    1 - productionPenalty * PRODUCTION_PENALTY_FACTOR + contentBonus * PRODUCTION_BONUS_FACTOR,
+    EFFICIENCY_MIN,
+    EFFICIENCY_MAX
+  );
+
+  // A pure random walk has no reason to stay near any particular level —
+  // over enough ticks (a long session, or an offline catch-up) it drifts
+  // to an extreme and, because inflationIndex compounds every tick, that
+  // runs away into either a price collapse or a hyperinflation that
+  // wasn't earned by anything the player did. Instead inflationRate
+  // reverts toward a single target — the difficulty's baseline plus
+  // whatever the tax/happiness situation is structurally doing to it
+  // right now — so it wanders realistically around wherever policy has
+  // it pointed, like a central bank target, rather than off a cliff.
+  const inflationTarget = clamp(
+    config.baseInflationDrift +
+      productionPenalty * PRODUCTION_INFLATION_FACTOR -
+      contentBonus * CONTENT_BONUS_FACTOR,
+    config.inflationMin,
+    config.inflationMax
+  );
   let inflationRate = clamp(
-    state.inflationRate + (Math.random() - 0.5) * 0.0012,
+    state.inflationRate +
+      (inflationTarget - state.inflationRate) * INFLATION_REVERSION_RATE +
+      (Math.random() - 0.5) * 0.0012,
     config.inflationMin,
     config.inflationMax
   );
@@ -201,30 +259,6 @@ function tick(state: EconomyState): EconomyState {
     }
     newEvents.push({ id: nextId++, message: template.message, tone: template.tone });
   }
-
-  // Villager tax & happiness: happiness drifts toward a level set by the
-  // current tax rate; unhappy villagers produce less (a real, lingering
-  // supply shortage that pushes prices up through scarcity, plus a small
-  // monetary-inflation drag) while happy ones produce a bit more and ease
-  // inflation slightly.
-  const targetHappiness = clamp(100 - state.taxRate * HAPPINESS_TARGET_SLOPE, 0, 100);
-  const happiness = clamp(
-    state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE,
-    0,
-    100
-  );
-  const productionPenalty = clamp((50 - happiness) / 50, 0, 1);
-  const contentBonus = clamp((happiness - 70) / 30, 0, 1);
-  const productionEfficiency = clamp(
-    1 - productionPenalty * PRODUCTION_PENALTY_FACTOR + contentBonus * PRODUCTION_BONUS_FACTOR,
-    EFFICIENCY_MIN,
-    EFFICIENCY_MAX
-  );
-  inflationRate = clamp(
-    inflationRate + productionPenalty * PRODUCTION_INFLATION_FACTOR - contentBonus * CONTENT_BONUS_FACTOR,
-    config.inflationMin,
-    config.inflationMax
-  );
 
   let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness });
   if (happiness <= ANGRY_THRESHOLD && Math.random() < ANGRY_EVENT_CHANCE) {
@@ -354,6 +388,7 @@ function tick(state: EconomyState): EconomyState {
     gameOver,
     paused: gameOver ? true : state.paused,
     stats: { ...state.stats, totalCaravansCompleted },
+    lastSavedAt: Date.now(),
   };
 }
 
@@ -599,6 +634,43 @@ function applyAchievements(state: EconomyState): EconomyState {
   };
 }
 
+function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): EconomyState {
+  if (ticks <= 0) return state;
+  const beforeCash = state.cash;
+  const beforeNetWorth = computeNetWorth(state);
+  const beforeAchievements = state.unlockedAchievements;
+  const beforeCaravansCompleted = state.stats.totalCaravansCompleted;
+  const wasGameOver = state.gameOver;
+
+  let s = state;
+  for (let i = 0; i < ticks; i++) {
+    s = tick(s);
+  }
+  s = applyAchievements(s);
+
+  const newAchievements = s.unlockedAchievements
+    .filter((id) => !beforeAchievements.includes(id))
+    .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.title)
+    .filter((title): title is string => !!title);
+
+  const summary = {
+    elapsedMs,
+    ticksSimulated: ticks,
+    cashDelta: s.cash - beforeCash,
+    netWorthDelta: computeNetWorth(s) - beforeNetWorth,
+    caravansCompleted: s.stats.totalCaravansCompleted - beforeCaravansCompleted,
+    newAchievements,
+    hyperinflationHappened: !wasGameOver && s.gameOver,
+    recentEvents: s.eventLog.slice(0, 5),
+  };
+
+  return { ...s, offlineSummary: summary };
+}
+
+function dismissOfflineSummary(state: EconomyState): EconomyState {
+  return { ...state, offlineSummary: null };
+}
+
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
@@ -621,6 +693,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return upgrade(state, action.upgradeId);
     case "SET_TAX_RATE":
       return setTaxRate(state, action.rate);
+    case "OFFLINE_ADVANCE":
+      return offlineAdvance(state, action.ticks, action.elapsedMs);
+    case "DISMISS_OFFLINE_SUMMARY":
+      return dismissOfflineSummary(state);
     default:
       return state;
   }
@@ -644,12 +720,21 @@ export function useEconomy() {
     };
   }, []);
 
-  // Load any previous save once on mount, then start persisting future changes.
+  // Load any previous save once on mount, fast-forward the town through
+  // however long the app was closed, then start persisting future changes.
   useEffect(() => {
     let cancelled = false;
     loadEconomyState().then((saved) => {
       if (cancelled) return;
-      if (saved) dispatch({ type: "HYDRATE", state: saved });
+      if (saved) {
+        dispatch({ type: "HYDRATE", state: saved });
+        const lastSavedAt = saved.lastSavedAt ?? Date.now();
+        const elapsedMs = clamp(Date.now() - lastSavedAt, 0, MAX_OFFLINE_MS);
+        const ticks = Math.min(Math.floor(elapsedMs / TICK_MS), MAX_OFFLINE_TICKS);
+        if (ticks > 0 && elapsedMs >= MIN_OFFLINE_MS_TO_SHOW) {
+          dispatch({ type: "OFFLINE_ADVANCE", ticks, elapsedMs });
+        }
+      }
       dispatch({ type: "DAILY_CHECKIN", today: todayString() });
       setHydrated(true);
     });
@@ -683,6 +768,7 @@ export function useEconomy() {
     []
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
+  const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -699,6 +785,7 @@ export function useEconomy() {
     reset,
     upgrade: upgrade_,
     setTaxRate: setTaxRate_,
+    dismissOfflineSummary,
     portfolioValue,
     netWorth,
     hydrated,

@@ -9,23 +9,30 @@ export interface EventTemplate {
   supplyShockPct?: number;
 }
 
+// inflationDelta values are deliberately small and roughly balanced
+// (the list sums to ~0) — they're meant to read as one-off news that
+// nudges the rate and fades via reversion, not as a structural bias
+// that would drag a long, passive session toward hyperinflation on its
+// own. "Merkez hazine para bastı" is intentionally the single largest
+// shock (money-printing is the canonical worst case), everything else
+// is modest by comparison.
 export const EVENT_TEMPLATES: EventTemplate[] = [
   {
     message: "Belediye vergileri artırdı! Fiyatlar geneline zam geldi.",
     tone: "bad",
-    inflationDelta: 0.006,
+    inflationDelta: 0.003,
   },
   {
     message: "Kuraklık tahılı vurdu. Ekmek fiyatları fırladı.",
     tone: "bad",
-    inflationDelta: 0.001,
+    inflationDelta: 0.0005,
     good: "bread",
     supplyShockPct: -0.32,
   },
   {
     message: "Bereketli hasat! Süt bolluğu fiyatları düşürdü.",
     tone: "good",
-    inflationDelta: -0.001,
+    inflationDelta: -0.0005,
     good: "milk",
     supplyShockPct: 0.3,
   },
@@ -46,22 +53,22 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
   {
     message: "Komşu kasabayla ticaret anlaşması enflasyonu yumuşattı.",
     tone: "good",
-    inflationDelta: -0.005,
+    inflationDelta: -0.0025,
   },
   {
     message: "Kasaba festivali talebi patlattı, her şey pahalandı.",
     tone: "bad",
-    inflationDelta: 0.004,
+    inflationDelta: 0.002,
   },
   {
     message: "Merkez hazine para bastı. Enflasyon hızlandı.",
     tone: "bad",
-    inflationDelta: 0.009,
+    inflationDelta: 0.004,
   },
   {
     message: "Sıkı bütçe önlemleri enflasyonu dizginledi.",
     tone: "good",
-    inflationDelta: -0.007,
+    inflationDelta: -0.0035,
   },
   {
     message: "Dokumahanede grev, kumaş fiyatı yükseldi.",
