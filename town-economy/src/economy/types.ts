@@ -3,6 +3,8 @@ import { TownId } from "./towns";
 
 export type GoodId = "bread" | "milk" | "wood" | "iron" | "cloth";
 
+export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank";
+
 export interface Good {
   id: GoodId;
   name: string;
@@ -78,4 +80,5 @@ export interface EconomyState {
   stats: EconomyStats;
   streak: StreakState;
   unlockedAchievements: string[];
+  upgrades: Record<UpgradeId, number>;
 }

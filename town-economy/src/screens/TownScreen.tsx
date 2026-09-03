@@ -2,7 +2,9 @@ import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
+import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { PriceChart } from "../components/PriceChart";
+import { ScalePressable } from "../components/ScalePressable";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -15,7 +17,7 @@ function moodFor(rate: number): { label: string; emoji: string; color: string } 
 }
 
 export function TownScreen() {
-  const { state } = useEconomyContext();
+  const { state, upgrade } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
 
   return (
@@ -42,6 +44,47 @@ export function TownScreen() {
           strokeWidth={3}
         />
       </View>
+
+      <Text style={styles.sectionLabel}>KASABA GELİŞTİRMELERİ</Text>
+      {UPGRADES.map((u) => {
+        const level = state.upgrades[u.id];
+        const maxed = level >= u.maxLevel;
+        const cost = maxed ? 0 : upgradeCost(u, level);
+        const disabled = maxed || state.cash < cost;
+        return (
+          <View key={u.id} style={styles.upgradeCard}>
+            <Text style={styles.upgradeIcon}>{u.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.upgradeTitleRow}>
+                <Text style={styles.upgradeName}>{u.name}</Text>
+                <Text style={styles.upgradeLevel}>
+                  Lv {level}/{u.maxLevel}
+                </Text>
+              </View>
+              <Text style={styles.upgradeDesc}>{u.description}</Text>
+              {level > 0 && <Text style={styles.upgradeEffect}>{u.effectLabel(level)}</Text>}
+              <View style={styles.upgradeLevelTrack}>
+                {Array.from({ length: u.maxLevel }).map((_, i) => (
+                  <View
+                    key={i}
+                    style={[styles.upgradeLevelPip, i < level && styles.upgradeLevelPipFilled]}
+                  />
+                ))}
+              </View>
+            </View>
+            <ScalePressable
+              disabled={disabled}
+              onPress={() => upgrade(u.id)}
+              style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
+              scaleTo={0.95}
+            >
+              <Text style={styles.upgradeBtnText}>
+                {maxed ? "MAKS" : `${cost} 🪙`}
+              </Text>
+            </ScalePressable>
+          </View>
+        );
+      })}
 
       <Text style={styles.sectionLabel}>ESNAF DURUMU</Text>
       <View style={styles.buildingsGrid}>
@@ -143,4 +186,36 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   eventText: { color: "#f0e3c8", fontSize: 12 },
+  upgradeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2a2016",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+  },
+  upgradeIcon: { fontSize: 24, marginRight: 12 },
+  upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  upgradeName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
+  upgradeLevel: { color: "#a0917a", fontSize: 11, fontWeight: "600" },
+  upgradeDesc: { color: "#a0917a", fontSize: 11, marginTop: 2 },
+  upgradeEffect: { color: "#3fae5c", fontSize: 11, fontWeight: "700", marginTop: 3 },
+  upgradeLevelTrack: { flexDirection: "row", gap: 4, marginTop: 6 },
+  upgradeLevelPip: {
+    width: 14,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#1a1410",
+    marginRight: 4,
+  },
+  upgradeLevelPipFilled: { backgroundColor: "#e8c777" },
+  upgradeBtn: {
+    backgroundColor: "#e8c777",
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginLeft: 10,
+  },
+  upgradeBtnDisabled: { backgroundColor: "#4a4032" },
+  upgradeBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 12 },
 });

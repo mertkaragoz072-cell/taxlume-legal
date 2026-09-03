@@ -6,6 +6,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, GoodId } from "../economy/types";
+import { UPGRADES_BY_ID } from "../economy/upgrades";
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -27,12 +28,16 @@ export function TradeScreen({ sounds }: Props) {
   const theirPrice = townState.prices[goodId];
   const holding = state.goods[goodId].holding;
 
-  const affordableImport = Math.floor(state.cash / (theirPrice * (1 + town.tariffRate)));
+  const tariffRate = Math.max(
+    0,
+    town.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
+  );
+  const affordableImport = Math.floor(state.cash / (theirPrice * (1 + tariffRate)));
   const resolvedQty =
     qtyOption === "ALL" ? (direction === "export" ? holding : affordableImport) : qtyOption;
 
   const gross = resolvedQty * theirPrice;
-  const net = direction === "export" ? gross * (1 - town.tariffRate) : gross * (1 + town.tariffRate);
+  const net = direction === "export" ? gross * (1 - tariffRate) : gross * (1 + tariffRate);
   const disabled =
     resolvedQty <= 0 ||
     (direction === "export" ? resolvedQty > holding : net > state.cash + 0.001);
@@ -43,6 +48,10 @@ export function TradeScreen({ sounds }: Props) {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
         {TOWNS.map((t) => {
           const selected = t.id === townId;
+          const effectiveTariff = Math.max(
+            0,
+            t.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
+          );
           return (
             <ScalePressable
               key={t.id}
@@ -52,7 +61,7 @@ export function TradeScreen({ sounds }: Props) {
               <Text style={styles.townIcon}>{t.icon}</Text>
               <Text style={styles.townName}>{t.name}</Text>
               <Text style={styles.townMeta}>
-                {t.distanceTicks} tur · %{(t.tariffRate * 100).toFixed(0)} vergi
+                {t.distanceTicks} tur · %{(effectiveTariff * 100).toFixed(0)} vergi
               </Text>
             </ScalePressable>
           );
@@ -131,7 +140,8 @@ export function TradeScreen({ sounds }: Props) {
           </Text>
         </View>
         <Text style={styles.etaText}>
-          🚚 Kervan {town.distanceTicks} turda ulaşır · %{(town.tariffRate * 100).toFixed(0)} vergi dahil
+          🚚 Kervan {town.distanceTicks} turda ulaşır · %{(tariffRate * 100).toFixed(0)} vergi dahil
+          {tariffRate < town.tariffRate ? " (Kervansaray indirimli)" : ""}
         </Text>
 
         <ScalePressable

@@ -5,6 +5,7 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
+import { UPGRADES, UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
   Caravan,
   CaravanDirection,
@@ -13,6 +14,7 @@ import {
   ForeignTownState,
   GoodId,
   GoodState,
+  UpgradeId,
 } from "./types";
 
 const HISTORY_LEN = 40;
@@ -31,7 +33,8 @@ type Action =
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "HYDRATE"; state: EconomyState }
-  | { type: "DAILY_CHECKIN"; today: string };
+  | { type: "DAILY_CHECKIN"; today: string }
+  | { type: "UPGRADE"; upgradeId: UpgradeId };
 
 function makeInitialGoodState(basePrice: number): GoodState {
   return {
@@ -87,6 +90,7 @@ function initialState(difficulty: DifficultyId = DEFAULT_DIFFICULTY): EconomySta
     },
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
+    upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
   };
 }
 
@@ -118,10 +122,13 @@ function tick(state: EconomyState): EconomyState {
   const newEvents: EconomyEvent[] = [];
   const goodMomentumBoost: Partial<Record<GoodId, number>> = {};
 
+  const eventSeverity =
+    config.eventSeverity * (1 - state.upgrades.townhall * UPGRADES_BY_ID.townhall.effectPerLevel);
+
   if (Math.random() < config.eventChance) {
     const template = EVENT_TEMPLATES[Math.floor(Math.random() * EVENT_TEMPLATES.length)];
     inflationRate = clamp(
-      inflationRate + template.inflationDelta * config.eventSeverity,
+      inflationRate + template.inflationDelta * eventSeverity,
       config.inflationMin,
       config.inflationMax
     );
@@ -235,6 +242,8 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
   if (state.gameOver) return state;
   const gs = state.goods[goodId];
   const price = gs.price;
+  const impact =
+    BUY_IMPACT * (1 - state.upgrades.market * UPGRADES_BY_ID.market.effectPerLevel);
 
   if (side === "buy") {
     const affordable = Math.floor(state.cash / price);
@@ -249,7 +258,7 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
         [goodId]: {
           ...gs,
           holding: gs.holding + amount,
-          momentum: clamp(gs.momentum + amount * BUY_IMPACT, -0.25, 0.25),
+          momentum: clamp(gs.momentum + amount * impact, -0.25, 0.25),
         },
       },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
@@ -267,7 +276,7 @@ function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: n
       [goodId]: {
         ...gs,
         holding: gs.holding - amount,
-        momentum: clamp(gs.momentum - amount * BUY_IMPACT, -0.25, 0.25),
+        momentum: clamp(gs.momentum - amount * impact, -0.25, 0.25),
       },
     },
     stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
@@ -289,12 +298,16 @@ function sendCaravan(
   const townsTradedWith = state.stats.townsTradedWith.includes(townId)
     ? state.stats.townsTradedWith
     : [...state.stats.townsTradedWith, townId];
+  const tariffRate = Math.max(
+    0,
+    town.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
+  );
 
   if (direction === "export") {
     const amount = Math.min(qty, gs.holding);
     if (amount <= 0) return state;
     const gross = amount * price;
-    const net = gross * (1 - town.tariffRate);
+    const net = gross * (1 - tariffRate);
     const caravan: Caravan = {
       id: state.nextId,
       townId,
@@ -318,10 +331,10 @@ function sendCaravan(
     };
   }
 
-  const affordable = Math.floor(state.cash / (price * (1 + town.tariffRate)));
+  const affordable = Math.floor(state.cash / (price * (1 + tariffRate)));
   const amount = Math.min(qty, affordable);
   if (amount <= 0) return state;
-  const cost = amount * price * (1 + town.tariffRate);
+  const cost = amount * price * (1 + tariffRate);
   const caravan: Caravan = {
     id: state.nextId,
     townId,
@@ -364,7 +377,10 @@ function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     count = 1;
   }
 
-  const bonus = Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP);
+  const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
+  const bonus =
+    Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) +
+    bankBonus;
   const message = prevDate
     ? `🌅 Hoş geldin! ${count}. gün üst üste giriş serisi. +${bonus} 🪙 günlük bonus.`
     : `🌅 Kasabana hoş geldin! Günlük giriş serin başladı. +${bonus} 🪙 bonus.`;
@@ -377,6 +393,20 @@ function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     streak: { count, lastOpenedDate: today },
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+
+function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
+  if (state.gameOver) return state;
+  const def = UPGRADES_BY_ID[upgradeId];
+  const level = state.upgrades[upgradeId];
+  if (level >= def.maxLevel) return state;
+  const cost = upgradeCost(def, level);
+  if (state.cash < cost) return state;
+  return {
+    ...state,
+    cash: state.cash - cost,
+    upgrades: { ...state.upgrades, [upgradeId]: level + 1 },
   };
 }
 
@@ -434,6 +464,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return action.state;
     case "DAILY_CHECKIN":
       return dailyCheckIn(state, action.today);
+    case "UPGRADE":
+      return upgrade(state, action.upgradeId);
     default:
       return state;
   }
@@ -491,6 +523,10 @@ export function useEconomy() {
     (difficulty: DifficultyId) => dispatch({ type: "RESET", difficulty }),
     []
   );
+  const upgrade_ = useCallback(
+    (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
+    []
+  );
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -505,6 +541,7 @@ export function useEconomy() {
     sendCaravan: sendCaravan_,
     togglePause,
     reset,
+    upgrade: upgrade_,
     portfolioValue,
     netWorth,
     hydrated,
