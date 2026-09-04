@@ -1,3 +1,4 @@
+import { PROPERTIES } from "./properties";
 import { TOWNS_BY_ID } from "./towns";
 import { EconomyState } from "./types";
 
@@ -22,7 +23,9 @@ export type AchievementId =
   | "debt_free"
   | "metropol_trader"
   | "researcher"
-  | "investor";
+  | "investor"
+  | "landlord"
+  | "real_estate_mogul";
 
 export interface AchievementDef {
   id: AchievementId;
@@ -239,6 +242,24 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 70,
     target: 2,
     progress: (s) => assetsOwnedCount(s),
+  },
+  {
+    id: "landlord",
+    titleKey: "achievement.landlord.title",
+    descriptionKey: "achievement.landlord.description",
+    icon: "🏘️",
+    reward: 50,
+    target: 1,
+    progress: (s) => s.ownedProperties.length,
+  },
+  {
+    id: "real_estate_mogul",
+    titleKey: "achievement.real_estate_mogul.title",
+    descriptionKey: "achievement.real_estate_mogul.description",
+    icon: "🏰",
+    reward: 250,
+    target: PROPERTIES.length,
+    progress: (s) => s.ownedProperties.length,
   },
 ];
 

@@ -123,6 +123,9 @@ export const STRINGS = {
       upgradesSectionLabel: "KASABA GELİŞTİRMELERİ",
       upgradeLevel: "Lv {level}/{max}",
       upgradeMaxed: "MAKS",
+      propertiesSectionLabel: "MÜLKLER",
+      propertyOwnedLabel: "Sahip",
+      propertyOwnedBtn: "Sahip Olundu",
       merchantsSectionLabel: "ESNAF DURUMU",
       workersSectionLabel: "İŞÇİLER",
       workersNote: "Ürünlere kalıcı ücretli işçi tut, üretimlerini artır. Ücret her turda kasadan düşer.",
@@ -247,6 +250,38 @@ export const STRINGS = {
       townhall: { name: "Belediye Binası", description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.", effect: "Kriz şiddeti -%{pct}" },
       bank: { name: "Banka", description: "Günlük giriş bonusunu artırır.", effect: "Günlük bonus +{amount} 🪙" },
     },
+    property: {
+      landPlot: {
+        name: "Arsa",
+        description: "Boş bir arazi parçası; kasabanın tüm üretimine küçük ama kalıcı bir katkı sağlar.",
+        effect: "+%{pct} tüm üretim",
+      },
+      house: {
+        name: "Ev",
+        description: "Kirası her turda kasaya küçük bir pasif gelir bırakan bir konut.",
+        effect: "+{amount} 🪙/tur pasif gelir",
+      },
+      warehouse: {
+        name: "Depo",
+        description: "Bankayla iş birliği yapan bir depo; kredi faizini biraz düşürür.",
+        effect: "-%{pct}/gün kredi faizi",
+      },
+      farm: {
+        name: "Çiftlik",
+        description: "Ekmek, süt, şarap ve balık üretimini belirgin şekilde artırır.",
+        effect: "+%{pct} gıda üretimi",
+      },
+      inn: {
+        name: "Han",
+        description: "Kervanlara konaklama sağlar; şehirler arası ticarette gümrük oranını düşürür.",
+        effect: "-%{pct} gümrük oranı",
+      },
+      mansion: {
+        name: "Malikane",
+        description: "Kasabanın gururu; halkın mutluluğunu kalıcı olarak yükseltir.",
+        effect: "+{amount} mutluluk hedefi",
+      },
+    },
     research: {
       sectionNote: "Ürünlere yatırım yaparak üretim hızını ve değerini kalıcı olarak artır.",
       researchedBadge: "✅ Araştırıldı",
@@ -335,6 +370,8 @@ export const STRINGS = {
       metropol_trader: { title: "Metropol Tüccarı", description: "Bir metropolle ticaret yap." },
       researcher: { title: "Araştırmacı", description: "5 araştırma yükseltmesi tamamla." },
       investor: { title: "Yatırımcı", description: "Aynı anda 2 farklı yatırım aracına sahip ol." },
+      landlord: { title: "Mülk Sahibi", description: "İlk mülkünü satın al." },
+      real_estate_mogul: { title: "Emlak Kralı", description: "Tüm mülklere sahip ol." },
     },
     quest: {
       daily_trade_small: { title: "Küçük Tüccar", description: "Bugün 3 alım-satım işlemi yap." },
@@ -582,6 +619,9 @@ export const STRINGS = {
       upgradesSectionLabel: "TOWN UPGRADES",
       upgradeLevel: "Lv {level}/{max}",
       upgradeMaxed: "MAX",
+      propertiesSectionLabel: "PROPERTIES",
+      propertyOwnedLabel: "Owned",
+      propertyOwnedBtn: "Owned",
       merchantsSectionLabel: "MERCHANT STATUS",
       workersSectionLabel: "WORKERS",
       workersNote: "Hire permanent, waged staff to boost a good's production. Wages come out of the treasury every turn.",
@@ -706,6 +746,38 @@ export const STRINGS = {
       townhall: { name: "Town Hall", description: "Good governance softens the severity of economic crises.", effect: "Crisis severity -{pct}%" },
       bank: { name: "Bank", description: "Increases the daily login bonus.", effect: "Daily bonus +{amount} 🪙" },
     },
+    property: {
+      landPlot: {
+        name: "Land Plot",
+        description: "An empty parcel of land; a small but permanent boost to the whole town's production.",
+        effect: "+{pct}% all production",
+      },
+      house: {
+        name: "House",
+        description: "A residence whose rent drops a small passive income into the treasury every turn.",
+        effect: "+{amount} 🪙/turn passive income",
+      },
+      warehouse: {
+        name: "Warehouse",
+        description: "A warehouse in partnership with the bank; shaves a little off loan interest.",
+        effect: "-{pct}%/day loan interest",
+      },
+      farm: {
+        name: "Farm",
+        description: "Meaningfully boosts bread, milk, wine, and fish production.",
+        effect: "+{pct}% food production",
+      },
+      inn: {
+        name: "Inn",
+        description: "Houses traveling caravans; lowers the tariff rate on inter-city trade.",
+        effect: "-{pct}% tariff rate",
+      },
+      mansion: {
+        name: "Mansion",
+        description: "The town's pride; permanently raises the villagers' happiness target.",
+        effect: "+{amount} happiness target",
+      },
+    },
     research: {
       sectionNote: "Invest in goods to permanently boost their production speed and value.",
       researchedBadge: "✅ Researched",
@@ -794,6 +866,8 @@ export const STRINGS = {
       metropol_trader: { title: "Metropol Trader", description: "Trade with a metropolis." },
       researcher: { title: "Researcher", description: "Complete 5 research upgrades." },
       investor: { title: "Investor", description: "Own 2 different investment assets at once." },
+      landlord: { title: "Landlord", description: "Buy your first property." },
+      real_estate_mogul: { title: "Real Estate Mogul", description: "Own every property." },
     },
     quest: {
       daily_trade_small: { title: "Small-Time Trader", description: "Make 3 trades today." },

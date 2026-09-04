@@ -7,6 +7,14 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { MINI_QUEST_TEMPLATES, MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
 import { loadEconomyState, saveEconomyState } from "./persist";
+import {
+  PROPERTIES_BY_ID,
+  propertyCaravanTariffDiscount,
+  propertyHappinessBonus,
+  propertyLoanRateDiscountPerDay,
+  propertyPassiveIncomePerTick,
+  propertyProductionMultiplier,
+} from "./properties";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
@@ -223,6 +231,7 @@ type Action =
   | { type: "DAILY_CHECKIN"; today: string }
   | { type: "UPGRADE"; upgradeId: UpgradeId }
   | { type: "RESEARCH"; nodeId: string }
+  | { type: "BUY_PROPERTY"; propertyId: string }
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
@@ -327,6 +336,7 @@ function initialState(
     activeSeasonalEvent: null,
     loan: null,
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
+    ownedProperties: [],
   };
 }
 
@@ -356,7 +366,10 @@ function tick(state: EconomyState): EconomyState {
     ? clamp(state.loan.remainingBalance / Math.max(computeNetWorth(state), 1), 0, 1)
     : 0;
   const targetHappiness = clamp(
-    100 - state.taxRate * HAPPINESS_TARGET_SLOPE - debtBurden * DEBT_HAPPINESS_DRAG,
+    100 -
+      state.taxRate * HAPPINESS_TARGET_SLOPE -
+      debtBurden * DEBT_HAPPINESS_DRAG +
+      propertyHappinessBonus(state.ownedProperties),
     0,
     100
   );
@@ -577,13 +590,15 @@ function tick(state: EconomyState): EconomyState {
         ? seasonalTemplate.priceMultiplier
         : 1;
     const workerProductionMult = 1 + workers[good.id] * WORKER_PRODUCTION_BONUS_PER_WORKER;
+    const propertyProductionMult = propertyProductionMultiplier(state.ownedProperties, good.id);
     const production =
       good.baseProduction *
       productionEfficiency *
       noise *
       researchedProductionMult *
       prestigeProductionMult *
-      workerProductionMult;
+      workerProductionMult *
+      propertyProductionMult;
     let supply = gs.supply + (production - good.baseProduction);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
@@ -651,8 +666,9 @@ function tick(state: EconomyState): EconomyState {
 
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
-  let cash = state.cash + taxCashDelta - workerWageCost;
-  let dailyCashEarned = state.dailyProgress.cashEarned + Math.max(0, taxCashDelta);
+  const propertyIncomePerTick = propertyPassiveIncomePerTick(state.ownedProperties);
+  let cash = state.cash + taxCashDelta + propertyIncomePerTick - workerWageCost;
+  let dailyCashEarned = state.dailyProgress.cashEarned + Math.max(0, taxCashDelta) + propertyIncomePerTick;
   let totalCaravansCompleted = state.stats.totalCaravansCompleted;
   for (const caravan of state.caravans) {
     if (caravan.arrivesAtTick > nextTick) {
@@ -869,7 +885,9 @@ function sendCaravan(
     : [...state.dailyProgress.townsTraded, townId];
   const tariffRate = Math.max(
     0,
-    town.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
+    town.tariffRate -
+      state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel -
+      propertyCaravanTariffDiscount(state.ownedProperties)
   );
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
@@ -1026,6 +1044,19 @@ function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
   };
 }
 
+function buyProperty(state: EconomyState, propertyId: string): EconomyState {
+  if (state.gameOver) return state;
+  if (state.ownedProperties.includes(propertyId)) return state;
+  const def = PROPERTIES_BY_ID[propertyId];
+  if (!def) return state;
+  if (state.cash < def.cost) return state;
+  return {
+    ...state,
+    cash: state.cash - def.cost,
+    ownedProperties: [...state.ownedProperties, propertyId],
+  };
+}
+
 function research(state: EconomyState, nodeId: string): EconomyState {
   if (state.gameOver) return state;
   if (state.researched.includes(nodeId)) return state;
@@ -1086,7 +1117,8 @@ export function loanInterestRatePerDay(state: EconomyState, termMonths: number):
     LOAN_BASE_INTEREST_RATE_PER_DAY +
       inflationContribution +
       termContribution -
-      state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY,
+      state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY -
+      propertyLoanRateDiscountPerDay(state.ownedProperties),
     LOAN_MIN_INTEREST_RATE_PER_DAY,
     LOAN_MAX_INTEREST_RATE_PER_DAY
   );
@@ -1477,6 +1509,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return upgrade(state, action.upgradeId);
     case "RESEARCH":
       return research(state, action.nodeId);
+    case "BUY_PROPERTY":
+      return buyProperty(state, action.propertyId);
     case "SET_TAX_RATE":
       return setTaxRate(state, action.rate);
     case "OFFLINE_ADVANCE":
@@ -1572,6 +1606,10 @@ export function useEconomy() {
     []
   );
   const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
+  const buyProperty_ = useCallback(
+    (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId }),
+    []
+  );
   const tradeAsset_ = useCallback(
     (assetId: AssetId, side: "buy" | "sell", qty: number) =>
       dispatch({ type: "TRADE_ASSET", assetId, side, qty }),
@@ -1621,6 +1659,7 @@ export function useEconomy() {
     fireWorker: fireWorker_,
     upgrade: upgrade_,
     research: research_,
+    buyProperty: buyProperty_,
     tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,

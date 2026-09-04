@@ -15,6 +15,7 @@ import {
   TAX_RATE_STEPS,
 } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
+import { PROPERTIES } from "../economy/properties";
 import {
   WORKER_MAX_PER_GOOD,
   WORKER_PRODUCTION_BONUS_PER_WORKER,
@@ -44,8 +45,19 @@ function happinessFor(h: number): { labelKey: string; emoji: string; color: stri
 }
 
 export function TownScreen() {
-  const { state, upgrade, setTaxRate, prestige, takeLoan, repayLoan, hireWorker, fireWorker, netWorth, t } =
-    useEconomyContext();
+  const {
+    state,
+    upgrade,
+    setTaxRate,
+    prestige,
+    takeLoan,
+    repayLoan,
+    hireWorker,
+    fireWorker,
+    buyProperty,
+    netWorth,
+    t,
+  } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
@@ -321,6 +333,38 @@ export function TownScreen() {
               {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
               <Text style={styles.upgradeBtnText}>
                 {maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}
+              </Text>
+            </ScalePressable>
+          </View>
+        );
+      })}
+
+      <Text style={styles.sectionLabel}>{t("town.propertiesSectionLabel")}</Text>
+      {PROPERTIES.map((p) => {
+        const owned = state.ownedProperties.includes(p.id);
+        const disabled = owned || state.cash < p.cost;
+        const effect = p.effectLabel();
+        return (
+          <View key={p.id} style={styles.upgradeCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <Text style={styles.upgradeIcon}>{p.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.upgradeTitleRow}>
+                <Text style={styles.upgradeName}>{t(p.nameKey)}</Text>
+                {owned && <Text style={styles.upgradeLevel}>{t("town.propertyOwnedLabel")}</Text>}
+              </View>
+              <Text style={styles.upgradeDesc}>{t(p.descriptionKey)}</Text>
+              <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>
+            </View>
+            <ScalePressable
+              disabled={disabled}
+              onPress={() => buyProperty(p.id)}
+              style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
+              scaleTo={0.95}
+            >
+              {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
+              <Text style={styles.upgradeBtnText}>
+                {owned ? t("town.propertyOwnedBtn") : `${p.cost} 🪙`}
               </Text>
             </ScalePressable>
           </View>

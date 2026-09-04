@@ -229,4 +229,7 @@ export interface EconomyState {
   /** hired staff per good (0-WORKER_MAX_PER_GOOD); each costs a per-tick wage
    * and permanently boosts that good's production while employed */
   workers: Record<GoodId, number>;
+  /** ids of purchased properties.ts entries — each is a one-time buy that
+   * grants a permanent passive bonus (production, income, loan rate, etc.) */
+  ownedProperties: string[];
 }
