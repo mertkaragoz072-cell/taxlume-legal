@@ -13,6 +13,7 @@ import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
@@ -116,6 +117,7 @@ function Game() {
         paused={state.paused}
         muted={sounds.muted}
         streakCount={state.streak.count}
+        gameDay={gameDayFromTick(state.tick)}
         difficulty={state.difficulty}
         language={state.language}
         t={t}

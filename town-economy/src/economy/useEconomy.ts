@@ -47,6 +47,18 @@ export const TRADE_UNLOCK_NET_WORTH = 500;
 export const METROPOL_UNLOCK_NET_WORTH = 3000;
 const DAILY_QUEST_COUNT = 3;
 
+// --- In-game day cycle -----------------------------------------------------
+// A separate clock from the real-world calendar day used for daily
+// check-ins/streaks/quests: this one is purely simulation time, ticking
+// forward with play (and offline catch-up) rather than the wall clock, so
+// systems like loan interest can be priced in a humane "per day" unit
+// instead of the raw ~1.5s tick.
+export const TICKS_PER_GAME_DAY = 40;
+
+export function gameDayFromTick(tick: number): number {
+  return Math.floor(tick / TICKS_PER_GAME_DAY) + 1;
+}
+
 // --- Prestige ------------------------------------------------------------
 // The "end of a run" milestone: cash in a well-grown town for a permanent,
 // stacking bonus that survives every future reset (see PRESTIGE below and
@@ -58,22 +70,31 @@ export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
 // --- Banking / loans -------------------------------------------------------
 // A loan is cash now against interest that compounds every tick until
 // repaid — real leverage, real risk. At most one outstanding at a time.
+// Rates are priced per in-game DAY (see TICKS_PER_GAME_DAY above) — a much
+// more legible unit than the raw tick — then converted to an equivalent
+// per-tick rate so the balance still compounds smoothly every tick.
 export const LOAN_MIN_CAP = 100;
 export const LOAN_MAX_NET_WORTH_PCT = 0.6;
-export const LOAN_BASE_INTEREST_RATE_PER_TICK = 0.0025;
+export const LOAN_BASE_INTEREST_RATE_PER_DAY = 0.05;
 // A higher Banka upgrade level buys a cheaper loan, floored so it's never free.
-export const LOAN_BANK_DISCOUNT_PER_LEVEL = 0.0003;
-export const LOAN_MIN_INTEREST_RATE_PER_TICK = 0.0008;
-export const LOAN_MAX_INTEREST_RATE_PER_TICK = 0.02;
+export const LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY = 0.006;
+export const LOAN_MIN_INTEREST_RATE_PER_DAY = 0.015;
+export const LOAN_MAX_INTEREST_RATE_PER_DAY = 0.35;
 // The rate offered reflects how hot inflation is running right now, like a
 // real central bank's policy rate — capped so a runaway inflation spiral
-// can't make every loan instantly unpayable.
-export const LOAN_INFLATION_SENSITIVITY = 0.35;
-export const LOAN_MAX_INFLATION_RATE_CONTRIB = 0.006;
+// can't make every loan instantly unpayable. inflationRate is a per-tick
+// drift, so it's first compounded out to what it implies for a full
+// in-game day before the sensitivity multiplier is applied.
+export const LOAN_INFLATION_SENSITIVITY = 0.4;
+export const LOAN_MAX_INFLATION_DAY_CONTRIB = 0.15;
 // Term choice at signing: longer commitments carry more rate risk for the
 // bank, so they lock in a higher (but fixed for the life of the loan) rate.
+// LOAN_TERM_DAYS_PER_MONTH is purely a flavor conversion so a term reads as
+// a real number of in-game days (no repayment schedule is enforced — the
+// term only sets the rate offered, repayment stays free-form any time).
 export const LOAN_TERM_MONTHS_STEPS = [3, 6, 12, 24];
-export const LOAN_TERM_RATE_PER_MONTH = 0.00005;
+export const LOAN_TERM_RATE_PER_MONTH_PER_DAY = 0.0015;
+export const LOAN_TERM_DAYS_PER_MONTH = 20;
 // How much an all-consuming debt (balance ≈ net worth) drags down the
 // villagers' target happiness, on top of whatever the tax rate is already doing.
 const DEBT_HAPPINESS_DRAG = 20;
@@ -1047,25 +1068,45 @@ export function loanCap(state: EconomyState): number {
   return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * LOAN_MAX_NET_WORTH_PCT));
 }
 
-/** The rate a loan of the given term would carry if signed right now: the
- * base rate, discounted by the Banka upgrade level, plus a premium for how
- * hot inflation is currently running and for how long the term locks the
- * bank in — mirrors how a real lender prices both inflation and duration risk. */
-export function loanInterestRatePerTick(state: EconomyState, termMonths: number): number {
+/** The per-DAY rate a loan of the given term would carry if signed right
+ * now: the base rate, discounted by the Banka upgrade level, plus a
+ * premium for how hot inflation is currently running (compounded out to
+ * what it implies over a full in-game day) and for how long the term
+ * locks the bank in — mirrors how a real lender prices both inflation and
+ * duration risk. This is the number worth showing the player. */
+export function loanInterestRatePerDay(state: EconomyState, termMonths: number): number {
+  const dailyInflation = clamp(Math.pow(1 + state.inflationRate, TICKS_PER_GAME_DAY) - 1, -0.5, 0.5);
   const inflationContribution = clamp(
-    state.inflationRate * LOAN_INFLATION_SENSITIVITY,
-    -LOAN_MAX_INFLATION_RATE_CONTRIB,
-    LOAN_MAX_INFLATION_RATE_CONTRIB
+    dailyInflation * LOAN_INFLATION_SENSITIVITY,
+    -LOAN_MAX_INFLATION_DAY_CONTRIB,
+    LOAN_MAX_INFLATION_DAY_CONTRIB
   );
-  const termContribution = termMonths * LOAN_TERM_RATE_PER_MONTH;
+  const termContribution = termMonths * LOAN_TERM_RATE_PER_MONTH_PER_DAY;
   return clamp(
-    LOAN_BASE_INTEREST_RATE_PER_TICK +
+    LOAN_BASE_INTEREST_RATE_PER_DAY +
       inflationContribution +
       termContribution -
-      state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL,
-    LOAN_MIN_INTEREST_RATE_PER_TICK,
-    LOAN_MAX_INTEREST_RATE_PER_TICK
+      state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY,
+    LOAN_MIN_INTEREST_RATE_PER_DAY,
+    LOAN_MAX_INTEREST_RATE_PER_DAY
   );
+}
+
+/** loanInterestRatePerDay converted to the equivalent per-tick rate — this
+ * is what's actually locked onto the Loan and compounded every tick, so
+ * the balance still drifts up smoothly instead of jumping once a day. */
+export function loanInterestRatePerTick(state: EconomyState, termMonths: number): number {
+  return loanDayRateToTickRate(loanInterestRatePerDay(state, termMonths));
+}
+
+export function loanDayRateToTickRate(dayRate: number): number {
+  return Math.pow(1 + dayRate, 1 / TICKS_PER_GAME_DAY) - 1;
+}
+
+/** Inverse of loanDayRateToTickRate — recovers the "%/day" figure worth
+ * displaying for a loan's already-locked-in per-tick rate. */
+export function loanTickRateToDayRate(tickRate: number): number {
+  return Math.pow(1 + tickRate, TICKS_PER_GAME_DAY) - 1;
 }
 
 function applyAchievements(state: EconomyState): EconomyState {

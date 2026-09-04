@@ -5,7 +5,9 @@ import { GOODS } from "../economy/goods";
 import {
   estimateTaxIncomePerTick,
   loanCap,
-  loanInterestRatePerTick,
+  loanInterestRatePerDay,
+  loanTickRateToDayRate,
+  LOAN_TERM_DAYS_PER_MONTH,
   LOAN_TERM_MONTHS_STEPS,
   PRESTIGE_CASH_BONUS_PER_LEVEL,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
@@ -52,7 +54,8 @@ export function TownScreen() {
   const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
   const cap = loanCap(state);
   const [selectedTermMonths, setSelectedTermMonths] = useState(LOAN_TERM_MONTHS_STEPS[0]);
-  const previewRate = loanInterestRatePerTick(state, selectedTermMonths);
+  const previewDayRate = loanInterestRatePerDay(state, selectedTermMonths);
+  const previewTermDays = selectedTermMonths * LOAN_TERM_DAYS_PER_MONTH;
 
   // A gentle breathing pulse on the Prestige button once it's actually
   // tappable — draws the eye without a modal or sound nagging about it.
@@ -202,8 +205,9 @@ export function TownScreen() {
             </View>
             <Text style={styles.bankRate}>
               {t("town.bank.rate", {
-                pct: (state.loan.interestRatePerTick * 100).toFixed(2),
+                pct: (loanTickRateToDayRate(state.loan.interestRatePerTick) * 100).toFixed(2),
                 months: state.loan.termMonths,
+                days: state.loan.termMonths * LOAN_TERM_DAYS_PER_MONTH,
               })}
             </Text>
             <View style={styles.bankBtnRow}>
@@ -243,7 +247,7 @@ export function TownScreen() {
               })}
             </View>
             <Text style={styles.bankRate}>
-              {t("town.bank.ratePreview", { pct: (previewRate * 100).toFixed(2) })}
+              {t("town.bank.ratePreview", { pct: (previewDayRate * 100).toFixed(2), days: previewTermDays })}
             </Text>
             <View style={styles.bankBtnRow}>
               {([0.25, 0.5, 1] as const).map((frac) => {

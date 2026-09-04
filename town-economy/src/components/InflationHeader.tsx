@@ -18,6 +18,7 @@ interface Props {
   paused: boolean;
   muted: boolean;
   streakCount: number;
+  gameDay: number;
   difficulty: DifficultyId;
   language: Language;
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -39,6 +40,7 @@ export function InflationHeader({
   paused,
   muted,
   streakCount,
+  gameDay,
   difficulty,
   language,
   t,
@@ -66,6 +68,9 @@ export function InflationHeader({
             <Text style={styles.streakBadgeText}>
               {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
             </Text>
+          </View>
+          <View style={styles.streakBadge}>
+            <Text style={styles.streakBadgeText}>📅 {t("header.day", { day: gameDay })}</Text>
           </View>
           {streakCount > 0 && (
             <View style={styles.streakBadge}>
