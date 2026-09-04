@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
+import { ConfettiBurst } from "./src/components/ConfettiBurst";
 import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { EventBanner } from "./src/components/EventBanner";
@@ -57,8 +58,23 @@ function Game() {
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
+  const prevAchievementCount = useRef(state.unlockedAchievements.length);
+  const prevPrestigeLevel = useRef(state.prestigeLevel);
 
   useLocalNotifications(state);
+
+  // A "big win" — a new achievement or a fresh prestige — earns a
+  // celebratory confetti pop on top of whatever screen the player is on.
+  useEffect(() => {
+    const grewAchievements = state.unlockedAchievements.length > prevAchievementCount.current;
+    const prestiged = state.prestigeLevel > prevPrestigeLevel.current;
+    prevAchievementCount.current = state.unlockedAchievements.length;
+    prevPrestigeLevel.current = state.prestigeLevel;
+    if (grewAchievements || prestiged) {
+      setConfettiTrigger((n) => n + 1);
+    }
+  }, [state.unlockedAchievements.length, state.prestigeLevel]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,6 +127,7 @@ function Game() {
         onEditName={() => setNameModalVisible(true)}
       />
       <EventBanner event={state.lastEvent} />
+      <ConfettiBurst trigger={confettiTrigger} />
 
       {screen === "market" && <MarketScreen sounds={sounds} />}
       {screen === "inventory" && <InventoryScreen />}

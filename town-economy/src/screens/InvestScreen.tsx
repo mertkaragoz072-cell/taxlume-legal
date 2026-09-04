@@ -3,6 +3,7 @@ import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ASSETS, AssetId } from "../economy/assets";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
@@ -12,6 +13,7 @@ import { cardShadow, CARD_GRADIENT } from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
+const formatPrice = (v: number) => `${v.toFixed(2)} 🪙`;
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -71,7 +73,7 @@ export function InvestScreen({ sounds }: Props) {
             <Text style={styles.chartSubtitle}>{t(selected.descriptionKey)}</Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>
-            <Text style={styles.chartPrice}>{selectedState.price.toFixed(2)} 🪙</Text>
+            <AnimatedNumber value={selectedState.price} formatter={formatPrice} style={styles.chartPrice} />
             <Text style={[styles.chartChange, { color: change >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {change >= 0 ? "+" : ""}
               {change.toFixed(2)}%

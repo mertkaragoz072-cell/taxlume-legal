@@ -2,8 +2,11 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { Language } from "../i18n/t";
+import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
+
+const formatCoins = (v: number) => `${v.toFixed(1)} 🪙`;
 
 interface Props {
   townName: string;
@@ -92,11 +95,11 @@ export function InflationHeader({
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>{t("header.cash")}</Text>
-          <Text style={styles.statValue}>{cash.toFixed(1)} 🪙</Text>
+          <AnimatedNumber value={cash} formatter={formatCoins} style={styles.statValue} />
         </View>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
-          <Text style={styles.statValue}>{netWorth.toFixed(1)} 🪙</Text>
+          <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
         </View>
         <View style={[styles.stat, styles.inflationStat]}>
           <View style={styles.inflationTextCol}>

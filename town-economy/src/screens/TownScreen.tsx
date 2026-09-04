@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import {
@@ -49,6 +49,22 @@ export function TownScreen() {
   const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
   const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
   const cap = loanCap(state);
+
+  // A gentle breathing pulse on the Prestige button once it's actually
+  // tappable — draws the eye without a modal or sound nagging about it.
+  const pulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!prestigeReady || prestigeArmed) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [prestigeReady, prestigeArmed, pulse]);
+  const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.035] });
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -133,23 +149,25 @@ export function TownScreen() {
           </Text>
         )}
         {prestigeReady ? (
-          <ScalePressable
-            onPress={() => {
-              if (!prestigeArmed) {
-                setPrestigeArmed(true);
-                return;
-              }
-              prestige();
-              setPrestigeArmed(false);
-            }}
-            style={styles.prestigeBtn}
-            scaleTo={0.97}
-          >
-            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-            <Text style={styles.prestigeBtnText}>
-              {prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
-            </Text>
-          </ScalePressable>
+          <Animated.View style={{ transform: [{ scale: prestigeArmed ? 1 : pulseScale }] }}>
+            <ScalePressable
+              onPress={() => {
+                if (!prestigeArmed) {
+                  setPrestigeArmed(true);
+                  return;
+                }
+                prestige();
+                setPrestigeArmed(false);
+              }}
+              style={styles.prestigeBtn}
+              scaleTo={0.97}
+            >
+              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+              <Text style={styles.prestigeBtnText}>
+                {prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
+              </Text>
+            </ScalePressable>
+          </Animated.View>
         ) : (
           <>
             <Text style={styles.prestigeLocked}>
