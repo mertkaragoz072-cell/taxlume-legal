@@ -82,6 +82,8 @@ export interface EconomyStats {
   totalCaravansSent: number;
   totalCaravansCompleted: number;
   townsTradedWith: TownId[];
+  /** times a loan (see Loan above) has been paid down to zero */
+  loansRepaid: number;
 }
 
 export interface StreakState {

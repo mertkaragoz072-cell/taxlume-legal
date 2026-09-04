@@ -1,3 +1,4 @@
+import { TOWNS_BY_ID } from "./towns";
 import { EconomyState } from "./types";
 
 export type AchievementId =
@@ -14,7 +15,12 @@ export type AchievementId =
   | "survive_100"
   | "survive_300"
   | "streak_3"
-  | "streak_7";
+  | "streak_7"
+  | "streak_30"
+  | "prestige_1"
+  | "workforce"
+  | "debt_free"
+  | "metropol_trader";
 
 export interface AchievementDef {
   id: AchievementId;
@@ -28,6 +34,14 @@ export interface AchievementDef {
 
 function goodsOwnedCount(state: EconomyState): number {
   return Object.values(state.goods).filter((g) => g.holding > 0).length;
+}
+
+function totalWorkersEmployed(state: EconomyState): number {
+  return Object.values(state.workers).reduce((sum, count) => sum + count, 0);
+}
+
+function metropolTownsTradedWith(state: EconomyState): number {
+  return state.stats.townsTradedWith.filter((id) => TOWNS_BY_ID[id]?.tier === "metropol").length;
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -156,6 +170,51 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 120,
     target: 7,
     progress: (s) => s.streak.count,
+  },
+  {
+    id: "streak_30",
+    titleKey: "achievement.streak_30.title",
+    descriptionKey: "achievement.streak_30.description",
+    icon: "💎",
+    reward: 350,
+    target: 30,
+    progress: (s) => s.streak.count,
+  },
+  {
+    id: "prestige_1",
+    titleKey: "achievement.prestige_1.title",
+    descriptionKey: "achievement.prestige_1.description",
+    icon: "🌟",
+    reward: 200,
+    target: 1,
+    progress: (s) => s.prestigeLevel,
+  },
+  {
+    id: "workforce",
+    titleKey: "achievement.workforce.title",
+    descriptionKey: "achievement.workforce.description",
+    icon: "👷",
+    reward: 60,
+    target: 3,
+    progress: (s) => totalWorkersEmployed(s),
+  },
+  {
+    id: "debt_free",
+    titleKey: "achievement.debt_free.title",
+    descriptionKey: "achievement.debt_free.description",
+    icon: "🏦",
+    reward: 80,
+    target: 1,
+    progress: (s) => s.stats.loansRepaid,
+  },
+  {
+    id: "metropol_trader",
+    titleKey: "achievement.metropol_trader.title",
+    descriptionKey: "achievement.metropol_trader.description",
+    icon: "🏙️",
+    reward: 100,
+    target: 1,
+    progress: (s) => metropolTownsTradedWith(s),
   },
 ];
 

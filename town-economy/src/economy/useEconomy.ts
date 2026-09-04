@@ -274,6 +274,7 @@ function initialState(
       totalCaravansSent: 0,
       totalCaravansCompleted: 0,
       townsTradedWith: [],
+      loansRepaid: 0,
     },
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
@@ -1340,10 +1341,12 @@ function repayLoan(state: EconomyState, amount: number): EconomyState {
   const payment = Math.min(amount, state.cash, state.loan.remainingBalance);
   if (payment <= 0) return state;
   const remainingBalance = state.loan.remainingBalance - payment;
+  const paidOff = remainingBalance <= 0.01;
   return {
     ...state,
     cash: state.cash - payment,
-    loan: remainingBalance <= 0.01 ? null : { ...state.loan, remainingBalance },
+    loan: paidOff ? null : { ...state.loan, remainingBalance },
+    stats: paidOff ? { ...state.stats, loansRepaid: state.stats.loansRepaid + 1 } : state.stats,
   };
 }
 

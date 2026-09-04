@@ -317,6 +317,11 @@ export const STRINGS = {
       survive_300: { title: "Kriz Yönetimi", description: "Çökmeden 300 tur hayatta kal." },
       streak_3: { title: "Sadık Tüccar", description: "3 gün üst üste kasabana uğra." },
       streak_7: { title: "Kasaba Efsanesi", description: "7 gün üst üste kasabana uğra." },
+      streak_30: { title: "Sadakat Yıldızı", description: "30 gün üst üste kasabana uğra." },
+      prestige_1: { title: "Yeniden Doğuş", description: "İlk prestijini yap." },
+      workforce: { title: "İşgücü", description: "Aynı anda toplam 3 işçi çalıştır." },
+      debt_free: { title: "Borçsuz Yaşam", description: "Bir krediyi tamamen kapat." },
+      metropol_trader: { title: "Metropol Tüccarı", description: "Bir metropolle ticaret yap." },
     },
     quest: {
       daily_trade_small: { title: "Küçük Tüccar", description: "Bugün 3 alım-satım işlemi yap." },
@@ -758,6 +763,11 @@ export const STRINGS = {
       survive_300: { title: "Crisis Management", description: "Survive 300 turns without collapsing." },
       streak_3: { title: "Loyal Trader", description: "Check in 3 days in a row." },
       streak_7: { title: "Town Legend", description: "Check in 7 days in a row." },
+      streak_30: { title: "Loyalty Star", description: "Check in 30 days in a row." },
+      prestige_1: { title: "Reborn", description: "Complete your first prestige." },
+      workforce: { title: "Workforce", description: "Employ 3 workers at the same time." },
+      debt_free: { title: "Debt Free", description: "Fully repay a loan." },
+      metropol_trader: { title: "Metropol Trader", description: "Trade with a metropolis." },
     },
     quest: {
       daily_trade_small: { title: "Small-Time Trader", description: "Make 3 trades today." },
