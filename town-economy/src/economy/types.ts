@@ -115,6 +115,15 @@ export interface VillagerRequest {
   triggeredAtTick: number;
 }
 
+/** a temporary town-wide "occasion" (see seasonalEvents.ts) that boosts one
+ * or more goods' home-market price for a stretch of ticks, then ends on its own */
+export interface SeasonalEventInstance {
+  id: number;
+  templateId: string;
+  triggeredAtTick: number;
+  expiresAtTick: number;
+}
+
 /** a short-lived side objective (see miniQuests.ts) that pops up mid-play,
  * runs passively alongside whatever the player is doing, and pays out
  * automatically if hit before expiresAtTick */
@@ -197,4 +206,6 @@ export interface EconomyState {
   /** times the player has cashed in a run for a permanent bonus (see PRESTIGE
    * in useEconomy.ts) — survives every reset, including a plain difficulty restart */
   prestigeLevel: number;
+  /** a temporary town-wide price event; see seasonalEvents.ts */
+  activeSeasonalEvent: SeasonalEventInstance | null;
 }

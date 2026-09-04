@@ -3,12 +3,13 @@ import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
+import { SEASONAL_EVENT_TEMPLATES_BY_ID } from "../economy/seasonalEvents";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT } from "../theme";
+import { cardShadow, CARD_GRADIENT, GOLD_GRADIENT } from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -22,6 +23,9 @@ export function MarketScreen({ sounds }: Props) {
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
   const selectedState = state.goods[selected.id];
   const { opacity: flashOpacity, flashColor } = usePriceFlash(selectedState.price);
+  const seasonalTemplate = state.activeSeasonalEvent
+    ? SEASONAL_EVENT_TEMPLATES_BY_ID[state.activeSeasonalEvent.templateId]
+    : null;
 
   const change =
     selectedState.history.length > 1
@@ -32,6 +36,29 @@ export function MarketScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      {state.activeSeasonalEvent && seasonalTemplate && (
+        <View style={styles.seasonalCard}>
+          <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <Text style={styles.seasonalIcon}>{seasonalTemplate.icon}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.seasonalTitle}>{t(seasonalTemplate.titleKey)}</Text>
+            <Text style={styles.seasonalDesc}>{t(seasonalTemplate.descriptionKey)}</Text>
+            <View style={styles.seasonalFooterRow}>
+              <Text style={styles.seasonalBonus}>
+                {t("market.seasonalEventBonus", {
+                  pct: Math.round((seasonalTemplate.priceMultiplier - 1) * 100),
+                })}
+              </Text>
+              <Text style={styles.seasonalTicksLeft}>
+                {t("market.seasonalEventTicksLeft", {
+                  ticks: Math.max(0, state.activeSeasonalEvent.expiresAtTick - state.tick),
+                })}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       <View style={styles.chartCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Animated.View
@@ -98,6 +125,21 @@ export function MarketScreen({ sounds }: Props) {
 
 const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 40 },
+  seasonalCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  seasonalIcon: { fontSize: 28, marginRight: 12 },
+  seasonalTitle: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
+  seasonalDesc: { color: "#2a2016", fontSize: 11, marginTop: 2 },
+  seasonalFooterRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
+  seasonalBonus: { color: "#1a1410", fontWeight: "800", fontSize: 12 },
+  seasonalTicksLeft: { color: "#2a2016", fontSize: 11, fontWeight: "700" },
   chartCard: {
     borderRadius: 18,
     padding: 16,

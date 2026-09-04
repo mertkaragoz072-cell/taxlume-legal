@@ -9,6 +9,7 @@ import { MINI_QUEST_TEMPLATES, MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
+import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
@@ -124,6 +125,10 @@ const VILLAGER_REQUEST_CHANCE = 0.018;
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.
 const MINI_QUEST_CHANCE = 0.02;
+// Much rarer than a mini quest — a seasonal event runs far longer (tens of
+// ticks) so overlapping spawns would just mean "always some price boost
+// active," which defeats the "special occasion" feel (see seasonalEvents.ts).
+const SEASONAL_EVENT_CHANCE = 0.006;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -269,6 +274,7 @@ function initialState(
     dailyQuests: makeDailyQuests("init"),
     activeMiniQuest: null,
     prestigeLevel: 0,
+    activeSeasonalEvent: null,
   };
 }
 
@@ -407,6 +413,42 @@ function tick(state: EconomyState): EconomyState {
     }
   }
 
+  // Seasonal events run purely on ticks — no player action can complete or
+  // interrupt one, so both the expiry check and the spawn roll live here
+  // rather than in a reducer post-processing step (contrast with mini quests).
+  let activeSeasonalEvent: EconomyState["activeSeasonalEvent"] = state.activeSeasonalEvent;
+  if (activeSeasonalEvent && state.tick + 1 >= activeSeasonalEvent.expiresAtTick) {
+    const endedTemplate = SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId];
+    if (endedTemplate) {
+      newEvents.push({
+        id: nextId++,
+        message: t(state.language, "msg.seasonalEventEnded", {
+          icon: endedTemplate.icon,
+          title: t(state.language, endedTemplate.titleKey),
+        }),
+        tone: "neutral",
+      });
+    }
+    activeSeasonalEvent = null;
+  }
+  if (!activeSeasonalEvent && Math.random() < SEASONAL_EVENT_CHANCE) {
+    const template = SEASONAL_EVENT_TEMPLATES[Math.floor(Math.random() * SEASONAL_EVENT_TEMPLATES.length)];
+    activeSeasonalEvent = {
+      id: nextId,
+      templateId: template.id,
+      triggeredAtTick: state.tick + 1,
+      expiresAtTick: state.tick + 1 + template.durationTicks,
+    };
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.seasonalEventStarted", {
+        icon: template.icon,
+        title: t(state.language, template.titleKey),
+      }),
+      tone: "good",
+    });
+  }
+
   let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness });
   if (happiness <= ANGRY_THRESHOLD && Math.random() < ANGRY_EVENT_CHANCE) {
     const penalty = Math.min(state.cash + taxCashDelta, ANGRY_CASH_PENALTY);
@@ -430,6 +472,9 @@ function tick(state: EconomyState): EconomyState {
 
   // Permanent, run-independent bonus from past prestiges (see PRESTIGE).
   const prestigeProductionMult = 1 + state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL;
+  const seasonalTemplate = activeSeasonalEvent
+    ? SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId]
+    : null;
 
   const goods = { ...state.goods };
   for (const good of GOODS) {
@@ -438,6 +483,10 @@ function tick(state: EconomyState): EconomyState {
     const noise = 1 + (Math.random() - 0.5) * PRODUCTION_NOISE;
     const researchedProductionMult = researchMultiplier(state.researched, good.id, "production");
     const researchedValueMult = researchMultiplier(state.researched, good.id, "value");
+    const seasonalMult =
+      seasonalTemplate && seasonalTemplate.affectedGoods.includes(good.id)
+        ? seasonalTemplate.priceMultiplier
+        : 1;
     const production =
       good.baseProduction * productionEfficiency * noise * researchedProductionMult * prestigeProductionMult;
     let supply = gs.supply + (production - good.baseProduction);
@@ -445,7 +494,7 @@ function tick(state: EconomyState): EconomyState {
     if (shockPct) supply *= 1 + shockPct;
     supply = clamp(supply, minSupply, maxSupply);
     const price = priceFromSupply(
-      good.basePrice * researchedValueMult,
+      good.basePrice * researchedValueMult * seasonalMult,
       good.baseSupply,
       good.elasticity,
       supply,
@@ -579,6 +628,7 @@ function tick(state: EconomyState): EconomyState {
     pendingDecision,
     pendingRequest,
     activeMiniQuest,
+    activeSeasonalEvent,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
