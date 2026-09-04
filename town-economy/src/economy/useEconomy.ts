@@ -604,6 +604,8 @@ function tradeAsset(
       ...state,
       cash: state.cash - cost,
       assets: { ...state.assets, [assetId]: { ...as, holding, avgCost } },
+      stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
+      dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
     };
   }
 
@@ -632,6 +634,12 @@ function tradeAsset(
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
+    dailyProgress: {
+      ...state.dailyProgress,
+      trades: state.dailyProgress.trades + 1,
+      cashEarned: state.dailyProgress.cashEarned + proceeds,
+    },
   };
 }
 

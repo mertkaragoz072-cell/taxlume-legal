@@ -117,7 +117,7 @@ function Game() {
       {screen === "trade" && <TradeScreen sounds={sounds} />}
       {screen === "town" && <TownScreen />}
       {screen === "research" && <ResearchScreen />}
-      {screen === "invest" && <InvestScreen />}
+      {screen === "invest" && <InvestScreen sounds={sounds} />}
       {screen === "achievements" && <AchievementsScreen />}
 
       <TabBar active={screen} onChange={setScreen} />

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ASSETS, AssetId } from "../economy/assets";
 import { BuySellPanel } from "../components/BuySellPanel";
@@ -12,8 +13,12 @@ import { cardShadow, CARD_GRADIENT } from "../theme";
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
 
-export function InvestScreen() {
-  const { state, tradeAsset, t } = useEconomyContext();
+interface Props {
+  sounds: ReturnType<typeof useSoundEffects>;
+}
+
+export function InvestScreen({ sounds }: Props) {
+  const { state, tradeAsset, assetsValue, t } = useEconomyContext();
   const [selectedId, setSelectedId] = useState<AssetId>(ASSETS[0].id);
   const selected = ASSETS.find((a) => a.id === selectedId)!;
   const selectedState = state.assets[selected.id];
@@ -28,10 +33,6 @@ export function InvestScreen() {
 
   const unrealizedPnl = (selectedState.price - selectedState.avgCost) * selectedState.holding;
 
-  const totalInvestValue = ASSETS.reduce(
-    (sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price,
-    0
-  );
   const totalPnl = ASSETS.reduce((sum, a) => {
     const as = state.assets[a.id];
     return sum + (as.price - as.avgCost) * as.holding;
@@ -43,8 +44,8 @@ export function InvestScreen() {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.portfolioLabel}>{t("invest.portfolioLabel")}</Text>
         <View style={styles.portfolioRow}>
-          <Text style={styles.portfolioValue}>{totalInvestValue.toFixed(1)} 🪙</Text>
-          {totalInvestValue > 0 && (
+          <Text style={styles.portfolioValue}>{assetsValue.toFixed(1)} 🪙</Text>
+          {assetsValue > 0 && (
             <Text style={[styles.portfolioPnl, { color: totalPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {totalPnl >= 0
                 ? t("invest.unrealizedProfit", { amount: totalPnl.toFixed(1) })
@@ -117,7 +118,11 @@ export function InvestScreen() {
         good={selected}
         state={selectedState}
         cash={state.cash}
-        onTrade={(side, qty) => tradeAsset(selected.id, side, qty)}
+        onTrade={(side, qty) => {
+          tradeAsset(selected.id, side, qty);
+          if (side === "buy") sounds.playBuy();
+          else sounds.playSell();
+        }}
       />
     </ScrollView>
   );
