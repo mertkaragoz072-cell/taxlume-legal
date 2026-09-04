@@ -328,6 +328,8 @@ export const STRINGS = {
       workforce: { title: "İşgücü", description: "Aynı anda toplam 3 işçi çalıştır." },
       debt_free: { title: "Borçsuz Yaşam", description: "Bir krediyi tamamen kapat." },
       metropol_trader: { title: "Metropol Tüccarı", description: "Bir metropolle ticaret yap." },
+      researcher: { title: "Araştırmacı", description: "5 araştırma yükseltmesi tamamla." },
+      investor: { title: "Yatırımcı", description: "Aynı anda 2 farklı yatırım aracına sahip ol." },
     },
     quest: {
       daily_trade_small: { title: "Küçük Tüccar", description: "Bugün 3 alım-satım işlemi yap." },
@@ -780,6 +782,8 @@ export const STRINGS = {
       workforce: { title: "Workforce", description: "Employ 3 workers at the same time." },
       debt_free: { title: "Debt Free", description: "Fully repay a loan." },
       metropol_trader: { title: "Metropol Trader", description: "Trade with a metropolis." },
+      researcher: { title: "Researcher", description: "Complete 5 research upgrades." },
+      investor: { title: "Investor", description: "Own 2 different investment assets at once." },
     },
     quest: {
       daily_trade_small: { title: "Small-Time Trader", description: "Make 3 trades today." },

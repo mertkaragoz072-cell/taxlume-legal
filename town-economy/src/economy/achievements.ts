@@ -20,7 +20,9 @@ export type AchievementId =
   | "prestige_1"
   | "workforce"
   | "debt_free"
-  | "metropol_trader";
+  | "metropol_trader"
+  | "researcher"
+  | "investor";
 
 export interface AchievementDef {
   id: AchievementId;
@@ -42,6 +44,10 @@ function totalWorkersEmployed(state: EconomyState): number {
 
 function metropolTownsTradedWith(state: EconomyState): number {
   return state.stats.townsTradedWith.filter((id) => TOWNS_BY_ID[id]?.tier === "metropol").length;
+}
+
+function assetsOwnedCount(state: EconomyState): number {
+  return Object.values(state.assets).filter((a) => a.holding > 0).length;
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -215,6 +221,24 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 100,
     target: 1,
     progress: (s) => metropolTownsTradedWith(s),
+  },
+  {
+    id: "researcher",
+    titleKey: "achievement.researcher.title",
+    descriptionKey: "achievement.researcher.description",
+    icon: "🔬",
+    reward: 90,
+    target: 5,
+    progress: (s) => s.researched.length,
+  },
+  {
+    id: "investor",
+    titleKey: "achievement.investor.title",
+    descriptionKey: "achievement.investor.description",
+    icon: "📈",
+    reward: 70,
+    target: 2,
+    progress: (s) => assetsOwnedCount(s),
   },
 ];
 
