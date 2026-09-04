@@ -45,6 +45,14 @@ export const TRADE_UNLOCK_NET_WORTH = 500;
 export const METROPOL_UNLOCK_NET_WORTH = 3000;
 const DAILY_QUEST_COUNT = 3;
 
+// --- Prestige ------------------------------------------------------------
+// The "end of a run" milestone: cash in a well-grown town for a permanent,
+// stacking bonus that survives every future reset (see PRESTIGE below and
+// the RESET case, which both carry prestigeLevel forward).
+export const PRESTIGE_UNLOCK_NET_WORTH = 10000;
+export const PRESTIGE_PRODUCTION_BONUS_PER_LEVEL = 0.08;
+export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
+
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
 // scarcity = clamp((baseSupply / supply) ^ elasticity, SCARCITY_MIN, SCARCITY_MAX)
@@ -156,6 +164,7 @@ type Action =
   | { type: "SEND_CARAVAN"; townId: TownId; goodId: GoodId; direction: CaravanDirection; qty: number }
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
+  | { type: "PRESTIGE" }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
   | { type: "UPGRADE"; upgradeId: UpgradeId }
@@ -259,6 +268,7 @@ function initialState(
     dailyProgress: makeInitialDailyProgress(),
     dailyQuests: makeDailyQuests("init"),
     activeMiniQuest: null,
+    prestigeLevel: 0,
   };
 }
 
@@ -418,6 +428,9 @@ function tick(state: EconomyState): EconomyState {
   const inflationIndex = state.inflationIndex * (1 + inflationRate);
   const inflationHistory = pushCapped(state.inflationHistory, inflationIndex, HISTORY_LEN);
 
+  // Permanent, run-independent bonus from past prestiges (see PRESTIGE).
+  const prestigeProductionMult = 1 + state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL;
+
   const goods = { ...state.goods };
   for (const good of GOODS) {
     const gs = goods[good.id];
@@ -425,7 +438,8 @@ function tick(state: EconomyState): EconomyState {
     const noise = 1 + (Math.random() - 0.5) * PRODUCTION_NOISE;
     const researchedProductionMult = researchMultiplier(state.researched, good.id, "production");
     const researchedValueMult = researchMultiplier(state.researched, good.id, "value");
-    const production = good.baseProduction * productionEfficiency * noise * researchedProductionMult;
+    const production =
+      good.baseProduction * productionEfficiency * noise * researchedProductionMult * prestigeProductionMult;
     let supply = gs.supply + (production - good.baseProduction);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
@@ -1162,6 +1176,26 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
   );
 }
 
+function prestige(state: EconomyState): EconomyState {
+  if (computeNetWorth(state) < PRESTIGE_UNLOCK_NET_WORTH) return state;
+  const nextLevel = state.prestigeLevel + 1;
+  const base = initialState(state.difficulty, state.language);
+  const event: EconomyEvent = {
+    id: base.nextId,
+    message: t(state.language, "msg.prestiged", { level: nextLevel }),
+    tone: "good",
+  };
+  return {
+    ...base,
+    townName: state.townName,
+    prestigeLevel: nextLevel,
+    cash: base.cash + nextLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
+    nextId: base.nextId + 1,
+    lastEvent: event,
+    eventLog: [event],
+  };
+}
+
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
@@ -1176,13 +1210,20 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return sendCaravan(state, action.townId, action.goodId, action.direction, action.qty);
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
-    case "RESET":
-      // A new difficulty starts the economy over, but the player's
-      // chosen town name and language are identity, not run state — keep them.
+    case "RESET": {
+      // A new difficulty starts the economy over, but the player's chosen
+      // town name, language, and any earned prestige bonus are identity,
+      // not run state — keep them.
+      const base = initialState(action.difficulty, state.language);
       return {
-        ...initialState(action.difficulty, state.language),
+        ...base,
         townName: state.townName,
+        prestigeLevel: state.prestigeLevel,
+        cash: base.cash + state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
       };
+    }
+    case "PRESTIGE":
+      return prestige(state);
     case "HYDRATE":
       return action.state;
     case "DAILY_CHECKIN":
@@ -1273,6 +1314,7 @@ export function useEconomy() {
     (difficulty: DifficultyId) => dispatch({ type: "RESET", difficulty }),
     []
   );
+  const prestige_ = useCallback(() => dispatch({ type: "PRESTIGE" }), []);
   const upgrade_ = useCallback(
     (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
     []
@@ -1320,6 +1362,7 @@ export function useEconomy() {
     sendCaravan: sendCaravan_,
     togglePause,
     reset,
+    prestige: prestige_,
     upgrade: upgrade_,
     research: research_,
     tradeAsset: tradeAsset_,

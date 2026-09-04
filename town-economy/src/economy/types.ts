@@ -194,4 +194,7 @@ export interface EconomyState {
   dailyQuests: DailyQuest[];
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */
   activeMiniQuest: MiniQuestInstance | null;
+  /** times the player has cashed in a run for a permanent bonus (see PRESTIGE
+   * in useEconomy.ts) — survives every reset, including a plain difficulty restart */
+  prestigeLevel: number;
 }

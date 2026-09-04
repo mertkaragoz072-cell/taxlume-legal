@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
-import { estimateTaxIncomePerTick, TAX_RATE_STEPS } from "../economy/useEconomy";
+import {
+  estimateTaxIncomePerTick,
+  PRESTIGE_CASH_BONUS_PER_LEVEL,
+  PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
+  PRESTIGE_UNLOCK_NET_WORTH,
+  TAX_RATE_STEPS,
+} from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
@@ -28,10 +34,13 @@ function happinessFor(h: number): { labelKey: string; emoji: string; color: stri
 }
 
 export function TownScreen() {
-  const { state, upgrade, setTaxRate, t } = useEconomyContext();
+  const { state, upgrade, setTaxRate, prestige, netWorth, t } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
+  const [prestigeArmed, setPrestigeArmed] = useState(false);
+  const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
+  const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -96,6 +105,59 @@ export function TownScreen() {
             );
           })}
         </View>
+      </View>
+
+      <View style={styles.prestigeCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View style={styles.taxHeaderRow}>
+          <Text style={styles.taxTitle}>{t("town.prestige.title")}</Text>
+          {state.prestigeLevel > 0 && (
+            <Text style={styles.prestigeLevel}>{t("town.prestige.level", { level: state.prestigeLevel })}</Text>
+          )}
+        </View>
+        <Text style={styles.taxDesc}>{t("town.prestige.description")}</Text>
+        {state.prestigeLevel > 0 && (
+          <Text style={styles.prestigeBonus}>
+            {t("town.prestige.bonus", {
+              pct: Math.round(state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL * 100),
+              cash: state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
+            })}
+          </Text>
+        )}
+        {prestigeReady ? (
+          <ScalePressable
+            onPress={() => {
+              if (!prestigeArmed) {
+                setPrestigeArmed(true);
+                return;
+              }
+              prestige();
+              setPrestigeArmed(false);
+            }}
+            style={styles.prestigeBtn}
+            scaleTo={0.97}
+          >
+            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+            <Text style={styles.prestigeBtnText}>
+              {prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
+            </Text>
+          </ScalePressable>
+        ) : (
+          <>
+            <Text style={styles.prestigeLocked}>
+              {t("town.prestige.locked", { target: PRESTIGE_UNLOCK_NET_WORTH })}
+            </Text>
+            <View style={styles.lockedTrack}>
+              <View style={[styles.lockedFill, { width: `${prestigePct * 100}%` }]} />
+            </View>
+            <Text style={styles.prestigeProgress}>
+              {t("town.prestige.progress", {
+                current: Math.floor(netWorth),
+                target: PRESTIGE_UNLOCK_NET_WORTH,
+              })}
+            </Text>
+          </>
+        )}
       </View>
 
       <View style={styles.chartCard}>
@@ -254,6 +316,34 @@ const styles = StyleSheet.create({
   taxBtnActive: { borderColor: "#e8c777" },
   taxBtnText: { color: "#a0917a", fontWeight: "700", fontSize: 12 },
   taxBtnTextActive: { color: "#e8c777" },
+  prestigeCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  prestigeLevel: { color: "#e8c777", fontWeight: "800", fontSize: 12 },
+  prestigeBonus: { color: "#3fae5c", fontSize: 11, fontWeight: "700", marginTop: 6 },
+  prestigeLocked: { color: "#a0917a", fontSize: 11, marginTop: 10, marginBottom: 8 },
+  prestigeProgress: { color: "#e8c777", fontSize: 12, fontWeight: "700" },
+  lockedTrack: {
+    width: "100%",
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#1a1410",
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  lockedFill: { height: "100%", backgroundColor: "#e8c777", borderRadius: 4 },
+  prestigeBtn: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    overflow: "hidden",
+    marginTop: 12,
+  },
+  prestigeBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
   chartCard: {
     borderRadius: 16,
     padding: 16,
