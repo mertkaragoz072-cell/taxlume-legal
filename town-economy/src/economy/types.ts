@@ -122,8 +122,12 @@ export interface VillagerRequest {
 export interface Loan {
   principal: number;
   remainingBalance: number;
-  /** locked in when the loan is taken (a higher bank upgrade level buys a lower rate) */
+  /** locked in when the loan is taken (depends on the bank upgrade level,
+   * inflation at signing time, and the chosen term — see loanInterestRatePerTick) */
   interestRatePerTick: number;
+  /** the installment term chosen at signing (see LOAN_TERM_MONTHS_STEPS); a
+   * longer term locks in a higher rate, mirroring real fixed-term lending */
+  termMonths: number;
   takenAtTick: number;
 }
 

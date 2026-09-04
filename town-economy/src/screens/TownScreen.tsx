@@ -5,6 +5,8 @@ import { GOODS } from "../economy/goods";
 import {
   estimateTaxIncomePerTick,
   loanCap,
+  loanInterestRatePerTick,
+  LOAN_TERM_MONTHS_STEPS,
   PRESTIGE_CASH_BONUS_PER_LEVEL,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRESTIGE_UNLOCK_NET_WORTH,
@@ -49,6 +51,8 @@ export function TownScreen() {
   const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
   const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
   const cap = loanCap(state);
+  const [selectedTermMonths, setSelectedTermMonths] = useState(LOAN_TERM_MONTHS_STEPS[0]);
+  const previewRate = loanInterestRatePerTick(state, selectedTermMonths);
 
   // A gentle breathing pulse on the Prestige button once it's actually
   // tappable — draws the eye without a modal or sound nagging about it.
@@ -197,7 +201,10 @@ export function TownScreen() {
               <Text style={styles.bankBalanceValue}>{state.loan.remainingBalance.toFixed(1)} 🪙</Text>
             </View>
             <Text style={styles.bankRate}>
-              {t("town.bank.rate", { pct: (state.loan.interestRatePerTick * 100).toFixed(2) })}
+              {t("town.bank.rate", {
+                pct: (state.loan.interestRatePerTick * 100).toFixed(2),
+                months: state.loan.termMonths,
+              })}
             </Text>
             <View style={styles.bankBtnRow}>
               {([0.25, 0.5, 1] as const).map((frac) => {
@@ -218,12 +225,36 @@ export function TownScreen() {
         ) : (
           <>
             <Text style={styles.bankCap}>{t("town.bank.cap", { amount: cap })}</Text>
+            <Text style={styles.bankTermLabel}>{t("town.bank.termLabel")}</Text>
+            <View style={styles.taxRow}>
+              {LOAN_TERM_MONTHS_STEPS.map((months) => {
+                const selected = months === selectedTermMonths;
+                return (
+                  <ScalePressable
+                    key={months}
+                    onPress={() => setSelectedTermMonths(months)}
+                    style={[styles.taxBtn, selected && styles.taxBtnActive]}
+                  >
+                    <Text style={[styles.taxBtnText, selected && styles.taxBtnTextActive]}>
+                      {t("town.bank.termMonths", { months })}
+                    </Text>
+                  </ScalePressable>
+                );
+              })}
+            </View>
+            <Text style={styles.bankRate}>
+              {t("town.bank.ratePreview", { pct: (previewRate * 100).toFixed(2) })}
+            </Text>
             <View style={styles.bankBtnRow}>
               {([0.25, 0.5, 1] as const).map((frac) => {
                 const amount = Math.round(cap * frac);
                 if (amount < 10) return null;
                 return (
-                  <ScalePressable key={frac} onPress={() => takeLoan(amount)} style={styles.bankBtn}>
+                  <ScalePressable
+                    key={frac}
+                    onPress={() => takeLoan(amount, selectedTermMonths)}
+                    style={styles.bankBtn}
+                  >
                     <Text style={styles.bankBtnText}>{t("town.bank.takeBtn", { amount })}</Text>
                   </ScalePressable>
                 );
@@ -468,6 +499,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   bankCap: { color: "#a0917a", fontSize: 11, marginTop: 4, marginBottom: 10 },
+  bankTermLabel: { color: "#a0917a", fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 6 },
   bankBalanceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
   bankBalanceLabel: { color: "#a0917a", fontSize: 11 },
   bankBalanceValue: { color: "#c94b4b", fontWeight: "800", fontSize: 15 },

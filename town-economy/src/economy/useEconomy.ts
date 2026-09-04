@@ -64,6 +64,16 @@ export const LOAN_BASE_INTEREST_RATE_PER_TICK = 0.0025;
 // A higher Banka upgrade level buys a cheaper loan, floored so it's never free.
 export const LOAN_BANK_DISCOUNT_PER_LEVEL = 0.0003;
 export const LOAN_MIN_INTEREST_RATE_PER_TICK = 0.0008;
+export const LOAN_MAX_INTEREST_RATE_PER_TICK = 0.02;
+// The rate offered reflects how hot inflation is running right now, like a
+// real central bank's policy rate — capped so a runaway inflation spiral
+// can't make every loan instantly unpayable.
+export const LOAN_INFLATION_SENSITIVITY = 0.35;
+export const LOAN_MAX_INFLATION_RATE_CONTRIB = 0.006;
+// Term choice at signing: longer commitments carry more rate risk for the
+// bank, so they lock in a higher (but fixed for the life of the loan) rate.
+export const LOAN_TERM_MONTHS_STEPS = [3, 6, 12, 24];
+export const LOAN_TERM_RATE_PER_MONTH = 0.00005;
 // How much an all-consuming debt (balance ≈ net worth) drags down the
 // villagers' target happiness, on top of whatever the tax rate is already doing.
 const DEBT_HAPPINESS_DRAG = 20;
@@ -184,7 +194,7 @@ type Action =
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "PRESTIGE" }
-  | { type: "TAKE_LOAN"; amount: number }
+  | { type: "TAKE_LOAN"; amount: number; termMonths: number }
   | { type: "REPAY_LOAN"; amount: number }
   | { type: "HIRE_WORKER"; goodId: GoodId }
   | { type: "FIRE_WORKER"; goodId: GoodId }
@@ -1037,6 +1047,27 @@ export function loanCap(state: EconomyState): number {
   return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * LOAN_MAX_NET_WORTH_PCT));
 }
 
+/** The rate a loan of the given term would carry if signed right now: the
+ * base rate, discounted by the Banka upgrade level, plus a premium for how
+ * hot inflation is currently running and for how long the term locks the
+ * bank in — mirrors how a real lender prices both inflation and duration risk. */
+export function loanInterestRatePerTick(state: EconomyState, termMonths: number): number {
+  const inflationContribution = clamp(
+    state.inflationRate * LOAN_INFLATION_SENSITIVITY,
+    -LOAN_MAX_INFLATION_RATE_CONTRIB,
+    LOAN_MAX_INFLATION_RATE_CONTRIB
+  );
+  const termContribution = termMonths * LOAN_TERM_RATE_PER_MONTH;
+  return clamp(
+    LOAN_BASE_INTEREST_RATE_PER_TICK +
+      inflationContribution +
+      termContribution -
+      state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL,
+    LOAN_MIN_INTEREST_RATE_PER_TICK,
+    LOAN_MAX_INTEREST_RATE_PER_TICK
+  );
+}
+
 function applyAchievements(state: EconomyState): EconomyState {
   const netWorth = computeNetWorth(state);
   const newlyUnlocked = ACHIEVEMENTS.filter(
@@ -1321,18 +1352,16 @@ function prestige(state: EconomyState): EconomyState {
   };
 }
 
-function takeLoan(state: EconomyState, amount: number): EconomyState {
+function takeLoan(state: EconomyState, amount: number, termMonths: number): EconomyState {
   if (state.gameOver || state.loan || amount <= 0) return state;
+  if (!LOAN_TERM_MONTHS_STEPS.includes(termMonths)) return state;
   const principal = Math.min(Math.round(amount), loanCap(state));
   if (principal <= 0) return state;
-  const interestRatePerTick = Math.max(
-    LOAN_MIN_INTEREST_RATE_PER_TICK,
-    LOAN_BASE_INTEREST_RATE_PER_TICK - state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL
-  );
+  const interestRatePerTick = loanInterestRatePerTick(state, termMonths);
   return {
     ...state,
     cash: state.cash + principal,
-    loan: { principal, remainingBalance: principal, interestRatePerTick, takenAtTick: state.tick },
+    loan: { principal, remainingBalance: principal, interestRatePerTick, termMonths, takenAtTick: state.tick },
   };
 }
 
@@ -1392,7 +1421,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
     case "PRESTIGE":
       return prestige(state);
     case "TAKE_LOAN":
-      return takeLoan(state, action.amount);
+      return takeLoan(state, action.amount, action.termMonths);
     case "REPAY_LOAN":
       return repayLoan(state, action.amount);
     case "HIRE_WORKER":
@@ -1490,7 +1519,10 @@ export function useEconomy() {
     []
   );
   const prestige_ = useCallback(() => dispatch({ type: "PRESTIGE" }), []);
-  const takeLoan_ = useCallback((amount: number) => dispatch({ type: "TAKE_LOAN", amount }), []);
+  const takeLoan_ = useCallback(
+    (amount: number, termMonths: number) => dispatch({ type: "TAKE_LOAN", amount, termMonths }),
+    []
+  );
   const repayLoan_ = useCallback((amount: number) => dispatch({ type: "REPAY_LOAN", amount }), []);
   const hireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "HIRE_WORKER", goodId }), []);
   const fireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "FIRE_WORKER", goodId }), []);
