@@ -115,6 +115,21 @@ export interface VillagerRequest {
   triggeredAtTick: number;
 }
 
+/** a short-lived side objective (see miniQuests.ts) that pops up mid-play,
+ * runs passively alongside whatever the player is doing, and pays out
+ * automatically if hit before expiresAtTick */
+export interface MiniQuestInstance {
+  id: number;
+  templateId: string;
+  target: number;
+  reward: number;
+  triggeredAtTick: number;
+  expiresAtTick: number;
+  /** the template's DailyProgress metric value at spawn time, so progress
+   * is measured "since this quest appeared" rather than since the day began */
+  baseline: number;
+}
+
 /** counters that reset each day and back the daily quests' progress */
 export interface DailyProgress {
   trades: number;
@@ -177,4 +192,6 @@ export interface EconomyState {
   pendingRequest: VillagerRequest | null;
   dailyProgress: DailyProgress;
   dailyQuests: DailyQuest[];
+  /** a short-lived side objective running in the background; doesn't freeze the tick loop */
+  activeMiniQuest: MiniQuestInstance | null;
 }

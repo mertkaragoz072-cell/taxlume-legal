@@ -108,6 +108,8 @@ export const STRINGS = {
       dailyQuestsLabel: "GÜNLÜK GÖREVLER",
       dailyQuestsCount: "{count} / {total} tamamlandı",
       dailyQuestsNote: "Her gün yeni görevler gelir, yarın tekrar uğra.",
+      miniQuestSectionLabel: "ANLIK GÖREV",
+      miniQuestTicksLeft: "{ticks} tur kaldı",
       sectionLabel: "BAŞARIMLAR",
     },
     offline: {
@@ -298,6 +300,13 @@ export const STRINGS = {
       daily_earnings: { title: "Kazanç Günü", description: "Bugün 100 🪙 kazan." },
       daily_upgrade: { title: "Yatırımcı", description: "Bugün bir kasaba geliştirmesi satın al." },
     },
+    miniQuest: {
+      flash_trade: { title: "Anlık Fırsat", description: "Hızla bir alışveriş yap!" },
+      flash_trade_3: { title: "Hızlı Alışveriş", description: "Art arda 3 alışveriş yap!" },
+      flash_earnings: { title: "Hızlı Kazanç", description: "Hızla 40 🪙 kazan!" },
+      flash_caravan: { title: "Aceleci Kervan", description: "Hemen bir kervan yola çıkar!" },
+      flash_upgrade: { title: "Ani Yatırım", description: "Hemen bir kasaba geliştirmesi satın al!" },
+    },
     decision: {
       famine_relief: {
         title: "Kıtlık Yardımı",
@@ -355,6 +364,9 @@ export const STRINGS = {
     msg: {
       decisionPending: "📢 {title}: kasabanı ilgilendiren bir karar bekliyor.",
       villagerRequestPending: "🙋 Bir köylü {qty} {good} rica ediyor.",
+      miniQuestPending: "⚡ Anlık görev: {icon} {title}!",
+      miniQuestCompleted: "🎉 Anlık görev tamamlandı: {icon} {title} (+{reward} 🪙)",
+      miniQuestExpired: "⌛ Anlık görev süresi doldu: {icon} {title}",
       angryUprising: "😡 Köylüler vergiden bıktı, ayaklandı! -{amount} 🪙 zarar.",
       contentDonation: "😊 Köylüler adil vergiden memnun, gönüllü bağış yaptılar! +{amount} 🪙.",
       caravanReturnedExport: "🚚 Kervan {town}'dan döndü: +{amount} 🪙 ({qty} {good})",
@@ -499,6 +511,8 @@ export const STRINGS = {
       dailyQuestsLabel: "DAILY QUESTS",
       dailyQuestsCount: "{count} / {total} done",
       dailyQuestsNote: "New quests arrive every day — check back tomorrow.",
+      miniQuestSectionLabel: "FLASH QUEST",
+      miniQuestTicksLeft: "{ticks} turns left",
       sectionLabel: "ACHIEVEMENTS",
     },
     offline: {
@@ -689,6 +703,13 @@ export const STRINGS = {
       daily_earnings: { title: "Payday", description: "Earn 100 🪙 today." },
       daily_upgrade: { title: "Investor", description: "Buy a town upgrade today." },
     },
+    miniQuest: {
+      flash_trade: { title: "Flash Opportunity", description: "Make a quick trade!" },
+      flash_trade_3: { title: "Quick Shopping", description: "Make 3 trades in a row!" },
+      flash_earnings: { title: "Quick Cash", description: "Earn 40 🪙 fast!" },
+      flash_caravan: { title: "Rush Caravan", description: "Send a caravan right now!" },
+      flash_upgrade: { title: "Sudden Investment", description: "Buy a town upgrade right now!" },
+    },
     decision: {
       famine_relief: {
         title: "Famine Relief",
@@ -746,6 +767,9 @@ export const STRINGS = {
     msg: {
       decisionPending: "📢 {title}: a decision needs your attention.",
       villagerRequestPending: "🙋 A villager is asking for {qty} {good}.",
+      miniQuestPending: "⚡ Flash quest: {icon} {title}!",
+      miniQuestCompleted: "🎉 Flash quest completed: {icon} {title} (+{reward} 🪙)",
+      miniQuestExpired: "⌛ Flash quest expired: {icon} {title}",
       angryUprising: "😡 Villagers, fed up with taxes, revolted! -{amount} 🪙 lost.",
       contentDonation: "😊 Villagers, pleased with fair taxes, made a voluntary donation! +{amount} 🪙.",
       caravanReturnedExport: "🚚 The caravan returned from {town}: +{amount} 🪙 ({qty} {good})",

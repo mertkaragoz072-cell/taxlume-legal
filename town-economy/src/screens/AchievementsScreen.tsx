@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { GradientFill } from "../components/GradientFill";
 import { ACHIEVEMENTS } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 import { CARD_GRADIENT, cardShadow, UNLOCKED_CARD_GRADIENT } from "../theme";
 
@@ -10,6 +11,8 @@ export function AchievementsScreen() {
   const { state, netWorth, t } = useEconomyContext();
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
+  const miniQuest = state.activeMiniQuest;
+  const miniQuestTemplate = miniQuest ? MINI_QUEST_TEMPLATES_BY_ID[miniQuest.templateId] : null;
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -30,6 +33,49 @@ export function AchievementsScreen() {
           </Text>
         </View>
       </View>
+
+      {miniQuest && miniQuestTemplate && (
+        <>
+          <Text style={styles.sectionLabel}>{t("achievements.miniQuestSectionLabel")}</Text>
+          {(() => {
+            const current = Math.max(
+              0,
+              Math.min(
+                miniQuestTemplate.metric(state.dailyProgress) - miniQuest.baseline,
+                miniQuest.target
+              )
+            );
+            const pct = miniQuest.target > 0 ? current / miniQuest.target : 0;
+            const ticksLeft = Math.max(0, miniQuest.expiresAtTick - state.tick);
+            return (
+              <View style={styles.miniQuestCard}>
+                <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.icon}>{miniQuestTemplate.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.title, styles.titleUnlocked]}>
+                      {t(miniQuestTemplate.titleKey)}
+                    </Text>
+                    <Text style={styles.reward}>+{miniQuest.reward} 🪙</Text>
+                  </View>
+                  <Text style={styles.description}>{t(miniQuestTemplate.descriptionKey)}</Text>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]} />
+                  </View>
+                  <View style={styles.miniQuestFooterRow}>
+                    <Text style={styles.progressText}>
+                      {Math.floor(current)} / {miniQuest.target}
+                    </Text>
+                    <Text style={styles.miniQuestTicksLeft}>
+                      {t("achievements.miniQuestTicksLeft", { ticks: ticksLeft })}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })()}
+        </>
+      )}
 
       <View style={styles.questHeaderRow}>
         <Text style={styles.sectionLabel}>{t("achievements.dailyQuestsLabel")}</Text>
@@ -159,6 +205,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardUnlocked: { opacity: 1, borderWidth: 1, borderColor: "#e8c777", ...cardShadow },
+  miniQuestCard: {
+    flexDirection: "row",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#e8c777",
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  miniQuestProgressFill: { backgroundColor: "#e8c777" },
+  miniQuestFooterRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 3 },
+  miniQuestTicksLeft: { color: "#e8c777", fontSize: 10, fontWeight: "700" },
   icon: { fontSize: 26, marginRight: 12 },
   iconLocked: { opacity: 0.5 },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

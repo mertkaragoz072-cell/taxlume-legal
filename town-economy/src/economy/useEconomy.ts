@@ -5,6 +5,7 @@ import { DECISION_TEMPLATES, DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
+import { MINI_QUEST_TEMPLATES, MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
@@ -111,6 +112,10 @@ const DECISION_EVENT_CHANCE = 0.02;
 // A separate, simpler kind of interruption from decisions: a villager just
 // wants some of one good, not a policy choice with varied outcomes.
 const VILLAGER_REQUEST_CHANCE = 0.018;
+// Unlike a decision or villager request, a mini quest never freezes the
+// tick loop — it just runs in the background against a short deadline
+// (see miniQuests.ts) while the player keeps playing normally.
+const MINI_QUEST_CHANCE = 0.02;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -253,6 +258,7 @@ function initialState(
     pendingRequest: null,
     dailyProgress: makeInitialDailyProgress(),
     dailyQuests: makeDailyQuests("init"),
+    activeMiniQuest: null,
   };
 }
 
@@ -362,6 +368,33 @@ function tick(state: EconomyState): EconomyState {
       }),
       tone: "neutral",
     });
+  }
+
+  // Mini quests run passively alongside everything else, so they don't
+  // check pendingDecision/pendingRequest — only that none is already active.
+  let activeMiniQuest: EconomyState["activeMiniQuest"] = state.activeMiniQuest;
+  if (!activeMiniQuest && Math.random() < MINI_QUEST_CHANCE) {
+    const candidates = MINI_QUEST_TEMPLATES.filter((tpl) => !tpl.requiresTrade || state.tradeUnlocked);
+    if (candidates.length > 0) {
+      const template = candidates[Math.floor(Math.random() * candidates.length)];
+      activeMiniQuest = {
+        id: nextId,
+        templateId: template.id,
+        target: template.target,
+        reward: template.reward,
+        triggeredAtTick: state.tick + 1,
+        expiresAtTick: state.tick + 1 + template.durationTicks,
+        baseline: template.metric(state.dailyProgress),
+      };
+      newEvents.push({
+        id: nextId++,
+        message: t(state.language, "msg.miniQuestPending", {
+          icon: template.icon,
+          title: t(state.language, template.titleKey),
+        }),
+        tone: "neutral",
+      });
+    }
   }
 
   let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness });
@@ -531,6 +564,7 @@ function tick(state: EconomyState): EconomyState {
     lastSavedAt: Date.now(),
     pendingDecision,
     pendingRequest,
+    activeMiniQuest,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
@@ -802,6 +836,10 @@ function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),
     dailyQuests: makeDailyQuests(today),
+    // A mini quest's progress is measured against the daily counters above
+    // via a baseline snapshot — resetting those out from under it would
+    // make it unwinnable, so just drop it; a new one spawns again soon.
+    activeMiniQuest: null,
   };
 }
 
@@ -967,6 +1005,58 @@ function applyDailyQuests(state: EconomyState): EconomyState {
   };
 }
 
+// Only checks completion/expiry of the active mini quest — the random
+// spawn roll lives in tick() itself so it fires once per real tick, not
+// once per player action (this runs after every action, like the other
+// applyX post-processing steps).
+function applyMiniQuest(state: EconomyState): EconomyState {
+  const mq = state.activeMiniQuest;
+  if (!mq) return state;
+  const template = MINI_QUEST_TEMPLATES_BY_ID[mq.templateId];
+  if (!template) return { ...state, activeMiniQuest: null };
+
+  const progress = template.metric(state.dailyProgress) - mq.baseline;
+  if (progress >= mq.target) {
+    const event: EconomyEvent = {
+      id: state.nextId,
+      message: t(state.language, "msg.miniQuestCompleted", {
+        icon: template.icon,
+        title: t(state.language, template.titleKey),
+        reward: mq.reward,
+      }),
+      tone: "good",
+    };
+    return {
+      ...state,
+      cash: state.cash + mq.reward,
+      activeMiniQuest: null,
+      nextId: state.nextId + 1,
+      lastEvent: event,
+      eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    };
+  }
+
+  if (state.tick >= mq.expiresAtTick) {
+    const event: EconomyEvent = {
+      id: state.nextId,
+      message: t(state.language, "msg.miniQuestExpired", {
+        icon: template.icon,
+        title: t(state.language, template.titleKey),
+      }),
+      tone: "neutral",
+    };
+    return {
+      ...state,
+      activeMiniQuest: null,
+      nextId: state.nextId + 1,
+      lastEvent: event,
+      eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    };
+  }
+
+  return state;
+}
+
 function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): EconomyState {
   if (ticks <= 0) return state;
   const beforeCash = state.cash;
@@ -979,6 +1069,10 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
   let s = state;
   for (let i = 0; i < ticks; i++) {
     s = tick(s);
+    // Checked every iteration (unlike the other applyX steps below) since
+    // a mini quest's short deadline can spawn, complete, and expire many
+    // times over within a single offline gap.
+    s = applyMiniQuest(s);
   }
   s = applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s))));
 
@@ -1119,7 +1213,9 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
 function reducer(state: EconomyState, action: Action): EconomyState {
   const next = baseReducer(state, action);
   if (next === state || action.type === "RESET") return next;
-  return applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next))));
+  return applyMiniQuest(
+    applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next))))
+  );
 }
 
 export function useEconomy() {
