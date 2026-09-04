@@ -1024,7 +1024,7 @@ function setLanguage(state: EconomyState, language: Language): EconomyState {
   return { ...state, language };
 }
 
-function computeNetWorth(state: EconomyState): number {
+export function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
     GOODS.reduce((sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price, 0) +

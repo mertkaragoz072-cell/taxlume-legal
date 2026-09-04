@@ -1,7 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { GOODS_BY_ID } from "../economy/goods";
-import { TICK_MS } from "../economy/useEconomy";
+import { computeNetWorth, PRESTIGE_UNLOCK_NET_WORTH, TICK_MS } from "../economy/useEconomy";
 import { EconomyState } from "../economy/types";
 import { TOWNS_BY_ID } from "../economy/towns";
 import { t } from "../i18n/t";
@@ -9,6 +9,8 @@ import { t } from "../i18n/t";
 const CHANNEL_ID = "town-economy-default";
 const UNHAPPY_HAPPINESS_THRESHOLD = 30;
 const UNHAPPY_WARNING_DELAY_SEC = 2 * 60 * 60; // 2 hours
+const LOAN_REMINDER_DELAY_SEC = 3 * 60 * 60; // 3 hours
+const PRESTIGE_READY_DELAY_SEC = 60 * 60; // 1 hour
 const DAILY_REMINDER_HOUR = 20;
 const MIN_SCHEDULE_SECONDS = 5;
 
@@ -97,7 +99,7 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
     await scheduleSafely({
       content: {
         title: t(state.language, "notif.unhappyTitle"),
-        body: t(state.language, "notif.unhappyBody"),
+        body: t(state.language, "notif.unhappyBody", { happiness: Math.round(state.happiness) }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -107,11 +109,56 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
     });
   }
 
+  // A loan just sits there accruing interest while the app is closed — worth
+  // a nudge distinct from the general daily reminder.
+  if (state.loan && !state.gameOver) {
+    await scheduleSafely({
+      content: {
+        title: t(state.language, "notif.loanTitle"),
+        body: t(state.language, "notif.loanBody", {
+          amount: Math.round(state.loan.remainingBalance),
+        }),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: LOAN_REMINDER_DELAY_SEC,
+        repeats: false,
+      },
+    });
+  }
+
+  // Prestiging is a deliberate action, not something that happens on its
+  // own — unlike the trade/metropol unlocks, a player who hits the net
+  // worth bar and then closes the app would otherwise never be told.
+  if (!state.gameOver && computeNetWorth(state) >= PRESTIGE_UNLOCK_NET_WORTH) {
+    await scheduleSafely({
+      content: {
+        title: t(state.language, "notif.prestigeReadyTitle"),
+        body: t(state.language, "notif.prestigeReadyBody"),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: PRESTIGE_READY_DELAY_SEC,
+        repeats: false,
+      },
+    });
+  }
+
   if (!state.gameOver) {
+    // Rotates through whichever context is most relevant right now instead
+    // of always showing the same generic line — a streak in progress is
+    // the strongest hook, then unfinished daily quests, then a fallback.
+    const incompleteDailyQuests = state.dailyQuests.filter((q) => !q.completed).length;
+    const dailyReminderBody =
+      state.streak.count > 0
+        ? t(state.language, "notif.dailyReminderBodyStreak", { count: state.streak.count })
+        : incompleteDailyQuests > 0
+          ? t(state.language, "notif.dailyReminderBodyQuests", { count: incompleteDailyQuests })
+          : t(state.language, "notif.dailyReminderBodyDefault");
     await scheduleSafely({
       content: {
         title: t(state.language, "notif.dailyReminderTitle"),
-        body: t(state.language, "notif.dailyReminderBody"),
+        body: dailyReminderBody,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
