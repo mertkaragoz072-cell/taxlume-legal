@@ -3,7 +3,18 @@ import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
 
-export type GoodId = "bread" | "milk" | "wood" | "iron" | "cloth" | "fish" | "wine" | "leather";
+export type GoodId =
+  | "bread"
+  | "milk"
+  | "wood"
+  | "iron"
+  | "cloth"
+  | "fish"
+  | "wine"
+  | "leather"
+  | "spice"
+  | "silk"
+  | "jewelry";
 
 export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank";
 
@@ -145,6 +156,8 @@ export interface EconomyState {
   unlockedAchievements: string[];
   /** set once the town's net worth first crosses TRADE_UNLOCK_NET_WORTH; sticky, never re-locks */
   tradeUnlocked: boolean;
+  /** set once the town's net worth first crosses METROPOL_UNLOCK_NET_WORTH; sticky, never re-locks */
+  metropolUnlocked: boolean;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
   researched: string[];
   /** speculative assets (gold, oil, stocks) — separate random-walk market, see assets.ts */

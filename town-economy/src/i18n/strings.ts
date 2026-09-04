@@ -60,6 +60,12 @@ export const STRINGS = {
         description: "Şehirler arası ticareti açmak için kasabanın net servetini {target} 🪙'ye çıkar.",
         progress: "{current} / {target} 🪙",
       },
+      metropolSectionLabel: "METROPOLLER",
+      metropolLocked: {
+        title: "Metropoller Henüz Kilitli",
+        description: "Uzak metropollerle ticaret için kasabanın net servetini {target} 🪙'ye çıkar. Baharat, ipek ve mücevher orada çok daha değerli.",
+        progress: "{current} / {target} 🪙",
+      },
     },
     town: {
       moodLabel: "Kasaba Hissiyatı",
@@ -179,6 +185,9 @@ export const STRINGS = {
       fish: { name: "Balık", producer: "Balıkçı" },
       wine: { name: "Şarap", producer: "Şaraphane" },
       leather: { name: "Deri", producer: "Tabakhane" },
+      spice: { name: "Baharat", producer: "Baharatçı" },
+      silk: { name: "İpek", producer: "İpek Çiftliği" },
+      jewelry: { name: "Mücevher", producer: "Kuyumcu" },
     },
     asset: {
       gold: { name: "Altın", description: "Güvenli liman — yavaş ama istikrarlı değer kazanır." },
@@ -190,6 +199,8 @@ export const STRINGS = {
       windyhill: { name: "Rüzgar Tepesi" },
       ironforge: { name: "Demirocak" },
       portcity: { name: "Liman Şehri" },
+      grandbazaar: { name: "Büyük Pazar" },
+      diamondharbor: { name: "Elmas Liman" },
     },
     upgrade: {
       market: { name: "Pazar Yeri", description: "Alım satımların fiyatlar üzerindeki ani etkisini yumuşatır.", effect: "Piyasa etkisi -%{pct}" },
@@ -235,6 +246,18 @@ export const STRINGS = {
       leather: {
         t1: { name: "Deri Verimliliği", description: "Daha sağlıklı sürülerle deri üretimini artır." },
         t2: { name: "Tabaklama Ustalığı", description: "Usta tabaklama derinin değerini ve üretimini artırır." },
+      },
+      spice: {
+        t1: { name: "Baharat Verimliliği", description: "Daha iyi hasat teknikleriyle baharat üretimini artır." },
+        t2: { name: "Baharat Ustalığı", description: "Usta baharatçılık baharatın değerini ve üretimini artırır." },
+      },
+      silk: {
+        t1: { name: "İpekböceği Verimliliği", description: "Sağlıklı ipekböceği çiftlikleri ipek üretimini artırır." },
+        t2: { name: "İpek Dokuma Ustalığı", description: "Usta ipek dokumacılığı ipeğin değerini ve üretimini artırır." },
+      },
+      jewelry: {
+        t1: { name: "Kuyumculuk Verimliliği", description: "Daha iyi aletlerle mücevher üretimini artırır." },
+        t2: { name: "Kuyumcu Ustalığı", description: "Usta kuyumculuk mücevherin değerini ve üretimini artırır." },
       },
     },
     invest: {
@@ -362,6 +385,7 @@ export const STRINGS = {
       workerStrike: "⚒️ Grev başladı! {good} üretimi durdu.",
       workerNoStrike: "⚒️ İşçiler bu sefer sabretti, grev çıkmadı.",
       tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
+      metropolUnlocked: "🏙️ Metropollerle ticaret açıldı! Baharat, ipek ve mücevher artık çok daha kârlı.",
       investSoldProfit: "📈 {qty} {asset} sattın, +{amount} 🪙 kâr ettin!",
       investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
     },
@@ -425,6 +449,12 @@ export const STRINGS = {
       locked: {
         title: "Trade Not Unlocked Yet",
         description: "Grow your town's net worth to {target} 🪙 to unlock trade with neighboring towns.",
+        progress: "{current} / {target} 🪙",
+      },
+      metropolSectionLabel: "METROPOLISES",
+      metropolLocked: {
+        title: "Metropolises Not Unlocked Yet",
+        description: "Grow your town's net worth to {target} 🪙 to unlock trade with distant metropolises. Spice, silk, and jewelry sell for far more there.",
         progress: "{current} / {target} 🪙",
       },
     },
@@ -546,6 +576,9 @@ export const STRINGS = {
       fish: { name: "Fish", producer: "Fishery" },
       wine: { name: "Wine", producer: "Winery" },
       leather: { name: "Leather", producer: "Tannery" },
+      spice: { name: "Spice", producer: "Spice Merchant" },
+      silk: { name: "Silk", producer: "Silk Farm" },
+      jewelry: { name: "Jewelry", producer: "Jeweler" },
     },
     asset: {
       gold: { name: "Gold", description: "A safe haven — slow but steady value growth." },
@@ -557,6 +590,8 @@ export const STRINGS = {
       windyhill: { name: "Windy Hill" },
       ironforge: { name: "Ironforge" },
       portcity: { name: "Port City" },
+      grandbazaar: { name: "Grand Bazaar" },
+      diamondharbor: { name: "Diamond Harbor" },
     },
     upgrade: {
       market: { name: "Marketplace", description: "Softens how sharply trades move prices.", effect: "Market impact -{pct}%" },
@@ -602,6 +637,18 @@ export const STRINGS = {
       leather: {
         t1: { name: "Leatherworking Efficiency", description: "Healthier herds boost leather production." },
         t2: { name: "Tanning Mastery", description: "Master tanning raises leather's value and production." },
+      },
+      spice: {
+        t1: { name: "Spice Efficiency", description: "Better harvesting techniques boost spice production." },
+        t2: { name: "Spice Mastery", description: "Master spice trading raises spice's value and production." },
+      },
+      silk: {
+        t1: { name: "Silkworm Efficiency", description: "Healthier silkworm farms boost silk production." },
+        t2: { name: "Silk Weaving Mastery", description: "Master silk weaving raises silk's value and production." },
+      },
+      jewelry: {
+        t1: { name: "Jewelry Efficiency", description: "Better tools boost jewelry production." },
+        t2: { name: "Master Jewelers", description: "Master jewelry-crafting raises jewelry's value and production." },
       },
     },
     invest: {
@@ -729,6 +776,7 @@ export const STRINGS = {
       workerStrike: "⚒️ A strike broke out! {good} production stopped.",
       workerNoStrike: "⚒️ The workers held off this time — no strike.",
       tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
+      metropolUnlocked: "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
       investSoldProfit: "📈 Sold {qty} {asset}, +{amount} 🪙 profit!",
       investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",
     },

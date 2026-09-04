@@ -94,6 +94,42 @@ export const GOODS: Good[] = [
     baseProduction: 12,
     elasticity: 0.65,
   },
+  // Luxury goods — thin local supply and high elasticity so their real
+  // payoff is exporting them to a metropolis' specialty demand rather
+  // than selling them at home (see towns.ts' metropol-tier entries).
+  {
+    id: "spice",
+    nameKey: "good.spice.name",
+    producerKey: "good.spice.producer",
+    icon: "🌶️",
+    color: "#d9701e",
+    basePrice: 19,
+    baseSupply: 110,
+    baseProduction: 8,
+    elasticity: 0.75,
+  },
+  {
+    id: "silk",
+    nameKey: "good.silk.name",
+    producerKey: "good.silk.producer",
+    icon: "🧣",
+    color: "#c9a0dc",
+    basePrice: 26,
+    baseSupply: 90,
+    baseProduction: 6,
+    elasticity: 0.8,
+  },
+  {
+    id: "jewelry",
+    nameKey: "good.jewelry.name",
+    producerKey: "good.jewelry.producer",
+    icon: "💍",
+    color: "#7fd4d1",
+    basePrice: 42,
+    baseSupply: 60,
+    baseProduction: 4,
+    elasticity: 0.95,
+  },
 ];
 
 export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Record<

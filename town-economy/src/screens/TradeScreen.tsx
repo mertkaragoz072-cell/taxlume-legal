@@ -5,10 +5,10 @@ import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
-import { TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
+import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, GoodId } from "../economy/types";
 import { UPGRADES_BY_ID } from "../economy/upgrades";
-import { TRADE_UNLOCK_NET_WORTH } from "../economy/useEconomy";
+import { METROPOL_UNLOCK_NET_WORTH, TRADE_UNLOCK_NET_WORTH } from "../economy/useEconomy";
 import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
 
 interface Props {
@@ -16,6 +16,37 @@ interface Props {
 }
 
 type QtyOption = 1 | 5 | "ALL";
+
+const REGULAR_TOWNS = TOWNS.filter((tn) => tn.tier === "town");
+const METROPOLISES = TOWNS.filter((tn) => tn.tier === "metropol");
+
+interface TownPillProps {
+  town: ForeignTown;
+  selected: boolean;
+  onPress: () => void;
+  caravanseraiLevel: number;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}
+
+function TownPill({ town, selected, onPress, caravanseraiLevel, t }: TownPillProps) {
+  const effectiveTariff = Math.max(
+    0,
+    town.tariffRate - caravanseraiLevel * UPGRADES_BY_ID.caravanserai.effectPerLevel
+  );
+  return (
+    <ScalePressable
+      onPress={onPress}
+      style={[styles.townPill, selected && styles.townPillActive]}
+    >
+      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <Text style={styles.townIcon}>{town.icon}</Text>
+      <Text style={styles.townName}>{t(town.nameKey)}</Text>
+      <Text style={styles.townMeta}>
+        {t("trade.townMeta", { ticks: town.distanceTicks, tariff: (effectiveTariff * 100).toFixed(0) })}
+      </Text>
+    </ScalePressable>
+  );
+}
 
 export function TradeScreen({ sounds }: Props) {
   const { state, sendCaravan, t, netWorth } = useEconomyContext();
@@ -74,28 +105,58 @@ export function TradeScreen({ sounds }: Props) {
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <Text style={styles.sectionLabel}>{t("trade.neighborsSectionLabel")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-        {TOWNS.map((tn) => {
-          const selected = tn.id === townId;
-          const effectiveTariff = Math.max(
-            0,
-            tn.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
-          );
-          return (
-            <ScalePressable
-              key={tn.id}
-              onPress={() => setTownId(tn.id)}
-              style={[styles.townPill, selected && styles.townPillActive]}
-            >
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <Text style={styles.townIcon}>{tn.icon}</Text>
-              <Text style={styles.townName}>{t(tn.nameKey)}</Text>
-              <Text style={styles.townMeta}>
-                {t("trade.townMeta", { ticks: tn.distanceTicks, tariff: (effectiveTariff * 100).toFixed(0) })}
-              </Text>
-            </ScalePressable>
-          );
-        })}
+        {REGULAR_TOWNS.map((tn) => (
+          <TownPill
+            key={tn.id}
+            town={tn}
+            selected={tn.id === townId}
+            onPress={() => setTownId(tn.id)}
+            caravanseraiLevel={state.upgrades.caravanserai}
+            t={t}
+          />
+        ))}
       </ScrollView>
+
+      <Text style={styles.sectionLabel}>{t("trade.metropolSectionLabel")}</Text>
+      {state.metropolUnlocked ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
+          {METROPOLISES.map((tn) => (
+            <TownPill
+              key={tn.id}
+              town={tn}
+              selected={tn.id === townId}
+              onPress={() => setTownId(tn.id)}
+              caravanseraiLevel={state.upgrades.caravanserai}
+              t={t}
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.metropolLockedCard}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <Text style={styles.metropolLockedIcon}>🔒</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.metropolLockedTitle}>{t("trade.metropolLocked.title")}</Text>
+            <Text style={styles.metropolLockedDesc}>
+              {t("trade.metropolLocked.description", { target: METROPOL_UNLOCK_NET_WORTH })}
+            </Text>
+            <View style={styles.lockedTrack}>
+              <View
+                style={[
+                  styles.lockedFill,
+                  { width: `${Math.max(0, Math.min(1, netWorth / METROPOL_UNLOCK_NET_WORTH)) * 100}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.metropolLockedProgress}>
+              {t("trade.metropolLocked.progress", {
+                current: Math.floor(netWorth),
+                target: METROPOL_UNLOCK_NET_WORTH,
+              })}
+            </Text>
+          </View>
+        </View>
+      )}
 
       <Text style={styles.sectionLabel}>
         {t("trade.pricesSectionLabel", { town: t(town.nameKey).toUpperCase() })}
@@ -275,6 +336,19 @@ const styles = StyleSheet.create({
   },
   lockedFill: { height: "100%", backgroundColor: "#e8c777", borderRadius: 4 },
   lockedProgress: { color: "#e8c777", fontSize: 12, fontWeight: "700" },
+  metropolLockedCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  metropolLockedIcon: { fontSize: 24, marginRight: 12 },
+  metropolLockedTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
+  metropolLockedDesc: { color: "#a0917a", fontSize: 11, marginTop: 3, marginBottom: 8, lineHeight: 15 },
+  metropolLockedProgress: { color: "#e8c777", fontSize: 11, fontWeight: "700" },
   sectionLabel: {
     color: "#a0917a",
     fontSize: 11,

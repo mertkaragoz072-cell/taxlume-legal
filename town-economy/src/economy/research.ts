@@ -63,6 +63,12 @@ export const RESEARCH_NODES: ResearchNode[] = [
   tier2("wine", 467, "🍷"),
   tier1("leather", 121, "🐐"),
   tier2("leather", 278, "🥾"),
+  tier1("spice", 171, "🌱"),
+  tier2("spice", 392, "🌶️"),
+  tier1("silk", 234, "🐛"),
+  tier2("silk", 536, "🧣"),
+  tier1("jewelry", 378, "💎"),
+  tier2("jewelry", 866, "💍"),
 ];
 
 export const RESEARCH_NODES_BY_ID = Object.fromEntries(
