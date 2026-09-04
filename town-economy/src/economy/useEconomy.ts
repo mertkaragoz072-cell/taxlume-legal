@@ -10,6 +10,7 @@ import { loadEconomyState, saveEconomyState } from "./persist";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
+import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
@@ -185,6 +186,8 @@ type Action =
   | { type: "PRESTIGE" }
   | { type: "TAKE_LOAN"; amount: number }
   | { type: "REPAY_LOAN"; amount: number }
+  | { type: "HIRE_WORKER"; goodId: GoodId }
+  | { type: "FIRE_WORKER"; goodId: GoodId }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
   | { type: "UPGRADE"; upgradeId: UpgradeId }
@@ -291,6 +294,7 @@ function initialState(
     prestigeLevel: 0,
     activeSeasonalEvent: null,
     loan: null,
+    workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
   };
 }
 
@@ -501,6 +505,34 @@ function tick(state: EconomyState): EconomyState {
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId]
     : null;
 
+  // Hired staff (see workers.ts) cost a wage every tick, capped at what the
+  // treasury can actually afford this tick — a shortfall lays off just
+  // enough workers (arbitrary but deterministic order) to cover the rest,
+  // rather than letting cash go negative.
+  let workers = state.workers;
+  let workerWageCost = 0;
+  {
+    let totalWorkers = GOODS.reduce((sum, g) => sum + workers[g.id], 0);
+    workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+    const availableForWages = state.cash + taxCashDelta;
+    let laidOff = 0;
+    while (workerWageCost > availableForWages && totalWorkers > 0) {
+      const g = GOODS.find((g) => workers[g.id] > 0);
+      if (!g) break;
+      workers = { ...workers, [g.id]: workers[g.id] - 1 };
+      totalWorkers -= 1;
+      workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+      laidOff++;
+    }
+    if (laidOff > 0) {
+      newEvents.push({
+        id: nextId++,
+        message: t(state.language, "msg.workersLaidOff", { count: laidOff }),
+        tone: "bad",
+      });
+    }
+  }
+
   const goods = { ...state.goods };
   for (const good of GOODS) {
     const gs = goods[good.id];
@@ -512,8 +544,14 @@ function tick(state: EconomyState): EconomyState {
       seasonalTemplate && seasonalTemplate.affectedGoods.includes(good.id)
         ? seasonalTemplate.priceMultiplier
         : 1;
+    const workerProductionMult = 1 + workers[good.id] * WORKER_PRODUCTION_BONUS_PER_WORKER;
     const production =
-      good.baseProduction * productionEfficiency * noise * researchedProductionMult * prestigeProductionMult;
+      good.baseProduction *
+      productionEfficiency *
+      noise *
+      researchedProductionMult *
+      prestigeProductionMult *
+      workerProductionMult;
     let supply = gs.supply + (production - good.baseProduction);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
@@ -581,7 +619,7 @@ function tick(state: EconomyState): EconomyState {
 
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
-  let cash = state.cash + taxCashDelta;
+  let cash = state.cash + taxCashDelta - workerWageCost;
   let dailyCashEarned = state.dailyProgress.cashEarned + Math.max(0, taxCashDelta);
   let totalCaravansCompleted = state.stats.totalCaravansCompleted;
   for (const caravan of state.caravans) {
@@ -659,6 +697,7 @@ function tick(state: EconomyState): EconomyState {
     activeMiniQuest,
     activeSeasonalEvent,
     loan,
+    workers,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
@@ -1308,6 +1347,19 @@ function repayLoan(state: EconomyState, amount: number): EconomyState {
   };
 }
 
+function hireWorker(state: EconomyState, goodId: GoodId): EconomyState {
+  if (state.gameOver) return state;
+  const count = state.workers[goodId];
+  if (count >= WORKER_MAX_PER_GOOD) return state;
+  return { ...state, workers: { ...state.workers, [goodId]: count + 1 } };
+}
+
+function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {
+  const count = state.workers[goodId];
+  if (count <= 0) return state;
+  return { ...state, workers: { ...state.workers, [goodId]: count - 1 } };
+}
+
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
@@ -1340,6 +1392,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return takeLoan(state, action.amount);
     case "REPAY_LOAN":
       return repayLoan(state, action.amount);
+    case "HIRE_WORKER":
+      return hireWorker(state, action.goodId);
+    case "FIRE_WORKER":
+      return fireWorker(state, action.goodId);
     case "HYDRATE":
       return action.state;
     case "DAILY_CHECKIN":
@@ -1433,6 +1489,8 @@ export function useEconomy() {
   const prestige_ = useCallback(() => dispatch({ type: "PRESTIGE" }), []);
   const takeLoan_ = useCallback((amount: number) => dispatch({ type: "TAKE_LOAN", amount }), []);
   const repayLoan_ = useCallback((amount: number) => dispatch({ type: "REPAY_LOAN", amount }), []);
+  const hireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "HIRE_WORKER", goodId }), []);
+  const fireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "FIRE_WORKER", goodId }), []);
   const upgrade_ = useCallback(
     (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
     []
@@ -1483,6 +1541,8 @@ export function useEconomy() {
     prestige: prestige_,
     takeLoan: takeLoan_,
     repayLoan: repayLoan_,
+    hireWorker: hireWorker_,
+    fireWorker: fireWorker_,
     upgrade: upgrade_,
     research: research_,
     tradeAsset: tradeAsset_,

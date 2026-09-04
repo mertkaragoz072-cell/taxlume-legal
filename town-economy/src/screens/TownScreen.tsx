@@ -11,6 +11,11 @@ import {
   TAX_RATE_STEPS,
 } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
+import {
+  WORKER_MAX_PER_GOOD,
+  WORKER_PRODUCTION_BONUS_PER_WORKER,
+  WORKER_WAGE_PER_TICK,
+} from "../economy/workers";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
@@ -35,7 +40,8 @@ function happinessFor(h: number): { labelKey: string; emoji: string; color: stri
 }
 
 export function TownScreen() {
-  const { state, upgrade, setTaxRate, prestige, takeLoan, repayLoan, netWorth, t } = useEconomyContext();
+  const { state, upgrade, setTaxRate, prestige, takeLoan, repayLoan, hireWorker, fireWorker, netWorth, t } =
+    useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
@@ -293,6 +299,49 @@ export function TownScreen() {
         })}
       </View>
 
+      <Text style={styles.sectionLabel}>{t("town.workersSectionLabel")}</Text>
+      <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
+      {GOODS.map((g) => {
+        const count = state.workers[g.id];
+        return (
+          <View key={g.id} style={styles.workerCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <Text style={styles.workerIcon}>{g.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.workerName}>{t(g.nameKey)}</Text>
+              {count > 0 && (
+                <Text style={styles.workerInfo}>
+                  {t("town.workerWage", { amount: (count * WORKER_WAGE_PER_TICK).toFixed(1) })}
+                  {" · "}
+                  {t("town.workerBonus", { pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100) })}
+                </Text>
+              )}
+              <View style={styles.workerPipRow}>
+                {Array.from({ length: WORKER_MAX_PER_GOOD }).map((_, i) => (
+                  <View key={i} style={[styles.workerPip, i < count && styles.workerPipFilled]} />
+                ))}
+              </View>
+            </View>
+            <View style={styles.workerBtnCol}>
+              <ScalePressable
+                disabled={count >= WORKER_MAX_PER_GOOD}
+                onPress={() => hireWorker(g.id)}
+                style={[styles.workerBtn, count >= WORKER_MAX_PER_GOOD && styles.workerBtnDisabled]}
+              >
+                <Text style={styles.workerBtnText}>+</Text>
+              </ScalePressable>
+              <ScalePressable
+                disabled={count <= 0}
+                onPress={() => fireWorker(g.id)}
+                style={[styles.workerBtn, count <= 0 && styles.workerBtnDisabled]}
+              >
+                <Text style={styles.workerBtnText}>−</Text>
+              </ScalePressable>
+            </View>
+          </View>
+        );
+      })}
+
       <Text style={styles.sectionLabel}>{t("town.eventsSectionLabel")}</Text>
       {state.eventLog.length === 0 && (
         <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>
@@ -415,6 +464,32 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   bankBtnText: { color: "#e8c777", fontWeight: "700", fontSize: 11 },
+  workersNote: { color: "#a0917a", fontSize: 11, marginBottom: 10 },
+  workerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+  workerIcon: { fontSize: 22, marginRight: 12 },
+  workerName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
+  workerInfo: { color: "#3fae5c", fontSize: 10, fontWeight: "700", marginTop: 2 },
+  workerPipRow: { flexDirection: "row", gap: 4, marginTop: 6 },
+  workerPip: { width: 14, height: 5, borderRadius: 3, backgroundColor: "#1a1410", marginRight: 4 },
+  workerPipFilled: { backgroundColor: "#e8c777" },
+  workerBtnCol: { marginLeft: 10, gap: 6 },
+  workerBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#1a1410",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  workerBtnDisabled: { opacity: 0.35 },
+  workerBtnText: { color: "#e8c777", fontWeight: "800", fontSize: 16 },
   chartCard: {
     borderRadius: 16,
     padding: 16,

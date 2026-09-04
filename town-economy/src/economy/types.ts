@@ -220,4 +220,7 @@ export interface EconomyState {
   activeSeasonalEvent: SeasonalEventInstance | null;
   /** at most one outstanding town loan at a time */
   loan: Loan | null;
+  /** hired staff per good (0-WORKER_MAX_PER_GOOD); each costs a per-tick wage
+   * and permanently boosts that good's production while employed */
+  workers: Record<GoodId, number>;
 }
