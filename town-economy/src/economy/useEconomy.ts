@@ -54,6 +54,19 @@ export const PRESTIGE_UNLOCK_NET_WORTH = 10000;
 export const PRESTIGE_PRODUCTION_BONUS_PER_LEVEL = 0.08;
 export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
 
+// --- Banking / loans -------------------------------------------------------
+// A loan is cash now against interest that compounds every tick until
+// repaid — real leverage, real risk. At most one outstanding at a time.
+export const LOAN_MIN_CAP = 100;
+export const LOAN_MAX_NET_WORTH_PCT = 0.6;
+export const LOAN_BASE_INTEREST_RATE_PER_TICK = 0.0025;
+// A higher Banka upgrade level buys a cheaper loan, floored so it's never free.
+export const LOAN_BANK_DISCOUNT_PER_LEVEL = 0.0003;
+export const LOAN_MIN_INTEREST_RATE_PER_TICK = 0.0008;
+// How much an all-consuming debt (balance ≈ net worth) drags down the
+// villagers' target happiness, on top of whatever the tax rate is already doing.
+const DEBT_HAPPINESS_DRAG = 20;
+
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
 // scarcity = clamp((baseSupply / supply) ^ elasticity, SCARCITY_MIN, SCARCITY_MAX)
@@ -170,6 +183,8 @@ type Action =
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "PRESTIGE" }
+  | { type: "TAKE_LOAN"; amount: number }
+  | { type: "REPAY_LOAN"; amount: number }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
   | { type: "UPGRADE"; upgradeId: UpgradeId }
@@ -275,6 +290,7 @@ function initialState(
     activeMiniQuest: null,
     prestigeLevel: 0,
     activeSeasonalEvent: null,
+    loan: null,
   };
 }
 
@@ -298,7 +314,16 @@ function tick(state: EconomyState): EconomyState {
   // monetary-inflation drag) while happy ones produce a bit more and ease
   // inflation slightly. Computed before inflation so both structural
   // pressures below fold into one target.
-  const targetHappiness = clamp(100 - state.taxRate * HAPPINESS_TARGET_SLOPE, 0, 100);
+  // An outstanding loan the size of the whole town's net worth weighs on
+  // the villagers too, on top of whatever the tax rate is doing.
+  const debtBurden = state.loan
+    ? clamp(state.loan.remainingBalance / Math.max(computeNetWorth(state), 1), 0, 1)
+    : 0;
+  const targetHappiness = clamp(
+    100 - state.taxRate * HAPPINESS_TARGET_SLOPE - debtBurden * DEBT_HAPPINESS_DRAG,
+    0,
+    100
+  );
   const happiness = clamp(
     state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE,
     0,
@@ -550,6 +575,10 @@ function tick(state: EconomyState): EconomyState {
     assets[asset.id] = { ...as, price, history: pushCapped(as.history, price, HISTORY_LEN) };
   }
 
+  const loan = state.loan
+    ? { ...state.loan, remainingBalance: state.loan.remainingBalance * (1 + state.loan.interestRatePerTick) }
+    : null;
+
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
   let cash = state.cash + taxCashDelta;
@@ -629,6 +658,7 @@ function tick(state: EconomyState): EconomyState {
     pendingRequest,
     activeMiniQuest,
     activeSeasonalEvent,
+    loan,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
@@ -958,8 +988,13 @@ function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
     GOODS.reduce((sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price, 0) +
-    ASSETS.reduce((sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price, 0)
+    ASSETS.reduce((sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price, 0) -
+    (state.loan ? state.loan.remainingBalance : 0)
   );
+}
+
+export function loanCap(state: EconomyState): number {
+  return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * LOAN_MAX_NET_WORTH_PCT));
 }
 
 function applyAchievements(state: EconomyState): EconomyState {
@@ -1246,6 +1281,33 @@ function prestige(state: EconomyState): EconomyState {
   };
 }
 
+function takeLoan(state: EconomyState, amount: number): EconomyState {
+  if (state.gameOver || state.loan || amount <= 0) return state;
+  const principal = Math.min(Math.round(amount), loanCap(state));
+  if (principal <= 0) return state;
+  const interestRatePerTick = Math.max(
+    LOAN_MIN_INTEREST_RATE_PER_TICK,
+    LOAN_BASE_INTEREST_RATE_PER_TICK - state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL
+  );
+  return {
+    ...state,
+    cash: state.cash + principal,
+    loan: { principal, remainingBalance: principal, interestRatePerTick, takenAtTick: state.tick },
+  };
+}
+
+function repayLoan(state: EconomyState, amount: number): EconomyState {
+  if (!state.loan || amount <= 0) return state;
+  const payment = Math.min(amount, state.cash, state.loan.remainingBalance);
+  if (payment <= 0) return state;
+  const remainingBalance = state.loan.remainingBalance - payment;
+  return {
+    ...state,
+    cash: state.cash - payment,
+    loan: remainingBalance <= 0.01 ? null : { ...state.loan, remainingBalance },
+  };
+}
+
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
@@ -1274,6 +1336,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
     }
     case "PRESTIGE":
       return prestige(state);
+    case "TAKE_LOAN":
+      return takeLoan(state, action.amount);
+    case "REPAY_LOAN":
+      return repayLoan(state, action.amount);
     case "HYDRATE":
       return action.state;
     case "DAILY_CHECKIN":
@@ -1365,6 +1431,8 @@ export function useEconomy() {
     []
   );
   const prestige_ = useCallback(() => dispatch({ type: "PRESTIGE" }), []);
+  const takeLoan_ = useCallback((amount: number) => dispatch({ type: "TAKE_LOAN", amount }), []);
+  const repayLoan_ = useCallback((amount: number) => dispatch({ type: "REPAY_LOAN", amount }), []);
   const upgrade_ = useCallback(
     (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
     []
@@ -1403,7 +1471,7 @@ export function useEconomy() {
     (sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price,
     0
   );
-  const netWorth = state.cash + portfolioValue + assetsValue;
+  const netWorth = state.cash + portfolioValue + assetsValue - (state.loan ? state.loan.remainingBalance : 0);
 
   return {
     state,
@@ -1413,6 +1481,8 @@ export function useEconomy() {
     togglePause,
     reset,
     prestige: prestige_,
+    takeLoan: takeLoan_,
+    repayLoan: repayLoan_,
     upgrade: upgrade_,
     research: research_,
     tradeAsset: tradeAsset_,

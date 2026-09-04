@@ -4,6 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import {
   estimateTaxIncomePerTick,
+  loanCap,
   PRESTIGE_CASH_BONUS_PER_LEVEL,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRESTIGE_UNLOCK_NET_WORTH,
@@ -34,13 +35,14 @@ function happinessFor(h: number): { labelKey: string; emoji: string; color: stri
 }
 
 export function TownScreen() {
-  const { state, upgrade, setTaxRate, prestige, netWorth, t } = useEconomyContext();
+  const { state, upgrade, setTaxRate, prestige, takeLoan, repayLoan, netWorth, t } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
   const [prestigeArmed, setPrestigeArmed] = useState(false);
   const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
   const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
+  const cap = loanCap(state);
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -156,6 +158,53 @@ export function TownScreen() {
                 target: PRESTIGE_UNLOCK_NET_WORTH,
               })}
             </Text>
+          </>
+        )}
+      </View>
+
+      <View style={styles.bankCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <Text style={styles.taxTitle}>{t("town.bank.title")}</Text>
+        <Text style={styles.taxDesc}>{t("town.bank.description")}</Text>
+        {state.loan ? (
+          <>
+            <View style={styles.bankBalanceRow}>
+              <Text style={styles.bankBalanceLabel}>{t("town.bank.activeTitle")}</Text>
+              <Text style={styles.bankBalanceValue}>{state.loan.remainingBalance.toFixed(1)} 🪙</Text>
+            </View>
+            <Text style={styles.bankRate}>
+              {t("town.bank.rate", { pct: (state.loan.interestRatePerTick * 100).toFixed(2) })}
+            </Text>
+            <View style={styles.bankBtnRow}>
+              {([0.25, 0.5, 1] as const).map((frac) => {
+                const amount = Math.min(state.cash, state.loan!.remainingBalance) * frac;
+                if (amount < 1) return null;
+                return (
+                  <ScalePressable key={frac} onPress={() => repayLoan(amount)} style={styles.bankBtn}>
+                    <Text style={styles.bankBtnText}>
+                      {frac === 1
+                        ? t("town.bank.repayAllBtn")
+                        : t("town.bank.repayBtn", { amount: Math.round(amount) })}
+                    </Text>
+                  </ScalePressable>
+                );
+              })}
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.bankCap}>{t("town.bank.cap", { amount: cap })}</Text>
+            <View style={styles.bankBtnRow}>
+              {([0.25, 0.5, 1] as const).map((frac) => {
+                const amount = Math.round(cap * frac);
+                if (amount < 10) return null;
+                return (
+                  <ScalePressable key={frac} onPress={() => takeLoan(amount)} style={styles.bankBtn}>
+                    <Text style={styles.bankBtnText}>{t("town.bank.takeBtn", { amount })}</Text>
+                  </ScalePressable>
+                );
+              })}
+            </View>
           </>
         )}
       </View>
@@ -344,6 +393,28 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   prestigeBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
+  bankCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  bankCap: { color: "#a0917a", fontSize: 11, marginTop: 4, marginBottom: 10 },
+  bankBalanceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
+  bankBalanceLabel: { color: "#a0917a", fontSize: 11 },
+  bankBalanceValue: { color: "#c94b4b", fontWeight: "800", fontSize: 15 },
+  bankRate: { color: "#a0917a", fontSize: 10, marginTop: 2, marginBottom: 10 },
+  bankBtnRow: { flexDirection: "row", gap: 8 },
+  bankBtn: {
+    flex: 1,
+    backgroundColor: "#1a1410",
+    borderRadius: 10,
+    paddingVertical: 9,
+    alignItems: "center",
+    marginRight: 6,
+  },
+  bankBtnText: { color: "#e8c777", fontWeight: "700", fontSize: 11 },
   chartCard: {
     borderRadius: 16,
     padding: 16,

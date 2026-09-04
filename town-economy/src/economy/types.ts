@@ -115,6 +115,16 @@ export interface VillagerRequest {
   triggeredAtTick: number;
 }
 
+/** an outstanding town loan — interest compounds every tick until repaid;
+ * see TAKE_LOAN/REPAY_LOAN in useEconomy.ts */
+export interface Loan {
+  principal: number;
+  remainingBalance: number;
+  /** locked in when the loan is taken (a higher bank upgrade level buys a lower rate) */
+  interestRatePerTick: number;
+  takenAtTick: number;
+}
+
 /** a temporary town-wide "occasion" (see seasonalEvents.ts) that boosts one
  * or more goods' home-market price for a stretch of ticks, then ends on its own */
 export interface SeasonalEventInstance {
@@ -208,4 +218,6 @@ export interface EconomyState {
   prestigeLevel: number;
   /** a temporary town-wide price event; see seasonalEvents.ts */
   activeSeasonalEvent: SeasonalEventInstance | null;
+  /** at most one outstanding town loan at a time */
+  loan: Loan | null;
 }
