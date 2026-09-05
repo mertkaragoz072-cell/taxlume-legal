@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
+import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
@@ -17,7 +18,7 @@ import {
   isGoodUnlocked,
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
-import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
+import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT, withAlpha } from "../theme";
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -109,7 +110,7 @@ export function TradeScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionLabel}>{t("trade.neighborsSectionLabel")}</Text>
+      <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
         {REGULAR_TOWNS.map((tn) => (
           <TownPill
@@ -123,7 +124,7 @@ export function TradeScreen({ sounds }: Props) {
         ))}
       </ScrollView>
 
-      <Text style={styles.sectionLabel}>{t("trade.metropolSectionLabel")}</Text>
+      <SectionLabel text={t("trade.metropolSectionLabel")} color="#c58ee0" />
       {state.metropolUnlocked ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
           {METROPOLISES.map((tn) => (
@@ -168,9 +169,10 @@ export function TradeScreen({ sounds }: Props) {
         </View>
       )}
 
-      <Text style={styles.sectionLabel}>
-        {t("trade.pricesSectionLabel", { town: t(town.nameKey).toUpperCase() })}
-      </Text>
+      <SectionLabel
+        text={t("trade.pricesSectionLabel", { town: t(town.nameKey).toUpperCase() })}
+        color={good.color}
+      />
       <View style={styles.goodsTable}>
         {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
           const home = state.goods[g.id].price;
@@ -185,6 +187,10 @@ export function TradeScreen({ sounds }: Props) {
               scaleTo={0.98}
             >
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(g.color, 0.12) }]}
+              />
               <Text style={styles.goodIcon}>{g.icon}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.goodName}>{t(g.nameKey)}</Text>
@@ -276,7 +282,7 @@ export function TradeScreen({ sounds }: Props) {
         </ScalePressable>
       </View>
 
-      <Text style={styles.sectionLabel}>{t("trade.activeCaravansSectionLabel")}</Text>
+      <SectionLabel text={t("trade.activeCaravansSectionLabel")} color="#5fd884" />
       {state.caravans.length === 0 && (
         <Text style={styles.emptyText}>{t("trade.noCaravans")}</Text>
       )}
@@ -292,6 +298,7 @@ export function TradeScreen({ sounds }: Props) {
           return (
             <View key={c.id} style={styles.caravanCard}>
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View style={[styles.caravanAccent, { backgroundColor: g.color }]} />
               <View style={styles.caravanHeader}>
                 <Text style={styles.caravanTitle}>
                   {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
@@ -310,7 +317,7 @@ export function TradeScreen({ sounds }: Props) {
           );
         })}
 
-      <Text style={styles.sectionLabel}>{t("trade.contract.sectionLabel")}</Text>
+      <SectionLabel text={t("trade.contract.sectionLabel")} color="#f0776a" />
       <Text style={styles.contractDesc}>{t("trade.contract.description")}</Text>
       <View style={styles.panel}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -400,7 +407,7 @@ export function TradeScreen({ sounds }: Props) {
         })()}
       </View>
 
-      <Text style={styles.sectionLabel}>{t("trade.contract.activeSectionLabel")}</Text>
+      <SectionLabel text={t("trade.contract.activeSectionLabel")} color="#e8c777" />
       {state.contracts.length === 0 && (
         <Text style={styles.emptyText}>{t("trade.contract.noContracts")}</Text>
       )}
@@ -415,6 +422,7 @@ export function TradeScreen({ sounds }: Props) {
           return (
             <View key={c.id} style={styles.caravanCard}>
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
               <View style={styles.caravanHeader}>
                 <Text style={styles.caravanTitle}>
                   {c.direction === "long" ? "📈" : "📉"} {cGood.icon} {t(cGood.nameKey)}
@@ -484,13 +492,6 @@ const styles = StyleSheet.create({
   metropolLockedTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
   metropolLockedDesc: { color: "#a0917a", fontSize: 11, marginTop: 3, marginBottom: 8, lineHeight: 15 },
   metropolLockedProgress: { color: "#e8c777", fontSize: 11, fontWeight: "700" },
-  sectionLabel: {
-    color: "#a0917a",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
   townRow: { marginBottom: 20 },
   townPill: {
     borderRadius: 14,
@@ -557,7 +558,14 @@ const styles = StyleSheet.create({
   contractDesc: { color: "#a0917a", fontSize: 12, marginBottom: 12, lineHeight: 17 },
   contractTermLabel: { color: "#a0917a", fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 6 },
   contractMaxNote: { color: "#a0917a", fontSize: 10, marginTop: 8, marginBottom: 10 },
-  caravanCard: { borderRadius: 12, padding: 12, marginBottom: 10, overflow: "hidden" },
+  caravanCard: {
+    borderRadius: 12,
+    padding: 12,
+    paddingLeft: 15,
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+  caravanAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   caravanHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
   caravanTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 12 },
   caravanEta: { color: "#e8c777", fontWeight: "700", fontSize: 11 },

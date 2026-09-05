@@ -10,6 +10,7 @@ import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
+import { SectionLabel } from "../components/SectionLabel";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT, GOLD_GRADIENT, withAlpha } from "../theme";
 
@@ -98,10 +99,7 @@ export function MarketScreen({ sounds }: Props) {
         />
       </View>
 
-      <View style={styles.sectionLabelRow}>
-        <View style={[styles.sectionLabelDot, { backgroundColor: "#e8c777" }]} />
-        <Text style={styles.sectionLabel}>{t("market.sectionLabel")}</Text>
-      </View>
+      <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
         {unlockedGoods.map((g) => (
           <GoodCard
@@ -116,10 +114,7 @@ export function MarketScreen({ sounds }: Props) {
 
       {lockedGoods.length > 0 && (
         <>
-          <View style={styles.sectionLabelRow}>
-            <View style={[styles.sectionLabelDot, { backgroundColor: "#a0917a" }]} />
-            <Text style={styles.sectionLabel}>{t("market.comingSoonLabel")}</Text>
-          </View>
+          <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
             {lockedGoods.map((g) => {
               const daysLeft = Math.max(1, (g.unlockDay ?? 1) - gameDayFromTick(state.tick));
@@ -191,14 +186,6 @@ const styles = StyleSheet.create({
   chartSubtitle: { color: "#a0917a", fontSize: 12, marginTop: 2 },
   chartPrice: { color: "#e8c777", fontSize: 18, fontWeight: "800" },
   chartChange: { fontSize: 13, fontWeight: "700", marginTop: 2 },
-  sectionLabelRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  sectionLabelDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  sectionLabel: {
-    color: "#a0917a",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
   goodsRow: { marginBottom: 18 },
   lockedCard: {
     width: 108,

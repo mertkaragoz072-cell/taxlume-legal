@@ -26,7 +26,8 @@ import {
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { SectionLabel } from "../components/SectionLabel";
+import { CARD_GRADIENT, cardShadow, glowShadow, GOLD_GRADIENT, withAlpha } from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -93,6 +94,10 @@ export function TownScreen() {
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.moodCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(mood.color, 0.1) }]}
+        />
         <Text style={styles.moodEmoji}>{mood.emoji}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.moodLabel}>{t("town.moodLabel")}</Text>
@@ -106,6 +111,10 @@ export function TownScreen() {
 
       <View style={styles.moodCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(happy.color, 0.1) }]}
+        />
         <Text style={styles.moodEmoji}>{happy.emoji}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.moodLabel}>{t("town.happinessLabel")}</Text>
@@ -154,8 +163,14 @@ export function TownScreen() {
         </View>
       </View>
 
-      <View style={styles.prestigeCard}>
+      <View style={[styles.prestigeCard, prestigeReady && glowShadow("#e8c777")]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        {prestigeReady && (
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha("#e8c777", 0.08) }]}
+          />
+        )}
         <View style={styles.taxHeaderRow}>
           <Text style={styles.taxTitle}>{t("town.prestige.title")}</Text>
           {state.prestigeLevel > 0 && (
@@ -209,7 +224,7 @@ export function TownScreen() {
         )}
       </View>
 
-      <Text style={styles.sectionLabel}>{t("town.prestige.perksSectionLabel")}</Text>
+      <SectionLabel text={t("town.prestige.perksSectionLabel")} color="#e8c777" />
       <Text style={styles.prestigePointsLabel}>
         {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
       </Text>
@@ -253,6 +268,13 @@ export function TownScreen() {
 
       <View style={styles.bankCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: withAlpha(state.loan ? "#f0776a" : "#6fb8f2", 0.08) },
+          ]}
+        />
         <Text style={styles.taxTitle}>{t("town.bank.title")}</Text>
         <Text style={styles.taxDesc}>{t("town.bank.description")}</Text>
         {state.loan ? (
@@ -338,7 +360,7 @@ export function TownScreen() {
         />
       </View>
 
-      <Text style={styles.sectionLabel}>{t("town.upgradesSectionLabel")}</Text>
+      <SectionLabel text={t("town.upgradesSectionLabel")} color="#6fb8f2" />
       {UPGRADES.map((u) => {
         const level = state.upgrades[u.id];
         const maxed = level >= u.maxLevel;
@@ -385,7 +407,7 @@ export function TownScreen() {
         );
       })}
 
-      <Text style={styles.sectionLabel}>{t("town.propertiesSectionLabel")}</Text>
+      <SectionLabel text={t("town.propertiesSectionLabel")} color="#c58ee0" />
       {PROPERTIES.map((p) => {
         const owned = state.ownedProperties.includes(p.id);
         const disabled = owned || state.cash < p.cost;
@@ -417,7 +439,7 @@ export function TownScreen() {
         );
       })}
 
-      <Text style={styles.sectionLabel}>{t("town.merchantsSectionLabel")}</Text>
+      <SectionLabel text={t("town.merchantsSectionLabel")} color="#5fd884" />
       <View style={styles.buildingsGrid}>
         {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
           const gs = state.goods[g.id];
@@ -426,6 +448,10 @@ export function TownScreen() {
           return (
             <View key={g.id} style={styles.buildingCard}>
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(g.color, 0.12) }]}
+              />
               <Text style={styles.buildingIcon}>{g.icon}</Text>
               <Text style={styles.buildingName}>{t(g.producerKey)}</Text>
               <View style={styles.buildingTrack}>
@@ -442,13 +468,14 @@ export function TownScreen() {
         })}
       </View>
 
-      <Text style={styles.sectionLabel}>{t("town.workersSectionLabel")}</Text>
+      <SectionLabel text={t("town.workersSectionLabel")} color="#e0a13f" />
       <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
       {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
         const count = state.workers[g.id];
         return (
           <View key={g.id} style={styles.workerCard}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <View style={[styles.workerAccent, { backgroundColor: g.color }]} />
             <Text style={styles.workerIcon}>{g.icon}</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.workerName}>{t(g.nameKey)}</Text>
@@ -485,7 +512,7 @@ export function TownScreen() {
         );
       })}
 
-      <Text style={styles.sectionLabel}>{t("town.eventsSectionLabel")}</Text>
+      <SectionLabel text={t("town.eventsSectionLabel")} color="#a0917a" />
       {state.eventLog.length === 0 && (
         <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>
       )}
@@ -616,9 +643,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 14,
     padding: 12,
+    paddingLeft: 15,
     marginBottom: 10,
     overflow: "hidden",
   },
+  workerAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   workerIcon: { fontSize: 22, marginRight: 12 },
   workerName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
   workerInfo: { color: "#3fae5c", fontSize: 10, fontWeight: "700", marginTop: 2 },
@@ -644,13 +673,6 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   chartTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13, marginBottom: 6 },
-  sectionLabel: {
-    color: "#a0917a",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
   buildingsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
   buildingCard: {
     width: "31%",

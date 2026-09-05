@@ -1,9 +1,10 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { GradientFill } from "../components/GradientFill";
+import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
-import { CARD_GRADIENT, cardShadow } from "../theme";
+import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
@@ -29,7 +30,7 @@ export function InventoryScreen() {
         </View>
       </View>
 
-      <Text style={styles.sectionLabel}>{t("inventory.sectionLabel")}</Text>
+      <SectionLabel text={t("inventory.sectionLabel")} color="#e8c777" />
       {holdings.length === 0 && (
         <View style={styles.emptyBox}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -43,6 +44,10 @@ export function InventoryScreen() {
         return (
           <View key={good.id} style={styles.row}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.1) }]}
+            />
             <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
             <Text style={styles.rowIcon}>{good.icon}</Text>
             <View style={styles.rowMain}>
@@ -80,13 +85,6 @@ const styles = StyleSheet.create({
   netRow: { marginTop: 4, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#3a2d1e", marginBottom: 0 },
   netLabel: { color: "#e8c777", fontSize: 14, fontWeight: "700" },
   netValue: { color: "#e8c777", fontSize: 16, fontWeight: "800" },
-  sectionLabel: {
-    color: "#a0917a",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
   emptyBox: {
     borderRadius: 14,
     padding: 20,

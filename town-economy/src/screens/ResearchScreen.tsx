@@ -5,9 +5,9 @@ import { GOODS } from "../economy/goods";
 import { RESEARCH_NODES, RESEARCH_NODES_BY_ID, ResearchNode } from "../economy/research";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
 
-function NodeCard({ node }: { node: ResearchNode }) {
+function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
   const { state, research, t } = useEconomyContext();
   const researched = state.researched.includes(node.id);
   const prereq = node.requires ? RESEARCH_NODES_BY_ID[node.requires] : null;
@@ -18,6 +18,13 @@ function NodeCard({ node }: { node: ResearchNode }) {
   return (
     <View style={[styles.nodeCard, locked && styles.nodeCardLocked]}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      {!locked && (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(color, 0.1) }]}
+        />
+      )}
+      <View style={[styles.accentStripe, { backgroundColor: color }]} />
       <Text style={[styles.nodeIcon, locked && styles.dimmed]}>{node.icon}</Text>
       <View style={{ flex: 1 }}>
         <Text style={[styles.nodeName, locked && styles.dimmed]}>{t(node.nameKey)}</Text>
@@ -73,10 +80,10 @@ export function ResearchScreen() {
           <View key={good.id} style={styles.goodGroup}>
             <View style={styles.goodHeaderRow}>
               <Text style={styles.goodHeaderIcon}>{good.icon}</Text>
-              <Text style={styles.goodHeaderName}>{t(good.nameKey)}</Text>
+              <Text style={[styles.goodHeaderName, { color: good.color }]}>{t(good.nameKey)}</Text>
             </View>
             {nodes.map((node) => (
-              <NodeCard key={node.id} node={node} />
+              <NodeCard key={node.id} node={node} color={good.color} />
             ))}
           </View>
         );
@@ -101,6 +108,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   nodeCardLocked: { opacity: 0.6 },
+  accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   dimmed: { opacity: 0.7 },
   nodeIcon: { fontSize: 24, marginRight: 12 },
   nodeName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },

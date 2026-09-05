@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
+import { SectionLabel } from "../components/SectionLabel";
 import { ACHIEVEMENTS } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
@@ -69,7 +70,7 @@ export function AchievementsScreen() {
         </View>
       </View>
 
-      <Text style={styles.sectionLabel}>{t("achievements.statsSectionLabel")}</Text>
+      <SectionLabel text={t("achievements.statsSectionLabel")} color="#e8c777" />
       <View style={styles.statsCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.statsGrid}>
@@ -102,7 +103,7 @@ export function AchievementsScreen() {
 
       {miniQuest && miniQuestTemplate && (
         <>
-          <Text style={styles.sectionLabel}>{t("achievements.miniQuestSectionLabel")}</Text>
+          <SectionLabel text={t("achievements.miniQuestSectionLabel")} color="#f0776a" />
           {(() => {
             const current = Math.max(
               0,
@@ -144,7 +145,7 @@ export function AchievementsScreen() {
       )}
 
       <View style={styles.questHeaderRow}>
-        <Text style={styles.sectionLabel}>{t("achievements.dailyQuestsLabel")}</Text>
+        <SectionLabel text={t("achievements.dailyQuestsLabel")} color="#6fb8f2" />
         <Text style={styles.questCount}>
           {t("achievements.dailyQuestsCount", { count: completedQuestCount, total: state.dailyQuests.length })}
         </Text>
@@ -190,7 +191,7 @@ export function AchievementsScreen() {
         );
       })}
 
-      <Text style={styles.sectionLabel}>{t("achievements.sectionLabel")}</Text>
+      <SectionLabel text={t("achievements.sectionLabel")} color="#c58ee0" />
       {ACHIEVEMENTS.map((a) => {
         const unlocked = state.unlockedAchievements.includes(a.id);
         const current = Math.min(a.progress(state, netWorth), a.target);
@@ -228,7 +229,7 @@ export function AchievementsScreen() {
         );
       })}
 
-      <Text style={styles.sectionLabel}>{t("backup.sectionLabel")}</Text>
+      <SectionLabel text={t("backup.sectionLabel")} color="#a0917a" />
       <View style={styles.backupCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.description}>{t("backup.description")}</Text>
@@ -319,14 +320,6 @@ const styles = StyleSheet.create({
   },
   questCount: { color: "#e8c777", fontSize: 11, fontWeight: "700" },
   questNote: { color: "#6b5f4d", fontSize: 10, marginBottom: 10 },
-  sectionLabel: {
-    color: "#a0917a",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 10,
-    marginTop: 6,
-  },
   card: {
     flexDirection: "row",
     borderRadius: 14,

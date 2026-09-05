@@ -9,7 +9,7 @@ import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT } from "../theme";
+import { cardShadow, CARD_GRADIENT, withAlpha } from "../theme";
 import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
@@ -60,8 +60,12 @@ export function InvestScreen({ sounds }: Props) {
 
       <Text style={styles.sectionNote}>{t("invest.sectionNote")}</Text>
 
-      <View style={styles.chartCard}>
+      <View style={[styles.chartCard, { borderColor: withAlpha(selected.color, 0.4) }]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(selected.color, 0.1) }]}
+        />
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity: flashOpacity }]}
@@ -149,6 +153,7 @@ const styles = StyleSheet.create({
   sectionNote: { color: "#a0917a", fontSize: 12, marginBottom: 16, lineHeight: 17 },
   chartCard: {
     borderRadius: 18,
+    borderWidth: 1.5,
     padding: 16,
     marginBottom: 18,
     overflow: "hidden",
