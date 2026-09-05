@@ -91,6 +91,8 @@ export interface EconomyStats {
   townsTradedWith: TownId[];
   /** times a loan (see Loan above) has been paid down to zero */
   loansRepaid: number;
+  /** times a forward contract (see ForwardContract below) settled at a profit */
+  contractsWon: number;
 }
 
 export interface StreakState {
@@ -136,6 +138,25 @@ export interface Loan {
    * longer term locks in a higher rate, mirroring real fixed-term lending */
   termMonths: number;
   takenAtTick: number;
+}
+
+export type ContractDirection = "long" | "short";
+
+/** a cash-settled forward contract on a good's home price — bet that it
+ * rises ("long") or falls ("short") by a chosen term, see openContract in
+ * useEconomy.ts. Margin is collateral held until settlement; a loss can
+ * never exceed it (no negative cash, no margin calls). */
+export interface ForwardContract {
+  id: number;
+  goodId: GoodId;
+  direction: ContractDirection;
+  qty: number;
+  /** the good's home price at signing — the settlement reference point */
+  strikePrice: number;
+  /** cash held as collateral, returned (adjusted by the payoff) at settlement */
+  margin: number;
+  signedAtTick: number;
+  maturesAtTick: number;
 }
 
 /** a temporary town-wide "occasion" (see seasonalEvents.ts) that boosts one
@@ -244,4 +265,6 @@ export interface EconomyState {
   /** ids of purchased properties.ts entries — each is a one-time buy that
    * grants a permanent passive bonus (production, income, loan rate, etc.) */
   ownedProperties: string[];
+  /** open forward contracts, capped at CONTRACT_MAX_ACTIVE — see openContract in useEconomy.ts */
+  contracts: ForwardContract[];
 }

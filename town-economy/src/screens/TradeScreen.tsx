@@ -6,12 +6,16 @@ import { ScalePressable } from "../components/ScalePressable";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
-import { CaravanDirection, EconomyState, GoodId } from "../economy/types";
+import { CaravanDirection, ContractDirection, EconomyState, GoodId } from "../economy/types";
 import {
+  CONTRACT_MARGIN_PCT,
+  CONTRACT_MAX_ACTIVE,
+  CONTRACT_TERM_DAY_STEPS,
   effectiveMetropolUnlockNetWorth,
   effectiveTariffRate,
   effectiveTradeUnlockNetWorth,
   isGoodUnlocked,
+  TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
 import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
 
@@ -50,11 +54,14 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
 }
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan, t, netWorth } = useEconomyContext();
+  const { state, sendCaravan, openContract, t, netWorth } = useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
   const [qtyOption, setQtyOption] = useState<QtyOption>(5);
+  const [contractDirection, setContractDirection] = useState<ContractDirection>("long");
+  const [contractQty, setContractQty] = useState<1 | 5 | 10>(1);
+  const [contractTermDays, setContractTermDays] = useState(CONTRACT_TERM_DAY_STEPS[0]);
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
@@ -302,6 +309,131 @@ export function TradeScreen({ sounds }: Props) {
             </View>
           );
         })}
+
+      <Text style={styles.sectionLabel}>{t("trade.contract.sectionLabel")}</Text>
+      <Text style={styles.contractDesc}>{t("trade.contract.description")}</Text>
+      <View style={styles.panel}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View style={styles.sideToggle}>
+          <ScalePressable
+            style={[styles.sideBtn, contractDirection === "long" && styles.sideBtnActiveExport]}
+            onPress={() => setContractDirection("long")}
+          >
+            <Text
+              style={[styles.sideBtnText, contractDirection === "long" && styles.sideBtnTextActive]}
+            >
+              {t("trade.contract.directionLong")}
+            </Text>
+          </ScalePressable>
+          <ScalePressable
+            style={[styles.sideBtn, contractDirection === "short" && styles.sideBtnActiveImport]}
+            onPress={() => setContractDirection("short")}
+          >
+            <Text
+              style={[styles.sideBtnText, contractDirection === "short" && styles.sideBtnTextActive]}
+            >
+              {t("trade.contract.directionShort")}
+            </Text>
+          </ScalePressable>
+        </View>
+
+        <View style={styles.qtyRow}>
+          {([1, 5, 10] as const).map((q) => (
+            <ScalePressable
+              key={q}
+              style={[styles.qtyBtn, contractQty === q && { borderColor: good.color, borderWidth: 2 }]}
+              onPress={() => setContractQty(q)}
+            >
+              <Text style={styles.qtyBtnText}>{q}</Text>
+            </ScalePressable>
+          ))}
+        </View>
+
+        <Text style={styles.contractTermLabel}>{t("trade.contract.termLabel")}</Text>
+        <View style={styles.qtyRow}>
+          {CONTRACT_TERM_DAY_STEPS.map((days) => (
+            <ScalePressable
+              key={days}
+              style={[
+                styles.qtyBtn,
+                contractTermDays === days && { borderColor: good.color, borderWidth: 2 },
+              ]}
+              onPress={() => setContractTermDays(days)}
+            >
+              <Text style={styles.qtyBtnText}>{t("trade.contract.termDays", { days })}</Text>
+            </ScalePressable>
+          ))}
+        </View>
+
+        {(() => {
+          const strikePreview = state.goods[goodId].price;
+          const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
+          const contractDisabled =
+            state.contracts.length >= CONTRACT_MAX_ACTIVE ||
+            state.cash < margin ||
+            !isGoodUnlocked(good, state);
+          return (
+            <>
+              <Text style={styles.summaryLabel}>
+                {t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
+              </Text>
+              <Text style={styles.contractMaxNote}>
+                {t("trade.contract.maxActiveNote", { max: CONTRACT_MAX_ACTIVE })}
+              </Text>
+              <ScalePressable
+                disabled={contractDisabled}
+                onPress={() => openContract(goodId, contractDirection, contractQty, contractTermDays)}
+                style={[styles.confirmBtn, contractDisabled && styles.confirmBtnDisabled]}
+                scaleTo={0.97}
+              >
+                <GradientFill
+                  colors={contractDirection === "long" ? GREEN_GRADIENT : BLUE_GRADIENT}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                />
+                <Text style={styles.confirmBtnText}>{t("trade.contract.openBtn")}</Text>
+              </ScalePressable>
+            </>
+          );
+        })()}
+      </View>
+
+      <Text style={styles.sectionLabel}>{t("trade.contract.activeSectionLabel")}</Text>
+      {state.contracts.length === 0 && (
+        <Text style={styles.emptyText}>{t("trade.contract.noContracts")}</Text>
+      )}
+      {[...state.contracts]
+        .sort((a, b) => a.maturesAtTick - b.maturesAtTick)
+        .map((c) => {
+          const cGood = GOODS_BY_ID[c.goodId];
+          const total = c.maturesAtTick - c.signedAtTick;
+          const elapsed = state.tick - c.signedAtTick;
+          const progress = total > 0 ? clamp01(elapsed / total) : 1;
+          const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
+          return (
+            <View key={c.id} style={styles.caravanCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View style={styles.caravanHeader}>
+                <Text style={styles.caravanTitle}>
+                  {c.direction === "long" ? "📈" : "📉"} {cGood.icon} {t(cGood.nameKey)}
+                </Text>
+                <Text style={styles.caravanEta}>{t("trade.contract.daysLeft", { days: daysLeft })}</Text>
+              </View>
+              <Text style={styles.caravanSub}>
+                {t("trade.contract.contractRow", {
+                  qty: c.qty,
+                  good: t(cGood.nameKey),
+                  price: c.strikePrice.toFixed(2),
+                })}
+              </Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+              </View>
+            </View>
+          );
+        })}
     </ScrollView>
   );
 }
@@ -422,6 +554,9 @@ const styles = StyleSheet.create({
   confirmBtnDisabled: { opacity: 0.35 },
   confirmBtnText: { color: "#fff", fontWeight: "800", fontSize: 13 },
   emptyText: { color: "#a0917a", fontSize: 12, marginBottom: 10 },
+  contractDesc: { color: "#a0917a", fontSize: 12, marginBottom: 12, lineHeight: 17 },
+  contractTermLabel: { color: "#a0917a", fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 6 },
+  contractMaxNote: { color: "#a0917a", fontSize: 10, marginTop: 8, marginBottom: 10 },
   caravanCard: { borderRadius: 12, padding: 12, marginBottom: 10, overflow: "hidden" },
   caravanHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
   caravanTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 12 },

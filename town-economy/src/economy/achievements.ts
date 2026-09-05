@@ -26,7 +26,8 @@ export type AchievementId =
   | "investor"
   | "landlord"
   | "real_estate_mogul"
-  | "skilled_ruler";
+  | "skilled_ruler"
+  | "speculator";
 
 export interface AchievementDef {
   id: AchievementId;
@@ -270,6 +271,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 150,
     target: 3,
     progress: (s) => s.prestigePerks.length,
+  },
+  {
+    id: "speculator",
+    titleKey: "achievement.speculator.title",
+    descriptionKey: "achievement.speculator.description",
+    icon: "📑",
+    reward: 60,
+    target: 1,
+    progress: (s) => s.stats.contractsWon,
   },
 ];
 

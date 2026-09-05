@@ -71,6 +71,22 @@ export const STRINGS = {
         description: "Uzak metropollerle ticaret için kasabanın net servetini {target} 🪙'ye çıkar. Baharat, ipek ve mücevher orada çok daha değerli.",
         progress: "{current} / {target} 🪙",
       },
+      contract: {
+        sectionLabel: "VADELİ İŞLEMLER",
+        description:
+          "Bir ürünün fiyatının yükseleceğine ya da düşeceğine bahse gir. Vade sonunda, tahminine göre kâr ya da zarar edersin — en fazla teminatın kadar.",
+        directionLong: "📈 YÜKSELİŞ",
+        directionShort: "📉 DÜŞÜŞ",
+        termLabel: "Vade seç",
+        termDays: "{days} gün",
+        marginPreview: "Gerekli teminat: {amount} 🪙",
+        openBtn: "Sözleşme Aç",
+        maxActiveNote: "Aynı anda en fazla {max} açık sözleşme tutabilirsin.",
+        activeSectionLabel: "AÇIK SÖZLEŞMELER",
+        noContracts: "Açık sözleşme yok.",
+        contractRow: "{qty} x {good} · Giriş: {price} 🪙",
+        daysLeft: "{days} gün kaldı",
+      },
     },
     town: {
       moodLabel: "Kasaba Hissiyatı",
@@ -418,6 +434,7 @@ export const STRINGS = {
       landlord: { title: "Mülk Sahibi", description: "İlk mülkünü satın al." },
       real_estate_mogul: { title: "Emlak Kralı", description: "Tüm mülklere sahip ol." },
       skilled_ruler: { title: "Usta Hükümdar", description: "3 prestij yeteneği aç." },
+      speculator: { title: "Spekülatör", description: "Bir vadeli işlem sözleşmesini kârla kapat." },
     },
     quest: {
       daily_trade_small: { title: "Küçük Tüccar", description: "Bugün 3 alım-satım işlemi yap." },
@@ -539,6 +556,8 @@ export const STRINGS = {
       metropolUnlocked: "🏙️ Metropollerle ticaret açıldı! Baharat, ipek ve mücevher artık çok daha kârlı.",
       investSoldProfit: "📈 {qty} {asset} sattın, +{amount} 🪙 kâr ettin!",
       investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
+      contractProfit: "📑 {good} vadeli işlemi kapandı, +{amount} 🪙 kâr!",
+      contractLoss: "📑 {good} vadeli işlemi kapandı, -{amount} 🪙 zarar.",
     },
   },
   en: {
@@ -612,6 +631,22 @@ export const STRINGS = {
         title: "Metropolises Not Unlocked Yet",
         description: "Grow your town's net worth to {target} 🪙 to unlock trade with distant metropolises. Spice, silk, and jewelry sell for far more there.",
         progress: "{current} / {target} 🪙",
+      },
+      contract: {
+        sectionLabel: "FORWARD CONTRACTS",
+        description:
+          "Bet on whether a good's price will rise or fall. At maturity you profit or lose based on your call — capped at your margin.",
+        directionLong: "📈 RISE",
+        directionShort: "📉 FALL",
+        termLabel: "Choose term",
+        termDays: "{days}d",
+        marginPreview: "Required margin: {amount} 🪙",
+        openBtn: "Open Contract",
+        maxActiveNote: "You can hold at most {max} open contracts at once.",
+        activeSectionLabel: "OPEN CONTRACTS",
+        noContracts: "No open contracts.",
+        contractRow: "{qty} x {good} · Entry: {price} 🪙",
+        daysLeft: "{days}d left",
       },
     },
     town: {
@@ -960,6 +995,7 @@ export const STRINGS = {
       landlord: { title: "Landlord", description: "Buy your first property." },
       real_estate_mogul: { title: "Real Estate Mogul", description: "Own every property." },
       skilled_ruler: { title: "Skilled Ruler", description: "Unlock 3 prestige perks." },
+      speculator: { title: "Speculator", description: "Close a forward contract at a profit." },
     },
     quest: {
       daily_trade_small: { title: "Small-Time Trader", description: "Make 3 trades today." },
@@ -1081,6 +1117,8 @@ export const STRINGS = {
       metropolUnlocked: "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
       investSoldProfit: "📈 Sold {qty} {asset}, +{amount} 🪙 profit!",
       investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",
+      contractProfit: "📑 {good} contract settled, +{amount} 🪙 profit!",
+      contractLoss: "📑 {good} contract settled, -{amount} 🪙 loss.",
     },
   },
 } as const;

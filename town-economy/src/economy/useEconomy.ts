@@ -39,9 +39,11 @@ import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
 import {
   Caravan,
   CaravanDirection,
+  ContractDirection,
   EconomyEvent,
   EconomyState,
   ForeignTownState,
+  ForwardContract,
   Good,
   GoodId,
   GoodState,
@@ -126,6 +128,15 @@ export const LOAN_TERM_DAYS_PER_MONTH = 20;
 // How much an all-consuming debt (balance ≈ net worth) drags down the
 // villagers' target happiness, on top of whatever the tax rate is already doing.
 const DEBT_HAPPINESS_DRAG = 20;
+
+// --- Forward contracts ---------------------------------------------------
+// A cash-settled bet on a good's home price at signing vs. its price at
+// maturity — "long" pays off if it rose, "short" if it fell. Margin is
+// collateral pulled up front; a loss is capped at that margin (see
+// settlement in tick()) so a bad bet can never push cash negative.
+export const CONTRACT_MAX_ACTIVE = 3;
+export const CONTRACT_MARGIN_PCT = 0.25;
+export const CONTRACT_TERM_DAY_STEPS = [1, 3, 5, 10];
 
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
@@ -244,6 +255,13 @@ type Action =
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "PRESTIGE" }
   | { type: "UNLOCK_PRESTIGE_PERK"; perkId: string }
+  | {
+      type: "OPEN_CONTRACT";
+      goodId: GoodId;
+      direction: ContractDirection;
+      qty: number;
+      termDays: number;
+    }
   | { type: "TAKE_LOAN"; amount: number; termMonths: number }
   | { type: "REPAY_LOAN"; amount: number }
   | { type: "HIRE_WORKER"; goodId: GoodId }
@@ -336,6 +354,7 @@ function initialState(
       totalCaravansCompleted: 0,
       townsTradedWith: [],
       loansRepaid: 0,
+      contractsWon: 0,
     },
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
@@ -360,6 +379,7 @@ function initialState(
     loan: null,
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     ownedProperties: [],
+    contracts: [],
   };
 }
 
@@ -729,6 +749,36 @@ function tick(state: EconomyState): EconomyState {
     }
   }
 
+  const stillOpenContracts: ForwardContract[] = [];
+  let contractsWon = state.stats.contractsWon;
+  for (const contract of state.contracts) {
+    if (contract.maturesAtTick > nextTick) {
+      stillOpenContracts.push(contract);
+      continue;
+    }
+    const settlePrice = goods[contract.goodId].price;
+    const priceDelta =
+      contract.direction === "long"
+        ? settlePrice - contract.strikePrice
+        : contract.strikePrice - settlePrice;
+    // A loss can never exceed the margin put up at signing — no margin
+    // calls, no negative cash, just a simple "worst case you lose your
+    // deposit" retail-style contract.
+    const payoff = Math.max(priceDelta * contract.qty, -contract.margin);
+    cash += contract.margin + payoff;
+    dailyCashEarned += Math.max(0, payoff);
+    if (payoff >= 0) contractsWon += 1;
+    const contractGood = GOODS_BY_ID[contract.goodId];
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
+        good: t(state.language, contractGood.nameKey),
+        amount: Math.abs(payoff).toFixed(1),
+      }),
+      tone: payoff >= 0 ? "good" : "bad",
+    });
+  }
+
   const gameOver = inflationIndex >= config.hyperinflationIndex;
   if (gameOver && !state.gameOver) {
     newEvents.push({
@@ -754,6 +804,7 @@ function tick(state: EconomyState): EconomyState {
     foreignTowns,
     assets,
     caravans: stillTraveling,
+    contracts: stillOpenContracts,
     cash,
     happiness,
     nextId,
@@ -761,7 +812,7 @@ function tick(state: EconomyState): EconomyState {
     eventLog,
     gameOver,
     paused: gameOver ? true : state.paused,
-    stats: { ...state.stats, totalCaravansCompleted },
+    stats: { ...state.stats, totalCaravansCompleted, contractsWon },
     lastSavedAt: Date.now(),
     pendingDecision,
     pendingRequest,
@@ -1008,6 +1059,40 @@ function sendCaravan(
       caravansSent: state.dailyProgress.caravansSent + 1,
       townsTraded: townsTradedToday,
     },
+  };
+}
+
+function openContract(
+  state: EconomyState,
+  goodId: GoodId,
+  direction: ContractDirection,
+  qty: number,
+  termDays: number
+): EconomyState {
+  if (state.gameOver || qty <= 0) return state;
+  if (state.contracts.length >= CONTRACT_MAX_ACTIVE) return state;
+  if (!CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
+  const good = GOODS_BY_ID[goodId];
+  if (!good || !isGoodUnlocked(good, state)) return state;
+  const strikePrice = state.goods[goodId].price;
+  const notional = strikePrice * qty;
+  const margin = Math.round(notional * CONTRACT_MARGIN_PCT * 100) / 100;
+  if (margin <= 0 || state.cash < margin) return state;
+  const contract: ForwardContract = {
+    id: state.nextId,
+    goodId,
+    direction,
+    qty,
+    strikePrice,
+    margin,
+    signedAtTick: state.tick,
+    maturesAtTick: state.tick + termDays * TICKS_PER_GAME_DAY,
+  };
+  return {
+    ...state,
+    cash: state.cash - margin,
+    nextId: state.nextId + 1,
+    contracts: [...state.contracts, contract],
   };
 }
 
@@ -1557,6 +1642,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return prestige(state);
     case "UNLOCK_PRESTIGE_PERK":
       return unlockPrestigePerk(state, action.perkId);
+    case "OPEN_CONTRACT":
+      return openContract(state, action.goodId, action.direction, action.qty, action.termDays);
     case "TAKE_LOAN":
       return takeLoan(state, action.amount, action.termMonths);
     case "REPAY_LOAN":
@@ -1662,6 +1749,11 @@ export function useEconomy() {
     (perkId: string) => dispatch({ type: "UNLOCK_PRESTIGE_PERK", perkId }),
     []
   );
+  const openContract_ = useCallback(
+    (goodId: GoodId, direction: ContractDirection, qty: number, termDays: number) =>
+      dispatch({ type: "OPEN_CONTRACT", goodId, direction, qty, termDays }),
+    []
+  );
   const takeLoan_ = useCallback(
     (amount: number, termMonths: number) => dispatch({ type: "TAKE_LOAN", amount, termMonths }),
     []
@@ -1722,6 +1814,7 @@ export function useEconomy() {
     reset,
     prestige: prestige_,
     unlockPrestigePerk: unlockPrestigePerk_,
+    openContract: openContract_,
     takeLoan: takeLoan_,
     repayLoan: repayLoan_,
     hireWorker: hireWorker_,
