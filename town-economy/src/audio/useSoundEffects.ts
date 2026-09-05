@@ -1,4 +1,5 @@
 import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { useCallback, useRef, useState } from "react";
 
 const buySource = require("../../assets/sounds/buy.wav");
@@ -33,12 +34,35 @@ export function useSoundEffects() {
     }
   }, []);
 
+  // Best-effort tactile feedback — a platform that can't vibrate (desktop
+  // web, an iPad without the Taptic Engine) should silently do nothing,
+  // never throw, and it follows the same mute toggle as sound so there's
+  // just one "quiet mode" switch rather than a second setting to manage.
+  const haptic = useCallback((trigger: () => Promise<void>) => {
+    if (mutedRef.current) return;
+    try {
+      trigger().catch(() => {});
+    } catch {
+      // ignore
+    }
+  }, []);
+
   return {
     muted,
     toggleMuted: () => setMuted((m) => !m),
-    playBuy: () => play(buyPlayer),
-    playSell: () => play(sellPlayer),
+    playBuy: () => {
+      play(buyPlayer);
+      haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+    },
+    playSell: () => {
+      play(sellPlayer);
+      haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft));
+    },
     playEvent: () => play(eventPlayer),
-    playCrash: () => play(crashPlayer),
+    playCrash: () => {
+      play(crashPlayer);
+      haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
+    },
+    playSuccess: () => haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
   };
 }

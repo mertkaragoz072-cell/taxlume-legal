@@ -5,6 +5,7 @@ import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ConfettiBurst } from "./src/components/ConfettiBurst";
 import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
+import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { EventBanner } from "./src/components/EventBanner";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
@@ -75,6 +76,7 @@ function Game() {
     prevPrestigeLevel.current = state.prestigeLevel;
     if (grewAchievements || prestiged) {
       setConfettiTrigger((n) => n + 1);
+      sounds.playSuccess();
     }
     // Ask for a store review right after a moment the player is likely
     // happy about — a first prestige, or having racked up a handful of
@@ -83,6 +85,7 @@ function Game() {
     if (prestiged || state.unlockedAchievements.length >= 6) {
       maybeRequestReview();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.unlockedAchievements.length, state.prestigeLevel]);
 
   useEffect(() => {
@@ -189,9 +192,11 @@ function Game() {
 
 export default function App() {
   return (
-    <EconomyProvider>
-      <Game />
-    </EconomyProvider>
+    <ErrorBoundary>
+      <EconomyProvider>
+        <Game />
+      </EconomyProvider>
+    </ErrorBoundary>
   );
 }
 
