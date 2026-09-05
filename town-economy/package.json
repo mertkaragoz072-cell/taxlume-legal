@@ -29,7 +29,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "gen:sounds": "node scripts/gen-sounds.js"
+    "gen:sounds": "node scripts/gen-sounds.js",
+    "check:i18n": "node scripts/check-i18n.js"
   },
   "private": true
 }
