@@ -17,7 +17,9 @@ const SLIDES: Slide[] = [
   { icon: "🔥", titleKey: "tutorial.slide3Title", bodyKey: "tutorial.slide3Body" },
   { icon: "🚚", titleKey: "tutorial.slide4Title", bodyKey: "tutorial.slide4Body" },
   { icon: "🏛️", titleKey: "tutorial.slide5Title", bodyKey: "tutorial.slide5Body" },
-  { icon: "🏆", titleKey: "tutorial.slide6Title", bodyKey: "tutorial.slide6Body" },
+  { icon: "🔬", titleKey: "tutorial.slide6Title", bodyKey: "tutorial.slide6Body" },
+  { icon: "🏦", titleKey: "tutorial.slide7Title", bodyKey: "tutorial.slide7Body" },
+  { icon: "🏆", titleKey: "tutorial.slide8Title", bodyKey: "tutorial.slide8Body" },
 ];
 
 interface Props {

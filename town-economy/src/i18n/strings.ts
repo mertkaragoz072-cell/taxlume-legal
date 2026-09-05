@@ -227,9 +227,15 @@ export const STRINGS = {
       slide5Title: "Vergi ve Yönetim",
       slide5Body:
         "Köylülerden vergi al ama dikkat: çok vergi halkı sinirlendirir, üretimi düşürür ve enflasyonu hızlandırır. Kazandığın parayla kasabanı geliştir.",
-      slide6Title: "Başarımlar ve Günlük Seri",
+      slide6Title: "Büyüme ve Derinlik",
       slide6Body:
-        "İlerledikçe başarımlar kazan, her gün uğrayarak günlük bonusunu ve serini büyüt. Şimdi kasabanı yönetmeye başla!",
+        "Kasaban büyüdükçe Araştırma, Yatırım, İşçi ve Mülk sekmeleri açılır; bazı ürünler de zamanla (Kasaba ekranındaki Gün sayacına göre) piyasaya çıkar.",
+      slide7Title: "Banka, Vadeli İşlemler ve Prestij",
+      slide7Body:
+        "Bankadan kredi çekebilir, bir ürünün fiyatının yükseleceğine/düşeceğine vadeli işlemle bahse girebilirsin. Yeterince büyüyünce Prestij yaparak kalıcı bonuslar ve yetenek puanları kazanırsın.",
+      slide8Title: "Başarımlar ve Günlük Seri",
+      slide8Body:
+        "İlerledikçe başarımlar kazan, her gün uğrayarak serini büyüt. Hedefler ekranından ilerlemeni bir kodla yedekleyebilirsin. Şimdi kasabanı yönetmeye başla!",
     },
     difficultyModal: {
       title: "Yeni Oyun Başlat",
@@ -804,9 +810,15 @@ export const STRINGS = {
       slide5Title: "Tax & Governance",
       slide5Body:
         "Tax villagers, but careful: too much makes people angry, cuts production, and speeds up inflation. Spend what you earn on town upgrades.",
-      slide6Title: "Achievements & Daily Streak",
+      slide6Title: "Growth & Depth",
       slide6Body:
-        "Earn achievements as you go, and check in daily to grow your bonus and your streak. Now go run your town!",
+        "As your town grows, Research, Invest, Workers, and Properties tabs unlock; some goods also arrive over time (tracked by the Day counter on the Town screen).",
+      slide7Title: "Bank, Forward Contracts & Prestige",
+      slide7Body:
+        "Borrow from the bank, or bet on whether a good's price will rise or fall with a forward contract. Once you've grown enough, Prestige for permanent bonuses and skill points.",
+      slide8Title: "Achievements & Daily Streak",
+      slide8Body:
+        "Earn achievements as you go, and check in daily to grow your bonus and your streak. You can back up your progress as a code from the Goals screen. Now go run your town!",
     },
     difficultyModal: {
       title: "Start New Game",
