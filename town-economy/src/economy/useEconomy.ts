@@ -314,7 +314,7 @@ function makeDailyQuests(dateSeed: string): EconomyState["dailyQuests"] {
   }));
 }
 
-function initialState(
+export function initialState(
   difficulty: DifficultyId = DEFAULT_DIFFICULTY,
   language: Language = DEFAULT_LANGUAGE
 ): EconomyState {
@@ -394,7 +394,7 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
   return next;
 }
 
-function tick(state: EconomyState): EconomyState {
+export function tick(state: EconomyState): EconomyState {
   if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest) return state;
   const config = DIFFICULTIES[state.difficulty];
 
@@ -827,7 +827,7 @@ function tick(state: EconomyState): EconomyState {
   };
 }
 
-function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: number): EconomyState {
+export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell", qty: number): EconomyState {
   if (state.gameOver) return state;
   const good = GOODS_BY_ID[goodId];
   const gs = state.goods[goodId];
@@ -1570,7 +1570,7 @@ function unlockPrestigePerk(state: EconomyState, perkId: string): EconomyState {
   };
 }
 
-function takeLoan(state: EconomyState, amount: number, termMonths: number): EconomyState {
+export function takeLoan(state: EconomyState, amount: number, termMonths: number): EconomyState {
   if (state.gameOver || state.loan || amount <= 0) return state;
   if (!LOAN_TERM_MONTHS_STEPS.includes(termMonths)) return state;
   const principal = Math.min(Math.round(amount), loanCap(state));
@@ -1583,7 +1583,7 @@ function takeLoan(state: EconomyState, amount: number, termMonths: number): Econ
   };
 }
 
-function repayLoan(state: EconomyState, amount: number): EconomyState {
+export function repayLoan(state: EconomyState, amount: number): EconomyState {
   if (!state.loan || amount <= 0) return state;
   const payment = Math.min(amount, state.cash, state.loan.remainingBalance);
   if (payment <= 0) return state;
