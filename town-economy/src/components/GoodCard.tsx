@@ -48,7 +48,14 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
           {change.toFixed(1)}%
         </Text>
       </View>
-      <PriceChart history={state.history} color={good.color} width={92} height={34} strokeWidth={1.5} />
+      <PriceChart
+        history={state.history}
+        color={good.color}
+        width={92}
+        height={34}
+        strokeWidth={1.5}
+        filled={false}
+      />
       <Text style={styles.name}>{t(good.nameKey)}</Text>
       <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
       {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}

@@ -8,6 +8,8 @@ interface Props {
   width: number;
   height: number;
   strokeWidth?: number;
+  /** the gradient area fill under the curve — off gives a plain, airier line */
+  filled?: boolean;
 }
 
 interface Point {
@@ -34,7 +36,7 @@ function smoothLinePath(points: Point[]): string {
   return d;
 }
 
-export function PriceChart({ history, color, width, height, strokeWidth = 2.5 }: Props) {
+export function PriceChart({ history, color, width, height, strokeWidth = 2.5, filled = true }: Props) {
   // Wrapped in a plain View rather than returning the <Svg> bare: on web,
   // react-native-svg's root renders as a plain (statically positioned) DOM
   // node, which paints BEHIND any absolutely/relatively positioned sibling
@@ -83,13 +85,17 @@ export function PriceChart({ history, color, width, height, strokeWidth = 2.5 }:
   return (
     <View style={{ width, height }}>
       <Svg width={width} height={height}>
-        <Defs>
-          <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={color} stopOpacity={0.35} />
-            <Stop offset="1" stopColor={color} stopOpacity={0} />
-          </LinearGradient>
-        </Defs>
-        <Path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
+        {filled && (
+          <>
+            <Defs>
+              <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={color} stopOpacity={0.35} />
+                <Stop offset="1" stopColor={color} stopOpacity={0} />
+              </LinearGradient>
+            </Defs>
+            <Path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
+          </>
+        )}
         <Line
           x1={0}
           y1={lastY}
