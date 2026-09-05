@@ -130,6 +130,57 @@ export const GOODS: Good[] = [
     baseProduction: 4,
     elasticity: 0.95,
   },
+  // Unlock over time (see gameDayFromTick/isGoodUnlocked in useEconomy.ts)
+  // rather than by net worth — a steady drip of new products to keep
+  // reopening the market screen worthwhile as a run goes on.
+  {
+    id: "honey",
+    nameKey: "good.honey.name",
+    producerKey: "good.honey.producer",
+    icon: "🍯",
+    color: "#e0a52e",
+    basePrice: 8.6,
+    baseSupply: 160,
+    baseProduction: 10,
+    elasticity: 0.6,
+    unlockDay: 2,
+  },
+  {
+    id: "cheese",
+    nameKey: "good.cheese.name",
+    producerKey: "good.cheese.producer",
+    icon: "🧀",
+    color: "#f2c14e",
+    basePrice: 10.5,
+    baseSupply: 150,
+    baseProduction: 10,
+    elasticity: 0.55,
+    unlockDay: 4,
+  },
+  {
+    id: "paper",
+    nameKey: "good.paper.name",
+    producerKey: "good.paper.producer",
+    icon: "📜",
+    color: "#d8cbb0",
+    basePrice: 7.8,
+    baseSupply: 190,
+    baseProduction: 14,
+    elasticity: 0.5,
+    unlockDay: 7,
+  },
+  {
+    id: "glass",
+    nameKey: "good.glass.name",
+    producerKey: "good.glass.producer",
+    icon: "🪟",
+    color: "#8fd9e8",
+    basePrice: 17.5,
+    baseSupply: 120,
+    baseProduction: 8,
+    elasticity: 0.7,
+    unlockDay: 10,
+  },
 ];
 
 export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Record<

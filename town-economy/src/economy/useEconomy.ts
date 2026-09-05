@@ -67,6 +67,14 @@ export function gameDayFromTick(tick: number): number {
   return Math.floor(tick / TICKS_PER_GAME_DAY) + 1;
 }
 
+/** A good with no unlockDay is available from the start; one with an
+ * unlockDay only becomes tradeable once the town has been running that
+ * many in-game days — it still simulates quietly in the background before
+ * that, so it isn't starting from scratch once revealed. */
+export function isGoodUnlocked(good: Good, state: EconomyState): boolean {
+  return !good.unlockDay || gameDayFromTick(state.tick) >= good.unlockDay;
+}
+
 // --- Prestige ------------------------------------------------------------
 // The "end of a run" milestone: cash in a well-grown town for a permanent,
 // stacking bonus that survives every future reset (see PRESTIGE below and

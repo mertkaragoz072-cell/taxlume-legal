@@ -4,6 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import {
   estimateTaxIncomePerTick,
+  isGoodUnlocked,
   loanCap,
   loanInterestRatePerDay,
   loanTickRateToDayRate,
@@ -373,7 +374,7 @@ export function TownScreen() {
 
       <Text style={styles.sectionLabel}>{t("town.merchantsSectionLabel")}</Text>
       <View style={styles.buildingsGrid}>
-        {GOODS.map((g) => {
+        {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
           const gs = state.goods[g.id];
           const ratio = gs.price / g.basePrice;
           const pct = Math.max(0, Math.min(1, (ratio - 0.6) / (1.8 - 0.6)));
@@ -398,7 +399,7 @@ export function TownScreen() {
 
       <Text style={styles.sectionLabel}>{t("town.workersSectionLabel")}</Text>
       <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
-      {GOODS.map((g) => {
+      {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
         const count = state.workers[g.id];
         return (
           <View key={g.id} style={styles.workerCard}>

@@ -4,7 +4,7 @@ import { EconomyState } from "./types";
 const STORAGE_KEY = "taxlume-town-economy-save-v1";
 // Bump whenever EconomyState's shape changes in a way older saves can't
 // satisfy — an outdated save is discarded rather than crashing the app.
-const SAVE_VERSION = 25;
+const SAVE_VERSION = 26;
 
 interface SaveFile {
   version: number;

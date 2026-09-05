@@ -8,7 +8,7 @@ import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, GoodId } from "../economy/types";
 import { UPGRADES_BY_ID } from "../economy/upgrades";
-import { METROPOL_UNLOCK_NET_WORTH, TRADE_UNLOCK_NET_WORTH } from "../economy/useEconomy";
+import { isGoodUnlocked, METROPOL_UNLOCK_NET_WORTH, TRADE_UNLOCK_NET_WORTH } from "../economy/useEconomy";
 import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
 
 interface Props {
@@ -162,7 +162,7 @@ export function TradeScreen({ sounds }: Props) {
         {t("trade.pricesSectionLabel", { town: t(town.nameKey).toUpperCase() })}
       </Text>
       <View style={styles.goodsTable}>
-        {GOODS.map((g) => {
+        {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
           const home = state.goods[g.id].price;
           const there = townState.prices[g.id];
           const delta = ((there - home) / home) * 100;

@@ -14,7 +14,11 @@ export type GoodId =
   | "leather"
   | "spice"
   | "silk"
-  | "jewelry";
+  | "jewelry"
+  | "honey"
+  | "cheese"
+  | "paper"
+  | "glass";
 
 export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank";
 
@@ -33,6 +37,9 @@ export interface Good {
   baseProduction: number;
   /** how strongly a supply shortfall/surplus moves price: price ∝ (baseSupply/supply)^elasticity */
   elasticity: number;
+  /** in-game day (see gameDayFromTick in useEconomy.ts) this good first
+   * becomes tradeable; omitted/undefined means available from day 1 */
+  unlockDay?: number;
 }
 
 export interface GoodState {

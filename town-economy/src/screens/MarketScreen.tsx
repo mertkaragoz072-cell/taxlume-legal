@@ -4,6 +4,7 @@ import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { SEASONAL_EVENT_TEMPLATES_BY_ID } from "../economy/seasonalEvents";
+import { gameDayFromTick, isGoodUnlocked } from "../economy/useEconomy";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
@@ -22,6 +23,8 @@ interface Props {
 
 export function MarketScreen({ sounds }: Props) {
   const { state, selectGood, trade, t } = useEconomyContext();
+  const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
+  const lockedGoods = GOODS.filter((g) => !isGoodUnlocked(g, state));
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
   const selectedState = state.goods[selected.id];
   const { opacity: flashOpacity, flashColor } = usePriceFlash(selectedState.price);
@@ -93,7 +96,7 @@ export function MarketScreen({ sounds }: Props) {
 
       <Text style={styles.sectionLabel}>{t("market.sectionLabel")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
-        {GOODS.map((g) => (
+        {unlockedGoods.map((g) => (
           <GoodCard
             key={g.id}
             good={g}
@@ -103,6 +106,25 @@ export function MarketScreen({ sounds }: Props) {
           />
         ))}
       </ScrollView>
+
+      {lockedGoods.length > 0 && (
+        <>
+          <Text style={styles.sectionLabel}>{t("market.comingSoonLabel")}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+            {lockedGoods.map((g) => {
+              const daysLeft = Math.max(1, (g.unlockDay ?? 1) - gameDayFromTick(state.tick));
+              return (
+                <View key={g.id} style={styles.lockedCard}>
+                  <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                  <Text style={styles.lockedIcon}>🔒 {g.icon}</Text>
+                  <Text style={styles.lockedName}>{t(g.nameKey)}</Text>
+                  <Text style={styles.lockedDay}>{t("market.unlocksInDays", { days: daysLeft })}</Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </>
+      )}
 
       <BuySellPanel
         good={selected}
@@ -166,6 +188,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   goodsRow: { marginBottom: 18 },
+  lockedCard: {
+    width: 108,
+    borderRadius: 14,
+    padding: 10,
+    paddingTop: 13,
+    marginRight: 10,
+    alignItems: "center",
+    overflow: "hidden",
+    opacity: 0.6,
+    ...cardShadow,
+  },
+  lockedIcon: { fontSize: 20 },
+  lockedName: { color: "#f0e3c8", fontSize: 12, fontWeight: "600", marginTop: 6 },
+  lockedDay: { color: "#a0917a", fontSize: 10, marginTop: 4, textAlign: "center" },
   gameOverBox: {
     marginTop: 18,
     backgroundColor: "#3a1f1a",

@@ -34,6 +34,8 @@ export const STRINGS = {
       sellConfirm: "SAT",
       seasonalEventTicksLeft: "{ticks} tur kaldı",
       seasonalEventBonus: "+%{pct} fiyat",
+      comingSoonLabel: "YAKINDA",
+      unlocksInDays: "{days} gün sonra açılır",
     },
     inventory: {
       portfolioValue: "Envanter Değeri",
@@ -230,6 +232,10 @@ export const STRINGS = {
       spice: { name: "Baharat", producer: "Baharatçı" },
       silk: { name: "İpek", producer: "İpek Çiftliği" },
       jewelry: { name: "Mücevher", producer: "Kuyumcu" },
+      honey: { name: "Bal", producer: "Arıcı" },
+      cheese: { name: "Peynir", producer: "Mandıra" },
+      paper: { name: "Kağıt", producer: "Kağıt Atölyesi" },
+      glass: { name: "Cam Eşya", producer: "Camcı" },
     },
     asset: {
       gold: { name: "Altın", description: "Güvenli liman — yavaş ama istikrarlı değer kazanır." },
@@ -530,6 +536,8 @@ export const STRINGS = {
       sellConfirm: "SELL",
       seasonalEventTicksLeft: "{ticks} turns left",
       seasonalEventBonus: "+{pct}% price",
+      comingSoonLabel: "COMING SOON",
+      unlocksInDays: "Unlocks in {days}d",
     },
     inventory: {
       portfolioValue: "Inventory Value",
@@ -726,6 +734,10 @@ export const STRINGS = {
       spice: { name: "Spice", producer: "Spice Merchant" },
       silk: { name: "Silk", producer: "Silk Farm" },
       jewelry: { name: "Jewelry", producer: "Jeweler" },
+      honey: { name: "Honey", producer: "Apiary" },
+      cheese: { name: "Cheese", producer: "Creamery" },
+      paper: { name: "Paper", producer: "Paper Mill" },
+      glass: { name: "Glassware", producer: "Glassworks" },
     },
     asset: {
       gold: { name: "Gold", description: "A safe haven — slow but steady value growth." },
