@@ -2,11 +2,10 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { Language } from "../i18n/t";
+import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
-
-const formatCoins = (v: number) => `${v.toFixed(1)} 🪙`;
 
 interface Props {
   townName: string;
@@ -53,6 +52,7 @@ export function InflationHeader({
 }: Props) {
   const hot = inflationRate > 0.006;
   const difficultyConfig = DIFFICULTIES[difficulty];
+  const formatCoins = (v: number) => formatCoinsUtil(v, language);
   return (
     <View style={styles.wrap}>
       <GradientFill colors={["#241c12", "#140f0a"]} x1="0" y1="0" x2="0" y2="1" />

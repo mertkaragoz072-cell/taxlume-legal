@@ -21,7 +21,7 @@ function formatElapsed(ms: number, t: (key: string, params?: Record<string, stri
 }
 
 export function OfflineSummaryModal({ summary, onDismiss }: Props) {
-  const { t } = useEconomyContext();
+  const { t, formatCoins } = useEconomyContext();
   if (!summary) return null;
 
   return (
@@ -46,7 +46,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               <Text style={styles.statLabel}>{t("header.cash")}</Text>
               <Text style={[styles.statValue, { color: summary.cashDelta >= 0 ? "#3fae5c" : "#c94b4b" }]}>
                 {summary.cashDelta >= 0 ? "+" : ""}
-                {summary.cashDelta.toFixed(1)} 🪙
+                {formatCoins(summary.cashDelta)}
               </Text>
             </View>
             <View style={styles.stat}>
@@ -55,7 +55,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
                 style={[styles.statValue, { color: summary.netWorthDelta >= 0 ? "#3fae5c" : "#c94b4b" }]}
               >
                 {summary.netWorthDelta >= 0 ? "+" : ""}
-                {summary.netWorthDelta.toFixed(1)} 🪙
+                {formatCoins(summary.netWorthDelta)}
               </Text>
             </View>
             {summary.caravansCompleted > 0 && (

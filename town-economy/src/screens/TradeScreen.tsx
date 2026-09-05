@@ -54,7 +54,7 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
 }
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan, openContract, t, netWorth } = useEconomyContext();
+  const { state, sendCaravan, openContract, t, netWorth, formatCoins } = useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
@@ -245,7 +245,7 @@ export function TradeScreen({ sounds }: Props) {
           </Text>
           <Text style={styles.summaryTotal}>
             {direction === "export" ? "+" : "-"}
-            {net.toFixed(1)} 🪙
+            {formatCoins(net)}
           </Text>
         </View>
         <Text style={styles.etaText}>

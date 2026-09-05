@@ -10,17 +10,18 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT } from "../theme";
+import { formatNumber } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
-const formatPrice = (v: number) => `${v.toFixed(2)} 🪙`;
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
 }
 
 export function InvestScreen({ sounds }: Props) {
-  const { state, tradeAsset, assetsValue, t } = useEconomyContext();
+  const { state, tradeAsset, assetsValue, t, formatCoins } = useEconomyContext();
+  const formatPrice = (v: number) => formatCoins(v, 2);
   const [selectedId, setSelectedId] = useState<AssetId>(ASSETS[0].id);
   const selected = ASSETS.find((a) => a.id === selectedId)!;
   const selectedState = state.assets[selected.id];
@@ -46,12 +47,12 @@ export function InvestScreen({ sounds }: Props) {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <Text style={styles.portfolioLabel}>{t("invest.portfolioLabel")}</Text>
         <View style={styles.portfolioRow}>
-          <Text style={styles.portfolioValue}>{assetsValue.toFixed(1)} 🪙</Text>
+          <Text style={styles.portfolioValue}>{formatCoins(assetsValue)}</Text>
           {assetsValue > 0 && (
             <Text style={[styles.portfolioPnl, { color: totalPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {totalPnl >= 0
-                ? t("invest.unrealizedProfit", { amount: totalPnl.toFixed(1) })
-                : t("invest.unrealizedLoss", { amount: Math.abs(totalPnl).toFixed(1) })}
+                ? t("invest.unrealizedProfit", { amount: formatNumber(totalPnl, state.language) })
+                : t("invest.unrealizedLoss", { amount: formatNumber(Math.abs(totalPnl), state.language) })}
             </Text>
           )}
         </View>
@@ -95,8 +96,10 @@ export function InvestScreen({ sounds }: Props) {
             </Text>
             <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {unrealizedPnl >= 0
-                ? t("invest.unrealizedProfit", { amount: unrealizedPnl.toFixed(1) })
-                : t("invest.unrealizedLoss", { amount: Math.abs(unrealizedPnl).toFixed(1) })}
+                ? t("invest.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
+                : t("invest.unrealizedLoss", {
+                    amount: formatNumber(Math.abs(unrealizedPnl), state.language),
+                  })}
             </Text>
           </View>
         ) : (

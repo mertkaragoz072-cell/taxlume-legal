@@ -18,7 +18,7 @@ interface Props {
 type Qty = 1 | 5 | "ALL";
 
 export function BuySellPanel({ good, state, cash, onTrade }: Props) {
-  const { t } = useEconomyContext();
+  const { t, formatCoins } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [qtyOption, setQtyOption] = useState<Qty>(1);
 
@@ -66,7 +66,7 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
         <Text style={styles.summaryLabel}>
           {resolvedQty} x {t(good.nameKey)} @ {state.price.toFixed(2)}
         </Text>
-        <Text style={styles.summaryTotal}>{total.toFixed(1)} 🪙</Text>
+        <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
       </View>
 
       <ScalePressable

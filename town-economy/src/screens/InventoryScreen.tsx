@@ -6,7 +6,7 @@ import { GOODS } from "../economy/goods";
 import { CARD_GRADIENT, cardShadow } from "../theme";
 
 export function InventoryScreen() {
-  const { state, portfolioValue, netWorth, t } = useEconomyContext();
+  const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
   const holdings = GOODS.map((g) => ({ good: g, gs: state.goods[g.id] })).filter(
     ({ gs }) => gs.holding > 0
   );
@@ -17,15 +17,15 @@ export function InventoryScreen() {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>{t("header.cash")}</Text>
-          <Text style={styles.summaryValue}>{state.cash.toFixed(1)} 🪙</Text>
+          <Text style={styles.summaryValue}>{formatCoins(state.cash)}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>{t("inventory.portfolioValue")}</Text>
-          <Text style={styles.summaryValue}>{portfolioValue.toFixed(1)} 🪙</Text>
+          <Text style={styles.summaryValue}>{formatCoins(portfolioValue)}</Text>
         </View>
         <View style={[styles.summaryRow, styles.netRow]}>
           <Text style={styles.netLabel}>{t("header.netWorth")}</Text>
-          <Text style={styles.netValue}>{netWorth.toFixed(1)} 🪙</Text>
+          <Text style={styles.netValue}>{formatCoins(netWorth)}</Text>
         </View>
       </View>
 
@@ -55,7 +55,7 @@ export function InventoryScreen() {
               </View>
             </View>
             <View style={{ alignItems: "flex-end" }}>
-              <Text style={styles.rowValue}>{value.toFixed(1)} 🪙</Text>
+              <Text style={styles.rowValue}>{formatCoins(value)}</Text>
               <Text style={styles.rowShare}>%{share.toFixed(0)}</Text>
             </View>
           </View>

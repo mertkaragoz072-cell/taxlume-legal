@@ -36,6 +36,7 @@ import {
   VILLAGER_REQUEST_REFUSE_HAPPINESS,
 } from "./villagerRequests";
 import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
+import { formatCoins as formatCoinsUtil, formatNumber as formatNumberUtil } from "../utils/formatNumber";
 import {
   Caravan,
   CaravanDirection,
@@ -571,7 +572,9 @@ function tick(state: EconomyState): EconomyState {
     taxCashDelta -= penalty;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.angryUprising", { amount: penalty.toFixed(1) }),
+      message: t(state.language, "msg.angryUprising", {
+        amount: formatNumberUtil(penalty, state.language),
+      }),
       tone: "bad",
     });
   } else if (happiness >= CONTENT_THRESHOLD && Math.random() < CONTENT_EVENT_CHANCE) {
@@ -728,7 +731,7 @@ function tick(state: EconomyState): EconomyState {
         id: nextId++,
         message: t(state.language, "msg.caravanReturnedExport", {
           town: t(state.language, town.nameKey),
-          amount: caravan.amount.toFixed(1),
+          amount: formatNumberUtil(caravan.amount, state.language),
           qty: caravan.qty,
           good: t(state.language, good.nameKey),
         }),
@@ -773,7 +776,7 @@ function tick(state: EconomyState): EconomyState {
       id: nextId++,
       message: t(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
         good: t(state.language, contractGood.nameKey),
-        amount: Math.abs(payoff).toFixed(1),
+        amount: formatNumberUtil(Math.abs(payoff), state.language),
       }),
       tone: payoff >= 0 ? "good" : "bad",
     });
@@ -916,7 +919,7 @@ function tradeAsset(
   const message = t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
     asset: t(state.language, asset.nameKey),
     qty: amount,
-    amount: Math.abs(pnl).toFixed(1),
+    amount: formatNumberUtil(Math.abs(pnl), state.language),
   });
   const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
   return {
@@ -1832,6 +1835,8 @@ export function useEconomy() {
     setTownName,
     setLanguage: setLanguage_,
     t: translate,
+    formatCoins: (value: number, decimals?: number) =>
+      formatCoinsUtil(value, state.language, decimals),
     portfolioValue,
     assetsValue,
     netWorth,

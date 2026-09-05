@@ -60,6 +60,7 @@ export function TownScreen() {
     unlockPrestigePerk,
     netWorth,
     t,
+    formatCoins,
   } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
@@ -258,7 +259,7 @@ export function TownScreen() {
           <>
             <View style={styles.bankBalanceRow}>
               <Text style={styles.bankBalanceLabel}>{t("town.bank.activeTitle")}</Text>
-              <Text style={styles.bankBalanceValue}>{state.loan.remainingBalance.toFixed(1)} 🪙</Text>
+              <Text style={styles.bankBalanceValue}>{formatCoins(state.loan.remainingBalance)}</Text>
             </View>
             <Text style={styles.bankRate}>
               {t("town.bank.rate", {
