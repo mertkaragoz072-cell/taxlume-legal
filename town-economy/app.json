@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Altın Kasaba",
-    "slug": "altin-kasaba",
+    "name": "Golden Town",
+    "slug": "golden-town",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.altinkasaba.app",
+      "bundleIdentifier": "com.goldentown.app",
       "buildNumber": "1"
     },
     "android": {
-      "package": "com.altinkasaba.app",
+      "package": "com.goldentown.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#1a1410",
