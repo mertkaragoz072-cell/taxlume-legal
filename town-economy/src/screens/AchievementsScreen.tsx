@@ -69,6 +69,37 @@ export function AchievementsScreen() {
         </View>
       </View>
 
+      <Text style={styles.sectionLabel}>{t("achievements.statsSectionLabel")}</Text>
+      <View style={styles.statsCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View style={styles.statsGrid}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{state.stats.totalTrades}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.totalTrades")}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{state.stats.totalCaravansCompleted}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.caravansCompleted")}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{state.stats.townsTradedWith.length}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.townsTradedWith")}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{state.stats.loansRepaid}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.loansRepaid")}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{state.stats.contractsWon}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.contractsWon")}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{state.prestigeLevel}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.prestigeLevel")}</Text>
+          </View>
+        </View>
+      </View>
+
       {miniQuest && miniQuestTemplate && (
         <>
           <Text style={styles.sectionLabel}>{t("achievements.miniQuestSectionLabel")}</Text>
@@ -269,6 +300,17 @@ const styles = StyleSheet.create({
   streakRow: { flexDirection: "row", alignItems: "center" },
   streakEmoji: { fontSize: 16, marginRight: 6 },
   streakText: { color: "#f0e3c8", fontSize: 12 },
+  statsCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  statsGrid: { flexDirection: "row", flexWrap: "wrap" },
+  statItem: { width: "33.33%", marginBottom: 12, alignItems: "center" },
+  statValue: { color: "#e8c777", fontSize: 18, fontWeight: "800" },
+  statLabel: { color: "#a0917a", fontSize: 10, textAlign: "center", marginTop: 2 },
   questHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",

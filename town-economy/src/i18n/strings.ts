@@ -178,6 +178,15 @@ export const STRINGS = {
       miniQuestSectionLabel: "ANLIK GÖREV",
       miniQuestTicksLeft: "{ticks} tur kaldı",
       sectionLabel: "BAŞARIMLAR",
+      statsSectionLabel: "ÖMÜR BOYU İSTATİSTİKLER",
+      stats: {
+        totalTrades: "Toplam İşlem",
+        caravansCompleted: "Tamamlanan Kervan",
+        townsTradedWith: "Ticaret Yapılan Kasaba",
+        loansRepaid: "Ödenen Kredi",
+        contractsWon: "Kazanılan Vadeli İşlem",
+        prestigeLevel: "Prestij Seviyesi",
+      },
     },
     backup: {
       sectionLabel: "KAYIT YEDEKLEME",
@@ -251,6 +260,11 @@ export const STRINGS = {
       title: "Yeni Oyun Başlat",
       subtitle: "Bir zorluk seviyesi seç. Mevcut kasaba ilerlemenin üzerine yazılacak.",
       currentTag: "ŞU AN",
+      confirmTitle: "Emin misin?",
+      confirmBody:
+        "{difficulty} zorluğunda yeni bir oyuna başlamak mevcut kasaba ilerlemeni kalıcı olarak silecek. Bu işlem geri alınamaz.",
+      confirmButton: "Evet, Sıfırla",
+      back: "Geri",
     },
     townNameModal: {
       title: "🏘️ Kasabanı Adlandır",
@@ -771,6 +785,15 @@ export const STRINGS = {
       miniQuestSectionLabel: "FLASH QUEST",
       miniQuestTicksLeft: "{ticks} turns left",
       sectionLabel: "ACHIEVEMENTS",
+      statsSectionLabel: "LIFETIME STATS",
+      stats: {
+        totalTrades: "Total Trades",
+        caravansCompleted: "Caravans Completed",
+        townsTradedWith: "Towns Traded With",
+        loansRepaid: "Loans Repaid",
+        contractsWon: "Contracts Won",
+        prestigeLevel: "Prestige Level",
+      },
     },
     backup: {
       sectionLabel: "SAVE BACKUP",
@@ -844,6 +867,11 @@ export const STRINGS = {
       title: "Start New Game",
       subtitle: "Pick a difficulty. Your current town's progress will be overwritten.",
       currentTag: "CURRENT",
+      confirmTitle: "Are you sure?",
+      confirmBody:
+        "Starting a new game on {difficulty} will permanently erase your current town's progress. This can't be undone.",
+      confirmButton: "Yes, Reset",
+      back: "Back",
     },
     townNameModal: {
       title: "🏘️ Name Your Town",
