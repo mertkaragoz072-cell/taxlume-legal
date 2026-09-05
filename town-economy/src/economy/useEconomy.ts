@@ -36,7 +36,7 @@ import {
   VILLAGER_REQUEST_REFUSE_HAPPINESS,
 } from "./villagerRequests";
 import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
-import { formatCoins as formatCoinsUtil, formatNumber as formatNumberUtil } from "../utils/formatNumber";
+import { formatCoins as formatCoinsUtil, formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import {
   Caravan,
   CaravanDirection,
