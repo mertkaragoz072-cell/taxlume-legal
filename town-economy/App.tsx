@@ -7,6 +7,7 @@ import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { EventBanner } from "./src/components/EventBanner";
+import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
@@ -16,6 +17,7 @@ import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
+import { APP_BACKGROUND_GRADIENT } from "./src/theme";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { InvestScreen } from "./src/screens/InvestScreen";
@@ -118,6 +120,7 @@ function Game() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
+      <GradientFill colors={APP_BACKGROUND_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
       <View style={styles.content}>
         <InflationHeader
           townName={state.townName}
@@ -203,7 +206,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#1a1410" },
+  safe: { flex: 1, backgroundColor: "#140f0a" },
   // The UI was designed for a phone-width column; on a wide screen (iPad,
   // web desktop) let it grow to a comfortable max width and center it
   // instead of stretching cards edge-to-edge.

@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { Language } from "../i18n/t";
+import { glowShadow, withAlpha } from "../theme";
 import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
@@ -55,30 +56,32 @@ export function InflationHeader({
   const formatCoins = (v: number) => formatCoinsUtil(v, language);
   return (
     <View style={styles.wrap}>
-      <GradientFill colors={["#241c12", "#140f0a"]} x1="0" y1="0" x2="0" y2="1" />
+      <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
       <View style={styles.goldLine} />
-      <View style={styles.topLine}>
+      <View style={styles.nameRow}>
+        <Pressable
+          onPress={onEditName}
+          style={styles.townNamePressable}
+          accessibilityRole="button"
+          accessibilityLabel={t("a11y.editTownName")}
+        >
+          <Text style={styles.town} numberOfLines={1}>
+            🏘️ {townName.toUpperCase()} ✏️
+          </Text>
+        </Pressable>
+      </View>
+      <View style={styles.metaRow}>
         <View style={styles.townRow}>
-          <Pressable
-            onPress={onEditName}
-            style={styles.townNamePressable}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.editTownName")}
-          >
-            <Text style={styles.town} numberOfLines={1}>
-              🏘️ {townName.toUpperCase()} ✏️
-            </Text>
-          </Pressable>
-          <View style={styles.streakBadge}>
+          <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
             <Text style={styles.streakBadgeText}>
               {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
             </Text>
           </View>
-          <View style={styles.streakBadge}>
+          <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
             <Text style={styles.streakBadgeText}>📅 {t("header.day", { day: gameDay })}</Text>
           </View>
           {streakCount > 0 && (
-            <View style={styles.streakBadge}>
+            <View style={[styles.streakBadge, { backgroundColor: withAlpha("#f0776a", 0.22) }]}>
               <Text style={styles.streakBadgeText}>🔥 {streakCount}</Text>
             </View>
           )}
@@ -94,7 +97,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onHelp}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: withAlpha("#6fb8f2", 0.22) }]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.help")}
           >
@@ -110,7 +113,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onTogglePause}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
             accessibilityRole="button"
             accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
           >
@@ -118,7 +121,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onReset}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: withAlpha("#f0776a", 0.22) }]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.newGame")}
           >
@@ -136,10 +139,16 @@ export function InflationHeader({
           <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
           <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
         </View>
-        <View style={[styles.stat, styles.inflationStat]}>
+        <View
+          style={[
+            styles.stat,
+            styles.inflationStat,
+            hot && glowShadow("#e0693f"),
+          ]}
+        >
           <View style={styles.inflationTextCol}>
             <Text style={styles.statLabel}>{t("header.inflation")}</Text>
-            <Text style={[styles.statValue, { color: hot ? "#e0693f" : "#e8c777" }]}>
+            <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]}>
               {inflationIndex.toFixed(1)}{" "}
               <Text style={{ fontSize: 11 }}>
                 ({inflationRate >= 0 ? "+" : ""}
@@ -149,7 +158,7 @@ export function InflationHeader({
           </View>
           <PriceChart
             history={inflationHistory}
-            color={hot ? "#e0693f" : "#e8c777"}
+            color={hot ? "#ff8a5c" : "#e8c777"}
             width={70}
             height={30}
             strokeWidth={1.5}
@@ -176,15 +185,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#e8c777",
     opacity: 0.55,
   },
-  topLine: {
+  nameRow: { marginBottom: 6 },
+  metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
-  townRow: { flexDirection: "row", alignItems: "center", flexShrink: 1 },
-  townNamePressable: { flexShrink: 1 },
-  town: { color: "#e8c777", fontWeight: "800", fontSize: 14, letterSpacing: 0.5 },
+  townRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, flexWrap: "wrap" },
+  townNamePressable: { alignSelf: "flex-start" },
+  town: {
+    color: "#ffd75e",
+    fontWeight: "800",
+    fontSize: 16,
+    letterSpacing: 0.5,
+    textShadowColor: "rgba(255, 200, 90, 0.55)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
   streakBadge: {
     backgroundColor: "#2a2016",
     borderRadius: 10,

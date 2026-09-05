@@ -11,7 +11,7 @@ import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, GOLD_GRADIENT } from "../theme";
+import { cardShadow, CARD_GRADIENT, GOLD_GRADIENT, withAlpha } from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -64,8 +64,12 @@ export function MarketScreen({ sounds }: Props) {
         </View>
       )}
 
-      <View style={styles.chartCard}>
+      <View style={[styles.chartCard, { borderColor: withAlpha(selected.color, 0.4) }]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(selected.color, 0.1) }]}
+        />
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity: flashOpacity }]}
@@ -94,7 +98,10 @@ export function MarketScreen({ sounds }: Props) {
         />
       </View>
 
-      <Text style={styles.sectionLabel}>{t("market.sectionLabel")}</Text>
+      <View style={styles.sectionLabelRow}>
+        <View style={[styles.sectionLabelDot, { backgroundColor: "#e8c777" }]} />
+        <Text style={styles.sectionLabel}>{t("market.sectionLabel")}</Text>
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
         {unlockedGoods.map((g) => (
           <GoodCard
@@ -109,7 +116,10 @@ export function MarketScreen({ sounds }: Props) {
 
       {lockedGoods.length > 0 && (
         <>
-          <Text style={styles.sectionLabel}>{t("market.comingSoonLabel")}</Text>
+          <View style={styles.sectionLabelRow}>
+            <View style={[styles.sectionLabelDot, { backgroundColor: "#a0917a" }]} />
+            <Text style={styles.sectionLabel}>{t("market.comingSoonLabel")}</Text>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
             {lockedGoods.map((g) => {
               const daysLeft = Math.max(1, (g.unlockDay ?? 1) - gameDayFromTick(state.tick));
@@ -166,6 +176,7 @@ const styles = StyleSheet.create({
   seasonalTicksLeft: { color: "#2a2016", fontSize: 11, fontWeight: "700" },
   chartCard: {
     borderRadius: 18,
+    borderWidth: 1.5,
     padding: 16,
     marginBottom: 18,
     overflow: "hidden",
@@ -180,12 +191,13 @@ const styles = StyleSheet.create({
   chartSubtitle: { color: "#a0917a", fontSize: 12, marginTop: 2 },
   chartPrice: { color: "#e8c777", fontSize: 18, fontWeight: "800" },
   chartChange: { fontSize: 13, fontWeight: "700", marginTop: 2 },
+  sectionLabelRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  sectionLabelDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
   sectionLabel: {
     color: "#a0917a",
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
-    marginBottom: 8,
   },
   goodsRow: { marginBottom: 18 },
   lockedCard: {

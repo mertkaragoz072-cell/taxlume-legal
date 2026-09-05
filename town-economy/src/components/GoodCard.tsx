@@ -2,7 +2,7 @@ import React from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT } from "../theme";
+import { cardShadow, CARD_GRADIENT, glowShadow, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { ScalePressable } from "./ScalePressable";
@@ -33,9 +33,17 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
   return (
     <ScalePressable
       onPress={onPress}
-      style={[styles.card, selected && { borderColor: good.color, borderWidth: 2 }]}
+      style={[
+        styles.card,
+        selected && { borderColor: good.color, borderWidth: 2 },
+        selected && glowShadow(good.color),
+      ]}
     >
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.14) }]}
+      />
       <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
       <Animated.View
         pointerEvents="none"
@@ -81,7 +89,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 3,
+    height: 4,
   },
   flashOverlay: {
     borderRadius: 14,
