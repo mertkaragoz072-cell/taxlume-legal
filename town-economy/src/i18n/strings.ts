@@ -106,6 +106,11 @@ export const STRINGS = {
         progress: "{current} / {target} 🪙",
         button: "Prestij Yap",
         confirmButton: "Emin misin? Tekrar dokun",
+        pointsLabel: "🎖️ {points} yetenek puanı",
+        perksSectionLabel: "Prestij Yetenekleri",
+        perkRequires: "Önce {name} gerekli",
+        perkUnlockBtn: "{cost} puan",
+        perkUnlockedBtn: "Açıldı",
       },
       bank: {
         title: "🏦 Banka",
@@ -288,6 +293,40 @@ export const STRINGS = {
         effect: "+{amount} mutluluk hedefi",
       },
     },
+    prestige: {
+      perk: {
+        headStart: {
+          name: "Kolay Başlangıç",
+          description: "Her yeni oyunda kasaya ekstra başlangıç sermayesi ekler.",
+          effect: "+{amount} 🪙 başlangıç sermayesi",
+        },
+        efficiency: {
+          name: "Kalıcı Verimlilik",
+          description: "Kasabanın tüm üretimini kalıcı olarak artırır.",
+          effect: "+%{pct} tüm üretim",
+        },
+        taxRelief: {
+          name: "Vergi Muafiyeti",
+          description: "Köylülerin vergiye olan hoşnutsuzluğunu azaltır.",
+          effect: "Vergi mutluluk etkisi -%{pct}",
+        },
+        bankersFriend: {
+          name: "Bankacının Dostu",
+          description: "Banka kredilerinin faiz oranını kalıcı olarak düşürür.",
+          effect: "-%{pct}/gün kredi faizi",
+        },
+        earlyExplorer: {
+          name: "Erken Kaşif",
+          description: "Ticaret ve metropol açılma eşiklerini düşürür.",
+          effect: "Açılma eşiği -%{pct}",
+        },
+        tariffMaster: {
+          name: "Gümrük Ustası",
+          description: "Şehirler arası ticarette gümrük oranını daha da düşürür.",
+          effect: "-%{pct} gümrük oranı",
+        },
+      },
+    },
     research: {
       sectionNote: "Ürünlere yatırım yaparak üretim hızını ve değerini kalıcı olarak artır.",
       researchedBadge: "✅ Araştırıldı",
@@ -378,6 +417,7 @@ export const STRINGS = {
       investor: { title: "Yatırımcı", description: "Aynı anda 2 farklı yatırım aracına sahip ol." },
       landlord: { title: "Mülk Sahibi", description: "İlk mülkünü satın al." },
       real_estate_mogul: { title: "Emlak Kralı", description: "Tüm mülklere sahip ol." },
+      skilled_ruler: { title: "Usta Hükümdar", description: "3 prestij yeteneği aç." },
     },
     quest: {
       daily_trade_small: { title: "Küçük Tüccar", description: "Bugün 3 alım-satım işlemi yap." },
@@ -608,6 +648,11 @@ export const STRINGS = {
         progress: "{current} / {target} 🪙",
         button: "Prestige",
         confirmButton: "Sure? Tap again",
+        pointsLabel: "🎖️ {points} skill points",
+        perksSectionLabel: "Prestige Perks",
+        perkRequires: "Requires {name} first",
+        perkUnlockBtn: "{cost} pts",
+        perkUnlockedBtn: "Unlocked",
       },
       bank: {
         title: "🏦 Bank",
@@ -790,6 +835,40 @@ export const STRINGS = {
         effect: "+{amount} happiness target",
       },
     },
+    prestige: {
+      perk: {
+        headStart: {
+          name: "Easy Start",
+          description: "Adds extra starting cash to every new run.",
+          effect: "+{amount} 🪙 starting cash",
+        },
+        efficiency: {
+          name: "Enduring Efficiency",
+          description: "Permanently boosts the whole town's production.",
+          effect: "+{pct}% all production",
+        },
+        taxRelief: {
+          name: "Tax Relief",
+          description: "Reduces how much villagers resent taxation.",
+          effect: "Tax happiness impact -{pct}%",
+        },
+        bankersFriend: {
+          name: "Banker's Friend",
+          description: "Permanently lowers the bank loan interest rate.",
+          effect: "-{pct}%/day loan interest",
+        },
+        earlyExplorer: {
+          name: "Early Explorer",
+          description: "Lowers the net-worth thresholds for trade and metropol access.",
+          effect: "Unlock threshold -{pct}%",
+        },
+        tariffMaster: {
+          name: "Tariff Master",
+          description: "Further lowers the tariff on inter-city trade.",
+          effect: "-{pct}% tariff rate",
+        },
+      },
+    },
     research: {
       sectionNote: "Invest in goods to permanently boost their production speed and value.",
       researchedBadge: "✅ Researched",
@@ -880,6 +959,7 @@ export const STRINGS = {
       investor: { title: "Investor", description: "Own 2 different investment assets at once." },
       landlord: { title: "Landlord", description: "Buy your first property." },
       real_estate_mogul: { title: "Real Estate Mogul", description: "Own every property." },
+      skilled_ruler: { title: "Skilled Ruler", description: "Unlock 3 prestige perks." },
     },
     quest: {
       daily_trade_small: { title: "Small-Time Trader", description: "Make 3 trades today." },

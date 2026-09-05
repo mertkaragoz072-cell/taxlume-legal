@@ -15,11 +15,20 @@ import {
   propertyPassiveIncomePerTick,
   propertyProductionMultiplier,
 } from "./properties";
+import {
+  perkCaravanTariffDiscount,
+  perkHeadStartBonus,
+  perkLoanRateDiscountPerDay,
+  perkProductionBonus,
+  perkTaxHappinessRelief,
+  perkUnlockThresholdMult,
+  PRESTIGE_PERKS_BY_ID,
+} from "./prestigePerks";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
-import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
+import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
   rollVillagerRequest,
@@ -82,6 +91,9 @@ export function isGoodUnlocked(good: Good, state: EconomyState): boolean {
 export const PRESTIGE_UNLOCK_NET_WORTH = 10000;
 export const PRESTIGE_PRODUCTION_BONUS_PER_LEVEL = 0.08;
 export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
+// Points earned each prestige, spent on prestigePerks.ts — a player-chosen
+// permanent tree layered on top of the automatic level bonus above.
+export const PRESTIGE_POINTS_PER_PRESTIGE = 1;
 
 // --- Banking / loans -------------------------------------------------------
 // A loan is cash now against interest that compounds every tick until
@@ -231,6 +243,7 @@ type Action =
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "PRESTIGE" }
+  | { type: "UNLOCK_PRESTIGE_PERK"; perkId: string }
   | { type: "TAKE_LOAN"; amount: number; termMonths: number }
   | { type: "REPAY_LOAN"; amount: number }
   | { type: "HIRE_WORKER"; goodId: GoodId }
@@ -341,6 +354,8 @@ function initialState(
     dailyQuests: makeDailyQuests("init"),
     activeMiniQuest: null,
     prestigeLevel: 0,
+    prestigePoints: 0,
+    prestigePerks: [],
     activeSeasonalEvent: null,
     loan: null,
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
@@ -373,11 +388,10 @@ function tick(state: EconomyState): EconomyState {
   const debtBurden = state.loan
     ? clamp(state.loan.remainingBalance / Math.max(computeNetWorth(state), 1), 0, 1)
     : 0;
+  const taxHappinessDrag =
+    state.taxRate * HAPPINESS_TARGET_SLOPE * (1 - perkTaxHappinessRelief(state.prestigePerks));
   const targetHappiness = clamp(
-    100 -
-      state.taxRate * HAPPINESS_TARGET_SLOPE -
-      debtBurden * DEBT_HAPPINESS_DRAG +
-      propertyHappinessBonus(state.ownedProperties),
+    100 - taxHappinessDrag - debtBurden * DEBT_HAPPINESS_DRAG + propertyHappinessBonus(state.ownedProperties),
     0,
     100
   );
@@ -553,7 +567,8 @@ function tick(state: EconomyState): EconomyState {
   const inflationHistory = pushCapped(state.inflationHistory, inflationIndex, HISTORY_LEN);
 
   // Permanent, run-independent bonus from past prestiges (see PRESTIGE).
-  const prestigeProductionMult = 1 + state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL;
+  const prestigeProductionMult =
+    1 + state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL + perkProductionBonus(state.prestigePerks);
   const seasonalTemplate = activeSeasonalEvent
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId]
     : null;
@@ -872,6 +887,19 @@ function tradeAsset(
   };
 }
 
+/** the real tariff a caravan pays right now: the town's base rate, cut by
+ * the Kervansaray upgrade, any owned property, and any prestige perk —
+ * shared by the reducer and the trade screen's previews so they never drift. */
+export function effectiveTariffRate(state: EconomyState, town: ForeignTown): number {
+  return Math.max(
+    0,
+    town.tariffRate -
+      state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel -
+      propertyCaravanTariffDiscount(state.ownedProperties) -
+      perkCaravanTariffDiscount(state.prestigePerks)
+  );
+}
+
 function sendCaravan(
   state: EconomyState,
   townId: TownId,
@@ -891,12 +919,7 @@ function sendCaravan(
   const townsTradedToday = state.dailyProgress.townsTraded.includes(townId)
     ? state.dailyProgress.townsTraded
     : [...state.dailyProgress.townsTraded, townId];
-  const tariffRate = Math.max(
-    0,
-    town.tariffRate -
-      state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel -
-      propertyCaravanTariffDiscount(state.ownedProperties)
-  );
+  const tariffRate = effectiveTariffRate(state, town);
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
   if (direction === "export") {
@@ -1126,7 +1149,8 @@ export function loanInterestRatePerDay(state: EconomyState, termMonths: number):
       inflationContribution +
       termContribution -
       state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY -
-      propertyLoanRateDiscountPerDay(state.ownedProperties),
+      propertyLoanRateDiscountPerDay(state.ownedProperties) -
+      perkLoanRateDiscountPerDay(state.prestigePerks),
     LOAN_MIN_INTEREST_RATE_PER_DAY,
     LOAN_MAX_INTEREST_RATE_PER_DAY
   );
@@ -1182,9 +1206,19 @@ function applyAchievements(state: EconomyState): EconomyState {
   };
 }
 
+/** TRADE_UNLOCK_NET_WORTH discounted by the earlyExplorer prestige perk. */
+export function effectiveTradeUnlockNetWorth(state: EconomyState): number {
+  return TRADE_UNLOCK_NET_WORTH * perkUnlockThresholdMult(state.prestigePerks);
+}
+
+/** METROPOL_UNLOCK_NET_WORTH discounted by the earlyExplorer prestige perk. */
+export function effectiveMetropolUnlockNetWorth(state: EconomyState): number {
+  return METROPOL_UNLOCK_NET_WORTH * perkUnlockThresholdMult(state.prestigePerks);
+}
+
 function applyTradeUnlock(state: EconomyState): EconomyState {
   if (state.tradeUnlocked) return state;
-  if (computeNetWorth(state) < TRADE_UNLOCK_NET_WORTH) return state;
+  if (computeNetWorth(state) < effectiveTradeUnlockNetWorth(state)) return state;
 
   const event: EconomyEvent = {
     id: state.nextId,
@@ -1202,7 +1236,7 @@ function applyTradeUnlock(state: EconomyState): EconomyState {
 
 function applyMetropolUnlock(state: EconomyState): EconomyState {
   if (state.metropolUnlocked) return state;
-  if (computeNetWorth(state) < METROPOL_UNLOCK_NET_WORTH) return state;
+  if (computeNetWorth(state) < effectiveMetropolUnlockNetWorth(state)) return state;
 
   const event: EconomyEvent = {
     id: state.nextId,
@@ -1426,10 +1460,25 @@ function prestige(state: EconomyState): EconomyState {
     ...base,
     townName: state.townName,
     prestigeLevel: nextLevel,
-    cash: base.cash + nextLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
+    prestigePoints: state.prestigePoints + PRESTIGE_POINTS_PER_PRESTIGE,
+    prestigePerks: state.prestigePerks,
+    cash: base.cash + nextLevel * PRESTIGE_CASH_BONUS_PER_LEVEL + perkHeadStartBonus(state.prestigePerks),
     nextId: base.nextId + 1,
     lastEvent: event,
     eventLog: [event],
+  };
+}
+
+function unlockPrestigePerk(state: EconomyState, perkId: string): EconomyState {
+  if (state.prestigePerks.includes(perkId)) return state;
+  const def = PRESTIGE_PERKS_BY_ID[perkId];
+  if (!def) return state;
+  if (def.requires && !state.prestigePerks.includes(def.requires)) return state;
+  if (state.prestigePoints < def.cost) return state;
+  return {
+    ...state,
+    prestigePoints: state.prestigePoints - def.cost,
+    prestigePerks: [...state.prestigePerks, perkId],
   };
 }
 
@@ -1496,11 +1545,18 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
         ...base,
         townName: state.townName,
         prestigeLevel: state.prestigeLevel,
-        cash: base.cash + state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
+        prestigePoints: state.prestigePoints,
+        prestigePerks: state.prestigePerks,
+        cash:
+          base.cash +
+          state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL +
+          perkHeadStartBonus(state.prestigePerks),
       };
     }
     case "PRESTIGE":
       return prestige(state);
+    case "UNLOCK_PRESTIGE_PERK":
+      return unlockPrestigePerk(state, action.perkId);
     case "TAKE_LOAN":
       return takeLoan(state, action.amount, action.termMonths);
     case "REPAY_LOAN":
@@ -1602,6 +1658,10 @@ export function useEconomy() {
     []
   );
   const prestige_ = useCallback(() => dispatch({ type: "PRESTIGE" }), []);
+  const unlockPrestigePerk_ = useCallback(
+    (perkId: string) => dispatch({ type: "UNLOCK_PRESTIGE_PERK", perkId }),
+    []
+  );
   const takeLoan_ = useCallback(
     (amount: number, termMonths: number) => dispatch({ type: "TAKE_LOAN", amount, termMonths }),
     []
@@ -1661,6 +1721,7 @@ export function useEconomy() {
     togglePause,
     reset,
     prestige: prestige_,
+    unlockPrestigePerk: unlockPrestigePerk_,
     takeLoan: takeLoan_,
     repayLoan: repayLoan_,
     hireWorker: hireWorker_,

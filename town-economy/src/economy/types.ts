@@ -229,6 +229,11 @@ export interface EconomyState {
   /** times the player has cashed in a run for a permanent bonus (see PRESTIGE
    * in useEconomy.ts) — survives every reset, including a plain difficulty restart */
   prestigeLevel: number;
+  /** unspent points earned from prestiging, spent on prestigePerks.ts nodes —
+   * survives every reset like prestigeLevel does */
+  prestigePoints: number;
+  /** ids of unlocked prestigePerks.ts nodes — permanent, survives every reset */
+  prestigePerks: string[];
   /** a temporary town-wide price event; see seasonalEvents.ts */
   activeSeasonalEvent: SeasonalEventInstance | null;
   /** at most one outstanding town loan at a time */

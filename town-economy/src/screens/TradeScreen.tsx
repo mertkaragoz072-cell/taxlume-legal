@@ -6,9 +6,13 @@ import { ScalePressable } from "../components/ScalePressable";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
-import { CaravanDirection, GoodId } from "../economy/types";
-import { UPGRADES_BY_ID } from "../economy/upgrades";
-import { isGoodUnlocked, METROPOL_UNLOCK_NET_WORTH, TRADE_UNLOCK_NET_WORTH } from "../economy/useEconomy";
+import { CaravanDirection, EconomyState, GoodId } from "../economy/types";
+import {
+  effectiveMetropolUnlockNetWorth,
+  effectiveTariffRate,
+  effectiveTradeUnlockNetWorth,
+  isGoodUnlocked,
+} from "../economy/useEconomy";
 import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT } from "../theme";
 
 interface Props {
@@ -24,15 +28,12 @@ interface TownPillProps {
   town: ForeignTown;
   selected: boolean;
   onPress: () => void;
-  caravanseraiLevel: number;
+  state: EconomyState;
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-function TownPill({ town, selected, onPress, caravanseraiLevel, t }: TownPillProps) {
-  const effectiveTariff = Math.max(
-    0,
-    town.tariffRate - caravanseraiLevel * UPGRADES_BY_ID.caravanserai.effectPerLevel
-  );
+function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
+  const effectiveTariff = effectiveTariffRate(state, town);
   return (
     <ScalePressable
       onPress={onPress}
@@ -56,7 +57,8 @@ export function TradeScreen({ sounds }: Props) {
   const [qtyOption, setQtyOption] = useState<QtyOption>(5);
 
   if (!state.tradeUnlocked) {
-    const pct = Math.max(0, Math.min(1, netWorth / TRADE_UNLOCK_NET_WORTH));
+    const target = effectiveTradeUnlockNetWorth(state);
+    const pct = Math.max(0, Math.min(1, netWorth / target));
     return (
       <ScrollView contentContainerStyle={styles.lockedBody} showsVerticalScrollIndicator={false}>
         <View style={styles.lockedCard}>
@@ -64,7 +66,7 @@ export function TradeScreen({ sounds }: Props) {
           <Text style={styles.lockedIcon}>🔒</Text>
           <Text style={styles.lockedTitle}>{t("trade.locked.title")}</Text>
           <Text style={styles.lockedDesc}>
-            {t("trade.locked.description", { target: TRADE_UNLOCK_NET_WORTH })}
+            {t("trade.locked.description", { target: Math.round(target) })}
           </Text>
           <View style={styles.lockedTrack}>
             <View style={[styles.lockedFill, { width: `${pct * 100}%` }]} />
@@ -72,7 +74,7 @@ export function TradeScreen({ sounds }: Props) {
           <Text style={styles.lockedProgress}>
             {t("trade.locked.progress", {
               current: Math.floor(netWorth),
-              target: TRADE_UNLOCK_NET_WORTH,
+              target: Math.round(target),
             })}
           </Text>
         </View>
@@ -87,10 +89,7 @@ export function TradeScreen({ sounds }: Props) {
   const theirPrice = townState.prices[goodId];
   const holding = state.goods[goodId].holding;
 
-  const tariffRate = Math.max(
-    0,
-    town.tariffRate - state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel
-  );
+  const tariffRate = effectiveTariffRate(state, town);
   const affordableImport = Math.floor(state.cash / (theirPrice * (1 + tariffRate)));
   const resolvedQty =
     qtyOption === "ALL" ? (direction === "export" ? holding : affordableImport) : qtyOption;
@@ -111,7 +110,7 @@ export function TradeScreen({ sounds }: Props) {
             town={tn}
             selected={tn.id === townId}
             onPress={() => setTownId(tn.id)}
-            caravanseraiLevel={state.upgrades.caravanserai}
+            state={state}
             t={t}
           />
         ))}
@@ -126,7 +125,7 @@ export function TradeScreen({ sounds }: Props) {
               town={tn}
               selected={tn.id === townId}
               onPress={() => setTownId(tn.id)}
-              caravanseraiLevel={state.upgrades.caravanserai}
+              state={state}
               t={t}
             />
           ))}
@@ -138,20 +137,24 @@ export function TradeScreen({ sounds }: Props) {
           <View style={{ flex: 1 }}>
             <Text style={styles.metropolLockedTitle}>{t("trade.metropolLocked.title")}</Text>
             <Text style={styles.metropolLockedDesc}>
-              {t("trade.metropolLocked.description", { target: METROPOL_UNLOCK_NET_WORTH })}
+              {t("trade.metropolLocked.description", { target: Math.round(effectiveMetropolUnlockNetWorth(state)) })}
             </Text>
             <View style={styles.lockedTrack}>
               <View
                 style={[
                   styles.lockedFill,
-                  { width: `${Math.max(0, Math.min(1, netWorth / METROPOL_UNLOCK_NET_WORTH)) * 100}%` },
+                  {
+                    width: `${
+                      Math.max(0, Math.min(1, netWorth / effectiveMetropolUnlockNetWorth(state))) * 100
+                    }%`,
+                  },
                 ]}
               />
             </View>
             <Text style={styles.metropolLockedProgress}>
               {t("trade.metropolLocked.progress", {
                 current: Math.floor(netWorth),
-                target: METROPOL_UNLOCK_NET_WORTH,
+                target: Math.round(effectiveMetropolUnlockNetWorth(state)),
               })}
             </Text>
           </View>

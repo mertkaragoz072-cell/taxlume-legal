@@ -17,6 +17,7 @@ import {
 } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { PROPERTIES } from "../economy/properties";
+import { PRESTIGE_PERKS } from "../economy/prestigePerks";
 import {
   WORKER_MAX_PER_GOOD,
   WORKER_PRODUCTION_BONUS_PER_WORKER,
@@ -56,6 +57,7 @@ export function TownScreen() {
     hireWorker,
     fireWorker,
     buyProperty,
+    unlockPrestigePerk,
     netWorth,
     t,
   } = useEconomyContext();
@@ -205,6 +207,48 @@ export function TownScreen() {
           </>
         )}
       </View>
+
+      <Text style={styles.sectionLabel}>{t("town.prestige.perksSectionLabel")}</Text>
+      <Text style={styles.prestigePointsLabel}>
+        {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
+      </Text>
+      {PRESTIGE_PERKS.map((perk) => {
+        const unlocked = state.prestigePerks.includes(perk.id);
+        const requiresDef = perk.requires ? PRESTIGE_PERKS.find((p) => p.id === perk.requires) : null;
+        const requirementMet = !perk.requires || state.prestigePerks.includes(perk.requires);
+        const disabled = unlocked || !requirementMet || state.prestigePoints < perk.cost;
+        const effect = perk.effectLabel();
+        return (
+          <View key={perk.id} style={styles.upgradeCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <Text style={styles.upgradeIcon}>{perk.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.upgradeTitleRow}>
+                <Text style={styles.upgradeName}>{t(perk.nameKey)}</Text>
+                {unlocked && <Text style={styles.upgradeLevel}>{t("town.propertyOwnedLabel")}</Text>}
+              </View>
+              <Text style={styles.upgradeDesc}>{t(perk.descriptionKey)}</Text>
+              <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>
+              {!unlocked && !requirementMet && requiresDef && (
+                <Text style={styles.perkRequires}>
+                  {t("town.prestige.perkRequires", { name: t(requiresDef.nameKey) })}
+                </Text>
+              )}
+            </View>
+            <ScalePressable
+              disabled={disabled}
+              onPress={() => unlockPrestigePerk(perk.id)}
+              style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
+              scaleTo={0.95}
+            >
+              {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
+              <Text style={styles.upgradeBtnText}>
+                {unlocked ? t("town.prestige.perkUnlockedBtn") : t("town.prestige.perkUnlockBtn", { cost: perk.cost })}
+              </Text>
+            </ScalePressable>
+          </View>
+        );
+      })}
 
       <View style={styles.bankCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -523,6 +567,8 @@ const styles = StyleSheet.create({
   prestigeBonus: { color: "#3fae5c", fontSize: 11, fontWeight: "700", marginTop: 6 },
   prestigeLocked: { color: "#a0917a", fontSize: 11, marginTop: 10, marginBottom: 8 },
   prestigeProgress: { color: "#e8c777", fontSize: 12, fontWeight: "700" },
+  prestigePointsLabel: { color: "#e8c777", fontSize: 12, fontWeight: "700", marginBottom: 10 },
+  perkRequires: { color: "#c94b4b", fontSize: 10, marginTop: 3, fontWeight: "600" },
   lockedTrack: {
     width: "100%",
     height: 8,
