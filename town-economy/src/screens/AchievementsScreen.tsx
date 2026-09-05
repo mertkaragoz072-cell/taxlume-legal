@@ -1,18 +1,53 @@
-import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { GradientFill } from "../components/GradientFill";
+import { ScalePressable } from "../components/ScalePressable";
 import { ACHIEVEMENTS } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
-import { CARD_GRADIENT, cardShadow, UNLOCKED_CARD_GRADIENT } from "../theme";
+import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, UNLOCKED_CARD_GRADIENT } from "../theme";
+
+type ImportFeedback = { type: "success" | "error"; text: string };
 
 export function AchievementsScreen() {
-  const { state, netWorth, t } = useEconomyContext();
+  const { state, netWorth, t, hydrate } = useEconomyContext();
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
   const miniQuest = state.activeMiniQuest;
   const miniQuestTemplate = miniQuest ? MINI_QUEST_TEMPLATES_BY_ID[miniQuest.templateId] : null;
+
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importArmed, setImportArmed] = useState(false);
+  const [importFeedback, setImportFeedback] = useState<ImportFeedback | null>(null);
+
+  const handleCopyCode = async () => {
+    await Clipboard.setStringAsync(encodeSaveCode(state));
+    setCopyFeedback(true);
+    setTimeout(() => setCopyFeedback(false), 2500);
+  };
+
+  const handleImport = () => {
+    // Validate before arming — a garbage paste should say so immediately,
+    // not make the player tap twice to discover that.
+    const result = decodeSaveCode(importText);
+    if (!result.ok) {
+      setImportFeedback({ type: "error", text: t(`backup.error.${result.reason}`) });
+      setImportArmed(false);
+      return;
+    }
+    if (!importArmed) {
+      setImportArmed(true);
+      return;
+    }
+    hydrate(result.state);
+    setImportFeedback({ type: "success", text: t("backup.restored") });
+    setImportText("");
+    setImportArmed(false);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -161,6 +196,60 @@ export function AchievementsScreen() {
           </View>
         );
       })}
+
+      <Text style={styles.sectionLabel}>{t("backup.sectionLabel")}</Text>
+      <View style={styles.backupCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <Text style={styles.description}>{t("backup.description")}</Text>
+        <ScalePressable onPress={handleCopyCode} style={styles.backupBtn} scaleTo={0.97}>
+          <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+          <Text style={styles.backupBtnText}>{t("backup.copyBtn")}</Text>
+        </ScalePressable>
+        {copyFeedback && <Text style={styles.backupFeedbackSuccess}>{t("backup.copied")}</Text>}
+
+        <Text style={[styles.description, styles.backupImportDesc]}>
+          {t("backup.importDescription")}
+        </Text>
+        <TextInput
+          value={importText}
+          onChangeText={(text) => {
+            setImportText(text);
+            setImportArmed(false);
+            setImportFeedback(null);
+          }}
+          placeholder={t("backup.importPlaceholder")}
+          placeholderTextColor="#6b5f4d"
+          style={styles.backupInput}
+          multiline
+          numberOfLines={3}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <ScalePressable
+          disabled={importText.trim().length === 0}
+          onPress={handleImport}
+          style={[styles.backupBtn, importText.trim().length === 0 && styles.backupBtnDisabled]}
+          scaleTo={0.97}
+        >
+          {importText.trim().length > 0 && (
+            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+          )}
+          <Text style={styles.backupBtnText}>
+            {importArmed ? t("backup.confirmImportBtn") : t("backup.importBtn")}
+          </Text>
+        </ScalePressable>
+        {importFeedback && (
+          <Text
+            style={
+              importFeedback.type === "success"
+                ? styles.backupFeedbackSuccess
+                : styles.backupFeedbackError
+            }
+          >
+            {importFeedback.text}
+          </Text>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -228,4 +317,36 @@ const styles = StyleSheet.create({
   progressTrack: { height: 4, borderRadius: 2, backgroundColor: "#1a1410", overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: "#e8c777", borderRadius: 2 },
   progressText: { color: "#a0917a", fontSize: 10, marginTop: 3 },
+  backupCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  backupImportDesc: { marginTop: 14 },
+  backupBtn: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  backupBtnDisabled: { backgroundColor: "#4a4032" },
+  backupBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 13 },
+  backupInput: {
+    backgroundColor: "#1a1410",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#3a2d1e",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: "#f0e3c8",
+    fontSize: 12,
+    marginTop: 8,
+    marginBottom: 10,
+    textAlignVertical: "top",
+  },
+  backupFeedbackSuccess: { color: "#3fae5c", fontSize: 11, fontWeight: "700", marginTop: 8 },
+  backupFeedbackError: { color: "#c94b4b", fontSize: 11, fontWeight: "700", marginTop: 8 },
 });

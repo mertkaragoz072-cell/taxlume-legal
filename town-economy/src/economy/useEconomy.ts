@@ -1766,6 +1766,7 @@ export function useEconomy() {
     []
   );
   const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
+  const hydrate_ = useCallback((imported: EconomyState) => dispatch({ type: "HYDRATE", state: imported }), []);
   const buyProperty_ = useCallback(
     (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId }),
     []
@@ -1815,6 +1816,7 @@ export function useEconomy() {
     prestige: prestige_,
     unlockPrestigePerk: unlockPrestigePerk_,
     openContract: openContract_,
+    hydrate: hydrate_,
     takeLoan: takeLoan_,
     repayLoan: repayLoan_,
     hireWorker: hireWorker_,

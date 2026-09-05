@@ -23,6 +23,7 @@ import { ResearchScreen } from "./src/screens/ResearchScreen";
 import { TownScreen } from "./src/screens/TownScreen";
 import { TradeScreen } from "./src/screens/TradeScreen";
 import { hasSeenTutorial, markTutorialSeen } from "./src/tutorial/tutorialStorage";
+import { maybeRequestReview } from "./src/utils/reviewPrompt";
 
 // On web, browsers block audio.play() until the page has seen a user
 // gesture. Our event/hyperinflation sounds can fire from the tick loop
@@ -74,6 +75,13 @@ function Game() {
     prevPrestigeLevel.current = state.prestigeLevel;
     if (grewAchievements || prestiged) {
       setConfettiTrigger((n) => n + 1);
+    }
+    // Ask for a store review right after a moment the player is likely
+    // happy about — a first prestige, or having racked up a handful of
+    // achievements — never right after a setback. Only ever fires once
+    // per install (see maybeRequestReview).
+    if (prestiged || state.unlockedAchievements.length >= 6) {
+      maybeRequestReview();
     }
   }, [state.unlockedAchievements.length, state.prestigeLevel]);
 
