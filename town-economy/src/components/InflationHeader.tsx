@@ -59,7 +59,12 @@ export function InflationHeader({
       <View style={styles.goldLine} />
       <View style={styles.topLine}>
         <View style={styles.townRow}>
-          <Pressable onPress={onEditName} style={styles.townNamePressable}>
+          <Pressable
+            onPress={onEditName}
+            style={styles.townNamePressable}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.editTownName")}
+          >
             <Text style={styles.town} numberOfLines={1}>
               🏘️ {townName.toUpperCase()} ✏️
             </Text>
@@ -79,19 +84,44 @@ export function InflationHeader({
           )}
         </View>
         <View style={styles.controls}>
-          <Pressable onPress={onToggleLanguage} style={styles.iconBtn}>
+          <Pressable
+            onPress={onToggleLanguage}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.toggleLanguage")}
+          >
             <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
           </Pressable>
-          <Pressable onPress={onHelp} style={styles.iconBtn}>
+          <Pressable
+            onPress={onHelp}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.help")}
+          >
             <Text style={styles.iconBtnText}>❓</Text>
           </Pressable>
-          <Pressable onPress={onToggleMuted} style={styles.iconBtn}>
+          <Pressable
+            onPress={onToggleMuted}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={muted ? t("a11y.unmute") : t("a11y.mute")}
+          >
             <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
           </Pressable>
-          <Pressable onPress={onTogglePause} style={styles.iconBtn}>
+          <Pressable
+            onPress={onTogglePause}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
+          >
             <Text style={styles.iconBtnText}>{paused ? "▶" : "⏸"}</Text>
           </Pressable>
-          <Pressable onPress={onReset} style={styles.iconBtn}>
+          <Pressable
+            onPress={onReset}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.newGame")}
+          >
             <Text style={styles.iconBtnText}>⟳</Text>
           </Pressable>
         </View>

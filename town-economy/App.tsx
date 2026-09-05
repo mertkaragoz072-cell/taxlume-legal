@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ConfettiBurst } from "./src/components/ConfettiBurst";
 import { DecisionModal } from "./src/components/DecisionModal";
@@ -118,74 +118,76 @@ function Game() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      <InflationHeader
-        townName={state.townName}
-        cash={state.cash}
-        netWorth={netWorth}
-        inflationIndex={state.inflationIndex}
-        inflationRate={state.inflationRate}
-        inflationHistory={state.inflationHistory}
-        paused={state.paused}
-        muted={sounds.muted}
-        streakCount={state.streak.count}
-        gameDay={gameDayFromTick(state.tick)}
-        difficulty={state.difficulty}
-        language={state.language}
-        t={t}
-        onTogglePause={togglePause}
-        onToggleMuted={sounds.toggleMuted}
-        onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
-        onReset={() => setDifficultyModalVisible(true)}
-        onHelp={() => setTutorialVisible(true)}
-        onEditName={() => setNameModalVisible(true)}
-      />
-      <EventBanner event={state.lastEvent} />
-      <ConfettiBurst trigger={confettiTrigger} />
+      <View style={styles.content}>
+        <InflationHeader
+          townName={state.townName}
+          cash={state.cash}
+          netWorth={netWorth}
+          inflationIndex={state.inflationIndex}
+          inflationRate={state.inflationRate}
+          inflationHistory={state.inflationHistory}
+          paused={state.paused}
+          muted={sounds.muted}
+          streakCount={state.streak.count}
+          gameDay={gameDayFromTick(state.tick)}
+          difficulty={state.difficulty}
+          language={state.language}
+          t={t}
+          onTogglePause={togglePause}
+          onToggleMuted={sounds.toggleMuted}
+          onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
+          onReset={() => setDifficultyModalVisible(true)}
+          onHelp={() => setTutorialVisible(true)}
+          onEditName={() => setNameModalVisible(true)}
+        />
+        <EventBanner event={state.lastEvent} />
+        <ConfettiBurst trigger={confettiTrigger} />
 
-      {screen === "market" && <MarketScreen sounds={sounds} />}
-      {screen === "inventory" && <InventoryScreen />}
-      {screen === "trade" && <TradeScreen sounds={sounds} />}
-      {screen === "town" && <TownScreen />}
-      {screen === "research" && <ResearchScreen />}
-      {screen === "invest" && <InvestScreen sounds={sounds} />}
-      {screen === "achievements" && <AchievementsScreen />}
+        {screen === "market" && <MarketScreen sounds={sounds} />}
+        {screen === "inventory" && <InventoryScreen />}
+        {screen === "trade" && <TradeScreen sounds={sounds} />}
+        {screen === "town" && <TownScreen />}
+        {screen === "research" && <ResearchScreen />}
+        {screen === "invest" && <InvestScreen sounds={sounds} />}
+        {screen === "achievements" && <AchievementsScreen />}
 
-      <TabBar active={screen} onChange={setScreen} />
+        <TabBar active={screen} onChange={setScreen} />
 
-      <DifficultyModal
-        visible={difficultyModalVisible}
-        currentDifficulty={state.difficulty}
-        onSelect={(difficulty) => {
-          reset(difficulty);
-          setDifficultyModalVisible(false);
-        }}
-        onCancel={() => setDifficultyModalVisible(false)}
-      />
+        <DifficultyModal
+          visible={difficultyModalVisible}
+          currentDifficulty={state.difficulty}
+          onSelect={(difficulty) => {
+            reset(difficulty);
+            setDifficultyModalVisible(false);
+          }}
+          onCancel={() => setDifficultyModalVisible(false)}
+        />
 
-      <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
+        <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
 
-      <DecisionModal
-        decision={!state.offlineSummary && !tutorialVisible ? state.pendingDecision : null}
-        onResolve={resolveDecision}
-      />
+        <DecisionModal
+          decision={!state.offlineSummary && !tutorialVisible ? state.pendingDecision : null}
+          onResolve={resolveDecision}
+        />
 
-      <VillagerRequestModal
-        request={!state.offlineSummary && !tutorialVisible ? state.pendingRequest : null}
-        holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
-        onResolve={resolveRequest}
-      />
+        <VillagerRequestModal
+          request={!state.offlineSummary && !tutorialVisible ? state.pendingRequest : null}
+          holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
+          onResolve={resolveRequest}
+        />
 
-      <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
+        <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
 
-      <TownNameModal
-        visible={nameModalVisible}
-        currentName={state.townName}
-        onSave={(name) => {
-          setTownName(name);
-          setNameModalVisible(false);
-        }}
-        onCancel={() => setNameModalVisible(false)}
-      />
+        <TownNameModal
+          visible={nameModalVisible}
+          currentName={state.townName}
+          onSave={(name) => {
+            setTownName(name);
+            setNameModalVisible(false);
+          }}
+          onCancel={() => setNameModalVisible(false)}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -202,4 +204,8 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#1a1410" },
+  // The UI was designed for a phone-width column; on a wide screen (iPad,
+  // web desktop) let it grow to a comfortable max width and center it
+  // instead of stretching cards edge-to-edge.
+  content: { flex: 1, width: "100%", maxWidth: 480, alignSelf: "center" },
 });

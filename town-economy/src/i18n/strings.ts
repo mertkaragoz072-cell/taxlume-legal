@@ -15,6 +15,16 @@ export const STRINGS = {
       perTurn: "/tur",
       day: "Gün {day}",
     },
+    a11y: {
+      editTownName: "Kasaba adını değiştir",
+      toggleLanguage: "Dili değiştir",
+      help: "Nasıl oynanır",
+      mute: "Sesi kapat",
+      unmute: "Sesi aç",
+      pause: "Oyunu duraklat",
+      resume: "Oyuna devam et",
+      newGame: "Yeni oyun başlat",
+    },
     tabs: {
       market: "Piyasa",
       inventory: "Envanter",
@@ -597,6 +607,16 @@ export const STRINGS = {
       inflation: "Inflation (TPI)",
       perTurn: "/turn",
       day: "Day {day}",
+    },
+    a11y: {
+      editTownName: "Edit town name",
+      toggleLanguage: "Switch language",
+      help: "How to play",
+      mute: "Mute sound",
+      unmute: "Unmute sound",
+      pause: "Pause game",
+      resume: "Resume game",
+      newGame: "Start new game",
     },
     tabs: {
       market: "Market",
