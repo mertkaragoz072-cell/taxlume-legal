@@ -46,6 +46,10 @@ export const STRINGS = {
       seasonalEventBonus: "+%{pct} fiyat",
       comingSoonLabel: "YAKINDA",
       unlocksInDays: "{days} gün sonra açılır",
+      holdingLabel: "Elinde: {qty}",
+      avgCostLabel: "Ort. maliyet {price} 🪙",
+      unrealizedProfit: "Kâr +{amount} 🪙",
+      unrealizedLoss: "Zarar -{amount} 🪙",
     },
     inventory: {
       portfolioValue: "Envanter Değeri",
@@ -186,6 +190,7 @@ export const STRINGS = {
         loansRepaid: "Ödenen Kredi",
         contractsWon: "Kazanılan Vadeli İşlem",
         prestigeLevel: "Prestij Seviyesi",
+        totalRealizedProfit: "Ömür Boyu Piyasa Kârı",
       },
     },
     backup: {
@@ -604,6 +609,8 @@ export const STRINGS = {
       investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
       contractProfit: "📑 {good} vadeli işlemi kapandı, +{amount} 🪙 kâr!",
       contractLoss: "📑 {good} vadeli işlemi kapandı, -{amount} 🪙 zarar.",
+      goodSoldProfit: "📈 {qty} {good} sattın, +{amount} 🪙 kâr ettin!",
+      goodSoldLoss: "📉 {qty} {good} sattın, -{amount} 🪙 zarar ettin.",
     },
   },
   en: {
@@ -653,6 +660,10 @@ export const STRINGS = {
       seasonalEventBonus: "+{pct}% price",
       comingSoonLabel: "COMING SOON",
       unlocksInDays: "Unlocks in {days}d",
+      holdingLabel: "You own: {qty}",
+      avgCostLabel: "Avg. cost {price} 🪙",
+      unrealizedProfit: "Profit +{amount} 🪙",
+      unrealizedLoss: "Loss -{amount} 🪙",
     },
     inventory: {
       portfolioValue: "Inventory Value",
@@ -793,6 +804,7 @@ export const STRINGS = {
         loansRepaid: "Loans Repaid",
         contractsWon: "Contracts Won",
         prestigeLevel: "Prestige Level",
+        totalRealizedProfit: "Lifetime Market Profit",
       },
     },
     backup: {
@@ -1211,6 +1223,8 @@ export const STRINGS = {
       investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",
       contractProfit: "📑 {good} contract settled, +{amount} 🪙 profit!",
       contractLoss: "📑 {good} contract settled, -{amount} 🪙 loss.",
+      goodSoldProfit: "📈 Sold {qty} {good}, +{amount} 🪙 profit!",
+      goodSoldLoss: "📉 Sold {qty} {good}, -{amount} 🪙 loss.",
     },
   },
 } as const;

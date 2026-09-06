@@ -286,6 +286,7 @@ function makeInitialGoodState(good: Good): GoodState {
     history: [good.basePrice],
     supply: good.baseSupply,
     holding: 0,
+    avgCost: 0,
   };
 }
 
@@ -356,6 +357,7 @@ export function initialState(
       townsTradedWith: [],
       loansRepaid: 0,
       contractsWon: 0,
+      totalRealizedProfit: 0,
     },
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
@@ -842,6 +844,8 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
     const amount = Math.min(qty, affordable);
     if (amount <= 0) return state;
     const cost = amount * price;
+    const holding = gs.holding + amount;
+    const avgCost = (gs.avgCost * gs.holding + cost) / holding;
     return {
       ...state,
       cash: state.cash - cost,
@@ -849,7 +853,8 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
         ...state.goods,
         [goodId]: {
           ...gs,
-          holding: gs.holding + amount,
+          holding,
+          avgCost,
           supply: clamp(gs.supply - amount / marketDepth, minSupply, maxSupply),
         },
       },
@@ -861,6 +866,17 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   const amount = Math.min(qty, gs.holding);
   if (amount <= 0) return state;
   const proceeds = amount * price;
+  const holding = gs.holding - amount;
+  // Realized profit/loss vs. the cost basis, surfaced right in the event
+  // feed — the whole point of buying low is seeing whether a sale landed
+  // above or below what was paid for it.
+  const pnl = (price - gs.avgCost) * amount;
+  const message = t(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
+    good: t(state.language, good.nameKey),
+    qty: amount,
+    amount: formatNumberUtil(Math.abs(pnl), state.language),
+  });
+  const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
   return {
     ...state,
     cash: state.cash + proceeds,
@@ -868,11 +884,19 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
       ...state.goods,
       [goodId]: {
         ...gs,
-        holding: gs.holding - amount,
+        holding,
+        avgCost: holding > 0 ? gs.avgCost : 0,
         supply: clamp(gs.supply + amount / marketDepth, minSupply, maxSupply),
       },
     },
-    stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    stats: {
+      ...state.stats,
+      totalTrades: state.stats.totalTrades + 1,
+      totalRealizedProfit: state.stats.totalRealizedProfit + pnl,
+    },
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,

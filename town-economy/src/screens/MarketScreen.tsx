@@ -13,6 +13,7 @@ import { PriceChart } from "../components/PriceChart";
 import { SectionLabel } from "../components/SectionLabel";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT, GOLD_GRADIENT, withAlpha } from "../theme";
+import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -39,6 +40,8 @@ export function MarketScreen({ sounds }: Props) {
           selectedState.history[selectedState.history.length - 2]) *
         100
       : 0;
+
+  const unrealizedPnl = (selectedState.price - selectedState.avgCost) * selectedState.holding;
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -98,6 +101,19 @@ export function MarketScreen({ sounds }: Props) {
           strokeWidth={3}
           interactive
         />
+        {selectedState.holding > 0 && (
+          <View style={styles.holdingRow}>
+            <Text style={styles.holdingText}>
+              {t("market.holdingLabel", { qty: selectedState.holding })} ·{" "}
+              {t("market.avgCostLabel", { price: selectedState.avgCost.toFixed(2) })}
+            </Text>
+            <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
+              {unrealizedPnl >= 0
+                ? t("market.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
+                : t("market.unrealizedLoss", { amount: formatNumber(Math.abs(unrealizedPnl), state.language) })}
+            </Text>
+          </View>
+        )}
       </View>
 
       <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
@@ -187,6 +203,17 @@ const styles = StyleSheet.create({
   chartSubtitle: { color: "#a0917a", fontSize: 12, marginTop: 2 },
   chartPrice: { color: "#e8c777", fontSize: 18, fontWeight: "800" },
   chartChange: { fontSize: 13, fontWeight: "700", marginTop: 2 },
+  holdingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#3a2d1e",
+  },
+  holdingText: { color: "#a0917a", fontSize: 11, flex: 1 },
+  holdingPnl: { fontSize: 12, fontWeight: "700" },
   goodsRow: { marginBottom: 18 },
   lockedCard: {
     width: 108,

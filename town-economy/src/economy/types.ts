@@ -48,6 +48,8 @@ export interface GoodState {
   /** current stock in the home market; buying drains it, production/selling replenish it */
   supply: number;
   holding: number;
+  /** cost-basis average price of current holdings; resets to 0 once holding hits 0 */
+  avgCost: number;
 }
 
 /** a speculative asset (gold, oil, stocks) — price is a random walk, independent of supply/demand */
@@ -93,6 +95,8 @@ export interface EconomyStats {
   loansRepaid: number;
   /** times a forward contract (see ForwardContract below) settled at a profit */
   contractsWon: number;
+  /** lifetime realized profit/loss from selling goods on the home market, vs. their cost basis */
+  totalRealizedProfit: number;
 }
 
 export interface StreakState {

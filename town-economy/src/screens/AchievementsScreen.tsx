@@ -14,7 +14,7 @@ import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, UNLOCKED_CARD_GRADIENT } from
 type ImportFeedback = { type: "success" | "error"; text: string };
 
 export function AchievementsScreen() {
-  const { state, netWorth, t, hydrate } = useEconomyContext();
+  const { state, netWorth, t, hydrate, formatCoins } = useEconomyContext();
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
   const miniQuest = state.activeMiniQuest;
@@ -97,6 +97,17 @@ export function AchievementsScreen() {
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{state.prestigeLevel}</Text>
             <Text style={styles.statLabel}>{t("achievements.stats.prestigeLevel")}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text
+              style={[
+                styles.statValue,
+                { color: state.stats.totalRealizedProfit >= 0 ? "#3fae5c" : "#c94b4b" },
+              ]}
+            >
+              {formatCoins(state.stats.totalRealizedProfit)}
+            </Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.totalRealizedProfit")}</Text>
           </View>
         </View>
       </View>
