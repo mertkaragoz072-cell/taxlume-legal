@@ -99,6 +99,8 @@ export interface EconomyStats {
   contractsWon: number;
   /** lifetime realized profit/loss from selling goods on the home market, vs. their cost basis */
   totalRealizedProfit: number;
+  /** longest-ever run of consecutive profitable sells (goods or assets) — see tradeStreak below */
+  bestTradeStreak: number;
 }
 
 export interface StreakState {
@@ -208,6 +210,8 @@ export interface DailyQuest {
 
 export interface EconomyState {
   townName: string;
+  /** id of the emblem (see emblems.ts) shown next to the town name — purely cosmetic */
+  selectedEmblem: string;
   language: Language;
   difficulty: DifficultyId;
   cash: number;
@@ -226,6 +230,8 @@ export interface EconomyState {
   eventLog: EconomyEvent[];
   gameOver: boolean;
   stats: EconomyStats;
+  /** consecutive profitable sells (goods or assets) in a row right now; any loss resets it to 0 */
+  tradeStreak: number;
   streak: StreakState;
   unlockedAchievements: string[];
   /** set once the town's net worth first crosses TRADE_UNLOCK_NET_WORTH; sticky, never re-locks */

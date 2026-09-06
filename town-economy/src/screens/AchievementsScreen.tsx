@@ -120,6 +120,10 @@ export function AchievementsScreen() {
             </Text>
             <Text style={styles.statLabel}>{t("achievements.stats.totalRealizedProfit")}</Text>
           </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>🔥{state.stats.bestTradeStreak}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.bestTradeStreak")}</Text>
+          </View>
         </View>
       </View>
 

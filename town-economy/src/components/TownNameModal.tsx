@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Modal, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { isEmblemUnlocked, TOWN_EMBLEMS } from "../economy/emblems";
 import { TOWN_NAME_MAX_LENGTH } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, FONT, GOLD_GRADIENT } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -15,14 +16,20 @@ interface Props {
 }
 
 export function TownNameModal({ visible, currentName, onSave, onCancel }: Props) {
-  const { t } = useEconomyContext();
+  const { t, state, setEmblem } = useEconomyContext();
   const [draft, setDraft] = useState(currentName);
+  const [focusedEmblemId, setFocusedEmblemId] = useState(state.selectedEmblem);
 
   useEffect(() => {
-    if (visible) setDraft(currentName);
-  }, [visible, currentName]);
+    if (visible) {
+      setDraft(currentName);
+      setFocusedEmblemId(state.selectedEmblem);
+    }
+  }, [visible, currentName, state.selectedEmblem]);
 
   if (!visible) return null;
+
+  const focusedEmblem = TOWN_EMBLEMS.find((e) => e.id === focusedEmblemId) ?? TOWN_EMBLEMS[0];
 
   const trimmed = draft.trim();
   const disabled = trimmed.length === 0;
@@ -48,6 +55,32 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
           <Text style={styles.counter}>
             {draft.length}/{TOWN_NAME_MAX_LENGTH}
           </Text>
+
+          <Text style={styles.emblemSectionLabel}>{t("townNameModal.emblemSectionLabel")}</Text>
+          <Text style={styles.emblemDisclaimer}>{t("townNameModal.emblemHint")}</Text>
+          <View style={styles.emblemGrid}>
+            {TOWN_EMBLEMS.map((emblem) => {
+              const unlocked = isEmblemUnlocked(emblem.id, state);
+              const selected = state.selectedEmblem === emblem.id;
+              return (
+                <Pressable
+                  key={emblem.id}
+                  onPress={() => {
+                    setFocusedEmblemId(emblem.id);
+                    if (unlocked) setEmblem(emblem.id);
+                  }}
+                  style={[
+                    styles.emblemChip,
+                    selected && styles.emblemChipSelected,
+                    !unlocked && styles.emblemChipLocked,
+                  ]}
+                >
+                  <Text style={[styles.emblemIcon, !unlocked && styles.emblemIconLocked]}>{emblem.icon}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.emblemFocusHint}>{t(focusedEmblem.hintKey)}</Text>
 
           <ScalePressable
             disabled={disabled}
@@ -91,6 +124,31 @@ const styles = StyleSheet.create({
     fontWeight: "700", fontFamily: FONT.bold,
   },
   counter: { color: "#6b5f4d", fontSize: 10, textAlign: "right", marginTop: 4, marginBottom: 14 },
+  emblemSectionLabel: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  emblemDisclaimer: { color: "#6b5f4d", fontSize: TYPE.micro, marginBottom: SPACING.sm },
+  emblemGrid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginBottom: SPACING.xs },
+  emblemChip: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.chip,
+    backgroundColor: "#1a1410",
+    borderWidth: 2,
+    borderColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emblemChipSelected: { borderColor: COLORS.accent },
+  emblemChipLocked: { opacity: 0.35 },
+  emblemIcon: { fontSize: TYPE.heading },
+  emblemIconLocked: { opacity: 0.7 },
+  emblemFocusHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: 14 },
   saveBtn: {
     borderRadius: 12,
     paddingVertical: 12,

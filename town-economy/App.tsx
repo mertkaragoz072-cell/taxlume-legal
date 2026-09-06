@@ -24,6 +24,7 @@ import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { TOWN_EMBLEMS_BY_ID } from "./src/economy/emblems";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
@@ -141,6 +142,7 @@ function Game() {
       <View style={styles.content}>
         <InflationHeader
           townName={state.townName}
+          emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
           rankIcon={townRankIcon(state.townRankIndex)}
           rankTitle={rankTitle}
           cash={state.cash}

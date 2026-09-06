@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { HOT_STREAK_BONUS_PER_TRADE, HOT_STREAK_MAX_BONUS } from "../economy/useEconomy";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -12,6 +13,7 @@ import {
   SPACING,
   TYPE,
   WEIGHT,
+  withAlpha,
 } from "../theme";
 import { CoinPop } from "./CoinPop";
 import { GradientFill } from "./GradientFill";
@@ -32,10 +34,15 @@ interface Props {
 type Qty = 1 | 5 | "ALL";
 
 export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Props) {
-  const { t, formatCoins } = useEconomyContext();
+  const { t, formatCoins, state: economyState } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [qtyOption, setQtyOption] = useState<Qty>(1);
   const [coinPopTrigger, setCoinPopTrigger] = useState(0);
+
+  const tradeStreak = economyState.tradeStreak;
+  const streakBonusPct = Math.round(
+    Math.min(Math.max(tradeStreak - 1, 0) * HOT_STREAK_BONUS_PER_TRADE, HOT_STREAK_MAX_BONUS) * 100
+  );
 
   // The quoted chart price is the fair mid-price; what you actually pay or
   // receive sits a half-spread on either side of it, same as the reducer.
@@ -49,6 +56,13 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
   return (
     <View style={styles.wrap}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      {tradeStreak >= 2 && (
+        <View style={styles.streakBadge}>
+          <Text style={styles.streakBadgeText}>
+            {t("market.hotStreak", { streak: tradeStreak, bonusPct: streakBonusPct })}
+          </Text>
+        </View>
+      )}
       <View style={styles.sideToggle}>
         <Pressable
           style={[styles.sideBtn, side === "buy" && styles.sideBtnActiveBuy]}
@@ -115,6 +129,15 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
+  streakBadge: {
+    alignSelf: "center",
+    backgroundColor: withAlpha("#f0776a", 0.16),
+    borderRadius: RADIUS.chip,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: 4,
+    marginBottom: SPACING.sm,
+  },
+  streakBadgeText: { color: "#f0776a", fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   sideToggle: {
     flexDirection: "row",
     backgroundColor: "#1a1410",

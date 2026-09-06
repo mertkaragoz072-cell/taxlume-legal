@@ -3,6 +3,7 @@ import { ACHIEVEMENTS } from "./achievements";
 import { ASSETS, ASSETS_BY_ID, AssetId } from "./assets";
 import { DECISION_TEMPLATES, DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
+import { isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { MINI_QUEST_TEMPLATES, MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
@@ -197,6 +198,26 @@ const DEMAND_PRESSURE_MAX = 0.4; // clamp so no single order can send price to a
 // upgrade that dampens price impact) narrows the spread too.
 export const MARKET_SPREAD = 0.03; // total round-trip cost at market upgrade level 0
 
+// --- Hot streak -------------------------------------------------------------
+// A skill-expression layer on top of realized profit/loss: sell at a profit
+// (goods or assets, same counter) and the streak grows, paying a bonus on
+// top of that trade's own profit — sell at a loss and it's back to zero.
+// No bonus on the first win of a streak; it only starts compounding once
+// you've proven you can string wins together, so the tension is real
+// ("do I cash out now or risk the streak on one more trade?").
+export const HOT_STREAK_BONUS_PER_TRADE = 0.03; // +3% of that trade's profit per streak length past 1
+export const HOT_STREAK_MAX_BONUS = 0.3; // capped at +30%
+
+/** Given a just-realized pnl, returns the next streak count and the bonus
+ * cash (on top of pnl) that streak earns — shared by trade() and
+ * tradeAsset() so goods and assets build one unified trading streak. */
+function nextTradeStreak(currentStreak: number, pnl: number): { streak: number; bonus: number } {
+  if (pnl < 0) return { streak: 0, bonus: 0 };
+  const streak = currentStreak + 1;
+  const bonusPct = clamp((streak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS);
+  return { streak, bonus: pnl * bonusPct };
+}
+
 // --- Investable assets (gold, oil, stocks) -----------------------------
 // A pure random walk (drift + noise, occasionally a fatter-tailed spike)
 // bounded so a bad run can't send a price to zero or off to infinity.
@@ -327,7 +348,8 @@ type Action =
   | { type: "RESOLVE_DECISION"; optionId: string }
   | { type: "RESOLVE_REQUEST"; give: boolean }
   | { type: "SET_TOWN_NAME"; name: string }
-  | { type: "SET_LANGUAGE"; language: Language };
+  | { type: "SET_LANGUAGE"; language: Language }
+  | { type: "SET_EMBLEM"; emblemId: string };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -384,6 +406,7 @@ export function initialState(
   }
   return {
     townName: t(language, "app.defaultTownName"),
+    selectedEmblem: "village",
     language,
     difficulty,
     cash: config.startingCash,
@@ -408,7 +431,9 @@ export function initialState(
       loansRepaid: 0,
       contractsWon: 0,
       totalRealizedProfit: 0,
+      bestTradeStreak: 0,
     },
+    tradeStreak: 0,
     streak: { count: 0, lastOpenedDate: null },
     unlockedAchievements: [],
     tradeUnlocked: false,
@@ -949,15 +974,25 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   // feed — the whole point of buying low is seeing whether a sale landed
   // above or below what was paid for it.
   const pnl = (price - gs.avgCost) * amount;
-  const message = t(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
-    good: t(state.language, good.nameKey),
-    qty: amount,
-    amount: formatNumberUtil(Math.abs(pnl), state.language),
-  });
+  const { streak: tradeStreak, bonus } = nextTradeStreak(state.tradeStreak, pnl);
+  const message =
+    bonus > 0
+      ? t(state.language, "msg.goodSoldProfitStreak", {
+          streak: tradeStreak,
+          good: t(state.language, good.nameKey),
+          qty: amount,
+          amount: formatNumberUtil(pnl + bonus, state.language),
+          bonusPct: Math.round(clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100),
+        })
+      : t(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
+          good: t(state.language, good.nameKey),
+          qty: amount,
+          amount: formatNumberUtil(Math.abs(pnl), state.language),
+        });
   const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
   return {
     ...state,
-    cash: state.cash + proceeds,
+    cash: state.cash + proceeds + bonus,
     goods: {
       ...state.goods,
       [goodId]: {
@@ -971,15 +1006,17 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    tradeStreak,
     stats: {
       ...state.stats,
       totalTrades: state.stats.totalTrades + 1,
-      totalRealizedProfit: state.stats.totalRealizedProfit + pnl,
+      totalRealizedProfit: state.stats.totalRealizedProfit + pnl + bonus,
+      bestTradeStreak: Math.max(state.stats.bestTradeStreak, tradeStreak),
     },
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,
-      cashEarned: state.dailyProgress.cashEarned + proceeds,
+      cashEarned: state.dailyProgress.cashEarned + proceeds + bonus,
     },
   };
 }
@@ -1019,15 +1056,25 @@ function tradeAsset(
   // sale landed above or below what was paid for it.
   const pnl = (price - as.avgCost) * amount;
   const asset = ASSETS_BY_ID[assetId];
-  const message = t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
-    asset: t(state.language, asset.nameKey),
-    qty: amount,
-    amount: formatNumberUtil(Math.abs(pnl), state.language),
-  });
+  const { streak: tradeStreak, bonus } = nextTradeStreak(state.tradeStreak, pnl);
+  const message =
+    bonus > 0
+      ? t(state.language, "msg.investSoldProfitStreak", {
+          streak: tradeStreak,
+          asset: t(state.language, asset.nameKey),
+          qty: amount,
+          amount: formatNumberUtil(pnl + bonus, state.language),
+          bonusPct: Math.round(clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100),
+        })
+      : t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
+          asset: t(state.language, asset.nameKey),
+          qty: amount,
+          amount: formatNumberUtil(Math.abs(pnl), state.language),
+        });
   const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
   return {
     ...state,
-    cash: state.cash + proceeds,
+    cash: state.cash + proceeds + bonus,
     assets: {
       ...state.assets,
       [assetId]: { ...as, holding, avgCost: holding > 0 ? as.avgCost : 0 },
@@ -1035,11 +1082,16 @@ function tradeAsset(
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
-    stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
+    tradeStreak,
+    stats: {
+      ...state.stats,
+      totalTrades: state.stats.totalTrades + 1,
+      bestTradeStreak: Math.max(state.stats.bestTradeStreak, tradeStreak),
+    },
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,
-      cashEarned: state.dailyProgress.cashEarned + proceeds,
+      cashEarned: state.dailyProgress.cashEarned + proceeds + bonus,
     },
   };
 }
@@ -1306,6 +1358,11 @@ function setTownName(state: EconomyState, name: string): EconomyState {
 
 function setLanguage(state: EconomyState, language: Language): EconomyState {
   return { ...state, language };
+}
+
+function setEmblem(state: EconomyState, emblemId: string): EconomyState {
+  if (!isEmblemUnlocked(emblemId, state)) return state;
+  return { ...state, selectedEmblem: emblemId };
 }
 
 export function computeNetWorth(state: EconomyState): number {
@@ -1847,6 +1904,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return setTownName(state, action.name);
     case "SET_LANGUAGE":
       return setLanguage(state, action.language);
+    case "SET_EMBLEM":
+      return setEmblem(state, action.emblemId);
     default:
       return state;
   }
@@ -1960,6 +2019,7 @@ export function useEconomy() {
     []
   );
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
+  const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
   const setLanguage_ = useCallback(
     (language: Language) => dispatch({ type: "SET_LANGUAGE", language }),
     []
@@ -2004,6 +2064,7 @@ export function useEconomy() {
     resolveDecision: resolveDecision_,
     resolveRequest,
     setTownName,
+    setEmblem: setEmblem_,
     setLanguage: setLanguage_,
     t: translate,
     formatCoins: (value: number, decimals?: number) =>

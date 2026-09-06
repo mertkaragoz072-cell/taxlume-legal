@@ -1,6 +1,8 @@
 import { GOODS_BY_ID } from "../goods";
 import { TOWNS } from "../towns";
 import {
+  HOT_STREAK_BONUS_PER_TRADE,
+  HOT_STREAK_MAX_BONUS,
   LOAN_MAX_INTEREST_RATE_PER_DAY,
   LOAN_MIN_CAP,
   LOAN_MIN_INTEREST_RATE_PER_DAY,
@@ -232,5 +234,72 @@ describe("tick — loan interest accrual", () => {
       state = tick(state);
     }
     expect(gameDayFromTick(state.tick)).toBe(2);
+  });
+});
+
+describe("hot streak trading bonus", () => {
+  // A very low avgCost relative to the market price guarantees every sell in
+  // these tests realizes a profit, regardless of the bid/ask spread.
+  function stateWithCheapBread(): ReturnType<typeof initialState> {
+    const state = initialState();
+    return {
+      ...state,
+      cash: 100000,
+      goods: {
+        ...state.goods,
+        bread: { ...state.goods.bread, holding: 1000, avgCost: 0.01 },
+      },
+    };
+  }
+
+  it("does not award a bonus on the first win of a streak", () => {
+    const state = stateWithCheapBread();
+    const next = trade(state, "bread", "sell", 1);
+    expect(next.tradeStreak).toBe(1);
+    const price = state.goods.bread.price * (1 - marketSpread(state) / 2);
+    expect(next.cash).toBeCloseTo(state.cash + price, 6);
+  });
+
+  it("stacks a growing bonus on each consecutive profitable sell", () => {
+    let state = stateWithCheapBread();
+    state = trade(state, "bread", "sell", 1); // streak 1, no bonus yet
+    const beforeSecond = state;
+    state = trade(state, "bread", "sell", 1); // streak 2
+    expect(state.tradeStreak).toBe(2);
+
+    const price = beforeSecond.goods.bread.price * (1 - marketSpread(beforeSecond) / 2);
+    const pnl = (price - beforeSecond.goods.bread.avgCost) * 1;
+    const expectedBonus = pnl * HOT_STREAK_BONUS_PER_TRADE; // (streak - 1) = 1
+    expect(state.cash).toBeCloseTo(beforeSecond.cash + price + expectedBonus, 6);
+    expect(state.stats.bestTradeStreak).toBe(2);
+  });
+
+  it("caps the bonus percentage at HOT_STREAK_MAX_BONUS however long the streak runs", () => {
+    let state = stateWithCheapBread();
+    const tradesToExceedCap = Math.ceil(HOT_STREAK_MAX_BONUS / HOT_STREAK_BONUS_PER_TRADE) + 5;
+    for (let i = 0; i < tradesToExceedCap; i++) {
+      state = trade(state, "bread", "sell", 1);
+    }
+    const beforeLast = state;
+    state = trade(state, "bread", "sell", 1);
+    const price = beforeLast.goods.bread.price * (1 - marketSpread(beforeLast) / 2);
+    const pnl = (price - beforeLast.goods.bread.avgCost) * 1;
+    const expectedBonus = pnl * HOT_STREAK_MAX_BONUS;
+    expect(state.cash).toBeCloseTo(beforeLast.cash + price + expectedBonus, 6);
+  });
+
+  it("resets the streak to 0 on a loss, without lowering the recorded best streak", () => {
+    let state = stateWithCheapBread();
+    state = trade(state, "bread", "sell", 1);
+    state = trade(state, "bread", "sell", 1);
+    state = trade(state, "bread", "sell", 1);
+    expect(state.tradeStreak).toBe(3);
+    expect(state.stats.bestTradeStreak).toBe(3);
+
+    // Force a losing sell by setting the holding's avg cost above the market price.
+    const losingState = { ...state, goods: { ...state.goods, bread: { ...state.goods.bread, avgCost: 1e9 } } };
+    const afterLoss = trade(losingState, "bread", "sell", 1);
+    expect(afterLoss.tradeStreak).toBe(0);
+    expect(afterLoss.stats.bestTradeStreak).toBe(3);
   });
 });
