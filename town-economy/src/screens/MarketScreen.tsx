@@ -96,6 +96,7 @@ export function MarketScreen({ sounds }: Props) {
           width={chartWidth}
           height={140}
           strokeWidth={3}
+          interactive
         />
       </View>
 

@@ -357,6 +357,7 @@ export function TownScreen() {
           width={chartWidth}
           height={120}
           strokeWidth={3}
+          interactive
         />
       </View>
 

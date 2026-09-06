@@ -91,6 +91,7 @@ export function InvestScreen({ sounds }: Props) {
           width={chartWidth}
           height={140}
           strokeWidth={3}
+          interactive
         />
         {selectedState.holding > 0 ? (
           <View style={styles.holdingRow}>

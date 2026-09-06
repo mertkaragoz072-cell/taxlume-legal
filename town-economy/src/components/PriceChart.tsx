@@ -1,6 +1,6 @@
-import React from "react";
-import { View } from "react-native";
-import Svg, { Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
+import React, { useState } from "react";
+import { GestureResponderEvent, View } from "react-native";
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 interface Props {
   history: number[];
@@ -10,6 +10,9 @@ interface Props {
   strokeWidth?: number;
   /** the gradient area fill under the curve — off gives a plain, airier line */
   filled?: boolean;
+  /** shows min/max price labels and enables a press-and-drag crosshair —
+   * meant for the big standalone charts, not the small sparklines on cards */
+  interactive?: boolean;
 }
 
 interface Point {
@@ -36,7 +39,15 @@ function smoothLinePath(points: Point[]): string {
   return d;
 }
 
-export function PriceChart({ history, color, width, height, strokeWidth = 2.5, filled = true }: Props) {
+export function PriceChart({
+  history,
+  color,
+  width,
+  height,
+  strokeWidth = 2.5,
+  filled = true,
+  interactive = false,
+}: Props) {
   // Wrapped in a plain View rather than returning the <Svg> bare: on web,
   // react-native-svg's root renders as a plain (statically positioned) DOM
   // node, which paints BEHIND any absolutely/relatively positioned sibling
@@ -45,6 +56,7 @@ export function PriceChart({ history, color, width, height, strokeWidth = 2.5, f
   // relative) puts the chart in the same stacking layer as everything else
   // on the card, so it actually paints on top like it's supposed to.
   const gradientId = React.useId().replace(/:/g, "");
+  const [touchIndex, setTouchIndex] = useState<number | null>(null);
 
   if (history.length === 0) {
     return <View style={{ width, height }} />;
@@ -67,7 +79,7 @@ export function PriceChart({ history, color, width, height, strokeWidth = 2.5, f
   const min = Math.min(...history);
   const max = Math.max(...history);
   const span = max - min || 1;
-  const padY = height * 0.12;
+  const padY = height * (interactive ? 0.22 : 0.12);
 
   const points: Point[] = history.map((value, i) => ({
     x: (i / (history.length - 1)) * width,
@@ -82,8 +94,28 @@ export function PriceChart({ history, color, width, height, strokeWidth = 2.5, f
 
   const lastY = points[points.length - 1].y;
 
+  const resolveTouch = (e: GestureResponderEvent) => {
+    const ratio = Math.max(0, Math.min(1, e.nativeEvent.locationX / width));
+    setTouchIndex(Math.round(ratio * (history.length - 1)));
+  };
+
+  const touchPoint = touchIndex !== null ? points[touchIndex] : null;
+  const touchValue = touchIndex !== null ? history[touchIndex] : null;
+
   return (
-    <View style={{ width, height }}>
+    <View
+      style={{ width, height }}
+      {...(interactive
+        ? {
+            onStartShouldSetResponder: () => true,
+            onMoveShouldSetResponder: () => true,
+            onResponderGrant: resolveTouch,
+            onResponderMove: resolveTouch,
+            onResponderRelease: () => setTouchIndex(null),
+            onResponderTerminate: () => setTouchIndex(null),
+          }
+        : {})}
+    >
       <Svg width={width} height={height}>
         {filled && (
           <>
@@ -114,6 +146,61 @@ export function PriceChart({ history, color, width, height, strokeWidth = 2.5, f
           strokeLinejoin="round"
           strokeLinecap="round"
         />
+        {interactive && (
+          <>
+            <SvgText x={2} y={Math.max(padY - 6, 10)} fill={color} fontSize={10} fontWeight="700" opacity={0.8}>
+              {max.toFixed(2)}
+            </SvgText>
+            <SvgText x={2} y={height - padY + 14} fill={color} fontSize={10} fontWeight="700" opacity={0.8}>
+              {min.toFixed(2)}
+            </SvgText>
+          </>
+        )}
+        {interactive && touchPoint && touchValue !== null && (
+          <>
+            <Line
+              x1={touchPoint.x}
+              y1={0}
+              x2={touchPoint.x}
+              y2={height}
+              stroke={color}
+              strokeWidth={1}
+              strokeDasharray="2,3"
+              opacity={0.6}
+            />
+            <Circle cx={touchPoint.x} cy={touchPoint.y} r={4} fill={color} stroke="#1a1410" strokeWidth={1.5} />
+            {(() => {
+              const label = touchValue.toFixed(2);
+              const bubbleWidth = 14 + label.length * 6.5;
+              const bubbleX = Math.min(Math.max(touchPoint.x - bubbleWidth / 2, 0), width - bubbleWidth);
+              const bubbleY = Math.max(touchPoint.y - 26, 0);
+              return (
+                <>
+                  <Rect
+                    x={bubbleX}
+                    y={bubbleY}
+                    width={bubbleWidth}
+                    height={18}
+                    rx={5}
+                    fill="#1a1410"
+                    stroke={color}
+                    strokeWidth={1}
+                  />
+                  <SvgText
+                    x={bubbleX + bubbleWidth / 2}
+                    y={bubbleY + 13}
+                    fill={color}
+                    fontSize={11}
+                    fontWeight="700"
+                    textAnchor="middle"
+                  >
+                    {label}
+                  </SvgText>
+                </>
+              );
+            })()}
+          </>
+        )}
       </Svg>
     </View>
   );
