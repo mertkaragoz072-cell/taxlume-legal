@@ -20,7 +20,14 @@ export type GoodId =
   | "paper"
   | "glass";
 
-export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank" | "guardTower" | "earthquakeFund";
+export type UpgradeId =
+  | "market"
+  | "caravanserai"
+  | "townhall"
+  | "bank"
+  | "guardTower"
+  | "earthquakeFund"
+  | "storageYard";
 
 export interface Good {
   id: GoodId;
@@ -182,6 +189,20 @@ export interface ForwardContract {
   maturesAtTick: number;
 }
 
+/** a guaranteed physical delivery commitment — unlike ForwardContract (a
+ * cash-settled price bet with no goods involved), this reserves goods you
+ * already hold today and guarantees a locked-in price (today's price plus a
+ * fixed bonus) at maturity, see openBulkContract in useEconomy.ts */
+export interface BulkContract {
+  id: number;
+  goodId: GoodId;
+  qty: number;
+  /** cash paid per unit at maturity — the good's price at signing plus BULK_CONTRACT_BONUS_PCT */
+  lockedPricePerUnit: number;
+  signedAtTick: number;
+  maturesAtTick: number;
+}
+
 /** a temporary town-wide "occasion" (see seasonalEvents.ts) that boosts one
  * or more goods' home-market price for a stretch of ticks, then ends on its own */
 export interface SeasonalEventInstance {
@@ -324,4 +345,6 @@ export interface EconomyState {
   ownedProperties: string[];
   /** open forward contracts, capped at CONTRACT_MAX_ACTIVE — see openContract in useEconomy.ts */
   contracts: ForwardContract[];
+  /** open bulk delivery contracts, capped at BULK_CONTRACT_MAX_ACTIVE — see openBulkContract in useEconomy.ts */
+  bulkContracts: BulkContract[];
 }

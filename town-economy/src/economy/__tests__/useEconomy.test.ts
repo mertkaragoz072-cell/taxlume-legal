@@ -2,6 +2,9 @@ import { GOODS_BY_ID } from "../goods";
 import { TOWNS } from "../towns";
 import { UPGRADES_BY_ID } from "../upgrades";
 import {
+  BULK_CONTRACT_BONUS_PCT,
+  BULK_CONTRACT_MAX_ACTIVE,
+  BULK_CONTRACT_TERM_DAY_STEPS,
   CARAVAN_INSURANCE_COST_PCT,
   CARAVAN_RAID_CHANCE,
   CARAVAN_RAID_LOSS_MAX,
@@ -13,6 +16,7 @@ import {
   LOAN_MIN_INTEREST_RATE_PER_DAY,
   LOAN_TERM_MONTHS_STEPS,
   RIVAL_TOWN_GROWTH_RATE,
+  STORAGE_BASE_CAPACITY,
   TICKS_PER_GAME_DAY,
   computeNetWorth,
   effectiveTariffRate,
@@ -25,10 +29,13 @@ import {
   loanInterestRatePerDay,
   loanTickRateToDayRate,
   marketSpread,
+  openBulkContract,
   repayLoan,
   sendCaravan,
+  storageCapacity,
   takeLoan,
   tick,
+  totalGoodsHolding,
   trade,
 } from "../useEconomy";
 
@@ -108,6 +115,83 @@ describe("trade", () => {
     const bought = trade(state, "bread", "buy", 150);
     const sold = trade(bought, "bread", "sell", 100);
     expect(sold.goods.bread.demandPressure).toBeLessThan(bought.goods.bread.demandPressure);
+  });
+
+  it("clamps a buy order to the remaining storage capacity", () => {
+    const state = { ...initialState(), cash: 1000000 };
+    const cap = storageCapacity(state);
+    const next = trade(state, "bread", "buy", cap + 500);
+    expect(totalGoodsHolding(next)).toBeCloseTo(cap, 6);
+  });
+
+  it("rejects a buy outright once storage is already full", () => {
+    const state = { ...initialState(), cash: 1000000 };
+    const cap = storageCapacity(state);
+    const full = trade(state, "bread", "buy", cap);
+    const next = trade(full, "honey", "buy", 5);
+    expect(next).toBe(full);
+  });
+});
+
+describe("storageCapacity", () => {
+  it("starts at the base capacity with no storageYard upgrade", () => {
+    const state = initialState();
+    expect(storageCapacity(state)).toBe(STORAGE_BASE_CAPACITY);
+  });
+
+  it("grows with the storageYard upgrade level", () => {
+    const state = { ...initialState(), upgrades: { ...initialState().upgrades, storageYard: 2 } };
+    expect(storageCapacity(state)).toBeGreaterThan(STORAGE_BASE_CAPACITY);
+  });
+});
+
+describe("openBulkContract", () => {
+  it("rejects opening a contract without enough holding of the good", () => {
+    const state = initialState();
+    expect(state.goods.bread.holding).toBe(0);
+    const next = openBulkContract(state, "bread", 10, BULK_CONTRACT_TERM_DAY_STEPS[0]);
+    expect(next).toBe(state);
+  });
+
+  it("reserves the goods and opens a contract when holding is sufficient", () => {
+    const bought = trade({ ...initialState(), cash: 100000 }, "bread", "buy", 20);
+    const next = openBulkContract(bought, "bread", 10, BULK_CONTRACT_TERM_DAY_STEPS[0]);
+    expect(next.goods.bread.holding).toBe(10);
+    expect(next.bulkContracts).toHaveLength(1);
+    const contract = next.bulkContracts[0];
+    expect(contract.qty).toBe(10);
+    expect(contract.lockedPricePerUnit).toBeCloseTo(bought.goods.bread.price * (1 + BULK_CONTRACT_BONUS_PCT), 6);
+  });
+
+  it("rejects opening beyond the max active bulk contracts", () => {
+    let state = trade({ ...initialState(), cash: 100000 }, "bread", "buy", 100);
+    for (let i = 0; i < BULK_CONTRACT_MAX_ACTIVE; i++) {
+      state = openBulkContract(state, "bread", 1, BULK_CONTRACT_TERM_DAY_STEPS[0]);
+    }
+    expect(state.bulkContracts).toHaveLength(BULK_CONTRACT_MAX_ACTIVE);
+    const next = openBulkContract(state, "bread", 1, BULK_CONTRACT_TERM_DAY_STEPS[0]);
+    expect(next).toBe(state);
+  });
+
+  describe("settlement at maturity", () => {
+    const originalRandom = Math.random;
+    afterEach(() => {
+      Math.random = originalRandom;
+    });
+
+    it("pays out the locked price per unit at maturity via tick()", () => {
+      Math.random = () => 0.999999; // clears every chance check in tick() so only the settlement itself moves cash
+      const bought = trade({ ...initialState(), cash: 100000, happiness: 50 }, "bread", "buy", 10);
+      const opened = openBulkContract(bought, "bread", 10, BULK_CONTRACT_TERM_DAY_STEPS[0]);
+      const termTicks = BULK_CONTRACT_TERM_DAY_STEPS[0] * TICKS_PER_GAME_DAY;
+      let state = { ...opened, paused: false };
+      const expectedPayout = opened.bulkContracts[0].qty * opened.bulkContracts[0].lockedPricePerUnit;
+      for (let i = 0; i < termTicks; i++) {
+        state = tick(state);
+      }
+      expect(state.bulkContracts).toHaveLength(0);
+      expect(state.cash).toBeCloseTo(opened.cash + expectedPayout, 1);
+    });
   });
 });
 

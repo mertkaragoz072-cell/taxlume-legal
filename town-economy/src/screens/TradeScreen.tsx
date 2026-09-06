@@ -9,6 +9,9 @@ import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, ContractDirection, EconomyState, GoodId } from "../economy/types";
 import {
+  BULK_CONTRACT_BONUS_PCT,
+  BULK_CONTRACT_MAX_ACTIVE,
+  BULK_CONTRACT_TERM_DAY_STEPS,
   CARAVAN_INSURANCE_COST_PCT,
   CONTRACT_MARGIN_PCT,
   CONTRACT_MAX_ACTIVE,
@@ -81,7 +84,7 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
 }
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan, openContract, t, netWorth, formatCoins } = useEconomyContext();
+  const { state, sendCaravan, openContract, openBulkContract, t, netWorth, formatCoins } = useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
@@ -90,6 +93,8 @@ export function TradeScreen({ sounds }: Props) {
   const [contractDirection, setContractDirection] = useState<ContractDirection>("long");
   const [contractQty, setContractQty] = useState<1 | 5 | 10>(1);
   const [contractTermDays, setContractTermDays] = useState(CONTRACT_TERM_DAY_STEPS[0]);
+  const [bulkQty, setBulkQty] = useState<1 | 5 | 10>(5);
+  const [bulkTermDays, setBulkTermDays] = useState(BULK_CONTRACT_TERM_DAY_STEPS[0]);
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
@@ -573,6 +578,108 @@ export function TradeScreen({ sounds }: Props) {
                   qty: c.qty,
                   good: t(cGood.nameKey),
                   price: c.strikePrice.toFixed(2),
+                })}
+              </Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+              </View>
+            </View>
+          );
+        })}
+
+      <SectionLabel text={t("trade.bulkContract.sectionLabel")} color="#5fd884" />
+      <Text style={styles.contractDesc}>
+        {t("trade.bulkContract.description", { pct: Math.round(BULK_CONTRACT_BONUS_PCT * 100) })}
+      </Text>
+      <View style={styles.panel}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View style={styles.qtyRow}>
+          {([1, 5, 10] as const).map((q) => (
+            <ScalePressable
+              key={q}
+              style={[styles.qtyBtn, bulkQty === q && { borderColor: good.color, borderWidth: 2 }]}
+              onPress={() => setBulkQty(q)}
+            >
+              <Text style={styles.qtyBtnText}>{q}</Text>
+            </ScalePressable>
+          ))}
+        </View>
+
+        <Text style={styles.contractTermLabel}>{t("trade.bulkContract.termLabel")}</Text>
+        <View style={styles.qtyRow}>
+          {BULK_CONTRACT_TERM_DAY_STEPS.map((days) => (
+            <ScalePressable
+              key={days}
+              style={[styles.qtyBtn, bulkTermDays === days && { borderColor: good.color, borderWidth: 2 }]}
+              onPress={() => setBulkTermDays(days)}
+            >
+              <Text style={styles.qtyBtnText}>{t("trade.bulkContract.termDays", { days })}</Text>
+            </ScalePressable>
+          ))}
+        </View>
+
+        {(() => {
+          const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
+          const payout = lockedPrice * bulkQty;
+          const hasEnough = state.goods[goodId].holding >= bulkQty;
+          const bulkDisabled =
+            state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE ||
+            !hasEnough ||
+            !isGoodUnlocked(good, state);
+          return (
+            <>
+              <Text style={styles.summaryLabel}>
+                {t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
+              </Text>
+              {!hasEnough && (
+                <Text style={styles.contractMaxNote}>
+                  {t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })}
+                </Text>
+              )}
+              <Text style={styles.contractMaxNote}>
+                {t("trade.bulkContract.maxActiveNote", { max: BULK_CONTRACT_MAX_ACTIVE })}
+              </Text>
+              <ScalePressable
+                disabled={bulkDisabled}
+                onPress={() => openBulkContract(goodId, bulkQty, bulkTermDays)}
+                style={[styles.confirmBtn, bulkDisabled && styles.confirmBtnDisabled]}
+                scaleTo={0.97}
+              >
+                <GradientFill colors={GREEN_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+                <Text style={styles.confirmBtnText}>{t("trade.bulkContract.openBtn")}</Text>
+              </ScalePressable>
+            </>
+          );
+        })()}
+      </View>
+
+      <SectionLabel text={t("trade.bulkContract.activeSectionLabel")} color={COLORS.accent} />
+      {state.bulkContracts.length === 0 && (
+        <Text style={styles.emptyText}>{t("trade.bulkContract.noContracts")}</Text>
+      )}
+      {[...state.bulkContracts]
+        .sort((a, b) => a.maturesAtTick - b.maturesAtTick)
+        .map((c) => {
+          const cGood = GOODS_BY_ID[c.goodId];
+          const total = c.maturesAtTick - c.signedAtTick;
+          const elapsed = state.tick - c.signedAtTick;
+          const progress = total > 0 ? clamp01(elapsed / total) : 1;
+          const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
+          return (
+            <View key={c.id} style={styles.caravanCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
+              <View style={styles.caravanHeader}>
+                <Text style={styles.caravanTitle}>
+                  📦 {cGood.icon} {t(cGood.nameKey)}
+                </Text>
+                <Text style={styles.caravanEta}>{t("trade.bulkContract.daysLeft", { days: daysLeft })}</Text>
+              </View>
+              <Text style={styles.caravanSub}>
+                {t("trade.bulkContract.contractRow", {
+                  qty: c.qty,
+                  good: t(cGood.nameKey),
+                  price: c.lockedPricePerUnit.toFixed(2),
                 })}
               </Text>
               <View style={styles.progressTrack}>

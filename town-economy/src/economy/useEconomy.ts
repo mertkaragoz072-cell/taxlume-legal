@@ -47,6 +47,7 @@ import {
 import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
 import { formatCoins as formatCoinsUtil, formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import {
+  BulkContract,
   Caravan,
   CaravanDirection,
   ContractDirection,
@@ -158,6 +159,15 @@ const DEBT_HAPPINESS_DRAG = 20;
 export const CONTRACT_MAX_ACTIVE = 3;
 export const CONTRACT_MARGIN_PCT = 0.25;
 export const CONTRACT_TERM_DAY_STEPS = [1, 3, 5, 10];
+
+// A bulk delivery contract reserves goods the player already holds today
+// (see openBulkContract) and guarantees a locked-in payout at maturity —
+// today's price plus a fixed bonus, paid regardless of where the price
+// actually moves. Unlike ForwardContract above, no margin is ever at risk
+// and the outcome is never a loss, only a delayed, boosted sale.
+export const BULK_CONTRACT_MAX_ACTIVE = 3;
+export const BULK_CONTRACT_BONUS_PCT = 0.15;
+export const BULK_CONTRACT_TERM_DAY_STEPS = [2, 5, 10];
 
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
@@ -310,6 +320,14 @@ export const EARTHQUAKE_LOSS_MIN = 0.1;
 export const EARTHQUAKE_LOSS_MAX = 0.25;
 export const EARTHQUAKE_LOSS_FLOOR = 0.02;
 
+// A generous default so this never binds during ordinary early/mid-game
+// play — it only starts to matter once a player is genuinely hoarding
+// several goods at once, which is exactly the late-game tension it's meant
+// to add. Only the home-market buy path is capped (not caravan imports,
+// whose cash is already spent by the time the goods would arrive, so
+// clamping there would just make goods vanish rather than block a choice).
+export const STORAGE_BASE_CAPACITY = 600;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -375,6 +393,7 @@ type Action =
       qty: number;
       termDays: number;
     }
+  | { type: "OPEN_BULK_CONTRACT"; goodId: GoodId; qty: number; termDays: number }
   | { type: "TAKE_LOAN"; amount: number; termMonths: number }
   | { type: "REPAY_LOAN"; amount: number }
   | { type: "HIRE_WORKER"; goodId: GoodId }
@@ -490,7 +509,15 @@ export function initialState(
     townRankIndex: 0,
     researched: [],
     assets,
-    upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0, guardTower: 0, earthquakeFund: 0 },
+    upgrades: {
+      market: 0,
+      caravanserai: 0,
+      townhall: 0,
+      bank: 0,
+      guardTower: 0,
+      earthquakeFund: 0,
+      storageYard: 0,
+    },
     taxRate: 0,
     happiness: 100,
     lastSavedAt: Date.now(),
@@ -512,6 +539,7 @@ export function initialState(
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     ownedProperties: [],
     contracts: [],
+    bulkContracts: [],
   };
 }
 
@@ -984,6 +1012,27 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  const stillOpenBulkContracts: BulkContract[] = [];
+  for (const contract of state.bulkContracts) {
+    if (contract.maturesAtTick > nextTick) {
+      stillOpenBulkContracts.push(contract);
+      continue;
+    }
+    const payout = contract.qty * contract.lockedPricePerUnit;
+    cash += payout;
+    dailyCashEarned += payout;
+    const contractGood = GOODS_BY_ID[contract.goodId];
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.bulkContractDelivered", {
+        qty: contract.qty,
+        good: t(state.language, contractGood.nameKey),
+        amount: formatNumberUtil(payout, state.language),
+      }),
+      tone: "good",
+    });
+  }
+
   const gameOver = inflationIndex >= config.hyperinflationIndex;
   if (gameOver && !state.gameOver) {
     newEvents.push({
@@ -1041,6 +1090,7 @@ export function tick(state: EconomyState): EconomyState {
     assets,
     caravans: stillTraveling,
     contracts: stillOpenContracts,
+    bulkContracts: stillOpenBulkContracts,
     cash,
     happiness,
     nextId,
@@ -1078,7 +1128,8 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   if (side === "buy") {
     const price = midPrice * (1 + spread / 2);
     const affordable = Math.floor(state.cash / price);
-    const amount = Math.min(qty, affordable);
+    const capRemaining = Math.max(0, Math.floor(storageCapacity(state) - totalGoodsHolding(state)));
+    const amount = Math.min(qty, affordable, capRemaining);
     if (amount <= 0) return state;
     const cost = amount * price;
     const holding = gs.holding + amount;
@@ -1411,6 +1462,31 @@ function openContract(
   };
 }
 
+export function openBulkContract(state: EconomyState, goodId: GoodId, qty: number, termDays: number): EconomyState {
+  if (state.gameOver || qty <= 0) return state;
+  if (state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE) return state;
+  if (!BULK_CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
+  const good = GOODS_BY_ID[goodId];
+  if (!good || !isGoodUnlocked(good, state)) return state;
+  const gs = state.goods[goodId];
+  if (gs.holding < qty) return state;
+  const lockedPricePerUnit = gs.price * (1 + BULK_CONTRACT_BONUS_PCT);
+  const contract: BulkContract = {
+    id: state.nextId,
+    goodId,
+    qty,
+    lockedPricePerUnit,
+    signedAtTick: state.tick,
+    maturesAtTick: state.tick + termDays * TICKS_PER_GAME_DAY,
+  };
+  return {
+    ...state,
+    nextId: state.nextId + 1,
+    goods: { ...state.goods, [goodId]: { ...gs, holding: gs.holding - qty } },
+    bulkContracts: [...state.bulkContracts, contract],
+  };
+}
+
 const DAILY_BONUS_BASE = 20;
 const DAILY_BONUS_PER_STREAK_DAY = 8;
 const DAILY_BONUS_CAP = 90;
@@ -1534,6 +1610,14 @@ export function computeNetWorth(state: EconomyState): number {
     ASSETS.reduce((sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price, 0) -
     (state.loan ? state.loan.remainingBalance : 0)
   );
+}
+
+export function totalGoodsHolding(state: EconomyState): number {
+  return GOODS.reduce((sum, g) => sum + state.goods[g.id].holding, 0);
+}
+
+export function storageCapacity(state: EconomyState): number {
+  return STORAGE_BASE_CAPACITY + state.upgrades.storageYard * UPGRADES_BY_ID.storageYard.effectPerLevel;
 }
 
 export function loanCap(state: EconomyState): number {
@@ -2088,6 +2172,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return unlockPrestigePerk(state, action.perkId);
     case "OPEN_CONTRACT":
       return openContract(state, action.goodId, action.direction, action.qty, action.termDays);
+    case "OPEN_BULK_CONTRACT":
+      return openBulkContract(state, action.goodId, action.qty, action.termDays);
     case "TAKE_LOAN":
       return takeLoan(state, action.amount, action.termMonths);
     case "REPAY_LOAN":
@@ -2206,6 +2292,11 @@ export function useEconomy() {
       dispatch({ type: "OPEN_CONTRACT", goodId, direction, qty, termDays }),
     []
   );
+  const openBulkContract_ = useCallback(
+    (goodId: GoodId, qty: number, termDays: number) =>
+      dispatch({ type: "OPEN_BULK_CONTRACT", goodId, qty, termDays }),
+    []
+  );
   const takeLoan_ = useCallback(
     (amount: number, termMonths: number) => dispatch({ type: "TAKE_LOAN", amount, termMonths }),
     []
@@ -2275,6 +2366,7 @@ export function useEconomy() {
     prestige: prestige_,
     unlockPrestigePerk: unlockPrestigePerk_,
     openContract: openContract_,
+    openBulkContract: openBulkContract_,
     hydrate: hydrate_,
     takeLoan: takeLoan_,
     repayLoan: repayLoan_,

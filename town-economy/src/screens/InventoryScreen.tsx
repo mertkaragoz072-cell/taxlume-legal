@@ -4,6 +4,7 @@ import { GradientFill } from "../components/GradientFill";
 import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
+import { storageCapacity, totalGoodsHolding } from "../economy/useEconomy";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 export function InventoryScreen() {
@@ -11,6 +12,9 @@ export function InventoryScreen() {
   const holdings = GOODS.map((g) => ({ good: g, gs: state.goods[g.id] })).filter(
     ({ gs }) => gs.holding > 0
   );
+  const usedStorage = totalGoodsHolding(state);
+  const capacity = storageCapacity(state);
+  const storagePct = capacity > 0 ? Math.min(1, usedStorage / capacity) : 0;
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -28,6 +32,25 @@ export function InventoryScreen() {
           <Text style={styles.netLabel}>{t("header.netWorth")}</Text>
           <Text style={styles.netValue}>{formatCoins(netWorth)}</Text>
         </View>
+      </View>
+
+      <View style={styles.storageCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View style={styles.storageHeaderRow}>
+          <Text style={styles.storageLabel}>{t("inventory.storageLabel")}</Text>
+          <Text style={styles.storageValue}>
+            {t("inventory.storageUsage", { used: Math.round(usedStorage), capacity: Math.round(capacity) })}
+          </Text>
+        </View>
+        <View style={styles.storageTrack}>
+          <View
+            style={[
+              styles.storageFill,
+              { width: `${storagePct * 100}%`, backgroundColor: storagePct >= 1 ? COLORS.negative : COLORS.accent },
+            ]}
+          />
+        </View>
+        {storagePct >= 1 && <Text style={styles.storageFullNote}>{t("inventory.storageFull")}</Text>}
       </View>
 
       <SectionLabel text={t("inventory.sectionLabel")} color={COLORS.accent} />
@@ -85,6 +108,19 @@ const styles = StyleSheet.create({
   netRow: { marginTop: SPACING.xs, paddingTop: SPACING.sm + 2, borderTopWidth: 1, borderTopColor: "#3a2d1e", marginBottom: 0 },
   netLabel: { color: COLORS.accent, fontSize: TYPE.body + 1, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   netValue: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  storageCard: {
+    borderRadius: RADIUS.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.xl - 4,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  storageHeaderRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.xs },
+  storageLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
+  storageValue: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  storageTrack: { height: 8, borderRadius: 4, backgroundColor: "#1a1410", overflow: "hidden" },
+  storageFill: { height: "100%", borderRadius: 4 },
+  storageFullNote: { color: COLORS.negative, fontSize: TYPE.micro, marginTop: SPACING.xs },
   emptyBox: {
     borderRadius: RADIUS.card,
     padding: SPACING.xl - 4,

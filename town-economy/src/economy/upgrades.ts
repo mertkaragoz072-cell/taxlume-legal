@@ -85,6 +85,19 @@ export const UPGRADES: UpgradeDef[] = [
     effectPerLevel: 0.03,
     effectLabel: (level) => ({ key: "upgrade.earthquakeFund.effect", params: { pct: Math.round(level * 3) } }),
   },
+  {
+    id: "storageYard",
+    nameKey: "upgrade.storageYard.name",
+    icon: "📦",
+    descriptionKey: "upgrade.storageYard.description",
+    maxLevel: 5,
+    baseCost: 100,
+    costGrowth: 1.55,
+    // Additional total storage capacity (summed across every good) per
+    // level — see STORAGE_BASE_CAPACITY/storageCapacity in useEconomy.ts.
+    effectPerLevel: 150,
+    effectLabel: (level) => ({ key: "upgrade.storageYard.effect", params: { amount: level * 150 } }),
+  },
 ];
 
 export const UPGRADES_BY_ID = Object.fromEntries(UPGRADES.map((u) => [u.id, u])) as Record<
