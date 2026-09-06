@@ -1,6 +1,9 @@
 import { GOODS_BY_ID } from "../goods";
 import { TOWNS } from "../towns";
 import {
+  CARAVAN_INSURANCE_COST_PCT,
+  CARAVAN_RAID_LOSS_MAX,
+  CARAVAN_RAID_LOSS_MIN,
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
   LOAN_MAX_INTEREST_RATE_PER_DAY,
@@ -20,6 +23,7 @@ import {
   loanTickRateToDayRate,
   marketSpread,
   repayLoan,
+  sendCaravan,
   takeLoan,
   tick,
   trade,
@@ -301,5 +305,151 @@ describe("hot streak trading bonus", () => {
     const afterLoss = trade(losingState, "bread", "sell", 1);
     expect(afterLoss.tradeStreak).toBe(0);
     expect(afterLoss.stats.bestTradeStreak).toBe(3);
+  });
+});
+
+describe("sendCaravan insurance", () => {
+  const townId = TOWNS[0].id;
+
+  it("export: charges no cash and marks the caravan uninsured when insurance isn't requested", () => {
+    const state = {
+      ...initialState(),
+      cash: 1000,
+      goods: { ...initialState().goods, bread: { ...initialState().goods.bread, holding: 50 } },
+    };
+    const next = sendCaravan(state, townId, "bread", "export", 10, false);
+    const caravan = next.caravans[next.caravans.length - 1];
+    expect(caravan.insured).toBe(false);
+    expect(next.cash).toBe(state.cash);
+    expect(next.goods.bread.holding).toBe(40);
+  });
+
+  it("export: deducts an upfront premium and marks the caravan insured when affordable", () => {
+    const state = {
+      ...initialState(),
+      cash: 1000,
+      goods: { ...initialState().goods, bread: { ...initialState().goods.bread, holding: 50 } },
+    };
+    const price = state.foreignTowns[townId].prices.bread;
+    const gross = 10 * price;
+    const next = sendCaravan(state, townId, "bread", "export", 10, true);
+    const caravan = next.caravans[next.caravans.length - 1];
+    expect(caravan.insured).toBe(true);
+    expect(next.cash).toBeCloseTo(state.cash - gross * CARAVAN_INSURANCE_COST_PCT, 6);
+  });
+
+  it("export: silently skips insurance if the premium isn't affordable", () => {
+    const state = {
+      ...initialState(),
+      cash: 0,
+      goods: { ...initialState().goods, bread: { ...initialState().goods.bread, holding: 50 } },
+    };
+    const next = sendCaravan(state, townId, "bread", "export", 10, true);
+    const caravan = next.caravans[next.caravans.length - 1];
+    expect(caravan.insured).toBe(false);
+    expect(next.cash).toBe(0);
+  });
+
+  it("import: deducts cost plus an upfront premium and marks the caravan insured when affordable", () => {
+    const state = { ...initialState(), cash: 100000 };
+    const town = state.foreignTowns[townId];
+    const price = town.prices.bread;
+    const tariffRate = effectiveTariffRate(state, TOWNS[0]);
+    const cost = 10 * price * (1 + tariffRate);
+    const next = sendCaravan(state, townId, "bread", "import", 10, true);
+    const caravan = next.caravans[next.caravans.length - 1];
+    expect(caravan.insured).toBe(true);
+    expect(next.cash).toBeCloseTo(state.cash - cost - cost * CARAVAN_INSURANCE_COST_PCT, 6);
+  });
+
+  it("import: skips insurance (but still buys the goods) if only the premium is unaffordable", () => {
+    const state = { ...initialState(), cash: 100000 };
+    const town = state.foreignTowns[townId];
+    const price = town.prices.bread;
+    const tariffRate = effectiveTariffRate(state, TOWNS[0]);
+    const cost = 10 * price * (1 + tariffRate);
+    // Leave exactly enough for the goods themselves, nothing left for the premium.
+    const tightState = { ...state, cash: cost };
+    const next = sendCaravan(tightState, townId, "bread", "import", 10, true);
+    const caravan = next.caravans[next.caravans.length - 1];
+    expect(caravan.insured).toBe(false);
+    expect(next.cash).toBeCloseTo(0, 6);
+  });
+});
+
+describe("caravan bandit raids", () => {
+  const originalRandom = Math.random;
+  afterEach(() => {
+    Math.random = originalRandom;
+  });
+
+  function stateWithArrivingCaravan(insured: boolean) {
+    const state = { ...initialState(), cash: 1000, paused: false };
+    const caravan = {
+      id: state.nextId,
+      townId: TOWNS[0].id,
+      goodId: "bread" as const,
+      direction: "export" as const,
+      qty: 10,
+      amount: 100,
+      departedTick: state.tick,
+      arrivesAtTick: state.tick + 1,
+      insured,
+    };
+    return { ...state, nextId: state.nextId + 1, caravans: [caravan] };
+  }
+
+  // tick() also credits passive tax/production income independent of any
+  // caravan, so isolate the caravan's own contribution by diffing against
+  // an otherwise-identical tick with no caravan in flight (same Math.random
+  // mock makes every other random effect land identically in both calls).
+  function caravanCashContribution(insured: boolean) {
+    const withCaravan = stateWithArrivingCaravan(insured);
+    const withoutCaravan = { ...withCaravan, caravans: [] };
+    const nextWith = tick(withCaravan);
+    const nextWithout = tick(withoutCaravan);
+    return nextWith.cash - nextWithout.cash;
+  }
+
+  it("delivers the full amount when the raid roll misses", () => {
+    Math.random = () => 0.999999; // clears every chance check in tick(), including the raid roll
+    expect(caravanCashContribution(false)).toBeCloseTo(100, 6);
+    const next = tick(stateWithArrivingCaravan(false));
+    expect(next.caravans.length).toBe(0);
+  });
+
+  it("reduces the delivered amount when an uninsured caravan is raided", () => {
+    Math.random = () => 0.01; // clears CARAVAN_RAID_CHANCE and sets the loss pct
+    const lossPct = CARAVAN_RAID_LOSS_MIN + 0.01 * (CARAVAN_RAID_LOSS_MAX - CARAVAN_RAID_LOSS_MIN);
+    expect(caravanCashContribution(false)).toBeCloseTo(100 * (1 - lossPct), 6);
+    expect(caravanCashContribution(false)).toBeLessThan(100);
+  });
+
+  it("never raids an insured caravan even when the raid roll would otherwise hit", () => {
+    Math.random = () => 0.01;
+    expect(caravanCashContribution(true)).toBeCloseTo(100, 6);
+  });
+});
+
+describe("personal net-worth record", () => {
+  it("does not celebrate on a fresh save with nothing to beat yet (priorBestNetWorth = 0)", () => {
+    const state = { ...initialState(), paused: false };
+    expect(state.priorBestNetWorth).toBe(0);
+    const next = tick(state);
+    expect(next.recordBrokenThisRun).toBe(false);
+  });
+
+  it("fires a new-record event once net worth crosses priorBestNetWorth, and stays quiet after", () => {
+    const state = { ...initialState(), cash: 1000, priorBestNetWorth: 500, paused: false };
+    const next = tick(state);
+    expect(next.recordBrokenThisRun).toBe(true);
+    expect(next.lastEvent?.message).toMatch(/record|rekor/i);
+    expect(next.bestNetWorthEver).toBeGreaterThanOrEqual(computeNetWorth(next));
+
+    // A second tick shouldn't re-fire the celebration even though net worth
+    // is still comfortably above the old record.
+    const afterSecondTick = tick({ ...next, lastEvent: { id: -1, message: "", tone: "neutral" } });
+    expect(afterSecondTick.recordBrokenThisRun).toBe(true);
+    expect(afterSecondTick.lastEvent?.message).not.toMatch(/record|rekor/i);
   });
 });

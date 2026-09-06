@@ -86,6 +86,9 @@ export interface Caravan {
   amount: number;
   departedTick: number;
   arrivesAtTick: number;
+  /** paid an upfront premium to fully waive bandit-raid risk on arrival — see
+   * CARAVAN_RAID_CHANCE/CARAVAN_INSURANCE_COST_PCT in useEconomy.ts */
+  insured: boolean;
 }
 
 export interface EconomyStats {
@@ -285,6 +288,17 @@ export interface EconomyState {
   prestigePoints: number;
   /** ids of unlocked prestigePerks.ts nodes — permanent, survives every reset */
   prestigePerks: string[];
+  /** highest net worth ever reached, across every prestige/reset — never
+   * decreases, kept updated every tick in tick() */
+  bestNetWorthEver: number;
+  /** snapshot of bestNetWorthEver taken when this run started (prestige or a
+   * plain reset) — the bar this run needs to clear for a "new record" beat;
+   * 0 on a save that has never prestiged or reset, meaning there's nothing
+   * to beat yet */
+  priorBestNetWorth: number;
+  /** true once this run's net worth has already crossed priorBestNetWorth —
+   * suppresses repeat "new record" celebrations for the rest of the run */
+  recordBrokenThisRun: boolean;
   /** a temporary town-wide price event; see seasonalEvents.ts */
   activeSeasonalEvent: SeasonalEventInstance | null;
   /** at most one outstanding town loan at a time */

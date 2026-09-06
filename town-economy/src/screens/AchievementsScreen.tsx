@@ -124,6 +124,10 @@ export function AchievementsScreen() {
             <Text style={styles.statValue}>🔥{state.stats.bestTradeStreak}</Text>
             <Text style={styles.statLabel}>{t("achievements.stats.bestTradeStreak")}</Text>
           </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>🏆{formatCoins(state.bestNetWorthEver)}</Text>
+            <Text style={styles.statLabel}>{t("achievements.stats.bestNetWorthEver")}</Text>
+          </View>
         </View>
       </View>
 

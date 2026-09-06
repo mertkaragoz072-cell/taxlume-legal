@@ -279,6 +279,15 @@ const MINI_QUEST_CHANCE = 0.02;
 // active," which defeats the "special occasion" feel (see seasonalEvents.ts).
 const SEASONAL_EVENT_CHANCE = 0.006;
 
+// A caravan out on the road risks a bandit raid on arrival unless the player
+// paid to insure it — see sendCaravan and the caravan-completion loop in tick().
+export const CARAVAN_RAID_CHANCE = 0.15;
+export const CARAVAN_RAID_LOSS_MIN = 0.4;
+export const CARAVAN_RAID_LOSS_MAX = 0.7;
+// Upfront premium, as a fraction of the caravan's own value, that fully
+// waives raid risk for that one caravan.
+export const CARAVAN_INSURANCE_COST_PCT = 0.08;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -325,7 +334,14 @@ type Action =
   | { type: "SELECT_GOOD"; goodId: GoodId }
   | { type: "TRADE"; goodId: GoodId; side: "buy" | "sell"; qty: number }
   | { type: "TRADE_ASSET"; assetId: AssetId; side: "buy" | "sell"; qty: number }
-  | { type: "SEND_CARAVAN"; townId: TownId; goodId: GoodId; direction: CaravanDirection; qty: number }
+  | {
+      type: "SEND_CARAVAN";
+      townId: TownId;
+      goodId: GoodId;
+      direction: CaravanDirection;
+      qty: number;
+      insured: boolean;
+    }
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId }
   | { type: "PRESTIGE" }
@@ -461,6 +477,9 @@ export function initialState(
     prestigeLevel: 0,
     prestigePoints: 0,
     prestigePerks: [],
+    bestNetWorthEver: 0,
+    priorBestNetWorth: 0,
+    recordBrokenThisRun: false,
     activeSeasonalEvent: null,
     loan: null,
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
@@ -839,30 +858,34 @@ export function tick(state: EconomyState): EconomyState {
     const town = TOWNS_BY_ID[caravan.townId];
     const good = GOODS_BY_ID[caravan.goodId];
     totalCaravansCompleted += 1;
+    const wasRaided = !caravan.insured && Math.random() < CARAVAN_RAID_CHANCE;
+    const deliveredAmount = wasRaided
+      ? caravan.amount * (1 - (CARAVAN_RAID_LOSS_MIN + Math.random() * (CARAVAN_RAID_LOSS_MAX - CARAVAN_RAID_LOSS_MIN)))
+      : caravan.amount;
     if (caravan.direction === "export") {
-      cash += caravan.amount;
-      dailyCashEarned += caravan.amount;
+      cash += deliveredAmount;
+      dailyCashEarned += deliveredAmount;
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.caravanReturnedExport", {
+        message: t(state.language, wasRaided ? "msg.caravanRaidedExport" : "msg.caravanReturnedExport", {
           town: t(state.language, town.nameKey),
-          amount: formatNumberUtil(caravan.amount, state.language),
+          amount: formatNumberUtil(deliveredAmount, state.language),
           qty: caravan.qty,
           good: t(state.language, good.nameKey),
         }),
-        tone: "good",
+        tone: wasRaided ? "bad" : "good",
       });
     } else {
       const gs = goods[caravan.goodId];
-      goods[caravan.goodId] = { ...gs, holding: gs.holding + caravan.amount };
+      goods[caravan.goodId] = { ...gs, holding: gs.holding + deliveredAmount };
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.caravanReturnedImport", {
+        message: t(state.language, wasRaided ? "msg.caravanRaidedImport" : "msg.caravanReturnedImport", {
           town: t(state.language, town.nameKey),
-          qty: caravan.amount,
+          qty: Math.round(deliveredAmount),
           good: t(state.language, good.nameKey),
         }),
-        tone: "good",
+        tone: wasRaided ? "bad" : "good",
       });
     }
   }
@@ -906,6 +929,23 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  // A "new record" is only worth celebrating once per run: compare against
+  // priorBestNetWorth (the bar set by previous runs, snapshotted at the last
+  // prestige/reset) rather than the continuously-climbing bestNetWorthEver,
+  // which would otherwise fire on almost every tick while simply playing.
+  const netWorthNow = computeNetWorth({ ...state, cash, goods, assets, loan });
+  const beatPersonalRecord =
+    !state.recordBrokenThisRun && state.priorBestNetWorth > 0 && netWorthNow > state.priorBestNetWorth;
+  if (beatPersonalRecord) {
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.newNetWorthRecord", {
+        amount: formatNumberUtil(netWorthNow, state.language),
+      }),
+      tone: "good",
+    });
+  }
+
   const lastEvent = newEvents.length > 0 ? newEvents[newEvents.length - 1] : state.lastEvent;
   const eventLog =
     newEvents.length > 0
@@ -939,6 +979,8 @@ export function tick(state: EconomyState): EconomyState {
     activeSeasonalEvent,
     loan,
     workers,
+    bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),
+    recordBrokenThisRun: state.recordBrokenThisRun || beatPersonalRecord,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }
@@ -1132,12 +1174,13 @@ export function effectiveTariffRate(state: EconomyState, town: ForeignTown): num
   );
 }
 
-function sendCaravan(
+export function sendCaravan(
   state: EconomyState,
   townId: TownId,
   goodId: GoodId,
   direction: CaravanDirection,
-  qty: number
+  qty: number,
+  insureRequested: boolean
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
   const town = TOWNS_BY_ID[townId];
@@ -1159,6 +1202,11 @@ function sendCaravan(
     if (amount <= 0) return state;
     const gross = amount * price;
     const net = gross * (1 - tariffRate);
+    // Insurance is a small upfront cash premium regardless of trade
+    // direction — quietly skipped if the player can't actually afford it,
+    // same "clamp rather than block" spirit as an unaffordable buy order.
+    const insurancePremium = gross * CARAVAN_INSURANCE_COST_PCT;
+    const insured = insureRequested && state.cash >= insurancePremium;
     const caravan: Caravan = {
       id: state.nextId,
       townId,
@@ -1168,10 +1216,12 @@ function sendCaravan(
       amount: net,
       departedTick: state.tick,
       arrivesAtTick: state.tick + town.distanceTicks,
+      insured,
     };
     return {
       ...state,
       nextId: state.nextId + 1,
+      cash: state.cash - (insured ? insurancePremium : 0),
       goods: { ...state.goods, [goodId]: { ...gs, holding: gs.holding - amount } },
       // Dumping goods into their market floods it — their supply rises
       // and that good gets cheaper there for the next trader.
@@ -1203,6 +1253,8 @@ function sendCaravan(
   const amount = Math.min(qty, affordable);
   if (amount <= 0) return state;
   const cost = amount * price * (1 + tariffRate);
+  const insurancePremium = cost * CARAVAN_INSURANCE_COST_PCT;
+  const insured = insureRequested && state.cash >= cost + insurancePremium;
   const caravan: Caravan = {
     id: state.nextId,
     townId,
@@ -1212,11 +1264,12 @@ function sendCaravan(
     amount,
     departedTick: state.tick,
     arrivesAtTick: state.tick + town.distanceTicks,
+    insured,
   };
   return {
     ...state,
     nextId: state.nextId + 1,
-    cash: state.cash - cost,
+    cash: state.cash - cost - (insured ? insurancePremium : 0),
     // Buying out their stock drains their supply — the same good gets
     // pricier there, so repeatedly importing the same thing gets worse.
     foreignTowns: {
@@ -1827,9 +1880,11 @@ function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
 }
 
 function prestige(state: EconomyState): EconomyState {
-  if (computeNetWorth(state) < PRESTIGE_UNLOCK_NET_WORTH) return state;
+  const netWorthNow = computeNetWorth(state);
+  if (netWorthNow < PRESTIGE_UNLOCK_NET_WORTH) return state;
   const nextLevel = state.prestigeLevel + 1;
   const base = initialState(state.difficulty, state.language);
+  const bestNetWorthEver = Math.max(state.bestNetWorthEver, netWorthNow);
   const event: EconomyEvent = {
     id: base.nextId,
     message: t(state.language, "msg.prestiged", { level: nextLevel }),
@@ -1841,6 +1896,11 @@ function prestige(state: EconomyState): EconomyState {
     prestigeLevel: nextLevel,
     prestigePoints: state.prestigePoints + PRESTIGE_POINTS_PER_PRESTIGE,
     prestigePerks: state.prestigePerks,
+    // Identity, not run state — the record and the bar to beat next carry
+    // over even though everything else about the run resets.
+    bestNetWorthEver,
+    priorBestNetWorth: bestNetWorthEver,
+    recordBrokenThisRun: false,
     cash: base.cash + nextLevel * PRESTIGE_CASH_BONUS_PER_LEVEL + perkHeadStartBonus(state.prestigePerks),
     nextId: base.nextId + 1,
     lastEvent: event,
@@ -1912,7 +1972,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
     case "TRADE_ASSET":
       return tradeAsset(state, action.assetId, action.side, action.qty);
     case "SEND_CARAVAN":
-      return sendCaravan(state, action.townId, action.goodId, action.direction, action.qty);
+      return sendCaravan(state, action.townId, action.goodId, action.direction, action.qty, action.insured);
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "RESET": {
@@ -1920,12 +1980,16 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       // town name, language, and any earned prestige bonus are identity,
       // not run state — keep them.
       const base = initialState(action.difficulty, state.language);
+      const bestNetWorthEver = Math.max(state.bestNetWorthEver, computeNetWorth(state));
       return {
         ...base,
         townName: state.townName,
         prestigeLevel: state.prestigeLevel,
         prestigePoints: state.prestigePoints,
         prestigePerks: state.prestigePerks,
+        bestNetWorthEver,
+        priorBestNetWorth: bestNetWorthEver,
+        recordBrokenThisRun: false,
         cash:
           base.cash +
           state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL +
@@ -2035,8 +2099,8 @@ export function useEconomy() {
     []
   );
   const sendCaravan_ = useCallback(
-    (townId: TownId, goodId: GoodId, direction: CaravanDirection, qty: number) =>
-      dispatch({ type: "SEND_CARAVAN", townId, goodId, direction, qty }),
+    (townId: TownId, goodId: GoodId, direction: CaravanDirection, qty: number, insured: boolean) =>
+      dispatch({ type: "SEND_CARAVAN", townId, goodId, direction, qty, insured }),
     []
   );
   const togglePause = useCallback(() => dispatch({ type: "TOGGLE_PAUSE" }), []);

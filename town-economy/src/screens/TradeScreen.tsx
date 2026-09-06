@@ -9,6 +9,7 @@ import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, ContractDirection, EconomyState, GoodId } from "../economy/types";
 import {
+  CARAVAN_INSURANCE_COST_PCT,
   CONTRACT_MARGIN_PCT,
   CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
@@ -85,6 +86,7 @@ export function TradeScreen({ sounds }: Props) {
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
   const [qtyOption, setQtyOption] = useState<QtyOption>(5);
+  const [insureCaravan, setInsureCaravan] = useState(false);
   const [contractDirection, setContractDirection] = useState<ContractDirection>("long");
   const [contractQty, setContractQty] = useState<1 | 5 | 10>(1);
   const [contractTermDays, setContractTermDays] = useState(CONTRACT_TERM_DAY_STEPS[0]);
@@ -132,6 +134,10 @@ export function TradeScreen({ sounds }: Props) {
   const disabled =
     resolvedQty <= 0 ||
     (direction === "export" ? resolvedQty > holding : net > state.cash + 0.001);
+
+  const insurancePremium = (direction === "export" ? gross : net) * CARAVAN_INSURANCE_COST_PCT;
+  const cashNeededForInsurance = direction === "export" ? insurancePremium : net + insurancePremium;
+  const canAffordInsurance = state.cash + 0.001 >= cashNeededForInsurance;
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -377,9 +383,24 @@ export function TradeScreen({ sounds }: Props) {
         </Text>
 
         <ScalePressable
+          onPress={() => setInsureCaravan((v) => !v)}
+          style={[styles.insuranceRow, insureCaravan && styles.insuranceRowActive]}
+          scaleTo={0.98}
+        >
+          <Text style={styles.insuranceLabel}>
+            🛡️ {t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}
+          </Text>
+          <Text style={styles.insuranceHint}>
+            {insureCaravan && !canAffordInsurance
+              ? t("trade.insuranceUnaffordable")
+              : t("trade.insuranceHint")}
+          </Text>
+        </ScalePressable>
+
+        <ScalePressable
           disabled={disabled}
           onPress={() => {
-            sendCaravan(townId, goodId, direction, resolvedQty);
+            sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
             if (direction === "export") sounds.playSell();
             else sounds.playBuy();
           }}
@@ -419,6 +440,7 @@ export function TradeScreen({ sounds }: Props) {
               <View style={styles.caravanHeader}>
                 <Text style={styles.caravanTitle}>
                   {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
+                  {c.insured ? " 🛡️" : ""}
                 </Text>
                 <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: remaining })}</Text>
               </View>
@@ -722,6 +744,18 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm + 2,
     paddingHorizontal: 2,
   },
+  insuranceRow: {
+    backgroundColor: "#1a1410",
+    borderRadius: RADIUS.card,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.sm,
+    borderWidth: 2,
+    borderColor: "#3a2d1e",
+  },
+  insuranceRowActive: { borderColor: COLORS.accent },
+  insuranceLabel: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  insuranceHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
   confirmBtn: { borderRadius: RADIUS.card, paddingVertical: SPACING.md, alignItems: "center", overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.35 },
   confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
