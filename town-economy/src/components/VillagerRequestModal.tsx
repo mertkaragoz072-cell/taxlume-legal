@@ -5,6 +5,7 @@ import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
 import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 import { VillagerIllustration } from "./VillagerIllustration";
 
@@ -36,7 +37,7 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
 
   return (
     <Modal visible transparent animationType="fade">
-      <View style={styles.backdrop}>
+      <ModalBackdrop>
         <View style={styles.stage}>
           <Animated.View
             style={[
@@ -94,19 +95,12 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
             </ScalePressable>
           </View>
         </View>
-      </View>
+      </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
   stage: {
     width: "100%",
     maxWidth: 360,

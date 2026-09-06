@@ -5,7 +5,7 @@ import { GOODS } from "../economy/goods";
 import { RESEARCH_NODES, RESEARCH_NODES_BY_ID, ResearchNode } from "../economy/research";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
   const { state, research, t } = useEconomyContext();
@@ -93,44 +93,44 @@ export function ResearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: 16, paddingBottom: 40 },
-  sectionNote: { color: "#a0917a", fontSize: 12, marginBottom: 16, lineHeight: 17 },
-  goodGroup: { marginBottom: 18 },
-  goodHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  goodHeaderIcon: { fontSize: 18, marginRight: 8 },
-  goodHeaderName: { color: "#f0e3c8", fontWeight: "800", fontSize: 14 },
+  body: { padding: SPACING.lg, paddingBottom: 40 },
+  sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, lineHeight: 17 },
+  goodGroup: { marginBottom: SPACING.lg + 2 },
+  goodHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm },
+  goodHeaderIcon: { fontSize: TYPE.heading, marginRight: SPACING.sm },
+  goodHeaderName: { color: COLORS.textPrimary, fontWeight: WEIGHT.black, fontSize: TYPE.body },
   nodeCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: RADIUS.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm + 2,
     overflow: "hidden",
   },
   nodeCardLocked: { opacity: 0.6 },
   accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   dimmed: { opacity: 0.7 },
-  nodeIcon: { fontSize: 24, marginRight: 12 },
-  nodeName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
-  nodeDesc: { color: "#a0917a", fontSize: 11, marginTop: 2 },
-  effectRow: { flexDirection: "row", gap: 10, marginTop: 4 },
-  effectText: { color: "#3fae5c", fontSize: 11, fontWeight: "700" },
-  lockedText: { color: "#c94b4b", fontSize: 10, fontWeight: "600", marginTop: 4 },
+  nodeIcon: { fontSize: TYPE.heading + 6, marginRight: SPACING.md },
+  nodeName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  nodeDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
+  effectRow: { flexDirection: "row", gap: SPACING.sm + 2, marginTop: SPACING.xs },
+  effectText: { color: COLORS.positive, fontSize: TYPE.caption, fontWeight: WEIGHT.bold },
+  lockedText: { color: COLORS.negative, fontSize: TYPE.micro, fontWeight: WEIGHT.medium, marginTop: SPACING.xs },
   badge: {
     backgroundColor: "rgba(63,174,92,0.16)",
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    marginLeft: 10,
+    borderRadius: RADIUS.chip,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm + 2,
+    marginLeft: SPACING.sm + 2,
   },
-  badgeText: { color: "#3fae5c", fontWeight: "700", fontSize: 11 },
+  badgeText: { color: COLORS.positive, fontWeight: WEIGHT.bold, fontSize: TYPE.caption },
   researchBtn: {
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    marginLeft: 10,
+    borderRadius: RADIUS.chip,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm + 2,
+    marginLeft: SPACING.sm + 2,
     overflow: "hidden",
   },
   researchBtnDisabled: { backgroundColor: "#4a4032" },
-  researchBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 11 },
+  researchBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontSize: TYPE.caption },
 });

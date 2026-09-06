@@ -28,7 +28,18 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
-import { CARD_GRADIENT, cardShadow, glowShadow, GOLD_GRADIENT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  glowShadow,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -36,7 +47,7 @@ const chartWidth = Math.min(screenWidth - 48, 420);
 function moodFor(rate: number): { labelKey: string; emoji: string; color: string } {
   if (rate > 0.01) return { labelKey: "town.mood.crisis", emoji: "🔥", color: "#e0693f" };
   if (rate > 0.005) return { labelKey: "town.mood.heating", emoji: "😰", color: "#e0a13f" };
-  if (rate > -0.001) return { labelKey: "town.mood.calm", emoji: "🙂", color: "#e8c777" };
+  if (rate > -0.001) return { labelKey: "town.mood.calm", emoji: "🙂", color: COLORS.accent };
   return { labelKey: "town.mood.cooling", emoji: "😌", color: "#3fae5c" };
 }
 
@@ -100,14 +111,14 @@ export function TownScreen() {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha("#e8c777", 0.1) }]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(COLORS.accent, 0.1) }]}
         />
         <Text style={styles.moodEmoji}>{townRankIcon(state.townRankIndex)}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.moodLabel}>{t("town.rankLabel")}</Text>
-          <Text style={[styles.moodValue, { color: "#e8c777" }]}>{rankTitle}</Text>
+          <Text style={[styles.moodValue, { color: COLORS.accent }]}>{rankTitle}</Text>
           <View style={styles.happinessTrack}>
-            <View style={[styles.happinessFill, { width: `${rankPct * 100}%`, backgroundColor: "#e8c777" }]} />
+            <View style={[styles.happinessFill, { width: `${rankPct * 100}%`, backgroundColor: COLORS.accent }]} />
           </View>
         </View>
         <View style={{ alignItems: "flex-end" }}>
@@ -187,12 +198,12 @@ export function TownScreen() {
         </View>
       </View>
 
-      <View style={[styles.prestigeCard, prestigeReady && glowShadow("#e8c777")]}>
+      <View style={[styles.prestigeCard, prestigeReady && glowShadow(COLORS.accent)]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         {prestigeReady && (
           <View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha("#e8c777", 0.08) }]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(COLORS.accent, 0.08) }]}
           />
         )}
         <View style={styles.taxHeaderRow}>
@@ -248,7 +259,7 @@ export function TownScreen() {
         )}
       </View>
 
-      <SectionLabel text={t("town.prestige.perksSectionLabel")} color="#e8c777" />
+      <SectionLabel text={t("town.prestige.perksSectionLabel")} color={COLORS.accent} />
       <Text style={styles.prestigePointsLabel}>
         {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
       </Text>
@@ -548,7 +559,7 @@ export function TownScreen() {
             styles.eventRow,
             {
               borderLeftColor:
-                event.tone === "bad" ? "#c94b4b" : event.tone === "good" ? "#3fae5c" : "#a0917a",
+                event.tone === "bad" ? COLORS.negative : event.tone === "good" ? COLORS.positive : COLORS.textMuted,
             },
           ]}
         >
@@ -561,203 +572,215 @@ export function TownScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: 16, paddingBottom: 40 },
+  body: { padding: SPACING.lg, paddingBottom: 40 },
   moodCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
     overflow: "hidden",
     ...cardShadow,
   },
-  moodEmoji: { fontSize: 32, marginRight: 12 },
-  moodLabel: { color: "#a0917a", fontSize: 11 },
-  moodValue: { fontSize: 16, fontWeight: "800", marginTop: 2 },
-  moodIndex: { color: "#e8c777", fontSize: 16, fontWeight: "800" },
-  moodIndexLabel: { color: "#a0917a", fontSize: 10, marginTop: 2 },
+  moodEmoji: { fontSize: 32, marginRight: SPACING.md },
+  moodLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
+  moodValue: { fontSize: TYPE.title, fontWeight: WEIGHT.black, marginTop: 2 },
+  moodIndex: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black },
+  moodIndexLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2 },
   happinessTrack: {
     height: 5,
     borderRadius: 3,
-    backgroundColor: "#1a1410",
+    backgroundColor: COLORS.onLight,
     overflow: "hidden",
     marginTop: 6,
   },
   happinessFill: { height: "100%", borderRadius: 3 },
   taxCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
   taxHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  taxTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
-  taxIncome: { color: "#e8c777", fontWeight: "700", fontSize: 12 },
-  taxDesc: { color: "#a0917a", fontSize: 11, marginTop: 6, marginBottom: 12 },
+  taxTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  taxIncome: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontSize: TYPE.label },
+  taxDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 6, marginBottom: SPACING.md },
   taxRow: { flexDirection: "row", gap: 6 },
   taxBtn: {
     flex: 1,
-    backgroundColor: "#1a1410",
-    borderRadius: 10,
+    backgroundColor: COLORS.onLight,
+    borderRadius: RADIUS.chip,
     paddingVertical: 9,
     alignItems: "center",
     borderWidth: 2,
     borderColor: "transparent",
     marginRight: 6,
   },
-  taxBtnActive: { borderColor: "#e8c777" },
-  taxBtnText: { color: "#a0917a", fontWeight: "700", fontSize: 12 },
-  taxBtnTextActive: { color: "#e8c777" },
+  taxBtnActive: { borderColor: COLORS.accent },
+  taxBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontSize: TYPE.label },
+  taxBtnTextActive: { color: COLORS.accent },
   prestigeCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
-  prestigeLevel: { color: "#e8c777", fontWeight: "800", fontSize: 12 },
-  prestigeBonus: { color: "#3fae5c", fontSize: 11, fontWeight: "700", marginTop: 6 },
-  prestigeLocked: { color: "#a0917a", fontSize: 11, marginTop: 10, marginBottom: 8 },
-  prestigeProgress: { color: "#e8c777", fontSize: 12, fontWeight: "700" },
-  prestigePointsLabel: { color: "#e8c777", fontSize: 12, fontWeight: "700", marginBottom: 10 },
-  perkRequires: { color: "#c94b4b", fontSize: 10, marginTop: 3, fontWeight: "600" },
+  prestigeLevel: { color: COLORS.accent, fontWeight: WEIGHT.black, fontSize: TYPE.label },
+  prestigeBonus: { color: COLORS.positive, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, marginTop: 6 },
+  prestigeLocked: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: SPACING.sm + 2, marginBottom: SPACING.sm },
+  prestigeProgress: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold },
+  prestigePointsLabel: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold, marginBottom: SPACING.sm + 2 },
+  perkRequires: { color: COLORS.negative, fontSize: TYPE.micro, marginTop: 3, fontWeight: WEIGHT.medium },
   lockedTrack: {
     width: "100%",
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#1a1410",
+    backgroundColor: COLORS.onLight,
     overflow: "hidden",
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
-  lockedFill: { height: "100%", backgroundColor: "#e8c777", borderRadius: 4 },
+  lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
   prestigeBtn: {
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: RADIUS.card,
+    paddingVertical: SPACING.md,
     alignItems: "center",
     overflow: "hidden",
-    marginTop: 12,
+    marginTop: SPACING.md,
   },
-  prestigeBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
+  prestigeBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontSize: TYPE.body },
   bankCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
-  bankCap: { color: "#a0917a", fontSize: 11, marginTop: 4, marginBottom: 10 },
-  bankTermLabel: { color: "#a0917a", fontSize: 10, fontWeight: "700", letterSpacing: 0.5, marginBottom: 6 },
-  bankBalanceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
-  bankBalanceLabel: { color: "#a0917a", fontSize: 11 },
-  bankBalanceValue: { color: "#c94b4b", fontWeight: "800", fontSize: 15 },
-  bankRate: { color: "#a0917a", fontSize: 10, marginTop: 2, marginBottom: 10 },
-  bankBtnRow: { flexDirection: "row", gap: 8 },
+  bankCap: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: SPACING.xs, marginBottom: SPACING.sm + 2 },
+  bankTermLabel: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  bankBalanceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: SPACING.sm },
+  bankBalanceLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
+  bankBalanceValue: { color: COLORS.negative, fontWeight: WEIGHT.black, fontSize: TYPE.title - 1 },
+  bankRate: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2, marginBottom: SPACING.sm + 2 },
+  bankBtnRow: { flexDirection: "row", gap: SPACING.sm },
   bankBtn: {
     flex: 1,
-    backgroundColor: "#1a1410",
-    borderRadius: 10,
+    backgroundColor: COLORS.onLight,
+    borderRadius: RADIUS.chip,
     paddingVertical: 9,
     alignItems: "center",
     marginRight: 6,
   },
-  bankBtnText: { color: "#e8c777", fontWeight: "700", fontSize: 11 },
-  workersNote: { color: "#a0917a", fontSize: 11, marginBottom: 10 },
+  bankBtnText: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontSize: TYPE.caption },
+  workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
   workerCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 14,
-    padding: 12,
-    paddingLeft: 15,
-    marginBottom: 10,
+    borderRadius: RADIUS.card,
+    padding: SPACING.md,
+    paddingLeft: SPACING.md + 3,
+    marginBottom: SPACING.sm + 2,
     overflow: "hidden",
   },
   workerAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
-  workerIcon: { fontSize: 22, marginRight: 12 },
-  workerName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
-  workerInfo: { color: "#3fae5c", fontSize: 10, fontWeight: "700", marginTop: 2 },
+  workerIcon: { fontSize: 22, marginRight: SPACING.md },
+  workerName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  workerInfo: { color: COLORS.positive, fontSize: TYPE.micro, fontWeight: WEIGHT.bold, marginTop: 2 },
   workerPipRow: { flexDirection: "row", gap: 4, marginTop: 6 },
-  workerPip: { width: 14, height: 5, borderRadius: 3, backgroundColor: "#1a1410", marginRight: 4 },
-  workerPipFilled: { backgroundColor: "#e8c777" },
-  workerBtnCol: { marginLeft: 10, gap: 6 },
+  workerPip: { width: 14, height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, marginRight: 4 },
+  workerPipFilled: { backgroundColor: COLORS.accent },
+  workerBtnCol: { marginLeft: SPACING.sm + 2, gap: 6 },
   workerBtn: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#1a1410",
+    backgroundColor: COLORS.onLight,
     alignItems: "center",
     justifyContent: "center",
   },
   workerBtnDisabled: { opacity: 0.35 },
-  workerBtnText: { color: "#e8c777", fontWeight: "800", fontSize: 16 },
+  workerBtnText: { color: COLORS.accent, fontWeight: WEIGHT.black, fontSize: TYPE.title },
   chartCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
-  chartTitle: { color: "#f0e3c8", fontWeight: "700", fontSize: 13, marginBottom: 6 },
-  buildingsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
+  chartTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body, marginBottom: 6 },
+  buildingsGrid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm + 2, marginBottom: SPACING.xl - 4 },
   buildingCard: {
     width: "31%",
-    borderRadius: 14,
-    padding: 10,
+    borderRadius: RADIUS.card,
+    padding: SPACING.sm + 2,
     alignItems: "center",
     overflow: "hidden",
   },
   buildingIcon: { fontSize: 22 },
-  buildingName: { color: "#f0e3c8", fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
+  buildingName: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.medium,
+    marginTop: SPACING.xs,
+    textAlign: "center",
+  },
   buildingTrack: {
     width: 10,
     height: 44,
-    backgroundColor: "#1a1410",
+    backgroundColor: COLORS.onLight,
     borderRadius: 5,
-    marginTop: 8,
+    marginTop: SPACING.sm,
     justifyContent: "flex-end",
     overflow: "hidden",
   },
   buildingFill: { width: "100%", borderRadius: 5 },
-  buildingRatio: { color: "#a0917a", fontSize: 10, marginTop: 6 },
-  emptyText: { color: "#a0917a", fontSize: 12, marginBottom: 10 },
+  buildingRatio: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 6 },
+  emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
   eventRow: {
-    borderRadius: 10,
+    borderRadius: RADIUS.chip,
     borderLeftWidth: 3,
-    padding: 10,
-    marginBottom: 8,
+    padding: SPACING.sm + 2,
+    marginBottom: SPACING.sm,
     overflow: "hidden",
   },
-  eventText: { color: "#f0e3c8", fontSize: 12 },
+  eventText: { color: COLORS.textPrimary, fontSize: TYPE.label },
   upgradeCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: RADIUS.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm + 2,
     overflow: "hidden",
   },
-  upgradeIcon: { fontSize: 24, marginRight: 12 },
+  upgradeIcon: { fontSize: 24, marginRight: SPACING.md },
   upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  upgradeName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
-  upgradeLevel: { color: "#a0917a", fontSize: 11, fontWeight: "600" },
-  upgradeDesc: { color: "#a0917a", fontSize: 11, marginTop: 2 },
-  upgradeEffect: { color: "#3fae5c", fontSize: 11, fontWeight: "700", marginTop: 3 },
+  upgradeName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  upgradeLevel: { color: COLORS.textMuted, fontSize: TYPE.caption, fontWeight: WEIGHT.medium },
+  upgradeDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
+  upgradeEffect: { color: COLORS.positive, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, marginTop: 3 },
   upgradeLevelTrack: { flexDirection: "row", gap: 4, marginTop: 6 },
   upgradeLevelPip: {
     width: 14,
     height: 5,
     borderRadius: 3,
-    backgroundColor: "#1a1410",
+    backgroundColor: COLORS.onLight,
     marginRight: 4,
   },
-  upgradeLevelPipFilled: { backgroundColor: "#e8c777" },
+  upgradeLevelPipFilled: { backgroundColor: COLORS.accent },
   upgradeBtn: {
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    marginLeft: 10,
+    borderRadius: RADIUS.chip,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm + 2,
+    marginLeft: SPACING.sm + 2,
     overflow: "hidden",
   },
   upgradeBtnDisabled: { backgroundColor: "#4a4032" },
-  upgradeBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 12 },
+  upgradeBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontSize: TYPE.label },
 });

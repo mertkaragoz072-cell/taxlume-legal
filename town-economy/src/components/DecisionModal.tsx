@@ -7,6 +7,7 @@ import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
 
 const DECISION_ACCENT = "#c58ee0";
 import { GradientFill } from "./GradientFill";
+import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -22,7 +23,7 @@ export function DecisionModal({ decision, onResolve }: Props) {
 
   return (
     <Modal visible transparent animationType="fade">
-      <View style={styles.backdrop}>
+      <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <View style={[styles.iconBadge, { backgroundColor: withAlpha(DECISION_ACCENT, 0.16) }]}>
@@ -43,19 +44,12 @@ export function DecisionModal({ decision, onResolve }: Props) {
             </ScalePressable>
           ))}
         </View>
-      </View>
+      </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
   card: {
     width: "100%",
     maxWidth: 360,

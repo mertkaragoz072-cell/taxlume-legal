@@ -4,6 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
 import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -34,7 +35,7 @@ export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
+      <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           {pending ? (
@@ -101,19 +102,12 @@ export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel
             </>
           )}
         </View>
-      </View>
+      </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
   card: {
     width: "100%",
     maxWidth: 360,

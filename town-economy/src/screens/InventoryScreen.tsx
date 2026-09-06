@@ -4,7 +4,7 @@ import { GradientFill } from "../components/GradientFill";
 import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
-import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
@@ -30,7 +30,7 @@ export function InventoryScreen() {
         </View>
       </View>
 
-      <SectionLabel text={t("inventory.sectionLabel")} color="#e8c777" />
+      <SectionLabel text={t("inventory.sectionLabel")} color={COLORS.accent} />
       {holdings.length === 0 && (
         <View style={styles.emptyBox}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -71,44 +71,44 @@ export function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: 16, paddingBottom: 40 },
+  body: { padding: SPACING.lg, paddingBottom: 40 },
   summaryCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-  summaryLabel: { color: "#a0917a", fontSize: 13 },
-  summaryValue: { color: "#f0e3c8", fontSize: 13, fontWeight: "600" },
-  netRow: { marginTop: 4, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#3a2d1e", marginBottom: 0 },
-  netLabel: { color: "#e8c777", fontSize: 14, fontWeight: "700" },
-  netValue: { color: "#e8c777", fontSize: 16, fontWeight: "800" },
+  summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.sm },
+  summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.body },
+  summaryValue: { color: COLORS.textPrimary, fontSize: TYPE.body, fontWeight: WEIGHT.medium },
+  netRow: { marginTop: SPACING.xs, paddingTop: SPACING.sm + 2, borderTopWidth: 1, borderTopColor: "#3a2d1e", marginBottom: 0 },
+  netLabel: { color: COLORS.accent, fontSize: TYPE.body + 1, fontWeight: WEIGHT.bold },
+  netValue: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black },
   emptyBox: {
-    borderRadius: 14,
-    padding: 20,
+    borderRadius: RADIUS.card,
+    padding: SPACING.xl - 4,
     alignItems: "center",
     overflow: "hidden",
   },
-  emptyText: { color: "#f0e3c8", fontWeight: "600", marginBottom: 4 },
-  emptySub: { color: "#a0917a", fontSize: 12, textAlign: "center" },
+  emptyText: { color: COLORS.textPrimary, fontWeight: WEIGHT.medium, marginBottom: SPACING.xs },
+  emptySub: { color: COLORS.textMuted, fontSize: TYPE.label, textAlign: "center" },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 14,
-    padding: 12,
-    paddingLeft: 15,
-    marginBottom: 10,
+    borderRadius: RADIUS.card,
+    padding: SPACING.md,
+    paddingLeft: SPACING.md + 3,
+    marginBottom: SPACING.sm + 2,
     overflow: "hidden",
   },
   accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
-  rowIcon: { fontSize: 26, marginRight: 12 },
-  rowMain: { flex: 1, marginRight: 10 },
-  rowName: { color: "#f0e3c8", fontWeight: "700", fontSize: 14 },
-  rowSub: { color: "#a0917a", fontSize: 11, marginTop: 1, marginBottom: 6 },
-  barTrack: { height: 5, borderRadius: 3, backgroundColor: "#1a1410", overflow: "hidden" },
+  rowIcon: { fontSize: 26, marginRight: SPACING.md },
+  rowMain: { flex: 1, marginRight: SPACING.sm + 2 },
+  rowName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  rowSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1, marginBottom: SPACING.sm - 2 },
+  barTrack: { height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 3 },
-  rowValue: { color: "#e8c777", fontWeight: "700", fontSize: 13 },
-  rowShare: { color: "#a0917a", fontSize: 11, marginTop: 2 },
+  rowValue: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  rowShare: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
 });

@@ -3,6 +3,7 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
 interface Slide {
@@ -52,7 +53,7 @@ export function TutorialModal({ visible, onFinish }: Props) {
 
   return (
     <Modal visible transparent animationType="fade">
-      <View style={styles.backdrop}>
+      <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <View style={[styles.iconBadge, { backgroundColor: withAlpha(slide.color, 0.16) }]}>
@@ -81,19 +82,12 @@ export function TutorialModal({ visible, onFinish }: Props) {
             </ScalePressable>
           )}
         </View>
-      </View>
+      </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
   card: {
     width: "100%",
     maxWidth: 360,

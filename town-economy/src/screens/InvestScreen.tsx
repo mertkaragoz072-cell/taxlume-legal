@@ -9,7 +9,7 @@ import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, withAlpha } from "../theme";
+import { cardShadow, CARD_GRADIENT, COLORS, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
@@ -49,7 +49,7 @@ export function InvestScreen({ sounds }: Props) {
         <View style={styles.portfolioRow}>
           <Text style={styles.portfolioValue}>{formatCoins(assetsValue)}</Text>
           {assetsValue > 0 && (
-            <Text style={[styles.portfolioPnl, { color: totalPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
+            <Text style={[styles.portfolioPnl, { color: totalPnl >= 0 ? COLORS.positive : COLORS.negative }]}>
               {totalPnl >= 0
                 ? t("invest.unrealizedProfit", { amount: formatNumber(totalPnl, state.language) })
                 : t("invest.unrealizedLoss", { amount: formatNumber(Math.abs(totalPnl), state.language) })}
@@ -79,7 +79,7 @@ export function InvestScreen({ sounds }: Props) {
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <AnimatedNumber value={selectedState.price} formatter={formatPrice} style={styles.chartPrice} />
-            <Text style={[styles.chartChange, { color: change >= 0 ? "#3fae5c" : "#c94b4b" }]}>
+            <Text style={[styles.chartChange, { color: change >= 0 ? COLORS.positive : COLORS.negative }]}>
               {change >= 0 ? "+" : ""}
               {change.toFixed(2)}%
             </Text>
@@ -99,7 +99,7 @@ export function InvestScreen({ sounds }: Props) {
               {t("invest.holdingLabel", { qty: selectedState.holding })} ·{" "}
               {t("invest.avgCostLabel", { price: selectedState.avgCost.toFixed(2) })}
             </Text>
-            <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
+            <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? COLORS.positive : COLORS.negative }]}>
               {unrealizedPnl >= 0
                 ? t("invest.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
                 : t("invest.unrealizedLoss", {
@@ -139,54 +139,54 @@ export function InvestScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: 16, paddingBottom: 40 },
+  body: { padding: SPACING.lg, paddingBottom: 40 },
   portfolioCard: {
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.md + 2,
+    marginBottom: SPACING.md,
     overflow: "hidden",
     ...cardShadow,
   },
-  portfolioLabel: { color: "#a0917a", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
-  portfolioRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
-  portfolioValue: { color: "#e8c777", fontSize: 20, fontWeight: "800" },
-  portfolioPnl: { fontSize: 13, fontWeight: "700" },
-  sectionNote: { color: "#a0917a", fontSize: 12, marginBottom: 16, lineHeight: 17 },
+  portfolioLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, letterSpacing: 1 },
+  portfolioRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: SPACING.xs },
+  portfolioValue: { color: COLORS.accent, fontSize: TYPE.display, fontWeight: WEIGHT.black },
+  portfolioPnl: { fontSize: TYPE.body, fontWeight: WEIGHT.bold },
+  sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, lineHeight: 17 },
   chartCard: {
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
     borderWidth: 1.5,
-    padding: 16,
-    marginBottom: 18,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg + 2,
     overflow: "hidden",
     ...cardShadow,
   },
   chartHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
-  chartTitle: { color: "#f0e3c8", fontSize: 17, fontWeight: "800" },
-  chartSubtitle: { color: "#a0917a", fontSize: 12, marginTop: 2, maxWidth: 200 },
-  chartPrice: { color: "#e8c777", fontSize: 18, fontWeight: "800" },
-  chartChange: { fontSize: 13, fontWeight: "700", marginTop: 2 },
+  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black },
+  chartSubtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginTop: 2, maxWidth: 200 },
+  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black },
+  chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, marginTop: 2 },
   holdingRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: SPACING.sm + 2,
+    paddingTop: SPACING.sm + 2,
     borderTopWidth: 1,
     borderTopColor: "#3a2d1e",
   },
-  holdingText: { color: "#a0917a", fontSize: 11, flex: 1 },
-  holdingPnl: { fontSize: 12, fontWeight: "700" },
+  holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
+  holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold },
   noHolding: {
-    color: "#a0917a",
-    fontSize: 11,
-    marginTop: 10,
-    paddingTop: 10,
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    marginTop: SPACING.sm + 2,
+    paddingTop: SPACING.sm + 2,
     borderTopWidth: 1,
     borderTopColor: "#3a2d1e",
   },
-  assetsRow: { marginBottom: 18 },
+  assetsRow: { marginBottom: SPACING.lg + 2 },
 });

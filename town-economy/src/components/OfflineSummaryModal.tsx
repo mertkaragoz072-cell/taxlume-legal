@@ -4,6 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { OfflineSummary } from "../economy/types";
 import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -26,7 +27,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
-      <View style={styles.backdrop}>
+      <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Text style={styles.title}>{t("offline.title")}</Text>
@@ -105,19 +106,12 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
             <Text style={styles.confirmBtnText}>{t("offline.confirmBtn")}</Text>
           </ScalePressable>
         </View>
-      </View>
+      </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.65)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
   card: {
     width: "100%",
     maxWidth: 360,
