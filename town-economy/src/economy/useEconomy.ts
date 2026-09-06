@@ -29,6 +29,13 @@ import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "./towns";
+import {
+  townRankBeyondCount,
+  townRankIcon,
+  townRankIndexForNetWorth,
+  townRankNameKey,
+  townRankReward,
+} from "./townRanks";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import {
   rollVillagerRequest,
@@ -65,6 +72,9 @@ export const TRADE_UNLOCK_NET_WORTH = 500;
 // pricier caravans, but far better payoff for the luxury goods) open up.
 // Sticky once crossed — see applyMetropolUnlock.
 export const METROPOL_UNLOCK_NET_WORTH = 3000;
+// The one content gate tied to prestigeLevel rather than the current run's
+// net worth — see towns.ts' "legendary" tier and applyLegendaryUnlock.
+export const LEGENDARY_UNLOCK_PRESTIGE_LEVEL = 3;
 const DAILY_QUEST_COUNT = 3;
 
 // --- In-game day cycle -----------------------------------------------------
@@ -97,6 +107,14 @@ export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
 // Points earned each prestige, spent on prestigePerks.ts — a player-chosen
 // permanent tree layered on top of the automatic level bonus above.
 export const PRESTIGE_POINTS_PER_PRESTIGE = 1;
+
+// --- Town ranks ------------------------------------------------------------
+// An endless, sticky title ladder driven by net worth alone (see
+// townRanks.ts) — every tier ever reached stays reached even if net worth
+// later falls, and each one adds a permanent sliver to production so there
+// is always a next rank worth chasing within a single run, not just across
+// resets like prestige.
+export const TOWN_RANK_PRODUCTION_BONUS_PER_RANK = 0.004;
 
 // --- Banking / loans -------------------------------------------------------
 // A loan is cash now against interest that compounds every tick until
@@ -395,6 +413,8 @@ export function initialState(
     unlockedAchievements: [],
     tradeUnlocked: false,
     metropolUnlocked: false,
+    legendaryUnlocked: false,
+    townRankIndex: 0,
     researched: [],
     assets,
     upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
@@ -625,7 +645,13 @@ export function tick(state: EconomyState): EconomyState {
 
   // Permanent, run-independent bonus from past prestiges (see PRESTIGE).
   const prestigeProductionMult =
-    1 + state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL + perkProductionBonus(state.prestigePerks);
+    1 +
+    state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL +
+    perkProductionBonus(state.prestigePerks) +
+    // Every town rank ever reached (see townRanks.ts) adds a small sliver
+    // too — sticky like prestige, but earned within a single run instead
+    // of requiring a reset, so there's always a next rank worth chasing.
+    state.townRankIndex * TOWN_RANK_PRODUCTION_BONUS_PER_RANK;
   const seasonalTemplate = activeSeasonalEvent
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId]
     : null;
@@ -1417,6 +1443,69 @@ function applyMetropolUnlock(state: EconomyState): EconomyState {
   };
 }
 
+// Unlike every other content gate, this one tracks prestigeLevel (a
+// permanent counter that survives every reset) rather than the current
+// run's net worth — so once earned, the legendary trading partner (see
+// towns.ts) stays open from tick one of every future run too.
+function applyLegendaryUnlock(state: EconomyState): EconomyState {
+  if (state.legendaryUnlocked) return state;
+  if (state.prestigeLevel < LEGENDARY_UNLOCK_PRESTIGE_LEVEL) return state;
+
+  const event: EconomyEvent = {
+    id: state.nextId,
+    message: t(state.language, "msg.legendaryUnlocked"),
+    tone: "good",
+  };
+  return {
+    ...state,
+    legendaryUnlocked: true,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+
+// Sticky, endless net-worth milestone ladder (see townRanks.ts) — checked
+// every action like an achievement, but unlike achievements a single big
+// jump in net worth (e.g. a long offline catch-up) can clear several
+// tiers at once, so every skipped tier's reward is paid out, not just the
+// one landed on.
+function applyTownRankUp(state: EconomyState): EconomyState {
+  const targetIndex = townRankIndexForNetWorth(computeNetWorth(state));
+  if (targetIndex <= state.townRankIndex) return state;
+
+  let nextId = state.nextId;
+  let cash = state.cash;
+  const newEvents: EconomyEvent[] = [];
+  for (let index = state.townRankIndex + 1; index <= targetIndex; index++) {
+    const reward = townRankReward(index);
+    cash += reward;
+    const beyond = townRankBeyondCount(index);
+    const title =
+      beyond > 0
+        ? t(state.language, "townRank.beyondTitle", { base: t(state.language, townRankNameKey(index)), n: beyond + 1 })
+        : t(state.language, townRankNameKey(index));
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.townRankUp", {
+        icon: townRankIcon(index),
+        title,
+        reward: formatNumberUtil(reward, state.language),
+      }),
+      tone: "good",
+    });
+  }
+
+  return {
+    ...state,
+    cash,
+    nextId,
+    townRankIndex: targetIndex,
+    lastEvent: newEvents[newEvents.length - 1],
+    eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
+  };
+}
+
 function applyDailyQuests(state: EconomyState): EconomyState {
   const newlyCompleted = state.dailyQuests.filter((q) => {
     if (q.completed) return false;
@@ -1524,7 +1613,9 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
     // times over within a single offline gap.
     s = applyMiniQuest(s);
   }
-  s = applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s))));
+  s = applyTownRankUp(
+    applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s)))))
+  );
 
   const newAchievements = s.unlockedAchievements
     .filter((id) => !beforeAchievements.includes(id))
@@ -1765,7 +1856,9 @@ function reducer(state: EconomyState, action: Action): EconomyState {
   const next = baseReducer(state, action);
   if (next === state || action.type === "RESET") return next;
   return applyMiniQuest(
-    applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next))))
+    applyTownRankUp(
+      applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next)))))
+    )
   );
 }
 

@@ -16,6 +16,7 @@ import {
   effectiveTariffRate,
   effectiveTradeUnlockNetWorth,
   isGoodUnlocked,
+  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
 import { BLUE_GRADIENT, CARD_GRADIENT, cardShadow, GREEN_GRADIENT, withAlpha } from "../theme";
@@ -28,7 +29,8 @@ type QtyOption = 1 | 5 | "ALL";
 
 const REGULAR_TOWNS = TOWNS.filter((tn) => tn.tier === "town");
 const METROPOLISES = TOWNS.filter((tn) => tn.tier === "metropol");
-const ALL_TOWNS = [...REGULAR_TOWNS, ...METROPOLISES];
+const LEGENDARY_TOWNS = TOWNS.filter((tn) => tn.tier === "legendary");
+const ALL_TOWNS = [...REGULAR_TOWNS, ...METROPOLISES, ...LEGENDARY_TOWNS];
 
 // Green above the baseline, red below — same intensity-scales-with-magnitude
 // idea as a real heatmap, but built from the app's own warm palette (and a
@@ -180,12 +182,58 @@ export function TradeScreen({ sounds }: Props) {
         </View>
       )}
 
+      <SectionLabel text={t("trade.legendarySectionLabel")} color="#f0776a" />
+      {state.legendaryUnlocked ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
+          {LEGENDARY_TOWNS.map((tn) => (
+            <TownPill
+              key={tn.id}
+              town={tn}
+              selected={tn.id === townId}
+              onPress={() => setTownId(tn.id)}
+              state={state}
+              t={t}
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.metropolLockedCard}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <Text style={styles.metropolLockedIcon}>🔒</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.metropolLockedTitle}>{t("trade.legendaryLocked.title")}</Text>
+            <Text style={styles.metropolLockedDesc}>
+              {t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
+            </Text>
+            <View style={styles.lockedTrack}>
+              <View
+                style={[
+                  styles.lockedFill,
+                  {
+                    width: `${
+                      Math.max(0, Math.min(1, state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL)) * 100
+                    }%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.metropolLockedProgress}>
+              {t("trade.legendaryLocked.progress", {
+                current: state.prestigeLevel,
+                target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+              })}
+            </Text>
+          </View>
+        </View>
+      )}
+
       <SectionLabel text={t("trade.heatmapSectionLabel")} color={good.color} />
       <Text style={styles.heatmapHint}>{t("trade.heatmapHint")}</Text>
       {(() => {
         const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
         const cellPct = (g: (typeof GOODS)[number], tn: ForeignTown): number | null => {
           if (tn.tier === "metropol" && !state.metropolUnlocked) return null;
+          if (tn.tier === "legendary" && !state.legendaryUnlocked) return null;
           const home = state.goods[g.id].price;
           const there = state.foreignTowns[tn.id].prices[g.id];
           const tariff = effectiveTariffRate(state, tn);

@@ -1,6 +1,12 @@
 import { GoodId } from "./types";
 
-export type TownId = "windyhill" | "ironforge" | "portcity" | "grandbazaar" | "diamondharbor";
+export type TownId =
+  | "windyhill"
+  | "ironforge"
+  | "portcity"
+  | "grandbazaar"
+  | "diamondharbor"
+  | "legendharbor";
 
 export interface ForeignTown {
   id: TownId;
@@ -11,8 +17,9 @@ export interface ForeignTown {
   tariffRate: number; // cut taken on both exports and imports
   /** their local equilibrium price = home basePrice * specialty (their own supply/production still swings it from there) */
   specialty: Record<GoodId, number>;
-  /** "town" trades as soon as tradeUnlocked; "metropol" needs metropolUnlocked too — see useEconomy.ts */
-  tier: "town" | "metropol";
+  /** "town" trades as soon as tradeUnlocked; "metropol" needs metropolUnlocked too;
+   * "legendary" needs a prestige-level milestone — see useEconomy.ts */
+  tier: "town" | "metropol" | "legendary";
 }
 
 export const TOWNS: ForeignTown[] = [
@@ -143,6 +150,37 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.0,
       paper: 0.9,
       glass: 1.8,
+    },
+  },
+  // A single legendary trading partner reached only through prestigeLevel
+  // (see LEGENDARY_UNLOCK_PRESTIGE_LEVEL in useEconomy.ts), not net worth —
+  // the game's only content gate tied to how many times you've prestiged
+  // rather than how rich the current run is. Pays well across the board
+  // instead of specializing in one or two luxuries like the metropolises,
+  // and charges the lowest tariff of anywhere — the reward for resetting.
+  {
+    id: "legendharbor",
+    nameKey: "place.legendharbor.name",
+    icon: "🐉",
+    distanceTicks: 18,
+    tariffRate: 0.02,
+    tier: "legendary",
+    specialty: {
+      bread: 1.4,
+      milk: 1.35,
+      wood: 1.3,
+      iron: 1.35,
+      cloth: 1.4,
+      fish: 1.3,
+      wine: 1.5,
+      leather: 1.35,
+      spice: 1.8,
+      silk: 1.7,
+      jewelry: 1.9,
+      honey: 1.4,
+      cheese: 1.35,
+      paper: 1.3,
+      glass: 1.5,
     },
   },
 ];

@@ -16,6 +16,7 @@ import {
   TAX_RATE_STEPS,
 } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
+import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
 import {
@@ -65,6 +66,9 @@ export function TownScreen() {
   } = useEconomyContext();
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
+  const rankTitle = townRankTitle(state.townRankIndex, t);
+  const rankNextThreshold = townRankThreshold(state.townRankIndex + 1);
+  const rankPct = Math.max(0, Math.min(1, netWorth / rankNextThreshold));
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
   const [prestigeArmed, setPrestigeArmed] = useState(false);
   const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
@@ -92,6 +96,26 @@ export function TownScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <View style={styles.moodCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha("#e8c777", 0.1) }]}
+        />
+        <Text style={styles.moodEmoji}>{townRankIcon(state.townRankIndex)}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.moodLabel}>{t("town.rankLabel")}</Text>
+          <Text style={[styles.moodValue, { color: "#e8c777" }]}>{rankTitle}</Text>
+          <View style={styles.happinessTrack}>
+            <View style={[styles.happinessFill, { width: `${rankPct * 100}%`, backgroundColor: "#e8c777" }]} />
+          </View>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={styles.moodIndex}>{townRankIcon(state.townRankIndex + 1)}</Text>
+          <Text style={styles.moodIndexLabel}>{t("town.rankNext")}</Text>
+        </View>
+      </View>
+
       <View style={styles.moodCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View

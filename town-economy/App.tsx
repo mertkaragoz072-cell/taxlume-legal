@@ -15,6 +15,7 @@ import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { APP_BACKGROUND_GRADIENT } from "./src/theme";
@@ -60,6 +61,8 @@ function Game() {
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
+
+  const rankTitle = townRankTitle(state.townRankIndex, t);
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
@@ -124,6 +127,8 @@ function Game() {
       <View style={styles.content}>
         <InflationHeader
           townName={state.townName}
+          rankIcon={townRankIcon(state.townRankIndex)}
+          rankTitle={rankTitle}
           cash={state.cash}
           netWorth={netWorth}
           inflationIndex={state.inflationIndex}

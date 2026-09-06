@@ -10,6 +10,8 @@ import { PriceChart } from "./PriceChart";
 
 interface Props {
   townName: string;
+  rankIcon: string;
+  rankTitle: string;
   cash: number;
   netWorth: number;
   inflationIndex: number;
@@ -32,6 +34,8 @@ interface Props {
 
 export function InflationHeader({
   townName,
+  rankIcon,
+  rankTitle,
   cash,
   netWorth,
   inflationIndex,
@@ -127,6 +131,11 @@ export function InflationHeader({
       </View>
       <View style={styles.metaRow}>
         <View style={styles.townRow}>
+          <View style={[styles.streakBadge, styles.streakBadgeRow, { backgroundColor: withAlpha("#e8c777", 0.22) }]}>
+            <Text style={styles.streakBadgeText}>
+              {rankIcon} {rankTitle}
+            </Text>
+          </View>
           <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
             <Text style={styles.streakBadgeText}>
               {difficultyConfig.icon} {t(difficultyConfig.labelKey)}

@@ -232,6 +232,10 @@ export interface EconomyState {
   tradeUnlocked: boolean;
   /** set once the town's net worth first crosses METROPOL_UNLOCK_NET_WORTH; sticky, never re-locks */
   metropolUnlocked: boolean;
+  /** set once prestigeLevel first reaches LEGENDARY_UNLOCK_PRESTIGE_LEVEL; sticky, never re-locks */
+  legendaryUnlocked: boolean;
+  /** highest town-rank tier (see townRanks.ts) this town's net worth has ever reached; sticky, never re-locks */
+  townRankIndex: number;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
   researched: string[];
   /** speculative assets (gold, oil, stocks) — separate random-walk market, see assets.ts */
