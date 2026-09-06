@@ -235,6 +235,10 @@ export const STRINGS = {
       dailyQuestsNote: "Her gün yeni görevler gelir, yarın tekrar uğra.",
       miniQuestSectionLabel: "ANLIK GÖREV",
       miniQuestTicksLeft: "{ticks} tur kaldı",
+      weeklyChallengeSectionLabel: "HAFTALIK MEYDAN OKUMA",
+      weeklyChallengeProgress: "{current} / {target}",
+      weeklyChallengeReward: "+{amount} 🪙",
+      weeklyChallengeClaimed: "✅ Tamamlandı, ödül alındı",
       sectionLabel: "BAŞARIMLAR",
       statsSectionLabel: "ÖMÜR BOYU İSTATİSTİKLER",
       hallOfFameSectionLabel: "ONUR LİSTESİ",
@@ -625,6 +629,11 @@ export const STRINGS = {
       flash_caravan: { title: "Aceleci Kervan", description: "Hemen bir kervan yola çıkar!" },
       flash_upgrade: { title: "Ani Yatırım", description: "Hemen bir kasaba geliştirmesi satın al!" },
     },
+    weeklyChallenge: {
+      weekly_trader: { title: "Haftanın Tüccarı", description: "Bu hafta {target} alım-satım yap." },
+      weekly_logistics: { title: "Haftanın Lojistiği", description: "Bu hafta {target} kervanı tamamla." },
+      weekly_profiteer: { title: "Haftanın Kârı", description: "Bu hafta {target} 🪙 gerçekleşmiş kâr elde et." },
+    },
     decision: {
       famine_relief: {
         title: "Kıtlık Yardımı",
@@ -771,6 +780,7 @@ export const STRINGS = {
       contractProfit: "📑 {good} vadeli işlemi kapandı, +{amount} 🪙 kâr!",
       contractLoss: "📑 {good} vadeli işlemi kapandı, -{amount} 🪙 zarar.",
       bulkContractDelivered: "📦 Toptan sözleşme teslim edildi: {qty} {good}, +{amount} 🪙 kazandın!",
+      weeklyChallengeComplete: "🏆 Haftalık meydan okuma tamamlandı: {title}, +{amount} 🪙!",
       goodSoldProfit: "📈 {qty} {good} sattın, +{amount} 🪙 kâr ettin!",
       goodSoldLoss: "📉 {qty} {good} sattın, -{amount} 🪙 zarar ettin.",
       goodSoldProfitStreak: "🔥 {streak} seri! {qty} {good} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
@@ -1012,6 +1022,10 @@ export const STRINGS = {
       dailyQuestsNote: "New quests arrive every day — check back tomorrow.",
       miniQuestSectionLabel: "FLASH QUEST",
       miniQuestTicksLeft: "{ticks} turns left",
+      weeklyChallengeSectionLabel: "WEEKLY CHALLENGE",
+      weeklyChallengeProgress: "{current} / {target}",
+      weeklyChallengeReward: "+{amount} 🪙",
+      weeklyChallengeClaimed: "✅ Completed, reward claimed",
       sectionLabel: "ACHIEVEMENTS",
       statsSectionLabel: "LIFETIME STATS",
       hallOfFameSectionLabel: "HALL OF FAME",
@@ -1402,6 +1416,11 @@ export const STRINGS = {
       flash_caravan: { title: "Rush Caravan", description: "Send a caravan right now!" },
       flash_upgrade: { title: "Sudden Investment", description: "Buy a town upgrade right now!" },
     },
+    weeklyChallenge: {
+      weekly_trader: { title: "Trader of the Week", description: "Make {target} trades this week." },
+      weekly_logistics: { title: "Logistics of the Week", description: "Complete {target} caravans this week." },
+      weekly_profiteer: { title: "Profit of the Week", description: "Realize {target} 🪙 in profit this week." },
+    },
     decision: {
       famine_relief: {
         title: "Famine Relief",
@@ -1548,6 +1567,7 @@ export const STRINGS = {
       contractProfit: "📑 {good} contract settled, +{amount} 🪙 profit!",
       contractLoss: "📑 {good} contract settled, -{amount} 🪙 loss.",
       bulkContractDelivered: "📦 Bulk contract delivered: {qty} {good}, +{amount} 🪙 earned!",
+      weeklyChallengeComplete: "🏆 Weekly challenge complete: {title}, +{amount} 🪙!",
       goodSoldProfit: "📈 Sold {qty} {good}, +{amount} 🪙 profit!",
       goodSoldLoss: "📉 Sold {qty} {good}, -{amount} 🪙 loss.",
       goodSoldProfitStreak: "🔥 {streak}-win streak! Sold {qty} {good}, +{amount} 🪙 profit (includes +{bonusPct}% bonus)!",

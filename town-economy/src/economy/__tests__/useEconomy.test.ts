@@ -1,9 +1,12 @@
 import { GOODS_BY_ID } from "../goods";
 import { TOWNS } from "../towns";
+import { EconomyStats } from "../types";
 import { UPGRADES_BY_ID } from "../upgrades";
+import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../weeklyChallenges";
 import {
   addAutoTradeRule,
   applyAutoTradeRules,
+  applyWeeklyChallengeClaim,
   AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
   BULK_CONTRACT_BONUS_PCT,
@@ -23,6 +26,7 @@ import {
   STORAGE_BASE_CAPACITY,
   TICKS_PER_GAME_DAY,
   computeNetWorth,
+  dailyCheckIn,
   effectiveTariffRate,
   estimateTaxIncomePerTick,
   gameDayFromTick,
@@ -780,3 +784,81 @@ describe("applyAutoTradeRules", () => {
     expect(next.goods.bread.holding).toBe(0);
   });
 });
+
+describe("dailyCheckIn / weekly challenge assignment", () => {
+  it("assigns a weekly challenge on the very first check-in", () => {
+    const state = initialState();
+    expect(state.weeklyChallenge).toBeNull();
+    const next = dailyCheckIn(state, "2026-01-05");
+    expect(next.weeklyChallenge).not.toBeNull();
+    expect(next.weeklyChallenge!.claimed).toBe(false);
+  });
+
+  it("keeps the same weekly challenge across check-ins within the same ISO week", () => {
+    const first = dailyCheckIn(initialState(), "2026-01-05");
+    const second = dailyCheckIn({ ...first, streak: { count: 1, lastOpenedDate: "2026-01-04" } }, "2026-01-06");
+    expect(second.weeklyChallenge!.weekKey).toBe(first.weeklyChallenge!.weekKey);
+    expect(second.weeklyChallenge!.templateId).toBe(first.weeklyChallenge!.templateId);
+  });
+
+  it("assigns a fresh weekly challenge once the ISO week rolls over", () => {
+    const first = dailyCheckIn(initialState(), "2026-01-05");
+    const nextWeek = dailyCheckIn({ ...first, streak: { count: 1, lastOpenedDate: "2026-01-05" } }, "2026-01-12");
+    expect(nextWeek.weeklyChallenge!.weekKey).not.toBe(first.weeklyChallenge!.weekKey);
+    expect(nextWeek.weeklyChallenge!.claimed).toBe(false);
+  });
+});
+
+describe("applyWeeklyChallengeClaim", () => {
+  it("does nothing before the target is reached", () => {
+    const state = dailyCheckIn(initialState(), "2026-01-05");
+    const next = applyWeeklyChallengeClaim(state);
+    expect(next.weeklyChallenge!.claimed).toBe(false);
+    expect(next.cash).toBe(state.cash);
+  });
+
+  it("pays out the reward once the underlying stat crosses the target", () => {
+    const checkedIn = dailyCheckIn(initialState(), "2026-01-05");
+    const template = WEEKLY_CHALLENGE_TEMPLATES_BY_ID[checkedIn.weeklyChallenge!.templateId];
+    const state = {
+      ...checkedIn,
+      stats: statsWithMetricAtValue(
+        checkedIn.stats,
+        template.id,
+        checkedIn.weeklyChallenge!.startValue + template.target
+      ),
+    };
+    const next = applyWeeklyChallengeClaim(state);
+    expect(next.weeklyChallenge!.claimed).toBe(true);
+    expect(next.cash).toBeCloseTo(state.cash + template.reward, 6);
+  });
+
+  it("is a no-op once already claimed", () => {
+    const checkedIn = dailyCheckIn(initialState(), "2026-01-05");
+    const template = WEEKLY_CHALLENGE_TEMPLATES_BY_ID[checkedIn.weeklyChallenge!.templateId];
+    const withProgress = {
+      ...checkedIn,
+      stats: statsWithMetricAtValue(
+        checkedIn.stats,
+        template.id,
+        checkedIn.weeklyChallenge!.startValue + template.target
+      ),
+    };
+    const claimed = applyWeeklyChallengeClaim(withProgress);
+    const next = applyWeeklyChallengeClaim(claimed);
+    expect(next).toBe(claimed);
+  });
+});
+
+function statsWithMetricAtValue(base: EconomyStats, templateId: string, value: number): EconomyStats {
+  switch (templateId) {
+    case "weekly_trader":
+      return { ...base, totalTrades: value };
+    case "weekly_logistics":
+      return { ...base, totalCaravansCompleted: value };
+    case "weekly_profiteer":
+      return { ...base, totalRealizedProfit: value };
+    default:
+      throw new Error(`unknown weekly challenge template: ${templateId}`);
+  }
+}

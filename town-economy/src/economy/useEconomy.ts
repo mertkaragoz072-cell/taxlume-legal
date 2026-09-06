@@ -30,6 +30,7 @@ import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
+import { isoWeekKey, WEEKLY_CHALLENGE_TEMPLATES_BY_ID, weeklyChallengeTemplateForWeek } from "./weeklyChallenges";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import {
   townRankBeyondCount,
@@ -60,6 +61,7 @@ import {
   GoodId,
   GoodState,
   UpgradeId,
+  WeeklyChallenge,
 } from "./types";
 
 const HISTORY_LEN = 40;
@@ -553,6 +555,7 @@ export function initialState(
     contracts: [],
     bulkContracts: [],
     autoTradeRules: [],
+    weeklyChallenge: null,
   };
 }
 
@@ -1559,7 +1562,7 @@ const DAILY_BONUS_PER_STREAK_DAY = 8;
 const DAILY_BONUS_CAP = 90;
 const MS_PER_DAY = 86400000;
 
-function dailyCheckIn(state: EconomyState, today: string): EconomyState {
+export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
   const prevDate = state.streak.lastOpenedDate;
   if (prevDate === today) return state;
 
@@ -1597,6 +1600,46 @@ function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     // via a baseline snapshot — resetting those out from under it would
     // make it unwinnable, so just drop it; a new one spawns again soon.
     activeMiniQuest: null,
+    weeklyChallenge: ensureWeeklyChallenge(state, today),
+  };
+}
+
+// Deterministic on the ISO week number, not RNG — every player sees the same
+// challenge in the same calendar week with no seed or server sync needed.
+// Checked on every check-in so a save reopened after a week rollover (or
+// several) always lands on the current week's challenge, never a stale one.
+function ensureWeeklyChallenge(state: EconomyState, today: string): WeeklyChallenge {
+  const weekKey = isoWeekKey(today);
+  if (state.weeklyChallenge && state.weeklyChallenge.weekKey === weekKey) return state.weeklyChallenge;
+  const template = weeklyChallengeTemplateForWeek(weekKey);
+  return { weekKey, templateId: template.id, startValue: template.metric(state.stats), claimed: false };
+}
+
+// Runs once per tick, right after tick() — auto-claims the moment progress
+// reaches the target, the same "no separate claim button" choice as bulk
+// contract settlement.
+export function applyWeeklyChallengeClaim(state: EconomyState): EconomyState {
+  const wc = state.weeklyChallenge;
+  if (!wc || wc.claimed) return state;
+  const template = WEEKLY_CHALLENGE_TEMPLATES_BY_ID[wc.templateId];
+  if (!template) return state;
+  const progress = template.metric(state.stats) - wc.startValue;
+  if (progress < template.target) return state;
+  const event: EconomyEvent = {
+    id: state.nextId,
+    message: t(state.language, "msg.weeklyChallengeComplete", {
+      title: t(state.language, template.titleKey),
+      amount: formatNumberUtil(template.reward, state.language),
+    }),
+    tone: "good",
+  };
+  return {
+    ...state,
+    cash: state.cash + template.reward,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    weeklyChallenge: { ...wc, claimed: true },
   };
 }
 
@@ -2201,7 +2244,7 @@ function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
-      return applyAutoTradeRules(tick(state));
+      return applyWeeklyChallengeClaim(applyAutoTradeRules(tick(state)));
     case "SELECT_GOOD":
       return { ...state, selectedGood: action.goodId };
     case "TRADE":

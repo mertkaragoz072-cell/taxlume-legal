@@ -349,6 +349,18 @@ export interface EconomyState {
   bulkContracts: BulkContract[];
   /** standing auto-trade orders, capped at AUTO_TRADE_MAX_RULES — see applyAutoTradeRules in useEconomy.ts */
   autoTradeRules: AutoTradeRule[];
+  /** the calendar week's challenge, re-assigned deterministically whenever the
+   * ISO week rolls over — see ensureWeeklyChallenge in useEconomy.ts */
+  weeklyChallenge: WeeklyChallenge | null;
+}
+
+export interface WeeklyChallenge {
+  weekKey: string;
+  templateId: string;
+  /** the template's EconomyStats metric read at assignment time — progress is
+   * the current value of that same metric minus this baseline */
+  startValue: number;
+  claimed: boolean;
 }
 
 /** a standing order that re-fires trade() every tick its condition holds — see

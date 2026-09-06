@@ -14,6 +14,7 @@ import { RESEARCH_NODES } from "../economy/research";
 import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
 import { TOWNS } from "../economy/towns";
 import { isGoodUnlocked } from "../economy/useEconomy";
+import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../economy/weeklyChallenges";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -39,6 +40,10 @@ export function AchievementsScreen() {
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
   const miniQuest = state.activeMiniQuest;
   const miniQuestTemplate = miniQuest ? MINI_QUEST_TEMPLATES_BY_ID[miniQuest.templateId] : null;
+  const weeklyChallenge = state.weeklyChallenge;
+  const weeklyChallengeTemplate = weeklyChallenge
+    ? WEEKLY_CHALLENGE_TEMPLATES_BY_ID[weeklyChallenge.templateId]
+    : null;
 
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [importText, setImportText] = useState("");
@@ -222,6 +227,52 @@ export function AchievementsScreen() {
                       {t("achievements.miniQuestTicksLeft", { ticks: ticksLeft })}
                     </Text>
                   </View>
+                </View>
+              </View>
+            );
+          })()}
+        </>
+      )}
+
+      {weeklyChallenge && weeklyChallengeTemplate && (
+        <>
+          <SectionLabel text={t("achievements.weeklyChallengeSectionLabel")} color="#e8c777" />
+          {(() => {
+            const current = Math.max(
+              0,
+              Math.min(
+                weeklyChallengeTemplate.metric(state.stats) - weeklyChallenge.startValue,
+                weeklyChallengeTemplate.target
+              )
+            );
+            const pct = weeklyChallengeTemplate.target > 0 ? current / weeklyChallengeTemplate.target : 0;
+            return (
+              <View style={styles.miniQuestCard}>
+                <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.icon}>{weeklyChallengeTemplate.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.title, styles.titleUnlocked]}>
+                      {t(weeklyChallengeTemplate.titleKey)}
+                    </Text>
+                    <Text style={styles.reward}>
+                      {t("achievements.weeklyChallengeReward", { amount: weeklyChallengeTemplate.reward })}
+                    </Text>
+                  </View>
+                  <Text style={styles.description}>
+                    {t(weeklyChallengeTemplate.descriptionKey, { target: weeklyChallengeTemplate.target })}
+                  </Text>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]} />
+                  </View>
+                  <Text style={styles.progressText}>
+                    {weeklyChallenge.claimed
+                      ? t("achievements.weeklyChallengeClaimed")
+                      : t("achievements.weeklyChallengeProgress", {
+                          current: Math.floor(current),
+                          target: weeklyChallengeTemplate.target,
+                        })}
+                  </Text>
                 </View>
               </View>
             );
