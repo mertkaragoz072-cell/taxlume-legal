@@ -19,6 +19,7 @@ import { EventBanner } from "./src/components/EventBanner";
 import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
+import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
@@ -66,6 +67,7 @@ function Game() {
     dismissOfflineSummary,
     resolveDecision,
     resolveRequest,
+    resolveRivalOffer,
     setTownName,
     setLanguage,
     t,
@@ -198,6 +200,12 @@ function Game() {
           request={!state.offlineSummary && !tutorialVisible ? state.pendingRequest : null}
           holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
           onResolve={resolveRequest}
+        />
+
+        <RivalTraderModal
+          offer={!state.offlineSummary && !tutorialVisible ? state.pendingRivalOffer : null}
+          holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
+          onResolve={resolveRivalOffer}
         />
 
         <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />

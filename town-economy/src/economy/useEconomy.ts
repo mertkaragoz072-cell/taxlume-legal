@@ -27,6 +27,7 @@ import {
 } from "./prestigePerks";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
+import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "./towns";
@@ -266,6 +267,9 @@ const DECISION_EVENT_CHANCE = 0.02;
 // A separate, simpler kind of interruption from decisions: a villager just
 // wants some of one good, not a policy choice with varied outcomes.
 const VILLAGER_REQUEST_CHANCE = 0.018;
+// Rarer still — a rival trader's bulk-buy offer pays a premium over market
+// price, so it should feel like an occasional windfall, not a routine ask.
+const RIVAL_OFFER_CHANCE = 0.014;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.
@@ -347,6 +351,7 @@ type Action =
   | { type: "DISMISS_OFFLINE_SUMMARY" }
   | { type: "RESOLVE_DECISION"; optionId: string }
   | { type: "RESOLVE_REQUEST"; give: boolean }
+  | { type: "RESOLVE_RIVAL_OFFER"; accept: boolean }
   | { type: "SET_TOWN_NAME"; name: string }
   | { type: "SET_LANGUAGE"; language: Language }
   | { type: "SET_EMBLEM"; emblemId: string };
@@ -449,6 +454,7 @@ export function initialState(
     offlineSummary: null,
     pendingDecision: null,
     pendingRequest: null,
+    pendingRivalOffer: null,
     dailyProgress: makeInitialDailyProgress(),
     dailyQuests: makeDailyQuests("init"),
     activeMiniQuest: null,
@@ -474,7 +480,8 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
 }
 
 export function tick(state: EconomyState): EconomyState {
-  if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest) return state;
+  if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest || state.pendingRivalOffer)
+    return state;
   const config = DIFFICULTIES[state.difficulty];
 
   // Villager tax & happiness: happiness drifts toward a level set by the
@@ -575,6 +582,21 @@ export function tick(state: EconomyState): EconomyState {
     newEvents.push({
       id: nextId++,
       message: t(state.language, "msg.villagerRequestPending", {
+        qty,
+        good: t(state.language, good.nameKey),
+      }),
+      tone: "neutral",
+    });
+  }
+
+  let pendingRivalOffer: EconomyState["pendingRivalOffer"] = state.pendingRivalOffer;
+  if (!pendingDecision && !pendingRequest && !pendingRivalOffer && Math.random() < RIVAL_OFFER_CHANCE) {
+    const { goodId, qty, pricePerUnit } = rollRivalTraderOffer(state);
+    pendingRivalOffer = { id: nextId, goodId, qty, pricePerUnit, triggeredAtTick: state.tick + 1 };
+    const good = GOODS_BY_ID[goodId];
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.rivalOfferPending", {
         qty,
         good: t(state.language, good.nameKey),
       }),
@@ -912,6 +934,7 @@ export function tick(state: EconomyState): EconomyState {
     lastSavedAt: Date.now(),
     pendingDecision,
     pendingRequest,
+    pendingRivalOffer,
     activeMiniQuest,
     activeSeasonalEvent,
     loan,
@@ -1760,6 +1783,49 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
   );
 }
 
+function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
+  const offer = state.pendingRivalOffer;
+  if (!offer) return state;
+  const good = GOODS_BY_ID[offer.goodId];
+  const gs = state.goods[offer.goodId];
+  const goodName = t(state.language, good.nameKey);
+
+  function outcome(
+    messageKey: string,
+    params: Record<string, string | number> | undefined,
+    tone: EconomyEvent["tone"],
+    patch: Partial<EconomyState>
+  ) {
+    const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+    return {
+      ...state,
+      ...patch,
+      pendingRivalOffer: null,
+      nextId: state.nextId + 1,
+      lastEvent: event,
+      eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    };
+  }
+
+  if (accept) {
+    if (gs.holding < offer.qty) {
+      return outcome("msg.rivalOfferInsufficient", { good: goodName }, "neutral", {});
+    }
+    const total = offer.qty * offer.pricePerUnit;
+    return outcome(
+      "msg.rivalOfferAccepted",
+      { qty: offer.qty, good: goodName, amount: formatNumberUtil(total, state.language) },
+      "good",
+      {
+        cash: state.cash + total,
+        goods: { ...state.goods, [offer.goodId]: { ...gs, holding: gs.holding - offer.qty } },
+      }
+    );
+  }
+
+  return outcome("msg.rivalOfferDeclined", undefined, "neutral", {});
+}
+
 function prestige(state: EconomyState): EconomyState {
   if (computeNetWorth(state) < PRESTIGE_UNLOCK_NET_WORTH) return state;
   const nextLevel = state.prestigeLevel + 1;
@@ -1900,6 +1966,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return resolveDecision(state, action.optionId);
     case "RESOLVE_REQUEST":
       return resolveVillagerRequest(state, action.give);
+    case "RESOLVE_RIVAL_OFFER":
+      return resolveRivalOffer(state, action.accept);
     case "SET_TOWN_NAME":
       return setTownName(state, action.name);
     case "SET_LANGUAGE":
@@ -2018,6 +2086,10 @@ export function useEconomy() {
     (give: boolean) => dispatch({ type: "RESOLVE_REQUEST", give }),
     []
   );
+  const resolveRivalOffer_ = useCallback(
+    (accept: boolean) => dispatch({ type: "RESOLVE_RIVAL_OFFER", accept }),
+    []
+  );
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
   const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
   const setLanguage_ = useCallback(
@@ -2063,6 +2135,7 @@ export function useEconomy() {
     dismissOfflineSummary,
     resolveDecision: resolveDecision_,
     resolveRequest,
+    resolveRivalOffer: resolveRivalOffer_,
     setTownName,
     setEmblem: setEmblem_,
     setLanguage: setLanguage_,

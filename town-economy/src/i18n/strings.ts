@@ -242,6 +242,16 @@ export const STRINGS = {
       refuseBtn: "Reddet",
       refuseHint: "😞 mutluluk azalır",
     },
+    rivalOffer: {
+      title: "Rakip Tüccar Teklifi",
+      description:
+        "Rakip bir tüccar toplu halde {qty} {icon} {good} almak istiyor. Adet başı {price} öder (toplam {total}).",
+      acceptBtn: "Teklifi Kabul Et",
+      acceptHint: "malını rakibe satarsın",
+      insufficientHint: "elinde yeterli {good} yok",
+      declineBtn: "Reddet",
+      declineHint: "teklifi geri çevirirsin",
+    },
     tutorial: {
       next: "İleri",
       start: "Başla!",
@@ -585,6 +595,14 @@ export const STRINGS = {
           reddet: { label: "Reddet", hint: "grev riski var" },
         },
       },
+      black_market_gamble: {
+        title: "Gizli Kumarhane",
+        description: "Şehir dışından bir kumarbaz, kapalı kapılar ardında bir bahis öneriyor. Girer misin?",
+        options: {
+          bahis: { label: "Bahse Gir (-60 🪙)", hint: "🎲 %50 ihtimalle 2 katına çıkar, %50 kaybedersin" },
+          vazgec: { label: "Vazgeç", hint: "güvenli ama fırsatı kaçırırsın" },
+        },
+      },
     },
     event: {
       taxHike: "Belediye vergileri artırdı! Fiyatlar geneline zam geldi.",
@@ -645,6 +663,14 @@ export const STRINGS = {
       workerRaiseSuccess: "⚒️ Zam verdin, işçiler memnun.",
       workerStrike: "⚒️ Grev başladı! {good} üretimi durdu.",
       workerNoStrike: "⚒️ İşçiler bu sefer sabretti, grev çıkmadı.",
+      gambleNoCash: "🎲 Bahse girmek istedin ama paran yetmedi.",
+      gambleWin: "🎲 Şansın yaver gitti! Bahsi kazandın, +{amount} 🪙!",
+      gambleLose: "🎲 Şansın dönmedi, bahsi kaybettin: -{amount} 🪙.",
+      gambleDecline: "🎲 Bahisten vazgeçtin, güvenli tarafta kaldın.",
+      rivalOfferPending: "💼 Rakip bir tüccar toplu alım teklifi sundu: {qty} {good}!",
+      rivalOfferAccepted: "💼 Rakibe {qty} {good} sattın, +{amount} 🪙 kazandın!",
+      rivalOfferInsufficient: "💼 Teklifi kabul etmek istedin ama yeterli {good} yoktu.",
+      rivalOfferDeclined: "💼 Rakibin toplu alım teklifini reddettin.",
       tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
       metropolUnlocked: "🏙️ Metropollerle ticaret açıldı! Baharat, ipek ve mücevher artık çok daha kârlı.",
       legendaryUnlocked: "🐉 Efsanevi Tüccar açıldı! Artık bu ortağın kapısı her yeni kasabada da açık kalacak.",
@@ -901,6 +927,16 @@ export const STRINGS = {
       insufficientHint: "you don't have enough {good}",
       refuseBtn: "Refuse",
       refuseHint: "😞 happiness falls",
+    },
+    rivalOffer: {
+      title: "Rival Trader Offer",
+      description:
+        "A rival trader wants to buy {qty} {icon} {good} in bulk, paying {price} per unit ({total} total).",
+      acceptBtn: "Accept the Deal",
+      acceptHint: "sells your goods to the rival",
+      insufficientHint: "you don't have enough {good}",
+      declineBtn: "Decline",
+      declineHint: "turns down the offer",
     },
     tutorial: {
       next: "Next",
@@ -1245,6 +1281,14 @@ export const STRINGS = {
           reddet: { label: "Refuse", hint: "risk of a strike" },
         },
       },
+      black_market_gamble: {
+        title: "Black Market Gamble",
+        description: "A gambler from out of town offers you a bet behind closed doors. Take it?",
+        options: {
+          bahis: { label: "Take the Bet (-60 🪙)", hint: "🎲 50% chance to double it, 50% to lose it" },
+          vazgec: { label: "Walk Away", hint: "safe, but you miss the chance" },
+        },
+      },
     },
     event: {
       taxHike: "The town council raised taxes! Prices rose across the board.",
@@ -1305,6 +1349,14 @@ export const STRINGS = {
       workerRaiseSuccess: "⚒️ You gave the raise — the workers are pleased.",
       workerStrike: "⚒️ A strike broke out! {good} production stopped.",
       workerNoStrike: "⚒️ The workers held off this time — no strike.",
+      gambleNoCash: "🎲 You wanted to take the bet, but couldn't afford it.",
+      gambleWin: "🎲 Luck was on your side! You won the bet, +{amount} 🪙!",
+      gambleLose: "🎲 Luck didn't hold — you lost the bet: -{amount} 🪙.",
+      gambleDecline: "🎲 You walked away from the bet, safe and sound.",
+      rivalOfferPending: "💼 A rival trader offered a bulk deal: {qty} {good}!",
+      rivalOfferAccepted: "💼 You sold {qty} {good} to the rival, +{amount} 🪙!",
+      rivalOfferInsufficient: "💼 You wanted to take the deal, but didn't have enough {good}.",
+      rivalOfferDeclined: "💼 You declined the rival's bulk-buy offer.",
       tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
       metropolUnlocked: "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
       legendaryUnlocked: "🐉 Legendary Trader unlocked! This partner's door stays open in every future town too.",

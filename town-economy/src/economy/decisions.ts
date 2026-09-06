@@ -39,6 +39,10 @@ function randomGood() {
   return GOODS[Math.floor(Math.random() * GOODS.length)];
 }
 
+// A flat stake, like every other decision's costs — deliberately not scaled
+// to net worth so a fixed number can appear right in the option label.
+const GAMBLE_WAGER = 60;
+
 export interface DecisionOption {
   id: string;
   labelKey: string;
@@ -202,6 +206,32 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
         });
       }
       return outcome(state, "msg.workerNoStrike", undefined, "neutral", {});
+    },
+  },
+  {
+    id: "black_market_gamble",
+    icon: "🎲",
+    titleKey: "decision.black_market_gamble.title",
+    descriptionKey: "decision.black_market_gamble.description",
+    options: [
+      { id: "bahis", labelKey: "decision.black_market_gamble.options.bahis.label", hintKey: "decision.black_market_gamble.options.bahis.hint" },
+      { id: "vazgec", labelKey: "decision.black_market_gamble.options.vazgec.label", hintKey: "decision.black_market_gamble.options.vazgec.hint" },
+    ],
+    resolve: (state, optionId) => {
+      if (optionId === "bahis") {
+        if (state.cash < GAMBLE_WAGER) {
+          return outcome(state, "msg.gambleNoCash", undefined, "neutral", {});
+        }
+        if (Math.random() < 0.5) {
+          return outcome(state, "msg.gambleWin", { amount: GAMBLE_WAGER }, "good", {
+            cash: state.cash + GAMBLE_WAGER,
+          });
+        }
+        return outcome(state, "msg.gambleLose", { amount: GAMBLE_WAGER }, "bad", {
+          cash: state.cash - GAMBLE_WAGER,
+        });
+      }
+      return outcome(state, "msg.gambleDecline", undefined, "neutral", {});
     },
   },
 ];

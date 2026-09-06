@@ -134,6 +134,18 @@ export interface VillagerRequest {
   triggeredAtTick: number;
 }
 
+/** a rival trader offers to buy a bulk quantity of one good at a premium
+ * over its current market price; accept to sell it to them for cash, or
+ * decline — see rivalTrader.ts and resolveRivalOffer in useEconomy.ts */
+export interface RivalTraderOffer {
+  id: number;
+  goodId: GoodId;
+  qty: number;
+  /** cash paid per unit if accepted — set above the market price at roll time */
+  pricePerUnit: number;
+  triggeredAtTick: number;
+}
+
 /** an outstanding town loan — interest compounds every tick until repaid;
  * see TAKE_LOAN/REPAY_LOAN in useEconomy.ts */
 export interface Loan {
@@ -259,6 +271,8 @@ export interface EconomyState {
   pendingDecision: PendingDecision | null;
   /** a villager asking for goods; freezes the tick loop until given or refused */
   pendingRequest: VillagerRequest | null;
+  /** a rival trader's bulk-buy offer; freezes the tick loop until accepted or declined */
+  pendingRivalOffer: RivalTraderOffer | null;
   dailyProgress: DailyProgress;
   dailyQuests: DailyQuest[];
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */
