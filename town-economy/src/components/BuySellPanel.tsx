@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { CARD_GRADIENT, cardShadow, GREEN_GRADIENT, RED_GRADIENT } from "../theme";
+import { CoinPop } from "./CoinPop";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -21,6 +22,7 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
   const { t, formatCoins } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [qtyOption, setQtyOption] = useState<Qty>(1);
+  const [coinPopTrigger, setCoinPopTrigger] = useState(0);
 
   const affordableAll = Math.floor(cash / state.price);
   const resolvedQty = qtyOption === "ALL" ? (side === "buy" ? affordableAll : state.holding) : qtyOption;
@@ -69,17 +71,23 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
         <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
       </View>
 
-      <ScalePressable
-        disabled={disabled}
-        onPress={() => onTrade(side, resolvedQty)}
-        style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-        scaleTo={0.97}
-      >
-        <GradientFill colors={side === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-        <Text style={styles.confirmBtnText}>
-          {side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} {good.icon}
-        </Text>
-      </ScalePressable>
+      <View style={styles.confirmBtnWrap}>
+        <ScalePressable
+          disabled={disabled}
+          onPress={() => {
+            onTrade(side, resolvedQty);
+            setCoinPopTrigger((n) => n + 1);
+          }}
+          style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
+          scaleTo={0.97}
+        >
+          <GradientFill colors={side === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+          <Text style={styles.confirmBtnText}>
+            {side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} {good.icon}
+          </Text>
+        </ScalePressable>
+        <CoinPop trigger={coinPopTrigger} />
+      </View>
     </View>
   );
 }
@@ -123,6 +131,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: { color: "#a0917a", fontSize: 12 },
   summaryTotal: { color: "#e8c777", fontSize: 13, fontWeight: "700" },
+  confirmBtnWrap: { position: "relative" },
   confirmBtn: { borderRadius: 12, paddingVertical: 12, alignItems: "center", overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.35 },
   confirmBtnText: { color: "#fff", fontWeight: "800", fontSize: 14 },

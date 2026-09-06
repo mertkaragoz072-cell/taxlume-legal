@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { Language } from "../i18n/t";
 import { glowShadow, withAlpha } from "../theme";
@@ -54,6 +54,61 @@ export function InflationHeader({
   const hot = inflationRate > 0.006;
   const difficultyConfig = DIFFICULTIES[difficulty];
   const formatCoins = (v: number) => formatCoinsUtil(v, language);
+
+  // A slow breathing glow on the inflation card while it's running hot, and
+  // a gentle flicker on the streak flame — motion that reads as "alive"
+  // even when the player isn't touching anything.
+  const hotPulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!hot) {
+      hotPulse.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(hotPulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(hotPulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [hot, hotPulse]);
+  const hotGlowOpacity = hotPulse.interpolate({ inputRange: [0, 1], outputRange: [0.12, 0.4] });
+
+  const flamePulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (streakCount <= 0) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(flamePulse, {
+          toValue: 1,
+          duration: 700,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(flamePulse, {
+          toValue: 0,
+          duration: 700,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [streakCount, flamePulse]);
+  const flameScale = flamePulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] });
+
   return (
     <View style={styles.wrap}>
       <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
@@ -81,8 +136,17 @@ export function InflationHeader({
             <Text style={styles.streakBadgeText}>📅 {t("header.day", { day: gameDay })}</Text>
           </View>
           {streakCount > 0 && (
-            <View style={[styles.streakBadge, { backgroundColor: withAlpha("#f0776a", 0.22) }]}>
-              <Text style={styles.streakBadgeText}>🔥 {streakCount}</Text>
+            <View
+              style={[
+                styles.streakBadge,
+                styles.streakBadgeRow,
+                { backgroundColor: withAlpha("#f0776a", 0.22) },
+              ]}
+            >
+              <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
+                🔥
+              </Animated.Text>
+              <Text style={styles.streakBadgeText}>{streakCount}</Text>
             </View>
           )}
         </View>
@@ -146,6 +210,16 @@ export function InflationHeader({
             hot && glowShadow("#e0693f"),
           ]}
         >
+          {hot && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                styles.hotGlow,
+                { opacity: hotGlowOpacity },
+              ]}
+            />
+          )}
           <View style={styles.inflationTextCol}>
             <Text style={styles.statLabel}>{t("header.inflation")}</Text>
             <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]}>
@@ -211,6 +285,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   streakBadgeText: { color: "#f0e3c8", fontSize: 11, fontWeight: "700" },
+  streakBadgeRow: { flexDirection: "row", alignItems: "center" },
+  flameEmoji: { fontSize: 11, marginRight: 3 },
   controls: { flexDirection: "row", gap: 8 },
   iconBtn: {
     width: 30,
@@ -234,4 +310,5 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   inflationTextCol: { flex: 1 },
+  hotGlow: { backgroundColor: "#e0693f", borderRadius: 10 },
 });
