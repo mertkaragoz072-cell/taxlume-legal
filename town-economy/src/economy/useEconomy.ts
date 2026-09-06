@@ -47,6 +47,7 @@ import {
 import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
 import { formatCoins as formatCoinsUtil, formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import {
+  AutoTradeRule,
   BulkContract,
   Caravan,
   CaravanDirection,
@@ -168,6 +169,14 @@ export const CONTRACT_TERM_DAY_STEPS = [1, 3, 5, 10];
 export const BULK_CONTRACT_MAX_ACTIVE = 3;
 export const BULK_CONTRACT_BONUS_PCT = 0.15;
 export const BULK_CONTRACT_TERM_DAY_STEPS = [2, 5, 10];
+
+// A standing order: when a good's price crosses the threshold captured at
+// creation time (current price minus/plus one of these percentages), the
+// rule re-fires trade() every tick the condition still holds — no one-shot
+// bookkeeping, just a repeating conditional buy/sell the player sets and
+// forgets. See applyAutoTradeRules, run once per tick right after tick().
+export const AUTO_TRADE_MAX_RULES = 3;
+export const AUTO_TRADE_TRIGGER_PCT_STEPS = [0.1, 0.2, 0.3];
 
 // --- Supply & demand pricing -------------------------------------------
 // price = basePrice * (townPriceIndex / 100) * scarcity(supply)
@@ -394,6 +403,9 @@ type Action =
       termDays: number;
     }
   | { type: "OPEN_BULK_CONTRACT"; goodId: GoodId; qty: number; termDays: number }
+  | { type: "ADD_AUTO_TRADE_RULE"; goodId: GoodId; side: "buy" | "sell"; triggerPct: number; qty: number }
+  | { type: "REMOVE_AUTO_TRADE_RULE"; ruleId: number }
+  | { type: "TOGGLE_AUTO_TRADE_RULE"; ruleId: number }
   | { type: "TAKE_LOAN"; amount: number; termMonths: number }
   | { type: "REPAY_LOAN"; amount: number }
   | { type: "HIRE_WORKER"; goodId: GoodId }
@@ -540,6 +552,7 @@ export function initialState(
     ownedProperties: [],
     contracts: [],
     bulkContracts: [],
+    autoTradeRules: [],
   };
 }
 
@@ -1487,6 +1500,60 @@ export function openBulkContract(state: EconomyState, goodId: GoodId, qty: numbe
   };
 }
 
+export function addAutoTradeRule(
+  state: EconomyState,
+  goodId: GoodId,
+  side: "buy" | "sell",
+  triggerPct: number,
+  qty: number
+): EconomyState {
+  if (state.gameOver || qty <= 0) return state;
+  if (state.autoTradeRules.length >= AUTO_TRADE_MAX_RULES) return state;
+  if (!AUTO_TRADE_TRIGGER_PCT_STEPS.includes(triggerPct)) return state;
+  const good = GOODS_BY_ID[goodId];
+  if (!good || !isGoodUnlocked(good, state)) return state;
+  const price = state.goods[goodId].price;
+  const rule: AutoTradeRule = {
+    id: state.nextId,
+    goodId,
+    side,
+    trigger: side === "buy" ? "priceBelow" : "priceAbove",
+    triggerPrice: side === "buy" ? price * (1 - triggerPct) : price * (1 + triggerPct),
+    qty,
+    enabled: true,
+  };
+  return { ...state, nextId: state.nextId + 1, autoTradeRules: [...state.autoTradeRules, rule] };
+}
+
+export function removeAutoTradeRule(state: EconomyState, ruleId: number): EconomyState {
+  return { ...state, autoTradeRules: state.autoTradeRules.filter((r) => r.id !== ruleId) };
+}
+
+export function toggleAutoTradeRule(state: EconomyState, ruleId: number): EconomyState {
+  return {
+    ...state,
+    autoTradeRules: state.autoTradeRules.map((r) => (r.id === ruleId ? { ...r, enabled: !r.enabled } : r)),
+  };
+}
+
+// Runs once per tick, right after tick() — a standing rule re-fires trade()
+// every tick its condition still holds (no one-shot arming), so the same
+// low-price dip can trigger several small buys in a row rather than one.
+export function applyAutoTradeRules(state: EconomyState): EconomyState {
+  if (state.gameOver || state.autoTradeRules.length === 0) return state;
+  let next = state;
+  for (const rule of state.autoTradeRules) {
+    if (!rule.enabled) continue;
+    const good = GOODS_BY_ID[rule.goodId];
+    if (!good || !isGoodUnlocked(good, next)) continue;
+    const price = next.goods[rule.goodId].price;
+    const triggered = rule.trigger === "priceBelow" ? price <= rule.triggerPrice : price >= rule.triggerPrice;
+    if (!triggered) continue;
+    next = trade(next, rule.goodId, rule.side, rule.qty);
+  }
+  return next;
+}
+
 const DAILY_BONUS_BASE = 20;
 const DAILY_BONUS_PER_STREAK_DAY = 8;
 const DAILY_BONUS_CAP = 90;
@@ -2134,7 +2201,7 @@ function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
-      return tick(state);
+      return applyAutoTradeRules(tick(state));
     case "SELECT_GOOD":
       return { ...state, selectedGood: action.goodId };
     case "TRADE":
@@ -2174,6 +2241,12 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return openContract(state, action.goodId, action.direction, action.qty, action.termDays);
     case "OPEN_BULK_CONTRACT":
       return openBulkContract(state, action.goodId, action.qty, action.termDays);
+    case "ADD_AUTO_TRADE_RULE":
+      return addAutoTradeRule(state, action.goodId, action.side, action.triggerPct, action.qty);
+    case "REMOVE_AUTO_TRADE_RULE":
+      return removeAutoTradeRule(state, action.ruleId);
+    case "TOGGLE_AUTO_TRADE_RULE":
+      return toggleAutoTradeRule(state, action.ruleId);
     case "TAKE_LOAN":
       return takeLoan(state, action.amount, action.termMonths);
     case "REPAY_LOAN":
@@ -2297,6 +2370,19 @@ export function useEconomy() {
       dispatch({ type: "OPEN_BULK_CONTRACT", goodId, qty, termDays }),
     []
   );
+  const addAutoTradeRule_ = useCallback(
+    (goodId: GoodId, side: "buy" | "sell", triggerPct: number, qty: number) =>
+      dispatch({ type: "ADD_AUTO_TRADE_RULE", goodId, side, triggerPct, qty }),
+    []
+  );
+  const removeAutoTradeRule_ = useCallback(
+    (ruleId: number) => dispatch({ type: "REMOVE_AUTO_TRADE_RULE", ruleId }),
+    []
+  );
+  const toggleAutoTradeRule_ = useCallback(
+    (ruleId: number) => dispatch({ type: "TOGGLE_AUTO_TRADE_RULE", ruleId }),
+    []
+  );
   const takeLoan_ = useCallback(
     (amount: number, termMonths: number) => dispatch({ type: "TAKE_LOAN", amount, termMonths }),
     []
@@ -2367,6 +2453,9 @@ export function useEconomy() {
     unlockPrestigePerk: unlockPrestigePerk_,
     openContract: openContract_,
     openBulkContract: openBulkContract_,
+    addAutoTradeRule: addAutoTradeRule_,
+    removeAutoTradeRule: removeAutoTradeRule_,
+    toggleAutoTradeRule: toggleAutoTradeRule_,
     hydrate: hydrate_,
     takeLoan: takeLoan_,
     repayLoan: repayLoan_,

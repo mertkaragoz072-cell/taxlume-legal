@@ -347,4 +347,19 @@ export interface EconomyState {
   contracts: ForwardContract[];
   /** open bulk delivery contracts, capped at BULK_CONTRACT_MAX_ACTIVE — see openBulkContract in useEconomy.ts */
   bulkContracts: BulkContract[];
+  /** standing auto-trade orders, capped at AUTO_TRADE_MAX_RULES — see applyAutoTradeRules in useEconomy.ts */
+  autoTradeRules: AutoTradeRule[];
+}
+
+/** a standing order that re-fires trade() every tick its condition holds — see
+ * applyAutoTradeRules in useEconomy.ts */
+export interface AutoTradeRule {
+  id: number;
+  goodId: GoodId;
+  side: "buy" | "sell";
+  trigger: "priceBelow" | "priceAbove";
+  /** absolute price captured relative to the good's price when the rule was created */
+  triggerPrice: number;
+  qty: number;
+  enabled: boolean;
 }

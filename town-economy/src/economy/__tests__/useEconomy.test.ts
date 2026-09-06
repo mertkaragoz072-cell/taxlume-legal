@@ -2,6 +2,10 @@ import { GOODS_BY_ID } from "../goods";
 import { TOWNS } from "../towns";
 import { UPGRADES_BY_ID } from "../upgrades";
 import {
+  addAutoTradeRule,
+  applyAutoTradeRules,
+  AUTO_TRADE_MAX_RULES,
+  AUTO_TRADE_TRIGGER_PCT_STEPS,
   BULK_CONTRACT_BONUS_PCT,
   BULK_CONTRACT_MAX_ACTIVE,
   BULK_CONTRACT_TERM_DAY_STEPS,
@@ -30,11 +34,13 @@ import {
   loanTickRateToDayRate,
   marketSpread,
   openBulkContract,
+  removeAutoTradeRule,
   repayLoan,
   sendCaravan,
   storageCapacity,
   takeLoan,
   tick,
+  toggleAutoTradeRule,
   totalGoodsHolding,
   trade,
 } from "../useEconomy";
@@ -679,5 +685,98 @@ describe("ghost rival town", () => {
     const next = tick(state);
     expect(next.rivalCurrentlyAhead).toBe(false);
     expect(next.lastEvent?.message).toMatch(/rakip|rival/i);
+  });
+});
+
+describe("addAutoTradeRule", () => {
+  it("captures the trigger price relative to the good's price at creation time", () => {
+    const state = initialState();
+    const price = state.goods.bread.price;
+    const pct = AUTO_TRADE_TRIGGER_PCT_STEPS[0];
+    const next = addAutoTradeRule(state, "bread", "buy", pct, 5);
+    expect(next.autoTradeRules).toHaveLength(1);
+    const rule = next.autoTradeRules[0];
+    expect(rule.trigger).toBe("priceBelow");
+    expect(rule.triggerPrice).toBeCloseTo(price * (1 - pct), 6);
+    expect(rule.enabled).toBe(true);
+  });
+
+  it("rejects adding beyond the max active rules", () => {
+    let state = initialState();
+    for (let i = 0; i < AUTO_TRADE_MAX_RULES; i++) {
+      state = addAutoTradeRule(state, "bread", "sell", AUTO_TRADE_TRIGGER_PCT_STEPS[0], 1);
+    }
+    expect(state.autoTradeRules).toHaveLength(AUTO_TRADE_MAX_RULES);
+    const next = addAutoTradeRule(state, "bread", "sell", AUTO_TRADE_TRIGGER_PCT_STEPS[0], 1);
+    expect(next).toBe(state);
+  });
+
+  it("rejects an unrecognized trigger percentage", () => {
+    const state = initialState();
+    const next = addAutoTradeRule(state, "bread", "buy", 0.99, 1);
+    expect(next).toBe(state);
+  });
+});
+
+describe("removeAutoTradeRule / toggleAutoTradeRule", () => {
+  it("removes a rule by id", () => {
+    const withRule = addAutoTradeRule(initialState(), "bread", "buy", AUTO_TRADE_TRIGGER_PCT_STEPS[0], 5);
+    const ruleId = withRule.autoTradeRules[0].id;
+    const next = removeAutoTradeRule(withRule, ruleId);
+    expect(next.autoTradeRules).toHaveLength(0);
+  });
+
+  it("toggles a rule's enabled flag without affecting others", () => {
+    const withRule = addAutoTradeRule(initialState(), "bread", "buy", AUTO_TRADE_TRIGGER_PCT_STEPS[0], 5);
+    const ruleId = withRule.autoTradeRules[0].id;
+    const toggledOff = toggleAutoTradeRule(withRule, ruleId);
+    expect(toggledOff.autoTradeRules[0].enabled).toBe(false);
+    const toggledOn = toggleAutoTradeRule(toggledOff, ruleId);
+    expect(toggledOn.autoTradeRules[0].enabled).toBe(true);
+  });
+});
+
+describe("applyAutoTradeRules", () => {
+  it("does nothing when the price hasn't crossed the threshold", () => {
+    const state = addAutoTradeRule(initialState(), "bread", "buy", AUTO_TRADE_TRIGGER_PCT_STEPS[0], 5);
+    const next = applyAutoTradeRules(state);
+    expect(next.goods.bread.holding).toBe(0);
+  });
+
+  it("fires a buy once the price is at or below the trigger", () => {
+    const withRule = addAutoTradeRule({ ...initialState(), cash: 100000 }, "bread", "buy", 0.1, 5);
+    const droppedPrice = withRule.autoTradeRules[0].triggerPrice;
+    const state = {
+      ...withRule,
+      goods: { ...withRule.goods, bread: { ...withRule.goods.bread, price: droppedPrice } },
+    };
+    const next = applyAutoTradeRules(state);
+    expect(next.goods.bread.holding).toBe(5);
+    expect(next.cash).toBeLessThan(state.cash);
+  });
+
+  it("fires a sell once the price is at or above the trigger", () => {
+    const bought = trade({ ...initialState(), cash: 100000 }, "bread", "buy", 10);
+    const withRule = addAutoTradeRule(bought, "bread", "sell", 0.1, 5);
+    const risenPrice = withRule.autoTradeRules[0].triggerPrice;
+    const state = {
+      ...withRule,
+      goods: { ...withRule.goods, bread: { ...withRule.goods.bread, price: risenPrice } },
+    };
+    const next = applyAutoTradeRules(state);
+    expect(next.goods.bread.holding).toBe(5);
+  });
+
+  it("skips a disabled rule", () => {
+    const withRule = addAutoTradeRule({ ...initialState(), cash: 100000 }, "bread", "buy", 0.1, 5);
+    const ruleId = withRule.autoTradeRules[0].id;
+    const disabled = toggleAutoTradeRule(withRule, ruleId);
+    const droppedPrice = disabled.autoTradeRules[0].triggerPrice;
+    const state = {
+      ...disabled,
+      goods: { ...disabled.goods, bread: { ...disabled.goods.bread, price: droppedPrice } },
+    };
+    const next = applyAutoTradeRules(state);
+    expect(next.goods.bread.holding).toBe(0);
   });
 });
