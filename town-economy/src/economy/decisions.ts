@@ -1,5 +1,6 @@
 import { t } from "../i18n/t";
 import { GOODS } from "./goods";
+import { RESEARCH_NODES } from "./research";
 import { EconomyEvent, EconomyState } from "./types";
 
 const EVENT_LOG_CAP = 30;
@@ -42,6 +43,11 @@ function randomGood() {
 // A flat stake, like every other decision's costs — deliberately not scaled
 // to net worth so a fixed number can appear right in the option label.
 const GAMBLE_WAGER = 60;
+
+// What the stranger charges for an instant, randomly-picked research
+// unlock — often a steal against that node's real cost, which is the
+// point (a lucky find), but never free.
+const MYSTERY_STRANGER_COST = 70;
 
 export interface DecisionOption {
   id: string;
@@ -232,6 +238,53 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
         });
       }
       return outcome(state, "msg.gambleDecline", undefined, "neutral", {});
+    },
+  },
+  {
+    id: "mystery_stranger",
+    icon: "🕵️",
+    titleKey: "decision.mystery_stranger.title",
+    descriptionKey: "decision.mystery_stranger.description",
+    options: [
+      {
+        id: "kabul",
+        labelKey: "decision.mystery_stranger.options.kabul.label",
+        hintKey: "decision.mystery_stranger.options.kabul.hint",
+      },
+      {
+        id: "reddet",
+        labelKey: "decision.mystery_stranger.options.reddet.label",
+        hintKey: "decision.mystery_stranger.options.reddet.hint",
+      },
+    ],
+    resolve: (state, optionId) => {
+      if (optionId === "kabul") {
+        if (state.cash < MYSTERY_STRANGER_COST) {
+          return outcome(state, "msg.mysteryStrangerNoCash", undefined, "neutral", {});
+        }
+        const afterCash = state.cash - MYSTERY_STRANGER_COST;
+        // Only nodes that would normally be eligible to research right now
+        // (tier-1, or tier-2 whose prerequisite is already done) — the
+        // stranger sells you a shortcut, not a rule-breaking skip-ahead.
+        const eligible = RESEARCH_NODES.filter(
+          (n) => !state.researched.includes(n.id) && (!n.requires || state.researched.includes(n.requires))
+        );
+        if (eligible.length === 0) {
+          return outcome(state, "msg.mysteryStrangerNothingLeft", undefined, "neutral", {});
+        }
+        const node = eligible[Math.floor(Math.random() * eligible.length)];
+        return outcome(
+          state,
+          "msg.mysteryStrangerSuccess",
+          { research: t(state.language, node.nameKey) },
+          "good",
+          {
+            cash: afterCash,
+            researched: [...state.researched, node.id],
+          }
+        );
+      }
+      return outcome(state, "msg.mysteryStrangerRefuse", undefined, "neutral", {});
     },
   },
 ];

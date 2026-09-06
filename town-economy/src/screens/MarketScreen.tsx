@@ -54,8 +54,31 @@ export function MarketScreen({ sounds }: Props) {
 
   const unrealizedPnl = (selectedState.price - selectedState.avgCost) * selectedState.holding;
 
+  // A rough "market mood" reading — the average of every unlocked good's
+  // latest tick-over-tick move. Purely a derived display value (no new
+  // state), meant as a quick at-a-glance cue for whether it's broadly a
+  // buyer's or seller's moment, not a precise signal.
+  const sentiment = (() => {
+    const changes = unlockedGoods.map((g) => {
+      const h = state.goods[g.id].history;
+      if (h.length < 2) return 0;
+      const prev = h[h.length - 2];
+      return prev !== 0 ? (h[h.length - 1] - prev) / prev : 0;
+    });
+    const avg = changes.length > 0 ? changes.reduce((a, b) => a + b, 0) / changes.length : 0;
+    if (avg > 0.004) return { key: "bullish", icon: "🐂", color: "#3fae5c" };
+    if (avg < -0.004) return { key: "bearish", icon: "🐻", color: "#c94b4b" };
+    return { key: "neutral", icon: "😐", color: COLORS.textMuted };
+  })();
+
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <View style={styles.sentimentRow}>
+        <Text style={[styles.sentimentText, { color: sentiment.color }]}>
+          {sentiment.icon} {t(`market.sentiment.${sentiment.key}`)}
+        </Text>
+      </View>
+
       {state.activeSeasonalEvent && seasonalTemplate && (
         <View style={styles.seasonalCard}>
           <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -183,6 +206,8 @@ export function MarketScreen({ sounds }: Props) {
 
 const styles = StyleSheet.create({
   body: { padding: SPACING.lg, paddingBottom: 40 },
+  sentimentRow: { alignItems: "center", marginBottom: SPACING.md },
+  sentimentText: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   seasonalCard: {
     flexDirection: "row",
     alignItems: "center",

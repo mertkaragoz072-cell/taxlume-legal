@@ -36,6 +36,11 @@ export const STRINGS = {
     },
     market: {
       sectionLabel: "KASABA PİYASASI",
+      sentiment: {
+        bullish: "Boğa Piyasası",
+        bearish: "Ayı Piyasası",
+        neutral: "Nötr Piyasa",
+      },
       gameOverTitle: "💥 Hiperenflasyon kasabayı vurdu! Ekonomi çöktü.",
       gameOverSubtitle: "Yeniden başlamak için üstteki ⟳ butonuna dokun.",
       buyShort: "AL",
@@ -623,6 +628,14 @@ export const STRINGS = {
           vazgec: { label: "Vazgeç", hint: "güvenli ama fırsatı kaçırırsın" },
         },
       },
+      mystery_stranger: {
+        title: "Gizemli Yabancı",
+        description: "Şapkalı bir yabancı sana gizli bir bilgi satmak istiyor. İlgilenir misin?",
+        options: {
+          kabul: { label: "Bilgiyi Satın Al (-70 🪙)", hint: "🔬 rastgele bir araştırmayı hemen açar" },
+          reddet: { label: "Reddet", hint: "güvenli ama fırsatı kaçırırsın" },
+        },
+      },
     },
     event: {
       taxHike: "Belediye vergileri artırdı! Fiyatlar geneline zam geldi.",
@@ -693,6 +706,10 @@ export const STRINGS = {
       gambleWin: "🎲 Şansın yaver gitti! Bahsi kazandın, +{amount} 🪙!",
       gambleLose: "🎲 Şansın dönmedi, bahsi kaybettin: -{amount} 🪙.",
       gambleDecline: "🎲 Bahisten vazgeçtin, güvenli tarafta kaldın.",
+      mysteryStrangerNoCash: "🕵️ Bilgiyi almak istedin ama paran yetmedi.",
+      mysteryStrangerSuccess: "🕵️ Yabancı doğru söylemiş! {research} araştırması hemen tamamlandı.",
+      mysteryStrangerNothingLeft: "🕵️ Yabancının bildiği her şeyi zaten biliyordun — parandan hiçbir şey alınmadı.",
+      mysteryStrangerRefuse: "🕵️ Yabancıyı reddettin, tedbirli davrandın.",
       rivalOfferPending: "💼 Rakip bir tüccar toplu alım teklifi sundu: {qty} {good}!",
       rivalOfferAccepted: "💼 Rakibe {qty} {good} sattın, +{amount} 🪙 kazandın!",
       rivalOfferInsufficient: "💼 Teklifi kabul etmek istedin ama yeterli {good} yoktu.",
@@ -748,6 +765,11 @@ export const STRINGS = {
     },
     market: {
       sectionLabel: "TOWN MARKET",
+      sentiment: {
+        bullish: "Bull Market",
+        bearish: "Bear Market",
+        neutral: "Neutral Market",
+      },
       gameOverTitle: "💥 Hyperinflation hit the town! The economy collapsed.",
       gameOverSubtitle: "Tap the ⟳ button above to start over.",
       buyShort: "BUY",
@@ -1335,6 +1357,14 @@ export const STRINGS = {
           vazgec: { label: "Walk Away", hint: "safe, but you miss the chance" },
         },
       },
+      mystery_stranger: {
+        title: "Mystery Stranger",
+        description: "A stranger in a hat wants to sell you a secret. Interested?",
+        options: {
+          kabul: { label: "Buy the Secret (-70 🪙)", hint: "🔬 instantly unlocks a random research" },
+          reddet: { label: "Refuse", hint: "safe, but you miss the chance" },
+        },
+      },
     },
     event: {
       taxHike: "The town council raised taxes! Prices rose across the board.",
@@ -1405,6 +1435,10 @@ export const STRINGS = {
       gambleWin: "🎲 Luck was on your side! You won the bet, +{amount} 🪙!",
       gambleLose: "🎲 Luck didn't hold — you lost the bet: -{amount} 🪙.",
       gambleDecline: "🎲 You walked away from the bet, safe and sound.",
+      mysteryStrangerNoCash: "🕵️ You wanted to buy the secret, but couldn't afford it.",
+      mysteryStrangerSuccess: "🕵️ The stranger was right! {research} research finished instantly.",
+      mysteryStrangerNothingLeft: "🕵️ You already knew everything the stranger did — nothing was charged.",
+      mysteryStrangerRefuse: "🕵️ You refused the stranger and played it safe.",
       rivalOfferPending: "💼 A rival trader offered a bulk deal: {qty} {good}!",
       rivalOfferAccepted: "💼 You sold {qty} {good} to the rival, +{amount} 🪙!",
       rivalOfferInsufficient: "💼 You wanted to take the deal, but didn't have enough {good}.",
