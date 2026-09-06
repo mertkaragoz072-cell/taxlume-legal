@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { withAlpha } from "../theme";
+import { COLORS, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 
 export type ScreenId =
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   tab: { flex: 1, alignItems: "center", paddingVertical: 4 },
-  icon: { fontSize: 18, opacity: 0.5 },
+  icon: { fontSize: TYPE.heading, opacity: 0.5 },
   iconActive: { opacity: 1 },
-  label: { fontSize: 10, color: "#a0917a", marginTop: 2, fontWeight: "600" },
+  label: { fontSize: TYPE.micro, color: COLORS.textMuted, marginTop: 2, fontWeight: WEIGHT.medium },
 });

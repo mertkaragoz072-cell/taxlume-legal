@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { Language } from "../i18n/t";
-import { glowShadow, withAlpha } from "../theme";
+import { COLORS, glowShadow, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
@@ -265,22 +265,22 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 2,
-    backgroundColor: "#e8c777",
+    backgroundColor: COLORS.accent,
     opacity: 0.55,
   },
-  nameRow: { marginBottom: 6 },
+  nameRow: { marginBottom: SPACING.xs + 2 },
   metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   townRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, flexWrap: "wrap" },
   townNamePressable: { alignSelf: "flex-start" },
   town: {
     color: "#ffd75e",
-    fontWeight: "800",
-    fontSize: 16,
+    fontWeight: WEIGHT.black,
+    fontSize: TYPE.title,
     letterSpacing: 0.5,
     textShadowColor: "rgba(255, 200, 90, 0.55)",
     textShadowOffset: { width: 0, height: 0 },
@@ -289,14 +289,14 @@ const styles = StyleSheet.create({
   streakBadge: {
     backgroundColor: "#2a2016",
     borderRadius: 10,
-    paddingHorizontal: 8,
+    paddingHorizontal: SPACING.sm,
     paddingVertical: 3,
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
   },
-  streakBadgeText: { color: "#f0e3c8", fontSize: 11, fontWeight: "700" },
+  streakBadgeText: { color: COLORS.textPrimary, fontSize: TYPE.caption, fontWeight: WEIGHT.bold },
   streakBadgeRow: { flexDirection: "row", alignItems: "center" },
-  flameEmoji: { fontSize: 11, marginRight: 3 },
-  controls: { flexDirection: "row", gap: 8 },
+  flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
+  controls: { flexDirection: "row", gap: SPACING.sm },
   iconBtn: {
     width: 30,
     height: 30,
@@ -304,14 +304,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#2a2016",
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
   },
-  iconBtnText: { color: "#f0e3c8", fontSize: 13 },
-  langBtnText: { color: "#e8c777", fontSize: 10, fontWeight: "800" },
+  iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.body },
+  langBtnText: { color: COLORS.accent, fontSize: TYPE.micro, fontWeight: WEIGHT.black },
   statsRow: { flexDirection: "row", justifyContent: "space-between" },
   stat: { flex: 1 },
-  statLabel: { color: "#a0917a", fontSize: 10, marginBottom: 2 },
-  statValue: { color: "#f0e3c8", fontSize: 14, fontWeight: "700" },
+  statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 2 },
+  statValue: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.bold },
   inflationStat: {
     flex: 1.4,
     flexDirection: "row",

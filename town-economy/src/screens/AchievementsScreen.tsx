@@ -9,7 +9,17 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, UNLOCKED_CARD_GRADIENT } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  UNLOCKED_CARD_GRADIENT,
+  WEIGHT,
+} from "../theme";
 
 type ImportFeedback = { type: "success" | "error"; text: string };
 
@@ -298,31 +308,31 @@ export function AchievementsScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: 16, paddingBottom: 40 },
+  body: { padding: SPACING.lg, paddingBottom: 40 },
   summaryCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
-  summaryRow: { flexDirection: "row", alignItems: "baseline", marginBottom: 8 },
-  summaryBig: { color: "#e8c777", fontSize: 22, fontWeight: "800", marginRight: 8 },
-  summaryLabel: { color: "#a0917a", fontSize: 12 },
+  summaryRow: { flexDirection: "row", alignItems: "baseline", marginBottom: SPACING.sm },
+  summaryBig: { color: COLORS.accent, fontSize: TYPE.display, fontWeight: WEIGHT.black, marginRight: SPACING.sm },
+  summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
   streakRow: { flexDirection: "row", alignItems: "center" },
-  streakEmoji: { fontSize: 16, marginRight: 6 },
-  streakText: { color: "#f0e3c8", fontSize: 12 },
+  streakEmoji: { fontSize: TYPE.title, marginRight: 6 },
+  streakText: { color: COLORS.textPrimary, fontSize: TYPE.label },
   statsCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
     overflow: "hidden",
     ...cardShadow,
   },
   statsGrid: { flexDirection: "row", flexWrap: "wrap" },
-  statItem: { width: "33.33%", marginBottom: 12, alignItems: "center" },
-  statValue: { color: "#e8c777", fontSize: 18, fontWeight: "800" },
-  statLabel: { color: "#a0917a", fontSize: 10, textAlign: "center", marginTop: 2 },
+  statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center" },
+  statValue: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black },
+  statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, textAlign: "center", marginTop: 2 },
   questHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",

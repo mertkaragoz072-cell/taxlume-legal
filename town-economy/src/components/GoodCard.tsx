@@ -2,7 +2,7 @@ import React from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, glowShadow, withAlpha } from "../theme";
+import { cardShadow, CARD_GRADIENT, COLORS, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { ScalePressable } from "./ScalePressable";
@@ -40,18 +40,22 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
       ]}
     >
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      {selected && (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
+        />
+      )}
       <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.14) }]}
+        style={[styles.accentStripe, { backgroundColor: selected ? good.color : withAlpha(good.color, 0.4) }]}
       />
-      <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
       />
       <View style={styles.topRow}>
         <Text style={styles.icon}>{good.icon}</Text>
-        <Text style={[styles.change, { color: positive ? "#3fae5c" : "#c94b4b" }]}>
+        <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
           {positive ? "+" : ""}
           {change.toFixed(1)}%
         </Text>
@@ -74,12 +78,12 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     width: 108,
-    borderRadius: 14,
+    borderRadius: RADIUS.card,
     borderWidth: 2,
     borderColor: "transparent",
-    padding: 10,
-    paddingTop: 13,
-    marginRight: 10,
+    padding: SPACING.sm + 2,
+    paddingTop: SPACING.md + 1,
+    marginRight: SPACING.sm + 2,
     alignItems: "center",
     overflow: "hidden",
     ...cardShadow,
@@ -92,7 +96,7 @@ const styles = StyleSheet.create({
     height: 4,
   },
   flashOverlay: {
-    borderRadius: 14,
+    borderRadius: RADIUS.card,
   },
   topRow: {
     flexDirection: "row",
@@ -100,17 +104,17 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 2,
   },
-  icon: { fontSize: 20 },
-  change: { fontSize: 11, fontWeight: "700" },
-  name: { color: "#f0e3c8", fontSize: 12, fontWeight: "600", marginTop: 4 },
-  price: { color: "#e8c777", fontSize: 13, fontWeight: "700" },
+  icon: { fontSize: TYPE.heading },
+  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.bold },
+  name: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.medium, marginTop: SPACING.xs },
+  price: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold },
   holding: {
     marginTop: 2,
-    fontSize: 10,
-    color: "#1a1410",
-    backgroundColor: "#e8c777",
+    fontSize: TYPE.micro,
+    color: COLORS.onLight,
+    backgroundColor: COLORS.accent,
     borderRadius: 8,
-    paddingHorizontal: 6,
+    paddingHorizontal: SPACING.xs + 2,
     paddingVertical: 1,
   },
 });

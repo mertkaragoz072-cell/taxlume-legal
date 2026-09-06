@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, GREEN_GRADIENT, RED_GRADIENT } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  GREEN_GRADIENT,
+  RADIUS,
+  RED_GRADIENT,
+  SPACING,
+  TYPE,
+  WEIGHT,
+} from "../theme";
 import { CoinPop } from "./CoinPop";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
@@ -99,45 +109,45 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
 
 const styles = StyleSheet.create({
   wrap: {
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.md,
     overflow: "hidden",
     ...cardShadow,
   },
   sideToggle: {
     flexDirection: "row",
     backgroundColor: "#1a1410",
-    borderRadius: 10,
+    borderRadius: RADIUS.chip,
     padding: 3,
-    marginBottom: 10,
+    marginBottom: SPACING.md - 2,
   },
-  sideBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: "center" },
-  sideBtnActiveBuy: { backgroundColor: "#3fae5c" },
-  sideBtnActiveSell: { backgroundColor: "#c94b4b" },
-  sideBtnText: { color: "#a0917a", fontWeight: "700", fontSize: 13 },
+  sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
+  sideBtnActiveBuy: { backgroundColor: COLORS.positive },
+  sideBtnActiveSell: { backgroundColor: COLORS.negative },
+  sideBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
   sideBtnTextActive: { color: "#fff" },
-  qtyRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  qtyRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.md - 2 },
   qtyBtn: {
     flex: 1,
     backgroundColor: "#1a1410",
-    borderRadius: 10,
-    paddingVertical: 8,
+    borderRadius: RADIUS.chip,
+    paddingVertical: SPACING.sm,
     alignItems: "center",
     borderWidth: 2,
     borderColor: "transparent",
-    marginRight: 8,
+    marginRight: SPACING.sm,
   },
-  qtyBtnText: { color: "#f0e3c8", fontWeight: "700", fontSize: 12 },
+  qtyBtnText: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.label },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: SPACING.md - 2,
     paddingHorizontal: 2,
   },
-  summaryLabel: { color: "#a0917a", fontSize: 12 },
-  summaryTotal: { color: "#e8c777", fontSize: 13, fontWeight: "700" },
+  summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
+  summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold },
   confirmBtnWrap: { position: "relative" },
-  confirmBtn: { borderRadius: 12, paddingVertical: 12, alignItems: "center", overflow: "hidden" },
+  confirmBtn: { borderRadius: RADIUS.card, paddingVertical: SPACING.md, alignItems: "center", overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.35 },
-  confirmBtnText: { color: "#fff", fontWeight: "800", fontSize: 14 },
+  confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontSize: TYPE.body + 1 },
 });
