@@ -59,6 +59,19 @@ export const UPGRADES: UpgradeDef[] = [
     effectPerLevel: 6,
     effectLabel: (level) => ({ key: "upgrade.bank.effect", params: { amount: level * 6 } }),
   },
+  {
+    id: "guardTower",
+    nameKey: "upgrade.guardTower.name",
+    icon: "🗼",
+    descriptionKey: "upgrade.guardTower.description",
+    maxLevel: 5,
+    baseCost: 110,
+    costGrowth: 1.6,
+    // A permanent complement to per-trip caravan insurance — this lowers
+    // every caravan's raid chance instead of waiving it for just one trip.
+    effectPerLevel: 0.02,
+    effectLabel: (level) => ({ key: "upgrade.guardTower.effect", params: { pct: Math.round(level * 2) } }),
+  },
 ];
 
 export const UPGRADES_BY_ID = Object.fromEntries(UPGRADES.map((u) => [u.id, u])) as Record<

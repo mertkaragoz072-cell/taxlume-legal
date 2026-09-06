@@ -1,7 +1,9 @@
 import { GOODS_BY_ID } from "../goods";
 import { TOWNS } from "../towns";
+import { UPGRADES_BY_ID } from "../upgrades";
 import {
   CARAVAN_INSURANCE_COST_PCT,
+  CARAVAN_RAID_CHANCE,
   CARAVAN_RAID_LOSS_MAX,
   CARAVAN_RAID_LOSS_MIN,
   HOT_STREAK_BONUS_PER_TRADE,
@@ -383,7 +385,7 @@ describe("caravan bandit raids", () => {
     Math.random = originalRandom;
   });
 
-  function stateWithArrivingCaravan(insured: boolean) {
+  function stateWithArrivingCaravan(insured: boolean, guardTowerLevel = 0) {
     const state = { ...initialState(), cash: 1000, paused: false };
     const caravan = {
       id: state.nextId,
@@ -396,15 +398,20 @@ describe("caravan bandit raids", () => {
       arrivesAtTick: state.tick + 1,
       insured,
     };
-    return { ...state, nextId: state.nextId + 1, caravans: [caravan] };
+    return {
+      ...state,
+      nextId: state.nextId + 1,
+      caravans: [caravan],
+      upgrades: { ...state.upgrades, guardTower: guardTowerLevel },
+    };
   }
 
   // tick() also credits passive tax/production income independent of any
   // caravan, so isolate the caravan's own contribution by diffing against
   // an otherwise-identical tick with no caravan in flight (same Math.random
   // mock makes every other random effect land identically in both calls).
-  function caravanCashContribution(insured: boolean) {
-    const withCaravan = stateWithArrivingCaravan(insured);
+  function caravanCashContribution(insured: boolean, guardTowerLevel = 0) {
+    const withCaravan = stateWithArrivingCaravan(insured, guardTowerLevel);
     const withoutCaravan = { ...withCaravan, caravans: [] };
     const nextWith = tick(withCaravan);
     const nextWithout = tick(withoutCaravan);
@@ -428,6 +435,51 @@ describe("caravan bandit raids", () => {
   it("never raids an insured caravan even when the raid roll would otherwise hit", () => {
     Math.random = () => 0.01;
     expect(caravanCashContribution(true)).toBeCloseTo(100, 6);
+  });
+
+  it("a maxed guard tower lowers the effective raid chance below the base rate", () => {
+    const guardTowerLevel = UPGRADES_BY_ID.guardTower.maxLevel;
+    const reducedChance = CARAVAN_RAID_CHANCE - guardTowerLevel * UPGRADES_BY_ID.guardTower.effectPerLevel;
+    // Pick a roll that clears the (lower) guard-tower chance but would have
+    // triggered a raid at the base rate, so the two only differ because of
+    // the upgrade.
+    const roll = (reducedChance + CARAVAN_RAID_CHANCE) / 2;
+    Math.random = () => roll;
+    expect(caravanCashContribution(false, 0)).toBeLessThan(100); // raided without the upgrade
+    expect(caravanCashContribution(false, guardTowerLevel)).toBeCloseTo(100, 6); // safe with it maxed
+  });
+});
+
+describe("lost treasure", () => {
+  const originalRandom = Math.random;
+  afterEach(() => {
+    Math.random = originalRandom;
+  });
+
+  // Happiness sits strictly between ANGRY_THRESHOLD and CONTENT_THRESHOLD so
+  // neither of those happiness-driven cash events (which fire on their own,
+  // much larger, chance) can stack with the treasure roll and throw off the
+  // exact-cash assertions below.
+  it("does not add anything when the roll misses", () => {
+    Math.random = () => 0.999999;
+    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false };
+    const next = tick(state);
+    expect(next.cash).toBeCloseTo(1000, 6);
+  });
+
+  it("adds a cash windfall sized off current cash when the rare roll hits", () => {
+    Math.random = () => 0; // clears every chance check in tick(), including LOST_TREASURE_CHANCE
+    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false };
+    const next = tick(state);
+    expect(next.cash).toBeCloseTo(1000 + 1000 * 0.05, 6);
+    expect(next.lastEvent?.message).toMatch(/hazine|treasure/i);
+  });
+
+  it("floors the windfall so it's still meaningful with little cash", () => {
+    Math.random = () => 0;
+    const state = { ...initialState(), cash: 10, happiness: 50, paused: false };
+    const next = tick(state);
+    expect(next.cash).toBeCloseTo(10 + 20, 6);
   });
 });
 

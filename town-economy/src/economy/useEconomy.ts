@@ -288,6 +288,14 @@ export const CARAVAN_RAID_LOSS_MAX = 0.7;
 // waives raid risk for that one caravan.
 export const CARAVAN_INSURANCE_COST_PCT = 0.08;
 
+// A rare, purely positive windfall — no choice or interruption, just a nice
+// surprise. Sized off current cash (with a floor so it's never trivial
+// early on) rather than a flat amount, so it stays a meaningful treat at
+// every stage of a run instead of fading into irrelevance late-game.
+const LOST_TREASURE_CHANCE = 0.008;
+const LOST_TREASURE_PCT_OF_CASH = 0.05;
+const LOST_TREASURE_MIN_AMOUNT = 20;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -463,7 +471,7 @@ export function initialState(
     townRankIndex: 0,
     researched: [],
     assets,
-    upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0 },
+    upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0, guardTower: 0 },
     taxRate: 0,
     happiness: 100,
     lastSavedAt: Date.now(),
@@ -858,7 +866,11 @@ export function tick(state: EconomyState): EconomyState {
     const town = TOWNS_BY_ID[caravan.townId];
     const good = GOODS_BY_ID[caravan.goodId];
     totalCaravansCompleted += 1;
-    const wasRaided = !caravan.insured && Math.random() < CARAVAN_RAID_CHANCE;
+    const effectiveRaidChance = Math.max(
+      0,
+      CARAVAN_RAID_CHANCE - state.upgrades.guardTower * UPGRADES_BY_ID.guardTower.effectPerLevel
+    );
+    const wasRaided = !caravan.insured && Math.random() < effectiveRaidChance;
     const deliveredAmount = wasRaided
       ? caravan.amount * (1 - (CARAVAN_RAID_LOSS_MIN + Math.random() * (CARAVAN_RAID_LOSS_MAX - CARAVAN_RAID_LOSS_MIN)))
       : caravan.amount;
@@ -888,6 +900,19 @@ export function tick(state: EconomyState): EconomyState {
         tone: wasRaided ? "bad" : "good",
       });
     }
+  }
+
+  if (Math.random() < LOST_TREASURE_CHANCE) {
+    const treasureAmount = Math.max(LOST_TREASURE_MIN_AMOUNT, Math.round(cash * LOST_TREASURE_PCT_OF_CASH));
+    cash += treasureAmount;
+    dailyCashEarned += treasureAmount;
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.lostTreasureFound", {
+        amount: formatNumberUtil(treasureAmount, state.language),
+      }),
+      tone: "good",
+    });
   }
 
   const stillOpenContracts: ForwardContract[] = [];

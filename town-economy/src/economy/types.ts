@@ -20,7 +20,7 @@ export type GoodId =
   | "paper"
   | "glass";
 
-export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank";
+export type UpgradeId = "market" | "caravanserai" | "townhall" | "bank" | "guardTower";
 
 export interface Good {
   id: GoodId;

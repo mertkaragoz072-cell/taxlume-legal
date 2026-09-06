@@ -382,6 +382,11 @@ export const STRINGS = {
       caravanserai: { name: "Kervansaray", description: "Komşu kasabalarla ticarette gümrük vergisini düşürür.", effect: "Gümrük vergisi -%{pct}" },
       townhall: { name: "Belediye Binası", description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.", effect: "Kriz şiddeti -%{pct}" },
       bank: { name: "Banka", description: "Günlük giriş bonusunu artırır.", effect: "Günlük bonus +{amount} 🪙" },
+      guardTower: {
+        name: "Muhafız Kulesi",
+        description: "Tüm kervanların haydut baskınına uğrama ihtimalini kalıcı olarak azaltır.",
+        effect: "Soygun riski -%{pct}",
+      },
     },
     property: {
       landPlot: {
@@ -645,6 +650,7 @@ export const STRINGS = {
       caravanRaidedExport: "🏴‍☠️ Haydutlar {town} yolunda kervanına saldırdı! Sadece +{amount} 🪙 kurtarabildin ({qty} {good} yüklüydü).",
       caravanRaidedImport: "🏴‍☠️ Haydutlar {town}'dan dönen kervanına saldırdı! Sadece {qty} {good} kurtarabildin.",
       newNetWorthRecord: "🏆 Yeni kişisel rekor! Net servetin {amount} 🪙'e ulaştı.",
+      lostTreasureFound: "💰 Kayıp bir hazine buldun! +{amount} 🪙 kazandın.",
       hyperinflationGameOver: "Hiperenflasyon! Kasaba ekonomisi çöktü. Yeniden başlat.",
       dailyCheckInReturning: "🌅 Hoş geldin! {count}. gün üst üste giriş serisi. +{bonus} 🪙 günlük bonus.",
       dailyCheckInFirst: "🌅 Kasabana hoş geldin! Günlük giriş serin başladı. +{bonus} 🪙 bonus.",
@@ -1075,6 +1081,11 @@ export const STRINGS = {
       caravanserai: { name: "Caravanserai", description: "Lowers the tariff on trade with neighboring towns.", effect: "Tariff -{pct}%" },
       townhall: { name: "Town Hall", description: "Good governance softens the severity of economic crises.", effect: "Crisis severity -{pct}%" },
       bank: { name: "Bank", description: "Increases the daily login bonus.", effect: "Daily bonus +{amount} 🪙" },
+      guardTower: {
+        name: "Guard Tower",
+        description: "Permanently lowers the chance of any caravan being raided by bandits.",
+        effect: "Raid risk -{pct}%",
+      },
     },
     property: {
       landPlot: {
@@ -1338,6 +1349,7 @@ export const STRINGS = {
       caravanRaidedExport: "🏴‍☠️ Bandits raided your caravan on the road to {town}! You only recovered +{amount} 🪙 (it carried {qty} {good}).",
       caravanRaidedImport: "🏴‍☠️ Bandits raided your caravan returning from {town}! You only recovered {qty} {good}.",
       newNetWorthRecord: "🏆 New personal record! Your net worth reached {amount} 🪙.",
+      lostTreasureFound: "💰 You found a lost treasure! +{amount} 🪙.",
       hyperinflationGameOver: "Hyperinflation! The town's economy collapsed. Start over.",
       dailyCheckInReturning: "🌅 Welcome back! Day {count} of your streak. +{bonus} 🪙 daily bonus.",
       dailyCheckInFirst: "🌅 Welcome to your town! Your login streak has begun. +{bonus} 🪙 bonus.",
