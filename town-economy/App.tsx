@@ -1,3 +1,12 @@
+import { Cinzel_700Bold } from "@expo-google-fonts/cinzel";
+import {
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from "@expo-google-fonts/manrope";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
@@ -42,6 +51,11 @@ if (typeof window !== "undefined") {
     }
   });
 }
+
+// Keep the native splash up until the custom fonts (see theme.ts's FONT
+// tokens) have loaded, so the app never flashes a frame in the system font
+// before swapping to its real typeface.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function Game() {
   const {
@@ -201,6 +215,20 @@ function Game() {
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Cinzel_700Bold,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <ErrorBoundary>
       <EconomyProvider>

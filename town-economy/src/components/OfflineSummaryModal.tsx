@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { OfflineSummary } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { CARD_GRADIENT, cardShadow, FONT, GOLD_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -121,24 +121,24 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 18, fontWeight: "800", marginBottom: 4 },
+  title: { color: "#f0e3c8", fontSize: 18, fontFamily: FONT.display, marginBottom: 4 },
   subtitle: { color: "#a0917a", fontSize: 12, marginBottom: 14 },
   row: { marginBottom: 12 },
   crisisRow: { backgroundColor: "#3a1f1a", borderRadius: 10, padding: 10 },
-  crisisText: { color: "#f0b7a8", fontSize: 12, fontWeight: "600" },
+  crisisText: { color: "#f0b7a8", fontSize: 12, fontWeight: "600", fontFamily: FONT.medium },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 8 },
   stat: { minWidth: "40%" },
   statLabel: { color: "#a0917a", fontSize: 10, marginBottom: 2 },
-  statValue: { color: "#f0e3c8", fontSize: 15, fontWeight: "800" },
+  statValue: { color: "#f0e3c8", fontSize: 15, fontWeight: "800", fontFamily: FONT.black },
   section: { marginTop: 14 },
   sectionLabel: {
     color: "#a0917a",
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "700", fontFamily: FONT.bold,
     letterSpacing: 1,
     marginBottom: 8,
   },
-  achievementText: { color: "#e8c777", fontSize: 12, fontWeight: "700", marginBottom: 4 },
+  achievementText: { color: "#e8c777", fontSize: 12, fontWeight: "700", fontFamily: FONT.bold, marginBottom: 4 },
   eventText: { color: "#f0e3c8", fontSize: 11, marginBottom: 4 },
   confirmBtn: {
     borderRadius: 12,
@@ -147,5 +147,5 @@ const styles = StyleSheet.create({
     marginTop: 18,
     overflow: "hidden",
   },
-  confirmBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
+  confirmBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
 });

@@ -22,6 +22,21 @@ export const WEIGHT = {
   black: "800" as const,
 };
 
+// Custom fonts loaded in App.tsx — a distinct static family per weight
+// (React Native doesn't synthesize weights for a custom TTF the way a
+// browser does, so `fontWeight` alone has no visual effect on these; pair
+// every WEIGHT.x with the matching FONT.x). `display` is the app's one
+// flourish — a chiseled serif for a town's name and its biggest numbers,
+// used sparingly (see the "restraint" note by COLORS below) so it reads
+// as an occasional accent rather than the whole app's voice.
+export const FONT = {
+  regular: "Manrope_500Medium",
+  medium: "Manrope_600SemiBold",
+  bold: "Manrope_700Bold",
+  black: "Manrope_800ExtraBold",
+  display: "Cinzel_700Bold",
+} as const;
+
 export const SPACING = {
   xs: 4,
   sm: 8,

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { Language } from "../i18n/t";
-import { COLORS, glowShadow, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   townNamePressable: { alignSelf: "flex-start" },
   town: {
     color: "#ffd75e",
-    fontWeight: WEIGHT.black,
+    fontFamily: FONT.display,
     fontSize: TYPE.title,
     letterSpacing: 0.5,
     textShadowColor: "rgba(255, 200, 90, 0.55)",
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     marginLeft: SPACING.sm,
   },
-  streakBadgeText: { color: COLORS.textPrimary, fontSize: TYPE.caption, fontWeight: WEIGHT.bold },
+  streakBadgeText: { color: COLORS.textPrimary, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   streakBadgeRow: { flexDirection: "row", alignItems: "center" },
   flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
   controls: { flexDirection: "row", gap: SPACING.sm },
@@ -307,11 +307,11 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.sm,
   },
   iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.body },
-  langBtnText: { color: COLORS.accent, fontSize: TYPE.micro, fontWeight: WEIGHT.black },
+  langBtnText: { color: COLORS.accent, fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   statsRow: { flexDirection: "row", justifyContent: "space-between" },
   stat: { flex: 1 },
   statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 2 },
-  statValue: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.bold },
+  statValue: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   inflationStat: {
     flex: 1.4,
     flexDirection: "row",

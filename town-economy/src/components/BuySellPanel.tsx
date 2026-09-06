@@ -5,6 +5,7 @@ import {
   CARD_GRADIENT,
   cardShadow,
   COLORS,
+  FONT,
   GREEN_GRADIENT,
   RADIUS,
   RED_GRADIENT,
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
   sideBtnActiveBuy: { backgroundColor: COLORS.positive },
   sideBtnActiveSell: { backgroundColor: COLORS.negative },
-  sideBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  sideBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
   sideBtnTextActive: { color: "#fff" },
   qtyRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.md - 2 },
   qtyBtn: {
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     marginRight: SPACING.sm,
   },
-  qtyBtnText: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.label },
+  qtyBtnText: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -145,9 +146,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
-  summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold },
+  summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   confirmBtnWrap: { position: "relative" },
   confirmBtn: { borderRadius: RADIUS.card, paddingVertical: SPACING.md, alignItems: "center", overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.35 },
-  confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontSize: TYPE.body + 1 },
+  confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body + 1 },
 });

@@ -12,7 +12,18 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { SectionLabel } from "../components/SectionLabel";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, COLORS, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  cardShadow,
+  CARD_GRADIENT,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
@@ -182,11 +193,11 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   seasonalIcon: { fontSize: 28, marginRight: SPACING.md },
-  seasonalTitle: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontSize: TYPE.body },
+  seasonalTitle: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
   seasonalDesc: { color: "#2a2016", fontSize: TYPE.caption, marginTop: 2 },
   seasonalFooterRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
-  seasonalBonus: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontSize: TYPE.label },
-  seasonalTicksLeft: { color: "#2a2016", fontSize: TYPE.caption, fontWeight: WEIGHT.bold },
+  seasonalBonus: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.label },
+  seasonalTicksLeft: { color: "#2a2016", fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   chartCard: {
     borderRadius: RADIUS.feature,
     borderWidth: 1.5,
@@ -200,10 +211,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: SPACING.sm,
   },
-  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black },
+  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   chartSubtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginTop: 2 },
-  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black },
-  chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, marginTop: 2 },
+  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 2 },
   holdingRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -214,7 +225,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#3a2d1e",
   },
   holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
-  holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold },
+  holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   goodsRow: { marginBottom: SPACING.lg + 2 },
   lockedCard: {
     width: 108,
@@ -228,7 +239,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   lockedIcon: { fontSize: TYPE.heading },
-  lockedName: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.medium, marginTop: 6 },
+  lockedName: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium, marginTop: 6 },
   lockedDay: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs, textAlign: "center" },
   gameOverBox: {
     marginTop: SPACING.lg + 2,
@@ -237,6 +248,6 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     alignItems: "center",
   },
-  gameOverText: { color: "#f0b7a8", fontWeight: WEIGHT.black, fontSize: TYPE.body, textAlign: "center" },
+  gameOverText: { color: "#f0b7a8", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body, textAlign: "center" },
   gameOverSub: { color: "#c9a893", fontSize: TYPE.label, marginTop: 6, textAlign: "center" },
 });

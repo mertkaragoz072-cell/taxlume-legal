@@ -4,7 +4,7 @@ import { GradientFill } from "../components/GradientFill";
 import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
-import { CARD_GRADIENT, cardShadow, COLORS, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
@@ -81,17 +81,17 @@ const styles = StyleSheet.create({
   },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.sm },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.body },
-  summaryValue: { color: COLORS.textPrimary, fontSize: TYPE.body, fontWeight: WEIGHT.medium },
+  summaryValue: { color: COLORS.textPrimary, fontSize: TYPE.body, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
   netRow: { marginTop: SPACING.xs, paddingTop: SPACING.sm + 2, borderTopWidth: 1, borderTopColor: "#3a2d1e", marginBottom: 0 },
-  netLabel: { color: COLORS.accent, fontSize: TYPE.body + 1, fontWeight: WEIGHT.bold },
-  netValue: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black },
+  netLabel: { color: COLORS.accent, fontSize: TYPE.body + 1, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  netValue: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   emptyBox: {
     borderRadius: RADIUS.card,
     padding: SPACING.xl - 4,
     alignItems: "center",
     overflow: "hidden",
   },
-  emptyText: { color: COLORS.textPrimary, fontWeight: WEIGHT.medium, marginBottom: SPACING.xs },
+  emptyText: { color: COLORS.textPrimary, fontWeight: WEIGHT.medium, fontFamily: FONT.medium, marginBottom: SPACING.xs },
   emptySub: { color: COLORS.textMuted, fontSize: TYPE.label, textAlign: "center" },
   row: {
     flexDirection: "row",
@@ -105,10 +105,10 @@ const styles = StyleSheet.create({
   accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
   rowIcon: { fontSize: 26, marginRight: SPACING.md },
   rowMain: { flex: 1, marginRight: SPACING.sm + 2 },
-  rowName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  rowName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
   rowSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1, marginBottom: SPACING.sm - 2 },
   barTrack: { height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 3 },
-  rowValue: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontSize: TYPE.body },
+  rowValue: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
   rowShare: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
 });

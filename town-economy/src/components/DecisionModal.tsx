@@ -3,10 +3,11 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DECISION_TEMPLATES_BY_ID } from "../economy/decisions";
 import { PendingDecision } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, FONT } from "../theme";
 
 const DECISION_ACCENT = "#c58ee0";
 import { GradientFill } from "./GradientFill";
+import { IconBadge } from "./IconBadge";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
@@ -26,9 +27,7 @@ export function DecisionModal({ decision, onResolve }: Props) {
       <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={[styles.iconBadge, { backgroundColor: withAlpha(DECISION_ACCENT, 0.16) }]}>
-            <Text style={styles.icon}>{template.icon}</Text>
-          </View>
+          <IconBadge icon={template.icon} color={DECISION_ACCENT} />
           <Text style={styles.title}>{t(template.titleKey)}</Text>
           <Text style={styles.description}>{t(template.descriptionKey)}</Text>
 
@@ -59,16 +58,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  iconBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  icon: { fontSize: 36 },
-  title: { color: "#f0e3c8", fontSize: 17, fontWeight: "800", marginBottom: 8, textAlign: "center" },
+  title: { color: "#f0e3c8", fontSize: 17, fontFamily: FONT.display, marginBottom: 8, textAlign: "center" },
   description: {
     color: "#a0917a",
     fontSize: 13,
@@ -86,6 +76,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#3a2d1e",
   },
-  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontSize: 14, marginBottom: 3 },
+  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontFamily: FONT.bold, fontSize: 14, marginBottom: 3 },
   optionHint: { color: "#a0917a", fontSize: 11 },
 });

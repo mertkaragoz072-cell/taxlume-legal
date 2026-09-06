@@ -3,7 +3,7 @@ import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, FONT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 17, fontWeight: "800", marginBottom: 8, textAlign: "center" },
+  title: { color: "#f0e3c8", fontSize: 17, fontFamily: FONT.display, marginBottom: 8, textAlign: "center" },
   description: {
     color: "#a0917a",
     fontSize: 13,
@@ -142,6 +142,6 @@ const styles = StyleSheet.create({
     borderColor: "#3a2d1e",
   },
   optionDisabled: { opacity: 0.5 },
-  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontSize: 14, marginBottom: 3 },
+  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontFamily: FONT.bold, fontSize: 14, marginBottom: 3 },
   optionHint: { color: "#a0917a", fontSize: 11 },
 });

@@ -2,7 +2,7 @@ import React from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, COLORS, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { cardShadow, CARD_GRADIENT, COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { ScalePressable } from "./ScalePressable";
@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   icon: { fontSize: TYPE.heading },
-  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.bold },
-  name: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.medium, marginTop: SPACING.xs },
-  price: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold },
+  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  name: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium, marginTop: SPACING.xs },
+  price: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,

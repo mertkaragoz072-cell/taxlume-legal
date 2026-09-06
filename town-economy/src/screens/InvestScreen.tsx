@@ -9,7 +9,7 @@ import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, COLORS, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { cardShadow, CARD_GRADIENT, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
@@ -147,10 +147,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  portfolioLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, letterSpacing: 1 },
+  portfolioLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, letterSpacing: 1 },
   portfolioRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: SPACING.xs },
-  portfolioValue: { color: COLORS.accent, fontSize: TYPE.display, fontWeight: WEIGHT.black },
-  portfolioPnl: { fontSize: TYPE.body, fontWeight: WEIGHT.bold },
+  portfolioValue: { color: COLORS.accent, fontSize: TYPE.display, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  portfolioPnl: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, lineHeight: 17 },
   chartCard: {
     borderRadius: RADIUS.feature,
@@ -165,10 +165,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: SPACING.sm,
   },
-  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black },
+  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   chartSubtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginTop: 2, maxWidth: 200 },
-  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black },
-  chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, marginTop: 2 },
+  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 2 },
   holdingRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#3a2d1e",
   },
   holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
-  holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold },
+  holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   noHolding: {
     color: COLORS.textMuted,
     fontSize: TYPE.caption,

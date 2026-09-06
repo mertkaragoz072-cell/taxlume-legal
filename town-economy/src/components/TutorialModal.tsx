@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, FONT, GOLD_GRADIENT } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { IconBadge } from "./IconBadge";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
@@ -56,9 +57,7 @@ export function TutorialModal({ visible, onFinish }: Props) {
       <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={[styles.iconBadge, { backgroundColor: withAlpha(slide.color, 0.16) }]}>
-            <Text style={styles.icon}>{slide.icon}</Text>
-          </View>
+          <IconBadge icon={slide.icon} color={slide.color} size="lg" />
           <Text style={[styles.title, { color: slide.color }]}>{t(slide.titleKey)}</Text>
           <Text style={styles.body}>{t(slide.bodyKey)}</Text>
 
@@ -97,16 +96,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  iconBadge: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  icon: { fontSize: 44 },
-  title: { color: "#f0e3c8", fontSize: 18, fontWeight: "800", marginBottom: 10, textAlign: "center" },
+  title: { color: "#f0e3c8", fontSize: 18, fontFamily: FONT.display, marginBottom: 10, textAlign: "center" },
   body: { color: "#a0917a", fontSize: 13, textAlign: "center", lineHeight: 19, marginBottom: 18 },
   dots: { flexDirection: "row", gap: 6, marginBottom: 18 },
   dot: {
@@ -124,7 +114,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  nextBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
+  nextBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
   skipBtn: { marginTop: 10, paddingVertical: 6 },
-  skipBtnText: { color: "#a0917a", fontSize: 12, fontWeight: "600" },
+  skipBtnText: { color: "#a0917a", fontSize: 12, fontWeight: "600", fontFamily: FONT.medium },
 });

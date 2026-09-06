@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, FONT, GOLD_GRADIENT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 16, fontWeight: "800", marginBottom: 4 },
+  title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4 },
   subtitle: { color: "#a0917a", fontSize: 12, marginBottom: 14 },
   option: {
     flexDirection: "row",
@@ -129,12 +129,12 @@ const styles = StyleSheet.create({
   },
   optionIcon: { fontSize: 24, marginRight: 12 },
   optionTitleRow: { flexDirection: "row", alignItems: "center" },
-  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontSize: 14 },
+  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontFamily: FONT.bold, fontSize: 14 },
   optionActiveTag: {
     color: "#1a1410",
     backgroundColor: "#e8c777",
     fontSize: 9,
-    fontWeight: "800",
+    fontWeight: "800", fontFamily: FONT.black,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   optionDesc: { color: "#a0917a", fontSize: 11, marginTop: 3 },
   cancelBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
-  cancelText: { color: "#a0917a", fontSize: 13, fontWeight: "600" },
+  cancelText: { color: "#a0917a", fontSize: 13, fontWeight: "600", fontFamily: FONT.medium },
   confirmBtn: {
     borderRadius: 12,
     paddingVertical: 12,
@@ -150,5 +150,5 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginTop: 4,
   },
-  confirmBtnText: { color: "#1a1410", fontWeight: "800", fontSize: 14 },
+  confirmBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
 });
