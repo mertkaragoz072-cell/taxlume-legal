@@ -40,3 +40,16 @@ export function isEmblemUnlocked(id: string, state: EconomyState): boolean {
   const def = TOWN_EMBLEMS_BY_ID[id];
   return def ? def.unlockedBy(state) : false;
 }
+
+// A small accent-color palette for the emblem badge — always available (no
+// unlock gate), purely a personalization touch on top of the emblem itself.
+export const EMBLEM_COLORS: string[] = [
+  "#e8c777", // gold (default, matches the app's accent)
+  "#c94b4b", // red
+  "#3fae5c", // green
+  "#3a7ecc", // blue
+  "#c58ee0", // purple
+  "#e0a13f", // amber
+  "#f0776a", // coral
+  "#6fb8f2", // sky
+];

@@ -227,6 +227,8 @@ export interface EconomyState {
   townName: string;
   /** id of the emblem (see emblems.ts) shown next to the town name — purely cosmetic */
   selectedEmblem: string;
+  /** accent color (see EMBLEM_COLORS in emblems.ts) behind the emblem badge — always available, purely cosmetic */
+  selectedEmblemColor: string;
   language: Language;
   difficulty: DifficultyId;
   cash: number;

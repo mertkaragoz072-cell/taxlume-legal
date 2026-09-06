@@ -3,7 +3,7 @@ import { ACHIEVEMENTS } from "./achievements";
 import { ASSETS, ASSETS_BY_ID, AssetId } from "./assets";
 import { DECISION_TEMPLATES, DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
-import { isEmblemUnlocked } from "./emblems";
+import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { EVENT_TEMPLATES } from "./events";
 import { MINI_QUEST_TEMPLATES, MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
@@ -385,7 +385,8 @@ type Action =
   | { type: "RESOLVE_RIVAL_OFFER"; accept: boolean }
   | { type: "SET_TOWN_NAME"; name: string }
   | { type: "SET_LANGUAGE"; language: Language }
-  | { type: "SET_EMBLEM"; emblemId: string };
+  | { type: "SET_EMBLEM"; emblemId: string }
+  | { type: "SET_EMBLEM_COLOR"; color: string };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -443,6 +444,7 @@ export function initialState(
   return {
     townName: t(language, "app.defaultTownName"),
     selectedEmblem: "village",
+    selectedEmblemColor: EMBLEM_COLORS[0],
     language,
     difficulty,
     cash: config.startingCash,
@@ -1493,6 +1495,11 @@ function setEmblem(state: EconomyState, emblemId: string): EconomyState {
   return { ...state, selectedEmblem: emblemId };
 }
 
+function setEmblemColor(state: EconomyState, color: string): EconomyState {
+  if (!EMBLEM_COLORS.includes(color)) return state;
+  return { ...state, selectedEmblemColor: color };
+}
+
 export function computeNetWorth(state: EconomyState): number {
   return (
     state.cash +
@@ -2090,6 +2097,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return setLanguage(state, action.language);
     case "SET_EMBLEM":
       return setEmblem(state, action.emblemId);
+    case "SET_EMBLEM_COLOR":
+      return setEmblemColor(state, action.color);
     default:
       return state;
   }
@@ -2208,6 +2217,7 @@ export function useEconomy() {
   );
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
   const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
+  const setEmblemColor_ = useCallback((color: string) => dispatch({ type: "SET_EMBLEM_COLOR", color }), []);
   const setLanguage_ = useCallback(
     (language: Language) => dispatch({ type: "SET_LANGUAGE", language }),
     []
@@ -2254,6 +2264,7 @@ export function useEconomy() {
     resolveRivalOffer: resolveRivalOffer_,
     setTownName,
     setEmblem: setEmblem_,
+    setEmblemColor: setEmblemColor_,
     setLanguage: setLanguage_,
     t: translate,
     formatCoins: (value: number, decimals?: number) =>

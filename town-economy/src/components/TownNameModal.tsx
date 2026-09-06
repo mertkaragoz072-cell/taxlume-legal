@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { isEmblemUnlocked, TOWN_EMBLEMS } from "../economy/emblems";
+import { EMBLEM_COLORS, isEmblemUnlocked, TOWN_EMBLEMS } from "../economy/emblems";
 import { TOWN_NAME_MAX_LENGTH } from "../economy/useEconomy";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function TownNameModal({ visible, currentName, onSave, onCancel }: Props) {
-  const { t, state, setEmblem } = useEconomyContext();
+  const { t, state, setEmblem, setEmblemColor } = useEconomyContext();
   const [draft, setDraft] = useState(currentName);
   const [focusedEmblemId, setFocusedEmblemId] = useState(state.selectedEmblem);
 
@@ -71,7 +71,7 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
                   }}
                   style={[
                     styles.emblemChip,
-                    selected && styles.emblemChipSelected,
+                    selected && { borderColor: state.selectedEmblemColor },
                     !unlocked && styles.emblemChipLocked,
                   ]}
                 >
@@ -81,6 +81,21 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
             })}
           </View>
           <Text style={styles.emblemFocusHint}>{t(focusedEmblem.hintKey)}</Text>
+
+          <Text style={styles.emblemSectionLabel}>{t("townNameModal.emblemColorLabel")}</Text>
+          <View style={styles.colorRow}>
+            {EMBLEM_COLORS.map((color) => (
+              <Pressable
+                key={color}
+                onPress={() => setEmblemColor(color)}
+                style={[
+                  styles.colorSwatch,
+                  { backgroundColor: color },
+                  state.selectedEmblemColor === color && styles.colorSwatchSelected,
+                ]}
+              />
+            ))}
+          </View>
 
           <ScalePressable
             disabled={disabled}
@@ -144,11 +159,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  emblemChipSelected: { borderColor: COLORS.accent },
   emblemChipLocked: { opacity: 0.35 },
   emblemIcon: { fontSize: TYPE.heading },
   emblemIconLocked: { opacity: 0.7 },
   emblemFocusHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: 14 },
+  colorRow: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginBottom: 14 },
+  colorSwatch: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  colorSwatchSelected: { borderColor: "#fff" },
   saveBtn: {
     borderRadius: 12,
     paddingVertical: 12,

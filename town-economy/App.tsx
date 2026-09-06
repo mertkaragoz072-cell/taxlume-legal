@@ -29,7 +29,7 @@ import { TOWN_EMBLEMS_BY_ID } from "./src/economy/emblems";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
-import { APP_BACKGROUND_GRADIENT } from "./src/theme";
+import { seasonalBackgroundGradient } from "./src/theme";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { InvestScreen } from "./src/screens/InvestScreen";
@@ -140,11 +140,12 @@ function Game() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      <GradientFill colors={APP_BACKGROUND_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+      <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
       <View style={styles.content}>
         <InflationHeader
           townName={state.townName}
           emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
+          emblemColor={state.selectedEmblemColor}
           rankIcon={townRankIcon(state.townRankIndex)}
           rankTitle={rankTitle}
           cash={state.cash}

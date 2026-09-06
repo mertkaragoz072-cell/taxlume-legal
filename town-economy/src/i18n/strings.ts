@@ -310,6 +310,7 @@ export const STRINGS = {
       subtitle: "Kasabana istediğin ismi ver.",
       placeholder: "Kasaba ismi",
       emblemSectionLabel: "KASABA AMBLEMİ",
+      emblemColorLabel: "AMBLEM RENGİ",
       emblemHint: "Sadece görünüm — hiçbir mekanik etkisi yok.",
     },
     emblem: {
@@ -1021,6 +1022,7 @@ export const STRINGS = {
       subtitle: "Give your town whatever name you like.",
       placeholder: "Town name",
       emblemSectionLabel: "TOWN EMBLEM",
+      emblemColorLabel: "EMBLEM COLOR",
       emblemHint: "Cosmetic only — no mechanical effect.",
     },
     emblem: {

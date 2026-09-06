@@ -11,6 +11,7 @@ import { PriceChart } from "./PriceChart";
 interface Props {
   townName: string;
   emblem: string;
+  emblemColor: string;
   rankIcon: string;
   rankTitle: string;
   cash: number;
@@ -36,6 +37,7 @@ interface Props {
 export function InflationHeader({
   townName,
   emblem,
+  emblemColor,
   rankIcon,
   rankTitle,
   cash,
@@ -127,7 +129,8 @@ export function InflationHeader({
           accessibilityLabel={t("a11y.editTownName")}
         >
           <Text style={styles.town} numberOfLines={1}>
-            {emblem} {townName.toUpperCase()} ✏️
+            <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text>{" "}
+            {townName.toUpperCase()} ✏️
           </Text>
         </Pressable>
       </View>

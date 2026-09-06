@@ -81,6 +81,26 @@ export const BLUE_GRADIENT: [string, string] = ["#6fb8f2", "#3a7ecc"];
  * fill, so every screen has a little depth behind its cards */
 export const APP_BACKGROUND_GRADIENT: [string, string] = ["#2a2013", "#140f0a"];
 
+/** the same warm-dark backdrop, lightly retinted per real-world calendar
+ * season — a quiet bit of ambient variety that costs nothing in gameplay
+ * terms, purely a display-layer choice (not tied to any game state, so it
+ * never needs a save-version bump). Each stays close enough to the base
+ * gradient that cards and text contrast are unaffected. */
+const SEASON_BACKGROUND_GRADIENTS: Record<"spring" | "summer" | "autumn" | "winter", [string, string]> = {
+  spring: ["#243318", "#10140b"],
+  summer: ["#332619", "#1a1409"],
+  autumn: APP_BACKGROUND_GRADIENT,
+  winter: ["#1a2233", "#0c0f16"],
+};
+
+export function seasonalBackgroundGradient(date: Date = new Date()): [string, string] {
+  const month = date.getMonth(); // 0 = January
+  if (month >= 2 && month <= 4) return SEASON_BACKGROUND_GRADIENTS.spring;
+  if (month >= 5 && month <= 7) return SEASON_BACKGROUND_GRADIENTS.summer;
+  if (month >= 8 && month <= 10) return SEASON_BACKGROUND_GRADIENTS.autumn;
+  return SEASON_BACKGROUND_GRADIENTS.winter;
+}
+
 /** a soft lifted-card shadow; RN Web reads shadow*, native reads elevation too */
 export const cardShadow: ViewStyle = {
   shadowColor: "#000",
