@@ -50,6 +50,8 @@ export interface GoodState {
   holding: number;
   /** cost-basis average price of current holdings; resets to 0 once holding hits 0 */
   avgCost: number;
+  /** the player's own recent buying/selling pushing price above/below its supply-driven level; decays toward 0 each tick */
+  demandPressure: number;
 }
 
 /** a speculative asset (gold, oil, stocks) — price is a random walk, independent of supply/demand */

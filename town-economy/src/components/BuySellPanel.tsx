@@ -14,19 +14,24 @@ interface Props {
   state: { price: number; holding: number };
   cash: number;
   onTrade: (side: "buy" | "sell", qty: number) => void;
+  /** total round-trip bid/ask spread as a fraction of the quoted price (e.g. 0.03 = 3%); omit for no spread */
+  spreadPct?: number;
 }
 
 type Qty = 1 | 5 | "ALL";
 
-export function BuySellPanel({ good, state, cash, onTrade }: Props) {
+export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Props) {
   const { t, formatCoins } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [qtyOption, setQtyOption] = useState<Qty>(1);
   const [coinPopTrigger, setCoinPopTrigger] = useState(0);
 
-  const affordableAll = Math.floor(cash / state.price);
+  // The quoted chart price is the fair mid-price; what you actually pay or
+  // receive sits a half-spread on either side of it, same as the reducer.
+  const execPrice = side === "buy" ? state.price * (1 + spreadPct / 2) : state.price * (1 - spreadPct / 2);
+  const affordableAll = Math.floor(cash / execPrice);
   const resolvedQty = qtyOption === "ALL" ? (side === "buy" ? affordableAll : state.holding) : qtyOption;
-  const total = resolvedQty * state.price;
+  const total = resolvedQty * execPrice;
   const disabled =
     resolvedQty <= 0 || (side === "buy" ? total > cash + 0.001 : resolvedQty > state.holding);
 
@@ -66,7 +71,7 @@ export function BuySellPanel({ good, state, cash, onTrade }: Props) {
 
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>
-          {resolvedQty} x {t(good.nameKey)} @ {state.price.toFixed(2)}
+          {resolvedQty} x {t(good.nameKey)} @ {execPrice.toFixed(2)}
         </Text>
         <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
       </View>

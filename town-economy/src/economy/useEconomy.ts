@@ -158,6 +158,27 @@ const EFFICIENCY_MAX = 1.15;
 const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
 const FOREIGN_NOISE = 0.15;
 
+// --- Demand pressure ------------------------------------------------------
+// Supply alone drifts back toward (and past) baseSupply within a tick or two
+// once villagers are happy and producing above baseline — too fast for a
+// player's own buy/sell to feel like it moved anything. demandPressure is a
+// separate multiplier on top of the supply-driven price, nudged by every
+// trade and decaying slowly on its own clock, so a big order visibly bends
+// the price and that bend lingers for roughly a minute of real play before
+// fading — long enough to feel like your trade mattered, short enough that
+// the market always finds its own level again.
+const DEMAND_PRESSURE_DECAY = 0.98; // per tick (TICK_MS=1500ms) => ~50-tick / 75s half-life
+const DEMAND_PRESSURE_SENSITIVITY = 0.35; // price swing per "one baseSupply's worth" traded, before market depth
+const DEMAND_PRESSURE_MAX = 0.4; // clamp so no single order can send price to an absurd multiple
+
+// --- Bid/ask spread ---------------------------------------------------------
+// Real markets charge a toll on every round trip — without one, buying and
+// immediately selling back is free, so profit is pure luck rather than a
+// real read on where the price is headed. Buying costs a bit above the
+// quoted price, selling nets a bit below it; a deeper Pazar Yeri (the same
+// upgrade that dampens price impact) narrows the spread too.
+export const MARKET_SPREAD = 0.03; // total round-trip cost at market upgrade level 0
+
 // --- Investable assets (gold, oil, stocks) -----------------------------
 // A pure random walk (drift + noise, occasionally a fatter-tailed spike)
 // bounded so a bad run can't send a price to zero or off to infinity.
@@ -234,6 +255,16 @@ function priceFromSupply(
   return localBasePrice * (inflationIndex / 100) * scarcityFactor(supply, baseSupply, elasticity);
 }
 
+// A deeper Pazar Yeri means the same order moves the market (and pays the
+// spread) proportionally less — real market depth, not an arbitrary damper.
+export function marketDepthFactor(state: EconomyState): number {
+  return 1 + state.upgrades.market * UPGRADES_BY_ID.market.effectPerLevel;
+}
+
+export function marketSpread(state: EconomyState): number {
+  return MARKET_SPREAD / marketDepthFactor(state);
+}
+
 function supplyBounds(good: Good): { min: number; max: number } {
   return { min: good.baseSupply * SUPPLY_MIN_FACTOR, max: good.baseSupply * SUPPLY_MAX_FACTOR };
 }
@@ -287,6 +318,7 @@ function makeInitialGoodState(good: Good): GoodState {
     supply: good.baseSupply,
     holding: 0,
     avgCost: 0,
+    demandPressure: 0,
   };
 }
 
@@ -651,18 +683,26 @@ export function tick(state: EconomyState): EconomyState {
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
     supply = clamp(supply, minSupply, maxSupply);
-    const price = priceFromSupply(
-      good.basePrice * researchedValueMult * seasonalMult,
-      good.baseSupply,
-      good.elasticity,
-      supply,
-      inflationIndex
+    const demandPressure = clamp(
+      gs.demandPressure * DEMAND_PRESSURE_DECAY,
+      -DEMAND_PRESSURE_MAX,
+      DEMAND_PRESSURE_MAX
     );
+    const price =
+      priceFromSupply(
+        good.basePrice * researchedValueMult * seasonalMult,
+        good.baseSupply,
+        good.elasticity,
+        supply,
+        inflationIndex
+      ) *
+      (1 + demandPressure);
 
     goods[good.id] = {
       ...gs,
       price,
       supply,
+      demandPressure,
       history: pushCapped(gs.history, price, HISTORY_LEN),
     };
   }
@@ -833,19 +873,24 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   if (state.gameOver) return state;
   const good = GOODS_BY_ID[goodId];
   const gs = state.goods[goodId];
-  const price = gs.price;
-  // A deeper Pazar Yeri means the same order moves supply (and so price)
-  // proportionally less — real market depth, not an arbitrary damper.
-  const marketDepth = 1 + state.upgrades.market * UPGRADES_BY_ID.market.effectPerLevel;
+  const midPrice = gs.price;
+  const marketDepth = marketDepthFactor(state);
+  const spread = MARKET_SPREAD / marketDepth;
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
   if (side === "buy") {
+    const price = midPrice * (1 + spread / 2);
     const affordable = Math.floor(state.cash / price);
     const amount = Math.min(qty, affordable);
     if (amount <= 0) return state;
     const cost = amount * price;
     const holding = gs.holding + amount;
     const avgCost = (gs.avgCost * gs.holding + cost) / holding;
+    const demandPressure = clamp(
+      gs.demandPressure + (amount / good.baseSupply) * DEMAND_PRESSURE_SENSITIVITY / marketDepth,
+      -DEMAND_PRESSURE_MAX,
+      DEMAND_PRESSURE_MAX
+    );
     return {
       ...state,
       cash: state.cash - cost,
@@ -855,6 +900,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
           ...gs,
           holding,
           avgCost,
+          demandPressure,
           supply: clamp(gs.supply - amount / marketDepth, minSupply, maxSupply),
         },
       },
@@ -863,10 +909,16 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
     };
   }
 
+  const price = midPrice * (1 - spread / 2);
   const amount = Math.min(qty, gs.holding);
   if (amount <= 0) return state;
   const proceeds = amount * price;
   const holding = gs.holding - amount;
+  const demandPressure = clamp(
+    gs.demandPressure - (amount / good.baseSupply) * DEMAND_PRESSURE_SENSITIVITY / marketDepth,
+    -DEMAND_PRESSURE_MAX,
+    DEMAND_PRESSURE_MAX
+  );
   // Realized profit/loss vs. the cost basis, surfaced right in the event
   // feed — the whole point of buying low is seeing whether a sale landed
   // above or below what was paid for it.
@@ -886,6 +938,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
         ...gs,
         holding,
         avgCost: holding > 0 ? gs.avgCost : 0,
+        demandPressure,
         supply: clamp(gs.supply + amount / marketDepth, minSupply, maxSupply),
       },
     },
@@ -1832,6 +1885,7 @@ export function useEconomy() {
     0
   );
   const netWorth = state.cash + portfolioValue + assetsValue - (state.loan ? state.loan.remainingBalance : 0);
+  const marketSpreadPct = marketSpread(state);
 
   return {
     state,
@@ -1864,6 +1918,7 @@ export function useEconomy() {
     portfolioValue,
     assetsValue,
     netWorth,
+    marketSpreadPct,
     hydrated,
   };
 }

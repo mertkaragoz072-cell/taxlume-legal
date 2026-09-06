@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function MarketScreen({ sounds }: Props) {
-  const { state, selectGood, trade, t } = useEconomyContext();
+  const { state, selectGood, trade, t, marketSpreadPct } = useEconomyContext();
   const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
   const lockedGoods = GOODS.filter((g) => !isGoodUnlocked(g, state));
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
@@ -152,6 +152,7 @@ export function MarketScreen({ sounds }: Props) {
         good={selected}
         state={selectedState}
         cash={state.cash}
+        spreadPct={marketSpreadPct}
         onTrade={(side, qty) => {
           trade(selected.id, side, qty);
           if (side === "buy") sounds.playBuy();

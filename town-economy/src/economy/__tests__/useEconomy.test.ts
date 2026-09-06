@@ -16,6 +16,7 @@ import {
   loanDayRateToTickRate,
   loanInterestRatePerDay,
   loanTickRateToDayRate,
+  marketSpread,
   repayLoan,
   takeLoan,
   tick,
@@ -50,17 +51,18 @@ describe("isGoodUnlocked", () => {
 describe("trade", () => {
   it("buying reduces cash and increases holding by the traded amount", () => {
     const state = initialState();
-    const price = state.goods.bread.price;
+    // Buying fills a hair above the quoted mid-price (the bid/ask spread).
+    const buyPrice = state.goods.bread.price * (1 + marketSpread(state) / 2);
     const next = trade(state, "bread", "buy", 5);
     expect(next.goods.bread.holding).toBe(5);
-    expect(next.cash).toBeCloseTo(state.cash - 5 * price, 6);
+    expect(next.cash).toBeCloseTo(state.cash - 5 * buyPrice, 6);
     expect(next.stats.totalTrades).toBe(1);
   });
 
   it("clamps a buy order to what the player can actually afford", () => {
     const state = { ...initialState(), cash: 10 };
-    const price = state.goods.bread.price;
-    const affordable = Math.floor(10 / price);
+    const buyPrice = state.goods.bread.price * (1 + marketSpread(state) / 2);
+    const affordable = Math.floor(10 / buyPrice);
     const next = trade(state, "bread", "buy", 999);
     expect(next.goods.bread.holding).toBe(affordable);
     expect(next.cash).toBeGreaterThanOrEqual(0);
@@ -72,12 +74,31 @@ describe("trade", () => {
     expect(next).toBe(state);
   });
 
-  it("buying then selling the same quantity returns cash to its starting point", () => {
+  it("buying then selling the same quantity costs exactly the round-trip spread", () => {
     const state = initialState();
     const bought = trade(state, "bread", "buy", 3);
     const soldBack = trade(bought, "bread", "sell", 3);
-    expect(soldBack.cash).toBeCloseTo(state.cash, 6);
+    const spreadCost = 3 * state.goods.bread.price * marketSpread(state);
+    expect(state.cash - soldBack.cash).toBeCloseTo(spreadCost, 6);
     expect(soldBack.goods.bread.holding).toBe(0);
+  });
+
+  it("a large buy leaves lingering upward demand pressure that a tick then decays", () => {
+    const state = { ...initialState(), cash: 100000 };
+    const bought = trade(state, "bread", "buy", 100);
+    expect(bought.goods.bread.demandPressure).toBeGreaterThan(0);
+    // The price paid for the trade itself is still quoted off the old mid —
+    // the bump only shows up once tick() re-derives price from it.
+    const afterTick = tick({ ...bought, paused: false });
+    expect(afterTick.goods.bread.price).toBeGreaterThan(state.goods.bread.price);
+    expect(afterTick.goods.bread.demandPressure).toBeLessThan(bought.goods.bread.demandPressure);
+  });
+
+  it("a large sell leaves lingering downward demand pressure", () => {
+    const state = { ...initialState(), cash: 100000 };
+    const bought = trade(state, "bread", "buy", 150);
+    const sold = trade(bought, "bread", "sell", 100);
+    expect(sold.goods.bread.demandPressure).toBeLessThan(bought.goods.bread.demandPressure);
   });
 });
 

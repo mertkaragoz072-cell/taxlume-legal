@@ -323,7 +323,7 @@ export const STRINGS = {
       diamondharbor: { name: "Elmas Liman" },
     },
     upgrade: {
-      market: { name: "Pazar Yeri", description: "Alım satımların fiyatlar üzerindeki ani etkisini yumuşatır.", effect: "Piyasa etkisi -%{pct}" },
+      market: { name: "Pazar Yeri", description: "Alım satımların fiyatlar üzerindeki etkisini ve alış-satış farkını azaltır.", effect: "Piyasa etkisi -%{pct}" },
       caravanserai: { name: "Kervansaray", description: "Komşu kasabalarla ticarette gümrük vergisini düşürür.", effect: "Gümrük vergisi -%{pct}" },
       townhall: { name: "Belediye Binası", description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.", effect: "Kriz şiddeti -%{pct}" },
       bank: { name: "Banka", description: "Günlük giriş bonusunu artırır.", effect: "Günlük bonus +{amount} 🪙" },
@@ -937,7 +937,7 @@ export const STRINGS = {
       diamondharbor: { name: "Diamond Harbor" },
     },
     upgrade: {
-      market: { name: "Marketplace", description: "Softens how sharply trades move prices.", effect: "Market impact -{pct}%" },
+      market: { name: "Marketplace", description: "Softens how sharply trades move prices, and narrows the buy/sell spread.", effect: "Market impact -{pct}%" },
       caravanserai: { name: "Caravanserai", description: "Lowers the tariff on trade with neighboring towns.", effect: "Tariff -{pct}%" },
       townhall: { name: "Town Hall", description: "Good governance softens the severity of economic crises.", effect: "Crisis severity -{pct}%" },
       bank: { name: "Bank", description: "Increases the daily login bonus.", effect: "Daily bonus +{amount} 🪙" },
