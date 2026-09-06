@@ -237,6 +237,14 @@ export interface EconomyState {
   /** net worth sampled once per tick, capped at HISTORY_LEN — powers the
    * net-worth chart on the Achievements screen */
   netWorthHistory: number[];
+  /** a simulated "ghost" rival town's net worth — grows on its own each
+   * tick, purely for a light competitive comparison; resets with the run
+   * (prestige/reset), unlike bestNetWorthEver */
+  rivalNetWorth: number;
+  /** whether the rival was ahead of the player as of the last tick — used
+   * only to fire a "you overtook/were overtaken" event on a lead change,
+   * not every tick */
+  rivalCurrentlyAhead: boolean;
   inflationRate: number; // per-tick drift, changes slowly over time
   selectedGood: GoodId;
   goods: Record<GoodId, GoodState>;

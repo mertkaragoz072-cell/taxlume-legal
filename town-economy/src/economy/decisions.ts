@@ -2,7 +2,7 @@ import { t } from "../i18n/t";
 import { GOODS } from "./goods";
 import { EconomyEvent, EconomyState } from "./types";
 
-const EVENT_LOG_CAP = 8;
+const EVENT_LOG_CAP = 30;
 // Mirrors useEconomy's supply bounds (baseSupply × 0.15 / 3) — kept as a
 // local constant instead of importing from useEconomy.ts to avoid a
 // circular import (useEconomy.ts pulls DECISION_TEMPLATES from here).

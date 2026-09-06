@@ -87,6 +87,7 @@ export function TownScreen() {
   const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
   const cap = loanCap(state);
   const [selectedTermMonths, setSelectedTermMonths] = useState(LOAN_TERM_MONTHS_STEPS[0]);
+  const [showAllEvents, setShowAllEvents] = useState(false);
   const previewDayRate = loanInterestRatePerDay(state, selectedTermMonths);
   const previewTermDays = selectedTermMonths * LOAN_TERM_DAYS_PER_MONTH;
 
@@ -553,7 +554,20 @@ export function TownScreen() {
       {state.eventLog.length === 0 && (
         <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>
       )}
-      {state.eventLog.map((event) => (
+      {state.eventLog.length > 0 &&
+        (() => {
+          const goodCount = state.eventLog.filter((e) => e.tone === "good").length;
+          const badCount = state.eventLog.filter((e) => e.tone === "bad").length;
+          const neutralCount = state.eventLog.length - goodCount - badCount;
+          return (
+            <View style={styles.eventSummaryRow}>
+              <Text style={[styles.eventSummaryChip, { color: COLORS.positive }]}>✅ {goodCount}</Text>
+              <Text style={[styles.eventSummaryChip, { color: COLORS.negative }]}>⚠️ {badCount}</Text>
+              <Text style={[styles.eventSummaryChip, { color: COLORS.textMuted }]}>ℹ️ {neutralCount}</Text>
+            </View>
+          );
+        })()}
+      {(showAllEvents ? state.eventLog : state.eventLog.slice(0, 5)).map((event) => (
         <View
           key={event.id}
           style={[
@@ -568,6 +582,15 @@ export function TownScreen() {
           <Text style={styles.eventText}>{event.message}</Text>
         </View>
       ))}
+      {state.eventLog.length > 5 && (
+        <ScalePressable onPress={() => setShowAllEvents((v) => !v)} style={styles.eventToggleBtn} scaleTo={0.97}>
+          <Text style={styles.eventToggleBtnText}>
+            {showAllEvents
+              ? t("town.eventsShowLess")
+              : t("town.eventsShowMore", { count: state.eventLog.length - 5 })}
+          </Text>
+        </ScalePressable>
+      )}
     </ScrollView>
   );
 }
@@ -752,6 +775,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   eventText: { color: COLORS.textPrimary, fontSize: TYPE.label },
+  eventSummaryRow: { flexDirection: "row", gap: SPACING.md, marginBottom: SPACING.sm },
+  eventSummaryChip: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  eventToggleBtn: { alignItems: "center", paddingVertical: SPACING.sm, marginBottom: SPACING.sm },
+  eventToggleBtnText: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   upgradeCard: {
     flexDirection: "row",
     alignItems: "center",

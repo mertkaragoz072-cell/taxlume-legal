@@ -12,6 +12,7 @@ import {
   LOAN_MIN_CAP,
   LOAN_MIN_INTEREST_RATE_PER_DAY,
   LOAN_TERM_MONTHS_STEPS,
+  RIVAL_TOWN_GROWTH_RATE,
   TICKS_PER_GAME_DAY,
   computeNetWorth,
   effectiveTariffRate,
@@ -513,5 +514,54 @@ describe("personal net-worth record", () => {
     const afterSecondTick = tick({ ...next, lastEvent: { id: -1, message: "", tone: "neutral" } });
     expect(afterSecondTick.recordBrokenThisRun).toBe(true);
     expect(afterSecondTick.lastEvent?.message).not.toMatch(/record|rekor/i);
+  });
+});
+
+describe("ghost rival town", () => {
+  const originalRandom = Math.random;
+  afterEach(() => {
+    Math.random = originalRandom;
+  });
+
+  it("grows the rival's net worth each tick", () => {
+    Math.random = () => 0.5; // zeroes out the symmetric jitter term
+    const state = { ...initialState(), happiness: 50, paused: false };
+    const next = tick(state);
+    expect(next.rivalNetWorth).toBeCloseTo(state.rivalNetWorth * (1 + RIVAL_TOWN_GROWTH_RATE), 6);
+  });
+
+  it("fires an event when the rival overtakes the player, then stays quiet while still ahead", () => {
+    Math.random = () => 0.5;
+    // Rival starts just below the player's net worth, so growth pushes it ahead this tick.
+    const state = {
+      ...initialState(),
+      cash: 1000,
+      happiness: 50,
+      paused: false,
+      rivalNetWorth: 999,
+      rivalCurrentlyAhead: false,
+    };
+    const next = tick(state);
+    expect(next.rivalCurrentlyAhead).toBe(true);
+    expect(next.lastEvent?.message).toMatch(/rakip|rival/i);
+
+    const afterSecondTick = tick({ ...next, lastEvent: { id: -1, message: "", tone: "neutral" } });
+    expect(afterSecondTick.rivalCurrentlyAhead).toBe(true);
+    expect(afterSecondTick.lastEvent?.message).not.toMatch(/rakip|rival/i);
+  });
+
+  it("fires the opposite event when the player retakes the lead", () => {
+    Math.random = () => 0.5;
+    const state = {
+      ...initialState(),
+      cash: 100000,
+      happiness: 50,
+      paused: false,
+      rivalNetWorth: 500,
+      rivalCurrentlyAhead: true,
+    };
+    const next = tick(state);
+    expect(next.rivalCurrentlyAhead).toBe(false);
+    expect(next.lastEvent?.message).toMatch(/rakip|rival/i);
   });
 });

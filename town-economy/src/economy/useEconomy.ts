@@ -62,7 +62,7 @@ import {
 
 const HISTORY_LEN = 40;
 export const TICK_MS = 1500;
-const EVENT_LOG_CAP = 8;
+const EVENT_LOG_CAP = 30;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const TOWN_NAME_MAX_LENGTH = 24;
 // A new town starts local-market-only; once its net worth proves the
@@ -296,6 +296,13 @@ const LOST_TREASURE_CHANCE = 0.008;
 const LOST_TREASURE_PCT_OF_CASH = 0.05;
 const LOST_TREASURE_MIN_AMOUNT = 20;
 
+// A simulated "ghost" rival — grows steadily on its own (no strategy, just
+// a rough backdrop pace) so the player has something to race against
+// besides their own past runs. Purely a flavor comparison; nothing the
+// player does affects it directly.
+export const RIVAL_TOWN_GROWTH_RATE = 0.0015;
+const RIVAL_TOWN_GROWTH_JITTER = 0.002;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -444,6 +451,8 @@ export function initialState(
     inflationIndex: 100,
     inflationHistory: [100],
     netWorthHistory: [config.startingCash],
+    rivalNetWorth: config.startingCash,
+    rivalCurrentlyAhead: false,
     inflationRate: config.baseInflationDrift,
     selectedGood: GOODS[0].id,
     goods,
@@ -973,6 +982,19 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  const rivalNetWorth =
+    state.rivalNetWorth * (1 + RIVAL_TOWN_GROWTH_RATE + (Math.random() - 0.5) * RIVAL_TOWN_GROWTH_JITTER);
+  const rivalCurrentlyAhead = rivalNetWorth > netWorthNow;
+  if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead) {
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, rivalCurrentlyAhead ? "msg.rivalTownOvertookYou" : "msg.rivalTownOvertaken", {
+        amount: formatNumberUtil(rivalCurrentlyAhead ? rivalNetWorth : netWorthNow, state.language),
+      }),
+      tone: rivalCurrentlyAhead ? "bad" : "good",
+    });
+  }
+
   const lastEvent = newEvents.length > 0 ? newEvents[newEvents.length - 1] : state.lastEvent;
   const eventLog =
     newEvents.length > 0
@@ -1009,6 +1031,8 @@ export function tick(state: EconomyState): EconomyState {
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),
     recordBrokenThisRun: state.recordBrokenThisRun || beatPersonalRecord,
     netWorthHistory,
+    rivalNetWorth,
+    rivalCurrentlyAhead,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }

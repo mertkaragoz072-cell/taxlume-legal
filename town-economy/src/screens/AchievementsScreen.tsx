@@ -152,6 +152,14 @@ export function AchievementsScreen() {
           strokeWidth={3}
           interactive
         />
+        <View style={styles.rivalRow}>
+          <Text style={styles.rivalLabel}>
+            🏘️ {t("achievements.rivalTownLabel", { amount: formatCoins(state.rivalNetWorth) })}
+          </Text>
+          <Text style={[styles.rivalStatus, { color: state.rivalCurrentlyAhead ? "#c94b4b" : "#3fae5c" }]}>
+            {state.rivalCurrentlyAhead ? t("achievements.rivalAhead") : t("achievements.rivalBehind")}
+          </Text>
+        </View>
       </View>
 
       {miniQuest && miniQuestTemplate && (
@@ -432,6 +440,17 @@ const styles = StyleSheet.create({
     fontSize: TYPE.heading,
     marginBottom: 6,
   },
+  rivalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: SPACING.sm,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: "#3a2d1e",
+  },
+  rivalLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
+  rivalStatus: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.caption },
   compendiumCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
