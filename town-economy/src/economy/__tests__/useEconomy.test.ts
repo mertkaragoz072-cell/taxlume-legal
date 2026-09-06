@@ -241,6 +241,16 @@ describe("tick — loan interest accrual", () => {
     }
     expect(gameDayFromTick(state.tick)).toBe(2);
   });
+
+  it("samples net worth into netWorthHistory every tick, capped at HISTORY_LEN", () => {
+    let state = initialState();
+    expect(state.netWorthHistory).toEqual([state.cash]);
+    for (let i = 0; i < 5; i++) {
+      state = tick(state);
+    }
+    expect(state.netWorthHistory.length).toBe(6); // seed value + 5 ticks
+    expect(state.netWorthHistory[state.netWorthHistory.length - 1]).toBeCloseTo(computeNetWorth(state), 6);
+  });
 });
 
 describe("hot streak trading bonus", () => {

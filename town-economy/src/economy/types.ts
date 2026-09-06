@@ -234,6 +234,9 @@ export interface EconomyState {
   paused: boolean;
   inflationIndex: number; // town price index, starts at 100
   inflationHistory: number[];
+  /** net worth sampled once per tick, capped at HISTORY_LEN — powers the
+   * net-worth chart on the Achievements screen */
+  netWorthHistory: number[];
   inflationRate: number; // per-tick drift, changes slowly over time
   selectedGood: GoodId;
   goods: Record<GoodId, GoodState>;

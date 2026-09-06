@@ -443,6 +443,7 @@ export function initialState(
     paused: false,
     inflationIndex: 100,
     inflationHistory: [100],
+    netWorthHistory: [config.startingCash],
     inflationRate: config.baseInflationDrift,
     selectedGood: GOODS[0].id,
     goods,
@@ -959,6 +960,7 @@ export function tick(state: EconomyState): EconomyState {
   // prestige/reset) rather than the continuously-climbing bestNetWorthEver,
   // which would otherwise fire on almost every tick while simply playing.
   const netWorthNow = computeNetWorth({ ...state, cash, goods, assets, loan });
+  const netWorthHistory = pushCapped(state.netWorthHistory, netWorthNow, HISTORY_LEN);
   const beatPersonalRecord =
     !state.recordBrokenThisRun && state.priorBestNetWorth > 0 && netWorthNow > state.priorBestNetWorth;
   if (beatPersonalRecord) {
@@ -1006,6 +1008,7 @@ export function tick(state: EconomyState): EconomyState {
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),
     recordBrokenThisRun: state.recordBrokenThisRun || beatPersonalRecord,
+    netWorthHistory,
     dailyProgress: { ...state.dailyProgress, cashEarned: dailyCashEarned },
   };
 }

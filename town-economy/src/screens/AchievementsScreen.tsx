@@ -1,14 +1,19 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GradientFill } from "../components/GradientFill";
+import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
 import { ACHIEVEMENTS } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { GOODS } from "../economy/goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
+import { RESEARCH_NODES } from "../economy/research";
 import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
+import { TOWNS } from "../economy/towns";
+import { isGoodUnlocked } from "../economy/useEconomy";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -20,7 +25,11 @@ import {
   TYPE,
   UNLOCKED_CARD_GRADIENT,
   WEIGHT,
+  withAlpha,
 } from "../theme";
+
+const screenWidth = Dimensions.get("window").width;
+const netWorthChartWidth = Math.min(screenWidth - 48, 420);
 
 type ImportFeedback = { type: "success" | "error"; text: string };
 
@@ -129,6 +138,20 @@ export function AchievementsScreen() {
             <Text style={styles.statLabel}>{t("achievements.stats.bestNetWorthEver")}</Text>
           </View>
         </View>
+      </View>
+
+      <SectionLabel text={t("achievements.netWorthHistorySectionLabel")} color="#5fd884" />
+      <View style={styles.netWorthChartCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <Text style={styles.netWorthChartValue}>{formatCoins(netWorth)}</Text>
+        <PriceChart
+          history={state.netWorthHistory}
+          color="#5fd884"
+          width={netWorthChartWidth}
+          height={100}
+          strokeWidth={3}
+          interactive
+        />
       </View>
 
       {miniQuest && miniQuestTemplate && (
@@ -259,6 +282,59 @@ export function AchievementsScreen() {
         );
       })}
 
+      <SectionLabel text={t("achievements.compendiumSectionLabel")} color="#6fb8f2" />
+      <View style={styles.compendiumCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <Text style={styles.compendiumGroupLabel}>
+          {t("achievements.compendiumGoods", {
+            count: GOODS.filter((g) => isGoodUnlocked(g, state)).length,
+            total: GOODS.length,
+          })}
+        </Text>
+        <View style={styles.compendiumGrid}>
+          {GOODS.map((g) => {
+            const unlocked = isGoodUnlocked(g, state);
+            return (
+              <View key={g.id} style={[styles.compendiumChip, !unlocked && styles.compendiumChipLocked]}>
+                <Text style={styles.compendiumIcon}>{unlocked ? g.icon : "🔒"}</Text>
+              </View>
+            );
+          })}
+        </View>
+
+        <Text style={[styles.compendiumGroupLabel, styles.compendiumGroupLabelSpaced]}>
+          {t("achievements.compendiumTowns", {
+            count: state.stats.townsTradedWith.length,
+            total: TOWNS.length,
+          })}
+        </Text>
+        <View style={styles.compendiumGrid}>
+          {TOWNS.map((tn) => {
+            const visited = state.stats.townsTradedWith.includes(tn.id);
+            return (
+              <View key={tn.id} style={[styles.compendiumChip, !visited && styles.compendiumChipLocked]}>
+                <Text style={styles.compendiumIcon}>{visited ? tn.icon : "🔒"}</Text>
+              </View>
+            );
+          })}
+        </View>
+
+        <Text style={[styles.compendiumGroupLabel, styles.compendiumGroupLabelSpaced]}>
+          {t("achievements.compendiumResearch", {
+            count: state.researched.length,
+            total: RESEARCH_NODES.length,
+          })}
+        </Text>
+        <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${(state.researched.length / RESEARCH_NODES.length) * 100}%` },
+            ]}
+          />
+        </View>
+      </View>
+
       <SectionLabel text={t("backup.sectionLabel")} color="#a0917a" />
       <View style={styles.backupCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -342,6 +418,46 @@ const styles = StyleSheet.create({
   statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center" },
   statValue: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, textAlign: "center", marginTop: 2 },
+  netWorthChartCard: {
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  netWorthChartValue: {
+    color: "#5fd884",
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.heading,
+    marginBottom: 6,
+  },
+  compendiumCard: {
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl - 4,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  compendiumGroupLabel: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginBottom: SPACING.sm,
+  },
+  compendiumGroupLabelSpaced: { marginTop: SPACING.md },
+  compendiumGrid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
+  compendiumChip: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.chip,
+    backgroundColor: withAlpha(COLORS.accent, 0.12),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  compendiumChipLocked: { backgroundColor: "#1a1410", opacity: 0.5 },
+  compendiumIcon: { fontSize: TYPE.title },
   questHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",

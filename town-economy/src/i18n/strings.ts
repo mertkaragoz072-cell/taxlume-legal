@@ -195,6 +195,11 @@ export const STRINGS = {
       miniQuestTicksLeft: "{ticks} tur kaldı",
       sectionLabel: "BAŞARIMLAR",
       statsSectionLabel: "ÖMÜR BOYU İSTATİSTİKLER",
+      netWorthHistorySectionLabel: "NET SERVET GEÇMİŞİ",
+      compendiumSectionLabel: "KOLEKSİYON",
+      compendiumGoods: "Mallar: {count}/{total}",
+      compendiumTowns: "Ticaret Yapılan Kasabalar: {count}/{total}",
+      compendiumResearch: "Araştırmalar: {count}/{total}",
       stats: {
         totalTrades: "Toplam İşlem",
         caravansCompleted: "Tamamlanan Kervan",
@@ -894,6 +899,11 @@ export const STRINGS = {
       miniQuestTicksLeft: "{ticks} turns left",
       sectionLabel: "ACHIEVEMENTS",
       statsSectionLabel: "LIFETIME STATS",
+      netWorthHistorySectionLabel: "NET WORTH HISTORY",
+      compendiumSectionLabel: "COMPENDIUM",
+      compendiumGoods: "Goods: {count}/{total}",
+      compendiumTowns: "Towns Traded With: {count}/{total}",
+      compendiumResearch: "Research: {count}/{total}",
       stats: {
         totalTrades: "Total Trades",
         caravansCompleted: "Caravans Completed",
