@@ -28,6 +28,17 @@ type QtyOption = 1 | 5 | "ALL";
 
 const REGULAR_TOWNS = TOWNS.filter((tn) => tn.tier === "town");
 const METROPOLISES = TOWNS.filter((tn) => tn.tier === "metropol");
+const ALL_TOWNS = [...REGULAR_TOWNS, ...METROPOLISES];
+
+// Green above the baseline, red below — same intensity-scales-with-magnitude
+// idea as a real heatmap, but built from the app's own warm palette (and a
+// ⭐ on the single best cell) so it reads as a game board, not a spreadsheet.
+function heatCellColor(pct: number): string {
+  const clamped = Math.max(-50, Math.min(50, pct));
+  const intensity = Math.abs(clamped) / 50;
+  const base = clamped >= 0 ? "#5fd884" : "#f0776a";
+  return withAlpha(base, 0.1 + intensity * 0.55);
+}
 
 interface TownPillProps {
   town: ForeignTown;
@@ -169,43 +180,89 @@ export function TradeScreen({ sounds }: Props) {
         </View>
       )}
 
-      <SectionLabel
-        text={t("trade.pricesSectionLabel", { town: t(town.nameKey).toUpperCase() })}
-        color={good.color}
-      />
-      <View style={styles.goodsTable}>
-        {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
+      <SectionLabel text={t("trade.heatmapSectionLabel")} color={good.color} />
+      <Text style={styles.heatmapHint}>{t("trade.heatmapHint")}</Text>
+      {(() => {
+        const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
+        const cellPct = (g: (typeof GOODS)[number], tn: ForeignTown): number | null => {
+          if (tn.tier === "metropol" && !state.metropolUnlocked) return null;
           const home = state.goods[g.id].price;
-          const there = townState.prices[g.id];
-          const delta = ((there - home) / home) * 100;
-          const selected = g.id === goodId;
-          return (
-            <ScalePressable
-              key={g.id}
-              onPress={() => setGoodId(g.id)}
-              style={[styles.goodRow, selected && { borderColor: g.color, borderWidth: 2 }]}
-              scaleTo={0.98}
-            >
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View
-                pointerEvents="none"
-                style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(g.color, 0.12) }]}
-              />
-              <Text style={styles.goodIcon}>{g.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.goodName}>{t(g.nameKey)}</Text>
-                <Text style={styles.goodPrices}>
-                  {t("trade.priceCompare", { home: home.toFixed(2), there: there.toFixed(2) })}
-                </Text>
+          const there = state.foreignTowns[tn.id].prices[g.id];
+          const tariff = effectiveTariffRate(state, tn);
+          return ((there * (1 - tariff) - home) / home) * 100;
+        };
+        let bestGoodId: GoodId | null = null;
+        let bestTownId: TownId | null = null;
+        let bestPct = -Infinity;
+        for (const g of unlockedGoods) {
+          for (const tn of ALL_TOWNS) {
+            const pct = cellPct(g, tn);
+            if (pct !== null && pct > bestPct) {
+              bestPct = pct;
+              bestGoodId = g.id;
+              bestTownId = tn.id;
+            }
+          }
+        }
+        return (
+          <View style={styles.heatmapCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <View style={styles.heatmapHeaderRow}>
+              <View style={styles.heatmapCornerCell} />
+              {ALL_TOWNS.map((tn) => (
+                <View key={tn.id} style={styles.heatmapTownHeader}>
+                  <Text style={styles.heatmapTownIcon}>{tn.icon}</Text>
+                </View>
+              ))}
+            </View>
+            {unlockedGoods.map((g) => (
+              <View key={g.id} style={styles.heatmapRow}>
+                <ScalePressable
+                  onPress={() => setGoodId(g.id)}
+                  style={[styles.heatmapGoodCell, g.id === goodId && { borderColor: g.color }]}
+                  scaleTo={0.95}
+                >
+                  <Text style={styles.heatmapGoodIcon}>{g.icon}</Text>
+                </ScalePressable>
+                {ALL_TOWNS.map((tn) => {
+                  const pct = cellPct(g, tn);
+                  const isBest = g.id === bestGoodId && tn.id === bestTownId;
+                  const isSelected = g.id === goodId && tn.id === townId;
+                  if (pct === null) {
+                    return (
+                      <View key={tn.id} style={styles.heatmapCellLocked}>
+                        <Text style={styles.heatmapLockIcon}>🔒</Text>
+                      </View>
+                    );
+                  }
+                  return (
+                    <ScalePressable
+                      key={tn.id}
+                      onPress={() => {
+                        setGoodId(g.id);
+                        setTownId(tn.id);
+                        setDirection("export");
+                      }}
+                      style={[
+                        styles.heatmapCell,
+                        { backgroundColor: heatCellColor(pct) },
+                        isSelected && styles.heatmapCellSelected,
+                      ]}
+                      scaleTo={0.95}
+                    >
+                      {isBest && <Text style={styles.heatmapStar}>⭐</Text>}
+                      <Text style={styles.heatmapCellText}>
+                        {pct >= 0 ? "+" : ""}
+                        {pct.toFixed(0)}%
+                      </Text>
+                    </ScalePressable>
+                  );
+                })}
               </View>
-              <Text style={[styles.goodDelta, { color: delta >= 0 ? "#3fae5c" : "#c94b4b" }]}>
-                {delta >= 0 ? "+" : ""}
-                {delta.toFixed(0)}%
-              </Text>
-            </ScalePressable>
-          );
-        })}
-      </View>
+            ))}
+          </View>
+        );
+      })()}
 
       <View style={styles.panel}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -507,21 +564,51 @@ const styles = StyleSheet.create({
   townIcon: { fontSize: 22, marginBottom: 4 },
   townName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
   townMeta: { color: "#a0917a", fontSize: 10, marginTop: 4 },
-  goodsTable: { marginBottom: 20 },
-  goodRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
+  heatmapHint: { color: "#a0917a", fontSize: 11, marginBottom: 10, lineHeight: 15 },
+  heatmapCard: {
+    borderRadius: 16,
     padding: 10,
-    marginBottom: 8,
+    marginBottom: 20,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  heatmapHeaderRow: { flexDirection: "row", marginBottom: 6 },
+  heatmapCornerCell: { width: 34 },
+  heatmapTownHeader: { flex: 1, alignItems: "center" },
+  heatmapTownIcon: { fontSize: 16 },
+  heatmapRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  heatmapGoodCell: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: "transparent",
-    overflow: "hidden",
+    marginRight: 2,
   },
-  goodIcon: { fontSize: 22, marginRight: 10 },
-  goodName: { color: "#f0e3c8", fontWeight: "700", fontSize: 13 },
-  goodPrices: { color: "#a0917a", fontSize: 11, marginTop: 2 },
-  goodDelta: { fontWeight: "800", fontSize: 13 },
+  heatmapGoodIcon: { fontSize: 17 },
+  heatmapCell: {
+    flex: 1,
+    height: 34,
+    marginHorizontal: 2,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heatmapCellSelected: { borderWidth: 2, borderColor: "#e8c777" },
+  heatmapCellText: { color: "#f0e3c8", fontWeight: "700", fontSize: 10 },
+  heatmapStar: { fontSize: 9, position: "absolute", top: 1, right: 2 },
+  heatmapCellLocked: {
+    flex: 1,
+    height: 34,
+    marginHorizontal: 2,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  heatmapLockIcon: { fontSize: 12, opacity: 0.4 },
   panel: { borderRadius: 16, padding: 12, marginBottom: 20, overflow: "hidden", ...cardShadow },
   sideToggle: {
     flexDirection: "row",

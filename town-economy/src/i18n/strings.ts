@@ -57,8 +57,8 @@ export const STRINGS = {
     trade: {
       neighborsSectionLabel: "KOMŞU KASABALAR",
       townMeta: "{ticks} tur · %{tariff} vergi",
-      pricesSectionLabel: "{town} FİYATLARI",
-      priceCompare: "Bizde {home} 🪙 · Onlarda {there} 🪙",
+      heatmapSectionLabel: "FIRSAT HARİTASI",
+      heatmapHint: "Bir ürün ve kasaba seç — en kârlı fırsat ⭐ ile işaretli.",
       export: "İHRAÇ ET (Sat)",
       import: "İTHAL ET (Al)",
       summaryLine: "{qty} x {good} @ {price} ({town})",
@@ -664,8 +664,8 @@ export const STRINGS = {
     trade: {
       neighborsSectionLabel: "NEIGHBORING TOWNS",
       townMeta: "{ticks} turns · {tariff}% tariff",
-      pricesSectionLabel: "{town} PRICES",
-      priceCompare: "Here {home} 🪙 · There {there} 🪙",
+      heatmapSectionLabel: "OPPORTUNITY MAP",
+      heatmapHint: "Tap a good and a town — the best deal is marked ⭐.",
       export: "EXPORT (Sell)",
       import: "IMPORT (Buy)",
       summaryLine: "{qty} x {good} @ {price} ({town})",
