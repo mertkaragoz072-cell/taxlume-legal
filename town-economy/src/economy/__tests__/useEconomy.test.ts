@@ -494,6 +494,38 @@ describe("lost treasure", () => {
   });
 });
 
+describe("earthquake disaster", () => {
+  const originalRandom = Math.random;
+  afterEach(() => {
+    Math.random = originalRandom;
+  });
+
+  it("does not report a quake when the rare roll misses", () => {
+    Math.random = () => 0.999999;
+    const state = { ...initialState(), happiness: 50, paused: false };
+    const next = tick(state);
+    expect(next.eventLog.some((e) => /deprem|earthquake/i.test(e.message))).toBe(false);
+  });
+
+  it("reports a quake in the event log when the rare roll hits", () => {
+    Math.random = () => 0.001; // clears EARTHQUAKE_CHANCE and sets the severity roll
+    const state = { ...initialState(), happiness: 50, paused: false };
+    const next = tick(state);
+    expect(next.eventLog.some((e) => /deprem|earthquake/i.test(e.message))).toBe(true);
+  });
+
+  it("a maxed Earthquake Fund softens the supply loss relative to no fund at all", () => {
+    Math.random = () => 0.001;
+    const base = { ...initialState(), happiness: 50, paused: false };
+    const withoutFund = tick(base);
+    const withFund = tick({
+      ...base,
+      upgrades: { ...base.upgrades, earthquakeFund: UPGRADES_BY_ID.earthquakeFund.maxLevel },
+    });
+    expect(withFund.goods.bread.supply).toBeGreaterThan(withoutFund.goods.bread.supply);
+  });
+});
+
 describe("personal net-worth record", () => {
   it("does not celebrate on a fresh save with nothing to beat yet (priorBestNetWorth = 0)", () => {
     const state = { ...initialState(), paused: false };

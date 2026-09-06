@@ -5,7 +5,7 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
-import { ACHIEVEMENTS } from "../economy/achievements";
+import { ACHIEVEMENTS, ACHIEVEMENTS_BY_ID, AchievementId } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
@@ -89,6 +89,30 @@ export function AchievementsScreen() {
           </Text>
         </View>
       </View>
+
+      {state.unlockedAchievements.length > 0 && (
+        <>
+          <SectionLabel text={t("achievements.hallOfFameSectionLabel")} color="#c58ee0" />
+          <View style={styles.hallOfFameRow}>
+            {[...state.unlockedAchievements]
+              .slice(-3)
+              .reverse()
+              .map((id) => {
+                const a = ACHIEVEMENTS_BY_ID[id as AchievementId];
+                if (!a) return null;
+                return (
+                  <View key={id} style={styles.hallOfFameChip}>
+                    <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                    <Text style={styles.hallOfFameIcon}>{a.icon}</Text>
+                    <Text style={styles.hallOfFameTitle} numberOfLines={2}>
+                      {t(a.titleKey)}
+                    </Text>
+                  </View>
+                );
+              })}
+          </View>
+        </>
+      )}
 
       <SectionLabel text={t("achievements.statsSectionLabel")} color="#e8c777" />
       <View style={styles.statsCard}>
@@ -426,6 +450,23 @@ const styles = StyleSheet.create({
   statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center" },
   statValue: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, textAlign: "center", marginTop: 2 },
+  hallOfFameRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.xl - 4 },
+  hallOfFameChip: {
+    flex: 1,
+    borderRadius: RADIUS.card,
+    padding: SPACING.sm + 2,
+    alignItems: "center",
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  hallOfFameIcon: { fontSize: TYPE.heading, marginBottom: 4 },
+  hallOfFameTitle: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    textAlign: "center",
+  },
   netWorthChartCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,

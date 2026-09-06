@@ -72,6 +72,19 @@ export const UPGRADES: UpgradeDef[] = [
     effectPerLevel: 0.02,
     effectLabel: (level) => ({ key: "upgrade.guardTower.effect", params: { pct: Math.round(level * 2) } }),
   },
+  {
+    id: "earthquakeFund",
+    nameKey: "upgrade.earthquakeFund.name",
+    icon: "🏚️",
+    descriptionKey: "upgrade.earthquakeFund.description",
+    maxLevel: 5,
+    baseCost: 130,
+    costGrowth: 1.6,
+    // Softens how much supply an earthquake wipes out (never to zero — see
+    // EARTHQUAKE_LOSS_FLOOR in useEconomy.ts) rather than the odds of one hitting.
+    effectPerLevel: 0.03,
+    effectLabel: (level) => ({ key: "upgrade.earthquakeFund.effect", params: { pct: Math.round(level * 3) } }),
+  },
 ];
 
 export const UPGRADES_BY_ID = Object.fromEntries(UPGRADES.map((u) => [u.id, u])) as Record<

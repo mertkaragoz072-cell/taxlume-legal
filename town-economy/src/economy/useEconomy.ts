@@ -303,6 +303,13 @@ const LOST_TREASURE_MIN_AMOUNT = 20;
 export const RIVAL_TOWN_GROWTH_RATE = 0.0015;
 const RIVAL_TOWN_GROWTH_JITTER = 0.002;
 
+// A rare, broad disaster hitting every good's home supply at once — see the
+// earthquake roll in tick() and the Earthquake Fund upgrade that softens it.
+export const EARTHQUAKE_CHANCE = 0.003;
+export const EARTHQUAKE_LOSS_MIN = 0.1;
+export const EARTHQUAKE_LOSS_MAX = 0.25;
+export const EARTHQUAKE_LOSS_FLOOR = 0.02;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -483,7 +490,7 @@ export function initialState(
     townRankIndex: 0,
     researched: [],
     assets,
-    upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0, guardTower: 0 },
+    upgrades: { market: 0, caravanserai: 0, townhall: 0, bank: 0, guardTower: 0, earthquakeFund: 0 },
     taxRate: 0,
     happiness: 100,
     lastSavedAt: Date.now(),
@@ -599,6 +606,26 @@ export function tick(state: EconomyState): EconomyState {
       id: nextId++,
       message: t(state.language, template.messageKey),
       tone: template.tone,
+    });
+  }
+
+  // A rare, broad disaster — unlike the passive news above (which shocks at
+  // most one good), this hits every good's home supply at once. The
+  // Earthquake Fund upgrade softens the severity (never fully to zero) but
+  // never touches the chance, so it stays a genuine "when," not "if."
+  if (Math.random() < EARTHQUAKE_CHANCE) {
+    const rawLossPct = EARTHQUAKE_LOSS_MIN + Math.random() * (EARTHQUAKE_LOSS_MAX - EARTHQUAKE_LOSS_MIN);
+    const lossPct = Math.max(
+      EARTHQUAKE_LOSS_FLOOR,
+      rawLossPct - state.upgrades.earthquakeFund * UPGRADES_BY_ID.earthquakeFund.effectPerLevel
+    );
+    for (const good of GOODS) {
+      supplyShocks[good.id] = -lossPct;
+    }
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.earthquakeHit", { pct: Math.round(lossPct * 100) }),
+      tone: "bad",
     });
   }
 
