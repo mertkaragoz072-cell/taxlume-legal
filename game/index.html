@@ -3,162 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Merge Gun: Wave Defense</title>
+<title>Pati Nöbeti</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Quicksand:wght@500;600;700&display=swap">
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-  html, body {
-    margin: 0; padding: 0; height: 100%; overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #111;
-    touch-action: none;
+  :root{
+    --ink:#223142;
+    --sky-top:#7cc8e8;
+    --sky-bot:#bfe9d6;
+    --grass:#8fc93b;
+    --grass-deep:#79ad2c;
+    --danger:#e2604f;
+    --danger-deep:#c14a3c;
+    --dirt:#8c5a34;
+    --dirt-deep:#6e4527;
+    --panel-sky:#e3f4f8;
+    --panel-sky-deep:#cfe9f0;
+    --panel-belt:#9c6a3c;
+    --panel-belt-deep:#7c5230;
+    --paper:#fffdf7;
+    --accent:#ffb92e;
+    --accent-deep:#e69a12;
+    --good:#5ec95e;
+    --font-display:'Baloo 2', ui-rounded, system-ui, sans-serif;
+    --font-body:'Quicksand', system-ui, sans-serif;
   }
-  #app {
-    position: relative; width: 100%; height: 100%; max-width: 480px; margin: 0 auto;
-    background: #222; display: flex; flex-direction: column; overflow: hidden;
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html, body { margin:0; padding:0; height:100%; }
+  body{
+    min-height:100%; display:flex; align-items:center; justify-content:center;
+    background:#1b232c; font-family:var(--font-body); padding:18px;
+  }
+  #stage{
+    position:relative; width:100%; max-width:400px; aspect-ratio:9/18.5; max-height:900px;
+    background:var(--paper); border-radius:22px; overflow:hidden; touch-action:none;
+    box-shadow:0 18px 44px rgba(0,0,0,.5), 0 0 0 6px #0f151b;
+    display:flex; flex-direction:column;
   }
 
   /* ---------- Battlefield ---------- */
-  #battlefield {
-    position: relative; flex: 0 0 46%; overflow: hidden;
-    background: linear-gradient(to bottom, #8fd3f4 0%, #a9e0f5 60%, #b9e6c9 60%, #b9e6c9 100%);
+  #battlefield{
+    position:relative; flex:0 0 48%; overflow:hidden;
+    background:linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bot) 62%, var(--sky-bot) 62%);
   }
-  #trees {
-    position: absolute; right: 4%; top: 8%; font-size: 40px; line-height: 1; opacity: .9;
-    filter: drop-shadow(0 2px 0 rgba(0,0,0,.05));
+  #trees{ position:absolute; right:5%; top:6%; font-size:34px; line-height:1; filter:drop-shadow(0 3px 0 rgba(0,0,0,.08)); }
+  #waveBanner{
+    position:absolute; top:8px; left:0; right:0; text-align:center; z-index:20;
+    font-family:var(--font-display); font-weight:800; font-size:27px; color:#fff;
+    -webkit-text-stroke:3px var(--ink); paint-order:stroke fill; text-wrap:balance;
   }
-  #waveBanner {
-    position: absolute; top: 10px; left: 0; right: 0; text-align: center;
-    font-size: 30px; font-weight: 800; color: #fff;
-    -webkit-text-stroke: 3px #2a2a2a; paint-order: stroke fill;
-    z-index: 20; transition: opacity .3s;
+  #waveSub{
+    position:absolute; top:41px; left:0; right:0; text-align:center; z-index:20; opacity:0; transition:opacity .3s;
+    font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--accent);
+    -webkit-text-stroke:2px var(--ink); paint-order:stroke fill;
   }
-  #waveSub {
-    position: absolute; top: 46px; left: 0; right: 0; text-align: center;
-    font-size: 13px; font-weight: 700; color: #fff; -webkit-text-stroke: 2px #2a2a2a; paint-order: stroke fill;
-    z-index: 20;
+  #ground{ position:absolute; left:0; right:0; bottom:0; top:54%; display:flex; }
+  .side{ position:relative; flex:1; height:100%; }
+  .side.green{ background:linear-gradient(to bottom, var(--grass), var(--grass-deep)); }
+  .side.red{ background:linear-gradient(to bottom, var(--danger), var(--danger-deep)); }
+  #ground::after{
+    content:''; position:absolute; left:0; right:0; bottom:-9%; height:24%;
+    background:linear-gradient(to bottom, var(--dirt), var(--dirt-deep)); z-index:-1;
   }
-  #ground {
-    position: absolute; left: 0; right: 0; bottom: 0; top: 55%;
-    display: flex;
+  .hpbar{
+    position:absolute; top:7px; left:50%; transform:translateX(-50%);
+    width:76%; max-width:150px; height:17px; background:var(--ink); border-radius:5px;
+    border:2px solid var(--ink); overflow:hidden; z-index:5;
   }
-  .side { position: relative; flex: 1; height: 100%; }
-  .side.green { background: #a3c93a; }
-  .side.red { background: #d84f4f; }
-  #ground::after {
-    content: ''; position: absolute; left: 0; right: 0; bottom: -14%; height: 30%;
-    background: #8a5a34; z-index: -1;
+  .hpbar .fill{ height:100%; background:var(--good); transition:width .25s; }
+  .hpbar.enemy .fill{ background:#ff6a58; }
+  .hpbar .hptext{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-family:var(--font-body); font-weight:700; font-size:10px; font-variant-numeric:tabular-nums;
   }
-  #dirt {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 22px; background: #8a5a34;
+  #player{ position:absolute; bottom:4%; left:14%; width:104px; height:104px; z-index:4; filter:drop-shadow(0 3px 0 rgba(0,0,0,.1)); }
+  #player svg{ width:100%; height:100%; overflow:visible; }
+  #playerGunHold{
+    position:absolute; left:66%; top:46%; width:52%; z-index:6; pointer-events:none;
+    filter:drop-shadow(0 2px 0 rgba(0,0,0,.15));
   }
-  .hpbar {
-    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
-    width: 78%; max-width: 160px; height: 18px; background: #000; border-radius: 5px;
-    border: 2px solid #000; overflow: hidden; z-index: 5;
+  #enemies{
+    position:absolute; bottom:5%; left:0; right:0; display:flex; justify-content:center; align-items:flex-end;
+    flex-wrap:wrap-reverse; gap:2px 6px; padding:0 6px; z-index:3;
   }
-  .hpbar .fill { height: 100%; background: #58d858; transition: width .25s; }
-  .hpbar.enemy .fill { background: #e23c3c; }
-  .hpbar .hptext {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 11px; font-weight: 700;
+  .enemy{ position:relative; text-align:center; transition:opacity .25s, transform .15s; filter:drop-shadow(0 3px 0 rgba(0,0,0,.1)); }
+  .enemy .art svg{ width:100%; height:100%; overflow:visible; }
+  .enemy .ehp{
+    position:absolute; top:-15px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; border-radius:4px; font-size:9px; font-weight:700;
+    padding:1px 4px; white-space:nowrap; font-variant-numeric:tabular-nums; z-index:2;
   }
-  #player {
-    position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%) scaleX(-1);
-    font-size: 54px; z-index: 4; transition: transform .1s;
+  .enemy.hit{ transform:scale(1.15); filter:brightness(1.5); }
+  .enemy.dead{ opacity:0; transform:scale(.4) translateY(10px); }
+  .float{
+    position:absolute; font-family:var(--font-display); font-weight:800; font-size:14px; color:#fff;
+    -webkit-text-stroke:2px var(--ink); paint-order:stroke fill;
+    pointer-events:none; animation:floatUp .8s ease-out forwards; z-index:30;
   }
-  #playerGunTag {
-    position: absolute; bottom: 16%; left: 62%; width: 46px; height: 26px; z-index: 5; pointer-events: none;
+  .float.crit{ color:var(--accent); font-size:18px; }
+  .float.miss{ color:#e9e9e9; font-style:italic; }
+  @keyframes floatUp{ 0%{opacity:1; transform:translateY(0);} 100%{opacity:0; transform:translateY(-36px);} }
+  .muzzle{
+    position:absolute; bottom:38%; left:26%; width:13px; height:13px; border-radius:50%;
+    background:radial-gradient(circle, #fff6c8, var(--accent) 60%, transparent 72%);
+    animation:flash .12s ease-out forwards; z-index:6; pointer-events:none;
   }
-  #enemies {
-    position: absolute; bottom: 6%; left: 0; right: 0; display: flex; justify-content: center;
-    flex-wrap: wrap-reverse; gap: 2px 6px; padding: 0 6px; z-index: 3;
-  }
-  .enemy {
-    position: relative; font-size: 34px; text-align: center; transition: opacity .25s, transform .15s;
-  }
-  .enemy .ehp {
-    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-    background: #000; color: #fff; border-radius: 4px; font-size: 9px; font-weight: 700;
-    padding: 1px 4px; white-space: nowrap; border: 1px solid #700;
-  }
-  .enemy.hit { transform: scale(1.15); filter: brightness(1.6); }
-  .enemy.dead { opacity: 0; transform: scale(.4) translateY(10px); }
-  .float {
-    position: absolute; font-weight: 800; font-size: 15px; color: #fff;
-    -webkit-text-stroke: 2px #333; paint-order: stroke fill;
-    pointer-events: none; animation: floatUp .8s ease-out forwards; z-index: 30;
-  }
-  .float.crit { color: #ffd23c; font-size: 19px; }
-  .float.miss { color: #ccc; font-style: italic; }
-  @keyframes floatUp {
-    0% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-38px); }
-  }
-  .muzzle {
-    position: absolute; bottom: 30%; left: 58%; width: 14px; height: 14px; border-radius: 50%;
-    background: radial-gradient(circle, #fff6c0, #ffb020 60%, transparent 70%);
-    animation: flash .12s ease-out forwards; z-index: 6; pointer-events: none;
-  }
-  @keyframes flash { from{opacity:1; transform:scale(1);} to{opacity:0; transform:scale(1.8);} }
+  @keyframes flash{ from{opacity:1; transform:scale(1);} to{opacity:0; transform:scale(1.8);} }
 
-  #clearedBanner, #startScreen, #gameOverScreen {
-    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: rgba(0,0,0,.55); color: #fff; z-index: 50; text-align: center; padding: 20px;
+  #startScreen, #gameOverScreen{
+    position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(20,26,32,.62); color:#fff; text-align:center; padding:22px;
   }
-  #clearedBanner { background: rgba(0,0,0,.35); font-size: 26px; font-weight: 800; }
-  #startScreen[hidden], #gameOverScreen[hidden] { display: none; }
-  #startScreen h1, #gameOverScreen h1 { font-size: 26px; margin: 0 0 6px; }
-  #startScreen p, #gameOverScreen p { font-size: 13px; opacity: .85; margin: 0 0 18px; max-width: 300px; }
-  .bigBtn {
-    background: #58d858; color: #fff; border: none; border-radius: 12px; padding: 14px 34px;
-    font-size: 18px; font-weight: 800; box-shadow: 0 4px 0 #2f8f2f; cursor: pointer;
+  #startScreen[hidden], #gameOverScreen[hidden]{ display:none; }
+  .title{ font-family:var(--font-display); font-weight:800; font-size:28px; margin:0 0 6px; text-wrap:balance; }
+  .subtitle{ font-family:var(--font-body); font-weight:600; font-size:13px; opacity:.9; margin:0 0 20px; max-width:280px; line-height:1.5; }
+  .bigBtn{
+    font-family:var(--font-display); background:var(--good); color:#fff; border:none; border-radius:14px;
+    padding:13px 38px; font-size:19px; font-weight:800; box-shadow:0 4px 0 #2f8f2f; cursor:pointer;
   }
-  .bigBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #2f8f2f; }
+  .bigBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #2f8f2f; }
 
   /* ---------- HUD ---------- */
-  #hud { flex: 1; background: #b98a52; display: flex; flex-direction: column; padding: 8px 10px 12px; overflow: hidden; }
-  #statsRow {
-    display: flex; justify-content: space-between; background: #cfe8f0; border-radius: 12px 12px 0 0;
-    padding: 6px 4px 4px; font-size: 10px; font-weight: 700; color: #2a5a66;
+  #hud{ flex:1; background:var(--panel-belt); display:flex; flex-direction:column; padding:8px 9px 10px; min-height:0; }
+  #statsRow{
+    display:flex; justify-content:space-between; background:var(--panel-sky); border-radius:12px 12px 0 0;
+    padding:7px 4px 5px; font-family:var(--font-body);
   }
-  #statsRow .stat { flex: 1; text-align: center; }
-  #statsRow .stat .ic { font-size: 15px; display: block; }
-  #boardWrap {
-    background: #eaf7fb; border-radius: 0 0 12px 12px; padding: 6px; flex: 1; display: flex; flex-direction: column;
-    min-height: 0;
+  #statsRow .stat{ flex:1; text-align:center; }
+  #statsRow .stat .ic{ font-size:14px; display:block; }
+  #statsRow .stat span:last-child{ font-weight:700; font-size:10px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  #boardWrap{ background:var(--panel-sky-deep); border-radius:0 0 12px 12px; padding:6px; flex:1; display:flex; flex-direction:column; min-height:0; }
+  .sectionLabel{
+    font-family:var(--font-body); font-weight:700; font-size:9px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink); opacity:.55; margin:2px 0 3px 2px;
   }
-  #grid {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; flex: 1; min-height: 0;
+  #grid{ display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; flex:1; min-height:0; }
+  .slot{
+    position:relative; background:var(--paper); border-radius:7px; aspect-ratio:1/1;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(34,49,66,.08);
   }
-  .slot {
-    position: relative; background: #d7eef5; border-radius: 6px; aspect-ratio: 1/1;
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  .slot.equip{ background:#fff3d9; outline:2px dashed var(--accent-deep); }
+  .slot .gunbox{ width:88%; height:88%; pointer-events:none; }
+  .slot .frag{ width:70%; height:70%; pointer-events:none; }
+  .slot .count{
+    position:absolute; bottom:1px; right:3px; font-size:11px; font-weight:800; color:var(--ink);
+    background:rgba(255,255,255,.85); border-radius:4px; padding:0 3px;
   }
-  .slot.equip { background: #c3e6f2; outline: 2px dashed #7fb8cc; }
-  .slot .gunbox { width: 88%; height: 88%; pointer-events: none; }
-  .slot .frag { width: 70%; height: 70%; pointer-events: none; }
-  .slot .count {
-    position: absolute; bottom: 1px; right: 3px; font-size: 11px; font-weight: 800; color: #2a5a66;
-    background: rgba(255,255,255,.8); border-radius: 4px; padding: 0 3px;
-  }
-  .slot.dragging-src { opacity: .25; }
-  .slot.drop-target { outline: 2px solid #58d858; }
-  .slot.drop-reject { outline: 2px solid #e23c3c; }
-  #tray {
-    display: flex; gap: 4px; margin-top: 6px; padding: 4px; background: #9c7141; border-radius: 10px;
-    min-height: 40px;
-  }
-  #tray .slot { background: #f2f2f2; flex: 1; max-width: 15%; }
-  .dragClone {
-    position: fixed; width: 46px; height: 46px; pointer-events: none; z-index: 999; opacity: .9;
-    transform: translate(-50%,-50%);
-  }
-  .footerLinks { text-align: center; padding: 4px; font-size: 10px; }
-  .footerLinks a { color: #eee; margin: 0 6px; }
+  .slot.dragging-src{ opacity:.25; }
+  .slot.drop-target{ outline:2px solid var(--good); }
+  .slot.drop-reject{ outline:2px solid var(--danger-deep); }
+  #tray{ display:flex; gap:4px; margin-top:2px; padding:4px; background:var(--panel-belt-deep); border-radius:10px; min-height:38px; }
+  #tray .slot{ background:#f4f1ea; flex:1; max-width:15%; }
+  .dragClone{ position:fixed; width:44px; height:44px; pointer-events:none; z-index:999; opacity:.92; transform:translate(-50%,-50%); }
+  .footerLinks{ text-align:center; padding:6px 0 0; font-family:var(--font-body); font-size:10px; }
+  .footerLinks a{ color:rgba(255,255,255,.6); margin:0 6px; text-decoration:none; }
 </style>
 </head>
 <body>
-<div id="app">
+
+<div id="stage">
 
   <div id="battlefield">
     <div id="trees">🌲🌳🌲</div>
@@ -168,7 +172,8 @@
     <div id="ground">
       <div class="side green" id="playerSide">
         <div class="hpbar" id="playerHpBar"><div class="fill" id="playerHpFill"></div><span class="hptext" id="playerHpText"></span></div>
-        <div id="player">🐱</div>
+        <div id="player"></div>
+        <div id="playerGunHold"></div>
       </div>
       <div class="side red" id="enemySide">
         <div class="hpbar enemy" id="enemyHpBar"><div class="fill" id="enemyHpFill"></div><span class="hptext" id="enemyHpText"></span></div>
@@ -177,14 +182,14 @@
     </div>
 
     <div id="startScreen">
-      <h1>🐱 Merge Gun: Wave Defense</h1>
-      <p>Kedini savunmaya hazırla! Düşman dalgalarını alt et, silah parçalarını birleştir (merge) ve topunu güçlendir.</p>
+      <div class="title">🐾 Pati Nöbeti</div>
+      <p class="subtitle">Çiftlik dalga dalga saldırıyor. Silahını nöbetin sonuna kadar ayakta kalacak şekilde birleştir (merge) ve güçlendir.</p>
       <button class="bigBtn" id="startBtn">OYNA</button>
     </div>
 
     <div id="gameOverScreen" hidden>
-      <h1>💀 Kaybettin</h1>
-      <p id="goStats"></p>
+      <div class="title">💀 Nöbet Bitti</div>
+      <p class="subtitle" id="goStats"></p>
       <button class="bigBtn" id="restartBtn">TEKRAR OYNA</button>
     </div>
   </div>
@@ -198,32 +203,33 @@
       <div class="stat"><span class="ic">🪶</span><span id="statPierce">0%</span></div>
     </div>
     <div id="boardWrap">
+      <div class="sectionLabel">Cephanelik — aynı parçaları birleştir, silahına sürükle</div>
       <div id="grid"></div>
       <div id="tray"></div>
     </div>
   </div>
 
-  <div class="footerLinks"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></div>
 </div>
+
+<div class="footerLinks"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></div>
 
 <script>
 (function(){
   "use strict";
 
-  // ---------------- Weapon tiers ----------------
   var TIERS = [
-    { name:'Pistol',           dmg:285,  acc:.85, crit:0,  rate:150, pierce:0  },
-    { name:'Auto Pistol',      dmg:400,  acc:.90, crit:0,  rate:150, pierce:0  },
-    { name:'Marksman Rifle',   dmg:510,  acc:.94, crit:0,  rate:150, pierce:0  },
-    { name:'Battle Carbine',   dmg:650,  acc:.94, crit:3,  rate:150, pierce:10 },
-    { name:'Assault Rifle',    dmg:810,  acc:.94, crit:7,  rate:150, pierce:20 },
-    { name:'Heavy SMG',        dmg:1000, acc:.96, crit:10, rate:160, pierce:25 },
-    { name:'Battle Rifle',     dmg:1300, acc:.97, crit:14, rate:170, pierce:30 },
-    { name:'Marksman Elite',   dmg:1650, acc:.98, crit:18, rate:180, pierce:35 },
-    { name:'Combat Railgun',   dmg:2100, acc:.99, crit:22, rate:190, pierce:40 },
-    { name:'Annihilator',      dmg:2700, acc:.99, crit:26, rate:200, pierce:45 }
+    { name:'Tabanca',            dmg:285,  acc:.85, crit:0,  rate:150, pierce:0  },
+    { name:'Otomatik Tabanca',   dmg:400,  acc:.90, crit:0,  rate:150, pierce:0  },
+    { name:'Nişancı Tüfeği',     dmg:510,  acc:.94, crit:0,  rate:150, pierce:0  },
+    { name:'Muharebe Karabinası',dmg:650,  acc:.94, crit:3,  rate:150, pierce:10 },
+    { name:'Hücum Tüfeği',       dmg:810,  acc:.94, crit:7,  rate:150, pierce:20 },
+    { name:'Ağır SMG',           dmg:1000, acc:.96, crit:10, rate:160, pierce:25 },
+    { name:'Muharebe Tüfeği',    dmg:1300, acc:.97, crit:14, rate:170, pierce:30 },
+    { name:'Elit Nişancı',       dmg:1650, acc:.98, crit:18, rate:180, pierce:35 },
+    { name:'Savaş Railgun',      dmg:2100, acc:.99, crit:22, rate:190, pierce:40 },
+    { name:'Yok Edici',          dmg:2700, acc:.99, crit:26, rate:200, pierce:45 }
   ];
-  var MAX_TIER = TIERS.length; // 1-indexed tiers, 1..MAX_TIER
+  var MAX_TIER = TIERS.length;
 
   function gunSVG(tier, muted){
     var barrelLen = 34 + tier*8;
@@ -242,15 +248,109 @@
       '</svg>';
   }
 
-  // ---------------- Enemy types ----------------
+  var INK = '#262b2f';
+
+  function catSVG(){
+    return '<svg viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M18,100 Q2,90 6,68 Q9,55 20,52" fill="none" stroke="'+INK+'" stroke-width="7" stroke-linecap="round"/>' +
+      '<rect x="30" y="98" width="16" height="24" rx="7" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<rect x="54" y="100" width="15" height="22" rx="7" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<ellipse cx="52" cy="78" rx="34" ry="34" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<rect x="76" y="66" width="34" height="15" rx="7" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<circle cx="112" cy="73" r="9" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<circle cx="58" cy="36" r="27" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<path d="M38,20 L44,2 L54,20 Z" fill="#fff" stroke="'+INK+'" stroke-width="5" stroke-linejoin="round"/>' +
+      '<path d="M62,20 L70,1 L80,19 Z" fill="#fff" stroke="'+INK+'" stroke-width="5" stroke-linejoin="round"/>' +
+      '<path d="M42,17 L45,9 L50,18 Z" fill="#f4b6c0"/>' +
+      '<path d="M66,17 L70,8 L75,17 Z" fill="#f4b6c0"/>' +
+      '<rect x="34" y="30" width="50" height="9" fill="#3a3f44"/>' +
+      '<circle cx="46" cy="34" r="11" fill="#bfe8f5" stroke="#3a3f44" stroke-width="4"/>' +
+      '<circle cx="70" cy="34" r="11" fill="#bfe8f5" stroke="#3a3f44" stroke-width="4"/>' +
+      '<circle cx="46" cy="34" r="3.5" fill="'+INK+'"/>' +
+      '<circle cx="70" cy="34" r="3.5" fill="'+INK+'"/>' +
+      '<ellipse cx="58" cy="50" rx="4" ry="3" fill="#f4b6c0"/>' +
+      '</svg>';
+  }
+
+  function chickenSVG(){
+    return '<svg viewBox="0 0 90 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M68,45 Q84,30 78,15" fill="none" stroke="'+INK+'" stroke-width="6" stroke-linecap="round"/>' +
+      '<path d="M64,50 Q80,42 80,26" fill="none" stroke="'+INK+'" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="38" y1="80" x2="34" y2="96" stroke="#e08a3c" stroke-width="5" stroke-linecap="round"/>' +
+      '<line x1="50" y1="80" x2="54" y2="96" stroke="#e08a3c" stroke-width="5" stroke-linecap="round"/>' +
+      '<path d="M34,96 L26,100 M34,96 L34,102 M34,96 L42,100" fill="none" stroke="#e08a3c" stroke-width="4" stroke-linecap="round"/>' +
+      '<path d="M54,96 L46,100 M54,96 L54,102 M54,96 L62,100" fill="none" stroke="#e08a3c" stroke-width="4" stroke-linecap="round"/>' +
+      '<ellipse cx="44" cy="62" rx="26" ry="24" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<ellipse cx="56" cy="60" rx="11" ry="16" fill="#eee" stroke="'+INK+'" stroke-width="4" transform="rotate(15 56 60)"/>' +
+      '<circle cx="30" cy="30" r="16" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<circle cx="24" cy="14" r="5" fill="#e2604f"/><circle cx="32" cy="10" r="5" fill="#e2604f"/><circle cx="40" cy="14" r="5" fill="#e2604f"/>' +
+      '<path d="M22,38 Q19,46 26,46 Q24,40 22,38 Z" fill="#e2604f"/>' +
+      '<path d="M14,28 L2,32 L14,36 Z" fill="#f0a63c" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/>' +
+      '<circle cx="24" cy="27" r="3" fill="'+INK+'"/>' +
+      '</svg>';
+  }
+
+  function goatSVG(){
+    return '<svg viewBox="0 0 110 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M92,58 Q100,52 96,44" fill="none" stroke="'+INK+'" stroke-width="5" stroke-linecap="round"/>' +
+      '<rect x="42" y="76" width="10" height="20" rx="4" fill="#fff" stroke="'+INK+'" stroke-width="4"/>' +
+      '<rect x="60" y="76" width="10" height="20" rx="4" fill="#fff" stroke="'+INK+'" stroke-width="4"/>' +
+      '<rect x="78" y="76" width="10" height="20" rx="4" fill="#fff" stroke="'+INK+'" stroke-width="4"/>' +
+      '<ellipse cx="62" cy="66" rx="32" ry="22" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<circle cx="26" cy="46" r="18" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<path d="M16,32 Q10,18 18,8" fill="none" stroke="#4a4a4a" stroke-width="6" stroke-linecap="round"/>' +
+      '<path d="M30,30 Q34,14 26,4" fill="none" stroke="#4a4a4a" stroke-width="6" stroke-linecap="round"/>' +
+      '<ellipse cx="10" cy="46" rx="9" ry="5" fill="#fff" stroke="'+INK+'" stroke-width="4"/>' +
+      '<line x1="14" y1="38" x2="24" y2="41" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="20" cy="46" r="2.6" fill="'+INK+'"/>' +
+      '<path d="M14,58 L10,68 L18,62 L16,70 L22,62" fill="#eee" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"/>' +
+      '<ellipse cx="12" cy="54" rx="7" ry="5" fill="#f6f0e6" stroke="'+INK+'" stroke-width="3"/>' +
+      '</svg>';
+  }
+
+  function dinoSVG(){
+    return '<svg viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M92,60 Q120,54 122,30" fill="none" stroke="'+INK+'" stroke-width="8" stroke-linecap="round"/>' +
+      '<rect x="66" y="80" width="14" height="24" rx="6" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<rect x="86" y="80" width="14" height="24" rx="6" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<ellipse cx="78" cy="66" rx="34" ry="26" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<path d="M50,45 L56,32 L61,46 M62,43 L68,28 L74,44" fill="#fff" stroke="'+INK+'" stroke-width="4" stroke-linejoin="round"/>' +
+      '<rect x="58" y="66" width="14" height="8" rx="4" fill="#fff" stroke="'+INK+'" stroke-width="4"/>' +
+      '<path d="M40,54 Q52,62 62,56" fill="none" stroke="'+INK+'" stroke-width="16" stroke-linecap="round"/>' +
+      '<path d="M40,54 Q52,62 62,56" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/>' +
+      '<circle cx="26" cy="42" r="20" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<path d="M6,44 L2,50 L8,52 L4,58 L12,54" fill="#fff" stroke="'+INK+'" stroke-width="4" stroke-linejoin="round"/>' +
+      '<line x1="14" y1="30" x2="28" y2="34" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="22" cy="40" r="3" fill="'+INK+'"/>' +
+      '</svg>';
+  }
+
+  function oxSVG(){
+    return '<svg viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M100,60 Q116,66 114,84" fill="none" stroke="'+INK+'" stroke-width="5" stroke-linecap="round"/>' +
+      '<ellipse cx="114" cy="88" rx="5" ry="7" fill="#3a3f44"/>' +
+      '<rect x="50" y="82" width="14" height="24" rx="5" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<rect x="72" y="82" width="14" height="24" rx="5" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<rect x="94" y="82" width="14" height="24" rx="5" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<ellipse cx="76" cy="70" rx="38" ry="26" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<ellipse cx="92" cy="64" rx="12" ry="10" fill="#e7e2d6"/>' +
+      '<circle cx="26" cy="52" r="20" fill="#fff" stroke="'+INK+'" stroke-width="5"/>' +
+      '<path d="M12,38 Q0,30 4,18" fill="none" stroke="#4a4a4a" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M34,36 Q46,26 42,14" fill="none" stroke="#4a4a4a" stroke-width="7" stroke-linecap="round"/>' +
+      '<ellipse cx="12" cy="58" rx="10" ry="8" fill="#f6f0e6" stroke="'+INK+'" stroke-width="4"/>' +
+      '<circle cx="8" cy="58" r="1.6" fill="'+INK+'"/><circle cx="16" cy="58" r="1.6" fill="'+INK+'"/>' +
+      '<line x1="18" y1="42" x2="30" y2="45" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="24" cy="50" r="2.8" fill="'+INK+'"/>' +
+      '</svg>';
+  }
+
   var ENEMY_TYPES = [
-    { emoji:'🐔', hp:40,  dmg:3 },
-    { emoji:'🐐', hp:70,  dmg:5 },
-    { emoji:'🦖', hp:130, dmg:8 },
-    { emoji:'🐂', hp:220, dmg:12 }
+    { draw:chickenSVG, hp:40,  dmg:3 },
+    { draw:goatSVG,    hp:70,  dmg:5 },
+    { draw:dinoSVG,    hp:130, dmg:8 },
+    { draw:oxSVG,      hp:220, dmg:12 }
   ];
 
-  // ---------------- Game state ----------------
   var state = null;
 
   function freshState(){
@@ -259,8 +359,8 @@
       playerHpMax: 300,
       playerHp: 300,
       equipTier: 1,
-      board: new Array(18).fill(null),   // 3 rows x 6 cols grid (fragments)
-      tray: new Array(5).fill(null),     // bottom drop tray
+      board: new Array(18).fill(null),
+      tray: new Array(5).fill(null),
       enemies: [],
       lastPlayerShot: 0,
       running: false,
@@ -268,17 +368,16 @@
     };
   }
 
-  // ---------------- DOM refs ----------------
   var $ = function(id){ return document.getElementById(id); };
   var waveNumEl = $('waveNum'), waveSubEl = $('waveSub');
   var playerHpFill = $('playerHpFill'), playerHpText = $('playerHpText');
   var enemyHpFill = $('enemyHpFill'), enemyHpText = $('enemyHpText');
-  var enemiesEl = $('enemies'), playerEl = $('player'), enemySideEl = $('enemySide');
+  var enemiesEl = $('enemies');
+  var playerEl = $('player'), playerGunHold = $('playerGunHold');
   var gridEl = $('grid'), trayEl = $('tray');
   var statDmg = $('statDmg'), statAcc = $('statAcc'), statCrit = $('statCrit'), statRate = $('statRate'), statPierce = $('statPierce');
   var startScreen = $('startScreen'), gameOverScreen = $('gameOverScreen'), goStats = $('goStats');
 
-  // ---------------- Rendering ----------------
   function currentWeapon(){ return TIERS[state.equipTier-1]; }
 
   function renderStats(){
@@ -288,6 +387,11 @@
     statCrit.textContent = w.crit+'%';
     statRate.textContent = w.rate+'%';
     statPierce.textContent = w.pierce+'%';
+    playerGunHold.innerHTML = gunSVG(state.equipTier);
+  }
+
+  function renderPlayerArt(){
+    playerEl.innerHTML = catSVG();
   }
 
   function renderPlayerHp(){
@@ -311,11 +415,14 @@
 
   function renderEnemies(){
     enemiesEl.innerHTML = '';
+    var size = Math.max(44, Math.min(76, Math.floor(300 / Math.max(1,state.enemies.length))));
     state.enemies.forEach(function(e){
       var d = document.createElement('div');
       d.className = 'enemy' + (e.hp<=0 ? ' dead' : '');
       d.dataset.id = e.id;
-      d.innerHTML = '<div class="ehp">'+Math.max(0,Math.round(e.hp))+'</div><div>'+e.emoji+'</div>';
+      d.style.width = size+'px';
+      d.style.height = size+'px';
+      d.innerHTML = '<div class="ehp">'+Math.max(0,Math.round(e.hp))+'</div><div class="art">'+e.art+'</div>';
       enemiesEl.appendChild(d);
     });
   }
@@ -354,10 +461,8 @@
     setTimeout(function(){ m.remove(); }, 150);
   }
 
-  // ---------------- Board / merge rendering ----------------
   function renderBoard(){
     gridEl.innerHTML = '';
-    // equip slot first (index -1 conceptually), then 17 board slots
     var equip = document.createElement('div');
     equip.className = 'slot equip';
     equip.dataset.role = 'equip';
@@ -370,9 +475,7 @@
       s.className = 'slot';
       s.dataset.role = 'board';
       s.dataset.idx = i;
-      if(frag){
-        s.innerHTML = '<div class="frag">'+gunSVG(frag.tier, true)+'</div>';
-      }
+      if(frag){ s.innerHTML = '<div class="frag">'+gunSVG(frag.tier, true)+'</div>'; }
       gridEl.appendChild(s);
       attachDragHandlers(s, {kind:'board', idx:i});
     });
@@ -383,9 +486,7 @@
       s.className = 'slot';
       s.dataset.role = 'tray';
       s.dataset.idx = i;
-      if(frag){
-        s.innerHTML = '<div class="frag">'+gunSVG(frag.tier, true)+'</div>';
-      }
+      if(frag){ s.innerHTML = '<div class="frag">'+gunSVG(frag.tier, true)+'</div>'; }
       trayEl.appendChild(s);
       attachDragHandlers(s, {kind:'tray', idx:i});
     });
@@ -414,11 +515,10 @@
     setFragAt(slot, {tier: Math.max(1,tier)});
   }
 
-  // ---------------- Drag & drop (pointer events) ----------------
   var dragCtx = null;
 
   function attachDragHandlers(el, ref){
-    if(ref.kind==='equip') return; // equip slot is only a drop target, not draggable
+    if(ref.kind==='equip') return;
     el.addEventListener('pointerdown', function(ev){
       var frag = getFragAt(ref);
       if(!frag) return;
@@ -518,7 +618,6 @@
     setTimeout(function(){ waveSubEl.style.opacity = '0'; }, 900);
   }
 
-  // ---------------- Combat loop ----------------
   var tickHandle = null;
   var enemyIdCounter = 0;
 
@@ -531,7 +630,7 @@
       var hp = Math.round(type.hp*scale);
       state.enemies.push({
         id: ++enemyIdCounter,
-        emoji: type.emoji,
+        art: type.draw(),
         hp: hp, maxHp: hp,
         dmg: type.dmg,
         nextAttack: performance.now() + 800 + Math.random()*1600
@@ -567,15 +666,12 @@
     targets.forEach(function(e){
       var hit = Math.random() < w.acc;
       var dEl = enemiesEl.querySelector('[data-id="'+e.id+'"]');
-      if(!hit){
-        floatText(dEl, 'MISS', 'miss');
-        return;
-      }
+      if(!hit){ floatText(dEl, 'MISS', 'miss'); return; }
       var crit = Math.random()*100 < w.crit;
       var dmg = crit ? Math.round(w.dmg*1.8) : w.dmg;
       e.hp -= dmg;
       flashHit(e);
-      floatText(dEl, (crit?'CRIT ':'')+dmg, crit?'crit':'');
+      floatText(dEl, (crit?'KRİTİK ':'')+dmg, crit?'crit':'');
       updateEnemyDom(e);
     });
     renderEnemyHp();
@@ -607,7 +703,7 @@
       enemyAttacks(now);
       if(allEnemiesDead()){
         state.waveClearing = true;
-        waveSubEl.textContent = 'Wave Cleared!';
+        waveSubEl.textContent = 'Dalga Temizlendi!';
         waveSubEl.style.opacity = '1';
         var drops = 1 + Math.floor(Math.random()*2);
         for(var i=0;i<drops;i++) spawnFragmentDrop();
@@ -626,12 +722,13 @@
   function endGame(){
     state.running = false;
     if(tickHandle) cancelAnimationFrame(tickHandle);
-    goStats.textContent = 'Wave ' + state.wave + ' — ' + currentWeapon().name + ' silahına ulaştın.';
+    goStats.textContent = 'Dalga ' + state.wave + ' — ' + currentWeapon().name + ' silahına ulaştın.';
     gameOverScreen.hidden = false;
   }
 
   function startGame(){
     state = freshState();
+    renderPlayerArt();
     renderStats();
     renderPlayerHp();
     renderBoard();
@@ -646,7 +743,6 @@
   $('startBtn').addEventListener('click', startGame);
   $('restartBtn').addEventListener('click', startGame);
 
-  // initial static render for start screen background
   state = freshState();
   renderStats();
   renderPlayerHp();
