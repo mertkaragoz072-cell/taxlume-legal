@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 
 export type ScreenId =
@@ -12,14 +13,14 @@ export type ScreenId =
   | "invest"
   | "achievements";
 
-const TABS: { id: ScreenId; labelKey: string; icon: string }[] = [
-  { id: "market", labelKey: "tabs.market", icon: "📈" },
-  { id: "inventory", labelKey: "tabs.inventory", icon: "🎒" },
-  { id: "trade", labelKey: "tabs.trade", icon: "🚚" },
-  { id: "town", labelKey: "tabs.town", icon: "🏘️" },
-  { id: "research", labelKey: "tabs.research", icon: "🔬" },
-  { id: "invest", labelKey: "tabs.invest", icon: "💹" },
-  { id: "achievements", labelKey: "tabs.achievements", icon: "🏆" },
+const TABS: { id: ScreenId; labelKey: string; icon: string; color: string }[] = [
+  { id: "market", labelKey: "tabs.market", icon: "📈", color: "#e8c777" },
+  { id: "inventory", labelKey: "tabs.inventory", icon: "🎒", color: "#5fd884" },
+  { id: "trade", labelKey: "tabs.trade", icon: "🚚", color: "#6fb8f2" },
+  { id: "town", labelKey: "tabs.town", icon: "🏘️", color: "#c58ee0" },
+  { id: "research", labelKey: "tabs.research", icon: "🔬", color: "#4fc3c9" },
+  { id: "invest", labelKey: "tabs.invest", icon: "💹", color: "#e0a13f" },
+  { id: "achievements", labelKey: "tabs.achievements", icon: "🏆", color: "#f0776a" },
 ];
 
 interface Props {
@@ -30,6 +31,7 @@ interface Props {
 export function TabBar({ active, onChange }: Props) {
   const { t } = useEconomyContext();
   const activeIndex = TABS.findIndex((tab) => tab.id === active);
+  const activeColor = TABS[activeIndex].color;
   const indicatorAnim = useRef(new Animated.Value(activeIndex)).current;
 
   useEffect(() => {
@@ -53,14 +55,19 @@ export function TabBar({ active, onChange }: Props) {
         pointerEvents="none"
         style={[styles.indicatorSlot, { left: indicatorLeft, width: `${100 / TABS.length}%` }]}
       >
-        <View style={styles.indicatorPill} />
+        <View
+          style={[
+            styles.indicatorPill,
+            { backgroundColor: withAlpha(activeColor, 0.14), borderColor: withAlpha(activeColor, 0.4) },
+          ]}
+        />
       </Animated.View>
       {TABS.map((tab) => {
         const isActive = tab.id === active;
         return (
           <ScalePressable key={tab.id} onPress={() => onChange(tab.id)} style={styles.tab} scaleTo={0.9}>
             <Text style={[styles.icon, isActive && styles.iconActive]}>{tab.icon}</Text>
-            <Text style={[styles.label, isActive && styles.labelActive]}>{t(tab.labelKey)}</Text>
+            <Text style={[styles.label, isActive && { color: tab.color }]}>{t(tab.labelKey)}</Text>
           </ScalePressable>
         );
       })}
@@ -88,13 +95,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 14,
-    backgroundColor: "rgba(232,199,119,0.14)",
     borderWidth: 1,
-    borderColor: "rgba(232,199,119,0.35)",
   },
   tab: { flex: 1, alignItems: "center", paddingVertical: 4 },
   icon: { fontSize: 18, opacity: 0.5 },
   iconActive: { opacity: 1 },
   label: { fontSize: 10, color: "#a0917a", marginTop: 2, fontWeight: "600" },
-  labelActive: { color: "#e8c777" },
 });

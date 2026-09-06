@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -12,6 +12,12 @@ interface Props {
   onSelect: (difficulty: DifficultyId) => void;
   onCancel: () => void;
 }
+
+const DIFFICULTY_COLORS: Record<DifficultyId, string> = {
+  easy: "#5fd884",
+  normal: "#e8c777",
+  hard: "#f0776a",
+};
 
 export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel }: Props) {
   const { t } = useEconomyContext();
@@ -61,19 +67,26 @@ export function DifficultyModal({ visible, currentDifficulty, onSelect, onCancel
               {DIFFICULTY_ORDER.map((id) => {
                 const d = DIFFICULTIES[id];
                 const active = id === currentDifficulty;
+                const color = DIFFICULTY_COLORS[id];
                 return (
                   <ScalePressable
                     key={id}
                     onPress={() => setPendingDifficulty(id)}
-                    style={[styles.option, active && styles.optionActive]}
+                    style={[
+                      styles.option,
+                      { backgroundColor: withAlpha(color, 0.1) },
+                      active && { borderColor: color },
+                    ]}
                     scaleTo={0.97}
                   >
                     <Text style={styles.optionIcon}>{d.icon}</Text>
                     <View style={{ flex: 1 }}>
                       <View style={styles.optionTitleRow}>
-                        <Text style={styles.optionLabel}>{t(d.labelKey)}</Text>
+                        <Text style={[styles.optionLabel, { color }]}>{t(d.labelKey)}</Text>
                         {active && (
-                          <Text style={styles.optionActiveTag}>{t("difficultyModal.currentTag")}</Text>
+                          <Text style={[styles.optionActiveTag, { backgroundColor: color }]}>
+                            {t("difficultyModal.currentTag")}
+                          </Text>
                         )}
                       </View>
                       <Text style={styles.optionDesc}>{t(d.descriptionKey)}</Text>
@@ -114,14 +127,12 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1a1410",
     borderRadius: 14,
     padding: 12,
     marginBottom: 10,
     borderWidth: 2,
     borderColor: "transparent",
   },
-  optionActive: { borderColor: "#e8c777" },
   optionIcon: { fontSize: 24, marginRight: 12 },
   optionTitleRow: { flexDirection: "row", alignItems: "center" },
   optionLabel: { color: "#f0e3c8", fontWeight: "700", fontSize: 14 },

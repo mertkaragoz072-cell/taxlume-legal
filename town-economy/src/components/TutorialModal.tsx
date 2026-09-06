@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT } from "../theme";
+import { CARD_GRADIENT, cardShadow, GOLD_GRADIENT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -9,17 +9,18 @@ interface Slide {
   icon: string;
   titleKey: string;
   bodyKey: string;
+  color: string;
 }
 
 const SLIDES: Slide[] = [
-  { icon: "🏘️", titleKey: "tutorial.slide1Title", bodyKey: "tutorial.slide1Body" },
-  { icon: "📈", titleKey: "tutorial.slide2Title", bodyKey: "tutorial.slide2Body" },
-  { icon: "🔥", titleKey: "tutorial.slide3Title", bodyKey: "tutorial.slide3Body" },
-  { icon: "🚚", titleKey: "tutorial.slide4Title", bodyKey: "tutorial.slide4Body" },
-  { icon: "🏛️", titleKey: "tutorial.slide5Title", bodyKey: "tutorial.slide5Body" },
-  { icon: "🔬", titleKey: "tutorial.slide6Title", bodyKey: "tutorial.slide6Body" },
-  { icon: "🏦", titleKey: "tutorial.slide7Title", bodyKey: "tutorial.slide7Body" },
-  { icon: "🏆", titleKey: "tutorial.slide8Title", bodyKey: "tutorial.slide8Body" },
+  { icon: "🏘️", titleKey: "tutorial.slide1Title", bodyKey: "tutorial.slide1Body", color: "#e8c777" },
+  { icon: "📈", titleKey: "tutorial.slide2Title", bodyKey: "tutorial.slide2Body", color: "#5fd884" },
+  { icon: "🔥", titleKey: "tutorial.slide3Title", bodyKey: "tutorial.slide3Body", color: "#f0776a" },
+  { icon: "🚚", titleKey: "tutorial.slide4Title", bodyKey: "tutorial.slide4Body", color: "#6fb8f2" },
+  { icon: "🏛️", titleKey: "tutorial.slide5Title", bodyKey: "tutorial.slide5Body", color: "#c58ee0" },
+  { icon: "🔬", titleKey: "tutorial.slide6Title", bodyKey: "tutorial.slide6Body", color: "#4fc3c9" },
+  { icon: "🏦", titleKey: "tutorial.slide7Title", bodyKey: "tutorial.slide7Body", color: "#e0a13f" },
+  { icon: "🏆", titleKey: "tutorial.slide8Title", bodyKey: "tutorial.slide8Body", color: "#e8c777" },
 ];
 
 interface Props {
@@ -54,13 +55,18 @@ export function TutorialModal({ visible, onFinish }: Props) {
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.icon}>{slide.icon}</Text>
-          <Text style={styles.title}>{t(slide.titleKey)}</Text>
+          <View style={[styles.iconBadge, { backgroundColor: withAlpha(slide.color, 0.16) }]}>
+            <Text style={styles.icon}>{slide.icon}</Text>
+          </View>
+          <Text style={[styles.title, { color: slide.color }]}>{t(slide.titleKey)}</Text>
           <Text style={styles.body}>{t(slide.bodyKey)}</Text>
 
           <View style={styles.dots}>
-            {SLIDES.map((_, i) => (
-              <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
+            {SLIDES.map((s, i) => (
+              <View
+                key={i}
+                style={[styles.dot, i === index && [styles.dotActive, { backgroundColor: s.color }]]}
+              />
             ))}
           </View>
 
@@ -97,7 +103,15 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  icon: { fontSize: 44, marginBottom: 10 },
+  iconBadge: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  icon: { fontSize: 44 },
   title: { color: "#f0e3c8", fontSize: 18, fontWeight: "800", marginBottom: 10, textAlign: "center" },
   body: { color: "#a0917a", fontSize: 13, textAlign: "center", lineHeight: 19, marginBottom: 18 },
   dots: { flexDirection: "row", gap: 6, marginBottom: 18 },

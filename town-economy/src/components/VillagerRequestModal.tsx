@@ -3,7 +3,7 @@ import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
-import { CARD_GRADIENT, cardShadow } from "../theme";
+import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { VillagerIllustration } from "./VillagerIllustration";
@@ -56,6 +56,10 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
 
           <View style={styles.card}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.1) }]}
+            />
             <Text style={styles.title}>{t("villagerRequest.title")}</Text>
             <Text style={styles.description}>
               {t("villagerRequest.description", {
@@ -67,7 +71,11 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
 
             <ScalePressable
               onPress={() => onResolve(true)}
-              style={[styles.option, !canGive && styles.optionDisabled]}
+              style={[
+                styles.option,
+                canGive && { borderColor: good.color },
+                !canGive && styles.optionDisabled,
+              ]}
               scaleTo={0.96}
             >
               <Text style={styles.optionLabel}>

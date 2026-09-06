@@ -3,7 +3,9 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DECISION_TEMPLATES_BY_ID } from "../economy/decisions";
 import { PendingDecision } from "../economy/types";
-import { CARD_GRADIENT, cardShadow } from "../theme";
+import { CARD_GRADIENT, cardShadow, withAlpha } from "../theme";
+
+const DECISION_ACCENT = "#c58ee0";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -23,7 +25,9 @@ export function DecisionModal({ decision, onResolve }: Props) {
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.icon}>{template.icon}</Text>
+          <View style={[styles.iconBadge, { backgroundColor: withAlpha(DECISION_ACCENT, 0.16) }]}>
+            <Text style={styles.icon}>{template.icon}</Text>
+          </View>
           <Text style={styles.title}>{t(template.titleKey)}</Text>
           <Text style={styles.description}>{t(template.descriptionKey)}</Text>
 
@@ -61,7 +65,15 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  icon: { fontSize: 40, marginBottom: 8 },
+  iconBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  icon: { fontSize: 36 },
   title: { color: "#f0e3c8", fontSize: 17, fontWeight: "800", marginBottom: 8, textAlign: "center" },
   description: {
     color: "#a0917a",
