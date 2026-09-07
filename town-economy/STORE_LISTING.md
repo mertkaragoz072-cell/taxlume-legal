@@ -151,10 +151,26 @@ Enflasyonu yönetip en zengin kasabayı sen mi kuracaksın?
 
 ---
 
+## Screenshots
+
+Five 1290×2796px screenshots (Apple's 6.7"/6.9" App Store size, also well
+within Google Play's limits) are checked into `store-assets/screenshots/`:
+
+1. `01-market.png` — the market, mid-trade, with a price chart
+2. `02-trade.png` — a caravan en route on the road banner, plus the
+   neighboring-town/metropolis/legendary/mythic trading tiers
+3. `03-town.png` — town rank, tax policy, and the Prestige panel
+4. `04-research.png` — the research tree
+5. `05-achievements.png` — Hall of Fame, lifetime stats, and net worth
+   history
+
+Captured from a save with some progress (a couple of prestiges, a few
+goods owned, an active caravan) rather than a brand-new game, so they
+show what the game becomes rather than an empty starting state. No
+preview video is included — that still needs to be recorded separately.
+
 ## Notes
 
-- No screenshots or preview video are included here — those still need to
-  be captured from the running app.
 - Both stores' descriptions claim "no ads, no in-app purchases, no account
   required" and "everything happens locally on your device" — verified
   true against the codebase (see `PRIVACY.md`) as of this writing. If that

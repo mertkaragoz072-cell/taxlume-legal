@@ -612,7 +612,10 @@ export function TradeScreen({ sounds }: Props) {
               </Text>
               <ScalePressable
                 disabled={contractDisabled}
-                onPress={() => openContract(goodId, contractDirection, contractQty, contractTermDays)}
+                onPress={() => {
+                  openContract(goodId, contractDirection, contractQty, contractTermDays);
+                  sounds.playBuy();
+                }}
                 style={[styles.confirmBtn, contractDisabled && styles.confirmBtnDisabled]}
                 scaleTo={0.97}
               >
@@ -720,7 +723,10 @@ export function TradeScreen({ sounds }: Props) {
               </Text>
               <ScalePressable
                 disabled={bulkDisabled}
-                onPress={() => openBulkContract(goodId, bulkQty, bulkTermDays)}
+                onPress={() => {
+                  openBulkContract(goodId, bulkQty, bulkTermDays);
+                  sounds.playBuy();
+                }}
                 style={[styles.confirmBtn, bulkDisabled && styles.confirmBtnDisabled]}
                 scaleTo={0.97}
               >

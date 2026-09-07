@@ -275,7 +275,10 @@ export function MarketScreen({ sounds }: Props) {
               </Text>
               <ScalePressable
                 disabled={disabled}
-                onPress={() => addAutoTradeRule(selected.id, autoSide, autoPct, autoQty)}
+                onPress={() => {
+                  addAutoTradeRule(selected.id, autoSide, autoPct, autoQty);
+                  sounds.playBuy();
+                }}
                 style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
                 scaleTo={0.97}
               >
