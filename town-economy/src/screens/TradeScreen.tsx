@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
+import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
@@ -148,6 +149,32 @@ export function TradeScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      {state.caravans.length > 0 && (
+        <View style={styles.roadBanner}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          {[...state.caravans]
+            .sort((a, b) => a.arrivesAtTick - b.arrivesAtTick)
+            .map((c) => {
+              const cTown = TOWNS_BY_ID[c.townId];
+              const g = GOODS_BY_ID[c.goodId];
+              const total = c.arrivesAtTick - c.departedTick;
+              const elapsed = state.tick - c.departedTick;
+              const progress = total > 0 ? clamp01(elapsed / total) : 1;
+              const remaining = Math.max(0, c.arrivesAtTick - state.tick);
+              return (
+                <CaravanRoad
+                  key={c.id}
+                  progress={progress}
+                  destinationIcon={cTown.icon}
+                  accentColor={g.color}
+                  label={`${c.direction === "export" ? "📤" : "📥"} ${t(cTown.nameKey)} · ${g.icon} ${t(g.nameKey)}`}
+                  etaLabel={t("trade.turnsLeft", { n: remaining })}
+                />
+              );
+            })}
+        </View>
+      )}
+
       <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
         {REGULAR_TOWNS.map((tn) => (
@@ -750,6 +777,13 @@ function clamp01(v: number): number {
 
 const styles = StyleSheet.create({
   body: { padding: SPACING.lg, paddingBottom: 40 },
+  roadBanner: {
+    borderRadius: RADIUS.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   lockedBody: { flexGrow: 1, padding: SPACING.lg, justifyContent: "center" },
   lockedCard: {
     borderRadius: 20,
