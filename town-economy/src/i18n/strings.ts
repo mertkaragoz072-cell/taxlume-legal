@@ -342,10 +342,10 @@ export const STRINGS = {
         "Kasaban büyüdükçe Araştırma, Yatırım, İşçi ve Mülk sekmeleri açılır; bazı ürünler de zamanla (Kasaba ekranındaki Gün sayacına göre) piyasaya çıkar.",
       slide7Title: "Banka, Vadeli İşlemler ve Prestij",
       slide7Body:
-        "Bankadan kredi çekebilir, bir ürünün fiyatının yükseleceğine/düşeceğine vadeli işlemle bahse girebilirsin. Yeterince büyüyünce Prestij yaparak kalıcı bonuslar ve yetenek puanları kazanırsın.",
+        "Bankadan kredi çekebilir, bir ürünün fiyatının yükseleceğine/düşeceğine vadeli işlemle bahse girebilirsin. Yeterince büyüyünce Prestij yaparak kalıcı bonuslar ve yetenek puanları kazanır; tekrar tekrar prestij yaparak efsanevi ve mitik ticaret ortaklarına ulaşırsın.",
       slide8Title: "Başarımlar ve Günlük Seri",
       slide8Body:
-        "İlerledikçe başarımlar kazan, her gün uğrayarak serini büyüt. Hedefler ekranından ilerlemeni bir kodla yedekleyebilirsin. Şimdi kasabanı yönetmeye başla!",
+        "İlerledikçe başarımlar kazan, her gün uğrayarak serini büyüt ve her hafta yeni bir meydan okumayı tamamla. Hedefler ekranından ilerlemeni bir kodla yedekleyebilirsin. Şimdi kasabanı yönetmeye başla!",
     },
     difficultyModal: {
       title: "Yeni Oyun Başlat",
@@ -1148,10 +1148,10 @@ export const STRINGS = {
         "As your town grows, Research, Invest, Workers, and Properties tabs unlock; some goods also arrive over time (tracked by the Day counter on the Town screen).",
       slide7Title: "Bank, Forward Contracts & Prestige",
       slide7Body:
-        "Borrow from the bank, or bet on whether a good's price will rise or fall with a forward contract. Once you've grown enough, Prestige for permanent bonuses and skill points.",
+        "Borrow from the bank, or bet on whether a good's price will rise or fall with a forward contract. Once you've grown enough, Prestige for permanent bonuses and skill points; keep prestiging to reach legendary and mythic trading partners.",
       slide8Title: "Achievements & Daily Streak",
       slide8Body:
-        "Earn achievements as you go, and check in daily to grow your bonus and your streak. You can back up your progress as a code from the Goals screen. Now go run your town!",
+        "Earn achievements as you go, check in daily to grow your bonus and your streak, and take on a new weekly challenge every week. You can back up your progress as a code from the Goals screen. Now go run your town!",
     },
     difficultyModal: {
       title: "Start New Game",

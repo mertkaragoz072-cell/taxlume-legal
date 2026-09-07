@@ -14,12 +14,12 @@ a store's actual limit differs slightly from what's listed here.
 
 **Promotional Text** (170 char max, editable without a new build):
 
-> Run your town, trade smart, and keep inflation from spiraling out of
-> control. New goods, banking, forward contracts, and prestige await!
+> Trade across a growing world of towns, automate your strategy, and
+> prestige your way to a mythic trading empire while inflation looms.
 
 **Keywords** (100 char max, comma-separated, no spaces):
 ```
-economy,inflation,tycoon,simulation,trading,market,idle,strategy,town,business,finance,sim
+economy,inflation,tycoon,trading,market,strategy,town,business,finance,automation,prestige
 ```
 
 **Description** (4000 char max):
@@ -34,20 +34,30 @@ much and they spike. Watch the Town Price Index closely: let inflation run
 wild and hyperinflation will end your run.
 
 GROW YOUR TOWN
-• Send caravans to trade with neighboring towns — and eventually a whole
-  metropolis of luxury goods
+• Send caravans to trade with neighboring towns, a whole metropolis of
+  luxury goods, and — for the truly dedicated — legendary and mythic
+  trading partners reachable only by prestiging again and again
 • Unlock new goods over time as your town develops
 • Research upgrades, hire workers, and invest in property
+• Expand your storage and lock in guaranteed bulk deliveries once you're
+  moving serious volume
+• Set up automatic buy/sell rules that trade for you while you're away
 
 MANAGE YOUR MONEY
 • Borrow from the bank when you need capital — but interest adds up
-• Bet on where prices are headed with forward contracts
+• Bet on where prices are headed with forward contracts, or lock in a
+  guaranteed future price with bulk delivery contracts
 • Balance taxes carefully: too much makes villagers unhappy and speeds up
   inflation
 
 BUILD A LEGACY
-• Prestige once you've grown enough for permanent bonuses and skill points
-• Unlock dozens of achievements and build a daily streak
+• Prestige once you've grown enough for permanent bonuses and skill
+  points — keep going to earn Legendary Points and unlock a mythic tier
+  of trade
+• Take on optional harder-mode modifiers after your first prestige for an
+  extra reward
+• Chase a new weekly challenge every real week, daily quests, seasonal
+  price events, dozens of achievements, and a daily login streak
 • Back up your progress any time with a simple save code
 
 Golden Town is completely free to play — no ads, no in-app purchases, no
@@ -90,7 +100,7 @@ Kasabanın ekonomisini yönet, akıllıca ticaret yap, enflasyonu kontrol altın
 
 **Anahtar kelimeler**:
 ```
-ekonomi,enflasyon,simülasyon,ticaret,piyasa,strateji,kasaba,iş,tycoon,finans
+ekonomi,enflasyon,simülasyon,ticaret,piyasa,strateji,kasaba,iş,tycoon,finans,otomasyon
 ```
 
 **Açıklama** (her iki mağaza için):
@@ -105,21 +115,31 @@ Kasaba Fiyat Endeksi'ni yakından takip et: enflasyonu kontrolden
 çıkarırsan hiperenflasyon oyunu bitirir.
 
 KASABANI BÜYÜT
-• Komşu kasabalara — ve zamanla lüks ürünlerle dolu bir metropole —
-  kervanlar gönder
+• Komşu kasabalara, lüks ürünlerle dolu bir metropole ve — gerçekten
+  kararlıysan — art arda prestij yaparak ulaşabileceğin efsanevi ve mitik
+  ticaret ortaklarına kervanlar gönder
 • Kasaban geliştikçe zamanla yeni ürünler açılır
 • Araştırma yap, işçi tut, mülke yatırım yap
+• Depolama kapasiteni büyüt, ciddi hacimlerde ticaret yapmaya başlayınca
+  garantili toptan teslimat sözleşmeleri yap
+• Sen yokken senin yerine alım satım yapacak otomatik kurallar kur
 
 PARANI YÖNET
 • İhtiyaç olduğunda bankadan kredi çek — ama faiz birikir
-• Vadeli işlemlerle fiyatların nereye gideceğine bahse gir
+• Vadeli işlemlerle fiyatların nereye gideceğine bahse gir, ya da toptan
+  teslimat sözleşmeleriyle gelecekteki fiyatı garantile
 • Vergiyi dikkatli ayarla: çok fazla vergi köylüleri mutsuz eder ve
   enflasyonu hızlandırır
 
 BİR MİRAS BIRAK
 • Yeterince büyüyünce Prestij yaparak kalıcı bonuslar ve yetenek puanları
-  kazan
-• Onlarca başarım aç, günlük serini büyüt
+  kazan — devam edersen Efsane Puanı kazanıp mitik bir ticaret katmanı
+  açarsın
+• İlk prestijinden sonra isteğe bağlı zorluk modifikatörleriyle daha
+  zorlu bir koşuya karşılık ekstra ödül kazan
+• Her gerçek hafta yeni bir haftalık meydan okuma, günlük görevler,
+  mevsimsel fiyat etkinlikleri, onlarca başarım ve günlük giriş serisi
+  seni bekliyor
 • İlerlemeni istediğin an basit bir kodla yedekle
 
 Golden Town tamamen ücretsizdir — reklam yok, uygulama içi satın alma yok,
