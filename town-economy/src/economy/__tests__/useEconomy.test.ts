@@ -37,6 +37,10 @@ import {
   loanInterestRatePerDay,
   loanTickRateToDayRate,
   marketSpread,
+  applyMythicUnlock,
+  LEGENDARY_POINTS_PER_PRESTIGE,
+  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+  MYTHIC_UNLOCK_LEGENDARY_POINTS,
   openBulkContract,
   prestige,
   PRESTIGE_POINTS_PER_PRESTIGE,
@@ -887,6 +891,52 @@ describe("prestige with NG+ modifiers", () => {
   it("does nothing below the prestige unlock threshold", () => {
     const state = initialState();
     const next = prestige(state);
+    expect(next).toBe(state);
+  });
+});
+
+describe("prestige with legendaryPoints (second prestige tier)", () => {
+  it("does not pay out legendaryPoints on the prestige that first unlocks legendary", () => {
+    const state = {
+      ...initialState(),
+      cash: PRESTIGE_UNLOCK_NET_WORTH + 1,
+      prestigeLevel: LEGENDARY_UNLOCK_PRESTIGE_LEVEL - 1,
+      legendaryUnlocked: false,
+    };
+    const next = prestige(state);
+    expect(next.prestigeLevel).toBe(LEGENDARY_UNLOCK_PRESTIGE_LEVEL);
+    expect(next.legendaryPoints).toBe(0);
+  });
+
+  it("pays out legendaryPoints on every prestige after legendary is already unlocked", () => {
+    const state = {
+      ...initialState(),
+      cash: PRESTIGE_UNLOCK_NET_WORTH + 1,
+      prestigeLevel: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+      legendaryUnlocked: true,
+      legendaryPoints: 1,
+    };
+    const next = prestige(state);
+    expect(next.legendaryPoints).toBe(1 + LEGENDARY_POINTS_PER_PRESTIGE);
+  });
+});
+
+describe("applyMythicUnlock", () => {
+  it("does nothing below the legendaryPoints threshold", () => {
+    const state = { ...initialState(), legendaryPoints: MYTHIC_UNLOCK_LEGENDARY_POINTS - 1 };
+    const next = applyMythicUnlock(state);
+    expect(next).toBe(state);
+  });
+
+  it("unlocks once legendaryPoints reaches the threshold", () => {
+    const state = { ...initialState(), legendaryPoints: MYTHIC_UNLOCK_LEGENDARY_POINTS };
+    const next = applyMythicUnlock(state);
+    expect(next.mythicUnlocked).toBe(true);
+  });
+
+  it("is a no-op once already unlocked", () => {
+    const state = { ...initialState(), legendaryPoints: MYTHIC_UNLOCK_LEGENDARY_POINTS, mythicUnlocked: true };
+    const next = applyMythicUnlock(state);
     expect(next).toBe(state);
   });
 });

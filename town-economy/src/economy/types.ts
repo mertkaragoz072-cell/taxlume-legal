@@ -289,6 +289,8 @@ export interface EconomyState {
   metropolUnlocked: boolean;
   /** set once prestigeLevel first reaches LEGENDARY_UNLOCK_PRESTIGE_LEVEL; sticky, never re-locks */
   legendaryUnlocked: boolean;
+  /** set once legendaryPoints first reaches MYTHIC_UNLOCK_LEGENDARY_POINTS; sticky, never re-locks */
+  mythicUnlocked: boolean;
   /** highest town-rank tier (see townRanks.ts) this town's net worth has ever reached; sticky, never re-locks */
   townRankIndex: number;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
@@ -322,6 +324,11 @@ export interface EconomyState {
   prestigePoints: number;
   /** ids of unlocked prestigePerks.ts nodes — permanent, survives every reset */
   prestigePerks: string[];
+  /** a second, scarcer prestige currency — earned only on prestiges that
+   * happen after legendaryUnlocked, one per prestige; spent implicitly on
+   * the MYTHIC_UNLOCK_LEGENDARY_POINTS milestone (see mythicUnlocked above).
+   * Survives every reset like prestigePoints does. */
+  legendaryPoints: number;
   /** highest net worth ever reached, across every prestige/reset — never
    * decreases, kept updated every tick in tick() */
   bestNetWorthEver: number;

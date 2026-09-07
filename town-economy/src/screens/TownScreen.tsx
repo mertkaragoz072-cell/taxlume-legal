@@ -265,6 +265,11 @@ export function TownScreen() {
       <Text style={styles.prestigePointsLabel}>
         {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
       </Text>
+      {state.legendaryUnlocked && (
+        <Text style={styles.legendaryPointsLabel}>
+          {t("town.prestige.legendaryPointsLabel", { points: state.legendaryPoints })}
+        </Text>
+      )}
       {PRESTIGE_PERKS.map((perk) => {
         const unlocked = state.prestigePerks.includes(perk.id);
         const requiresDef = perk.requires ? PRESTIGE_PERKS.find((p) => p.id === perk.requires) : null;
@@ -656,6 +661,7 @@ const styles = StyleSheet.create({
   prestigeLocked: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: SPACING.sm + 2, marginBottom: SPACING.sm },
   prestigeProgress: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   prestigePointsLabel: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginBottom: SPACING.sm + 2 },
+  legendaryPointsLabel: { color: "#c77df0", fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginBottom: SPACING.sm + 2 },
   perkRequires: { color: COLORS.negative, fontSize: TYPE.micro, marginTop: 3, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
   lockedTrack: {
     width: "100%",

@@ -120,6 +120,12 @@ export const STRINGS = {
         description: "Bu, net servete değil prestij seviyesine bağlı tek ortak — {target}. prestij seviyesine ulaş. Her üründe rakipsiz fiyat ve en düşük gümrük seni bekliyor.",
         progress: "Prestij {current} / {target}",
       },
+      mythicSectionLabel: "MİTİK TÜCCAR",
+      mythicLocked: {
+        title: "Mitik Tüccar Henüz Kilitli",
+        description: "Efsanevi Tüccar açıldıktan sonra her prestijde 1 efsane puanı kazanırsın — {target} efsane puanına ulaş. Oyundaki en iyi fiyatlar ve en düşük gümrük burada.",
+        progress: "Efsane Puanı {current} / {target}",
+      },
       contract: {
         sectionLabel: "VADELİ İŞLEMLER",
         description:
@@ -189,6 +195,7 @@ export const STRINGS = {
         button: "Prestij Yap",
         confirmButton: "Emin misin? Tekrar dokun",
         pointsLabel: "🎖️ {points} yetenek puanı",
+        legendaryPointsLabel: "🌌 {points} efsane puanı",
         perksSectionLabel: "Prestij Yetenekleri",
         perkRequires: "Önce {name} gerekli",
         perkUnlockBtn: "{cost} puan",
@@ -420,6 +427,7 @@ export const STRINGS = {
       grandbazaar: { name: "Büyük Pazar" },
       diamondharbor: { name: "Elmas Liman" },
       legendharbor: { name: "Efsane Limanı" },
+      mythicspire: { name: "Mitik Kule" },
     },
     townRank: {
       village: { name: "Köy" },
@@ -783,6 +791,7 @@ export const STRINGS = {
       tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
       metropolUnlocked: "🏙️ Metropollerle ticaret açıldı! Baharat, ipek ve mücevher artık çok daha kârlı.",
       legendaryUnlocked: "🐉 Efsanevi Tüccar açıldı! Artık bu ortağın kapısı her yeni kasabada da açık kalacak.",
+      mythicUnlocked: "🌌 Mitik Tüccar açıldı! Oyundaki en iyi fiyatlar artık her yeni kasabada da açık kalacak.",
       townRankUp: "🎖️ Kasaba unvanı yükseldi: {icon} {title} (+{reward} 🪙)",
       investSoldProfit: "📈 {qty} {asset} sattın, +{amount} 🪙 kâr ettin!",
       investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
@@ -917,6 +926,12 @@ export const STRINGS = {
         description: "The one partner gated by prestige level, not net worth — reach prestige level {target}. Unbeatable prices on everything and the lowest tariff anywhere.",
         progress: "Prestige {current} / {target}",
       },
+      mythicSectionLabel: "MYTHIC TRADER",
+      mythicLocked: {
+        title: "Mythic Trader Not Unlocked Yet",
+        description: "Once the Legendary Trader is open, every prestige after it earns 1 legendary point — reach {target} legendary points. The best prices and lowest tariff in the game.",
+        progress: "Legendary Points {current} / {target}",
+      },
       contract: {
         sectionLabel: "FORWARD CONTRACTS",
         description:
@@ -986,6 +1001,7 @@ export const STRINGS = {
         button: "Prestige",
         confirmButton: "Sure? Tap again",
         pointsLabel: "🎖️ {points} skill points",
+        legendaryPointsLabel: "🌌 {points} legendary points",
         perksSectionLabel: "Prestige Perks",
         perkRequires: "Requires {name} first",
         perkUnlockBtn: "{cost} pts",
@@ -1217,6 +1233,7 @@ export const STRINGS = {
       grandbazaar: { name: "Grand Bazaar" },
       diamondharbor: { name: "Diamond Harbor" },
       legendharbor: { name: "Legend's Harbor" },
+      mythicspire: { name: "Mythic Spire" },
     },
     townRank: {
       village: { name: "Village" },
@@ -1580,6 +1597,7 @@ export const STRINGS = {
       tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
       metropolUnlocked: "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
       legendaryUnlocked: "🐉 Legendary Trader unlocked! This partner's door stays open in every future town too.",
+      mythicUnlocked: "🌌 Mythic Trader unlocked! The best prices in the game stay open in every future town too.",
       townRankUp: "🎖️ Town rank up: {icon} {title} (+{reward} 🪙)",
       investSoldProfit: "📈 Sold {qty} {asset}, +{amount} 🪙 profit!",
       investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",

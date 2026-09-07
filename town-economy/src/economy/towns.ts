@@ -6,7 +6,8 @@ export type TownId =
   | "portcity"
   | "grandbazaar"
   | "diamondharbor"
-  | "legendharbor";
+  | "legendharbor"
+  | "mythicspire";
 
 export interface ForeignTown {
   id: TownId;
@@ -18,8 +19,9 @@ export interface ForeignTown {
   /** their local equilibrium price = home basePrice * specialty (their own supply/production still swings it from there) */
   specialty: Record<GoodId, number>;
   /** "town" trades as soon as tradeUnlocked; "metropol" needs metropolUnlocked too;
-   * "legendary" needs a prestige-level milestone — see useEconomy.ts */
-  tier: "town" | "metropol" | "legendary";
+   * "legendary" needs a prestige-level milestone; "mythic" needs a legendaryPoints
+   * milestone reached only by prestiging repeatedly past legendary — see useEconomy.ts */
+  tier: "town" | "metropol" | "legendary" | "mythic";
 }
 
 export const TOWNS: ForeignTown[] = [
@@ -181,6 +183,36 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.35,
       paper: 1.3,
       glass: 1.5,
+    },
+  },
+  // The single mythic trading partner — gated behind legendaryPoints (see
+  // MYTHIC_UNLOCK_LEGENDARY_POINTS in useEconomy.ts), a second currency that
+  // only accrues once legendharbor is already open, one point per prestige
+  // from then on. The reward for prestiging well past the first milestone:
+  // the best across-the-board prices and the lowest tariff in the game.
+  {
+    id: "mythicspire",
+    nameKey: "place.mythicspire.name",
+    icon: "🌌",
+    distanceTicks: 24,
+    tariffRate: 0.01,
+    tier: "mythic",
+    specialty: {
+      bread: 1.6,
+      milk: 1.55,
+      wood: 1.5,
+      iron: 1.55,
+      cloth: 1.6,
+      fish: 1.5,
+      wine: 1.7,
+      leather: 1.55,
+      spice: 2.1,
+      silk: 2.0,
+      jewelry: 2.2,
+      honey: 1.6,
+      cheese: 1.55,
+      paper: 1.5,
+      glass: 1.7,
     },
   },
 ];

@@ -82,6 +82,11 @@ export const METROPOL_UNLOCK_NET_WORTH = 3000;
 // The one content gate tied to prestigeLevel rather than the current run's
 // net worth — see towns.ts' "legendary" tier and applyLegendaryUnlock.
 export const LEGENDARY_UNLOCK_PRESTIGE_LEVEL = 3;
+// A second, scarcer prestige currency — legendaryPoints only start accruing
+// once legendaryUnlocked is already true, one per prestige from then on (see
+// prestige() below). Reaching the milestone opens towns.ts' "mythic" tier.
+export const LEGENDARY_POINTS_PER_PRESTIGE = 1;
+export const MYTHIC_UNLOCK_LEGENDARY_POINTS = 3;
 const DAILY_QUEST_COUNT = 3;
 
 // --- In-game day cycle -----------------------------------------------------
@@ -522,6 +527,7 @@ export function initialState(
     tradeUnlocked: false,
     metropolUnlocked: false,
     legendaryUnlocked: false,
+    mythicUnlocked: false,
     townRankIndex: 0,
     researched: [],
     assets,
@@ -547,6 +553,7 @@ export function initialState(
     prestigeLevel: 0,
     prestigePoints: 0,
     prestigePerks: [],
+    legendaryPoints: 0,
     bestNetWorthEver: 0,
     priorBestNetWorth: 0,
     recordBrokenThisRun: false,
@@ -1881,6 +1888,27 @@ function applyLegendaryUnlock(state: EconomyState): EconomyState {
   };
 }
 
+// Same sticky-milestone shape as applyLegendaryUnlock, one tier up — tracks
+// legendaryPoints (a currency that itself only accrues post-legendary)
+// rather than prestigeLevel directly.
+export function applyMythicUnlock(state: EconomyState): EconomyState {
+  if (state.mythicUnlocked) return state;
+  if (state.legendaryPoints < MYTHIC_UNLOCK_LEGENDARY_POINTS) return state;
+
+  const event: EconomyEvent = {
+    id: state.nextId,
+    message: t(state.language, "msg.mythicUnlocked"),
+    tone: "good",
+  };
+  return {
+    ...state,
+    mythicUnlocked: true,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+
 // Sticky, endless net-worth milestone ladder (see townRanks.ts) — checked
 // every action like an achievement, but unlike achievements a single big
 // jump in net worth (e.g. a long offline catch-up) can clear several
@@ -2030,7 +2058,9 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
     s = applyMiniQuest(s);
   }
   s = applyTownRankUp(
-    applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s)))))
+    applyMythicUnlock(
+      applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s)))))
+    )
   );
 
   const newAchievements = s.unlockedAchievements
@@ -2180,6 +2210,10 @@ export function prestige(state: EconomyState): EconomyState {
     prestigePoints:
       state.prestigePoints + PRESTIGE_POINTS_PER_PRESTIGE + ngPlusBonusPrestigePoints(state.activeNgPlusModifiers),
     prestigePerks: state.prestigePerks,
+    // Only accrues once legendharbor is already open — the first legendary
+    // unlock itself (2 -> 3) doesn't pay out, every prestige after it does.
+    legendaryPoints:
+      state.legendaryPoints + (state.legendaryUnlocked ? LEGENDARY_POINTS_PER_PRESTIGE : 0),
     // Identity, not run state — the record and the bar to beat next carry
     // over even though everything else about the run resets.
     bestNetWorthEver,
@@ -2271,6 +2305,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
         prestigeLevel: state.prestigeLevel,
         prestigePoints: state.prestigePoints,
         prestigePerks: state.prestigePerks,
+        legendaryPoints: state.legendaryPoints,
         bestNetWorthEver,
         priorBestNetWorth: bestNetWorthEver,
         recordBrokenThisRun: false,
@@ -2342,7 +2377,9 @@ function reducer(state: EconomyState, action: Action): EconomyState {
   if (next === state || action.type === "RESET") return next;
   return applyMiniQuest(
     applyTownRankUp(
-      applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next)))))
+      applyMythicUnlock(
+        applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next)))))
+      )
     )
   );
 }
