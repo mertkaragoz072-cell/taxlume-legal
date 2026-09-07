@@ -38,6 +38,9 @@ import {
   loanTickRateToDayRate,
   marketSpread,
   openBulkContract,
+  prestige,
+  PRESTIGE_POINTS_PER_PRESTIGE,
+  PRESTIGE_UNLOCK_NET_WORTH,
   removeAutoTradeRule,
   repayLoan,
   sendCaravan,
@@ -847,6 +850,44 @@ describe("applyWeeklyChallengeClaim", () => {
     const claimed = applyWeeklyChallengeClaim(withProgress);
     const next = applyWeeklyChallengeClaim(claimed);
     expect(next).toBe(claimed);
+  });
+});
+
+describe("initialState with NG+ modifiers", () => {
+  it("applies active modifiers' harsher config to the starting state", () => {
+    const plain = initialState("normal");
+    const harsh = initialState("normal", "tr", ["leanStart"]);
+    expect(harsh.cash).toBeLessThan(plain.cash);
+    expect(harsh.activeNgPlusModifiers).toEqual(["leanStart"]);
+  });
+
+  it("defaults to no modifiers", () => {
+    expect(initialState().activeNgPlusModifiers).toEqual([]);
+  });
+});
+
+describe("prestige with NG+ modifiers", () => {
+  it("pays out only the base point with no modifiers active", () => {
+    const state = { ...initialState(), cash: PRESTIGE_UNLOCK_NET_WORTH + 1 };
+    const next = prestige(state);
+    expect(next.prestigePoints).toBe(PRESTIGE_POINTS_PER_PRESTIGE);
+    expect(next.activeNgPlusModifiers).toEqual([]);
+  });
+
+  it("adds each active modifier's flat bonus to the payout", () => {
+    const state = {
+      ...initialState("normal", "tr", ["harsherInflation", "tightMargin"]),
+      cash: PRESTIGE_UNLOCK_NET_WORTH + 1,
+    };
+    const next = prestige(state);
+    // harsherInflation +1, tightMargin +2, plus the base point
+    expect(next.prestigePoints).toBe(PRESTIGE_POINTS_PER_PRESTIGE + 3);
+  });
+
+  it("does nothing below the prestige unlock threshold", () => {
+    const state = initialState();
+    const next = prestige(state);
+    expect(next).toBe(state);
   });
 });
 

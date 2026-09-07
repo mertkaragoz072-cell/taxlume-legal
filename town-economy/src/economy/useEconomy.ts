@@ -31,6 +31,7 @@ import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { isoWeekKey, WEEKLY_CHALLENGE_TEMPLATES_BY_ID, weeklyChallengeTemplateForWeek } from "./weeklyChallenges";
+import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import {
   townRankBeyondCount,
@@ -394,7 +395,7 @@ type Action =
       insured: boolean;
     }
   | { type: "TOGGLE_PAUSE" }
-  | { type: "RESET"; difficulty: DifficultyId }
+  | { type: "RESET"; difficulty: DifficultyId; ngPlusModifiers?: string[] }
   | { type: "PRESTIGE" }
   | { type: "UNLOCK_PRESTIGE_PERK"; perkId: string }
   | {
@@ -466,9 +467,10 @@ function makeDailyQuests(dateSeed: string): EconomyState["dailyQuests"] {
 
 export function initialState(
   difficulty: DifficultyId = DEFAULT_DIFFICULTY,
-  language: Language = DEFAULT_LANGUAGE
+  language: Language = DEFAULT_LANGUAGE,
+  ngPlusModifierIds: string[] = []
 ): EconomyState {
-  const config = DIFFICULTIES[difficulty];
+  const config = effectiveDifficultyConfig(DIFFICULTIES[difficulty], ngPlusModifierIds);
   const goods = {} as EconomyState["goods"];
   for (const g of GOODS) {
     goods[g.id] = makeInitialGoodState(g);
@@ -556,6 +558,7 @@ export function initialState(
     bulkContracts: [],
     autoTradeRules: [],
     weeklyChallenge: null,
+    activeNgPlusModifiers: ngPlusModifierIds,
   };
 }
 
@@ -572,7 +575,7 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
 export function tick(state: EconomyState): EconomyState {
   if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest || state.pendingRivalOffer)
     return state;
-  const config = DIFFICULTIES[state.difficulty];
+  const config = effectiveDifficultyConfig(DIFFICULTIES[state.difficulty], state.activeNgPlusModifiers);
 
   // Villager tax & happiness: happiness drifts toward a level set by the
   // current tax rate; unhappy villagers produce less (a real, lingering
@@ -2159,7 +2162,7 @@ function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
   return outcome("msg.rivalOfferDeclined", undefined, "neutral", {});
 }
 
-function prestige(state: EconomyState): EconomyState {
+export function prestige(state: EconomyState): EconomyState {
   const netWorthNow = computeNetWorth(state);
   if (netWorthNow < PRESTIGE_UNLOCK_NET_WORTH) return state;
   const nextLevel = state.prestigeLevel + 1;
@@ -2174,7 +2177,8 @@ function prestige(state: EconomyState): EconomyState {
     ...base,
     townName: state.townName,
     prestigeLevel: nextLevel,
-    prestigePoints: state.prestigePoints + PRESTIGE_POINTS_PER_PRESTIGE,
+    prestigePoints:
+      state.prestigePoints + PRESTIGE_POINTS_PER_PRESTIGE + ngPlusBonusPrestigePoints(state.activeNgPlusModifiers),
     prestigePerks: state.prestigePerks,
     // Identity, not run state — the record and the bar to beat next carry
     // over even though everything else about the run resets.
@@ -2259,7 +2263,7 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       // A new difficulty starts the economy over, but the player's chosen
       // town name, language, and any earned prestige bonus are identity,
       // not run state — keep them.
-      const base = initialState(action.difficulty, state.language);
+      const base = initialState(action.difficulty, state.language, action.ngPlusModifiers ?? []);
       const bestNetWorthEver = Math.max(state.bestNetWorthEver, computeNetWorth(state));
       return {
         ...base,
@@ -2395,7 +2399,8 @@ export function useEconomy() {
   );
   const togglePause = useCallback(() => dispatch({ type: "TOGGLE_PAUSE" }), []);
   const reset = useCallback(
-    (difficulty: DifficultyId) => dispatch({ type: "RESET", difficulty }),
+    (difficulty: DifficultyId, ngPlusModifiers?: string[]) =>
+      dispatch({ type: "RESET", difficulty, ngPlusModifiers }),
     []
   );
   const prestige_ = useCallback(() => dispatch({ type: "PRESTIGE" }), []);

@@ -183,8 +183,9 @@ function Game() {
         <DifficultyModal
           visible={difficultyModalVisible}
           currentDifficulty={state.difficulty}
-          onSelect={(difficulty) => {
-            reset(difficulty);
+          prestigeLevel={state.prestigeLevel}
+          onSelect={(difficulty, ngPlusModifiers) => {
+            reset(difficulty, ngPlusModifiers);
             setDifficultyModalVisible(false);
           }}
           onCancel={() => setDifficultyModalVisible(false)}

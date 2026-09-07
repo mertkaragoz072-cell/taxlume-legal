@@ -349,6 +349,10 @@ export const STRINGS = {
         "{difficulty} zorluğunda yeni bir oyuna başlamak mevcut kasaba ilerlemeni kalıcı olarak silecek. Bu işlem geri alınamaz.",
       confirmButton: "Evet, Sıfırla",
       back: "Geri",
+      ngPlusTitle: "🔁 NG+ Zorluk Modifikatörleri",
+      ngPlusSubtitle: "İsteğe bağlı: her biri bu koşuyu zorlaştırır ama bir sonraki prestijde daha fazla yetenek puanı kazandırır.",
+      ngPlusPointsBadge: "+{points} 🎖️",
+      ngPlusTotalBonus: "Bir sonraki prestijde toplam +{points} 🎖️ bonus yetenek puanı",
     },
     townNameModal: {
       title: "🏘️ Kasabanı Adlandır",
@@ -633,6 +637,12 @@ export const STRINGS = {
       weekly_trader: { title: "Haftanın Tüccarı", description: "Bu hafta {target} alım-satım yap." },
       weekly_logistics: { title: "Haftanın Lojistiği", description: "Bu hafta {target} kervanı tamamla." },
       weekly_profiteer: { title: "Haftanın Kârı", description: "Bu hafta {target} 🪙 gerçekleşmiş kâr elde et." },
+    },
+    ngPlus: {
+      harsherInflation: { label: "Sert Enflasyon", description: "Enflasyon daha hızlı ve daha yüksek tavanla yükselir." },
+      frequentEvents: { label: "Sık Olaylar", description: "Piyasa olayları daha sık ve daha şiddetli gerçekleşir." },
+      leanStart: { label: "Zayıf Başlangıç", description: "Başlangıç sermayen yarıya iner." },
+      tightMargin: { label: "Dar Marj", description: "Hiperenflasyon çöküşü çok daha erken tetiklenir." },
     },
     decision: {
       famine_relief: {
@@ -1136,6 +1146,10 @@ export const STRINGS = {
         "Starting a new game on {difficulty} will permanently erase your current town's progress. This can't be undone.",
       confirmButton: "Yes, Reset",
       back: "Back",
+      ngPlusTitle: "🔁 NG+ Difficulty Modifiers",
+      ngPlusSubtitle: "Optional: each one makes this run harder but pays out more skill points at your next prestige.",
+      ngPlusPointsBadge: "+{points} 🎖️",
+      ngPlusTotalBonus: "+{points} 🎖️ bonus skill points total at your next prestige",
     },
     townNameModal: {
       title: "🏘️ Name Your Town",
@@ -1420,6 +1434,12 @@ export const STRINGS = {
       weekly_trader: { title: "Trader of the Week", description: "Make {target} trades this week." },
       weekly_logistics: { title: "Logistics of the Week", description: "Complete {target} caravans this week." },
       weekly_profiteer: { title: "Profit of the Week", description: "Realize {target} 🪙 in profit this week." },
+    },
+    ngPlus: {
+      harsherInflation: { label: "Harsh Inflation", description: "Inflation rises faster and with a higher ceiling." },
+      frequentEvents: { label: "Frequent Events", description: "Market events happen more often and hit harder." },
+      leanStart: { label: "Lean Start", description: "Your starting cash is cut in half." },
+      tightMargin: { label: "Tight Margin", description: "Hyperinflation collapse triggers much sooner." },
     },
     decision: {
       famine_relief: {

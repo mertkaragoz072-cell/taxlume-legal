@@ -352,6 +352,10 @@ export interface EconomyState {
   /** the calendar week's challenge, re-assigned deterministically whenever the
    * ISO week rolls over — see ensureWeeklyChallenge in useEconomy.ts */
   weeklyChallenge: WeeklyChallenge | null;
+  /** optional New Game Plus difficulty modifiers chosen for this run, each
+   * boosting the prestige point payout at the cost of a harsher run — see
+   * effectiveDifficultyConfig/ngPlusPrestigeMultiplier in ngPlusModifiers.ts */
+  activeNgPlusModifiers: string[];
 }
 
 export interface WeeklyChallenge {
