@@ -14,6 +14,7 @@ import {
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRESTIGE_UNLOCK_NET_WORTH,
   TAX_RATE_STEPS,
+  TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
@@ -177,7 +178,7 @@ export function TownScreen() {
           <Text style={styles.taxTitle}>{t("town.tax.title")}</Text>
           <Text style={styles.taxIncome}>
             {taxIncomePerTick > 0
-              ? t("town.tax.incomePerTurn", { amount: taxIncomePerTick.toFixed(2) })
+              ? t("town.tax.incomePerTurn", { amount: (taxIncomePerTick * TICKS_PER_GAME_DAY).toFixed(2) })
               : t("town.tax.none")}
           </Text>
         </View>
@@ -524,7 +525,7 @@ export function TownScreen() {
               <Text style={styles.workerName}>{t(g.nameKey)}</Text>
               {count > 0 && (
                 <Text style={styles.workerInfo}>
-                  {t("town.workerWage", { amount: (count * WORKER_WAGE_PER_TICK).toFixed(1) })}
+                  {t("town.workerWage", { amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1) })}
                   {" · "}
                   {t("town.workerBonus", { pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100) })}
                 </Text>

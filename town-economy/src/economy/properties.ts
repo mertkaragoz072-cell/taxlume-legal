@@ -43,7 +43,10 @@ export const PROPERTIES: PropertyDef[] = [
     cost: 900,
     effectKind: "passiveIncome",
     effectValue: 0.5,
-    effectLabel: () => ({ key: "property.house.effect", params: { amount: 0.5 } }),
+    // effectValue (0.5) is the actual per-tick rate the reducer applies —
+    // this label shows the daily-equivalent (0.5 * TICKS_PER_GAME_DAY) so the
+    // player sees a "gün" figure instead of a raw per-tick number.
+    effectLabel: () => ({ key: "property.house.effect", params: { amount: 20 } }),
   },
   {
     id: "warehouse",

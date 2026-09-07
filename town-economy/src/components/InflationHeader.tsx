@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
+import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
 import { COLORS, FONT, glowShadow, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
@@ -240,7 +241,8 @@ export function InflationHeader({
               {inflationIndex.toFixed(1)}{" "}
               <Text style={{ fontSize: 11 }}>
                 ({inflationRate >= 0 ? "+" : ""}
-                {(inflationRate * 100).toFixed(2)}%{t("header.perTurn")})
+                {((Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100).toFixed(2)}%
+                {t("header.perTurn")})
               </Text>
             </Text>
           </View>

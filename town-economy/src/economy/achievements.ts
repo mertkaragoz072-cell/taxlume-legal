@@ -153,7 +153,9 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     descriptionKey: "achievement.survive_100.description",
     icon: "🛡️",
     reward: 30,
-    target: 100,
+    // 3 in-game days (TICKS_PER_GAME_DAY=40 in useEconomy.ts) — hardcoded
+    // rather than imported to avoid a circular import with useEconomy.ts.
+    target: 120,
     progress: (s) => s.tick,
   },
   {
@@ -162,7 +164,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     descriptionKey: "achievement.survive_300.description",
     icon: "🏛️",
     reward: 100,
-    target: 300,
+    // 8 in-game days — see survive_100 above.
+    target: 320,
     progress: (s) => s.tick,
   },
   {

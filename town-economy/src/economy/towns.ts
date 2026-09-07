@@ -14,7 +14,7 @@ export interface ForeignTown {
   /** i18n key resolved via t() — never render directly */
   nameKey: string;
   icon: string;
-  distanceTicks: number; // how many ticks a caravan takes to get there and back
+  distanceDays: number; // how many in-game days a caravan takes to get there and back
   tariffRate: number; // cut taken on both exports and imports
   /** their local equilibrium price = home basePrice * specialty (their own supply/production still swings it from there) */
   specialty: Record<GoodId, number>;
@@ -29,7 +29,7 @@ export const TOWNS: ForeignTown[] = [
     id: "windyhill",
     nameKey: "place.windyhill.name",
     icon: "🌾",
-    distanceTicks: 4,
+    distanceDays: 4,
     tariffRate: 0.06,
     tier: "town",
     specialty: {
@@ -54,7 +54,7 @@ export const TOWNS: ForeignTown[] = [
     id: "ironforge",
     nameKey: "place.ironforge.name",
     icon: "⛏️",
-    distanceTicks: 6,
+    distanceDays: 6,
     tariffRate: 0.08,
     tier: "town",
     specialty: {
@@ -79,7 +79,7 @@ export const TOWNS: ForeignTown[] = [
     id: "portcity",
     nameKey: "place.portcity.name",
     icon: "⚓",
-    distanceTicks: 8,
+    distanceDays: 8,
     tariffRate: 0.04,
     tier: "town",
     specialty: {
@@ -108,7 +108,7 @@ export const TOWNS: ForeignTown[] = [
     id: "grandbazaar",
     nameKey: "place.grandbazaar.name",
     icon: "🕌",
-    distanceTicks: 12,
+    distanceDays: 12,
     tariffRate: 0.05,
     tier: "metropol",
     specialty: {
@@ -133,7 +133,7 @@ export const TOWNS: ForeignTown[] = [
     id: "diamondharbor",
     nameKey: "place.diamondharbor.name",
     icon: "💎",
-    distanceTicks: 14,
+    distanceDays: 14,
     tariffRate: 0.045,
     tier: "metropol",
     specialty: {
@@ -164,7 +164,7 @@ export const TOWNS: ForeignTown[] = [
     id: "legendharbor",
     nameKey: "place.legendharbor.name",
     icon: "🐉",
-    distanceTicks: 18,
+    distanceDays: 18,
     tariffRate: 0.02,
     tier: "legendary",
     specialty: {
@@ -194,7 +194,7 @@ export const TOWNS: ForeignTown[] = [
     id: "mythicspire",
     nameKey: "place.mythicspire.name",
     icon: "🌌",
-    distanceTicks: 24,
+    distanceDays: 24,
     tariffRate: 0.01,
     tier: "mythic",
     specialty: {

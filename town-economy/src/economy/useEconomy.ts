@@ -1373,7 +1373,7 @@ export function sendCaravan(
       qty: amount,
       amount: net,
       departedTick: state.tick,
-      arrivesAtTick: state.tick + town.distanceTicks,
+      arrivesAtTick: state.tick + town.distanceDays * TICKS_PER_GAME_DAY,
       insured,
     };
     return {
@@ -1421,7 +1421,7 @@ export function sendCaravan(
     qty: amount,
     amount,
     departedTick: state.tick,
-    arrivesAtTick: state.tick + town.distanceTicks,
+    arrivesAtTick: state.tick + town.distanceDays * TICKS_PER_GAME_DAY,
     insured,
   };
   return {

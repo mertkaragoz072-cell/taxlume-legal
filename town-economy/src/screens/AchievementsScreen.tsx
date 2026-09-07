@@ -13,7 +13,7 @@ import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 import { RESEARCH_NODES } from "../economy/research";
 import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
 import { TOWNS } from "../economy/towns";
-import { isGoodUnlocked } from "../economy/useEconomy";
+import { isGoodUnlocked, TICK_MS } from "../economy/useEconomy";
 import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../economy/weeklyChallenges";
 import {
   CARD_GRADIENT,
@@ -203,7 +203,7 @@ export function AchievementsScreen() {
               )
             );
             const pct = miniQuest.target > 0 ? current / miniQuest.target : 0;
-            const ticksLeft = Math.max(0, miniQuest.expiresAtTick - state.tick);
+            const secondsLeft = Math.ceil((Math.max(0, miniQuest.expiresAtTick - state.tick) * TICK_MS) / 1000);
             return (
               <View style={styles.miniQuestCard}>
                 <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -224,7 +224,7 @@ export function AchievementsScreen() {
                       {Math.floor(current)} / {miniQuest.target}
                     </Text>
                     <Text style={styles.miniQuestTicksLeft}>
-                      {t("achievements.miniQuestTicksLeft", { ticks: ticksLeft })}
+                      {t("achievements.miniQuestTicksLeft", { seconds: secondsLeft })}
                     </Text>
                   </View>
                 </View>

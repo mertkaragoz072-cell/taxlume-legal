@@ -4,7 +4,13 @@ import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { SEASONAL_EVENT_TEMPLATES_BY_ID } from "../economy/seasonalEvents";
-import { AUTO_TRADE_MAX_RULES, AUTO_TRADE_TRIGGER_PCT_STEPS, gameDayFromTick, isGoodUnlocked } from "../economy/useEconomy";
+import {
+  AUTO_TRADE_MAX_RULES,
+  AUTO_TRADE_TRIGGER_PCT_STEPS,
+  gameDayFromTick,
+  isGoodUnlocked,
+  TICKS_PER_GAME_DAY,
+} from "../economy/useEconomy";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
@@ -101,7 +107,10 @@ export function MarketScreen({ sounds }: Props) {
               </Text>
               <Text style={styles.seasonalTicksLeft}>
                 {t("market.seasonalEventTicksLeft", {
-                  ticks: Math.max(0, state.activeSeasonalEvent.expiresAtTick - state.tick),
+                  days: Math.max(
+                    0,
+                    Math.ceil((state.activeSeasonalEvent.expiresAtTick - state.tick) / TICKS_PER_GAME_DAY)
+                  ),
                 })}
               </Text>
             </View>

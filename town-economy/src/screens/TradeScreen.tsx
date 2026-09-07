@@ -80,7 +80,7 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
       <Text style={styles.townIcon}>{town.icon}</Text>
       <Text style={styles.townName}>{t(town.nameKey)}</Text>
       <Text style={styles.townMeta}>
-        {t("trade.townMeta", { ticks: town.distanceTicks, tariff: (effectiveTariff * 100).toFixed(0) })}
+        {t("trade.townMeta", { days: town.distanceDays, tariff: (effectiveTariff * 100).toFixed(0) })}
       </Text>
     </ScalePressable>
   );
@@ -160,7 +160,7 @@ export function TradeScreen({ sounds }: Props) {
               const total = c.arrivesAtTick - c.departedTick;
               const elapsed = state.tick - c.departedTick;
               const progress = total > 0 ? clamp01(elapsed / total) : 1;
-              const remaining = Math.max(0, c.arrivesAtTick - state.tick);
+              const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
               return (
                 <CaravanRoad
                   key={c.id}
@@ -168,7 +168,7 @@ export function TradeScreen({ sounds }: Props) {
                   destinationIcon={cTown.icon}
                   accentColor={g.color}
                   label={`${c.direction === "export" ? "📤" : "📥"} ${t(cTown.nameKey)} · ${g.icon} ${t(g.nameKey)}`}
-                  etaLabel={t("trade.turnsLeft", { n: remaining })}
+                  etaLabel={t("trade.turnsLeft", { n: daysLeft })}
                 />
               );
             })}
@@ -462,7 +462,7 @@ export function TradeScreen({ sounds }: Props) {
           </Text>
         </View>
         <Text style={styles.etaText}>
-          {t("trade.eta", { ticks: town.distanceTicks, tariff: (tariffRate * 100).toFixed(0) })}
+          {t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}
           {tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""}
         </Text>
 
@@ -516,7 +516,7 @@ export function TradeScreen({ sounds }: Props) {
           const total = c.arrivesAtTick - c.departedTick;
           const elapsed = state.tick - c.departedTick;
           const progress = total > 0 ? clamp01(elapsed / total) : 1;
-          const remaining = Math.max(0, c.arrivesAtTick - state.tick);
+          const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
           return (
             <View key={c.id} style={styles.caravanCard}>
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -526,7 +526,7 @@ export function TradeScreen({ sounds }: Props) {
                   {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
                   {c.insured ? " 🛡️" : ""}
                 </Text>
-                <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: remaining })}</Text>
+                <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: daysLeft })}</Text>
               </View>
               <Text style={styles.caravanSub}>
                 {c.direction === "export"
