@@ -66,7 +66,7 @@ import {
 } from "./types";
 
 const HISTORY_LEN = 40;
-export const TICK_MS = 1500;
+export const TICK_MS = 3000;
 const EVENT_LOG_CAP = 30;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const TOWN_NAME_MAX_LENGTH = 24;
@@ -211,10 +211,10 @@ const FOREIGN_NOISE = 0.15;
 // player's own buy/sell to feel like it moved anything. demandPressure is a
 // separate multiplier on top of the supply-driven price, nudged by every
 // trade and decaying slowly on its own clock, so a big order visibly bends
-// the price and that bend lingers for roughly a minute of real play before
+// the price and that bend lingers for a couple minutes of real play before
 // fading — long enough to feel like your trade mattered, short enough that
 // the market always finds its own level again.
-const DEMAND_PRESSURE_DECAY = 0.98; // per tick (TICK_MS=1500ms) => ~50-tick / 75s half-life
+const DEMAND_PRESSURE_DECAY = 0.98; // per tick (TICK_MS=3000ms) => ~50-tick / ~150s half-life
 const DEMAND_PRESSURE_SENSITIVITY = 0.35; // price swing per "one baseSupply's worth" traded, before market depth
 const DEMAND_PRESSURE_MAX = 0.4; // clamp so no single order can send price to an absurd multiple
 
