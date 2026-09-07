@@ -363,6 +363,11 @@ export interface EconomyState {
    * boosting the prestige point payout at the cost of a harsher run — see
    * effectiveDifficultyConfig/ngPlusPrestigeMultiplier in ngPlusModifiers.ts */
   activeNgPlusModifiers: string[];
+  /** epoch ms when a "watch an ad to speed up" boost expires; null when no
+   * boost is active — see SPEED_BOOST_DURATION_MS/activateSpeedBoost in
+   * useEconomy.ts. Wall-clock time, not tick-based, since the point is a
+   * real-world timer independent of how fast the game itself is ticking. */
+  speedBoostExpiresAt: number | null;
 }
 
 export interface WeeklyChallenge {

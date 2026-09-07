@@ -8,6 +8,7 @@ import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
+import { SpeedBoostButton } from "./SpeedBoostButton";
 
 interface Props {
   townName: string;
@@ -34,6 +35,7 @@ interface Props {
   onReset: () => void;
   onHelp: () => void;
   onEditName: () => void;
+  onOpenSpeedBoost: () => void;
 }
 
 // Anchor colors for a full in-game day, walked smoothly (not in steps) so
@@ -93,6 +95,7 @@ export function InflationHeader({
   onReset,
   onHelp,
   onEditName,
+  onOpenSpeedBoost,
 }: Props) {
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
@@ -210,6 +213,7 @@ export function InflationHeader({
           >
             <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
           </Pressable>
+          <SpeedBoostButton onPress={onOpenSpeedBoost} />
           <Pressable
             onPress={onHelp}
             style={[styles.iconBtn, { backgroundColor: withAlpha("#6fb8f2", 0.22) }]}

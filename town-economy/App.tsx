@@ -21,6 +21,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
+import { SpeedBoostModal } from "./src/components/SpeedBoostModal";
 import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
@@ -78,6 +79,7 @@ function Game() {
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
+  const [speedBoostModalVisible, setSpeedBoostModalVisible] = useState(false);
 
   const rankTitle = townRankTitle(state.townRankIndex, t);
 
@@ -167,6 +169,7 @@ function Game() {
           onReset={() => setDifficultyModalVisible(true)}
           onHelp={() => setTutorialVisible(true)}
           onEditName={() => setNameModalVisible(true)}
+          onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
         />
         <EventBanner event={state.lastEvent} />
         <ConfettiBurst trigger={confettiTrigger} />
@@ -221,6 +224,12 @@ function Game() {
             setNameModalVisible(false);
           }}
           onCancel={() => setNameModalVisible(false)}
+        />
+
+        <SpeedBoostModal
+          visible={speedBoostModalVisible}
+          onClose={() => setSpeedBoostModalVisible(false)}
+          sounds={sounds}
         />
       </View>
     </SafeAreaView>

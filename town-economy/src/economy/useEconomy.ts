@@ -67,6 +67,13 @@ import {
 
 const HISTORY_LEN = 40;
 export const TICK_MS = 3000;
+// "Watch an ad to speed up" — a temporary, real-time-bound multiplier on the
+// tick rate itself (not on TICKS_PER_GAME_DAY or any per-day rate), so a
+// boosted day plays out faster in wall-clock time without changing what a
+// game day means anywhere else.
+export const SPEED_BOOST_MULTIPLIER = 3;
+export const SPEED_BOOST_DURATION_MS = 30 * 60 * 1000;
+export const BOOSTED_TICK_MS = Math.round(TICK_MS / SPEED_BOOST_MULTIPLIER);
 const EVENT_LOG_CAP = 30;
 const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const TOWN_NAME_MAX_LENGTH = 24;
@@ -432,7 +439,8 @@ type Action =
   | { type: "SET_TOWN_NAME"; name: string }
   | { type: "SET_LANGUAGE"; language: Language }
   | { type: "SET_EMBLEM"; emblemId: string }
-  | { type: "SET_EMBLEM_COLOR"; color: string };
+  | { type: "SET_EMBLEM_COLOR"; color: string }
+  | { type: "ACTIVATE_SPEED_BOOST" };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -566,6 +574,7 @@ export function initialState(
     autoTradeRules: [],
     weeklyChallenge: null,
     activeNgPlusModifiers: ngPlusModifierIds,
+    speedBoostExpiresAt: null,
   };
 }
 
@@ -580,6 +589,12 @@ function pushCapped(arr: number[], value: number, cap: number): number[] {
 }
 
 export function tick(state: EconomyState): EconomyState {
+  // The speed boost is a real-world timer, not a tick count, so it must
+  // expire here (checked on every interval firing, whether paused or not)
+  // rather than depending on simulation ticks that stop while paused.
+  if (state.speedBoostExpiresAt !== null && Date.now() >= state.speedBoostExpiresAt) {
+    state = { ...state, speedBoostExpiresAt: null };
+  }
   if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest || state.pendingRivalOffer)
     return state;
   const config = effectiveDifficultyConfig(DIFFICULTIES[state.difficulty], state.activeNgPlusModifiers);
@@ -2293,6 +2308,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return sendCaravan(state, action.townId, action.goodId, action.direction, action.qty, action.insured);
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
+    case "ACTIVATE_SPEED_BOOST":
+      return state.gameOver ? state : { ...state, speedBoostExpiresAt: Date.now() + SPEED_BOOST_DURATION_MS };
     case "RESET": {
       // A new difficulty starts the economy over, but the player's chosen
       // town name, language, and any earned prestige bonus are identity,
@@ -2389,12 +2406,14 @@ export function useEconomy() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
+  const isSpeedBoosted = state.speedBoostExpiresAt !== null;
   useEffect(() => {
-    intervalRef.current = setInterval(() => dispatch({ type: "TICK" }), TICK_MS);
+    const intervalMs = isSpeedBoosted ? BOOSTED_TICK_MS : TICK_MS;
+    intervalRef.current = setInterval(() => dispatch({ type: "TICK" }), intervalMs);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [isSpeedBoosted]);
 
   // Load any previous save once on mount, fast-forward the town through
   // however long the app was closed, then start persisting future changes.
@@ -2511,6 +2530,7 @@ export function useEconomy() {
     (language: Language) => dispatch({ type: "SET_LANGUAGE", language }),
     []
   );
+  const activateSpeedBoost = useCallback(() => dispatch({ type: "ACTIVATE_SPEED_BOOST" }), []);
   const translate = useCallback(
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
     [state.language]
@@ -2559,6 +2579,7 @@ export function useEconomy() {
     setEmblem: setEmblem_,
     setEmblemColor: setEmblemColor_,
     setLanguage: setLanguage_,
+    activateSpeedBoost,
     t: translate,
     formatCoins: (value: number, decimals?: number) =>
       formatCoinsUtil(value, state.language, decimals),
