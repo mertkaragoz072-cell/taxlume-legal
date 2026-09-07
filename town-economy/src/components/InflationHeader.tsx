@@ -24,6 +24,7 @@ interface Props {
   muted: boolean;
   streakCount: number;
   gameDay: number;
+  tick: number;
   difficulty: DifficultyId;
   language: Language;
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -33,6 +34,38 @@ interface Props {
   onReset: () => void;
   onHelp: () => void;
   onEditName: () => void;
+}
+
+// Anchor colors for a full in-game day, walked smoothly (not in steps) so
+// the header subtly "breathes" as the town's day passes — dawn -> noon ->
+// dusk -> night -> back to dawn. Purely decorative, no gameplay effect.
+const DAY_TINT_ANCHORS: [number, [number, number, number]][] = [
+  [0, [232, 148, 74]], // dawn
+  [0.25, [255, 224, 102]], // noon
+  [0.5, [240, 119, 106]], // dusk
+  [0.75, [58, 74, 138]], // night
+  [1, [232, 148, 74]], // back to dawn
+];
+
+function dayTintColor(tick: number): string {
+  const progress = ((tick % TICKS_PER_GAME_DAY) + TICKS_PER_GAME_DAY) % TICKS_PER_GAME_DAY / TICKS_PER_GAME_DAY;
+  let lo = DAY_TINT_ANCHORS[0];
+  let hi = DAY_TINT_ANCHORS[DAY_TINT_ANCHORS.length - 1];
+  for (let i = 0; i < DAY_TINT_ANCHORS.length - 1; i++) {
+    if (progress >= DAY_TINT_ANCHORS[i][0] && progress <= DAY_TINT_ANCHORS[i + 1][0]) {
+      lo = DAY_TINT_ANCHORS[i];
+      hi = DAY_TINT_ANCHORS[i + 1];
+      break;
+    }
+  }
+  const span = hi[0] - lo[0] || 1;
+  const localT = (progress - lo[0]) / span;
+  const [r1, g1, b1] = lo[1];
+  const [r2, g2, b2] = hi[1];
+  const r = Math.round(r1 + (r2 - r1) * localT);
+  const g = Math.round(g1 + (g2 - g1) * localT);
+  const b = Math.round(b1 + (b2 - b1) * localT);
+  return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
 export function InflationHeader({
@@ -50,6 +83,7 @@ export function InflationHeader({
   muted,
   streakCount,
   gameDay,
+  tick,
   difficulty,
   language,
   t,
@@ -61,6 +95,7 @@ export function InflationHeader({
   onEditName,
 }: Props) {
   const hot = inflationRate > 0.006;
+  const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
   const formatCoins = (v: number) => formatCoinsUtil(v, language);
 
@@ -121,6 +156,7 @@ export function InflationHeader({
   return (
     <View style={styles.wrap}>
       <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]} />
       <View style={styles.goldLine} />
       <View style={styles.nameRow}>
         <Pressable

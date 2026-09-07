@@ -165,6 +165,7 @@ export const STRINGS = {
       priceIndexLabel: "Fiyat Endeksi",
       happinessLabel: "Halk Memnuniyeti",
       outOf100: "/ 100",
+      squareLabel: "KASABA MEYDANI",
       mood: {
         crisis: "Ekonomik kriz",
         heating: "Isınıyor",
@@ -231,6 +232,75 @@ export const STRINGS = {
       eventsEmpty: "Henüz bir olay yaşanmadı, kasaba sakin.",
       eventsShowMore: "{count} tane daha göster",
       eventsShowLess: "Daha az göster",
+    },
+    townChatter: {
+      happiness: {
+        revolt: {
+          v0: "Köşe başında insanlar öfkeyle konuşuyor, sabırları taşmak üzere.",
+          v1: "\"Bu kasabada artık yaşanmıyor!\" diye bağırıyor biri meydanda.",
+        },
+        unrest: {
+          v0: "Köylüler kaşlarını çatarak pazardan geçiyor.",
+          v1: "Kahvede herkes valiyi konuşuyor, hoşnutsuzlukla.",
+        },
+        coping: {
+          v0: "Kasaba her zamanki gibi, ne mutlu ne mutsuz, işine bakıyor.",
+          v1: "Pazar yerinde alışılmış bir gün, kimse şikayet etmiyor ama kimse de coşkulu değil.",
+        },
+        content: {
+          v0: "Çocuklar sokakta neşeyle koşuşturuyor, kasaba huzurlu.",
+          v1: "Fırının önünde gülüşmeler var, herkes memnun görünüyor.",
+        },
+        veryContent: {
+          v0: "Meydanda müzik çalıyor, kasaba tam bir bayram havasında!",
+          v1: "\"Böyle bir yönetim görmedik!\" diyor yaşlı bir köylü gülümseyerek.",
+        },
+      },
+      mood: {
+        crisis: {
+          v0: "Fiyat etiketleri neredeyse her saat değişiyor, herkes endişeli.",
+          v1: "\"Ekmek dün bu kadar değildi!\" diye söyleniyor bir müşteri.",
+        },
+        heating: {
+          v0: "Tüccarlar fiyatları dikkatle takip ediyor, bir şeyler değişiyor gibi.",
+          v1: "Pazarda fısıltılar var: fiyatlar tırmanışa mı geçti?",
+        },
+        calm: {
+          v0: "Piyasa sakin, fiyatlar oturmuş görünüyor.",
+          v1: "Herkes normal fiyatlarla alışverişini yapıyor, telaş yok.",
+        },
+        cooling: {
+          v0: "Fiyatlar yavaşça geriliyor, tüccarlar rahatladı.",
+          v1: "\"Sonunda biraz ucuzladı\" diyor bir köylü memnuniyetle.",
+        },
+      },
+      highTax: {
+        v0: "Vergi tahsildarının geçtiğini görenler içini çekiyor.",
+        v1: "\"Bu vergilerle nasıl geçineceğiz?\" diye söyleniyor pazarda.",
+      },
+      noTax: {
+        v0: "\"Bu kasabada vergi yok, tam cennet!\" diyor gezgin bir tüccar.",
+      },
+      caravanActive: {
+        v0: "Uzaktan kervan çanları duyuluyor, yola çıkan mal merak konusu.",
+        v1: "Kapı önünde birileri kervanın ne zaman döneceğini soruyor.",
+      },
+      loanActive: {
+        v0: "\"Banka borcunu hâlâ ödüyor musun?\" diye soruyor komşu.",
+        v1: "Bankacı kasabada dolaşıyor, ödeme tarihlerini hatırlatıyor.",
+      },
+      prestige: {
+        v0: "Yaşlılar eski kasabadan, sıfırdan başlamanın hikayesinden bahsediyor.",
+        v1: "\"Bu kasaba bir kez daha küllerinden doğdu\" diye anlatılıyor.",
+      },
+      workers: {
+        v0: "İşçiler sabah erkenden atölyelere doğru yürüyor.",
+      },
+      general: {
+        v0: "Pazar yerinde her zamanki gevezelik sürüyor.",
+        v1: "Bir köylü havanın gidişatından, bir diğeri hasattan söz ediyor.",
+        v2: "Kasabanın çanı öğleni haber veriyor, herkes işine dönüyor.",
+      },
     },
     achievements: {
       unlockedCount: "{count} / {total}",
@@ -971,6 +1041,7 @@ export const STRINGS = {
       priceIndexLabel: "Price Index",
       happinessLabel: "Public Happiness",
       outOf100: "/ 100",
+      squareLabel: "TOWN SQUARE",
       mood: {
         crisis: "Economic crisis",
         heating: "Heating up",
@@ -1037,6 +1108,75 @@ export const STRINGS = {
       eventsEmpty: "Nothing has happened yet — the town is calm.",
       eventsShowMore: "Show {count} more",
       eventsShowLess: "Show less",
+    },
+    townChatter: {
+      happiness: {
+        revolt: {
+          v0: "Voices are raised on the corner — patience is running out.",
+          v1: "\"This town isn't livable anymore!\" someone shouts in the square.",
+        },
+        unrest: {
+          v0: "Villagers cross the market with furrowed brows.",
+          v1: "At the coffeehouse, everyone's grumbling about the mayor.",
+        },
+        coping: {
+          v0: "The town goes about its business — not happy, not unhappy.",
+          v1: "An ordinary day at the market, no complaints, no cheers.",
+        },
+        content: {
+          v0: "Children run laughing through the streets — the town feels at peace.",
+          v1: "Laughter drifts from the bakery, everyone seems content.",
+        },
+        veryContent: {
+          v0: "Music plays in the square — the whole town feels festive!",
+          v1: "\"We've never had leadership like this!\" beams an old villager.",
+        },
+      },
+      mood: {
+        crisis: {
+          v0: "Price tags change almost by the hour — everyone's on edge.",
+          v1: "\"Bread wasn't this much yesterday!\" a customer mutters.",
+        },
+        heating: {
+          v0: "Merchants are watching prices closely — something's shifting.",
+          v1: "Whispers in the market: are prices climbing again?",
+        },
+        calm: {
+          v0: "The market feels steady, prices seem settled.",
+          v1: "Everyone shops at ordinary prices — no rush, no worry.",
+        },
+        cooling: {
+          v0: "Prices are easing back — the merchants look relieved.",
+          v1: "\"Finally, things got a little cheaper,\" says a satisfied villager.",
+        },
+      },
+      highTax: {
+        v0: "People sigh when they spot the tax collector passing by.",
+        v1: "\"How are we supposed to live with these taxes?\" someone grumbles.",
+      },
+      noTax: {
+        v0: "\"No taxes in this town — paradise!\" a traveling merchant remarks.",
+      },
+      caravanActive: {
+        v0: "Caravan bells echo in the distance — everyone wonders what it's carrying.",
+        v1: "Someone at the gate asks when the caravan will be back.",
+      },
+      loanActive: {
+        v0: "\"Still paying off that bank loan?\" a neighbor asks.",
+        v1: "The banker's making rounds, reminding folks of due dates.",
+      },
+      prestige: {
+        v0: "The elders tell stories of the old town, of starting over from nothing.",
+        v1: "\"This town rose from its ashes once again,\" they say.",
+      },
+      workers: {
+        v0: "Workers head out to the workshops early in the morning.",
+      },
+      general: {
+        v0: "The usual market chatter carries on as always.",
+        v1: "One villager talks about the weather, another about the harvest.",
+        v2: "The town bell rings for noon, and everyone returns to work.",
+      },
     },
     achievements: {
       unlockedCount: "{count} / {total}",

@@ -157,6 +157,7 @@ function Game() {
           muted={sounds.muted}
           streakCount={state.streak.count}
           gameDay={gameDayFromTick(state.tick)}
+          tick={state.tick}
           difficulty={state.difficulty}
           language={state.language}
           t={t}

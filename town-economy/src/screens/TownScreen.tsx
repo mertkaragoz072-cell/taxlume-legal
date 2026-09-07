@@ -29,6 +29,8 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
+import { TownChatterTicker } from "../components/TownChatterTicker";
+import { TownSquareScene } from "../components/TownSquareScene";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -110,6 +112,14 @@ export function TownScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <TownSquareScene
+        happiness={state.happiness}
+        label={t("town.squareLabel")}
+        moodLabel={t(happy.labelKey)}
+        moodColor={happy.color}
+      />
+      <TownChatterTicker state={state} t={t} />
+
       <View style={styles.moodCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View

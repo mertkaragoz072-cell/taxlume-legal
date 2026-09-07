@@ -3,11 +3,19 @@ import Svg, { Circle, Ellipse, Path, Rect } from "react-native-svg";
 
 interface Props {
   size?: number;
+  mood?: "happy" | "neutral" | "sad";
 }
 
+const MOUTH_PATHS: Record<NonNullable<Props["mood"]>, string> = {
+  happy: "M38 26 Q45 34 52 26",
+  neutral: "M39 27 Q45 31 51 27",
+  sad: "M39 29.5 Q45 25 51 29.5",
+};
+
 /** A small flat-style villager mascot, palette-matched to the rest of the
- * town's UI, used to give the "someone's asking for something" modals a face. */
-export function VillagerIllustration({ size = 84 }: Props) {
+ * town's UI, used to give the "someone's asking for something" modals a face,
+ * and reused (with a mood-driven expression) in the Town Square scene. */
+export function VillagerIllustration({ size = 84, mood = "neutral" }: Props) {
   const width = size;
   const height = size * 1.32;
 
@@ -37,7 +45,7 @@ export function VillagerIllustration({ size = 84 }: Props) {
 
       <Circle cx={40} cy={22} r={1.6} fill="#2a2016" />
       <Circle cx={50} cy={22} r={1.6} fill="#2a2016" />
-      <Path d="M39 27 Q45 31 51 27" stroke="#2a2016" strokeWidth={1.6} fill="none" strokeLinecap="round" />
+      <Path d={MOUTH_PATHS[mood]} stroke="#2a2016" strokeWidth={1.6} fill="none" strokeLinecap="round" />
     </Svg>
   );
 }
