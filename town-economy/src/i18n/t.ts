@@ -14,9 +14,7 @@ function getByPath(obj: unknown, path: string): unknown {
 
 function interpolate(template: string, params?: Params): string {
   if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (match, key) =>
-    key in params ? String(params[key]) : match
-  );
+  return template.replace(/\{(\w+)\}/g, (match, key) => (key in params ? String(params[key]) : match));
 }
 
 /** A pure, hook-free translator so it can be called both from React

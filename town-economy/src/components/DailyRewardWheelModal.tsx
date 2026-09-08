@@ -3,7 +3,18 @@ import { ActivityIndicator, Animated, Easing, Modal, StyleSheet, Text, View } fr
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-native-svg";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -53,7 +64,14 @@ function iconPosition(index: number) {
  * amount is already fixed by the streak formula (see dailyCheckIn in
  * useEconomy.ts) and already in the player's cash by the time this shows —
  * the spin is a celebratory reveal animation, not real randomness. */
-export function DailyRewardWheelModal({ visible, amount, streakCount, onDismiss, onRevealed, sounds }: Props) {
+export function DailyRewardWheelModal({
+  visible,
+  amount,
+  streakCount,
+  onDismiss,
+  onRevealed,
+  sounds,
+}: Props) {
   const { t, claimBonusSpin } = useEconomyContext();
   const [spinning, setSpinning] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -142,7 +160,13 @@ export function DailyRewardWheelModal({ visible, amount, streakCount, onDismiss,
                 {WHEEL_ICONS.map((_, i) => (
                   <Path
                     key={i}
-                    d={wedgePath(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS - 2, i * SEGMENT_ANGLE, (i + 1) * SEGMENT_ANGLE)}
+                    d={wedgePath(
+                      WHEEL_RADIUS,
+                      WHEEL_RADIUS,
+                      WHEEL_RADIUS - 2,
+                      i * SEGMENT_ANGLE,
+                      (i + 1) * SEGMENT_ANGLE
+                    )}
                     fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
                   />
                 ))}

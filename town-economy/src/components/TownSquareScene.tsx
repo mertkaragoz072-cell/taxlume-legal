@@ -41,7 +41,10 @@ export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Prop
   return (
     <View style={styles.card}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(moodColor, 0.08) }]} />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(moodColor, 0.08) }]}
+      />
       <Text style={styles.label}>{label}</Text>
       <View style={styles.row}>
         <Bobbing delay={0}>

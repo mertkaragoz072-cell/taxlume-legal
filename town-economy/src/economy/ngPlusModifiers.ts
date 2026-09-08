@@ -19,7 +19,11 @@ export const NG_PLUS_MODIFIERS: NgPlusModifierDef[] = [
     labelKey: "ngPlus.harsherInflation.label",
     descriptionKey: "ngPlus.harsherInflation.description",
     bonusPrestigePoints: 1,
-    apply: (c) => ({ ...c, baseInflationDrift: c.baseInflationDrift * 1.5, inflationMax: c.inflationMax * 1.2 }),
+    apply: (c) => ({
+      ...c,
+      baseInflationDrift: c.baseInflationDrift * 1.5,
+      inflationMax: c.inflationMax * 1.2,
+    }),
   },
   {
     id: "frequentEvents",
@@ -49,13 +53,17 @@ export const NG_PLUS_MODIFIERS: NgPlusModifierDef[] = [
   },
 ];
 
-export const NG_PLUS_MODIFIERS_BY_ID = Object.fromEntries(
-  NG_PLUS_MODIFIERS.map((m) => [m.id, m])
-) as Record<string, NgPlusModifierDef>;
+export const NG_PLUS_MODIFIERS_BY_ID = Object.fromEntries(NG_PLUS_MODIFIERS.map((m) => [m.id, m])) as Record<
+  string,
+  NgPlusModifierDef
+>;
 
 /** Folds every active modifier's apply() onto the base difficulty config —
  * order doesn't matter today since no two modifiers touch the same field. */
-export function effectiveDifficultyConfig(base: DifficultyConfig, activeModifierIds: string[]): DifficultyConfig {
+export function effectiveDifficultyConfig(
+  base: DifficultyConfig,
+  activeModifierIds: string[]
+): DifficultyConfig {
   return activeModifierIds.reduce((cfg, id) => {
     const mod = NG_PLUS_MODIFIERS_BY_ID[id];
     return mod ? mod.apply(cfg) : cfg;
@@ -63,5 +71,8 @@ export function effectiveDifficultyConfig(base: DifficultyConfig, activeModifier
 }
 
 export function ngPlusBonusPrestigePoints(activeModifierIds: string[]): number {
-  return activeModifierIds.reduce((sum, id) => sum + (NG_PLUS_MODIFIERS_BY_ID[id]?.bonusPrestigePoints ?? 0), 0);
+  return activeModifierIds.reduce(
+    (sum, id) => sum + (NG_PLUS_MODIFIERS_BY_ID[id]?.bonusPrestigePoints ?? 0),
+    0
+  );
 }

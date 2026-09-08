@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
 const PARTICLE_COUNT = 6;
@@ -13,14 +13,17 @@ interface Props {
  * "big win" moment), this is light enough to replay on every single trade
  * without feeling like spam. */
 export function CoinPop({ trigger }: Props) {
-  const particles = useRef(
+  // Lazy state, not `useRef(expression)`: a ref keeps only the first value but
+  // still re-evaluates its argument — and so re-rolls all this randomness and
+  // allocates six Animated.Values — on every single render.
+  const [particles] = useState(() =>
     Array.from({ length: PARTICLE_COUNT }).map(() => ({
       progress: new Animated.Value(0),
       xDrift: (Math.random() - 0.5) * 60,
       rotate: (Math.random() - 0.5) * 60,
       delay: Math.random() * 80,
     }))
-  ).current;
+  );
 
   useEffect(() => {
     if (trigger <= 0) return;

@@ -32,7 +32,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: unknown, info: unknown) {
-    // eslint-disable-next-line no-console
     console.error("Unhandled error caught by ErrorBoundary:", error, info);
   }
 
@@ -60,12 +59,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <Text style={styles.title}>Bir şeyler ters gitti</Text>
           <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.subtitle}>
-            Kasaba beklenmedik bir sorunla karşılaştı. Tekrar dene, ya da sorun devam ederse
-            kayıtlı ilerlemeni sıfırlayıp yeniden başlayabilirsin.
+            Kasaba beklenmedik bir sorunla karşılaştı. Tekrar dene, ya da sorun devam ederse kayıtlı
+            ilerlemeni sıfırlayıp yeniden başlayabilirsin.
           </Text>
           <Text style={styles.subtitle}>
-            The town hit an unexpected snag. Try again, or if it keeps happening, reset your
-            saved progress and start fresh.
+            The town hit an unexpected snag. Try again, or if it keeps happening, reset your saved progress
+            and start fresh.
           </Text>
 
           <ScalePressable onPress={this.handleRetry} style={styles.primaryBtn} scaleTo={0.97}>
@@ -74,9 +73,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
           </ScalePressable>
 
           <ScalePressable onPress={this.handleResetSave} style={styles.secondaryBtn} scaleTo={0.97}>
-            <Text style={styles.secondaryBtnText}>
-              Kaydı Sıfırla ve Yeniden Başla · Reset Save & Restart
-            </Text>
+            <Text style={styles.secondaryBtnText}>Kaydı Sıfırla ve Yeniden Başla · Reset Save & Restart</Text>
           </ScalePressable>
         </View>
       </SafeAreaView>

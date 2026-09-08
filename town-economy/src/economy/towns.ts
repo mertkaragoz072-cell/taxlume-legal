@@ -1,13 +1,7 @@
 import { GoodId } from "./types";
 
 export type TownId =
-  | "windyhill"
-  | "ironforge"
-  | "portcity"
-  | "grandbazaar"
-  | "diamondharbor"
-  | "legendharbor"
-  | "mythicspire";
+  "windyhill" | "ironforge" | "portcity" | "grandbazaar" | "diamondharbor" | "legendharbor" | "mythicspire";
 
 export interface ForeignTown {
   id: TownId;
@@ -217,7 +211,4 @@ export const TOWNS: ForeignTown[] = [
   },
 ];
 
-export const TOWNS_BY_ID = Object.fromEntries(TOWNS.map((t) => [t.id, t])) as Record<
-  string,
-  ForeignTown
->;
+export const TOWNS_BY_ID = Object.fromEntries(TOWNS.map((t) => [t.id, t])) as Record<string, ForeignTown>;

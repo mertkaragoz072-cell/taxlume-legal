@@ -21,13 +21,7 @@ export type GoodId =
   | "glass";
 
 export type UpgradeId =
-  | "market"
-  | "caravanserai"
-  | "townhall"
-  | "bank"
-  | "guardTower"
-  | "earthquakeFund"
-  | "storageYard";
+  "market" | "caravanserai" | "townhall" | "bank" | "guardTower" | "earthquakeFund" | "storageYard";
 
 export interface Good {
   id: GoodId;

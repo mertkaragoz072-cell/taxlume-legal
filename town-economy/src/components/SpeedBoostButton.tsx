@@ -20,15 +20,19 @@ interface Props {
 export function SpeedBoostButton({ onPress }: Props) {
   const { state, t } = useEconomyContext();
   const active = state.speedBoostExpiresAt !== null;
-  const [, forceTick] = useState(0);
+  // The clock is state the ticker owns, not something read during render:
+  // reading Date.now() while rendering makes the output depend on when React
+  // happens to render rather than on this component's own inputs.
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!active) return;
-    const interval = setInterval(() => forceTick((n) => n + 1), 1000);
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [active]);
 
-  const remainingMs = active ? Math.max(0, state.speedBoostExpiresAt! - Date.now()) : 0;
+  const remainingMs = active ? Math.max(0, state.speedBoostExpiresAt! - now) : 0;
 
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -63,9 +67,7 @@ export function SpeedBoostButton({ onPress }: Props) {
       style={[styles.iconBtn, active && styles.iconBtnActive]}
       accessibilityRole="button"
       accessibilityLabel={
-        active
-          ? t("a11y.speedBoostActive", { time: formatCountdown(remainingMs) })
-          : t("a11y.speedBoost")
+        active ? t("a11y.speedBoostActive", { time: formatCountdown(remainingMs) }) : t("a11y.speedBoost")
       }
     >
       <Animated.Text style={[styles.icon, active && { transform: [{ scale }] }]}>⚡</Animated.Text>

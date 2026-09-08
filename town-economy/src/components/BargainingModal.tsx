@@ -1,7 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -128,7 +138,11 @@ export function BargainingModal({ visible, onResolve }: Props) {
               >
                 {resultText}
               </Text>
-              <ScalePressable onPress={() => onResolve(result.bonus)} style={styles.continueBtn} scaleTo={0.96}>
+              <ScalePressable
+                onPress={() => onResolve(result.bonus)}
+                style={styles.continueBtn}
+                scaleTo={0.96}
+              >
                 <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
                 <Text style={styles.continueBtnText}>{t("bargain.continueBtn")}</Text>
               </ScalePressable>

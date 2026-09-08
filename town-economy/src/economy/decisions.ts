@@ -71,8 +71,16 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
     titleKey: "decision.famine_relief.title",
     descriptionKey: "decision.famine_relief.description",
     options: [
-      { id: "bagisla", labelKey: "decision.famine_relief.options.bagisla.label", hintKey: "decision.famine_relief.options.bagisla.hint" },
-      { id: "reddet", labelKey: "decision.famine_relief.options.reddet.label", hintKey: "decision.famine_relief.options.reddet.hint" },
+      {
+        id: "bagisla",
+        labelKey: "decision.famine_relief.options.bagisla.label",
+        hintKey: "decision.famine_relief.options.bagisla.hint",
+      },
+      {
+        id: "reddet",
+        labelKey: "decision.famine_relief.options.reddet.label",
+        hintKey: "decision.famine_relief.options.reddet.hint",
+      },
     ],
     resolve: (state, optionId) => {
       if (optionId === "bagisla") {
@@ -99,8 +107,16 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
     titleKey: "decision.tax_amnesty.title",
     descriptionKey: "decision.tax_amnesty.description",
     options: [
-      { id: "kabul", labelKey: "decision.tax_amnesty.options.kabul.label", hintKey: "decision.tax_amnesty.options.kabul.hint" },
-      { id: "reddet", labelKey: "decision.tax_amnesty.options.reddet.label", hintKey: "decision.tax_amnesty.options.reddet.hint" },
+      {
+        id: "kabul",
+        labelKey: "decision.tax_amnesty.options.kabul.label",
+        hintKey: "decision.tax_amnesty.options.kabul.hint",
+      },
+      {
+        id: "reddet",
+        labelKey: "decision.tax_amnesty.options.reddet.label",
+        hintKey: "decision.tax_amnesty.options.reddet.hint",
+      },
     ],
     resolve: (state, optionId) => {
       if (optionId === "kabul") {
@@ -123,8 +139,16 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
     titleKey: "decision.traveling_merchant.title",
     descriptionKey: "decision.traveling_merchant.description",
     options: [
-      { id: "riskal", labelKey: "decision.traveling_merchant.options.riskal.label", hintKey: "decision.traveling_merchant.options.riskal.hint" },
-      { id: "reddet", labelKey: "decision.traveling_merchant.options.reddet.label", hintKey: "decision.traveling_merchant.options.reddet.hint" },
+      {
+        id: "riskal",
+        labelKey: "decision.traveling_merchant.options.riskal.label",
+        hintKey: "decision.traveling_merchant.options.riskal.hint",
+      },
+      {
+        id: "reddet",
+        labelKey: "decision.traveling_merchant.options.reddet.label",
+        hintKey: "decision.traveling_merchant.options.reddet.hint",
+      },
     ],
     resolve: (state, optionId) => {
       if (optionId === "riskal") {
@@ -137,16 +161,10 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
           const gs = state.goods[good.id];
           const amount = Math.max(1, Math.round(80 / gs.price));
           const goodName = t(state.language, good.nameKey);
-          return outcome(
-            state,
-            "msg.merchantHonest",
-            { good: goodName, amount },
-            "good",
-            {
-              cash: afterCash,
-              goods: { ...state.goods, [good.id]: { ...gs, holding: gs.holding + amount } },
-            }
-          );
+          return outcome(state, "msg.merchantHonest", { good: goodName, amount }, "good", {
+            cash: afterCash,
+            goods: { ...state.goods, [good.id]: { ...gs, holding: gs.holding + amount } },
+          });
         }
         return outcome(state, "msg.merchantScam", undefined, "bad", { cash: afterCash });
       }
@@ -159,8 +177,16 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
     titleKey: "decision.drought_warning.title",
     descriptionKey: "decision.drought_warning.description",
     options: [
-      { id: "onlem", labelKey: "decision.drought_warning.options.onlem.label", hintKey: "decision.drought_warning.options.onlem.hint" },
-      { id: "yoksay", labelKey: "decision.drought_warning.options.yoksay.label", hintKey: "decision.drought_warning.options.yoksay.hint" },
+      {
+        id: "onlem",
+        labelKey: "decision.drought_warning.options.onlem.label",
+        hintKey: "decision.drought_warning.options.onlem.hint",
+      },
+      {
+        id: "yoksay",
+        labelKey: "decision.drought_warning.options.yoksay.label",
+        hintKey: "decision.drought_warning.options.yoksay.hint",
+      },
     ],
     resolve: (state, optionId) => {
       const bread = state.goods.bread;
@@ -190,8 +216,16 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
     titleKey: "decision.worker_demand.title",
     descriptionKey: "decision.worker_demand.description",
     options: [
-      { id: "zam", labelKey: "decision.worker_demand.options.zam.label", hintKey: "decision.worker_demand.options.zam.hint" },
-      { id: "reddet", labelKey: "decision.worker_demand.options.reddet.label", hintKey: "decision.worker_demand.options.reddet.hint" },
+      {
+        id: "zam",
+        labelKey: "decision.worker_demand.options.zam.label",
+        hintKey: "decision.worker_demand.options.zam.hint",
+      },
+      {
+        id: "reddet",
+        labelKey: "decision.worker_demand.options.reddet.label",
+        hintKey: "decision.worker_demand.options.reddet.hint",
+      },
     ],
     resolve: (state, optionId) => {
       if (optionId === "zam") {
@@ -220,8 +254,16 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
     titleKey: "decision.black_market_gamble.title",
     descriptionKey: "decision.black_market_gamble.description",
     options: [
-      { id: "bahis", labelKey: "decision.black_market_gamble.options.bahis.label", hintKey: "decision.black_market_gamble.options.bahis.hint" },
-      { id: "vazgec", labelKey: "decision.black_market_gamble.options.vazgec.label", hintKey: "decision.black_market_gamble.options.vazgec.hint" },
+      {
+        id: "bahis",
+        labelKey: "decision.black_market_gamble.options.bahis.label",
+        hintKey: "decision.black_market_gamble.options.bahis.hint",
+      },
+      {
+        id: "vazgec",
+        labelKey: "decision.black_market_gamble.options.vazgec.label",
+        hintKey: "decision.black_market_gamble.options.vazgec.hint",
+      },
     ],
     resolve: (state, optionId) => {
       if (optionId === "bahis") {

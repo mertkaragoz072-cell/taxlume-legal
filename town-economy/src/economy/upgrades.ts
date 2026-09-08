@@ -83,7 +83,10 @@ export const UPGRADES: UpgradeDef[] = [
     // Softens how much supply an earthquake wipes out (never to zero — see
     // EARTHQUAKE_LOSS_FLOOR in useEconomy.ts) rather than the odds of one hitting.
     effectPerLevel: 0.03,
-    effectLabel: (level) => ({ key: "upgrade.earthquakeFund.effect", params: { pct: Math.round(level * 3) } }),
+    effectLabel: (level) => ({
+      key: "upgrade.earthquakeFund.effect",
+      params: { pct: Math.round(level * 3) },
+    }),
   },
   {
     id: "storageYard",

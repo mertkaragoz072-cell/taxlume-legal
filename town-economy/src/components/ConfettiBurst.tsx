@@ -78,9 +78,7 @@ export function ConfettiBurst({ trigger }: Props) {
 
   return (
     <View style={styles.wrap} pointerEvents="none">
-      <Animated.View
-        style={[styles.flash, { opacity: flashOpacity, transform: [{ scale: flashScale }] }]}
-      />
+      <Animated.View style={[styles.flash, { opacity: flashOpacity, transform: [{ scale: flashScale }] }]} />
       {particles.map((p, i) => {
         const translateX = p.progress.interpolate({ inputRange: [0, 1], outputRange: [0, p.xEnd] });
         const translateY = p.progress.interpolate({
@@ -113,13 +111,7 @@ export function ConfettiBurst({ trigger }: Props) {
                 height: p.size,
                 borderRadius: p.isRibbon ? 1.5 : p.size / 2,
                 opacity,
-                transform: [
-                  { translateX },
-                  { translateY },
-                  { scale },
-                  { rotate },
-                  { scaleX: flipScaleX },
-                ],
+                transform: [{ translateX }, { translateY }, { scale }, { rotate }, { scaleX: flipScaleX }],
               },
             ]}
           />

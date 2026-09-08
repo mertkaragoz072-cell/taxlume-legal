@@ -12,7 +12,10 @@ interface Props {
   onDismiss: () => void;
 }
 
-function formatElapsed(ms: number, t: (key: string, params?: Record<string, string | number>) => string): string {
+function formatElapsed(
+  ms: number,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
   const totalMinutes = Math.round(ms / 60000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -36,69 +39,69 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
           </Text>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-          {summary.hyperinflationHappened && (
-            <View style={[styles.row, styles.crisisRow]}>
-              <Text style={styles.crisisText}>{t("offline.hyperinflation")}</Text>
-            </View>
-          )}
-
-          <View style={styles.statsGrid}>
-            <View style={styles.stat}>
-              <Text style={styles.statLabel}>{t("header.cash")}</Text>
-              <Text style={[styles.statValue, { color: summary.cashDelta >= 0 ? "#3fae5c" : "#c94b4b" }]}>
-                {summary.cashDelta >= 0 ? "+" : ""}
-                {formatCoins(summary.cashDelta)}
-              </Text>
-            </View>
-            <View style={styles.stat}>
-              <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
-              <Text
-                style={[styles.statValue, { color: summary.netWorthDelta >= 0 ? "#3fae5c" : "#c94b4b" }]}
-              >
-                {summary.netWorthDelta >= 0 ? "+" : ""}
-                {formatCoins(summary.netWorthDelta)}
-              </Text>
-            </View>
-            {summary.caravansCompleted > 0 && (
-              <View style={styles.stat}>
-                <Text style={styles.statLabel}>{t("offline.caravansCompleted")}</Text>
-                <Text style={styles.statValue}>🚚 {summary.caravansCompleted}</Text>
+            {summary.hyperinflationHappened && (
+              <View style={[styles.row, styles.crisisRow]}>
+                <Text style={styles.crisisText}>{t("offline.hyperinflation")}</Text>
               </View>
             )}
-          </View>
 
-          {summary.newQuests.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>{t("offline.questsSectionLabel")}</Text>
-              {summary.newQuests.map((title) => (
-                <Text key={title} style={styles.achievementText}>
-                  ✅ {title}
+            <View style={styles.statsGrid}>
+              <View style={styles.stat}>
+                <Text style={styles.statLabel}>{t("header.cash")}</Text>
+                <Text style={[styles.statValue, { color: summary.cashDelta >= 0 ? "#3fae5c" : "#c94b4b" }]}>
+                  {summary.cashDelta >= 0 ? "+" : ""}
+                  {formatCoins(summary.cashDelta)}
                 </Text>
-              ))}
+              </View>
+              <View style={styles.stat}>
+                <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
+                <Text
+                  style={[styles.statValue, { color: summary.netWorthDelta >= 0 ? "#3fae5c" : "#c94b4b" }]}
+                >
+                  {summary.netWorthDelta >= 0 ? "+" : ""}
+                  {formatCoins(summary.netWorthDelta)}
+                </Text>
+              </View>
+              {summary.caravansCompleted > 0 && (
+                <View style={styles.stat}>
+                  <Text style={styles.statLabel}>{t("offline.caravansCompleted")}</Text>
+                  <Text style={styles.statValue}>🚚 {summary.caravansCompleted}</Text>
+                </View>
+              )}
             </View>
-          )}
 
-          {summary.newAchievements.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>{t("offline.achievementsSectionLabel")}</Text>
-              {summary.newAchievements.map((title) => (
-                <Text key={title} style={styles.achievementText}>
-                  🏆 {title}
-                </Text>
-              ))}
-            </View>
-          )}
+            {summary.newQuests.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>{t("offline.questsSectionLabel")}</Text>
+                {summary.newQuests.map((title) => (
+                  <Text key={title} style={styles.achievementText}>
+                    ✅ {title}
+                  </Text>
+                ))}
+              </View>
+            )}
 
-          {summary.recentEvents.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>{t("offline.eventsSectionLabel")}</Text>
-              {summary.recentEvents.map((event) => (
-                <Text key={event.id} style={styles.eventText} numberOfLines={2}>
-                  {event.message}
-                </Text>
-              ))}
-            </View>
-          )}
+            {summary.newAchievements.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>{t("offline.achievementsSectionLabel")}</Text>
+                {summary.newAchievements.map((title) => (
+                  <Text key={title} style={styles.achievementText}>
+                    🏆 {title}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {summary.recentEvents.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>{t("offline.eventsSectionLabel")}</Text>
+                {summary.recentEvents.map((event) => (
+                  <Text key={event.id} style={styles.eventText} numberOfLines={2}>
+                    {event.message}
+                  </Text>
+                ))}
+              </View>
+            )}
           </ScrollView>
 
           <ScalePressable onPress={onDismiss} style={styles.confirmBtn} scaleTo={0.96}>
@@ -134,11 +137,18 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: "#a0917a",
     fontSize: 10,
-    fontWeight: "700", fontFamily: FONT.bold,
+    fontWeight: "700",
+    fontFamily: FONT.bold,
     letterSpacing: 1,
     marginBottom: 8,
   },
-  achievementText: { color: "#e8c777", fontSize: 12, fontWeight: "700", fontFamily: FONT.bold, marginBottom: 4 },
+  achievementText: {
+    color: "#e8c777",
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: FONT.bold,
+    marginBottom: 4,
+  },
   eventText: { color: "#f0e3c8", fontSize: 11, marginBottom: 4 },
   confirmBtn: {
     borderRadius: 12,

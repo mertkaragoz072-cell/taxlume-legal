@@ -32,10 +32,7 @@ export function EventBanner({ event }: Props) {
 
   return (
     <Animated.View
-      style={[
-        styles.banner,
-        { backgroundColor: TONE_BG[event.tone], opacity, transform: [{ translateY }] },
-      ]}
+      style={[styles.banner, { backgroundColor: TONE_BG[event.tone], opacity, transform: [{ translateY }] }]}
     >
       <Text style={styles.text}>📰 {event.message}</Text>
     </Animated.View>

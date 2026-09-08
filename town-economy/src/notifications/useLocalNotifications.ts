@@ -19,8 +19,9 @@ export function useLocalNotifications(state: EconomyState) {
   stateRef.current = state;
 
   useEffect(() => {
+    // Mount-only on purpose: the channel is created once, and the language
+    // is read through stateRef so a later switch does not recreate it.
     ensureNotificationChannel(stateRef.current.language);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -9,9 +9,7 @@ import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT,
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
-  const holdings = GOODS.map((g) => ({ good: g, gs: state.goods[g.id] })).filter(
-    ({ gs }) => gs.holding > 0
-  );
+  const holdings = GOODS.map((g) => ({ good: g, gs: state.goods[g.id] })).filter(({ gs }) => gs.holding > 0);
   const usedStorage = totalGoodsHolding(state);
   const capacity = storageCapacity(state);
   const storagePct = capacity > 0 ? Math.min(1, usedStorage / capacity) : 0;
@@ -46,7 +44,10 @@ export function InventoryScreen() {
           <View
             style={[
               styles.storageFill,
-              { width: `${storagePct * 100}%`, backgroundColor: storagePct >= 1 ? COLORS.negative : COLORS.accent },
+              {
+                width: `${storagePct * 100}%`,
+                backgroundColor: storagePct >= 1 ? COLORS.negative : COLORS.accent,
+              },
             ]}
           />
         </View>
@@ -104,8 +105,19 @@ const styles = StyleSheet.create({
   },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.sm },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.body },
-  summaryValue: { color: COLORS.textPrimary, fontSize: TYPE.body, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
-  netRow: { marginTop: SPACING.xs, paddingTop: SPACING.sm + 2, borderTopWidth: 1, borderTopColor: "#3a2d1e", marginBottom: 0 },
+  summaryValue: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.body,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
+  netRow: {
+    marginTop: SPACING.xs,
+    paddingTop: SPACING.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: "#3a2d1e",
+    marginBottom: 0,
+  },
   netLabel: { color: COLORS.accent, fontSize: TYPE.body + 1, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   netValue: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   storageCard: {
@@ -117,7 +129,12 @@ const styles = StyleSheet.create({
   },
   storageHeaderRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.xs },
   storageLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
-  storageValue: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  storageValue: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   storageTrack: { height: 8, borderRadius: 4, backgroundColor: "#1a1410", overflow: "hidden" },
   storageFill: { height: "100%", borderRadius: 4 },
   storageFullNote: { color: COLORS.negative, fontSize: TYPE.micro, marginTop: SPACING.xs },
@@ -127,7 +144,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  emptyText: { color: COLORS.textPrimary, fontWeight: WEIGHT.medium, fontFamily: FONT.medium, marginBottom: SPACING.xs },
+  emptyText: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+    marginBottom: SPACING.xs,
+  },
   emptySub: { color: COLORS.textMuted, fontSize: TYPE.label, textAlign: "center" },
   row: {
     flexDirection: "row",

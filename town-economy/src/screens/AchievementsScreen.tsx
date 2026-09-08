@@ -197,27 +197,26 @@ export function AchievementsScreen() {
           {(() => {
             const current = Math.max(
               0,
-              Math.min(
-                miniQuestTemplate.metric(state.dailyProgress) - miniQuest.baseline,
-                miniQuest.target
-              )
+              Math.min(miniQuestTemplate.metric(state.dailyProgress) - miniQuest.baseline, miniQuest.target)
             );
             const pct = miniQuest.target > 0 ? current / miniQuest.target : 0;
-            const secondsLeft = Math.ceil((Math.max(0, miniQuest.expiresAtTick - state.tick) * TICK_MS) / 1000);
+            const secondsLeft = Math.ceil(
+              (Math.max(0, miniQuest.expiresAtTick - state.tick) * TICK_MS) / 1000
+            );
             return (
               <View style={styles.miniQuestCard}>
                 <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
                 <Text style={styles.icon}>{miniQuestTemplate.icon}</Text>
                 <View style={{ flex: 1 }}>
                   <View style={styles.titleRow}>
-                    <Text style={[styles.title, styles.titleUnlocked]}>
-                      {t(miniQuestTemplate.titleKey)}
-                    </Text>
+                    <Text style={[styles.title, styles.titleUnlocked]}>{t(miniQuestTemplate.titleKey)}</Text>
                     <Text style={styles.reward}>+{miniQuest.reward} 🪙</Text>
                   </View>
                   <Text style={styles.description}>{t(miniQuestTemplate.descriptionKey)}</Text>
                   <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]} />
+                    <View
+                      style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
+                    />
                   </View>
                   <View style={styles.miniQuestFooterRow}>
                     <Text style={styles.progressText}>
@@ -263,7 +262,9 @@ export function AchievementsScreen() {
                     {t(weeklyChallengeTemplate.descriptionKey, { target: weeklyChallengeTemplate.target })}
                   </Text>
                   <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]} />
+                    <View
+                      style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
+                    />
                   </View>
                   <Text style={styles.progressText}>
                     {weeklyChallenge.claimed
@@ -283,7 +284,10 @@ export function AchievementsScreen() {
       <View style={styles.questHeaderRow}>
         <SectionLabel text={t("achievements.dailyQuestsLabel")} color="#6fb8f2" />
         <Text style={styles.questCount}>
-          {t("achievements.dailyQuestsCount", { count: completedQuestCount, total: state.dailyQuests.length })}
+          {t("achievements.dailyQuestsCount", {
+            count: completedQuestCount,
+            total: state.dailyQuests.length,
+          })}
         </Text>
       </View>
       <Text style={styles.questNote}>{t("achievements.dailyQuestsNote")}</Text>
@@ -341,9 +345,7 @@ export function AchievementsScreen() {
               x2="1"
               y2="1"
             />
-            <Text style={[styles.icon, !unlocked && styles.iconLocked]}>
-              {unlocked ? a.icon : "🔒"}
-            </Text>
+            <Text style={[styles.icon, !unlocked && styles.iconLocked]}>{unlocked ? a.icon : "🔒"}</Text>
             <View style={{ flex: 1 }}>
               <View style={styles.titleRow}>
                 <Text style={[styles.title, unlocked && styles.titleUnlocked]}>{t(a.titleKey)}</Text>
@@ -428,9 +430,7 @@ export function AchievementsScreen() {
         </ScalePressable>
         {copyFeedback && <Text style={styles.backupFeedbackSuccess}>{t("backup.copied")}</Text>}
 
-        <Text style={[styles.description, styles.backupImportDesc]}>
-          {t("backup.importDescription")}
-        </Text>
+        <Text style={[styles.description, styles.backupImportDesc]}>{t("backup.importDescription")}</Text>
         <TextInput
           value={importText}
           onChangeText={(text) => {
@@ -462,9 +462,7 @@ export function AchievementsScreen() {
         {importFeedback && (
           <Text
             style={
-              importFeedback.type === "success"
-                ? styles.backupFeedbackSuccess
-                : styles.backupFeedbackError
+              importFeedback.type === "success" ? styles.backupFeedbackSuccess : styles.backupFeedbackError
             }
           >
             {importFeedback.text}
@@ -485,7 +483,12 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   summaryRow: { flexDirection: "row", alignItems: "baseline", marginBottom: SPACING.sm },
-  summaryBig: { color: COLORS.accent, fontSize: TYPE.display, fontFamily: FONT.display, marginRight: SPACING.sm },
+  summaryBig: {
+    color: COLORS.accent,
+    fontSize: TYPE.display,
+    fontFamily: FONT.display,
+    marginRight: SPACING.sm,
+  },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
   streakRow: { flexDirection: "row", alignItems: "center" },
   streakEmoji: { fontSize: TYPE.title, marginRight: 6 },
@@ -499,7 +502,12 @@ const styles = StyleSheet.create({
   },
   statsGrid: { flexDirection: "row", flexWrap: "wrap" },
   statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center" },
-  statValue: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  statValue: {
+    color: COLORS.accent,
+    fontSize: TYPE.heading,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, textAlign: "center", marginTop: 2 },
   hallOfFameRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.xl - 4 },
   hallOfFameChip: {
@@ -639,6 +647,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlignVertical: "top",
   },
-  backupFeedbackSuccess: { color: "#3fae5c", fontSize: 11, fontWeight: "700", fontFamily: FONT.bold, marginTop: 8 },
-  backupFeedbackError: { color: "#c94b4b", fontSize: 11, fontWeight: "700", fontFamily: FONT.bold, marginTop: 8 },
+  backupFeedbackSuccess: {
+    color: "#3fae5c",
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: FONT.bold,
+    marginTop: 8,
+  },
+  backupFeedbackError: {
+    color: "#c94b4b",
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: FONT.bold,
+    marginTop: 8,
+  },
 });

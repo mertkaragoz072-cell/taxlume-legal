@@ -70,7 +70,16 @@ export function PriceChart({
     return (
       <View style={{ width, height }}>
         <Svg width={width} height={height}>
-          <Line x1={0} y1={y} x2={width} y2={y} stroke={color} strokeWidth={1} strokeDasharray="3,4" opacity={0.35} />
+          <Line
+            x1={0}
+            y1={y}
+            x2={width}
+            y2={y}
+            stroke={color}
+            strokeWidth={1}
+            strokeDasharray="3,4"
+            opacity={0.35}
+          />
         </Svg>
       </View>
     );
@@ -148,7 +157,14 @@ export function PriceChart({
         />
         {interactive && (
           <>
-            <SvgText x={2} y={Math.max(padY - 6, 10)} fill={color} fontSize={10} fontWeight="700" opacity={0.8}>
+            <SvgText
+              x={2}
+              y={Math.max(padY - 6, 10)}
+              fill={color}
+              fontSize={10}
+              fontWeight="700"
+              opacity={0.8}
+            >
               {max.toFixed(2)}
             </SvgText>
             <SvgText x={2} y={height - padY + 14} fill={color} fontSize={10} fontWeight="700" opacity={0.8}>
@@ -168,7 +184,14 @@ export function PriceChart({
               strokeDasharray="2,3"
               opacity={0.6}
             />
-            <Circle cx={touchPoint.x} cy={touchPoint.y} r={4} fill={color} stroke="#1a1410" strokeWidth={1.5} />
+            <Circle
+              cx={touchPoint.x}
+              cy={touchPoint.y}
+              r={4}
+              fill={color}
+              stroke="#1a1410"
+              strokeWidth={1.5}
+            />
             {(() => {
               const label = touchValue.toFixed(2);
               const bubbleWidth = 14 + label.length * 6.5;

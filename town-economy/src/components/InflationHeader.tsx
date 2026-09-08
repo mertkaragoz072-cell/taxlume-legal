@@ -50,7 +50,8 @@ const DAY_TINT_ANCHORS: [number, [number, number, number]][] = [
 ];
 
 function dayTintColor(tick: number): string {
-  const progress = ((tick % TICKS_PER_GAME_DAY) + TICKS_PER_GAME_DAY) % TICKS_PER_GAME_DAY / TICKS_PER_GAME_DAY;
+  const progress =
+    (((tick % TICKS_PER_GAME_DAY) + TICKS_PER_GAME_DAY) % TICKS_PER_GAME_DAY) / TICKS_PER_GAME_DAY;
   let lo = DAY_TINT_ANCHORS[0];
   let hi = DAY_TINT_ANCHORS[DAY_TINT_ANCHORS.length - 1];
   for (let i = 0; i < DAY_TINT_ANCHORS.length - 1; i++) {
@@ -159,7 +160,10 @@ export function InflationHeader({
   return (
     <View style={styles.wrap}>
       <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]} />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
+      />
       <View style={styles.goldLine} />
       <View style={styles.nameRow}>
         <Pressable
@@ -169,14 +173,19 @@ export function InflationHeader({
           accessibilityLabel={t("a11y.editTownName")}
         >
           <Text style={styles.town} numberOfLines={1}>
-            <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text>{" "}
-            {townName.toUpperCase()} ✏️
+            <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
           </Text>
         </Pressable>
       </View>
       <View style={styles.metaRow}>
         <View style={styles.townRow}>
-          <View style={[styles.streakBadge, styles.streakBadgeRow, { backgroundColor: withAlpha("#e8c777", 0.22) }]}>
+          <View
+            style={[
+              styles.streakBadge,
+              styles.streakBadgeRow,
+              { backgroundColor: withAlpha("#e8c777", 0.22) },
+            ]}
+          >
             <Text style={styles.streakBadgeText}>
               {rankIcon} {rankTitle}
             </Text>
@@ -258,21 +267,11 @@ export function InflationHeader({
           <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
           <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
         </View>
-        <View
-          style={[
-            styles.stat,
-            styles.inflationStat,
-            hot && glowShadow("#e0693f"),
-          ]}
-        >
+        <View style={[styles.stat, styles.inflationStat, hot && glowShadow("#e0693f")]}>
           {hot && (
             <Animated.View
               pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFill,
-                styles.hotGlow,
-                { opacity: hotGlowOpacity },
-              ]}
+              style={[StyleSheet.absoluteFill, styles.hotGlow, { opacity: hotGlowOpacity }]}
             />
           )}
           <View style={styles.inflationTextCol}>
@@ -340,7 +339,12 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     marginLeft: SPACING.sm,
   },
-  streakBadgeText: { color: COLORS.textPrimary, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  streakBadgeText: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   streakBadgeRow: { flexDirection: "row", alignItems: "center" },
   flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
   controls: { flexDirection: "row", gap: SPACING.sm },
@@ -354,11 +358,21 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.sm,
   },
   iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.body },
-  langBtnText: { color: COLORS.accent, fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  langBtnText: {
+    color: COLORS.accent,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   statsRow: { flexDirection: "row", justifyContent: "space-between" },
   stat: { flex: 1 },
   statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 2 },
-  statValue: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  statValue: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.title,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   inflationStat: {
     flex: 1.4,
     flexDirection: "row",

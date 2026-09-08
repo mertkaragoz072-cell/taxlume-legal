@@ -61,7 +61,4 @@ export const ASSETS: InvestAsset[] = [
   },
 ];
 
-export const ASSETS_BY_ID = Object.fromEntries(ASSETS.map((a) => [a.id, a])) as Record<
-  AssetId,
-  InvestAsset
->;
+export const ASSETS_BY_ID = Object.fromEntries(ASSETS.map((a) => [a.id, a])) as Record<AssetId, InvestAsset>;

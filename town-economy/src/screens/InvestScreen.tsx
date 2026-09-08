@@ -99,7 +99,9 @@ export function InvestScreen({ sounds }: Props) {
               {t("invest.holdingLabel", { qty: selectedState.holding })} ·{" "}
               {t("invest.avgCostLabel", { price: selectedState.avgCost.toFixed(2) })}
             </Text>
-            <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? COLORS.positive : COLORS.negative }]}>
+            <Text
+              style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? COLORS.positive : COLORS.negative }]}
+            >
               {unrealizedPnl >= 0
                 ? t("invest.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
                 : t("invest.unrealizedLoss", {
@@ -147,9 +149,25 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  portfolioLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, letterSpacing: 1 },
-  portfolioRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: SPACING.xs },
-  portfolioValue: { color: COLORS.accent, fontSize: TYPE.display, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  portfolioLabel: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    letterSpacing: 1,
+  },
+  portfolioRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: SPACING.xs,
+  },
+  portfolioValue: {
+    color: COLORS.accent,
+    fontSize: TYPE.display,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   portfolioPnl: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, lineHeight: 17 },
   chartCard: {
@@ -165,9 +183,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: SPACING.sm,
   },
-  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  chartTitle: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.title,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   chartSubtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginTop: 2, maxWidth: 200 },
-  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  chartPrice: {
+    color: COLORS.accent,
+    fontSize: TYPE.heading,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 2 },
   holdingRow: {
     flexDirection: "row",

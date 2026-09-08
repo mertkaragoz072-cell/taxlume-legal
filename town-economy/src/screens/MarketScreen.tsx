@@ -44,8 +44,16 @@ interface Props {
 }
 
 export function MarketScreen({ sounds }: Props) {
-  const { state, selectGood, trade, addAutoTradeRule, removeAutoTradeRule, toggleAutoTradeRule, t, marketSpreadPct } =
-    useEconomyContext();
+  const {
+    state,
+    selectGood,
+    trade,
+    addAutoTradeRule,
+    removeAutoTradeRule,
+    toggleAutoTradeRule,
+    t,
+    marketSpreadPct,
+  } = useEconomyContext();
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -160,7 +168,9 @@ export function MarketScreen({ sounds }: Props) {
             <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {unrealizedPnl >= 0
                 ? t("market.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
-                : t("market.unrealizedLoss", { amount: formatNumber(Math.abs(unrealizedPnl), state.language) })}
+                : t("market.unrealizedLoss", {
+                    amount: formatNumber(Math.abs(unrealizedPnl), state.language),
+                  })}
             </Text>
           </View>
         )}
@@ -234,7 +244,9 @@ export function MarketScreen({ sounds }: Props) {
         </View>
 
         <Text style={styles.autoTradeSubLabel}>
-          {autoSide === "buy" ? t("market.autoTrade.triggerBelowLabel") : t("market.autoTrade.triggerAboveLabel")}
+          {autoSide === "buy"
+            ? t("market.autoTrade.triggerBelowLabel")
+            : t("market.autoTrade.triggerAboveLabel")}
         </Text>
         <View style={styles.qtyRow}>
           {AUTO_TRADE_TRIGGER_PCT_STEPS.map((pct) => (
@@ -264,7 +276,8 @@ export function MarketScreen({ sounds }: Props) {
         {(() => {
           const triggerPrice =
             autoSide === "buy" ? selectedState.price * (1 - autoPct) : selectedState.price * (1 + autoPct);
-          const disabled = state.autoTradeRules.length >= AUTO_TRADE_MAX_RULES || !isGoodUnlocked(selected, state);
+          const disabled =
+            state.autoTradeRules.length >= AUTO_TRADE_MAX_RULES || !isGoodUnlocked(selected, state);
           return (
             <>
               <Text style={styles.autoTradePreview}>
@@ -282,7 +295,13 @@ export function MarketScreen({ sounds }: Props) {
                 style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
                 scaleTo={0.97}
               >
-                <GradientFill colors={autoSide === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+                <GradientFill
+                  colors={autoSide === "buy" ? GREEN_GRADIENT : RED_GRADIENT}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                />
                 <Text style={styles.confirmBtnText}>{t("market.autoTrade.addBtn")}</Text>
               </ScalePressable>
             </>
@@ -306,10 +325,10 @@ export function MarketScreen({ sounds }: Props) {
                 {rule.side === "buy" ? "📉" : "📈"} {t(ruleGood.nameKey)}
               </Text>
               <Text style={styles.autoTradeRowSub}>
-                {t(
-                  rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell",
-                  { qty: rule.qty, price: rule.triggerPrice.toFixed(2) }
-                )}
+                {t(rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell", {
+                  qty: rule.qty,
+                  price: rule.triggerPrice.toFixed(2),
+                })}
               </Text>
             </View>
             <ScalePressable
@@ -351,11 +370,26 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   seasonalIcon: { fontSize: 28, marginRight: SPACING.md },
-  seasonalTitle: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
+  seasonalTitle: {
+    color: COLORS.onLight,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.body,
+  },
   seasonalDesc: { color: "#2a2016", fontSize: TYPE.caption, marginTop: 2 },
   seasonalFooterRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
-  seasonalBonus: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.label },
-  seasonalTicksLeft: { color: "#2a2016", fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  seasonalBonus: {
+    color: COLORS.onLight,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.label,
+  },
+  seasonalTicksLeft: {
+    color: "#2a2016",
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   chartCard: {
     borderRadius: RADIUS.feature,
     borderWidth: 1.5,
@@ -369,9 +403,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: SPACING.sm,
   },
-  chartTitle: { color: COLORS.textPrimary, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  chartTitle: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.title,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   chartSubtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginTop: 2 },
-  chartPrice: { color: COLORS.accent, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  chartPrice: {
+    color: COLORS.accent,
+    fontSize: TYPE.heading,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
   chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 2 },
   holdingRow: {
     flexDirection: "row",
@@ -397,7 +441,13 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   lockedIcon: { fontSize: TYPE.heading },
-  lockedName: { color: COLORS.textPrimary, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium, marginTop: 6 },
+  lockedName: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+    marginTop: 6,
+  },
   lockedDay: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs, textAlign: "center" },
   gameOverBox: {
     marginTop: SPACING.lg + 2,
@@ -406,7 +456,13 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     alignItems: "center",
   },
-  gameOverText: { color: "#f0b7a8", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body, textAlign: "center" },
+  gameOverText: {
+    color: "#f0b7a8",
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.body,
+    textAlign: "center",
+  },
   gameOverSub: { color: "#c9a893", fontSize: TYPE.label, marginTop: 6, textAlign: "center" },
   autoTradeDesc: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
   autoTradePanel: {
@@ -426,7 +482,12 @@ const styles = StyleSheet.create({
   sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
   sideBtnActiveBuy: { backgroundColor: COLORS.positive },
   sideBtnActiveSell: { backgroundColor: COLORS.negative },
-  sideBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
+  sideBtnText: {
+    color: COLORS.textMuted,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
   sideBtnTextActive: { color: "#fff" },
   autoTradeSubLabel: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.xs },
   qtyRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.md - 2 },
@@ -440,12 +501,27 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     marginRight: SPACING.sm,
   },
-  qtyBtnText: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  qtyBtnText: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
   autoTradePreview: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1, marginBottom: 2 },
   autoTradeMaxNote: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: SPACING.sm + 2 },
-  confirmBtn: { borderRadius: RADIUS.card, paddingVertical: SPACING.md, alignItems: "center", overflow: "hidden" },
+  confirmBtn: {
+    borderRadius: RADIUS.card,
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+    overflow: "hidden",
+  },
   confirmBtnDisabled: { opacity: 0.35 },
-  confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body + 1 },
+  confirmBtnText: {
+    color: "#fff",
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.body + 1,
+  },
   autoTradeEmptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
   autoTradeRow: {
     flexDirection: "row",
@@ -458,7 +534,12 @@ const styles = StyleSheet.create({
   },
   autoTradeAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
   autoTradeRowIcon: { fontSize: 22, marginRight: SPACING.sm + 2 },
-  autoTradeRowTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  autoTradeRowTitle: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
   autoTradeRowSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1 },
   autoTradeToggleBtn: {
     borderRadius: RADIUS.chip,
@@ -468,7 +549,12 @@ const styles = StyleSheet.create({
     marginRight: SPACING.sm,
   },
   autoTradeToggleBtnActive: { backgroundColor: COLORS.positive },
-  autoTradeToggleBtnText: { color: "#fff", fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  autoTradeToggleBtnText: {
+    color: "#fff",
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   autoTradeDeleteBtn: {
     width: 26,
     height: 26,
@@ -477,5 +563,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  autoTradeDeleteBtnText: { color: "#f0b7a8", fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  autoTradeDeleteBtnText: {
+    color: "#f0b7a8",
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
 });

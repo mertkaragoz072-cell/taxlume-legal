@@ -43,12 +43,18 @@ export function RivalTraderModal({ offer, holding, onResolve }: Props) {
 
           <ScalePressable
             onPress={() => onResolve(true)}
-            style={[styles.option, canAccept && { borderColor: RIVAL_ACCENT }, !canAccept && styles.optionDisabled]}
+            style={[
+              styles.option,
+              canAccept && { borderColor: RIVAL_ACCENT },
+              !canAccept && styles.optionDisabled,
+            ]}
             scaleTo={0.96}
           >
             <Text style={styles.optionLabel}>{t("rivalOffer.acceptBtn")}</Text>
             <Text style={styles.optionHint}>
-              {canAccept ? t("rivalOffer.acceptHint") : t("rivalOffer.insufficientHint", { good: t(good.nameKey) })}
+              {canAccept
+                ? t("rivalOffer.acceptHint")
+                : t("rivalOffer.insufficientHint", { good: t(good.nameKey) })}
             </Text>
           </ScalePressable>
 
@@ -72,7 +78,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: COLORS.textPrimary, fontSize: 17, fontFamily: FONT.display, marginBottom: 8, textAlign: "center" },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: 17,
+    fontFamily: FONT.display,
+    marginBottom: 8,
+    textAlign: "center",
+  },
   description: {
     color: COLORS.textMuted,
     fontSize: 13,
@@ -91,6 +103,12 @@ const styles = StyleSheet.create({
     borderColor: "#3a2d1e",
   },
   optionDisabled: { opacity: 0.5 },
-  optionLabel: { color: COLORS.textPrimary, fontWeight: "700", fontFamily: FONT.bold, fontSize: 14, marginBottom: 3 },
+  optionLabel: {
+    color: COLORS.textPrimary,
+    fontWeight: "700",
+    fontFamily: FONT.bold,
+    fontSize: 14,
+    marginBottom: 3,
+  },
   optionHint: { color: COLORS.textMuted, fontSize: 11 },
 });

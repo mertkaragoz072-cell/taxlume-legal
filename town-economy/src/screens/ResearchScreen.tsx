@@ -7,7 +7,6 @@ import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import {
   CARD_GRADIENT,
-  cardShadow,
   COLORS,
   FONT,
   GOLD_GRADIENT,
@@ -53,9 +52,7 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
           )}
         </View>
         {locked && prereq && (
-          <Text style={styles.lockedText}>
-            {t("research.lockedRequires", { name: t(prereq.nameKey) })}
-          </Text>
+          <Text style={styles.lockedText}>{t("research.lockedRequires", { name: t(prereq.nameKey) })}</Text>
         )}
       </View>
       {researched ? (
@@ -70,9 +67,7 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
           scaleTo={0.95}
         >
           {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-          <Text style={styles.researchBtnText}>
-            {t("research.researchBtn", { cost: node.cost })}
-          </Text>
+          <Text style={styles.researchBtnText}>{t("research.researchBtn", { cost: node.cost })}</Text>
         </ScalePressable>
       )}
     </View>
@@ -109,7 +104,12 @@ const styles = StyleSheet.create({
   goodGroup: { marginBottom: SPACING.lg + 2 },
   goodHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm },
   goodHeaderIcon: { fontSize: TYPE.heading, marginRight: SPACING.sm },
-  goodHeaderName: { color: COLORS.textPrimary, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
+  goodHeaderName: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.body,
+  },
   nodeCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -122,11 +122,27 @@ const styles = StyleSheet.create({
   accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   dimmed: { opacity: 0.7 },
   nodeIcon: { fontSize: TYPE.heading + 6, marginRight: SPACING.md },
-  nodeName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
+  nodeName: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
   nodeDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
   effectRow: { flexDirection: "row", gap: SPACING.sm + 2, marginTop: SPACING.xs },
-  effectText: { color: COLORS.positive, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  lockedText: { color: COLORS.negative, fontSize: TYPE.micro, fontWeight: WEIGHT.medium, fontFamily: FONT.medium, marginTop: SPACING.xs },
+  effectText: {
+    color: COLORS.positive,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  lockedText: {
+    color: COLORS.negative,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+    marginTop: SPACING.xs,
+  },
   badge: {
     backgroundColor: "rgba(63,174,92,0.16)",
     borderRadius: RADIUS.chip,
@@ -134,7 +150,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm + 2,
     marginLeft: SPACING.sm + 2,
   },
-  badgeText: { color: COLORS.positive, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  badgeText: {
+    color: COLORS.positive,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.caption,
+  },
   researchBtn: {
     borderRadius: RADIUS.chip,
     paddingVertical: SPACING.sm,
@@ -143,5 +164,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   researchBtnDisabled: { backgroundColor: "#4a4032" },
-  researchBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.caption },
+  researchBtnText: {
+    color: COLORS.onLight,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.caption,
+  },
 });

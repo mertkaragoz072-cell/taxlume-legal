@@ -19,7 +19,7 @@ const BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 function utf8Encode(str: string): number[] {
   const bytes: number[] = [];
   for (let i = 0; i < str.length; i++) {
-    let code = str.codePointAt(i)!;
+    const code = str.codePointAt(i)!;
     if (code > 0xffff) i++; // consumed a surrogate pair
     if (code < 0x80) {
       bytes.push(code);
@@ -108,8 +108,7 @@ export function encodeSaveCode(state: EconomyState): string {
 }
 
 export type DecodeSaveCodeResult =
-  | { ok: true; state: EconomyState }
-  | { ok: false; reason: "format" | "version" | "corrupt" };
+  { ok: true; state: EconomyState } | { ok: false; reason: "format" | "version" | "corrupt" };
 
 export function decodeSaveCode(code: string): DecodeSaveCodeResult {
   const trimmed = code.trim();

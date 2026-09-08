@@ -52,10 +52,7 @@ export function ComboBanner({ event }: Props) {
   if (!event) return null;
 
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[styles.wrap, { opacity, transform: [{ scale }] }]}
-    >
+    <Animated.View pointerEvents="none" style={[styles.wrap, { opacity, transform: [{ scale }] }]}>
       <Animated.View style={[styles.pill, { backgroundColor: tierColor(event.count) }]}>
         <Text style={styles.text}>{t("combo.milestone", { count: event.count })}</Text>
         <Text style={styles.subtext}>{t("combo.subtitle")}</Text>
@@ -85,5 +82,11 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   text: { color: "#1a1410", fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
-  subtext: { color: "#1a1410", fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 1 },
+  subtext: {
+    color: "#1a1410",
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginTop: 1,
+  },
 });

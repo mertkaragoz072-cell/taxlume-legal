@@ -183,7 +183,4 @@ export const GOODS: Good[] = [
   },
 ];
 
-export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Record<
-  string,
-  Good
->;
+export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Record<string, Good>;

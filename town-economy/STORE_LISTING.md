@@ -18,6 +18,7 @@ a store's actual limit differs slightly from what's listed here.
 > prestige your way to a mythic trading empire while inflation looms.
 
 **Keywords** (100 char max, comma-separated, no spaces):
+
 ```
 economy,inflation,tycoon,trading,market,strategy,town,business,finance,automation,prestige
 ```
@@ -74,9 +75,11 @@ Can you out-manage inflation and build the richest town around?
 **Title** (30 char max): `Golden Town` (11)
 
 **Short description** (80 char max):
+
 ```
 Build your town's economy, trade smart, and keep inflation under control.
 ```
+
 (75 chars)
 
 **Full description** (4000 char max): same text as the App Store
@@ -94,11 +97,13 @@ description above.
 `Kasaba Ekonomisi ve Enflasyon` (30)
 
 **Play Store kısa açıklama** (80 karakter):
+
 ```
 Kasabanın ekonomisini yönet, akıllıca ticaret yap, enflasyonu kontrol altında tut.
 ```
 
 **Anahtar kelimeler**:
+
 ```
 ekonomi,enflasyon,simülasyon,ticaret,piyasa,strateji,kasaba,iş,tycoon,finans,otomasyon
 ```

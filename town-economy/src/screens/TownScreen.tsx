@@ -129,9 +129,13 @@ export function TownScreen() {
         <Text style={styles.moodEmoji}>{townRankIcon(state.townRankIndex)}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.moodLabel}>{t("town.rankLabel")}</Text>
-          <Text style={[styles.moodValue, { color: COLORS.accent, fontFamily: FONT.display }]}>{rankTitle}</Text>
+          <Text style={[styles.moodValue, { color: COLORS.accent, fontFamily: FONT.display }]}>
+            {rankTitle}
+          </Text>
           <View style={styles.happinessTrack}>
-            <View style={[styles.happinessFill, { width: `${rankPct * 100}%`, backgroundColor: COLORS.accent }]} />
+            <View
+              style={[styles.happinessFill, { width: `${rankPct * 100}%`, backgroundColor: COLORS.accent }]}
+            />
           </View>
         </View>
         <View style={{ alignItems: "flex-end" }}>
@@ -169,10 +173,7 @@ export function TownScreen() {
           <Text style={[styles.moodValue, { color: happy.color }]}>{t(happy.labelKey)}</Text>
           <View style={styles.happinessTrack}>
             <View
-              style={[
-                styles.happinessFill,
-                { width: `${state.happiness}%`, backgroundColor: happy.color },
-              ]}
+              style={[styles.happinessFill, { width: `${state.happiness}%`, backgroundColor: happy.color }]}
             />
           </View>
         </View>
@@ -222,7 +223,9 @@ export function TownScreen() {
         <View style={styles.taxHeaderRow}>
           <Text style={styles.taxTitle}>{t("town.prestige.title")}</Text>
           {state.prestigeLevel > 0 && (
-            <Text style={styles.prestigeLevel}>{t("town.prestige.level", { level: state.prestigeLevel })}</Text>
+            <Text style={styles.prestigeLevel}>
+              {t("town.prestige.level", { level: state.prestigeLevel })}
+            </Text>
           )}
         </View>
         <Text style={styles.taxDesc}>{t("town.prestige.description")}</Text>
@@ -312,7 +315,9 @@ export function TownScreen() {
             >
               {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
               <Text style={styles.upgradeBtnText}>
-                {unlocked ? t("town.prestige.perkUnlockedBtn") : t("town.prestige.perkUnlockBtn", { cost: perk.cost })}
+                {unlocked
+                  ? t("town.prestige.perkUnlockedBtn")
+                  : t("town.prestige.perkUnlockBtn", { cost: perk.cost })}
               </Text>
             </ScalePressable>
           </View>
@@ -427,9 +432,7 @@ export function TownScreen() {
             <View style={{ flex: 1 }}>
               <View style={styles.upgradeTitleRow}>
                 <Text style={styles.upgradeName}>{t(u.nameKey)}</Text>
-                <Text style={styles.upgradeLevel}>
-                  {t("town.upgradeLevel", { level, max: u.maxLevel })}
-                </Text>
+                <Text style={styles.upgradeLevel}>{t("town.upgradeLevel", { level, max: u.maxLevel })}</Text>
               </View>
               <Text style={styles.upgradeDesc}>{t(u.descriptionKey)}</Text>
               {level > 0 &&
@@ -439,10 +442,7 @@ export function TownScreen() {
                 })()}
               <View style={styles.upgradeLevelTrack}>
                 {Array.from({ length: u.maxLevel }).map((_, i) => (
-                  <View
-                    key={i}
-                    style={[styles.upgradeLevelPip, i < level && styles.upgradeLevelPipFilled]}
-                  />
+                  <View key={i} style={[styles.upgradeLevelPip, i < level && styles.upgradeLevelPipFilled]} />
                 ))}
               </View>
             </View>
@@ -453,9 +453,7 @@ export function TownScreen() {
               scaleTo={0.95}
             >
               {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-              <Text style={styles.upgradeBtnText}>
-                {maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}
-              </Text>
+              <Text style={styles.upgradeBtnText}>{maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}</Text>
             </ScalePressable>
           </View>
         );
@@ -485,9 +483,7 @@ export function TownScreen() {
               scaleTo={0.95}
             >
               {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-              <Text style={styles.upgradeBtnText}>
-                {owned ? t("town.propertyOwnedBtn") : `${p.cost} 🪙`}
-              </Text>
+              <Text style={styles.upgradeBtnText}>{owned ? t("town.propertyOwnedBtn") : `${p.cost} 🪙`}</Text>
             </ScalePressable>
           </View>
         );
@@ -509,12 +505,7 @@ export function TownScreen() {
               <Text style={styles.buildingIcon}>{g.icon}</Text>
               <Text style={styles.buildingName}>{t(g.producerKey)}</Text>
               <View style={styles.buildingTrack}>
-                <View
-                  style={[
-                    styles.buildingFill,
-                    { height: `${pct * 100}%`, backgroundColor: g.color },
-                  ]}
-                />
+                <View style={[styles.buildingFill, { height: `${pct * 100}%`, backgroundColor: g.color }]} />
               </View>
               <Text style={styles.buildingRatio}>{(ratio * 100).toFixed(0)}%</Text>
             </View>
@@ -535,9 +526,13 @@ export function TownScreen() {
               <Text style={styles.workerName}>{t(g.nameKey)}</Text>
               {count > 0 && (
                 <Text style={styles.workerInfo}>
-                  {t("town.workerWage", { amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1) })}
+                  {t("town.workerWage", {
+                    amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1),
+                  })}
                   {" · "}
-                  {t("town.workerBonus", { pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100) })}
+                  {t("town.workerBonus", {
+                    pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
+                  })}
                 </Text>
               )}
               <View style={styles.workerPipRow}>
@@ -567,9 +562,7 @@ export function TownScreen() {
       })}
 
       <SectionLabel text={t("town.eventsSectionLabel")} color="#a0917a" />
-      {state.eventLog.length === 0 && (
-        <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>
-      )}
+      {state.eventLog.length === 0 && <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>}
       {state.eventLog.length > 0 &&
         (() => {
           const goodCount = state.eventLog.filter((e) => e.tone === "good").length;
@@ -590,7 +583,11 @@ export function TownScreen() {
             styles.eventRow,
             {
               borderLeftColor:
-                event.tone === "bad" ? COLORS.negative : event.tone === "good" ? COLORS.positive : COLORS.textMuted,
+                event.tone === "bad"
+                  ? COLORS.negative
+                  : event.tone === "good"
+                    ? COLORS.positive
+                    : COLORS.textMuted,
             },
           ]}
         >
@@ -599,7 +596,11 @@ export function TownScreen() {
         </View>
       ))}
       {state.eventLog.length > 5 && (
-        <ScalePressable onPress={() => setShowAllEvents((v) => !v)} style={styles.eventToggleBtn} scaleTo={0.97}>
+        <ScalePressable
+          onPress={() => setShowAllEvents((v) => !v)}
+          style={styles.eventToggleBtn}
+          scaleTo={0.97}
+        >
           <Text style={styles.eventToggleBtnText}>
             {showAllEvents
               ? t("town.eventsShowLess")
@@ -643,7 +644,12 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   taxHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  taxTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
+  taxTitle: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
   taxIncome: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   taxDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 6, marginBottom: SPACING.md },
   taxRow: { flexDirection: "row", gap: 6 },
@@ -658,7 +664,12 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   taxBtnActive: { borderColor: COLORS.accent },
-  taxBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  taxBtnText: {
+    color: COLORS.textMuted,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
   taxBtnTextActive: { color: COLORS.accent },
   prestigeCard: {
     borderRadius: RADIUS.feature,
@@ -667,13 +678,52 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  prestigeLevel: { color: COLORS.accent, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.label },
-  prestigeBonus: { color: COLORS.positive, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 6 },
-  prestigeLocked: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: SPACING.sm + 2, marginBottom: SPACING.sm },
-  prestigeProgress: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  prestigePointsLabel: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginBottom: SPACING.sm + 2 },
-  legendaryPointsLabel: { color: "#c77df0", fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginBottom: SPACING.sm + 2 },
-  perkRequires: { color: COLORS.negative, fontSize: TYPE.micro, marginTop: 3, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  prestigeLevel: {
+    color: COLORS.accent,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.label,
+  },
+  prestigeBonus: {
+    color: COLORS.positive,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginTop: 6,
+  },
+  prestigeLocked: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    marginTop: SPACING.sm + 2,
+    marginBottom: SPACING.sm,
+  },
+  prestigeProgress: {
+    color: COLORS.accent,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  prestigePointsLabel: {
+    color: COLORS.accent,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginBottom: SPACING.sm + 2,
+  },
+  legendaryPointsLabel: {
+    color: "#c77df0",
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginBottom: SPACING.sm + 2,
+  },
+  perkRequires: {
+    color: COLORS.negative,
+    fontSize: TYPE.micro,
+    marginTop: 3,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
   lockedTrack: {
     width: "100%",
     height: 8,
@@ -690,7 +740,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginTop: SPACING.md,
   },
-  prestigeBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
+  prestigeBtnText: {
+    color: COLORS.onLight,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.body,
+  },
   bankCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
@@ -698,17 +753,33 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  bankCap: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: SPACING.xs, marginBottom: SPACING.sm + 2 },
+  bankCap: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    marginTop: SPACING.xs,
+    marginBottom: SPACING.sm + 2,
+  },
   bankTermLabel: {
     color: COLORS.textMuted,
     fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold, fontFamily: FONT.bold,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
-  bankBalanceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: SPACING.sm },
+  bankBalanceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: SPACING.sm,
+  },
   bankBalanceLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
-  bankBalanceValue: { color: COLORS.negative, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.title - 1 },
+  bankBalanceValue: {
+    color: COLORS.negative,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.title - 1,
+  },
   bankRate: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2, marginBottom: SPACING.sm + 2 },
   bankBtnRow: { flexDirection: "row", gap: SPACING.sm },
   bankBtn: {
@@ -719,7 +790,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 6,
   },
-  bankBtnText: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  bankBtnText: {
+    color: COLORS.accent,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.caption,
+  },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
   workerCard: {
     flexDirection: "row",
@@ -732,8 +808,19 @@ const styles = StyleSheet.create({
   },
   workerAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   workerIcon: { fontSize: 22, marginRight: SPACING.md },
-  workerName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
-  workerInfo: { color: COLORS.positive, fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 2 },
+  workerName: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
+  workerInfo: {
+    color: COLORS.positive,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginTop: 2,
+  },
   workerPipRow: { flexDirection: "row", gap: 4, marginTop: 6 },
   workerPip: { width: 14, height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, marginRight: 4 },
   workerPipFilled: { backgroundColor: COLORS.accent },
@@ -747,7 +834,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   workerBtnDisabled: { opacity: 0.35 },
-  workerBtnText: { color: COLORS.accent, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.title },
+  workerBtnText: {
+    color: COLORS.accent,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.title,
+  },
   chartCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
@@ -755,8 +847,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  chartTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body, marginBottom: 6 },
-  buildingsGrid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm + 2, marginBottom: SPACING.xl - 4 },
+  chartTitle: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+    marginBottom: 6,
+  },
+  buildingsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.sm + 2,
+    marginBottom: SPACING.xl - 4,
+  },
   buildingCard: {
     width: "31%",
     borderRadius: RADIUS.card,
@@ -768,7 +871,8 @@ const styles = StyleSheet.create({
   buildingName: {
     color: COLORS.textPrimary,
     fontSize: TYPE.micro,
-    fontWeight: WEIGHT.medium, fontFamily: FONT.medium,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
     marginTop: SPACING.xs,
     textAlign: "center",
   },
@@ -795,7 +899,12 @@ const styles = StyleSheet.create({
   eventSummaryRow: { flexDirection: "row", gap: SPACING.md, marginBottom: SPACING.sm },
   eventSummaryChip: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   eventToggleBtn: { alignItems: "center", paddingVertical: SPACING.sm, marginBottom: SPACING.sm },
-  eventToggleBtnText: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  eventToggleBtnText: {
+    color: COLORS.accent,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
   upgradeCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -806,10 +915,26 @@ const styles = StyleSheet.create({
   },
   upgradeIcon: { fontSize: 24, marginRight: SPACING.md },
   upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  upgradeName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
-  upgradeLevel: { color: COLORS.textMuted, fontSize: TYPE.caption, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  upgradeName: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
+  upgradeLevel: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
   upgradeDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
-  upgradeEffect: { color: COLORS.positive, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 3 },
+  upgradeEffect: {
+    color: COLORS.positive,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginTop: 3,
+  },
   upgradeLevelTrack: { flexDirection: "row", gap: 4, marginTop: 6 },
   upgradeLevelPip: {
     width: 14,
@@ -827,5 +952,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   upgradeBtnDisabled: { backgroundColor: "#4a4032" },
-  upgradeBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.label },
+  upgradeBtnText: {
+    color: COLORS.onLight,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.label,
+  },
 });

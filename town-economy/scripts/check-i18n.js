@@ -52,7 +52,9 @@ const missingInB = diff(keysA, keysB);
 const missingInA = diff(keysB, keysA);
 
 if (missingInB.length === 0 && missingInA.length === 0) {
-  console.log(`✅ i18n check passed — ${langA} and ${langB} have identical key structure (${keysA.size} keys).`);
+  console.log(
+    `✅ i18n check passed — ${langA} and ${langB} have identical key structure (${keysA.size} keys).`
+  );
   process.exit(0);
 }
 

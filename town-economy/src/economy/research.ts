@@ -71,9 +71,10 @@ export const RESEARCH_NODES: ResearchNode[] = [
   tier2("jewelry", 866, "💍"),
 ];
 
-export const RESEARCH_NODES_BY_ID = Object.fromEntries(
-  RESEARCH_NODES.map((n) => [n.id, n])
-) as Record<string, ResearchNode>;
+export const RESEARCH_NODES_BY_ID = Object.fromEntries(RESEARCH_NODES.map((n) => [n.id, n])) as Record<
+  string,
+  ResearchNode
+>;
 
 /** the combined multiplier from every researched node for one good — 1 = no
  * bonus yet, 1.3 = +30%, etc. */

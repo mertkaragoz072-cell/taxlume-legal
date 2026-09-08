@@ -84,8 +84,16 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
         title: t(state.language, "notif.caravanTitle"),
         body:
           caravan.direction === "export"
-            ? t(state.language, "notif.caravanExportBody", { town: townName, qty: caravan.qty, good: goodName })
-            : t(state.language, "notif.caravanImportBody", { town: townName, qty: caravan.qty, good: goodName }),
+            ? t(state.language, "notif.caravanExportBody", {
+                town: townName,
+                qty: caravan.qty,
+                good: goodName,
+              })
+            : t(state.language, "notif.caravanImportBody", {
+                town: townName,
+                qty: caravan.qty,
+                good: goodName,
+              }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

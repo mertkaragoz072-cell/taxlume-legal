@@ -67,9 +67,10 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
   },
 ];
 
-export const QUEST_TEMPLATES_BY_ID = Object.fromEntries(
-  QUEST_TEMPLATES.map((q) => [q.id, q])
-) as Record<string, QuestTemplate>;
+export const QUEST_TEMPLATES_BY_ID = Object.fromEntries(QUEST_TEMPLATES.map((q) => [q.id, q])) as Record<
+  string,
+  QuestTemplate
+>;
 
 export function makeInitialDailyProgress(): DailyProgress {
   return { trades: 0, caravansSent: 0, townsTraded: [], cashEarned: 0, upgradesBought: 0 };

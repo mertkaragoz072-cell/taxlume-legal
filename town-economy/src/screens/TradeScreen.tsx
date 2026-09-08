@@ -78,10 +78,7 @@ interface TownPillProps {
 function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
   const effectiveTariff = effectiveTariffRate(state, town);
   return (
-    <ScalePressable
-      onPress={onPress}
-      style={[styles.townPill, selected && styles.townPillActive]}
-    >
+    <ScalePressable onPress={onPress} style={[styles.townPill, selected && styles.townPillActive]}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
       <Text style={styles.townIcon}>{town.icon}</Text>
       <Text style={styles.townName}>{t(town.nameKey)}</Text>
@@ -93,7 +90,8 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
 }
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan, openContract, openBulkContract, t, netWorth, formatCoins } = useEconomyContext();
+  const { state, sendCaravan, openContract, openBulkContract, t, netWorth, formatCoins } =
+    useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
   const [direction, setDirection] = useState<CaravanDirection>("export");
@@ -142,20 +140,17 @@ export function TradeScreen({ sounds }: Props) {
   const town = TOWNS_BY_ID[townId];
   const townState = state.foreignTowns[townId];
   const good = GOODS_BY_ID[goodId];
-  const homePrice = state.goods[goodId].price;
   const theirPrice = townState.prices[goodId];
   const holding = state.goods[goodId].holding;
 
   const tariffRate = effectiveTariffRate(state, town);
   const affordableImport = Math.floor(state.cash / (theirPrice * (1 + tariffRate)));
-  const resolvedQty =
-    qtyOption === "ALL" ? (direction === "export" ? holding : affordableImport) : qtyOption;
+  const resolvedQty = qtyOption === "ALL" ? (direction === "export" ? holding : affordableImport) : qtyOption;
 
   const gross = resolvedQty * theirPrice;
   const net = direction === "export" ? gross * (1 - tariffRate) : gross * (1 + tariffRate);
   const disabled =
-    resolvedQty <= 0 ||
-    (direction === "export" ? resolvedQty > holding : net > state.cash + 0.001);
+    resolvedQty <= 0 || (direction === "export" ? resolvedQty > holding : net > state.cash + 0.001);
 
   const insurancePremium = (direction === "export" ? gross : net) * CARAVAN_INSURANCE_COST_PCT;
   const cashNeededForInsurance = direction === "export" ? insurancePremium : net + insurancePremium;
@@ -163,671 +158,668 @@ export function TradeScreen({ sounds }: Props) {
 
   return (
     <>
-    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      {state.caravans.length > 0 && (
-        <View style={styles.roadBanner}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          {[...state.caravans]
-            .sort((a, b) => a.arrivesAtTick - b.arrivesAtTick)
-            .map((c) => {
-              const cTown = TOWNS_BY_ID[c.townId];
-              const g = GOODS_BY_ID[c.goodId];
-              const total = c.arrivesAtTick - c.departedTick;
-              const elapsed = state.tick - c.departedTick;
-              const progress = total > 0 ? clamp01(elapsed / total) : 1;
-              const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
-              return (
-                <CaravanRoad
-                  key={c.id}
-                  progress={progress}
-                  destinationIcon={cTown.icon}
-                  accentColor={g.color}
-                  label={`${c.direction === "export" ? "📤" : "📥"} ${t(cTown.nameKey)} · ${g.icon} ${t(g.nameKey)}`}
-                  etaLabel={t("trade.turnsLeft", { n: daysLeft })}
-                />
-              );
-            })}
-        </View>
-      )}
-
-      <SectionLabel text={t("trade.mapSectionLabel")} color="#5fd884" />
-      <TownMapView
-        townName={state.townName}
-        selectedEmblem={state.selectedEmblem}
-        towns={ALL_TOWNS}
-        selectedTownId={townId}
-        onSelectTown={setTownId}
-        metropolUnlocked={state.metropolUnlocked}
-        legendaryUnlocked={state.legendaryUnlocked}
-        mythicUnlocked={state.mythicUnlocked}
-        caravans={state.caravans}
-        tick={state.tick}
-        t={t}
-      />
-
-      <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-        {REGULAR_TOWNS.map((tn) => (
-          <TownPill
-            key={tn.id}
-            town={tn}
-            selected={tn.id === townId}
-            onPress={() => setTownId(tn.id)}
-            state={state}
-            t={t}
-          />
-        ))}
-      </ScrollView>
-
-      <SectionLabel text={t("trade.metropolSectionLabel")} color="#c58ee0" />
-      {state.metropolUnlocked ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-          {METROPOLISES.map((tn) => (
-            <TownPill
-              key={tn.id}
-              town={tn}
-              selected={tn.id === townId}
-              onPress={() => setTownId(tn.id)}
-              state={state}
-              t={t}
-            />
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.metropolLockedCard}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.metropolLockedIcon}>🔒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.metropolLockedTitle}>{t("trade.metropolLocked.title")}</Text>
-            <Text style={styles.metropolLockedDesc}>
-              {t("trade.metropolLocked.description", { target: Math.round(effectiveMetropolUnlockNetWorth(state)) })}
-            </Text>
-            <View style={styles.lockedTrack}>
-              <View
-                style={[
-                  styles.lockedFill,
-                  {
-                    width: `${
-                      Math.max(0, Math.min(1, netWorth / effectiveMetropolUnlockNetWorth(state))) * 100
-                    }%`,
-                  },
-                ]}
-              />
-            </View>
-            <Text style={styles.metropolLockedProgress}>
-              {t("trade.metropolLocked.progress", {
-                current: Math.floor(netWorth),
-                target: Math.round(effectiveMetropolUnlockNetWorth(state)),
-              })}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      <SectionLabel text={t("trade.legendarySectionLabel")} color="#f0776a" />
-      {state.legendaryUnlocked ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-          {LEGENDARY_TOWNS.map((tn) => (
-            <TownPill
-              key={tn.id}
-              town={tn}
-              selected={tn.id === townId}
-              onPress={() => setTownId(tn.id)}
-              state={state}
-              t={t}
-            />
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.metropolLockedCard}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.metropolLockedIcon}>🔒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.metropolLockedTitle}>{t("trade.legendaryLocked.title")}</Text>
-            <Text style={styles.metropolLockedDesc}>
-              {t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
-            </Text>
-            <View style={styles.lockedTrack}>
-              <View
-                style={[
-                  styles.lockedFill,
-                  {
-                    width: `${
-                      Math.max(0, Math.min(1, state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL)) * 100
-                    }%`,
-                  },
-                ]}
-              />
-            </View>
-            <Text style={styles.metropolLockedProgress}>
-              {t("trade.legendaryLocked.progress", {
-                current: state.prestigeLevel,
-                target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
-              })}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {state.legendaryUnlocked && (
-        <>
-          <SectionLabel text={t("trade.mythicSectionLabel")} color="#c77df0" />
-          {state.mythicUnlocked ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-              {MYTHIC_TOWNS.map((tn) => (
-                <TownPill
-                  key={tn.id}
-                  town={tn}
-                  selected={tn.id === townId}
-                  onPress={() => setTownId(tn.id)}
-                  state={state}
-                  t={t}
-                />
-              ))}
-            </ScrollView>
-          ) : (
-            <View style={styles.metropolLockedCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <Text style={styles.metropolLockedIcon}>🔒</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.metropolLockedTitle}>{t("trade.mythicLocked.title")}</Text>
-                <Text style={styles.metropolLockedDesc}>
-                  {t("trade.mythicLocked.description", { target: MYTHIC_UNLOCK_LEGENDARY_POINTS })}
-                </Text>
-                <View style={styles.lockedTrack}>
-                  <View
-                    style={[
-                      styles.lockedFill,
-                      {
-                        width: `${
-                          Math.max(0, Math.min(1, state.legendaryPoints / MYTHIC_UNLOCK_LEGENDARY_POINTS)) * 100
-                        }%`,
-                      },
-                    ]}
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        {state.caravans.length > 0 && (
+          <View style={styles.roadBanner}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            {[...state.caravans]
+              .sort((a, b) => a.arrivesAtTick - b.arrivesAtTick)
+              .map((c) => {
+                const cTown = TOWNS_BY_ID[c.townId];
+                const g = GOODS_BY_ID[c.goodId];
+                const total = c.arrivesAtTick - c.departedTick;
+                const elapsed = state.tick - c.departedTick;
+                const progress = total > 0 ? clamp01(elapsed / total) : 1;
+                const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
+                return (
+                  <CaravanRoad
+                    key={c.id}
+                    progress={progress}
+                    destinationIcon={cTown.icon}
+                    accentColor={g.color}
+                    label={`${c.direction === "export" ? "📤" : "📥"} ${t(cTown.nameKey)} · ${g.icon} ${t(g.nameKey)}`}
+                    etaLabel={t("trade.turnsLeft", { n: daysLeft })}
                   />
-                </View>
-                <Text style={styles.metropolLockedProgress}>
-                  {t("trade.mythicLocked.progress", {
-                    current: state.legendaryPoints,
-                    target: MYTHIC_UNLOCK_LEGENDARY_POINTS,
-                  })}
-                </Text>
-              </View>
-            </View>
-          )}
-        </>
-      )}
+                );
+              })}
+          </View>
+        )}
 
-      <SectionLabel text={t("trade.heatmapSectionLabel")} color={good.color} />
-      <Text style={styles.heatmapHint}>{t("trade.heatmapHint")}</Text>
-      {(() => {
-        const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
-        const cellPct = (g: (typeof GOODS)[number], tn: ForeignTown): number | null => {
-          if (tn.tier === "metropol" && !state.metropolUnlocked) return null;
-          if (tn.tier === "legendary" && !state.legendaryUnlocked) return null;
-          if (tn.tier === "mythic" && !state.mythicUnlocked) return null;
-          const home = state.goods[g.id].price;
-          const there = state.foreignTowns[tn.id].prices[g.id];
-          const tariff = effectiveTariffRate(state, tn);
-          return ((there * (1 - tariff) - home) / home) * 100;
-        };
-        let bestGoodId: GoodId | null = null;
-        let bestTownId: TownId | null = null;
-        let bestPct = -Infinity;
-        for (const g of unlockedGoods) {
-          for (const tn of ALL_TOWNS) {
-            const pct = cellPct(g, tn);
-            if (pct !== null && pct > bestPct) {
-              bestPct = pct;
-              bestGoodId = g.id;
-              bestTownId = tn.id;
+        <SectionLabel text={t("trade.mapSectionLabel")} color="#5fd884" />
+        <TownMapView
+          townName={state.townName}
+          selectedEmblem={state.selectedEmblem}
+          towns={ALL_TOWNS}
+          selectedTownId={townId}
+          onSelectTown={setTownId}
+          metropolUnlocked={state.metropolUnlocked}
+          legendaryUnlocked={state.legendaryUnlocked}
+          mythicUnlocked={state.mythicUnlocked}
+          caravans={state.caravans}
+          tick={state.tick}
+          t={t}
+        />
+
+        <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
+          {REGULAR_TOWNS.map((tn) => (
+            <TownPill
+              key={tn.id}
+              town={tn}
+              selected={tn.id === townId}
+              onPress={() => setTownId(tn.id)}
+              state={state}
+              t={t}
+            />
+          ))}
+        </ScrollView>
+
+        <SectionLabel text={t("trade.metropolSectionLabel")} color="#c58ee0" />
+        {state.metropolUnlocked ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
+            {METROPOLISES.map((tn) => (
+              <TownPill
+                key={tn.id}
+                town={tn}
+                selected={tn.id === townId}
+                onPress={() => setTownId(tn.id)}
+                state={state}
+                t={t}
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.metropolLockedCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <Text style={styles.metropolLockedIcon}>🔒</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.metropolLockedTitle}>{t("trade.metropolLocked.title")}</Text>
+              <Text style={styles.metropolLockedDesc}>
+                {t("trade.metropolLocked.description", {
+                  target: Math.round(effectiveMetropolUnlockNetWorth(state)),
+                })}
+              </Text>
+              <View style={styles.lockedTrack}>
+                <View
+                  style={[
+                    styles.lockedFill,
+                    {
+                      width: `${
+                        Math.max(0, Math.min(1, netWorth / effectiveMetropolUnlockNetWorth(state))) * 100
+                      }%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.metropolLockedProgress}>
+                {t("trade.metropolLocked.progress", {
+                  current: Math.floor(netWorth),
+                  target: Math.round(effectiveMetropolUnlockNetWorth(state)),
+                })}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        <SectionLabel text={t("trade.legendarySectionLabel")} color="#f0776a" />
+        {state.legendaryUnlocked ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
+            {LEGENDARY_TOWNS.map((tn) => (
+              <TownPill
+                key={tn.id}
+                town={tn}
+                selected={tn.id === townId}
+                onPress={() => setTownId(tn.id)}
+                state={state}
+                t={t}
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.metropolLockedCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <Text style={styles.metropolLockedIcon}>🔒</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.metropolLockedTitle}>{t("trade.legendaryLocked.title")}</Text>
+              <Text style={styles.metropolLockedDesc}>
+                {t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
+              </Text>
+              <View style={styles.lockedTrack}>
+                <View
+                  style={[
+                    styles.lockedFill,
+                    {
+                      width: `${
+                        Math.max(0, Math.min(1, state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL)) * 100
+                      }%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.metropolLockedProgress}>
+                {t("trade.legendaryLocked.progress", {
+                  current: state.prestigeLevel,
+                  target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+                })}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {state.legendaryUnlocked && (
+          <>
+            <SectionLabel text={t("trade.mythicSectionLabel")} color="#c77df0" />
+            {state.mythicUnlocked ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
+                {MYTHIC_TOWNS.map((tn) => (
+                  <TownPill
+                    key={tn.id}
+                    town={tn}
+                    selected={tn.id === townId}
+                    onPress={() => setTownId(tn.id)}
+                    state={state}
+                    t={t}
+                  />
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.metropolLockedCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.metropolLockedIcon}>🔒</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.metropolLockedTitle}>{t("trade.mythicLocked.title")}</Text>
+                  <Text style={styles.metropolLockedDesc}>
+                    {t("trade.mythicLocked.description", { target: MYTHIC_UNLOCK_LEGENDARY_POINTS })}
+                  </Text>
+                  <View style={styles.lockedTrack}>
+                    <View
+                      style={[
+                        styles.lockedFill,
+                        {
+                          width: `${
+                            Math.max(0, Math.min(1, state.legendaryPoints / MYTHIC_UNLOCK_LEGENDARY_POINTS)) *
+                            100
+                          }%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.metropolLockedProgress}>
+                    {t("trade.mythicLocked.progress", {
+                      current: state.legendaryPoints,
+                      target: MYTHIC_UNLOCK_LEGENDARY_POINTS,
+                    })}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </>
+        )}
+
+        <SectionLabel text={t("trade.heatmapSectionLabel")} color={good.color} />
+        <Text style={styles.heatmapHint}>{t("trade.heatmapHint")}</Text>
+        {(() => {
+          const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
+          const cellPct = (g: (typeof GOODS)[number], tn: ForeignTown): number | null => {
+            if (tn.tier === "metropol" && !state.metropolUnlocked) return null;
+            if (tn.tier === "legendary" && !state.legendaryUnlocked) return null;
+            if (tn.tier === "mythic" && !state.mythicUnlocked) return null;
+            const home = state.goods[g.id].price;
+            const there = state.foreignTowns[tn.id].prices[g.id];
+            const tariff = effectiveTariffRate(state, tn);
+            return ((there * (1 - tariff) - home) / home) * 100;
+          };
+          let bestGoodId: GoodId | null = null;
+          let bestTownId: TownId | null = null;
+          let bestPct = -Infinity;
+          for (const g of unlockedGoods) {
+            for (const tn of ALL_TOWNS) {
+              const pct = cellPct(g, tn);
+              if (pct !== null && pct > bestPct) {
+                bestPct = pct;
+                bestGoodId = g.id;
+                bestTownId = tn.id;
+              }
             }
           }
-        }
-        return (
-          <View style={styles.heatmapCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <View style={styles.heatmapHeaderRow}>
-              <View style={styles.heatmapCornerCell} />
-              {ALL_TOWNS.map((tn) => (
-                <View key={tn.id} style={styles.heatmapTownHeader}>
-                  <Text style={styles.heatmapTownIcon}>{tn.icon}</Text>
+          return (
+            <View style={styles.heatmapCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View style={styles.heatmapHeaderRow}>
+                <View style={styles.heatmapCornerCell} />
+                {ALL_TOWNS.map((tn) => (
+                  <View key={tn.id} style={styles.heatmapTownHeader}>
+                    <Text style={styles.heatmapTownIcon}>{tn.icon}</Text>
+                  </View>
+                ))}
+              </View>
+              {unlockedGoods.map((g) => (
+                <View key={g.id} style={styles.heatmapRow}>
+                  <ScalePressable
+                    onPress={() => setGoodId(g.id)}
+                    style={[styles.heatmapGoodCell, g.id === goodId && { borderColor: g.color }]}
+                    scaleTo={0.95}
+                  >
+                    <Text style={styles.heatmapGoodIcon}>{g.icon}</Text>
+                  </ScalePressable>
+                  {ALL_TOWNS.map((tn) => {
+                    const pct = cellPct(g, tn);
+                    const isBest = g.id === bestGoodId && tn.id === bestTownId;
+                    const isSelected = g.id === goodId && tn.id === townId;
+                    if (pct === null) {
+                      return (
+                        <View key={tn.id} style={styles.heatmapCellLocked}>
+                          <Text style={styles.heatmapLockIcon}>🔒</Text>
+                        </View>
+                      );
+                    }
+                    return (
+                      <ScalePressable
+                        key={tn.id}
+                        onPress={() => {
+                          setGoodId(g.id);
+                          setTownId(tn.id);
+                          setDirection("export");
+                        }}
+                        style={[
+                          styles.heatmapCell,
+                          { backgroundColor: heatCellColor(pct) },
+                          isSelected && styles.heatmapCellSelected,
+                        ]}
+                        scaleTo={0.95}
+                      >
+                        {isBest && <Text style={styles.heatmapStar}>⭐</Text>}
+                        <Text style={styles.heatmapCellText}>
+                          {pct >= 0 ? "+" : ""}
+                          {pct.toFixed(0)}%
+                        </Text>
+                      </ScalePressable>
+                    );
+                  })}
                 </View>
               ))}
             </View>
-            {unlockedGoods.map((g) => (
-              <View key={g.id} style={styles.heatmapRow}>
-                <ScalePressable
-                  onPress={() => setGoodId(g.id)}
-                  style={[styles.heatmapGoodCell, g.id === goodId && { borderColor: g.color }]}
-                  scaleTo={0.95}
-                >
-                  <Text style={styles.heatmapGoodIcon}>{g.icon}</Text>
-                </ScalePressable>
-                {ALL_TOWNS.map((tn) => {
-                  const pct = cellPct(g, tn);
-                  const isBest = g.id === bestGoodId && tn.id === bestTownId;
-                  const isSelected = g.id === goodId && tn.id === townId;
-                  if (pct === null) {
-                    return (
-                      <View key={tn.id} style={styles.heatmapCellLocked}>
-                        <Text style={styles.heatmapLockIcon}>🔒</Text>
-                      </View>
-                    );
-                  }
-                  return (
-                    <ScalePressable
-                      key={tn.id}
-                      onPress={() => {
-                        setGoodId(g.id);
-                        setTownId(tn.id);
-                        setDirection("export");
-                      }}
-                      style={[
-                        styles.heatmapCell,
-                        { backgroundColor: heatCellColor(pct) },
-                        isSelected && styles.heatmapCellSelected,
-                      ]}
-                      scaleTo={0.95}
-                    >
-                      {isBest && <Text style={styles.heatmapStar}>⭐</Text>}
-                      <Text style={styles.heatmapCellText}>
-                        {pct >= 0 ? "+" : ""}
-                        {pct.toFixed(0)}%
-                      </Text>
-                    </ScalePressable>
-                  );
-                })}
-              </View>
+          );
+        })()}
+
+        <View style={styles.panel}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <View style={styles.sideToggle}>
+            <ScalePressable
+              style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
+              onPress={() => setDirection("export")}
+            >
+              <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
+                {t("trade.export")}
+              </Text>
+            </ScalePressable>
+            <ScalePressable
+              style={[styles.sideBtn, direction === "import" && styles.sideBtnActiveImport]}
+              onPress={() => setDirection("import")}
+            >
+              <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
+                {t("trade.import")}
+              </Text>
+            </ScalePressable>
+          </View>
+
+          <View style={styles.qtyRow}>
+            {([1, 5, "ALL"] as QtyOption[]).map((q) => (
+              <ScalePressable
+                key={String(q)}
+                style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
+                onPress={() => setQtyOption(q)}
+              >
+                <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
+              </ScalePressable>
             ))}
           </View>
-        );
-      })()}
 
-      <View style={styles.panel}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View style={styles.sideToggle}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>
+              {t("trade.summaryLine", {
+                qty: resolvedQty,
+                good: t(good.nameKey),
+                price: theirPrice.toFixed(2),
+                town: t(town.nameKey),
+              })}
+            </Text>
+            <Text style={styles.summaryTotal}>
+              {direction === "export" ? "+" : "-"}
+              {formatCoins(net)}
+            </Text>
+          </View>
+          <Text style={styles.etaText}>
+            {t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}
+            {tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""}
+          </Text>
+
           <ScalePressable
-            style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
-            onPress={() => setDirection("export")}
+            onPress={() => setInsureCaravan((v) => !v)}
+            style={[styles.insuranceRow, insureCaravan && styles.insuranceRowActive]}
+            scaleTo={0.98}
           >
-            <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
-              {t("trade.export")}
+            <Text style={styles.insuranceLabel}>
+              🛡️ {t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}
+            </Text>
+            <Text style={styles.insuranceHint}>
+              {insureCaravan && !canAffordInsurance
+                ? t("trade.insuranceUnaffordable")
+                : t("trade.insuranceHint")}
             </Text>
           </ScalePressable>
+
           <ScalePressable
-            style={[styles.sideBtn, direction === "import" && styles.sideBtnActiveImport]}
-            onPress={() => setDirection("import")}
+            disabled={disabled}
+            onPress={() => {
+              if (Math.random() < BARGAIN_CHANCE) {
+                setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
+                setBargainVisible(true);
+                return;
+              }
+              sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
+              if (direction === "export") sounds.playSell();
+              else sounds.playBuy();
+            }}
+            style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
+            scaleTo={0.97}
           >
-            <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
-              {t("trade.import")}
-            </Text>
+            <GradientFill
+              colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            />
+            <Text style={styles.confirmBtnText}>{t("trade.sendCaravanBtn", { icon: good.icon })}</Text>
           </ScalePressable>
         </View>
 
-        <View style={styles.qtyRow}>
-          {([1, 5, "ALL"] as QtyOption[]).map((q) => (
-            <ScalePressable
-              key={String(q)}
-              style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
-              onPress={() => setQtyOption(q)}
-            >
-              <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
-            </ScalePressable>
-          ))}
-        </View>
-
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>
-            {t("trade.summaryLine", {
-              qty: resolvedQty,
-              good: t(good.nameKey),
-              price: theirPrice.toFixed(2),
-              town: t(town.nameKey),
-            })}
-          </Text>
-          <Text style={styles.summaryTotal}>
-            {direction === "export" ? "+" : "-"}
-            {formatCoins(net)}
-          </Text>
-        </View>
-        <Text style={styles.etaText}>
-          {t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}
-          {tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""}
-        </Text>
-
-        <ScalePressable
-          onPress={() => setInsureCaravan((v) => !v)}
-          style={[styles.insuranceRow, insureCaravan && styles.insuranceRowActive]}
-          scaleTo={0.98}
-        >
-          <Text style={styles.insuranceLabel}>
-            🛡️ {t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}
-          </Text>
-          <Text style={styles.insuranceHint}>
-            {insureCaravan && !canAffordInsurance
-              ? t("trade.insuranceUnaffordable")
-              : t("trade.insuranceHint")}
-          </Text>
-        </ScalePressable>
-
-        <ScalePressable
-          disabled={disabled}
-          onPress={() => {
-            if (Math.random() < BARGAIN_CHANCE) {
-              setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
-              setBargainVisible(true);
-              return;
-            }
-            sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
-            if (direction === "export") sounds.playSell();
-            else sounds.playBuy();
-          }}
-          style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-          scaleTo={0.97}
-        >
-          <GradientFill
-            colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          />
-          <Text style={styles.confirmBtnText}>
-            {t("trade.sendCaravanBtn", { icon: good.icon })}
-          </Text>
-        </ScalePressable>
-      </View>
-
-      <SectionLabel text={t("trade.activeCaravansSectionLabel")} color="#5fd884" />
-      {state.caravans.length === 0 && (
-        <Text style={styles.emptyText}>{t("trade.noCaravans")}</Text>
-      )}
-      {[...state.caravans]
-        .sort((a, b) => a.arrivesAtTick - b.arrivesAtTick)
-        .map((c) => {
-          const cTown = TOWNS_BY_ID[c.townId];
-          const g = GOODS_BY_ID[c.goodId];
-          const total = c.arrivesAtTick - c.departedTick;
-          const elapsed = state.tick - c.departedTick;
-          const progress = total > 0 ? clamp01(elapsed / total) : 1;
-          const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
-          return (
-            <View key={c.id} style={styles.caravanCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View style={[styles.caravanAccent, { backgroundColor: g.color }]} />
-              <View style={styles.caravanHeader}>
-                <Text style={styles.caravanTitle}>
-                  {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
-                  {c.insured ? " 🛡️" : ""}
+        <SectionLabel text={t("trade.activeCaravansSectionLabel")} color="#5fd884" />
+        {state.caravans.length === 0 && <Text style={styles.emptyText}>{t("trade.noCaravans")}</Text>}
+        {[...state.caravans]
+          .sort((a, b) => a.arrivesAtTick - b.arrivesAtTick)
+          .map((c) => {
+            const cTown = TOWNS_BY_ID[c.townId];
+            const g = GOODS_BY_ID[c.goodId];
+            const total = c.arrivesAtTick - c.departedTick;
+            const elapsed = state.tick - c.departedTick;
+            const progress = total > 0 ? clamp01(elapsed / total) : 1;
+            const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
+            return (
+              <View key={c.id} style={styles.caravanCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <View style={[styles.caravanAccent, { backgroundColor: g.color }]} />
+                <View style={styles.caravanHeader}>
+                  <Text style={styles.caravanTitle}>
+                    {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
+                    {c.insured ? " 🛡️" : ""}
+                  </Text>
+                  <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: daysLeft })}</Text>
+                </View>
+                <Text style={styles.caravanSub}>
+                  {c.direction === "export"
+                    ? t("trade.caravanSentSub", { qty: c.qty, good: t(g.nameKey) })
+                    : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })}
                 </Text>
-                <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: daysLeft })}</Text>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                </View>
               </View>
-              <Text style={styles.caravanSub}>
-                {c.direction === "export"
-                  ? t("trade.caravanSentSub", { qty: c.qty, good: t(g.nameKey) })
-                  : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })}
-              </Text>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-              </View>
-            </View>
-          );
-        })}
+            );
+          })}
 
-      <SectionLabel text={t("trade.contract.sectionLabel")} color="#f0776a" />
-      <Text style={styles.contractDesc}>{t("trade.contract.description")}</Text>
-      <View style={styles.panel}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View style={styles.sideToggle}>
-          <ScalePressable
-            style={[styles.sideBtn, contractDirection === "long" && styles.sideBtnActiveExport]}
-            onPress={() => setContractDirection("long")}
-          >
-            <Text
-              style={[styles.sideBtnText, contractDirection === "long" && styles.sideBtnTextActive]}
-            >
-              {t("trade.contract.directionLong")}
-            </Text>
-          </ScalePressable>
-          <ScalePressable
-            style={[styles.sideBtn, contractDirection === "short" && styles.sideBtnActiveImport]}
-            onPress={() => setContractDirection("short")}
-          >
-            <Text
-              style={[styles.sideBtnText, contractDirection === "short" && styles.sideBtnTextActive]}
-            >
-              {t("trade.contract.directionShort")}
-            </Text>
-          </ScalePressable>
-        </View>
-
-        <View style={styles.qtyRow}>
-          {([1, 5, 10] as const).map((q) => (
+        <SectionLabel text={t("trade.contract.sectionLabel")} color="#f0776a" />
+        <Text style={styles.contractDesc}>{t("trade.contract.description")}</Text>
+        <View style={styles.panel}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <View style={styles.sideToggle}>
             <ScalePressable
-              key={q}
-              style={[styles.qtyBtn, contractQty === q && { borderColor: good.color, borderWidth: 2 }]}
-              onPress={() => setContractQty(q)}
+              style={[styles.sideBtn, contractDirection === "long" && styles.sideBtnActiveExport]}
+              onPress={() => setContractDirection("long")}
             >
-              <Text style={styles.qtyBtnText}>{q}</Text>
+              <Text style={[styles.sideBtnText, contractDirection === "long" && styles.sideBtnTextActive]}>
+                {t("trade.contract.directionLong")}
+              </Text>
             </ScalePressable>
-          ))}
-        </View>
-
-        <Text style={styles.contractTermLabel}>{t("trade.contract.termLabel")}</Text>
-        <View style={styles.qtyRow}>
-          {CONTRACT_TERM_DAY_STEPS.map((days) => (
             <ScalePressable
-              key={days}
-              style={[
-                styles.qtyBtn,
-                contractTermDays === days && { borderColor: good.color, borderWidth: 2 },
-              ]}
-              onPress={() => setContractTermDays(days)}
+              style={[styles.sideBtn, contractDirection === "short" && styles.sideBtnActiveImport]}
+              onPress={() => setContractDirection("short")}
             >
-              <Text style={styles.qtyBtnText}>{t("trade.contract.termDays", { days })}</Text>
+              <Text style={[styles.sideBtnText, contractDirection === "short" && styles.sideBtnTextActive]}>
+                {t("trade.contract.directionShort")}
+              </Text>
             </ScalePressable>
-          ))}
-        </View>
+          </View>
 
-        {(() => {
-          const strikePreview = state.goods[goodId].price;
-          const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
-          const contractDisabled =
-            state.contracts.length >= CONTRACT_MAX_ACTIVE ||
-            state.cash < margin ||
-            !isGoodUnlocked(good, state);
-          return (
-            <>
-              <Text style={styles.summaryLabel}>
-                {t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
-              </Text>
-              <Text style={styles.contractMaxNote}>
-                {t("trade.contract.maxActiveNote", { max: CONTRACT_MAX_ACTIVE })}
-              </Text>
+          <View style={styles.qtyRow}>
+            {([1, 5, 10] as const).map((q) => (
               <ScalePressable
-                disabled={contractDisabled}
-                onPress={() => {
-                  openContract(goodId, contractDirection, contractQty, contractTermDays);
-                  sounds.playBuy();
-                }}
-                style={[styles.confirmBtn, contractDisabled && styles.confirmBtnDisabled]}
-                scaleTo={0.97}
+                key={q}
+                style={[styles.qtyBtn, contractQty === q && { borderColor: good.color, borderWidth: 2 }]}
+                onPress={() => setContractQty(q)}
               >
-                <GradientFill
-                  colors={contractDirection === "long" ? GREEN_GRADIENT : BLUE_GRADIENT}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                />
-                <Text style={styles.confirmBtnText}>{t("trade.contract.openBtn")}</Text>
+                <Text style={styles.qtyBtnText}>{q}</Text>
               </ScalePressable>
-            </>
-          );
-        })()}
-      </View>
+            ))}
+          </View>
 
-      <SectionLabel text={t("trade.contract.activeSectionLabel")} color={COLORS.accent} />
-      {state.contracts.length === 0 && (
-        <Text style={styles.emptyText}>{t("trade.contract.noContracts")}</Text>
-      )}
-      {[...state.contracts]
-        .sort((a, b) => a.maturesAtTick - b.maturesAtTick)
-        .map((c) => {
-          const cGood = GOODS_BY_ID[c.goodId];
-          const total = c.maturesAtTick - c.signedAtTick;
-          const elapsed = state.tick - c.signedAtTick;
-          const progress = total > 0 ? clamp01(elapsed / total) : 1;
-          const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
-          return (
-            <View key={c.id} style={styles.caravanCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
-              <View style={styles.caravanHeader}>
-                <Text style={styles.caravanTitle}>
-                  {c.direction === "long" ? "📈" : "📉"} {cGood.icon} {t(cGood.nameKey)}
+          <Text style={styles.contractTermLabel}>{t("trade.contract.termLabel")}</Text>
+          <View style={styles.qtyRow}>
+            {CONTRACT_TERM_DAY_STEPS.map((days) => (
+              <ScalePressable
+                key={days}
+                style={[
+                  styles.qtyBtn,
+                  contractTermDays === days && { borderColor: good.color, borderWidth: 2 },
+                ]}
+                onPress={() => setContractTermDays(days)}
+              >
+                <Text style={styles.qtyBtnText}>{t("trade.contract.termDays", { days })}</Text>
+              </ScalePressable>
+            ))}
+          </View>
+
+          {(() => {
+            const strikePreview = state.goods[goodId].price;
+            const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
+            const contractDisabled =
+              state.contracts.length >= CONTRACT_MAX_ACTIVE ||
+              state.cash < margin ||
+              !isGoodUnlocked(good, state);
+            return (
+              <>
+                <Text style={styles.summaryLabel}>
+                  {t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
                 </Text>
-                <Text style={styles.caravanEta}>{t("trade.contract.daysLeft", { days: daysLeft })}</Text>
-              </View>
-              <Text style={styles.caravanSub}>
-                {t("trade.contract.contractRow", {
-                  qty: c.qty,
-                  good: t(cGood.nameKey),
-                  price: c.strikePrice.toFixed(2),
-                })}
-              </Text>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-              </View>
-            </View>
-          );
-        })}
-
-      <SectionLabel text={t("trade.bulkContract.sectionLabel")} color="#5fd884" />
-      <Text style={styles.contractDesc}>
-        {t("trade.bulkContract.description", { pct: Math.round(BULK_CONTRACT_BONUS_PCT * 100) })}
-      </Text>
-      <View style={styles.panel}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View style={styles.qtyRow}>
-          {([1, 5, 10] as const).map((q) => (
-            <ScalePressable
-              key={q}
-              style={[styles.qtyBtn, bulkQty === q && { borderColor: good.color, borderWidth: 2 }]}
-              onPress={() => setBulkQty(q)}
-            >
-              <Text style={styles.qtyBtnText}>{q}</Text>
-            </ScalePressable>
-          ))}
-        </View>
-
-        <Text style={styles.contractTermLabel}>{t("trade.bulkContract.termLabel")}</Text>
-        <View style={styles.qtyRow}>
-          {BULK_CONTRACT_TERM_DAY_STEPS.map((days) => (
-            <ScalePressable
-              key={days}
-              style={[styles.qtyBtn, bulkTermDays === days && { borderColor: good.color, borderWidth: 2 }]}
-              onPress={() => setBulkTermDays(days)}
-            >
-              <Text style={styles.qtyBtnText}>{t("trade.bulkContract.termDays", { days })}</Text>
-            </ScalePressable>
-          ))}
-        </View>
-
-        {(() => {
-          const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
-          const payout = lockedPrice * bulkQty;
-          const hasEnough = state.goods[goodId].holding >= bulkQty;
-          const bulkDisabled =
-            state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE ||
-            !hasEnough ||
-            !isGoodUnlocked(good, state);
-          return (
-            <>
-              <Text style={styles.summaryLabel}>
-                {t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
-              </Text>
-              {!hasEnough && (
                 <Text style={styles.contractMaxNote}>
-                  {t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })}
+                  {t("trade.contract.maxActiveNote", { max: CONTRACT_MAX_ACTIVE })}
                 </Text>
-              )}
-              <Text style={styles.contractMaxNote}>
-                {t("trade.bulkContract.maxActiveNote", { max: BULK_CONTRACT_MAX_ACTIVE })}
-              </Text>
-              <ScalePressable
-                disabled={bulkDisabled}
-                onPress={() => {
-                  openBulkContract(goodId, bulkQty, bulkTermDays);
-                  sounds.playBuy();
-                }}
-                style={[styles.confirmBtn, bulkDisabled && styles.confirmBtnDisabled]}
-                scaleTo={0.97}
-              >
-                <GradientFill colors={GREEN_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.confirmBtnText}>{t("trade.bulkContract.openBtn")}</Text>
-              </ScalePressable>
-            </>
-          );
-        })()}
-      </View>
+                <ScalePressable
+                  disabled={contractDisabled}
+                  onPress={() => {
+                    openContract(goodId, contractDirection, contractQty, contractTermDays);
+                    sounds.playBuy();
+                  }}
+                  style={[styles.confirmBtn, contractDisabled && styles.confirmBtnDisabled]}
+                  scaleTo={0.97}
+                >
+                  <GradientFill
+                    colors={contractDirection === "long" ? GREEN_GRADIENT : BLUE_GRADIENT}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  />
+                  <Text style={styles.confirmBtnText}>{t("trade.contract.openBtn")}</Text>
+                </ScalePressable>
+              </>
+            );
+          })()}
+        </View>
 
-      <SectionLabel text={t("trade.bulkContract.activeSectionLabel")} color={COLORS.accent} />
-      {state.bulkContracts.length === 0 && (
-        <Text style={styles.emptyText}>{t("trade.bulkContract.noContracts")}</Text>
-      )}
-      {[...state.bulkContracts]
-        .sort((a, b) => a.maturesAtTick - b.maturesAtTick)
-        .map((c) => {
-          const cGood = GOODS_BY_ID[c.goodId];
-          const total = c.maturesAtTick - c.signedAtTick;
-          const elapsed = state.tick - c.signedAtTick;
-          const progress = total > 0 ? clamp01(elapsed / total) : 1;
-          const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
-          return (
-            <View key={c.id} style={styles.caravanCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
-              <View style={styles.caravanHeader}>
-                <Text style={styles.caravanTitle}>
-                  📦 {cGood.icon} {t(cGood.nameKey)}
+        <SectionLabel text={t("trade.contract.activeSectionLabel")} color={COLORS.accent} />
+        {state.contracts.length === 0 && (
+          <Text style={styles.emptyText}>{t("trade.contract.noContracts")}</Text>
+        )}
+        {[...state.contracts]
+          .sort((a, b) => a.maturesAtTick - b.maturesAtTick)
+          .map((c) => {
+            const cGood = GOODS_BY_ID[c.goodId];
+            const total = c.maturesAtTick - c.signedAtTick;
+            const elapsed = state.tick - c.signedAtTick;
+            const progress = total > 0 ? clamp01(elapsed / total) : 1;
+            const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
+            return (
+              <View key={c.id} style={styles.caravanCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
+                <View style={styles.caravanHeader}>
+                  <Text style={styles.caravanTitle}>
+                    {c.direction === "long" ? "📈" : "📉"} {cGood.icon} {t(cGood.nameKey)}
+                  </Text>
+                  <Text style={styles.caravanEta}>{t("trade.contract.daysLeft", { days: daysLeft })}</Text>
+                </View>
+                <Text style={styles.caravanSub}>
+                  {t("trade.contract.contractRow", {
+                    qty: c.qty,
+                    good: t(cGood.nameKey),
+                    price: c.strikePrice.toFixed(2),
+                  })}
                 </Text>
-                <Text style={styles.caravanEta}>{t("trade.bulkContract.daysLeft", { days: daysLeft })}</Text>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                </View>
               </View>
-              <Text style={styles.caravanSub}>
-                {t("trade.bulkContract.contractRow", {
-                  qty: c.qty,
-                  good: t(cGood.nameKey),
-                  price: c.lockedPricePerUnit.toFixed(2),
-                })}
-              </Text>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+            );
+          })}
+
+        <SectionLabel text={t("trade.bulkContract.sectionLabel")} color="#5fd884" />
+        <Text style={styles.contractDesc}>
+          {t("trade.bulkContract.description", { pct: Math.round(BULK_CONTRACT_BONUS_PCT * 100) })}
+        </Text>
+        <View style={styles.panel}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <View style={styles.qtyRow}>
+            {([1, 5, 10] as const).map((q) => (
+              <ScalePressable
+                key={q}
+                style={[styles.qtyBtn, bulkQty === q && { borderColor: good.color, borderWidth: 2 }]}
+                onPress={() => setBulkQty(q)}
+              >
+                <Text style={styles.qtyBtnText}>{q}</Text>
+              </ScalePressable>
+            ))}
+          </View>
+
+          <Text style={styles.contractTermLabel}>{t("trade.bulkContract.termLabel")}</Text>
+          <View style={styles.qtyRow}>
+            {BULK_CONTRACT_TERM_DAY_STEPS.map((days) => (
+              <ScalePressable
+                key={days}
+                style={[styles.qtyBtn, bulkTermDays === days && { borderColor: good.color, borderWidth: 2 }]}
+                onPress={() => setBulkTermDays(days)}
+              >
+                <Text style={styles.qtyBtnText}>{t("trade.bulkContract.termDays", { days })}</Text>
+              </ScalePressable>
+            ))}
+          </View>
+
+          {(() => {
+            const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
+            const payout = lockedPrice * bulkQty;
+            const hasEnough = state.goods[goodId].holding >= bulkQty;
+            const bulkDisabled =
+              state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE ||
+              !hasEnough ||
+              !isGoodUnlocked(good, state);
+            return (
+              <>
+                <Text style={styles.summaryLabel}>
+                  {t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
+                </Text>
+                {!hasEnough && (
+                  <Text style={styles.contractMaxNote}>
+                    {t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })}
+                  </Text>
+                )}
+                <Text style={styles.contractMaxNote}>
+                  {t("trade.bulkContract.maxActiveNote", { max: BULK_CONTRACT_MAX_ACTIVE })}
+                </Text>
+                <ScalePressable
+                  disabled={bulkDisabled}
+                  onPress={() => {
+                    openBulkContract(goodId, bulkQty, bulkTermDays);
+                    sounds.playBuy();
+                  }}
+                  style={[styles.confirmBtn, bulkDisabled && styles.confirmBtnDisabled]}
+                  scaleTo={0.97}
+                >
+                  <GradientFill colors={GREEN_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+                  <Text style={styles.confirmBtnText}>{t("trade.bulkContract.openBtn")}</Text>
+                </ScalePressable>
+              </>
+            );
+          })()}
+        </View>
+
+        <SectionLabel text={t("trade.bulkContract.activeSectionLabel")} color={COLORS.accent} />
+        {state.bulkContracts.length === 0 && (
+          <Text style={styles.emptyText}>{t("trade.bulkContract.noContracts")}</Text>
+        )}
+        {[...state.bulkContracts]
+          .sort((a, b) => a.maturesAtTick - b.maturesAtTick)
+          .map((c) => {
+            const cGood = GOODS_BY_ID[c.goodId];
+            const total = c.maturesAtTick - c.signedAtTick;
+            const elapsed = state.tick - c.signedAtTick;
+            const progress = total > 0 ? clamp01(elapsed / total) : 1;
+            const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
+            return (
+              <View key={c.id} style={styles.caravanCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
+                <View style={styles.caravanHeader}>
+                  <Text style={styles.caravanTitle}>
+                    📦 {cGood.icon} {t(cGood.nameKey)}
+                  </Text>
+                  <Text style={styles.caravanEta}>
+                    {t("trade.bulkContract.daysLeft", { days: daysLeft })}
+                  </Text>
+                </View>
+                <Text style={styles.caravanSub}>
+                  {t("trade.bulkContract.contractRow", {
+                    qty: c.qty,
+                    good: t(cGood.nameKey),
+                    price: c.lockedPricePerUnit.toFixed(2),
+                  })}
+                </Text>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                </View>
               </View>
-            </View>
-          );
-        })}
-    </ScrollView>
-    <BargainingModal
-      visible={bargainVisible}
-      onResolve={(bonus) => {
-        if (pendingCaravan) {
-          sendCaravan(
-            pendingCaravan.townId,
-            pendingCaravan.goodId,
-            pendingCaravan.direction,
-            pendingCaravan.qty,
-            pendingCaravan.insured,
-            bonus
-          );
-          if (pendingCaravan.direction === "export") sounds.playSell();
-          else sounds.playBuy();
-        }
-        setBargainVisible(false);
-        setPendingCaravan(null);
-      }}
-    />
+            );
+          })}
+      </ScrollView>
+      <BargainingModal
+        visible={bargainVisible}
+        onResolve={(bonus) => {
+          if (pendingCaravan) {
+            sendCaravan(
+              pendingCaravan.townId,
+              pendingCaravan.goodId,
+              pendingCaravan.direction,
+              pendingCaravan.qty,
+              pendingCaravan.insured,
+              bonus
+            );
+            if (pendingCaravan.direction === "export") sounds.playSell();
+            else sounds.playBuy();
+          }
+          setBargainVisible(false);
+          setPendingCaravan(null);
+        }}
+      />
     </>
   );
 }
@@ -857,7 +849,8 @@ const styles = StyleSheet.create({
   lockedTitle: {
     color: COLORS.textPrimary,
     fontSize: TYPE.heading,
-    fontWeight: WEIGHT.black, fontFamily: FONT.black,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
     marginBottom: SPACING.sm,
     textAlign: "center",
   },
@@ -877,7 +870,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
-  lockedProgress: { color: COLORS.accent, fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  lockedProgress: {
+    color: COLORS.accent,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   metropolLockedCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -888,7 +886,12 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   metropolLockedIcon: { fontSize: 24, marginRight: SPACING.md },
-  metropolLockedTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
+  metropolLockedTitle: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
   metropolLockedDesc: {
     color: COLORS.textMuted,
     fontSize: TYPE.caption,
@@ -896,7 +899,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
     lineHeight: 15,
   },
-  metropolLockedProgress: { color: COLORS.accent, fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  metropolLockedProgress: {
+    color: COLORS.accent,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   townRow: { marginBottom: SPACING.xl - 4 },
   townPill: {
     borderRadius: RADIUS.card,
@@ -910,7 +918,12 @@ const styles = StyleSheet.create({
   },
   townPillActive: { borderColor: COLORS.accent },
   townIcon: { fontSize: 22, marginBottom: SPACING.xs },
-  townName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
+  townName: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
   townMeta: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs },
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
   heatmapCard: {
@@ -945,7 +958,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   heatmapCellSelected: { borderWidth: 2, borderColor: COLORS.accent },
-  heatmapCellText: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.micro },
+  heatmapCellText: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.micro,
+  },
   heatmapStar: { fontSize: 9, position: "absolute", top: 1, right: 2 },
   heatmapCellLocked: {
     flex: 1,
@@ -974,7 +992,12 @@ const styles = StyleSheet.create({
   sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
   sideBtnActiveExport: { backgroundColor: COLORS.positive },
   sideBtnActiveImport: { backgroundColor: "#4a90c9" },
-  sideBtnText: { color: COLORS.textMuted, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  sideBtnText: {
+    color: COLORS.textMuted,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.caption,
+  },
   sideBtnTextActive: { color: "#fff" },
   qtyRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.sm + 2 },
   qtyBtn: {
@@ -987,7 +1010,12 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     marginRight: SPACING.sm,
   },
-  qtyBtnText: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  qtyBtnText: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 2 },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1, marginRight: SPACING.sm },
   summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
@@ -1008,9 +1036,19 @@ const styles = StyleSheet.create({
     borderColor: "#3a2d1e",
   },
   insuranceRowActive: { borderColor: COLORS.accent },
-  insuranceLabel: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  insuranceLabel: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
   insuranceHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
-  confirmBtn: { borderRadius: RADIUS.card, paddingVertical: SPACING.md, alignItems: "center", overflow: "hidden" },
+  confirmBtn: {
+    borderRadius: RADIUS.card,
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+    overflow: "hidden",
+  },
   confirmBtnDisabled: { opacity: 0.35 },
   confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
   emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
@@ -1018,11 +1056,17 @@ const styles = StyleSheet.create({
   contractTermLabel: {
     color: COLORS.textMuted,
     fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold, fontFamily: FONT.bold,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
-  contractMaxNote: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.sm, marginBottom: SPACING.sm + 2 },
+  contractMaxNote: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.sm + 2,
+  },
   caravanCard: {
     borderRadius: RADIUS.card,
     padding: SPACING.md,
@@ -1032,8 +1076,18 @@ const styles = StyleSheet.create({
   },
   caravanAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
   caravanHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.xs },
-  caravanTitle: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
-  caravanEta: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  caravanTitle: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.label,
+  },
+  caravanEta: {
+    color: COLORS.accent,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.caption,
+  },
   caravanSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm },
   progressTrack: { height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 3 },

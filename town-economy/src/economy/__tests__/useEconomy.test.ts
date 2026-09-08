@@ -177,7 +177,10 @@ describe("openBulkContract", () => {
     expect(next.bulkContracts).toHaveLength(1);
     const contract = next.bulkContracts[0];
     expect(contract.qty).toBe(10);
-    expect(contract.lockedPricePerUnit).toBeCloseTo(bought.goods.bread.price * (1 + BULK_CONTRACT_BONUS_PCT), 6);
+    expect(contract.lockedPricePerUnit).toBeCloseTo(
+      bought.goods.bread.price * (1 + BULK_CONTRACT_BONUS_PCT),
+      6
+    );
   });
 
   it("rejects opening beyond the max active bulk contracts", () => {
@@ -415,7 +418,10 @@ describe("hot streak trading bonus", () => {
     expect(state.stats.bestTradeStreak).toBe(3);
 
     // Force a losing sell by setting the holding's avg cost above the market price.
-    const losingState = { ...state, goods: { ...state.goods, bread: { ...state.goods.bread, avgCost: 1e9 } } };
+    const losingState = {
+      ...state,
+      goods: { ...state.goods, bread: { ...state.goods.bread, avgCost: 1e9 } },
+    };
     const afterLoss = trade(losingState, "bread", "sell", 1);
     expect(afterLoss.tradeStreak).toBe(0);
     expect(afterLoss.stats.bestTradeStreak).toBe(3);
@@ -803,14 +809,20 @@ describe("dailyCheckIn / weekly challenge assignment", () => {
 
   it("keeps the same weekly challenge across check-ins within the same ISO week", () => {
     const first = dailyCheckIn(initialState(), "2026-01-05");
-    const second = dailyCheckIn({ ...first, streak: { count: 1, lastOpenedDate: "2026-01-04" } }, "2026-01-06");
+    const second = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-01-04" } },
+      "2026-01-06"
+    );
     expect(second.weeklyChallenge!.weekKey).toBe(first.weeklyChallenge!.weekKey);
     expect(second.weeklyChallenge!.templateId).toBe(first.weeklyChallenge!.templateId);
   });
 
   it("assigns a fresh weekly challenge once the ISO week rolls over", () => {
     const first = dailyCheckIn(initialState(), "2026-01-05");
-    const nextWeek = dailyCheckIn({ ...first, streak: { count: 1, lastOpenedDate: "2026-01-05" } }, "2026-01-12");
+    const nextWeek = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-01-05" } },
+      "2026-01-12"
+    );
     expect(nextWeek.weeklyChallenge!.weekKey).not.toBe(first.weeklyChallenge!.weekKey);
     expect(nextWeek.weeklyChallenge!.claimed).toBe(false);
   });
@@ -935,7 +947,11 @@ describe("applyMythicUnlock", () => {
   });
 
   it("is a no-op once already unlocked", () => {
-    const state = { ...initialState(), legendaryPoints: MYTHIC_UNLOCK_LEGENDARY_POINTS, mythicUnlocked: true };
+    const state = {
+      ...initialState(),
+      legendaryPoints: MYTHIC_UNLOCK_LEGENDARY_POINTS,
+      mythicUnlocked: true,
+    };
     const next = applyMythicUnlock(state);
     expect(next).toBe(state);
   });

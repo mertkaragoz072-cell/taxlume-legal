@@ -30,7 +30,11 @@ import { RESEARCH_NODES_BY_ID, researchMultiplier } from "./research";
 import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
 import { WORKER_MAX_PER_GOOD, WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
-import { isoWeekKey, WEEKLY_CHALLENGE_TEMPLATES_BY_ID, weeklyChallengeTemplateForWeek } from "./weeklyChallenges";
+import {
+  isoWeekKey,
+  WEEKLY_CHALLENGE_TEMPLATES_BY_ID,
+  weeklyChallengeTemplateForWeek,
+} from "./weeklyChallenges";
 import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import {
@@ -47,7 +51,10 @@ import {
   VILLAGER_REQUEST_REFUSE_HAPPINESS,
 } from "./villagerRequests";
 import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
-import { formatCoins as formatCoinsUtil, formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
+import {
+  formatCoins as formatCoinsUtil,
+  formatCompactNumber as formatNumberUtil,
+} from "../utils/formatNumber";
 import {
   AutoTradeRule,
   BulkContract,
@@ -386,10 +393,7 @@ function supplyBounds(good: Good): { min: number; max: number } {
 }
 
 export function estimateTaxIncomePerTick(state: EconomyState): number {
-  const taxableOutput = GOODS.reduce(
-    (sum, g) => sum + g.baseProduction * state.goods[g.id].price,
-    0
-  );
+  const taxableOutput = GOODS.reduce((sum, g) => sum + g.baseProduction * state.goods[g.id].price, 0);
   return state.taxRate * taxableOutput * TAX_OUTPUT_FACTOR * (state.happiness / 100);
 }
 
@@ -599,7 +603,13 @@ export function tick(state: EconomyState): EconomyState {
   if (state.speedBoostExpiresAt !== null && Date.now() >= state.speedBoostExpiresAt) {
     state = { ...state, speedBoostExpiresAt: null };
   }
-  if (state.paused || state.gameOver || state.pendingDecision || state.pendingRequest || state.pendingRivalOffer)
+  if (
+    state.paused ||
+    state.gameOver ||
+    state.pendingDecision ||
+    state.pendingRequest ||
+    state.pendingRivalOffer
+  )
     return state;
   const config = effectiveDifficultyConfig(DIFFICULTIES[state.difficulty], state.activeNgPlusModifiers);
 
@@ -621,11 +631,7 @@ export function tick(state: EconomyState): EconomyState {
     0,
     100
   );
-  const happiness = clamp(
-    state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE,
-    0,
-    100
-  );
+  const happiness = clamp(state.happiness + (targetHappiness - state.happiness) * HAPPINESS_EASE, 0, 100);
   const productionPenalty = clamp((50 - happiness) / 50, 0, 1);
   const contentBonus = clamp((happiness - 70) / 30, 0, 1);
   const productionEfficiency = clamp(
@@ -847,27 +853,24 @@ export function tick(state: EconomyState): EconomyState {
   // enough workers (arbitrary but deterministic order) to cover the rest,
   // rather than letting cash go negative.
   let workers = state.workers;
-  let workerWageCost = 0;
-  {
-    let totalWorkers = GOODS.reduce((sum, g) => sum + workers[g.id], 0);
+  let totalWorkers = GOODS.reduce((sum, g) => sum + workers[g.id], 0);
+  let workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+  const availableForWages = state.cash + taxCashDelta;
+  let laidOff = 0;
+  while (workerWageCost > availableForWages && totalWorkers > 0) {
+    const g = GOODS.find((good) => workers[good.id] > 0);
+    if (!g) break;
+    workers = { ...workers, [g.id]: workers[g.id] - 1 };
+    totalWorkers -= 1;
     workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
-    const availableForWages = state.cash + taxCashDelta;
-    let laidOff = 0;
-    while (workerWageCost > availableForWages && totalWorkers > 0) {
-      const g = GOODS.find((g) => workers[g.id] > 0);
-      if (!g) break;
-      workers = { ...workers, [g.id]: workers[g.id] - 1 };
-      totalWorkers -= 1;
-      workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
-      laidOff++;
-    }
-    if (laidOff > 0) {
-      newEvents.push({
-        id: nextId++,
-        message: t(state.language, "msg.workersLaidOff", { count: laidOff }),
-        tone: "bad",
-      });
-    }
+    laidOff++;
+  }
+  if (laidOff > 0) {
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.workersLaidOff", { count: laidOff }),
+      tone: "bad",
+    });
   }
 
   const goods = { ...state.goods };
@@ -984,7 +987,8 @@ export function tick(state: EconomyState): EconomyState {
     );
     const wasRaided = !caravan.insured && Math.random() < effectiveRaidChance;
     const deliveredAmount = wasRaided
-      ? caravan.amount * (1 - (CARAVAN_RAID_LOSS_MIN + Math.random() * (CARAVAN_RAID_LOSS_MAX - CARAVAN_RAID_LOSS_MIN)))
+      ? caravan.amount *
+        (1 - (CARAVAN_RAID_LOSS_MIN + Math.random() * (CARAVAN_RAID_LOSS_MAX - CARAVAN_RAID_LOSS_MIN)))
       : caravan.amount;
     if (caravan.direction === "export") {
       cash += deliveredAmount;
@@ -1036,9 +1040,7 @@ export function tick(state: EconomyState): EconomyState {
     }
     const settlePrice = goods[contract.goodId].price;
     const priceDelta =
-      contract.direction === "long"
-        ? settlePrice - contract.strikePrice
-        : contract.strikePrice - settlePrice;
+      contract.direction === "long" ? settlePrice - contract.strikePrice : contract.strikePrice - settlePrice;
     // A loss can never exceed the margin put up at signing — no margin
     // calls, no negative cash, just a simple "worst case you lose your
     // deposit" retail-style contract.
@@ -1111,9 +1113,13 @@ export function tick(state: EconomyState): EconomyState {
   if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, rivalCurrentlyAhead ? "msg.rivalTownOvertookYou" : "msg.rivalTownOvertaken", {
-        amount: formatNumberUtil(rivalCurrentlyAhead ? rivalNetWorth : netWorthNow, state.language),
-      }),
+      message: t(
+        state.language,
+        rivalCurrentlyAhead ? "msg.rivalTownOvertookYou" : "msg.rivalTownOvertaken",
+        {
+          amount: formatNumberUtil(rivalCurrentlyAhead ? rivalNetWorth : netWorthNow, state.language),
+        }
+      ),
       tone: rivalCurrentlyAhead ? "bad" : "good",
     });
   }
@@ -1180,7 +1186,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
     const holding = gs.holding + amount;
     const avgCost = (gs.avgCost * gs.holding + cost) / holding;
     const demandPressure = clamp(
-      gs.demandPressure + (amount / good.baseSupply) * DEMAND_PRESSURE_SENSITIVITY / marketDepth,
+      gs.demandPressure + ((amount / good.baseSupply) * DEMAND_PRESSURE_SENSITIVITY) / marketDepth,
       -DEMAND_PRESSURE_MAX,
       DEMAND_PRESSURE_MAX
     );
@@ -1208,7 +1214,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   const proceeds = amount * price;
   const holding = gs.holding - amount;
   const demandPressure = clamp(
-    gs.demandPressure - (amount / good.baseSupply) * DEMAND_PRESSURE_SENSITIVITY / marketDepth,
+    gs.demandPressure - ((amount / good.baseSupply) * DEMAND_PRESSURE_SENSITIVITY) / marketDepth,
     -DEMAND_PRESSURE_MAX,
     DEMAND_PRESSURE_MAX
   );
@@ -1224,7 +1230,9 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
           good: t(state.language, good.nameKey),
           qty: amount,
           amount: formatNumberUtil(pnl + bonus, state.language),
-          bonusPct: Math.round(clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100),
+          bonusPct: Math.round(
+            clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100
+          ),
         })
       : t(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
           good: t(state.language, good.nameKey),
@@ -1263,12 +1271,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   };
 }
 
-function tradeAsset(
-  state: EconomyState,
-  assetId: AssetId,
-  side: "buy" | "sell",
-  qty: number
-): EconomyState {
+function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell", qty: number): EconomyState {
   if (state.gameOver) return state;
   const as = state.assets[assetId];
   const price = as.price;
@@ -1306,7 +1309,9 @@ function tradeAsset(
           asset: t(state.language, asset.nameKey),
           qty: amount,
           amount: formatNumberUtil(pnl + bonus, state.language),
-          bonusPct: Math.round(clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100),
+          bonusPct: Math.round(
+            clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100
+          ),
         })
       : t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
           asset: t(state.language, asset.nameKey),
@@ -1512,7 +1517,12 @@ function openContract(
   };
 }
 
-export function openBulkContract(state: EconomyState, goodId: GoodId, qty: number, termDays: number): EconomyState {
+export function openBulkContract(
+  state: EconomyState,
+  goodId: GoodId,
+  qty: number,
+  termDays: number
+): EconomyState {
   if (state.gameOver || qty <= 0) return state;
   if (state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE) return state;
   if (!BULK_CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
@@ -1612,8 +1622,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
 
   const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
   const bonus =
-    Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) +
-    bankBonus;
+    Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) + bankBonus;
   const message = prevDate
     ? t(state.language, "msg.dailyCheckInReturning", { count, bonus })
     : t(state.language, "msg.dailyCheckInFirst", { bonus });
@@ -1954,7 +1963,10 @@ function applyTownRankUp(state: EconomyState): EconomyState {
     const beyond = townRankBeyondCount(index);
     const title =
       beyond > 0
-        ? t(state.language, "townRank.beyondTitle", { base: t(state.language, townRankNameKey(index)), n: beyond + 1 })
+        ? t(state.language, "townRank.beyondTitle", {
+            base: t(state.language, townRankNameKey(index)),
+            n: beyond + 1,
+          })
         : t(state.language, townRankNameKey(index));
     newEvents.push({
       id: nextId++,
@@ -2007,9 +2019,7 @@ function applyDailyQuests(state: EconomyState): EconomyState {
     ...state,
     cash,
     nextId,
-    dailyQuests: state.dailyQuests.map((q) =>
-      completedIds.has(q.id) ? { ...q, completed: true } : q
-    ),
+    dailyQuests: state.dailyQuests.map((q) => (completedIds.has(q.id) ? { ...q, completed: true } : q)),
     lastEvent: newEvents[newEvents.length - 1],
     eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
   };
@@ -2168,12 +2178,9 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
     );
   }
 
-  return outcome(
-    "msg.villagerRefuse",
-    { amount: VILLAGER_REQUEST_REFUSE_HAPPINESS },
-    "bad",
-    { happiness: clamp(state.happiness - VILLAGER_REQUEST_REFUSE_HAPPINESS, 0, 100) }
-  );
+  return outcome("msg.villagerRefuse", { amount: VILLAGER_REQUEST_REFUSE_HAPPINESS }, "bad", {
+    happiness: clamp(state.happiness - VILLAGER_REQUEST_REFUSE_HAPPINESS, 0, 100),
+  });
 }
 
 function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
@@ -2235,12 +2242,13 @@ export function prestige(state: EconomyState): EconomyState {
     townName: state.townName,
     prestigeLevel: nextLevel,
     prestigePoints:
-      state.prestigePoints + PRESTIGE_POINTS_PER_PRESTIGE + ngPlusBonusPrestigePoints(state.activeNgPlusModifiers),
+      state.prestigePoints +
+      PRESTIGE_POINTS_PER_PRESTIGE +
+      ngPlusBonusPrestigePoints(state.activeNgPlusModifiers),
     prestigePerks: state.prestigePerks,
     // Only accrues once legendharbor is already open — the first legendary
     // unlock itself (2 -> 3) doesn't pay out, every prestige after it does.
-    legendaryPoints:
-      state.legendaryPoints + (state.legendaryUnlocked ? LEGENDARY_POINTS_PER_PRESTIGE : 0),
+    legendaryPoints: state.legendaryPoints + (state.legendaryUnlocked ? LEGENDARY_POINTS_PER_PRESTIGE : 0),
     // Identity, not run state — the record and the bar to beat next carry
     // over even though everything else about the run resets.
     bestNetWorthEver,
@@ -2275,7 +2283,13 @@ export function takeLoan(state: EconomyState, amount: number, termMonths: number
   return {
     ...state,
     cash: state.cash + principal,
-    loan: { principal, remainingBalance: principal, interestRatePerTick, termMonths, takenAtTick: state.tick },
+    loan: {
+      principal,
+      remainingBalance: principal,
+      interestRatePerTick,
+      termMonths,
+      takenAtTick: state.tick,
+    },
   };
 }
 
@@ -2531,12 +2545,12 @@ export function useEconomy() {
   const repayLoan_ = useCallback((amount: number) => dispatch({ type: "REPAY_LOAN", amount }), []);
   const hireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "HIRE_WORKER", goodId }), []);
   const fireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "FIRE_WORKER", goodId }), []);
-  const upgrade_ = useCallback(
-    (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }),
+  const upgrade_ = useCallback((upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }), []);
+  const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
+  const hydrate_ = useCallback(
+    (imported: EconomyState) => dispatch({ type: "HYDRATE", state: imported }),
     []
   );
-  const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
-  const hydrate_ = useCallback((imported: EconomyState) => dispatch({ type: "HYDRATE", state: imported }), []);
   const buyProperty_ = useCallback(
     (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId }),
     []
@@ -2554,10 +2568,7 @@ export function useEconomy() {
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
     []
   );
-  const resolveRequest = useCallback(
-    (give: boolean) => dispatch({ type: "RESOLVE_REQUEST", give }),
-    []
-  );
+  const resolveRequest = useCallback((give: boolean) => dispatch({ type: "RESOLVE_REQUEST", give }), []);
   const resolveRivalOffer_ = useCallback(
     (accept: boolean) => dispatch({ type: "RESOLVE_RIVAL_OFFER", accept }),
     []
@@ -2565,10 +2576,7 @@ export function useEconomy() {
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
   const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
   const setEmblemColor_ = useCallback((color: string) => dispatch({ type: "SET_EMBLEM_COLOR", color }), []);
-  const setLanguage_ = useCallback(
-    (language: Language) => dispatch({ type: "SET_LANGUAGE", language }),
-    []
-  );
+  const setLanguage_ = useCallback((language: Language) => dispatch({ type: "SET_LANGUAGE", language }), []);
   const activateSpeedBoost = useCallback(() => dispatch({ type: "ACTIVATE_SPEED_BOOST" }), []);
   const translate = useCallback(
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
@@ -2622,8 +2630,7 @@ export function useEconomy() {
     setLanguage: setLanguage_,
     activateSpeedBoost,
     t: translate,
-    formatCoins: (value: number, decimals?: number) =>
-      formatCoinsUtil(value, state.language, decimals),
+    formatCoins: (value: number, decimals?: number) => formatCoinsUtil(value, state.language, decimals),
     portfolioValue,
     assetsValue,
     netWorth,

@@ -3,7 +3,17 @@ import { ActivityIndicator, Modal, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { SPEED_BOOST_MULTIPLIER } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+} from "../theme";
 import { formatCountdown } from "./SpeedBoostButton";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -23,12 +33,15 @@ const AD_SIMULATION_MS = 2200;
 export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
   const { state, t, activateSpeedBoost } = useEconomyContext();
   const [watching, setWatching] = useState(false);
-  const [, forceTick] = useState(0);
+  // Same reasoning as SpeedBoostButton: the countdown reads a clock this
+  // component owns, so rendering stays a pure function of props and state.
+  const [now, setNow] = useState(() => Date.now());
   const active = state.speedBoostExpiresAt !== null;
 
   useEffect(() => {
     if (!visible || !active) return;
-    const interval = setInterval(() => forceTick((n) => n + 1), 1000);
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [visible, active]);
 
@@ -45,7 +58,7 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
 
   if (!visible) return null;
 
-  const remainingMs = active ? Math.max(0, state.speedBoostExpiresAt! - Date.now()) : 0;
+  const remainingMs = active ? Math.max(0, state.speedBoostExpiresAt! - now) : 0;
 
   const watchAd = () => {
     setWatching(true);

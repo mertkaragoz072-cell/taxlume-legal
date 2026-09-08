@@ -3,7 +3,17 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import { useEconomyContext } from "../economy/EconomyContext";
 import { EMBLEM_COLORS, isEmblemUnlocked, TOWN_EMBLEMS } from "../economy/emblems";
 import { TOWN_NAME_MAX_LENGTH } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -136,7 +146,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: "#f0e3c8",
     fontSize: 15,
-    fontWeight: "700", fontFamily: FONT.bold,
+    fontWeight: "700",
+    fontFamily: FONT.bold,
   },
   counter: { color: "#6b5f4d", fontSize: 10, textAlign: "right", marginTop: 4, marginBottom: 14 },
   emblemSectionLabel: {

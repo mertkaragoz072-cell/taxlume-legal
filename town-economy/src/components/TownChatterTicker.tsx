@@ -58,5 +58,11 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   icon: { fontSize: 16, marginRight: SPACING.sm },
-  text: { flex: 1, color: COLORS.textMuted, fontSize: TYPE.caption, fontStyle: "italic", fontFamily: FONT.medium },
+  text: {
+    flex: 1,
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    fontStyle: "italic",
+    fontFamily: FONT.medium,
+  },
 });
