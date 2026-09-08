@@ -583,3 +583,220 @@ html, body {
 .room-item.tier-1 .tierIs1, .room-item.tier-2 .tierIs2, .room-item.tier-3 .tierIs3 { display: inline; }
 .room-item .upgrade-badge { top: -18px; }
 .room-item.rug .upgrade-badge { top: -22px; }
+
+/* ===== Visual polish pass ===== */
+
+/* Wallpaper border / cornice instead of a flat strip */
+.topstrip {
+  position: relative;
+  z-index: 2;
+  background: repeating-linear-gradient(90deg, #f0a868 0 14px, #e8955a 14px 28px);
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.18);
+}
+.topstrip::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 8px; height: 6px;
+  background: radial-gradient(circle, rgba(255,255,255,0.55) 1.5px, transparent 2px) 0 0 / 14px 6px repeat-x;
+}
+
+/* Room tiers: wallpaper + floor upgrade with the "Oda" item */
+.scene.room-t2 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0) 45%, rgba(0,0,0,0.08)),
+    radial-gradient(circle, rgba(255,255,255,0.4) 1.5px, transparent 2px) 0 0 / 26px 26px,
+    #dfe9f7;
+}
+.scene.room-t2::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 2px, rgba(255,255,255,0.12) 2px 4px, transparent 4px 72px),
+    linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0) 30%, rgba(0,0,0,0.06)),
+    #d9b071;
+}
+.scene.room-t3 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0) 45%, rgba(0,0,0,0.1)),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 10px, transparent 10px 20px),
+    #cfd4d9;
+}
+.scene.room-t3::after {
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.16) 0 2px, transparent 2px 22px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 22px),
+    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0) 30%, rgba(0,0,0,0.08)),
+    #6e4a2f;
+  border-top-color: #f4f1ea;
+}
+
+/* Window + day/night */
+.window {
+  position: absolute;
+  left: 68%;
+  top: 5%;
+  width: 108px;
+  height: 88px;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.18));
+}
+.window .sky { opacity: 0; transition: opacity 2.5s ease; }
+.window.day .sky-day, .window.sunset .sky-sunset, .window.night .sky-night { opacity: 1; }
+.night-overlay {
+  position: absolute;
+  inset: 0;
+  background: #1b2350;
+  opacity: 0;
+  transition: opacity 2.5s ease, background 2.5s ease;
+  pointer-events: none;
+  z-index: 4;
+}
+.lamp-light {
+  position: absolute;
+  left: 40%;
+  bottom: 14%;
+  width: 200px;
+  height: 230px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255,214,120,0.6), rgba(255,214,120,0) 65%);
+  opacity: 0;
+  transition: opacity 2.5s ease;
+  pointer-events: none;
+  z-index: 4;
+  mix-blend-mode: screen;
+}
+.lamp-light.on { opacity: 1; }
+
+/* Character */
+.character {
+  position: absolute;
+  left: 27%;
+  bottom: 21%;
+  width: 54px;
+  height: 90px;
+  z-index: 4;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: breathe 2.6s ease-in-out infinite;
+  transition: left 0.7s ease;
+}
+.character svg { display: block; overflow: visible; }
+.character .pose-sleep, .character .eyes-happy, .character .plate { display: none; }
+.character.happy .eyes-open { display: none; }
+.character.happy .eyes-happy { display: block; }
+.character.eating { left: 62%; }
+.character.eating .plate { display: block; }
+.character.eating .arm-r { display: none; }
+.character.bounce { animation: bounce 0.4s ease-out; }
+.character.sleeping {
+  left: 20px;
+  bottom: calc(21% + 90px);
+  width: 50px;
+  height: 40px;
+  animation: none;
+}
+.character.sleeping .pose-stand { display: none; }
+.character.sleeping .pose-sleep { display: block; }
+@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
+@keyframes bounce {
+  0% { transform: scale(1, 1); }
+  30% { transform: scale(1.18, 0.82); }
+  60% { transform: scale(0.92, 1.12); }
+  100% { transform: scale(1, 1); }
+}
+
+/* Micro animations */
+.lamp-glow { animation: glowBreathe 2.2s ease-in-out infinite; }
+@keyframes glowBreathe { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.42; } }
+.tv-ball { animation: tvBall 3s ease-in-out infinite alternate; }
+@keyframes tvBall { from { transform: translate(0, 0); } to { transform: translate(26px, -8px); } }
+.tv-sun { transform-box: fill-box; transform-origin: center; animation: sunPulse 2.5s ease-in-out infinite; }
+@keyframes sunPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.furniture.plant .leaves { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 3.6s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+.room-item svg { filter: drop-shadow(0 3px 3px rgba(0,0,0,0.18)); }
+
+/* Money flying to the wallet + wallet pop */
+.coin-fly {
+  position: absolute;
+  z-index: 40;
+  font-size: 18px;
+  pointer-events: none;
+  transition: transform 0.75s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.75s ease;
+  will-change: transform;
+}
+.money-pill.pop { animation: pop 0.3s ease-out; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+/* Celebration: confetti + reward card */
+.fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 45; overflow: hidden; }
+.confetti {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  animation: confetti 0.95s ease-out forwards;
+}
+@keyframes confetti {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+}
+.reward-card {
+  position: absolute;
+  left: 50%;
+  top: 36%;
+  transform: translate(-50%, -50%) scale(0.6);
+  background: #26262b;
+  color: #fff;
+  border: 3px solid var(--yellow);
+  border-radius: 18px;
+  padding: 14px 24px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 46;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  transition: transform 0.25s cubic-bezier(0.2, 1.4, 0.4, 1), opacity 0.25s ease;
+}
+.reward-card.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.reward-icon { font-size: 38px; }
+.reward-title { font-weight: 900; font-size: 16px; margin-top: 4px; }
+.reward-sub { font-size: 12px; color: #8ee89a; margin-top: 2px; }
+
+/* Maxed items shimmer gold */
+.furniture.is-max, .room-item.is-max { animation: maxShimmer 1.8s ease-in-out infinite; }
+@keyframes maxShimmer {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(255,213,79,0.5)); }
+  50% { filter: drop-shadow(0 0 10px rgba(255,213,79,0.95)); }
+}
+
+/* Banner: tutorial text for new players, then an XP progress bar */
+.banner .xp-bar {
+  display: none;
+  position: relative;
+  margin: 0 18px;
+  height: 16px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.banner .xp-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #57cc6a, #8ff0a0);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.banner .xp-text {
+  position: absolute;
+  inset: 0;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0;
+  color: #7a1c1c;
+  text-shadow: none;
+}
+.banner.progress .banner-tut { display: none; }
+.banner.progress .xp-bar { display: block; }
+.banner.progress { padding: 12px 0 14px; }

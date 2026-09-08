@@ -32,9 +32,13 @@
     hunger: 100,
     isSleeping: false,
     furniture: { bed: 1, fridge: 1, plant: 1 },
-    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0 },
+    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0 },
+    taps: 0,
     lastSeen: Date.now(),
   };
+
+  var SKY_CYCLE_MS = 6 * 60 * 1000;
+  var FURNITURE_TIER_NAMES = ["", "Klasik", "Kaliteli", "Modern", "Lüks"];
 
   // Room decor: level 0 = not owned. Levels 1-3 basic art, 4-6 standard, 7-9 modern/luxury.
   var SHOP_ITEMS = {
@@ -43,6 +47,7 @@
     picture: { name: "Tablo", icon: "🖼️", baseCost: 5000, growth: 1.5, bonus: 0.03, maxLevel: 9 },
     shelf: { name: "Kitaplık", icon: "📚", baseCost: 8000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
     tv: { name: "Televizyon", icon: "📺", baseCost: 12000, growth: 1.5, bonus: 0.05, maxLevel: 9 },
+    room: { name: "Oda (duvar + zemin)", icon: "🏠", baseCost: 15000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
   };
   var ITEM_TIER_NAMES = ["", "Basit", "Standart", "Modern"];
 
@@ -79,6 +84,21 @@
     shopList: document.getElementById("shopList"),
     shopSub: document.getElementById("shopSub"),
     shopClose: document.getElementById("shopClose"),
+    phone: document.querySelector(".phone"),
+    avatar: document.querySelector(".avatar"),
+    moneyPill: document.querySelector(".money-pill"),
+    banner: document.getElementById("banner"),
+    xpFill: document.getElementById("xpFill"),
+    xpText: document.getElementById("xpText"),
+    character: document.getElementById("character"),
+    windowEl: document.getElementById("window"),
+    nightOverlay: document.getElementById("nightOverlay"),
+    lampLight: document.getElementById("lampLight"),
+    fxLayer: document.getElementById("fxLayer"),
+    rewardCard: document.getElementById("rewardCard"),
+    rewardIcon: document.getElementById("rewardIcon"),
+    rewardTitle: document.getElementById("rewardTitle"),
+    rewardSub: document.getElementById("rewardSub"),
     plantBtn: document.getElementById("plantBtn"),
     bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
     bedCost: document.getElementById("bedCost"),
@@ -314,6 +334,7 @@
 
       els[refs.cost].textContent = maxed ? "MAX" : formatMoney(furnitureCost(key));
       els[refs.btn].classList.toggle("maxed", maxed);
+      els[refs.item].classList.toggle("is-max", maxed);
 
       var tier = furnitureTier(level);
       els[refs.item].classList.remove("tier-1", "tier-2", "tier-3", "tier-4");
@@ -344,6 +365,10 @@
 
     renderUpgradeBadges();
     renderRoomItems();
+    renderAmbient();
+    renderCharacter();
+    renderBanner();
+    renderAvatar();
   }
 
   function renderRoomItems() {
@@ -355,6 +380,7 @@
       var maxed = level >= cfg.maxLevel;
 
       node.classList.toggle("owned", level > 0);
+      node.classList.toggle("is-max", maxed);
       node.classList.remove("tier-1", "tier-2", "tier-3");
       node.classList.add("tier-" + itemTier(level));
 
@@ -429,9 +455,9 @@
     var tierBefore = itemTier(level);
     var tierAfter = itemTier(level + 1);
     if (level === 0) {
-      showToast(item.name + " alındı! +%" + Math.round(item.bonus * 100) + " kazanç");
+      celebrate(item.icon, item.name + " alındı!", "+%" + Math.round(item.bonus * 100) + " kazanç");
     } else if (tierAfter !== tierBefore) {
-      showToast(item.name + " yenilendi: " + ITEM_TIER_NAMES[tierAfter] + " model!");
+      celebrate(item.icon, item.name + " yenilendi!", ITEM_TIER_NAMES[tierAfter] + " model · kazanç arttı");
     } else {
       showToast(item.name + " seviye " + (level + 1) + "! Kazanç arttı.");
     }
@@ -447,6 +473,141 @@
 
   function closeShop() {
     els.shop.classList.remove("open");
+  }
+
+  /* ---------- Ambient: window sky, night tint, room tier ---------- */
+  function skyPhase() {
+    if (state.isSleeping) return "night";
+    var t = (Date.now() % SKY_CYCLE_MS) / SKY_CYCLE_MS;
+    if (t < 0.45) return "day";
+    if (t < 0.6) return "sunset";
+    if (t < 0.9) return "night";
+    return "sunset";
+  }
+
+  function renderAmbient() {
+    var phase = skyPhase();
+    els.windowEl.classList.remove("day", "sunset", "night");
+    els.windowEl.classList.add(phase);
+    els.nightOverlay.style.background = phase === "sunset" ? "#c8562a" : "#1b2350";
+    els.nightOverlay.style.opacity =
+      phase === "night" ? (state.isSleeping ? "0.5" : "0.4") : phase === "sunset" ? "0.12" : "0";
+    els.lampLight.classList.toggle("on", phase === "night" && state.items.lamp > 0);
+
+    els.scene.classList.remove("room-t1", "room-t2", "room-t3");
+    els.scene.classList.add("room-t" + itemTier(state.items.room));
+  }
+
+  /* ---------- Character ---------- */
+  var happyTimer = null;
+
+  function renderCharacter() {
+    els.character.classList.toggle("sleeping", state.isSleeping);
+  }
+
+  function characterBounce() {
+    var c = els.character;
+    c.classList.remove("bounce");
+    void c.offsetWidth;
+    c.classList.add("bounce");
+    c.classList.add("happy");
+    clearTimeout(happyTimer);
+    happyTimer = setTimeout(function () {
+      c.classList.remove("happy");
+    }, 600);
+  }
+
+  function characterEat() {
+    var c = els.character;
+    c.classList.add("eating");
+    setTimeout(function () {
+      c.classList.add("happy");
+    }, 700);
+    setTimeout(function () {
+      c.classList.remove("eating");
+    }, 1500);
+    setTimeout(function () {
+      c.classList.remove("happy");
+    }, 2300);
+  }
+
+  els.character.addEventListener("animationend", function (e) {
+    if (e.animationName === "bounce") els.character.classList.remove("bounce");
+  });
+
+  /* ---------- Money flying to the wallet ---------- */
+  var lastTapPoint = null;
+
+  function flyCoin() {
+    if (!lastTapPoint) return;
+    var phoneRect = els.phone.getBoundingClientRect();
+    var target = els.moneyText.getBoundingClientRect();
+    var coin = document.createElement("span");
+    coin.className = "coin-fly";
+    coin.textContent = "💰";
+    coin.style.left = lastTapPoint.x - phoneRect.left - 9 + "px";
+    coin.style.top = lastTapPoint.y - phoneRect.top - 9 + "px";
+    els.phone.appendChild(coin);
+    var dx = target.left + target.width / 2 - lastTapPoint.x;
+    var dy = target.top + target.height / 2 - lastTapPoint.y;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        coin.style.transform = "translate(" + dx + "px, " + dy + "px) scale(0.5)";
+        coin.style.opacity = "0.2";
+      });
+    });
+    setTimeout(function () {
+      coin.remove();
+      els.moneyPill.classList.remove("pop");
+      void els.moneyPill.offsetWidth;
+      els.moneyPill.classList.add("pop");
+    }, 760);
+  }
+
+  /* ---------- Celebration ---------- */
+  var rewardTimer = null;
+  var CONFETTI_COLORS = ["#e0574f", "#ffd54f", "#57cc6a", "#4f8ef0", "#b48be0", "#f2a25b"];
+
+  function celebrate(icon, title, sub) {
+    for (var i = 0; i < 24; i++) {
+      var p = document.createElement("span");
+      p.className = "confetti";
+      var angle = Math.random() * Math.PI * 2;
+      var dist = 80 + Math.random() * 140;
+      p.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+      p.style.setProperty("--dy", Math.sin(angle) * dist + 120 + "px");
+      p.style.setProperty("--rot", Math.round(Math.random() * 720 - 360) + "deg");
+      p.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      els.fxLayer.appendChild(p);
+      (function (node) {
+        setTimeout(function () {
+          node.remove();
+        }, 1000);
+      })(p);
+    }
+    els.rewardIcon.textContent = icon;
+    els.rewardTitle.textContent = title;
+    els.rewardSub.textContent = sub;
+    els.rewardCard.classList.add("show");
+    clearTimeout(rewardTimer);
+    rewardTimer = setTimeout(function () {
+      els.rewardCard.classList.remove("show");
+    }, 1700);
+  }
+
+  /* ---------- Banner (tutorial -> XP bar) and avatar ---------- */
+  function renderBanner() {
+    var done = state.taps >= 10;
+    els.banner.classList.toggle("progress", done);
+    if (!done) return;
+    var need = xpForNextLevel();
+    els.xpFill.style.width = Math.min(100, (state.xp / need) * 100) + "%";
+    els.xpText.textContent = "Seviye " + state.level + " · " + state.xp + "/" + need + " XP";
+  }
+
+  function renderAvatar() {
+    var mult = homeMultiplier();
+    els.avatar.textContent = mult < 1.5 ? "🧑" : mult < 2.5 ? "🧑‍💼" : mult < 4 ? "🤵" : "👑";
   }
 
   function levelUpIfReady() {
@@ -483,8 +644,11 @@
     state.money += earned;
     state.energy = clamp(state.energy - TAP_ENERGY_COST, 0, 100);
     state.xp += TAP_XP_GAIN;
+    state.taps += 1;
 
     pushPill("+ $" + earned + " 💰", false);
+    characterBounce();
+    flyCoin();
     levelUpIfReady();
     render();
     saveState();
@@ -522,6 +686,7 @@
     state.hunger = clamp(state.hunger + FOOD_HUNGER_GAIN, 0, 100);
     pushPill("+" + FOOD_HUNGER_GAIN + " 🍗", false);
     showToast("Karnını doyurdun!");
+    characterEat();
     render();
     saveState();
   }
@@ -543,7 +708,13 @@
 
     state.money -= cost;
     state.furniture[key] += 1;
-    showToast(cfg.name + " seviye " + state.furniture[key] + "! Kazanç arttı.");
+    var tierBefore = furnitureTier(level);
+    var tierAfter = furnitureTier(level + 1);
+    if (tierAfter !== tierBefore) {
+      celebrate("✨", cfg.name + " yenilendi!", FURNITURE_TIER_NAMES[tierAfter] + " model · kazanç arttı");
+    } else {
+      showToast(cfg.name + " seviye " + state.furniture[key] + "! Kazanç arttı.");
+    }
     render();
     saveState();
   }
@@ -597,6 +768,7 @@
     if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .room-item")) return;
     var rect = els.scene.getBoundingClientRect();
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
+    lastTapPoint = { x: e.clientX, y: e.clientY };
     lastTapAt = Date.now();
     showTapHint(false);
     onTap();
@@ -616,7 +788,9 @@
   });
 
   Object.keys(SHOP_ITEMS).forEach(function (key) {
-    document.getElementById(key + "UpgradeBtn").addEventListener("click", function (e) {
+    var badge = document.getElementById(key + "UpgradeBtn");
+    if (!badge) return; // items without room art (e.g. the room itself) are upgraded from the Market only
+    badge.addEventListener("click", function (e) {
       e.stopPropagation();
       upgradeItem(key);
     });
