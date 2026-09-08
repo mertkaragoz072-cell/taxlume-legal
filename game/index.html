@@ -43,7 +43,10 @@
 
   <div class="scene" id="scene">
 
-    <button class="quest-icon" id="questBtn" aria-label="Görevler">
+    <div class="event-fx" id="eventFx"></div>
+
+    <div class="side-icons">
+    <button class="quest-icon side-icon" id="questBtn" aria-label="Görevler">
       <svg viewBox="0 0 24 24" width="22" height="22">
         <rect x="5" y="3" width="14" height="18" rx="2" fill="#fff" stroke="#7a5228" stroke-width="1.2"/>
         <rect x="9" y="1.5" width="6" height="3" rx="1.2" fill="#7a5228"/>
@@ -55,6 +58,10 @@
         <line x1="12" y1="17.5" x2="16.5" y2="17.5" stroke="#c7c7c7" stroke-width="1.2"/>
       </svg>
     </button>
+    <button class="side-icon emoji" id="lotteryBtn" aria-label="Kazı Kazan">🎟️</button>
+    <button class="side-icon emoji" id="recordsBtn" aria-label="Rekorlar">📊</button>
+    <button class="side-icon emoji" id="eventBtn" aria-label="Etkinlikler">🎉</button>
+    </div>
 
     <div class="tap-wrap">
       <div class="tap-stack" id="floaters"></div>
@@ -735,6 +742,7 @@
     </div>
 
     <div class="hud-chips">
+      <div class="hud-chip event-chip" id="eventChip"></div>
       <div class="hud-chip work-chip" id="workChip"></div>
       <div class="hud-chip combo-chip" id="comboChip"></div>
     </div>

@@ -193,17 +193,31 @@ html, body {
   z-index: 1;
 }
 
-/* Quest / task icon */
-.quest-icon {
+/* Scene side buttons: quests, scratch card, records, seasonal events */
+.side-icons {
   position: absolute;
-  left: 5%;
-  top: 33%;
+  left: 6px;
+  top: 6%;
   z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.quest-icon,
+.side-icon {
+  position: relative;
   background: none;
   border: none;
   padding: 8px;
   cursor: pointer;
   filter: drop-shadow(0 3px 4px rgba(0,0,0,0.3));
+  transition: transform 0.12s ease;
+}
+.side-icon:active { transform: scale(0.9); }
+.side-icon.emoji {
+  font-size: 22px;
+  line-height: 1;
+  padding: 7px;
 }
 
 /* Floating money pill stack above the tap button */
@@ -891,6 +905,7 @@ html, body {
 /* Nav / quest alert dots */
 .nav-btn { position: relative; }
 .nav-btn.has-alert::after,
+.side-icon.has-alert::after,
 .quest-icon.has-alert::after {
   content: "";
   position: absolute;
@@ -903,7 +918,8 @@ html, body {
   border: 2px solid var(--topbar-bg);
   animation: alertPulse 1.4s ease-in-out infinite;
 }
-.quest-icon.has-alert::after { top: 2px; right: 2px; border-color: #f6e2b3; }
+.quest-icon.has-alert::after,
+.side-icon.has-alert::after { top: 2px; right: 2px; border-color: #f6e2b3; }
 @keyframes alertPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.25); }
@@ -1037,4 +1053,112 @@ html, body {
   0% { transform: scale(1); }
   40% { transform: scale(1.18); }
   100% { transform: scale(1); }
+}
+
+/* ---------- Seasonal events ---------- */
+.event-chip {
+  border-color: #ff9d4d;
+  color: #ffd0a1;
+}
+.event-fx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 4;
+}
+.event-bit {
+  position: absolute;
+  top: -8%;
+  animation: eventFall linear infinite;
+  opacity: 0.85;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+}
+@keyframes eventFall {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(105vh) rotate(320deg); }
+}
+
+/* ---------- Scratch card ---------- */
+.scratch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #2a2f45, #171a28);
+  border: 2px solid #3a4059;
+}
+.scratch-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  color: #6f7891;
+  cursor: pointer;
+  border-radius: 12px;
+  border: 2px solid #59617d;
+  background: linear-gradient(150deg, #b9c0d4 0%, #8f97b0 45%, #cdd4e6 55%, #969db8 100%);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  transition: transform 0.12s ease;
+}
+.scratch-cell:active { transform: scale(0.94); }
+.scratch-cell.open {
+  background: #f7f3e6;
+  border-color: #3a2a22;
+  color: #2a2a2a;
+  cursor: default;
+  animation: cellReveal 0.28s ease-out;
+}
+.scratch-cell.hit {
+  background: linear-gradient(180deg, #fff3c4, #ffd54f);
+  border-color: #b3300f;
+  box-shadow: 0 0 0 2px rgba(255,213,79,0.5);
+  animation: cellHit 0.5s ease-out;
+}
+@keyframes cellReveal {
+  0% { transform: rotateY(90deg) scale(0.8); }
+  100% { transform: rotateY(0) scale(1); }
+}
+@keyframes cellHit {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.16) rotate(-4deg); }
+  70% { transform: scale(1.08) rotate(3deg); }
+}
+.scratch-result {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #b8bcc2;
+  padding: 0 0 12px;
+}
+.scratch-result.win { color: #ffd54f; font-size: 16px; }
+
+/* ---------- Records ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.stat-card {
+  background: #1b1f2e;
+  border: 2px solid #2c3145;
+  border-radius: 12px;
+  padding: 9px 11px;
+}
+.stat-card.wide { grid-column: 1 / -1; }
+.stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8b93a7;
+  margin-bottom: 3px;
+}
+.stat-value {
+  font-size: 16px;
+  font-weight: 900;
+  color: #f0f2f7;
 }

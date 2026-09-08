@@ -46,7 +46,12 @@
     bank: { balance: 0, level: 0 },
     quests: { day: 0, list: [] },
     ach: {},
-    stats: { taps: 0, earned: 0, eats: 0, sleeps: 0, upgrades: 0, workSec: 0, golds: 0, crits: 0, petFeeds: 0 },
+    stats: {
+      taps: 0, earned: 0, eats: 0, sleeps: 0, upgrades: 0, workSec: 0, golds: 0, crits: 0, petFeeds: 0,
+      scratches: 0, scratchWins: 0, scratchWon: 0, jackpots: 0,
+      bestTap: 0, bestCombo: 0, bestStreak: 0,
+    },
+    scratch: { day: 0, freeUsed: false, card: null },
     legacy: 0,
     prestiges: 0,
     streak: { day: 0, count: 0 },
@@ -110,6 +115,11 @@
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
+    lotteryBtn: document.getElementById("lotteryBtn"),
+    recordsBtn: document.getElementById("recordsBtn"),
+    eventBtn: document.getElementById("eventBtn"),
+    eventChip: document.getElementById("eventChip"),
+    eventFx: document.getElementById("eventFx"),
     shop: document.getElementById("shop"),
     shopList: document.getElementById("shopList"),
     shopSub: document.getElementById("shopSub"),
@@ -207,6 +217,7 @@
       merged.ach = Object.assign({}, parsed.ach);
       merged.pet = Object.assign({}, defaultState.pet, parsed.pet);
       merged.perks = Object.assign({}, defaultState.perks, parsed.perks);
+      merged.scratch = Object.assign({}, defaultState.scratch, parsed.scratch);
       return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
@@ -240,7 +251,7 @@
   }
 
   function tapValue() {
-    return Math.round(tapBase() * homeMultiplier());
+    return Math.round(tapBase() * homeMultiplier() * eventMultiplier());
   }
 
   function effectiveOfflineRate() {
@@ -1024,18 +1035,26 @@
     { name: "Üniversite", icon: "🎓", cost: 40000, mins: 8, bonus: 0.25 },
     { name: "Yüksek Lisans", icon: "📜", cost: 250000, mins: 15, bonus: 0.4 },
     { name: "Doktora", icon: "🔬", cost: 1500000, mins: 30, bonus: 0.6 },
+    { name: "Profesörlük", icon: "📖", cost: 8000000, mins: 45, bonus: 0.8 },
+    { name: "Nobel Ödülü", icon: "🏅", cost: 60000000, mins: 90, bonus: 1.2 },
   ];
 
   var JOBS = {
     courier: { name: "Kurye", icon: "🛵", edu: 1, income: 8 },
+    waiter: { name: "Garson", icon: "🍽️", edu: 1, income: 14 },
     cashier: { name: "Kasiyer", icon: "🧾", edu: 2, income: 25 },
     office: { name: "Ofis Elemanı", icon: "🗂️", edu: 2, income: 60 },
+    teacher: { name: "Öğretmen", icon: "👨‍🏫", edu: 3, income: 120 },
     dev: { name: "Yazılımcı", icon: "💻", edu: 3, income: 180 },
+    pilot: { name: "Pilot", icon: "✈️", edu: 3, income: 300 },
+    lawyer: { name: "Avukat", icon: "⚖️", edu: 4, income: 380 },
     doctor: { name: "Doktor", icon: "🩺", edu: 4, income: 520 },
     ceo: { name: "CEO", icon: "🏢", edu: 5, income: 1600 },
+    investor: { name: "Yatırımcı", icon: "📈", edu: 6, income: 5200 },
+    astronaut: { name: "Astronot", icon: "🚀", edu: 7, income: 16000 },
   };
   var JOB_XP_PER_LEVEL = 600; // seconds worked per promotion
-  var JOB_MAX_LEVEL = 5;
+  var JOB_MAX_LEVEL = 8;
 
   var BANK_MAX_LEVEL = 5;
   var BANK_BASE_RATE = 0.02; // per hour
@@ -1044,6 +1063,71 @@
 
   var PRESTIGE_MIN_EARNED = 10000000;
   var LEGACY_BONUS = 0.05;
+
+  /* ---------- Seasonal events ----------
+     Dates are real calendar days, so the room and the economy change with
+     the year. from/to are [month (1-12), day] and may wrap around New Year. */
+  var EVENTS = [
+    { id: "newyear", name: "Yılbaşı", icon: "🎄", from: [12, 24], to: [1, 2], mult: 2, fx: "snow", desc: "Kar yağıyor, tüm kazanç iki katı!" },
+    { id: "spring", name: "Bahar Şenliği", icon: "🌸", from: [3, 20], to: [3, 27], mult: 1.5, fx: "petal", desc: "Çiçekler açtı, kazanç ×1.5" },
+    { id: "kids", name: "23 Nisan Çocuk Bayramı", icon: "🎈", from: [4, 22], to: [4, 24], mult: 2, fx: "confetti", desc: "Bayram coşkusu, kazanç ×2" },
+    { id: "youth", name: "19 Mayıs Gençlik Bayramı", icon: "🏃", from: [5, 18], to: [5, 20], mult: 1.75, fx: "confetti", desc: "Gençlik enerjisi, kazanç ×1.75" },
+    { id: "summer", name: "Yaz Festivali", icon: "🏖️", from: [6, 20], to: [7, 5], mult: 1.5, fx: "sun", desc: "Yaz tatili başladı, kazanç ×1.5" },
+    { id: "victory", name: "30 Ağustos Zafer Bayramı", icon: "🇹🇷", from: [8, 29], to: [8, 31], mult: 2, fx: "confetti", desc: "Zafer kutlaması, kazanç ×2" },
+    { id: "halloween", name: "Cadılar Bayramı", icon: "🎃", from: [10, 29], to: [11, 1], mult: 1.75, fx: "leaf", desc: "Ürkütücü geceler, kazanç ×1.75" },
+    { id: "republic", name: "29 Ekim Cumhuriyet Bayramı", icon: "🎆", from: [10, 28], to: [10, 30], mult: 2.5, fx: "confetti", desc: "En büyük bayram, kazanç ×2.5" },
+  ];
+
+  var WEEKEND_EVENT = {
+    id: "weekend", name: "Hafta Sonu", icon: "🎉", mult: 1.25, fx: "confetti",
+    desc: "Cumartesi ve pazar kazanç ×1.25",
+  };
+
+  // Day-of-year index, so a range that wraps past New Year still compares cleanly.
+  function dayOfYear(d) {
+    return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  }
+
+  function eventIsOn(ev, now) {
+    var year = now.getFullYear();
+    var today = dayOfYear(now);
+    var start = dayOfYear(new Date(year, ev.from[0] - 1, ev.from[1]));
+    var end = dayOfYear(new Date(year, ev.to[0] - 1, ev.to[1]));
+    return start <= end ? today >= start && today <= end : today >= start || today <= end;
+  }
+
+  // Ranges can overlap (29 Ekim falls inside Cadılar Bayramı); the player
+  // always gets the most generous of the events running that day.
+  function activeEvent() {
+    var now = new Date();
+    var best = null;
+    EVENTS.forEach(function (ev) {
+      if (eventIsOn(ev, now) && (!best || ev.mult > best.mult)) best = ev;
+    });
+    if (best) return best;
+    var wd = now.getDay();
+    return wd === 0 || wd === 6 ? WEEKEND_EVENT : null;
+  }
+
+  function eventMultiplier() {
+    var ev = activeEvent();
+    return ev ? ev.mult : 1;
+  }
+
+  // Milliseconds until an event's next start, so the panel can count down to it.
+  function msUntilEvent(ev) {
+    var now = new Date();
+    for (var y = 0; y < 2; y++) {
+      var start = new Date(now.getFullYear() + y, ev.from[0] - 1, ev.from[1]);
+      if (start > now) return start - now;
+    }
+    return 0;
+  }
+
+  function formatDays(ms) {
+    var days = Math.ceil(ms / 86400000);
+    return days <= 1 ? "yarın" : days + " gün sonra";
+  }
 
   var QUEST_POOL = [
     { id: "tap150", icon: "👆", stat: "taps", target: 150, text: "150 kez dokun", reward: 30 },
@@ -1055,6 +1139,8 @@
     { id: "upg2", icon: "⬆️", stat: "upgrades", target: 2, text: "2 eşya yükselt", reward: 90 },
     { id: "work300", icon: "💼", stat: "workSec", target: 300, text: "5 dakika çalış", reward: 70 },
     { id: "work900", icon: "💼", stat: "workSec", target: 900, text: "15 dakika çalış", reward: 140 },
+    { id: "scratch2", icon: "🎟️", stat: "scratches", target: 2, text: "2 kazı kazan oyna", reward: 80 },
+    { id: "feed3", icon: "🦴", stat: "petFeeds", target: 3, text: "Miniğini 3 kez besle", reward: 50 },
   ];
 
   var ACHIEVEMENTS = [
@@ -1075,6 +1161,13 @@
     { id: "bank1m", icon: "🏦", name: "Yatırımcı", desc: "Bankada $1.000.000 tut", money: 120000, test: function (s) { return s.bank.balance >= 1000000; } },
     { id: "streak7", icon: "🔥", name: "Sadık Oyuncu", desc: "7 gün üst üste oyna", legacy: 1, test: function (s) { return s.streak.count >= 7; } },
     { id: "prestige1", icon: "🌟", name: "Yeni Hayat", desc: "İlk kez yeniden doğ", money: 0, test: function (s) { return s.prestiges >= 1; } },
+    { id: "edu7", icon: "🏅", name: "Nobel Sahibi", desc: "Nobel Ödülü'nü kazan", legacy: 2, test: function (s) { return s.edu >= 7; } },
+    { id: "astronaut", icon: "🚀", name: "Yıldızlara", desc: "Astronot olarak çalış", legacy: 2, test: function (s) { return s.job === "astronaut"; } },
+    { id: "scratchWin", icon: "🎟️", name: "Şansın Açık", desc: "Kazı kazanda ilk kez kazan", money: 20000, test: function (s) { return s.stats.scratchWins >= 1; } },
+    { id: "jackpot", icon: "👑", name: "Büyük İkramiye", desc: "Kazı kazanda jackpot yakala", legacy: 2, test: function (s) { return s.stats.jackpots >= 1; } },
+    { id: "petLove", icon: "🐶", name: "Can Yoldaşı", desc: "Miniğini 50 kez besle", money: 60000, test: function (s) { return s.stats.petFeeds >= 50; } },
+    { id: "combo30", icon: "🔥", name: "Kombo Kralı", desc: "30'luk kombo yap", money: 90000, test: function (s) { return s.stats.bestCombo >= 30; } },
+    { id: "event1", icon: "🎉", name: "Kutlama Vakti", desc: "Bir etkinlik sırasında oyna", money: 15000, test: function () { return !!activeEvent(); } },
   ];
 
   /* ---------- Derived economy ---------- */
@@ -1098,7 +1191,7 @@
 
   function salaryPerSecond() {
     if (!state.job || !JOBS[state.job]) return 0;
-    return JOBS[state.job].income * (1 + 0.25 * (jobLevel() - 1)) * legacyMultiplier();
+    return JOBS[state.job].income * (1 + 0.25 * (jobLevel() - 1)) * legacyMultiplier() * eventMultiplier();
   }
 
   function bankRate() {
@@ -1170,6 +1263,7 @@
     var prev = state.streak.day;
     state.streak.count = prev === today - 1 ? state.streak.count + 1 : 1;
     state.streak.day = today;
+    if (state.streak.count > (state.stats.bestStreak || 0)) state.stats.bestStreak = state.streak.count;
     var bonus = Math.round(tapBase() * 40 * state.streak.count);
     state.money += bonus;
     bumpStat("earned", bonus);
@@ -1220,6 +1314,41 @@
       els.workChip.classList.toggle("off", !working);
     }
     els.character.classList.toggle("working", working);
+
+    var ev = activeEvent();
+    els.eventChip.classList.toggle("show", !!ev);
+    if (ev) els.eventChip.textContent = ev.icon + " " + ev.name + " ×" + ev.mult;
+    renderEventFx(ev);
+  }
+
+  /* ---------- Seasonal weather layer ---------- */
+  var EVENT_FX_ART = {
+    snow: ["❄️", "🌨️", "❄️"],
+    petal: ["🌸", "🌺", "🌷"],
+    confetti: ["🎊", "🎉", "✨"],
+    leaf: ["🍂", "🍁", "🎃"],
+    sun: ["☀️", "🌴", "🏖️"],
+  };
+  var eventFxId = null;
+
+  function renderEventFx(ev) {
+    var id = ev ? ev.id : null;
+    if (id === eventFxId) return;
+    eventFxId = id;
+    els.eventFx.textContent = "";
+    if (!ev) return;
+
+    var art = EVENT_FX_ART[ev.fx] || EVENT_FX_ART.confetti;
+    for (var i = 0; i < 12; i++) {
+      var bit = document.createElement("span");
+      bit.className = "event-bit";
+      bit.textContent = art[i % art.length];
+      bit.style.left = Math.random() * 96 + "%";
+      bit.style.animationDelay = (Math.random() * 8).toFixed(2) + "s";
+      bit.style.animationDuration = (7 + Math.random() * 6).toFixed(2) + "s";
+      bit.style.fontSize = (11 + Math.random() * 9).toFixed(0) + "px";
+      els.eventFx.appendChild(bit);
+    }
   }
 
   function renderNavBadges() {
@@ -1234,6 +1363,10 @@
       btn.classList.toggle("has-alert", !!alerts[btn.getAttribute("data-nav")]);
     });
     els.questBtn.classList.toggle("has-alert", claimableQuests() > 0);
+    els.lotteryBtn.classList.toggle("has-alert", freeCardAvailable() || !!state.scratch.card);
+    els.eventBtn.classList.toggle("has-alert", !!activeEvent());
+    var ev = activeEvent();
+    els.eventBtn.textContent = ev ? ev.icon : "🎉";
   }
 
   /* ---------- Golden coin ---------- */
@@ -1280,6 +1413,9 @@
     bank: { title: "🏦 Banka", build: buildBank },
     world: { title: "🏆 Başarımlar", build: buildAchievements },
     quests: { title: "📋 Görevler", build: buildQuests },
+    lottery: { title: "🎟️ Kazı Kazan", build: buildLottery },
+    records: { title: "📊 Rekorlar", build: buildRecords },
+    events: { title: "🎉 Etkinlikler", build: buildEvents },
   };
 
   function openPanel(tab) {
@@ -1634,6 +1770,326 @@
     saveState();
   }
 
+  /* ---------- Scratch card (Kazı Kazan) ----------
+     A nine-cell card: three of the same symbol anywhere wins that symbol's
+     prize. Tickets and prizes both scale with tap value, so the game stays
+     meaningful at every stage; the house edge keeps it from replacing taps. */
+  var SCRATCH_SYMBOLS = {
+    cherry: { icon: "🍒", mult: 1.5, weight: 45 },
+    lemon: { icon: "🍋", mult: 2, weight: 28 },
+    bell: { icon: "🔔", mult: 4, weight: 17 },
+    diamond: { icon: "💎", mult: 10, weight: 7 },
+    seven: { icon: "7️⃣", mult: 25, weight: 2.6 },
+    crown: { icon: "👑", mult: 100, weight: 0.4 },
+  };
+  var SCRATCH_WIN_CHANCE = 0.22;
+  var SCRATCH_TICKET_TAPS = 30; // ticket price in "taps worth of money"
+
+  function ticketCost() {
+    return Math.max(500, Math.round(tapValue() * SCRATCH_TICKET_TAPS));
+  }
+
+  function refreshScratchDay() {
+    var today = todayIndex();
+    if (state.scratch.day !== today) {
+      state.scratch.day = today;
+      state.scratch.freeUsed = false;
+    }
+  }
+
+  function freeCardAvailable() {
+    refreshScratchDay();
+    return !state.scratch.freeUsed && !state.scratch.card;
+  }
+
+  function pickWinningSymbol() {
+    var keys = Object.keys(SCRATCH_SYMBOLS);
+    var total = keys.reduce(function (sum, k) {
+      return sum + SCRATCH_SYMBOLS[k].weight;
+    }, 0);
+    var roll = Math.random() * total;
+    for (var i = 0; i < keys.length; i++) {
+      roll -= SCRATCH_SYMBOLS[keys[i]].weight;
+      if (roll <= 0) return keys[i];
+    }
+    return keys[0];
+  }
+
+  function buildCardCells(winSym) {
+    var keys = Object.keys(SCRATCH_SYMBOLS);
+    var counts = {};
+    var cells = [];
+    keys.forEach(function (k) {
+      counts[k] = 0;
+    });
+
+    if (winSym) {
+      for (var w = 0; w < 3; w++) {
+        cells.push(winSym);
+        counts[winSym]++;
+      }
+    }
+    // Fillers never reach three of a kind, so the card has exactly one result.
+    while (cells.length < 9) {
+      var options = keys.filter(function (k) {
+        return counts[k] < 2 && k !== winSym;
+      });
+      var pick = options[Math.floor(Math.random() * options.length)];
+      cells.push(pick);
+      counts[pick]++;
+    }
+
+    for (var i = cells.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = cells[i];
+      cells[i] = cells[j];
+      cells[j] = tmp;
+    }
+    return cells.map(function (sym) {
+      return { sym: sym, revealed: false };
+    });
+  }
+
+  function buyCard(free) {
+    refreshScratchDay();
+    if (state.scratch.card) return;
+    var cost = free ? 0 : ticketCost();
+    if (!free && state.money < cost) {
+      sfx.deny();
+      showToast("Bilet için yeterli paran yok.");
+      return;
+    }
+    if (free && state.scratch.freeUsed) return;
+
+    state.money -= cost;
+    if (free) state.scratch.freeUsed = true;
+
+    var winSym = Math.random() < SCRATCH_WIN_CHANCE ? pickWinningSymbol() : null;
+    var basis = free ? ticketCost() : cost;
+    state.scratch.card = {
+      cells: buildCardCells(winSym),
+      winSym: winSym,
+      prize: winSym ? Math.round(basis * SCRATCH_SYMBOLS[winSym].mult) : 0,
+      paid: cost,
+      done: false,
+      claimed: false,
+    };
+    bumpStat("scratches", 1);
+    sfx.coin();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function revealCell(idx) {
+    var card = state.scratch.card;
+    if (!card || card.cells[idx].revealed) return;
+    card.cells[idx].revealed = true;
+    sfx.tap();
+    if (card.cells.every(function (c) {
+      return c.revealed;
+    })) {
+      finishCard();
+    } else {
+      renderPanel();
+      saveState();
+    }
+  }
+
+  function revealAll() {
+    var card = state.scratch.card;
+    if (!card) return;
+    card.cells.forEach(function (c) {
+      c.revealed = true;
+    });
+    finishCard();
+  }
+
+  function finishCard() {
+    var card = state.scratch.card;
+    if (!card || card.done) return;
+    card.done = true;
+
+    if (card.winSym) {
+      var sym = SCRATCH_SYMBOLS[card.winSym];
+      state.money += card.prize;
+      bumpStat("earned", card.prize);
+      bumpStat("scratchWins", 1);
+      bumpStat("scratchWon", card.prize);
+      if (card.winSym === "crown") bumpStat("jackpots", 1);
+      celebrate(sym.icon, card.winSym === "crown" ? "JACKPOT!" : "Kazandın!", "+" + formatMoney(card.prize));
+      sfx.purchase();
+    } else {
+      showToast("Bu kart tutmadı. Bir dahaki sefere!");
+      sfx.deny();
+    }
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function discardCard() {
+    state.scratch.card = null;
+    renderPanel();
+    saveState();
+  }
+
+  function buildLottery() {
+    refreshScratchDay();
+    var card = state.scratch.card;
+    els.panelSub.textContent = freeCardAvailable()
+      ? "Bugün 1 ücretsiz kartın var! · Bilet " + formatMoney(ticketCost())
+      : "Bilet " + formatMoney(ticketCost()) + " · Toplam kazanç " + formatMoney(state.stats.scratchWon || 0);
+
+    if (card) {
+      var grid = document.createElement("div");
+      grid.className = "scratch-grid" + (card.done ? " done" : "");
+      card.cells.forEach(function (cell, idx) {
+        var btn = document.createElement("button");
+        btn.className = "scratch-cell" + (cell.revealed ? " open" : "");
+        if (card.done && card.winSym === cell.sym) btn.classList.add("hit");
+        btn.textContent = cell.revealed ? SCRATCH_SYMBOLS[cell.sym].icon : "?";
+        btn.addEventListener("click", function () {
+          revealCell(idx);
+        });
+        grid.appendChild(btn);
+      });
+      els.panelBody.appendChild(grid);
+
+      if (card.done) {
+        var result = document.createElement("div");
+        result.className = "scratch-result" + (card.winSym ? " win" : "");
+        result.textContent = card.winSym
+          ? SCRATCH_SYMBOLS[card.winSym].icon + " ×3 → " + formatMoney(card.prize) + " kazandın!"
+          : "Üç aynı sembol çıkmadı.";
+        els.panelBody.appendChild(result);
+        makeRow("🎫", "Kartı bitir", "Yeni bir bilet almak için kartı kapat", {
+          rowClass: "highlight",
+          button: "Yeni Kart",
+          onClick: discardCard,
+        });
+      } else {
+        makeRow("✋", "Kartı kazı", "Kutulara dokun ya da hepsini birden aç", {
+          rowClass: "highlight",
+          button: "Hepsini Kazı",
+          onClick: revealAll,
+        });
+      }
+    } else {
+      if (freeCardAvailable()) {
+        makeRow("🎁", "Günlük ücretsiz kart", "Her gün bir kart bedava, kaçırma!", {
+          rowClass: "highlight",
+          button: "Ücretsiz Al",
+          onClick: function () {
+            buyCard(true);
+          },
+        });
+      }
+      var poor = state.money < ticketCost();
+      makeRow("🎟️", "Kazı kazan bileti", "9 kutudan 3'ü aynı çıkarsa ikramiye senin", {
+        button: formatMoney(ticketCost()),
+        buttonClass: poor ? "poor" : "",
+        disabled: poor,
+        onClick: poor ? null : function () {
+          buyCard(false);
+        },
+      });
+    }
+
+    addNote("İkramiye tablosu (bilet bedelinin katı olarak)");
+    Object.keys(SCRATCH_SYMBOLS).forEach(function (key) {
+      var sym = SCRATCH_SYMBOLS[key];
+      makeRow(sym.icon, sym.icon + " ×3", "Bilet bedelinin " + sym.mult + " katı · " + formatMoney(ticketCost() * sym.mult), {
+        rowClass: "locked",
+      });
+    });
+    addNote("Oynanan kart: " + (state.stats.scratches || 0) + " · Kazanılan: " + (state.stats.scratchWins || 0));
+  }
+
+  /* ---------- Records ---------- */
+  function makeStatGrid(items) {
+    var grid = document.createElement("div");
+    grid.className = "stat-grid";
+    items.forEach(function (item) {
+      var card = document.createElement("div");
+      card.className = "stat-card" + (item.wide ? " wide" : "");
+      var label = document.createElement("div");
+      label.className = "stat-label";
+      label.textContent = item.label;
+      var value = document.createElement("div");
+      value.className = "stat-value";
+      value.textContent = item.value;
+      card.appendChild(label);
+      card.appendChild(value);
+      grid.appendChild(card);
+    });
+    els.panelBody.appendChild(grid);
+  }
+
+  function buildRecords() {
+    var s = state.stats;
+    els.panelSub.textContent =
+      "Seviye " + state.level + " · Gün " + state.day + " · " + state.prestiges + " kez yeniden doğdun";
+
+    addNote("🏅 Kişisel rekorlar");
+    makeStatGrid([
+      { label: "En yüksek tek tık", value: formatMoney(s.bestTap || 0) },
+      { label: "En uzun kombo", value: (s.bestCombo || 0) + "×" },
+      { label: "En uzun giriş serisi", value: (s.bestStreak || 0) + " gün" },
+      { label: "Kazı kazan kazancı", value: formatMoney(s.scratchWon || 0) },
+    ]);
+
+    addNote("📈 Toplamlar");
+    makeStatGrid([
+      { label: "Toplam dokunuş", value: (s.taps || 0).toLocaleString("tr-TR") },
+      { label: "Toplam kazanç", value: formatMoney(s.earned || 0) },
+      { label: "Kritik vuruş", value: (s.crits || 0).toLocaleString("tr-TR") },
+      { label: "Altın para", value: (s.golds || 0).toLocaleString("tr-TR") },
+      { label: "Çalışma süresi", value: s.workSec ? formatDuration(s.workSec) : "0d" },
+      { label: "Eşya yükseltme", value: (s.upgrades || 0).toLocaleString("tr-TR") },
+      { label: "Yenen yemek", value: (s.eats || 0).toLocaleString("tr-TR") },
+      { label: "Uyuma", value: (s.sleeps || 0).toLocaleString("tr-TR") },
+      { label: "Mama verme", value: (s.petFeeds || 0).toLocaleString("tr-TR") },
+      { label: "Oynanan kart", value: (s.scratches || 0).toLocaleString("tr-TR") },
+    ]);
+
+    addNote("✖️ Aktif çarpanlar");
+    var ev = activeEvent();
+    makeStatGrid([
+      { label: "Eğitim", value: "×" + eduMultiplier().toFixed(2) },
+      { label: "Ev eşyaları", value: "×" + homeMultiplier().toFixed(2) },
+      { label: "Miras", value: "×" + legacyMultiplier().toFixed(2) },
+      { label: "Etkinlik", value: ev ? "×" + ev.mult.toFixed(2) : "yok" },
+      { label: "Tık başına", value: formatMoney(tapValue()), wide: true },
+    ]);
+
+    addNote("Rekorlar prestijden etkilenmez; hepsi tüm hayatların toplamıdır.");
+  }
+
+  /* ---------- Seasonal events ---------- */
+  function buildEvents() {
+    var current = activeEvent();
+    els.panelSub.textContent = current
+      ? current.icon + " " + current.name + " sürüyor · kazanç ×" + current.mult
+      : "Şu an aktif etkinlik yok";
+
+    if (current) {
+      makeRow(current.icon, current.name, current.desc, { rowClass: "highlight" });
+    } else {
+      makeRow("🎉", "Hafta Sonu Bonusu", WEEKEND_EVENT.desc, { rowClass: "locked" });
+    }
+
+    addNote("📅 Yıl boyunca etkinlikler");
+    EVENTS.forEach(function (ev) {
+      var on = current && current.id === ev.id;
+      var when = ev.from[1] + "." + ev.from[0] + " – " + ev.to[1] + "." + ev.to[0];
+      makeRow(ev.icon, ev.name, on ? "Şu an aktif! · kazanç ×" + ev.mult : when + " · ×" + ev.mult + " · " + formatDays(msUntilEvent(ev)), {
+        rowClass: on ? "done" : "locked",
+      });
+    });
+    addNote("Etkinlik günlerinde hem tık kazancın hem de maaşın çarpanla artar. Hafta sonları her zaman ×1.25!");
+  }
+
   /* ---------- Achievements & prestige ---------- */
   function buildAchievements() {
     var unlocked = ACHIEVEMENTS.filter(function (a) {
@@ -1809,8 +2265,10 @@
     bumpStat("taps", 1);
     bumpStat("earned", earned);
     if (crit) bumpStat("crits", 1);
+    if (earned > (state.stats.bestTap || 0)) state.stats.bestTap = earned;
+    if (comboCount > (state.stats.bestCombo || 0)) state.stats.bestCombo = comboCount;
 
-    pushPill((crit ? "KRİTİK ×5  " : "") + "+ " + formatMoney(earned) + " 💰", false, crit);
+    pushPill((crit ? "KRİTİK ×" + critMultiplier() + "  " : "") + "+ " + formatMoney(earned) + " 💰", false, crit);
     characterBounce();
     flyCoin();
     levelUpIfReady();
@@ -1926,7 +2384,7 @@
 
   // Tapping anywhere on the room earns money; furniture, badges and icons keep their own actions.
   els.scene.addEventListener("click", function (e) {
-    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .room-item")) return;
+    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item")) return;
     var rect = els.scene.getBoundingClientRect();
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
@@ -1945,6 +2403,18 @@
   els.questBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("quests");
+  });
+  els.lotteryBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("lottery");
+  });
+  els.recordsBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("records");
+  });
+  els.eventBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("events");
   });
 
   Object.keys(UPGRADE_ELS).forEach(function (key) {
