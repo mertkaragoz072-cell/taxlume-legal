@@ -40,7 +40,12 @@
     floaters: document.getElementById("floaters"),
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
+    tapRingProgress: document.getElementById("tapRingProgress"),
+    questBtn: document.getElementById("questBtn"),
   };
+
+  var RING_CIRCUMFERENCE = 452;
+  var floaterStack = [];
 
   function loadState() {
     try {
@@ -83,17 +88,37 @@
     }, 1500);
   }
 
-  function spawnFloater(text, bad) {
+  function updateFloaterPositions() {
+    floaterStack.forEach(function (item, idx) {
+      item.el.style.bottom = idx * 34 + "px";
+      item.el.style.opacity = idx === 0 ? "1" : idx === 1 ? "0.6" : "0.3";
+      item.el.style.transform = "translate(-50%, 0) scale(" + (1 - idx * 0.08) + ")";
+    });
+  }
+
+  function pushPill(text, bad) {
     var el = document.createElement("div");
-    el.className = "floater" + (bad ? " bad" : "");
+    el.className = "floater-pill" + (bad ? " bad" : "");
     el.textContent = text;
-    var x = 30 + Math.random() * 40;
-    el.style.left = x + "%";
-    el.style.top = "30%";
+    el.style.bottom = "-40px";
+    el.style.opacity = "0";
     els.floaters.appendChild(el);
+
+    floaterStack.unshift({ el: el });
+    while (floaterStack.length > 3) {
+      var old = floaterStack.pop();
+      old.el.remove();
+    }
+    requestAnimationFrame(updateFloaterPositions);
+
     setTimeout(function () {
+      var idx = floaterStack.findIndex(function (item) {
+        return item.el === el;
+      });
+      if (idx !== -1) floaterStack.splice(idx, 1);
       el.remove();
-    }, 1000);
+      updateFloaterPositions();
+    }, 1600);
   }
 
   function fillClass(pct) {
@@ -122,6 +147,9 @@
 
     els.bedLabel.textContent = state.isSleeping ? "Uyandır" : "Yatak";
     els.zzz.classList.toggle("show", state.isSleeping);
+
+    els.tapRingProgress.style.strokeDashoffset =
+      (RING_CIRCUMFERENCE * (1 - state.energy / 100)).toFixed(1);
   }
 
   function levelUpIfReady() {
@@ -159,7 +187,7 @@
     state.energy = clamp(state.energy - TAP_ENERGY_COST, 0, 100);
     state.xp += TAP_XP_GAIN;
 
-    spawnFloater("+$" + earned, false);
+    pushPill("+ $" + earned + " 💰", false);
     levelUpIfReady();
     render();
     saveState();
@@ -195,7 +223,7 @@
     }
     state.money -= FOOD_COST;
     state.hunger = clamp(state.hunger + FOOD_HUNGER_GAIN, 0, 100);
-    spawnFloater("+" + FOOD_HUNGER_GAIN + " 🍗", false);
+    pushPill("+" + FOOD_HUNGER_GAIN + " 🍗", false);
     showToast("Karnını doyurdun!");
     render();
     saveState();
@@ -230,6 +258,9 @@
   els.tapBtn.addEventListener("click", onTap);
   els.bedBtn.addEventListener("click", onBed);
   els.fridgeBtn.addEventListener("click", onFridge);
+  els.questBtn.addEventListener("click", function () {
+    showToast("Görevler yakında geliyor!");
+  });
 
   var navButtons = document.querySelectorAll(".nav-btn");
   navButtons.forEach(function (btn) {

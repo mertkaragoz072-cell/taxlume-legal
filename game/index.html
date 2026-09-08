@@ -38,22 +38,79 @@
     </div>
   </div>
 
+  <div class="topstrip"></div>
+
   <div class="scene" id="scene">
-    <div class="floaters" id="floaters"></div>
+
+    <button class="quest-icon" id="questBtn" aria-label="Görevler">
+      <svg viewBox="0 0 24 24" width="22" height="22">
+        <rect x="5" y="3" width="14" height="18" rx="2" fill="#fff" stroke="#7a5228" stroke-width="1.2"/>
+        <rect x="9" y="1.5" width="6" height="3" rx="1.2" fill="#7a5228"/>
+        <path d="M7.5 8.5 8.7 9.7 10.5 7.4" stroke="#3fb950" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="12" y1="8.5" x2="16.5" y2="8.5" stroke="#c7c7c7" stroke-width="1.2"/>
+        <path d="M7.5 13 8.7 14.2 10.5 11.9" stroke="#3fb950" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="12" y1="13" x2="16.5" y2="13" stroke="#c7c7c7" stroke-width="1.2"/>
+        <path d="M7 17 9 19 M9 17 7 19" stroke="#ef4444" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="12" y1="17.5" x2="16.5" y2="17.5" stroke="#c7c7c7" stroke-width="1.2"/>
+      </svg>
+    </button>
 
     <div class="tap-wrap">
+      <div class="tap-stack" id="floaters"></div>
+      <svg class="tap-ring" id="tapRing" viewBox="0 0 160 160" width="160" height="160">
+        <circle cx="80" cy="80" r="72" fill="none" stroke="#123018" stroke-width="10"/>
+        <circle id="tapRingProgress" cx="80" cy="80" r="72" fill="none" stroke="#f5c518" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="452" stroke-dashoffset="452"
+                transform="rotate(-90 80 80)"/>
+      </svg>
       <button class="tap-btn" id="tapBtn">
-        <span id="tapLabel">DOKUN</span>
+        <span id="tapLabel">TAP</span>
       </button>
     </div>
 
+    <div class="furniture plant" aria-hidden="true">
+      <svg viewBox="0 0 40 46" width="40" height="46">
+        <path d="M20 28c-2-9-9-7-11-15 7 0 11 5 11 15z" fill="#3a9d4a"/>
+        <path d="M20 28c2-11 11-9 12-19-8 1-12 8-12 19z" fill="#4cb85c"/>
+        <path d="M20 28c-1-7-7-5-8-13 6 0 8 4 8 13z" fill="#5fcf6f"/>
+        <path d="M9 28h22l-3 16H12z" fill="#b5651d"/>
+        <rect x="8" y="24" width="24" height="6" rx="1.5" fill="#8a4513"/>
+      </svg>
+    </div>
+
     <div class="furniture bed" id="bedBtn">
-      <div class="bed-icon">🛏️<span class="zzz" id="zzz">💤</span></div>
+      <div class="bed-wrap">
+        <div class="zzz-stack" id="zzz">
+          <span>z</span><span>z</span><span>Z</span>
+        </div>
+        <svg viewBox="0 0 120 92" width="128" height="98">
+          <rect x="6" y="62" width="108" height="9" rx="2" fill="#7a4a22"/>
+          <rect x="4" y="8" width="15" height="72" rx="4" fill="#8a5a2c"/>
+          <circle cx="11.5" cy="12" r="4" fill="#6b4420"/>
+          <circle cx="11.5" cy="22" r="3" fill="#6b4420"/>
+          <rect x="101" y="26" width="15" height="54" rx="4" fill="#8a5a2c"/>
+          <circle cx="108.5" cy="30" r="3.5" fill="#6b4420"/>
+          <rect x="19" y="34" width="86" height="32" rx="6" fill="#5aa7e0"/>
+          <rect x="19" y="58" width="86" height="8" rx="3" fill="#f5c518"/>
+          <rect x="17" y="24" width="30" height="18" rx="6" fill="#fbfbfb" stroke="#e3e3e3" stroke-width="1"/>
+        </svg>
+      </div>
       <div class="furniture-label" id="bedLabel">Yatak</div>
     </div>
 
     <div class="furniture fridge" id="fridgeBtn">
-      <div class="fridge-icon">🧊</div>
+      <svg viewBox="0 0 90 132" width="82" height="120">
+        <rect x="4" y="4" width="82" height="124" rx="10" fill="#8fe0da" stroke="#4fb3ab" stroke-width="3"/>
+        <line x1="4" y1="44" x2="86" y2="44" stroke="#4fb3ab" stroke-width="3"/>
+        <rect x="72" y="12" width="6" height="20" rx="3" fill="#3a8f88"/>
+        <rect x="72" y="54" width="6" height="46" rx="3" fill="#3a8f88"/>
+        <g transform="translate(28,60) rotate(-6)">
+          <rect width="20" height="16" fill="#f7d34a" stroke="#d8ad1e" stroke-width="1"/>
+        </g>
+        <g transform="translate(40,78) rotate(4)">
+          <rect width="18" height="15" fill="#f7d34a" stroke="#d8ad1e" stroke-width="1"/>
+        </g>
+      </svg>
       <div class="furniture-label">Buzdolabı</div>
     </div>
 
@@ -61,12 +118,30 @@
   </div>
 
   <div class="navbar">
-    <button class="nav-btn active" data-nav="home">🏠</button>
-    <button class="nav-btn" data-nav="school">🎓</button>
-    <button class="nav-btn" data-nav="job">💼</button>
-    <button class="nav-btn" data-nav="bank">🏦</button>
-    <button class="nav-btn" data-nav="shop">🛒</button>
-    <button class="nav-btn" data-nav="world">🌍</button>
+    <button class="nav-btn active" data-nav="home">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z" fill="currentColor"/></svg>
+    </button>
+    <button class="nav-btn" data-nav="school">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3 2 8l10 5 10-5-10-5z" fill="currentColor"/><path d="M6 10.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="21" y1="9" x2="21" y2="16" stroke="currentColor" stroke-width="1.6"/></svg>
+    </button>
+    <button class="nav-btn" data-nav="job">
+      <svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="7" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="3" y1="12.5" x2="21" y2="12.5" stroke="currentColor" stroke-width="1.8"/></svg>
+    </button>
+    <button class="nav-btn" data-nav="bank">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 10 12 4l9 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="4" y="10" width="2.4" height="9" fill="currentColor"/><rect x="10.8" y="10" width="2.4" height="9" fill="currentColor"/><rect x="17.6" y="10" width="2.4" height="9" fill="currentColor"/><rect x="3" y="19" width="18" height="2" fill="currentColor"/></svg>
+    </button>
+    <button class="nav-btn" data-nav="shop">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 5h2l1.6 10.2A2 2 0 0 0 9.6 17h8.2a2 2 0 0 0 2-1.6L21 8H6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20.5" r="1.4" fill="currentColor"/><circle cx="18" cy="20.5" r="1.4" fill="currentColor"/></svg>
+    </button>
+    <button class="nav-btn" data-nav="world">
+      <svg viewBox="0 0 24 24" width="22" height="22">
+        <path d="M7 4h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4z" fill="currentColor"/>
+        <path d="M7 5H4a3 3 0 0 0 3 4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M17 5h3a3 3 0 0 1-3 4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <rect x="10.5" y="12" width="3" height="4" fill="currentColor"/>
+        <rect x="8" y="18" width="8" height="2" rx="1" fill="currentColor"/>
+      </svg>
+    </button>
   </div>
 
   <div class="toast" id="toast"></div>
