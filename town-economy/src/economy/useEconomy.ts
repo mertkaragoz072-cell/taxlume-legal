@@ -405,6 +405,7 @@ type Action =
       direction: CaravanDirection;
       qty: number;
       insured: boolean;
+      tariffDiscountBonus?: number;
     }
   | { type: "TOGGLE_PAUSE" }
   | { type: "RESET"; difficulty: DifficultyId; ngPlusModifiers?: string[] }
@@ -440,7 +441,8 @@ type Action =
   | { type: "SET_LANGUAGE"; language: Language }
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
-  | { type: "ACTIVATE_SPEED_BOOST" };
+  | { type: "ACTIVATE_SPEED_BOOST" }
+  | { type: "DISMISS_DAILY_BONUS" };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -575,6 +577,7 @@ export function initialState(
     weeklyChallenge: null,
     activeNgPlusModifiers: ngPlusModifierIds,
     speedBoostExpiresAt: null,
+    dailyBonusPending: null,
   };
 }
 
@@ -1353,7 +1356,12 @@ export function sendCaravan(
   goodId: GoodId,
   direction: CaravanDirection,
   qty: number,
-  insureRequested: boolean
+  insureRequested: boolean,
+  // A one-off tariff cut for this caravan only, won by tapping "stop" near
+  // the sweet spot in the bargaining mini-game (see BargainingModal.tsx) —
+  // 0 by every existing caller, never stored, never affects the town's
+  // actual tariffRate for the next trade.
+  tariffDiscountBonus = 0
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
   const town = TOWNS_BY_ID[townId];
@@ -1367,7 +1375,7 @@ export function sendCaravan(
   const townsTradedToday = state.dailyProgress.townsTraded.includes(townId)
     ? state.dailyProgress.townsTraded
     : [...state.dailyProgress.townsTraded, townId];
-  const tariffRate = effectiveTariffRate(state, town);
+  const tariffRate = effectiveTariffRate(state, town) * (1 - clamp(tariffDiscountBonus, 0, 1));
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
   if (direction === "export") {
@@ -1617,6 +1625,9 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     streak: { count, lastOpenedDate: today },
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    // The reward wheel modal spins to reveal this once the player next sees
+    // the app; dismissDailyBonus clears it after they've watched it land.
+    dailyBonusPending: bonus,
     // A genuinely new day (this function only reaches here when one
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),
@@ -2305,7 +2316,15 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
     case "TRADE_ASSET":
       return tradeAsset(state, action.assetId, action.side, action.qty);
     case "SEND_CARAVAN":
-      return sendCaravan(state, action.townId, action.goodId, action.direction, action.qty, action.insured);
+      return sendCaravan(
+        state,
+        action.townId,
+        action.goodId,
+        action.direction,
+        action.qty,
+        action.insured,
+        action.tariffDiscountBonus ?? 0
+      );
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "ACTIVATE_SPEED_BOOST":
@@ -2370,6 +2389,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return offlineAdvance(state, action.ticks, action.elapsedMs);
     case "DISMISS_OFFLINE_SUMMARY":
       return dismissOfflineSummary(state);
+    case "DISMISS_DAILY_BONUS":
+      return state.dailyBonusPending === null ? state : { ...state, dailyBonusPending: null };
     case "RESOLVE_DECISION":
       return resolveDecision(state, action.optionId);
     case "RESOLVE_REQUEST":
@@ -2449,8 +2470,14 @@ export function useEconomy() {
     []
   );
   const sendCaravan_ = useCallback(
-    (townId: TownId, goodId: GoodId, direction: CaravanDirection, qty: number, insured: boolean) =>
-      dispatch({ type: "SEND_CARAVAN", townId, goodId, direction, qty, insured }),
+    (
+      townId: TownId,
+      goodId: GoodId,
+      direction: CaravanDirection,
+      qty: number,
+      insured: boolean,
+      tariffDiscountBonus?: number
+    ) => dispatch({ type: "SEND_CARAVAN", townId, goodId, direction, qty, insured, tariffDiscountBonus }),
     []
   );
   const togglePause = useCallback(() => dispatch({ type: "TOGGLE_PAUSE" }), []);
@@ -2511,6 +2538,7 @@ export function useEconomy() {
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
+  const dismissDailyBonus = useCallback(() => dispatch({ type: "DISMISS_DAILY_BONUS" }), []);
   const resolveDecision_ = useCallback(
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
     []
@@ -2572,6 +2600,7 @@ export function useEconomy() {
     tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
+    dismissDailyBonus,
     resolveDecision: resolveDecision_,
     resolveRequest,
     resolveRivalOffer: resolveRivalOffer_,

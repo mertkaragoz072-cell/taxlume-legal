@@ -11,7 +11,9 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
+import { ComboBanner } from "./src/components/ComboBanner";
 import { ConfettiBurst } from "./src/components/ConfettiBurst";
+import { DailyRewardWheelModal } from "./src/components/DailyRewardWheelModal";
 import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
@@ -60,12 +62,17 @@ if (typeof window !== "undefined") {
 // before swapping to its real typeface.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// Trade-streak milestones that pop the combo banner — see the effect
+// watching state.tradeStreak below.
+const COMBO_MILESTONES = [3, 5, 8, 12, 20];
+
 function Game() {
   const {
     state,
     togglePause,
     reset,
     dismissOfflineSummary,
+    dismissDailyBonus,
     resolveDecision,
     resolveRequest,
     resolveRivalOffer,
@@ -88,6 +95,23 @@ function Game() {
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const prevAchievementCount = useRef(state.unlockedAchievements.length);
   const prevPrestigeLevel = useRef(state.prestigeLevel);
+
+  // A trade streak crossing a milestone earns a brief, self-dismissing
+  // combo banner — purely a celebratory flourish over the existing
+  // tradeStreak stat, no economy effect.
+  const prevTradeStreak = useRef(state.tradeStreak);
+  const comboIdRef = useRef(0);
+  const [comboEvent, setComboEvent] = useState<{ id: number; count: number } | null>(null);
+  useEffect(() => {
+    const prev = prevTradeStreak.current;
+    prevTradeStreak.current = state.tradeStreak;
+    if (state.tradeStreak > prev && COMBO_MILESTONES.includes(state.tradeStreak)) {
+      comboIdRef.current += 1;
+      setComboEvent({ id: comboIdRef.current, count: state.tradeStreak });
+      sounds.playSuccess();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.tradeStreak]);
 
   useLocalNotifications(state);
 
@@ -172,6 +196,7 @@ function Game() {
           onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
         />
         <EventBanner event={state.lastEvent} />
+        <ComboBanner event={comboEvent} />
         <ConfettiBurst trigger={confettiTrigger} />
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
@@ -229,6 +254,15 @@ function Game() {
         <SpeedBoostModal
           visible={speedBoostModalVisible}
           onClose={() => setSpeedBoostModalVisible(false)}
+          sounds={sounds}
+        />
+
+        <DailyRewardWheelModal
+          visible={!state.offlineSummary && !tutorialVisible && state.dailyBonusPending !== null}
+          amount={state.dailyBonusPending ?? 0}
+          streakCount={state.streak.count}
+          onDismiss={dismissDailyBonus}
+          onRevealed={() => setConfettiTrigger((n) => n + 1)}
           sounds={sounds}
         />
       </View>

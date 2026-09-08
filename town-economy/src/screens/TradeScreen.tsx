@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
+import { BargainingModal } from "../components/BargainingModal";
 import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
@@ -44,6 +45,10 @@ interface Props {
 }
 
 type QtyOption = 1 | 5 | "ALL";
+
+// Chance a caravan send offers the bargaining mini-game instead of sending
+// straight away — occasional enough to feel like a surprise, not a chore.
+const BARGAIN_CHANCE = 0.35;
 
 const REGULAR_TOWNS = TOWNS.filter((tn) => tn.tier === "town");
 const METROPOLISES = TOWNS.filter((tn) => tn.tier === "metropol");
@@ -98,6 +103,14 @@ export function TradeScreen({ sounds }: Props) {
   const [contractTermDays, setContractTermDays] = useState(CONTRACT_TERM_DAY_STEPS[0]);
   const [bulkQty, setBulkQty] = useState<1 | 5 | 10>(5);
   const [bulkTermDays, setBulkTermDays] = useState(BULK_CONTRACT_TERM_DAY_STEPS[0]);
+  const [bargainVisible, setBargainVisible] = useState(false);
+  const [pendingCaravan, setPendingCaravan] = useState<{
+    townId: TownId;
+    goodId: GoodId;
+    direction: CaravanDirection;
+    qty: number;
+    insured: boolean;
+  } | null>(null);
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
@@ -148,6 +161,7 @@ export function TradeScreen({ sounds }: Props) {
   const canAffordInsurance = state.cash + 0.001 >= cashNeededForInsurance;
 
   return (
+    <>
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       {state.caravans.length > 0 && (
         <View style={styles.roadBanner}>
@@ -484,6 +498,11 @@ export function TradeScreen({ sounds }: Props) {
         <ScalePressable
           disabled={disabled}
           onPress={() => {
+            if (Math.random() < BARGAIN_CHANCE) {
+              setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
+              setBargainVisible(true);
+              return;
+            }
             sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
             if (direction === "export") sounds.playSell();
             else sounds.playBuy();
@@ -774,6 +793,26 @@ export function TradeScreen({ sounds }: Props) {
           );
         })}
     </ScrollView>
+    <BargainingModal
+      visible={bargainVisible}
+      onResolve={(bonus) => {
+        if (pendingCaravan) {
+          sendCaravan(
+            pendingCaravan.townId,
+            pendingCaravan.goodId,
+            pendingCaravan.direction,
+            pendingCaravan.qty,
+            pendingCaravan.insured,
+            bonus
+          );
+          if (pendingCaravan.direction === "export") sounds.playSell();
+          else sounds.playBuy();
+        }
+        setBargainVisible(false);
+        setPendingCaravan(null);
+      }}
+    />
+    </>
   );
 }
 

@@ -368,6 +368,12 @@ export interface EconomyState {
    * useEconomy.ts. Wall-clock time, not tick-based, since the point is a
    * real-world timer independent of how fast the game itself is ticking. */
   speedBoostExpiresAt: number | null;
+  /** the amount just granted by today's check-in bonus (see dailyCheckIn in
+   * useEconomy.ts), already added to cash — non-null only until the player
+   * has seen the daily reward wheel reveal it, then dismissDailyBonus clears
+   * it back to null. The wheel is a spin-to-reveal animation over an amount
+   * that's already fixed by the streak-based formula, not real randomness. */
+  dailyBonusPending: number | null;
 }
 
 export interface WeeklyChallenge {
