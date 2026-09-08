@@ -106,6 +106,7 @@ export function BargainingModal({ visible, onResolve }: Props) {
 
           <View style={styles.barTrack}>
             <View style={styles.goodZone} />
+            <View style={styles.perfectZoneHalo} />
             <View style={styles.perfectZone} />
             <Animated.View style={[styles.marker, { left: markerLeft }]} />
           </View>
@@ -174,25 +175,43 @@ const styles = StyleSheet.create({
   },
   goodZone: {
     position: "absolute",
-    left: BAR_WIDTH * 0.325,
-    width: BAR_WIDTH * 0.35,
-    height: "100%",
-    backgroundColor: "rgba(224, 161, 63, 0.28)",
+    left: BAR_WIDTH * 0.3,
+    width: BAR_WIDTH * 0.4,
+    height: "70%",
+    top: "15%",
+    borderRadius: 999,
+    backgroundColor: "rgba(224, 161, 63, 0.14)",
+  },
+  perfectZoneHalo: {
+    position: "absolute",
+    left: BAR_WIDTH * 0.4,
+    width: BAR_WIDTH * 0.2,
+    height: "88%",
+    top: "6%",
+    borderRadius: 999,
+    backgroundColor: "rgba(95, 216, 132, 0.14)",
   },
   perfectZone: {
     position: "absolute",
     left: BAR_WIDTH * 0.44,
     width: BAR_WIDTH * 0.12,
-    height: "100%",
-    backgroundColor: "rgba(95, 216, 132, 0.35)",
+    height: "70%",
+    top: "15%",
+    borderRadius: 999,
+    backgroundColor: "rgba(95, 216, 132, 0.24)",
   },
   marker: {
     position: "absolute",
     width: MARKER_SIZE,
     height: MARKER_SIZE,
     borderRadius: MARKER_SIZE / 2,
-    backgroundColor: "#ffd75e",
+    backgroundColor: COLORS.accent,
     top: 7,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
   },
   resultText: {
     fontSize: TYPE.label,

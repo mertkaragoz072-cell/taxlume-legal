@@ -85,6 +85,7 @@ export function DailyRewardWheelModal({ visible, amount, streakCount, onDismiss,
                 </View>
               ))}
             </Animated.View>
+            <View style={styles.hubHalo} />
             <View style={styles.hub} />
           </View>
 
@@ -132,23 +133,27 @@ const styles = StyleSheet.create({
   },
   pointer: {
     position: "absolute",
-    top: -6,
+    top: -4,
     zIndex: 2,
     width: 0,
     height: 0,
-    borderLeftWidth: 9,
-    borderRightWidth: 9,
-    borderTopWidth: 14,
+    borderLeftWidth: 7,
+    borderRightWidth: 7,
+    borderTopWidth: 11,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderTopColor: "#ffd75e",
+    borderTopColor: COLORS.accent,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 0 },
   },
   wheel: {
     width: WHEEL_RADIUS * 2,
     height: WHEEL_RADIUS * 2,
     borderRadius: WHEEL_RADIUS,
     backgroundColor: "#1a1410",
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: "#3a2d1e",
   },
   chip: {
@@ -157,18 +162,25 @@ const styles = StyleSheet.create({
     height: CHIP_SIZE,
     borderRadius: CHIP_SIZE / 2,
     backgroundColor: "#2a2016",
-    borderWidth: 2,
-    borderColor: withAlpha("#ffd75e", 0.35),
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.22),
     alignItems: "center",
     justifyContent: "center",
   },
   chipIcon: { fontSize: 16 },
+  hubHalo: {
+    position: "absolute",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: withAlpha(COLORS.accent, 0.18),
+  },
   hub: {
     position: "absolute",
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#ffd75e",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.accent,
   },
   wonTitle: { color: "#ffd75e", fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   wonAmount: {
