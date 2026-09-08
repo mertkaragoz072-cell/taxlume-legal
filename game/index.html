@@ -68,8 +68,11 @@
       </button>
       <svg viewBox="0 0 40 46" width="60" height="69">
         <path id="plantLeaf1" d="M20 28c-2-9-9-7-11-15 7 0 11 5 11 15z" fill="#3a9d4a"/>
+        <path d="M18 26c-2-6-6-8-8-12" stroke="#2a7d38" stroke-width="0.6" fill="none" opacity="0.5"/>
         <path id="plantLeaf2" d="M20 28c2-11 11-9 12-19-8 1-12 8-12 19z" fill="#4cb85c"/>
+        <path d="M20.5 25c1-8 6-11 9-16" stroke="#3a9d4a" stroke-width="0.6" fill="none" opacity="0.5"/>
         <path id="plantLeaf3" d="M20 28c-1-7-7-5-8-13 6 0 8 4 8 13z" fill="#5fcf6f"/>
+        <path d="M19 25c-1-5-4-6-6-10" stroke="#4cb85c" stroke-width="0.5" fill="none" opacity="0.5"/>
         <g class="tierMin3">
           <path id="plantLeaf4" d="M20 28c3-8 10-6 13-12-6 0-11 4-13 12z" fill="#5fcf6f" opacity="0.9"/>
           <path id="plantLeaf5" d="M20 28c-3-6-9-4-12-9 5-1 10 2 12 9z" fill="#4cb85c" opacity="0.9"/>
@@ -82,10 +85,13 @@
         </g>
         <g class="tierMax2">
           <path id="plantPotBody" d="M9 28h22l-3 16H12z" fill="#b5651d"/>
+          <path d="M12 30l-1 11" stroke="#fff" stroke-width="1" opacity="0.18" fill="none"/>
           <rect id="plantPotRim" x="8" y="24" width="24" height="6" rx="1.5" fill="#8a4513"/>
+          <rect x="8" y="24" width="24" height="1.5" rx="0.7" fill="#fff" opacity="0.2"/>
         </g>
         <g class="tierMin3">
           <path id="plantPotBodyModern" d="M9 28h22l-2 15a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2z" fill="#8f8f96"/>
+          <path d="M12 31l-1 10" stroke="#fff" stroke-width="1" opacity="0.22" fill="none"/>
           <rect id="plantPotRimModern" x="8" y="25" width="24" height="5" rx="2" fill="#5c5c63"/>
           <rect class="tierMin4" x="8" y="25" width="24" height="1.4" fill="#ffe066" opacity="0.9"/>
         </g>
@@ -114,6 +120,9 @@
               <stop offset="0%" stop-color="#ffffff"/>
               <stop offset="100%" stop-color="#dcdfe2"/>
             </linearGradient>
+            <pattern id="fabricWeave" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#ffffff" stroke-opacity="0.09" stroke-width="1"/>
+            </pattern>
           </defs>
           <ellipse cx="60" cy="90" rx="56" ry="4" fill="#000" opacity="0.18"/>
 
@@ -154,10 +163,15 @@
           </g>
 
           <rect x="6" y="62" width="108" height="9" rx="2" fill="url(#woodGrad)"/>
+          <rect x="6" y="62" width="108" height="2" rx="1" fill="#fff" opacity="0.2"/>
+          <line x1="12" y1="65" x2="108" y2="65" stroke="#5c3a1a" stroke-width="0.6" opacity="0.3"/>
+          <line x1="12" y1="68" x2="108" y2="68" stroke="#5c3a1a" stroke-width="0.6" opacity="0.25"/>
           <g class="tierMin4 bed-led">
             <rect x="10" y="72.5" width="100" height="2.2" rx="1.1" fill="#4fd8ff" opacity="0.9"/>
           </g>
           <rect x="19" y="34" width="86" height="32" rx="6" fill="url(#blanketGrad)"/>
+          <rect x="19" y="34" width="86" height="32" rx="6" fill="url(#fabricWeave)"/>
+          <rect x="19" y="34" width="86" height="10" rx="6" fill="#fff" opacity="0.12"/>
           <path d="M30 36c4 6 4 20 0 28" stroke="#2f74ad" stroke-width="1.4" fill="none" opacity="0.45"/>
           <path d="M55 34c4 8 4 22 0 32" stroke="#2f74ad" stroke-width="1.4" fill="none" opacity="0.45"/>
           <path d="M80 36c4 6 4 20 0 28" stroke="#2f74ad" stroke-width="1.4" fill="none" opacity="0.45"/>
@@ -172,6 +186,8 @@
           </g>
           <rect x="17" y="24" width="30" height="18" rx="6" fill="url(#pillowGrad)" stroke="#cfd2d6" stroke-width="1"/>
           <path d="M20 30c4-2 8-2 12 0" stroke="#c9ccd0" stroke-width="1" fill="none" opacity="0.7"/>
+          <path d="M22 36c4-2 8-2 12 0" stroke="#c9ccd0" stroke-width="0.8" fill="none" opacity="0.5"/>
+          <rect x="19" y="26" width="10" height="3" rx="1.5" fill="#fff" opacity="0.5"/>
         </svg>
       </div>
     </div>
@@ -191,14 +207,20 @@
             <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
             <stop offset="18%" stop-color="#ffffff" stop-opacity="0"/>
           </linearGradient>
+          <pattern id="metalBrush" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+            <line x1="0" y1="0" x2="0" y2="5" stroke="#ffffff" stroke-opacity="0.07" stroke-width="1"/>
+          </pattern>
         </defs>
         <ellipse cx="45" cy="129" rx="34" ry="4.5" fill="#000" opacity="0.18"/>
         <rect x="14" y="122" width="6" height="7" rx="1.5" fill="#3a5a58"/>
         <rect x="70" y="122" width="6" height="7" rx="1.5" fill="#3a5a58"/>
         <rect id="fridgeBodyStroke" x="4" y="4" width="82" height="124" rx="10" fill="url(#fridgeGrad)" stroke="#4fb3ab" stroke-width="3"/>
+        <rect x="4" y="4" width="82" height="124" rx="10" fill="url(#metalBrush)"/>
         <rect x="4" y="4" width="82" height="124" rx="10" fill="url(#doorGrad)"/>
         <line id="fridgeDivider" x1="4" y1="44" x2="86" y2="44" stroke="#4fb3ab" stroke-width="3"/>
+        <rect x="4" y="42" width="82" height="4" fill="#000" opacity="0.08"/>
         <rect x="9" y="9" width="8" height="28" rx="4" fill="#ffffff" opacity="0.25"/>
+        <rect x="9" y="70" width="5" height="18" rx="2.5" fill="#ffffff" opacity="0.15"/>
         <g class="tierMax3 fridge-handles">
           <rect id="fridgeHandle1" x="70" y="10" width="8" height="20" rx="4" fill="#2f7570"/>
           <rect x="71" y="11.5" width="2.5" height="17" rx="1.2" fill="#ffffff" opacity="0.35"/>
