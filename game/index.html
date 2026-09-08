@@ -21,6 +21,7 @@
     <div class="day-pill">
       <span id="dayText">Gün 1</span>
     </div>
+    <button class="mute-btn" id="muteBtn" aria-label="Ses">🔊</button>
   </div>
 
   <div class="statsbar">
@@ -719,6 +720,29 @@
   </div>
 
   <div class="toast" id="toast"></div>
+  <div class="sheet" id="buySheet">
+    <div class="sheet-panel">
+      <div class="buy-head">
+        <div class="buy-title" id="buyTitle">Yükselt</div>
+        <button class="shop-close" id="buyClose" aria-label="Kapat">✕</button>
+      </div>
+      <div class="buy-compare">
+        <div class="buy-col">
+          <div class="buy-label">Şu an</div>
+          <div class="preview" id="buyPrevNow"></div>
+          <div class="buy-cap" id="buyCapNow"></div>
+        </div>
+        <div class="buy-arrow">➜</div>
+        <div class="buy-col next">
+          <div class="buy-label">Yeni model</div>
+          <div class="preview" id="buyPrevNext"></div>
+          <div class="buy-cap" id="buyCapNext"></div>
+        </div>
+      </div>
+      <div class="buy-stats" id="buyStats"></div>
+      <button class="buy-btn" id="buyConfirm">Satın Al</button>
+    </div>
+  </div>
   <div class="fx-layer" id="fxLayer"></div>
   <div class="reward-card" id="rewardCard">
     <div class="reward-icon" id="rewardIcon"></div>

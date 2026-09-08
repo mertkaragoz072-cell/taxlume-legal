@@ -34,6 +34,7 @@
     furniture: { bed: 1, fridge: 1, plant: 1 },
     items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0 },
     taps: 0,
+    muted: false,
     lastSeen: Date.now(),
   };
 
@@ -99,6 +100,16 @@
     rewardIcon: document.getElementById("rewardIcon"),
     rewardTitle: document.getElementById("rewardTitle"),
     rewardSub: document.getElementById("rewardSub"),
+    muteBtn: document.getElementById("muteBtn"),
+    buySheet: document.getElementById("buySheet"),
+    buyTitle: document.getElementById("buyTitle"),
+    buyClose: document.getElementById("buyClose"),
+    buyPrevNow: document.getElementById("buyPrevNow"),
+    buyPrevNext: document.getElementById("buyPrevNext"),
+    buyCapNow: document.getElementById("buyCapNow"),
+    buyCapNext: document.getElementById("buyCapNext"),
+    buyStats: document.getElementById("buyStats"),
+    buyConfirm: document.getElementById("buyConfirm"),
     plantBtn: document.getElementById("plantBtn"),
     bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
     bedCost: document.getElementById("bedCost"),
@@ -438,32 +449,7 @@
   }
 
   function upgradeItem(key) {
-    var item = SHOP_ITEMS[key];
-    var level = state.items[key];
-    if (level >= item.maxLevel) {
-      showToast(item.name + " zaten maksimum seviyede!");
-      return;
-    }
-    var cost = itemCost(key);
-    if (state.money < cost) {
-      showToast("Yetersiz para! Gerekli: " + formatMoney(cost));
-      return;
-    }
-    state.money -= cost;
-    state.items[key] = level + 1;
-
-    var tierBefore = itemTier(level);
-    var tierAfter = itemTier(level + 1);
-    if (level === 0) {
-      celebrate(item.icon, item.name + " alındı!", "+%" + Math.round(item.bonus * 100) + " kazanç");
-    } else if (tierAfter !== tierBefore) {
-      celebrate(item.icon, item.name + " yenilendi!", ITEM_TIER_NAMES[tierAfter] + " model · kazanç arttı");
-    } else {
-      showToast(item.name + " seviye " + (level + 1) + "! Kazanç arttı.");
-    }
-    render();
-    if (els.shop.classList.contains("open")) renderShop();
-    saveState();
+    openBuySheet("item", key);
   }
 
   function openShop() {
@@ -608,6 +594,313 @@
   function renderAvatar() {
     var mult = homeMultiplier();
     els.avatar.textContent = mult < 1.5 ? "🧑" : mult < 2.5 ? "🧑‍💼" : mult < 4 ? "🤵" : "👑";
+    els.muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  }
+
+  /* ---------- Sound effects (synthesised, no assets) ---------- */
+  var audioCtx = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        audioCtx = null;
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function tone(freq, at, dur, type, gain) {
+    if (!audioCtx || state.muted) return;
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, at);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(gain || 0.15, at + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(at);
+    osc.stop(at + dur + 0.03);
+  }
+
+  var sfx = {
+    tap: function () {
+      if (!ensureAudio()) return;
+      tone(900, audioCtx.currentTime, 0.05, "triangle", 0.06);
+    },
+    purchase: function () {
+      if (!ensureAudio()) return;
+      var t = audioCtx.currentTime;
+      tone(523, t, 0.1, "triangle", 0.14);
+      tone(659, t + 0.1, 0.1, "triangle", 0.14);
+      tone(784, t + 0.2, 0.1, "triangle", 0.14);
+      tone(1046, t + 0.3, 0.3, "triangle", 0.16);
+    },
+    coin: function () {
+      if (!ensureAudio()) return;
+      var t = audioCtx.currentTime;
+      tone(1046, t, 0.08, "square", 0.06);
+      tone(1568, t + 0.08, 0.16, "square", 0.06);
+    },
+    deny: function () {
+      if (!ensureAudio()) return;
+      var t = audioCtx.currentTime;
+      tone(220, t, 0.14, "sawtooth", 0.08);
+      tone(170, t + 0.14, 0.2, "sawtooth", 0.08);
+    },
+  };
+
+  /* ---------- Purchase sheet: see the old model, the new model, pay, replace ---------- */
+  var buyCtx = null;
+
+  var PREVIEW_PAINT = {
+    bed: [
+      ["woodStop1", "stop-color", ["wood", 0]], ["woodStop2", "stop-color", ["wood", 1]],
+      ["blanketStop1", "stop-color", ["blanket", 0]], ["blanketStop2", "stop-color", ["blanket", 1]],
+      ["bedTrim", "fill", ["trim"]], ["bedKnob1", "fill", ["knob"]], ["bedKnob2", "fill", ["knob"]], ["bedKnob3", "fill", ["knob"]],
+    ],
+    fridge: [
+      ["fridgeStop1", "stop-color", ["body", 0]], ["fridgeStop2", "stop-color", ["body", 1]], ["fridgeStop3", "stop-color", ["body", 2]],
+      ["fridgeHandle1", "fill", ["handle"]], ["fridgeHandle2", "fill", ["handle"]],
+      ["fridgeBodyStroke", "stroke", ["handle"]], ["fridgeDivider", "stroke", ["handle"]],
+    ],
+    plant: [
+      ["plantLeaf1", "fill", ["leaf", 0]], ["plantLeaf2", "fill", ["leaf", 1]], ["plantLeaf3", "fill", ["leaf", 2]],
+      ["plantLeaf4", "fill", ["leaf", 2]], ["plantLeaf5", "fill", ["leaf", 1]],
+      ["plantPotBody", "fill", ["pot", 0]], ["plantPotBodyModern", "fill", ["pot", 0]],
+      ["plantPotRim", "fill", ["pot", 1]], ["plantPotRimModern", "fill", ["pot", 1]],
+    ],
+  };
+
+  function buildPreview(kind, key, level, container, suffix) {
+    container.textContent = "";
+    container.className = "preview";
+    if (level <= 0) {
+      var empty = document.createElement("div");
+      empty.className = "preview-empty";
+      empty.textContent = "Yok";
+      container.appendChild(empty);
+      return;
+    }
+    var tier = kind === "furniture" ? furnitureTier(level) : itemTier(level);
+    container.classList.add("tier-" + tier);
+    var src = kind === "furniture" ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
+    var svg = src ? src.querySelector("svg") : null;
+    if (!svg) {
+      var em = document.createElement("div");
+      em.className = "preview-emoji";
+      em.textContent = SHOP_ITEMS[key].icon;
+      container.appendChild(em);
+      return;
+    }
+    // Clone the item's art with unique ids so each preview keeps its own gradients/clips.
+    var html = svg.outerHTML
+      .replace(/id="([^"]+)"/g, 'id="$1' + suffix + '"')
+      .replace(/url\(#([^)]+)\)/g, "url(#$1" + suffix + ")");
+    container.insertAdjacentHTML("beforeend", html);
+    if (kind === "furniture") {
+      var palette = TIER_PALETTES[key][tier - 1];
+      PREVIEW_PAINT[key].forEach(function (rule) {
+        var node = container.querySelector("#" + rule[0] + suffix);
+        if (!node) return;
+        var value = palette[rule[2][0]];
+        if (rule[2].length > 1) value = value[rule[2][1]];
+        node.setAttribute(rule[1], value);
+      });
+    }
+  }
+
+  function purchaseInfo(kind, key) {
+    var isF = kind === "furniture";
+    var cfg = isF ? FURNITURE_CONFIG[key] : SHOP_ITEMS[key];
+    var level = isF ? state.furniture[key] : state.items[key];
+    var tierOf = isF ? furnitureTier : itemTier;
+    var names = isF ? FURNITURE_TIER_NAMES : ITEM_TIER_NAMES;
+    var maxed = level >= cfg.maxLevel;
+    return {
+      isF: isF,
+      cfg: cfg,
+      level: level,
+      maxed: maxed,
+      cost: maxed ? 0 : isF ? furnitureCost(key) : itemCost(key),
+      tierNow: tierOf(level),
+      tierNext: tierOf(level + 1),
+      names: names,
+      bonusNow: isF ? cfg.bonus * (level - 1) : cfg.bonus * level,
+      bonusNext: isF ? cfg.bonus * level : cfg.bonus * (level + 1),
+      levelsToNextTier: (function () {
+        for (var l = level + 1; l <= cfg.maxLevel; l++) if (tierOf(l) !== tierOf(level)) return l - level;
+        return 0;
+      })(),
+    };
+  }
+
+  function openBuySheet(kind, key) {
+    var info = purchaseInfo(kind, key);
+    if (info.maxed) {
+      showToast(info.cfg.name + " zaten en üst model!");
+      return;
+    }
+    buyCtx = { kind: kind, key: key };
+    var newModel = info.tierNext !== info.tierNow || (!info.isF && info.level === 0);
+    var isNew = !info.isF && info.level === 0;
+
+    els.buyTitle.textContent = isNew ? info.cfg.name + " satın al" : info.cfg.name + " yükselt";
+    buildPreview(kind, key, info.level, els.buyPrevNow, "_a");
+    buildPreview(kind, key, info.level + 1, els.buyPrevNext, "_b");
+    els.buyCapNow.textContent = info.level > 0 ? info.names[info.tierNow] + " · Sv " + info.level : "Sahip değilsin";
+    els.buyCapNext.textContent =
+      info.names[info.tierNext] + " · Sv " + (info.level + 1) + (newModel ? " · YENİ MODEL" : "");
+
+    var multNow = homeMultiplier();
+    var multNext = multNow + info.cfg.bonus;
+    var base = 100 + (state.level - 1) * 20;
+    els.buyStats.textContent = "";
+    var lines = [
+      "Kazanç bonusu: +%" + Math.round(info.bonusNow * 100) + " → +%" + Math.round(info.bonusNext * 100),
+      "Tık başına: " + formatMoney(Math.round(base * multNow)) + " → " + formatMoney(Math.round(base * multNext)),
+      "Çevrimdışı: " + formatMoney(Math.round(base * multNow * OFFLINE_EARN_RATE * 3600)) + "/sa → " + formatMoney(Math.round(base * multNext * OFFLINE_EARN_RATE * 3600)) + "/sa",
+    ];
+    if (!newModel && info.levelsToNextTier > 0) {
+      lines.push(info.levelsToNextTier + " seviye sonra: " + info.names[info.tierNow + 1] + " model");
+    }
+    lines.forEach(function (text, i) {
+      var div = document.createElement("div");
+      if (newModel && i === 0) {
+        var tag = document.createElement("span");
+        tag.className = "new-model";
+        tag.textContent = isNew ? "🆕 Yeni eşya  " : "✨ Üst model  ";
+        div.appendChild(tag);
+      }
+      div.appendChild(document.createTextNode(text));
+      els.buyStats.appendChild(div);
+    });
+
+    var poor = state.money < info.cost;
+    els.buyConfirm.textContent = (isNew ? "Satın Al · " : "Yükselt · ") + formatMoney(info.cost);
+    els.buyConfirm.classList.toggle("poor", poor);
+    els.buySheet.classList.add("open");
+  }
+
+  function closeBuySheet() {
+    els.buySheet.classList.remove("open");
+    buyCtx = null;
+  }
+
+  function spawnDust(node) {
+    var rect = node.getBoundingClientRect();
+    var scene = els.scene.getBoundingClientRect();
+    for (var i = 0; i < 8; i++) {
+      var d = document.createElement("span");
+      d.className = "dust";
+      d.style.left = rect.left - scene.left + rect.width / 2 - 7 + "px";
+      d.style.top = rect.bottom - scene.top - 10 + "px";
+      var angle = Math.PI + (i / 7) * Math.PI;
+      d.style.setProperty("--dx", Math.cos(angle) * (30 + Math.random() * 30) + "px");
+      d.style.setProperty("--dy", Math.sin(angle) * 22 - 6 + "px");
+      els.scene.appendChild(d);
+      (function (n) {
+        setTimeout(function () {
+          n.remove();
+        }, 700);
+      })(d);
+    }
+  }
+
+  function spawnNewTag(node) {
+    var tag = document.createElement("span");
+    tag.className = "new-tag";
+    tag.textContent = "YENİ!";
+    node.appendChild(tag);
+    setTimeout(function () {
+      tag.remove();
+    }, 2300);
+  }
+
+  var moneyAnim = null;
+  function animateMoney(from, to) {
+    var start = performance.now();
+    var dur = 700;
+    cancelAnimationFrame(moneyAnim);
+    function step(now) {
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      els.moneyText.textContent = formatMoney(from + (to - from) * eased);
+      if (p < 1) moneyAnim = requestAnimationFrame(step);
+    }
+    moneyAnim = requestAnimationFrame(step);
+
+    var drop = document.createElement("span");
+    drop.className = "money-drop";
+    drop.textContent = "−" + formatMoney(from - to);
+    var phone = els.phone.getBoundingClientRect();
+    var wallet = els.moneyText.getBoundingClientRect();
+    drop.style.left = wallet.left - phone.left + "px";
+    drop.style.top = wallet.bottom - phone.top + 2 + "px";
+    els.phone.appendChild(drop);
+    setTimeout(function () {
+      drop.remove();
+    }, 1000);
+  }
+
+  function confirmPurchase() {
+    if (!buyCtx) return;
+    var kind = buyCtx.kind;
+    var key = buyCtx.key;
+    var info = purchaseInfo(kind, key);
+    if (info.maxed) return closeBuySheet();
+    if (state.money < info.cost) {
+      sfx.deny();
+      showToast("Yetersiz para! Gerekli: " + formatMoney(info.cost));
+      return;
+    }
+
+    var moneyBefore = state.money;
+    state.money -= info.cost;
+    if (info.isF) state.furniture[key] += 1;
+    else state.items[key] += 1;
+    var newModel = info.tierNext !== info.tierNow || (!info.isF && info.level === 0);
+    var node = info.isF ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
+
+    closeBuySheet();
+    animateMoney(moneyBefore, state.money);
+    sfx.purchase();
+
+    function finish() {
+      render();
+      if (node) {
+        node.classList.remove("swap-out");
+        node.classList.add("swap-in");
+        spawnDust(node);
+        if (newModel) spawnNewTag(node);
+        setTimeout(function () {
+          node.classList.remove("swap-in");
+        }, 650);
+      }
+      if (newModel) {
+        celebrate(
+          info.isF ? "✨" : info.cfg.icon,
+          info.level === 0 && !info.isF ? info.cfg.name + " alındı!" : info.cfg.name + " yenilendi!",
+          info.names[info.tierNext] + " model · +%" + Math.round(info.bonusNext * 100) + " kazanç"
+        );
+      } else {
+        sfx.coin();
+        showToast(info.cfg.name + " seviye " + (info.level + 1) + "! Kazanç arttı.");
+      }
+      if (els.shop.classList.contains("open")) renderShop();
+      saveState();
+    }
+
+    if (node && info.level > 0) {
+      node.classList.add("swap-out");
+      setTimeout(finish, 270);
+    } else {
+      finish();
+    }
   }
 
   function levelUpIfReady() {
@@ -692,31 +985,7 @@
   }
 
   function onUpgrade(key) {
-    var cfg = FURNITURE_CONFIG[key];
-    var level = state.furniture[key];
-
-    if (level >= cfg.maxLevel) {
-      showToast(cfg.name + " zaten maksimum seviyede!");
-      return;
-    }
-
-    var cost = furnitureCost(key);
-    if (state.money < cost) {
-      showToast("Yetersiz para! Gerekli: " + formatMoney(cost));
-      return;
-    }
-
-    state.money -= cost;
-    state.furniture[key] += 1;
-    var tierBefore = furnitureTier(level);
-    var tierAfter = furnitureTier(level + 1);
-    if (tierAfter !== tierBefore) {
-      celebrate("✨", cfg.name + " yenilendi!", FURNITURE_TIER_NAMES[tierAfter] + " model · kazanç arttı");
-    } else {
-      showToast(cfg.name + " seviye " + state.furniture[key] + "! Kazanç arttı.");
-    }
-    render();
-    saveState();
+    openBuySheet("furniture", key);
   }
 
   function passiveTick() {
@@ -770,6 +1039,7 @@
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
     lastTapAt = Date.now();
+    sfx.tap();
     showTapHint(false);
     onTap();
   });
@@ -830,6 +1100,18 @@
   });
   els.shop.addEventListener("click", function (e) {
     if (e.target === els.shop) els.shopClose.click();
+  });
+
+  els.buyClose.addEventListener("click", closeBuySheet);
+  els.buySheet.addEventListener("click", function (e) {
+    if (e.target === els.buySheet) closeBuySheet();
+  });
+  els.buyConfirm.addEventListener("click", confirmPurchase);
+  els.muteBtn.addEventListener("click", function () {
+    state.muted = !state.muted;
+    if (!state.muted) sfx.coin();
+    render();
+    saveState();
   });
 
   setInterval(function () {
