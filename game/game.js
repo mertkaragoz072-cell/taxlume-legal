@@ -40,11 +40,9 @@
     floaters: document.getElementById("floaters"),
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
-    tapRingProgress: document.getElementById("tapRingProgress"),
     questBtn: document.getElementById("questBtn"),
   };
 
-  var RING_CIRCUMFERENCE = 452;
   var floaterStack = [];
 
   function loadState() {
@@ -147,9 +145,6 @@
 
     els.bedLabel.textContent = state.isSleeping ? "Uyandır" : "Yatak";
     els.zzz.classList.toggle("show", state.isSleeping);
-
-    els.tapRingProgress.style.strokeDashoffset =
-      (RING_CIRCUMFERENCE * (1 - state.energy / 100)).toFixed(1);
   }
 
   function levelUpIfReady() {

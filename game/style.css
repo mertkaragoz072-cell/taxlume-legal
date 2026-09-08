@@ -215,21 +215,12 @@ html, body {
   top: 32%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 142px;
-  height: 142px;
+  width: 118px;
+  height: 118px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 3;
-}
-
-.tap-ring {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-#tapRingProgress {
-  transition: stroke-dashoffset 0.2s linear;
 }
 
 .tap-btn {
@@ -237,26 +228,26 @@ html, body {
   width: 112px;
   height: 112px;
   border-radius: 50%;
-  border: 7px solid var(--green-dark);
-  background: radial-gradient(circle at 35% 30%, #6be27f, var(--green) 70%);
+  border: 3px solid #2f9e46;
+  background: radial-gradient(circle at 35% 28%, #8bec9a, var(--green) 65%, var(--green-dark) 100%);
   color: #fff;
   font-size: 21px;
   font-weight: 900;
   letter-spacing: 1px;
   cursor: pointer;
-  text-shadow: 0 2px 0 #14461f;
-  box-shadow: 0 6px 0 #14461f, 0 10px 18px rgba(0,0,0,0.35);
-  transition: transform 0.06s ease, box-shadow 0.06s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 16px rgba(20,70,31,0.35), inset 0 3px 6px rgba(255,255,255,0.35), inset 0 -6px 10px rgba(0,0,0,0.12);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 .tap-btn:active {
-  transform: translateY(6px);
-  box-shadow: 0 0 0 #14461f, 0 4px 8px rgba(0,0,0,0.35);
+  transform: translateY(3px) scale(0.98);
+  box-shadow: 0 3px 8px rgba(20,70,31,0.3), inset 0 3px 6px rgba(255,255,255,0.25), inset 0 -4px 8px rgba(0,0,0,0.12);
 }
 .tap-btn.tired {
-  background: radial-gradient(circle at 35% 30%, #9aa0a6, #6e7378 70%);
-  border-color: #3d4045;
+  background: radial-gradient(circle at 35% 28%, #c2c6ca, #8a9095 65%, #6e7378 100%);
+  border-color: #5b6166;
 }
 .tap-btn.sleeping {
   opacity: 0.35;
