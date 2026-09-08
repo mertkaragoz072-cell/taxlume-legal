@@ -294,7 +294,6 @@ html, body {
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0,0,0,0.35);
 }
-.upgrade-badge .lvl { color: var(--yellow); }
 .upgrade-badge .cost { color: #8ee89a; }
 .upgrade-badge.maxed {
   border-color: var(--green);
@@ -305,6 +304,24 @@ html, body {
 .bed-wrap, .fridge svg {
   position: relative;
   filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25));
+  transition: filter 0.3s ease;
+}
+
+/* Quality tiers: furniture visibly upgrades as its level rises */
+.furniture.bed.tier-3 .bed-wrap,
+.furniture.fridge.tier-3 svg,
+.furniture.plant.tier-3 svg {
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25)) drop-shadow(0 0 6px rgba(255,209,102,0.55));
+}
+.furniture.bed.tier-4 .bed-wrap,
+.furniture.fridge.tier-4 svg,
+.furniture.plant.tier-4 svg {
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25)) drop-shadow(0 0 10px rgba(255,209,102,0.85));
+  animation: tierGlow 1.8s ease-in-out infinite;
+}
+@keyframes tierGlow {
+  0%, 100% { filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25)) drop-shadow(0 0 8px rgba(255,209,102,0.7)); }
+  50% { filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25)) drop-shadow(0 0 14px rgba(255,209,102,1)); }
 }
 
 .zzz-stack {

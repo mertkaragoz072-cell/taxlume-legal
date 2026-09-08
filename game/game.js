@@ -52,15 +52,36 @@
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
+    plantBtn: document.getElementById("plantBtn"),
     bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
-    bedLvl: document.getElementById("bedLvl"),
     bedCost: document.getElementById("bedCost"),
     fridgeUpgradeBtn: document.getElementById("fridgeUpgradeBtn"),
-    fridgeLvl: document.getElementById("fridgeLvl"),
     fridgeCost: document.getElementById("fridgeCost"),
     plantUpgradeBtn: document.getElementById("plantUpgradeBtn"),
-    plantLvl: document.getElementById("plantLvl"),
     plantCost: document.getElementById("plantCost"),
+
+    woodStop1: document.getElementById("woodStop1"),
+    woodStop2: document.getElementById("woodStop2"),
+    blanketStop1: document.getElementById("blanketStop1"),
+    blanketStop2: document.getElementById("blanketStop2"),
+    bedTrim: document.getElementById("bedTrim"),
+    bedKnob1: document.getElementById("bedKnob1"),
+    bedKnob2: document.getElementById("bedKnob2"),
+    bedKnob3: document.getElementById("bedKnob3"),
+
+    fridgeStop1: document.getElementById("fridgeStop1"),
+    fridgeStop2: document.getElementById("fridgeStop2"),
+    fridgeStop3: document.getElementById("fridgeStop3"),
+    fridgeHandle1: document.getElementById("fridgeHandle1"),
+    fridgeHandle2: document.getElementById("fridgeHandle2"),
+    fridgeBodyStroke: document.getElementById("fridgeBodyStroke"),
+    fridgeDivider: document.getElementById("fridgeDivider"),
+
+    plantLeaf1: document.getElementById("plantLeaf1"),
+    plantLeaf2: document.getElementById("plantLeaf2"),
+    plantLeaf3: document.getElementById("plantLeaf3"),
+    plantPotBody: document.getElementById("plantPotBody"),
+    plantPotRim: document.getElementById("plantPotRim"),
   };
 
   var floaterStack = [];
@@ -177,10 +198,66 @@
   }
 
   var UPGRADE_ELS = {
-    bed: { btn: "bedUpgradeBtn", lvl: "bedLvl", cost: "bedCost" },
-    fridge: { btn: "fridgeUpgradeBtn", lvl: "fridgeLvl", cost: "fridgeCost" },
-    plant: { btn: "plantUpgradeBtn", lvl: "plantLvl", cost: "plantCost" },
+    bed: { btn: "bedUpgradeBtn", cost: "bedCost", item: "bedBtn" },
+    fridge: { btn: "fridgeUpgradeBtn", cost: "fridgeCost", item: "fridgeBtn" },
+    plant: { btn: "plantUpgradeBtn", cost: "plantCost", item: "plantBtn" },
   };
+
+  var TIER_PALETTES = {
+    bed: [
+      { wood: ["#a4713a", "#6b4420"], knob: "#6b4420", blanket: ["#7cc6f5", "#3f8fd1"], trim: "#f5c518" },
+      { wood: ["#c98f52", "#8a5a2c"], knob: "#8a5a2c", blanket: ["#7ed6a0", "#2f9e5c"], trim: "#ffd54f" },
+      { wood: ["#d9a860", "#8a5a2c"], knob: "#4a2e12", blanket: ["#b48be0", "#7a4fc9"], trim: "#ffe066" },
+      { wood: ["#f7d774", "#c9a227"], knob: "#c9a227", blanket: ["#2ecc71", "#1c8f4e"], trim: "#fff2b0" },
+    ],
+    fridge: [
+      { body: ["#a9ece6", "#7fd9d4", "#5cb8b2"], handle: "#2f7570" },
+      { body: ["#bfe9ff", "#8fd0f5", "#5aa9d9"], handle: "#2b6f8f" },
+      { body: ["#e6d8ff", "#c6a8f0", "#9b6fd6"], handle: "#5a3a8f" },
+      { body: ["#fff2c2", "#ffd75e", "#e0ab1f"], handle: "#8a6a10" },
+    ],
+    plant: [
+      { pot: ["#b5651d", "#8a4513"], leaf: ["#3a9d4a", "#4cb85c", "#5fcf6f"] },
+      { pot: ["#c97a2b", "#9c5518"], leaf: ["#43b85a", "#57cf6c", "#78e089"] },
+      { pot: ["#8f8f96", "#5c5c63"], leaf: ["#57cf6c", "#78e089", "#9df0ac"] },
+      { pot: ["#f7d774", "#c9a227"], leaf: ["#7be08c", "#9df0ac", "#c2ffce"] },
+    ],
+  };
+
+  function furnitureTier(level) {
+    if (level >= 15) return 4;
+    if (level >= 10) return 3;
+    if (level >= 5) return 2;
+    return 1;
+  }
+
+  function applyFurnitureVisual(key, tier) {
+    var palette = TIER_PALETTES[key][tier - 1];
+    if (key === "bed") {
+      els.woodStop1.setAttribute("stop-color", palette.wood[0]);
+      els.woodStop2.setAttribute("stop-color", palette.wood[1]);
+      els.blanketStop1.setAttribute("stop-color", palette.blanket[0]);
+      els.blanketStop2.setAttribute("stop-color", palette.blanket[1]);
+      els.bedTrim.setAttribute("fill", palette.trim);
+      els.bedKnob1.setAttribute("fill", palette.knob);
+      els.bedKnob2.setAttribute("fill", palette.knob);
+      els.bedKnob3.setAttribute("fill", palette.knob);
+    } else if (key === "fridge") {
+      els.fridgeStop1.setAttribute("stop-color", palette.body[0]);
+      els.fridgeStop2.setAttribute("stop-color", palette.body[1]);
+      els.fridgeStop3.setAttribute("stop-color", palette.body[2]);
+      els.fridgeHandle1.setAttribute("fill", palette.handle);
+      els.fridgeHandle2.setAttribute("fill", palette.handle);
+      els.fridgeBodyStroke.setAttribute("stroke", palette.handle);
+      els.fridgeDivider.setAttribute("stroke", palette.handle);
+    } else {
+      els.plantLeaf1.setAttribute("fill", palette.leaf[0]);
+      els.plantLeaf2.setAttribute("fill", palette.leaf[1]);
+      els.plantLeaf3.setAttribute("fill", palette.leaf[2]);
+      els.plantPotBody.setAttribute("fill", palette.pot[0]);
+      els.plantPotRim.setAttribute("fill", palette.pot[1]);
+    }
+  }
 
   function renderUpgradeBadges() {
     Object.keys(FURNITURE_CONFIG).forEach(function (key) {
@@ -189,9 +266,13 @@
       var refs = UPGRADE_ELS[key];
       var maxed = level >= cfg.maxLevel;
 
-      els[refs.lvl].textContent = "Lv." + level;
       els[refs.cost].textContent = maxed ? "MAX" : formatMoney(furnitureCost(key));
       els[refs.btn].classList.toggle("maxed", maxed);
+
+      var tier = furnitureTier(level);
+      els[refs.item].classList.remove("tier-1", "tier-2", "tier-3", "tier-4");
+      els[refs.item].classList.add("tier-" + tier);
+      applyFurnitureVisual(key, tier);
     });
   }
 
