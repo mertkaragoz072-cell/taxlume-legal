@@ -54,10 +54,29 @@ scripts/             translation parity check, sound generation
 **The simulation is a reducer.** `src/economy/useEconomy.ts` holds one
 `useReducer` state machine, and a timer dispatches a `TICK` action on a fixed
 interval. Every rule of the game — prices, wages, taxes, inflation, caravans,
-loans, research, prestige — is a pure transition inside that reducer, so it can
-be unit tested without rendering anything. The state shape lives in
-`src/economy/types.ts`, and content tables (goods, towns, upgrades, quests,
-achievements) live in their own files beside it.
+loans, research, prestige — is a pure transition, so it can be unit tested
+without rendering anything. The state shape lives in `src/economy/types.ts`,
+and content tables (goods, towns, upgrades, quests, achievements) live in their
+own files beside it.
+
+The simulation is split across five modules that depend on each other in one
+direction only, so there are no import cycles:
+
+```
+constants.ts    every tuning number, no behaviour
+      ↓
+formulas.ts     pure reads of state: pricing maths, totals, quoted rates
+      ↓
+progression.ts  what a new state has just earned: achievements, tier
+                unlocks, town ranks, quest completion
+tick.ts         one step of the whole economy — the largest transition
+      ↓
+useEconomy.ts   the action set, the reducer that chains the above, and the hook
+```
+
+`useEconomy.ts` re-exports the public constants and formulas, so the rest of
+the app keeps importing from `economy/useEconomy` and never has to know which
+module a given value moved to.
 
 **Screens never compute game rules.** They read state and call actions through
 `EconomyContext`, so the same numbers appear everywhere without a screen
