@@ -26,6 +26,8 @@ export const STRINGS = {
       newGame: "Yeni oyun başlat",
       speedBoost: "Hızlandırmayı aç",
       speedBoostActive: "Hızlandırma aktif, {time} kaldı",
+      homeTown: "Kendi kasabanız: {name}",
+      townLocked: "{name}, kilitli",
     },
     tabs: {
       market: "Piyasa",
@@ -114,19 +116,22 @@ export const STRINGS = {
       metropolSectionLabel: "METROPOLLER",
       metropolLocked: {
         title: "Metropoller Henüz Kilitli",
-        description: "Uzak metropollerle ticaret için kasabanın net servetini {target} 🪙'ye çıkar. Baharat, ipek ve mücevher orada çok daha değerli.",
+        description:
+          "Uzak metropollerle ticaret için kasabanın net servetini {target} 🪙'ye çıkar. Baharat, ipek ve mücevher orada çok daha değerli.",
         progress: "{current} / {target} 🪙",
       },
       legendarySectionLabel: "EFSANEVİ TÜCCAR",
       legendaryLocked: {
         title: "Efsanevi Tüccar Henüz Kilitli",
-        description: "Bu, net servete değil prestij seviyesine bağlı tek ortak — {target}. prestij seviyesine ulaş. Her üründe rakipsiz fiyat ve en düşük gümrük seni bekliyor.",
+        description:
+          "Bu, net servete değil prestij seviyesine bağlı tek ortak — {target}. prestij seviyesine ulaş. Her üründe rakipsiz fiyat ve en düşük gümrük seni bekliyor.",
         progress: "Prestij {current} / {target}",
       },
       mythicSectionLabel: "MİTİK TÜCCAR",
       mythicLocked: {
         title: "Mitik Tüccar Henüz Kilitli",
-        description: "Efsanevi Tüccar açıldıktan sonra her prestijde 1 efsane puanı kazanırsın — {target} efsane puanına ulaş. Oyundaki en iyi fiyatlar ve en düşük gümrük burada.",
+        description:
+          "Efsanevi Tüccar açıldıktan sonra her prestijde 1 efsane puanı kazanırsın — {target} efsane puanına ulaş. Oyundaki en iyi fiyatlar ve en düşük gümrük burada.",
         progress: "Efsane Puanı {current} / {target}",
       },
       contract: {
@@ -191,7 +196,8 @@ export const STRINGS = {
       },
       prestige: {
         title: "🌟 Prestij",
-        description: "Kasabanı sıfırla, karşılığında sonsuza kadar kalıcı bir üretim ve başlangıç sermayesi bonusu kazan. Bonus her sıfırlamada seninle kalır.",
+        description:
+          "Kasabanı sıfırla, karşılığında sonsuza kadar kalıcı bir üretim ve başlangıç sermayesi bonusu kazan. Bonus her sıfırlamada seninle kalır.",
         level: "Seviye {level}",
         bonus: "+%{pct} üretim, +{cash} 🪙 başlangıç sermayesi (kalıcı)",
         locked: "Prestij yapmak için net servetini {target} 🪙'ye çıkar.",
@@ -228,7 +234,8 @@ export const STRINGS = {
       propertyOwnedBtn: "Sahip Olundu",
       merchantsSectionLabel: "ESNAF DURUMU",
       workersSectionLabel: "İŞÇİLER",
-      workersNote: "Ürünlere kalıcı ücretli işçi tut, üretimlerini artır. Ücret kasadan düzenli olarak düşer.",
+      workersNote:
+        "Ürünlere kalıcı ücretli işçi tut, üretimlerini artır. Ücret kasadan düzenli olarak düşer.",
       workerWage: "{amount} 🪙/gün ücret",
       workerBonus: "+%{pct} üretim",
       eventsSectionLabel: "SON OLAYLAR",
@@ -240,7 +247,7 @@ export const STRINGS = {
       happiness: {
         revolt: {
           v0: "Köşe başında insanlar öfkeyle konuşuyor, sabırları taşmak üzere.",
-          v1: "\"Bu kasabada artık yaşanmıyor!\" diye bağırıyor biri meydanda.",
+          v1: '"Bu kasabada artık yaşanmıyor!" diye bağırıyor biri meydanda.',
         },
         unrest: {
           v0: "Köylüler kaşlarını çatarak pazardan geçiyor.",
@@ -256,13 +263,13 @@ export const STRINGS = {
         },
         veryContent: {
           v0: "Meydanda müzik çalıyor, kasaba tam bir bayram havasında!",
-          v1: "\"Böyle bir yönetim görmedik!\" diyor yaşlı bir köylü gülümseyerek.",
+          v1: '"Böyle bir yönetim görmedik!" diyor yaşlı bir köylü gülümseyerek.',
         },
       },
       mood: {
         crisis: {
           v0: "Fiyat etiketleri neredeyse her saat değişiyor, herkes endişeli.",
-          v1: "\"Ekmek dün bu kadar değildi!\" diye söyleniyor bir müşteri.",
+          v1: '"Ekmek dün bu kadar değildi!" diye söyleniyor bir müşteri.',
         },
         heating: {
           v0: "Tüccarlar fiyatları dikkatle takip ediyor, bir şeyler değişiyor gibi.",
@@ -274,27 +281,27 @@ export const STRINGS = {
         },
         cooling: {
           v0: "Fiyatlar yavaşça geriliyor, tüccarlar rahatladı.",
-          v1: "\"Sonunda biraz ucuzladı\" diyor bir köylü memnuniyetle.",
+          v1: '"Sonunda biraz ucuzladı" diyor bir köylü memnuniyetle.',
         },
       },
       highTax: {
         v0: "Vergi tahsildarının geçtiğini görenler içini çekiyor.",
-        v1: "\"Bu vergilerle nasıl geçineceğiz?\" diye söyleniyor pazarda.",
+        v1: '"Bu vergilerle nasıl geçineceğiz?" diye söyleniyor pazarda.',
       },
       noTax: {
-        v0: "\"Bu kasabada vergi yok, tam cennet!\" diyor gezgin bir tüccar.",
+        v0: '"Bu kasabada vergi yok, tam cennet!" diyor gezgin bir tüccar.',
       },
       caravanActive: {
         v0: "Uzaktan kervan çanları duyuluyor, yola çıkan mal merak konusu.",
         v1: "Kapı önünde birileri kervanın ne zaman döneceğini soruyor.",
       },
       loanActive: {
-        v0: "\"Banka borcunu hâlâ ödüyor musun?\" diye soruyor komşu.",
+        v0: '"Banka borcunu hâlâ ödüyor musun?" diye soruyor komşu.',
         v1: "Bankacı kasabada dolaşıyor, ödeme tarihlerini hatırlatıyor.",
       },
       prestige: {
         v0: "Yaşlılar eski kasabadan, sıfırdan başlamanın hikayesinden bahsediyor.",
-        v1: "\"Bu kasaba bir kez daha küllerinden doğdu\" diye anlatılıyor.",
+        v1: '"Bu kasaba bir kez daha küllerinden doğdu" diye anlatılıyor.',
       },
       workers: {
         v0: "İşçiler sabah erkenden atölyelere doğru yürüyor.",
@@ -344,7 +351,8 @@ export const STRINGS = {
     },
     backup: {
       sectionLabel: "KAYIT YEDEKLEME",
-      description: "İlerlemeni bir koda dönüştür; başka bir cihazda o kodu yapıştırarak geri yükleyebilirsin.",
+      description:
+        "İlerlemeni bir koda dönüştür; başka bir cihazda o kodu yapıştırarak geri yükleyebilirsin.",
       copyBtn: "Kodu Kopyala",
       copied: "Kod panoya kopyalandı!",
       importDescription: "Bir kayıt kodun varsa buraya yapıştır.",
@@ -430,7 +438,8 @@ export const STRINGS = {
       confirmButton: "Evet, Sıfırla",
       back: "Geri",
       ngPlusTitle: "🔁 NG+ Zorluk Modifikatörleri",
-      ngPlusSubtitle: "İsteğe bağlı: her biri bu koşuyu zorlaştırır ama bir sonraki prestijde daha fazla yetenek puanı kazandırır.",
+      ngPlusSubtitle:
+        "İsteğe bağlı: her biri bu koşuyu zorlaştırır ama bir sonraki prestijde daha fazla yetenek puanı kazandırır.",
       ngPlusPointsBadge: "+{points} 🎖️",
       ngPlusTotalBonus: "Bir sonraki prestijde toplam +{points} 🎖️ bonus yetenek puanı",
     },
@@ -470,7 +479,7 @@ export const STRINGS = {
     },
     bargain: {
       title: "🤝 Pazarlık Fırsatı!",
-      subtitle: "Tam doğru anda \"Dur!\" de, bu kervanda tarifeyi düşür.",
+      subtitle: 'Tam doğru anda "Dur!" de, bu kervanda tarifeyi düşür.',
       stopBtn: "✋ DUR!",
       skipBtn: "Pazarlık yapma, direkt gönder",
       resultPerfect: "🎯 Mükemmel pazarlık! Tarife bu kervanda %{pct} azaldı.",
@@ -526,7 +535,10 @@ export const STRINGS = {
     asset: {
       gold: { name: "Altın", description: "Güvenli liman — yavaş ama istikrarlı değer kazanır." },
       oil: { name: "Petrol", description: "Yüksek oynaklık — sert iniş çıkışlar yaşar." },
-      techStock: { name: "Teknoloji Hissesi", description: "Yüksek risk, yüksek getiri potansiyeli olan büyüme hissesi." },
+      techStock: {
+        name: "Teknoloji Hissesi",
+        description: "Yüksek risk, yüksek getiri potansiyeli olan büyüme hissesi.",
+      },
       bankStock: { name: "Banka Hissesi", description: "Ilımlı oynaklıkta, düzenli getirili bir hisse." },
     },
     place: {
@@ -555,10 +567,26 @@ export const STRINGS = {
       beyondTitle: "{base} {n}",
     },
     upgrade: {
-      market: { name: "Pazar Yeri", description: "Alım satımların fiyatlar üzerindeki etkisini ve alış-satış farkını azaltır.", effect: "Piyasa etkisi -%{pct}" },
-      caravanserai: { name: "Kervansaray", description: "Komşu kasabalarla ticarette gümrük vergisini düşürür.", effect: "Gümrük vergisi -%{pct}" },
-      townhall: { name: "Belediye Binası", description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.", effect: "Kriz şiddeti -%{pct}" },
-      bank: { name: "Banka", description: "Günlük giriş bonusunu artırır.", effect: "Günlük bonus +{amount} 🪙" },
+      market: {
+        name: "Pazar Yeri",
+        description: "Alım satımların fiyatlar üzerindeki etkisini ve alış-satış farkını azaltır.",
+        effect: "Piyasa etkisi -%{pct}",
+      },
+      caravanserai: {
+        name: "Kervansaray",
+        description: "Komşu kasabalarla ticarette gümrük vergisini düşürür.",
+        effect: "Gümrük vergisi -%{pct}",
+      },
+      townhall: {
+        name: "Belediye Binası",
+        description: "İyi yönetim, ekonomik krizlerin şiddetini azaltır.",
+        effect: "Kriz şiddeti -%{pct}",
+      },
+      bank: {
+        name: "Banka",
+        description: "Günlük giriş bonusunu artırır.",
+        effect: "Günlük bonus +{amount} 🪙",
+      },
       guardTower: {
         name: "Muhafız Kulesi",
         description: "Tüm kervanların haydut baskınına uğrama ihtimalini kalıcı olarak azaltır.",
@@ -571,7 +599,8 @@ export const STRINGS = {
       },
       storageYard: {
         name: "Ambar",
-        description: "Toplam mal depolama kapasiteni kalıcı olarak artırır, alım yaparken tavana takılmazsın.",
+        description:
+          "Toplam mal depolama kapasiteni kalıcı olarak artırır, alım yaparken tavana takılmazsın.",
         effect: "+{amount} depolama kapasitesi",
       },
     },
@@ -650,51 +679,94 @@ export const STRINGS = {
       researchBtn: "Araştır ({cost} 🪙)",
       bread: {
         t1: { name: "Ekmek Verimliliği", description: "Daha iyi fırın teknikleriyle ekmek üretimini artır." },
-        t2: { name: "Fırın Ustalığı", description: "Usta fırıncılık ekmeğin hem üretimini hem değerini yükseltir." },
+        t2: {
+          name: "Fırın Ustalığı",
+          description: "Usta fırıncılık ekmeğin hem üretimini hem değerini yükseltir.",
+        },
       },
       milk: {
         t1: { name: "Süt Verimliliği", description: "Daha sağlıklı sürülerle süt üretimini artır." },
-        t2: { name: "Mandıra Ustalığı", description: "Gelişmiş mandıracılık sütün değerini ve üretimini artırır." },
+        t2: {
+          name: "Mandıra Ustalığı",
+          description: "Gelişmiş mandıracılık sütün değerini ve üretimini artırır.",
+        },
       },
       wood: {
-        t1: { name: "Odun Verimliliği", description: "Daha keskin baltalar ve testerelerle odun üretimini artır." },
-        t2: { name: "Kereste Ustalığı", description: "Usta marangozluk kerestenin değerini ve üretimini artırır." },
+        t1: {
+          name: "Odun Verimliliği",
+          description: "Daha keskin baltalar ve testerelerle odun üretimini artır.",
+        },
+        t2: {
+          name: "Kereste Ustalığı",
+          description: "Usta marangozluk kerestenin değerini ve üretimini artırır.",
+        },
       },
       iron: {
         t1: { name: "Demir Verimliliği", description: "Daha derin galerilerle demir üretimini artır." },
-        t2: { name: "Dökümcü Ustalığı", description: "Usta dökümcülük demirin değerini ve üretimini artırır." },
+        t2: {
+          name: "Dökümcü Ustalığı",
+          description: "Usta dökümcülük demirin değerini ve üretimini artırır.",
+        },
       },
       cloth: {
         t1: { name: "Kumaş Verimliliği", description: "Daha hızlı tezgahlarla kumaş üretimini artır." },
-        t2: { name: "Dokuma Ustalığı", description: "Usta dokumacılık kumaşın değerini ve üretimini artırır." },
+        t2: {
+          name: "Dokuma Ustalığı",
+          description: "Usta dokumacılık kumaşın değerini ve üretimini artırır.",
+        },
       },
       fish: {
-        t1: { name: "Balıkçılık Verimliliği", description: "Daha iyi ağlar ve teknelerle balık avını artır." },
+        t1: {
+          name: "Balıkçılık Verimliliği",
+          description: "Daha iyi ağlar ve teknelerle balık avını artır.",
+        },
         t2: { name: "Balık İşleme Ustalığı", description: "Usta işleme balığın değerini ve avını artırır." },
       },
       wine: {
         t1: { name: "Bağcılık Verimliliği", description: "Daha verimli bağlarla üzüm hasadını artır." },
-        t2: { name: "Şarapçılık Ustalığı", description: "Usta şarapçılık şarabın değerini ve üretimini artırır." },
+        t2: {
+          name: "Şarapçılık Ustalığı",
+          description: "Usta şarapçılık şarabın değerini ve üretimini artırır.",
+        },
       },
       leather: {
         t1: { name: "Deri Verimliliği", description: "Daha sağlıklı sürülerle deri üretimini artır." },
-        t2: { name: "Tabaklama Ustalığı", description: "Usta tabaklama derinin değerini ve üretimini artırır." },
+        t2: {
+          name: "Tabaklama Ustalığı",
+          description: "Usta tabaklama derinin değerini ve üretimini artırır.",
+        },
       },
       spice: {
-        t1: { name: "Baharat Verimliliği", description: "Daha iyi hasat teknikleriyle baharat üretimini artır." },
-        t2: { name: "Baharat Ustalığı", description: "Usta baharatçılık baharatın değerini ve üretimini artırır." },
+        t1: {
+          name: "Baharat Verimliliği",
+          description: "Daha iyi hasat teknikleriyle baharat üretimini artır.",
+        },
+        t2: {
+          name: "Baharat Ustalığı",
+          description: "Usta baharatçılık baharatın değerini ve üretimini artırır.",
+        },
       },
       silk: {
-        t1: { name: "İpekböceği Verimliliği", description: "Sağlıklı ipekböceği çiftlikleri ipek üretimini artırır." },
-        t2: { name: "İpek Dokuma Ustalığı", description: "Usta ipek dokumacılığı ipeğin değerini ve üretimini artırır." },
+        t1: {
+          name: "İpekböceği Verimliliği",
+          description: "Sağlıklı ipekböceği çiftlikleri ipek üretimini artırır.",
+        },
+        t2: {
+          name: "İpek Dokuma Ustalığı",
+          description: "Usta ipek dokumacılığı ipeğin değerini ve üretimini artırır.",
+        },
       },
       jewelry: {
         t1: { name: "Kuyumculuk Verimliliği", description: "Daha iyi aletlerle mücevher üretimini artırır." },
-        t2: { name: "Kuyumcu Ustalığı", description: "Usta kuyumculuk mücevherin değerini ve üretimini artırır." },
+        t2: {
+          name: "Kuyumcu Ustalığı",
+          description: "Usta kuyumculuk mücevherin değerini ve üretimini artırır.",
+        },
       },
     },
     invest: {
-      sectionNote: "Altın, petrol ve hisselere yatırım yap. Fiyatlar arzdan bağımsız dalgalanır — kâr da edebilirsin, zarar da.",
+      sectionNote:
+        "Altın, petrol ve hisselere yatırım yap. Fiyatlar arzdan bağımsız dalgalanır — kâr da edebilirsin, zarar da.",
       portfolioLabel: "Yatırım Değeri",
       holdingLabel: "Elinde: {qty}",
       avgCostLabel: "Ort. maliyet {price} 🪙",
@@ -703,9 +775,15 @@ export const STRINGS = {
       unrealizedLoss: "Zarar -{amount} 🪙",
     },
     difficulty: {
-      easy: { label: "Kolay", description: "Daha çok başlangıç sermayesi, yavaş enflasyon, seyrek ve hafif olaylar." },
+      easy: {
+        label: "Kolay",
+        description: "Daha çok başlangıç sermayesi, yavaş enflasyon, seyrek ve hafif olaylar.",
+      },
       normal: { label: "Orta", description: "Dengeli bir kasaba ekonomisi. Standart oynanış." },
-      hard: { label: "Zor", description: "Az sermaye, hızlı enflasyon, sık ve şiddetli krizler. Dikkatli yönet." },
+      hard: {
+        label: "Zor",
+        description: "Az sermaye, hızlı enflasyon, sık ve şiddetli krizler. Dikkatli yönet.",
+      },
     },
     achievement: {
       first_trade: { title: "İlk Adım", description: "Piyasada ilk alım ya da satımını yap." },
@@ -753,11 +831,20 @@ export const STRINGS = {
     weeklyChallenge: {
       weekly_trader: { title: "Haftanın Tüccarı", description: "Bu hafta {target} alım-satım yap." },
       weekly_logistics: { title: "Haftanın Lojistiği", description: "Bu hafta {target} kervanı tamamla." },
-      weekly_profiteer: { title: "Haftanın Kârı", description: "Bu hafta {target} 🪙 gerçekleşmiş kâr elde et." },
+      weekly_profiteer: {
+        title: "Haftanın Kârı",
+        description: "Bu hafta {target} 🪙 gerçekleşmiş kâr elde et.",
+      },
     },
     ngPlus: {
-      harsherInflation: { label: "Sert Enflasyon", description: "Enflasyon daha hızlı ve daha yüksek tavanla yükselir." },
-      frequentEvents: { label: "Sık Olaylar", description: "Piyasa olayları daha sık ve daha şiddetli gerçekleşir." },
+      harsherInflation: {
+        label: "Sert Enflasyon",
+        description: "Enflasyon daha hızlı ve daha yüksek tavanla yükselir.",
+      },
+      frequentEvents: {
+        label: "Sık Olaylar",
+        description: "Piyasa olayları daha sık ve daha şiddetli gerçekleşir.",
+      },
       leanStart: { label: "Zayıf Başlangıç", description: "Başlangıç sermayen yarıya iner." },
       tightMargin: { label: "Dar Marj", description: "Hiperenflasyon çöküşü çok daha erken tetiklenir." },
     },
@@ -832,12 +919,27 @@ export const STRINGS = {
       weaversStrike: "Dokumahanede grev, kumaş fiyatı yükseldi.",
     },
     seasonalEvent: {
-      spice_festival: { title: "Baharat Festivali", description: "Kasabada baharat festivali var, baharat fiyatları yükseldi!" },
+      spice_festival: {
+        title: "Baharat Festivali",
+        description: "Kasabada baharat festivali var, baharat fiyatları yükseldi!",
+      },
       wine_harvest: { title: "Şarap Hasadı", description: "Bereketli bağ hasadı, şarap talebi arttı!" },
-      silk_road_boom: { title: "İpek Yolu Canlanması", description: "İpek Yolu ticareti canlandı, ipek ve baharat değerlendi!" },
-      jewelry_gala: { title: "Mücevher Balosu", description: "Şehirde mücevher balosu var, mücevher fiyatları fırladı!" },
-      harvest_festival: { title: "Hasat Bayramı", description: "Bol hasat bayramı, ekmek ve süt talebi arttı!" },
-      smiths_fair: { title: "Demirci Panayırı", description: "Demirci panayırı başladı, demir ve deri değerlendi!" },
+      silk_road_boom: {
+        title: "İpek Yolu Canlanması",
+        description: "İpek Yolu ticareti canlandı, ipek ve baharat değerlendi!",
+      },
+      jewelry_gala: {
+        title: "Mücevher Balosu",
+        description: "Şehirde mücevher balosu var, mücevher fiyatları fırladı!",
+      },
+      harvest_festival: {
+        title: "Hasat Bayramı",
+        description: "Bol hasat bayramı, ekmek ve süt talebi arttı!",
+      },
+      smiths_fair: {
+        title: "Demirci Panayırı",
+        description: "Demirci panayırı başladı, demir ve deri değerlendi!",
+      },
     },
     msg: {
       decisionPending: "📢 {title}: kasabanı ilgilendiren bir karar bekliyor.",
@@ -853,8 +955,10 @@ export const STRINGS = {
       contentDonation: "😊 Köylüler adil vergiden memnun, gönüllü bağış yaptılar! +{amount} 🪙.",
       caravanReturnedExport: "🚚 Kervan {town}'dan döndü: +{amount} 🪙 ({qty} {good})",
       caravanReturnedImport: "🚚 Kervan {town}'dan döndü: {qty} {good} teslim edildi",
-      caravanRaidedExport: "🏴‍☠️ Haydutlar {town} yolunda kervanına saldırdı! Sadece +{amount} 🪙 kurtarabildin ({qty} {good} yüklüydü).",
-      caravanRaidedImport: "🏴‍☠️ Haydutlar {town}'dan dönen kervanına saldırdı! Sadece {qty} {good} kurtarabildin.",
+      caravanRaidedExport:
+        "🏴‍☠️ Haydutlar {town} yolunda kervanına saldırdı! Sadece +{amount} 🪙 kurtarabildin ({qty} {good} yüklüydü).",
+      caravanRaidedImport:
+        "🏴‍☠️ Haydutlar {town}'dan dönen kervanına saldırdı! Sadece {qty} {good} kurtarabildin.",
       newNetWorthRecord: "🏆 Yeni kişisel rekor! Net servetin {amount} 🪙'e ulaştı.",
       rivalTownOvertookYou: "🏘️ Rakip kasaba seni geçti! Onların net serveti {amount} 🪙'e ulaştı.",
       rivalTownOvertaken: "🎉 Rakip kasabayı geçtin! Net servetin {amount} 🪙'e ulaştı.",
@@ -891,7 +995,8 @@ export const STRINGS = {
       gambleDecline: "🎲 Bahisten vazgeçtin, güvenli tarafta kaldın.",
       mysteryStrangerNoCash: "🕵️ Bilgiyi almak istedin ama paran yetmedi.",
       mysteryStrangerSuccess: "🕵️ Yabancı doğru söylemiş! {research} araştırması hemen tamamlandı.",
-      mysteryStrangerNothingLeft: "🕵️ Yabancının bildiği her şeyi zaten biliyordun — parandan hiçbir şey alınmadı.",
+      mysteryStrangerNothingLeft:
+        "🕵️ Yabancının bildiği her şeyi zaten biliyordun — parandan hiçbir şey alınmadı.",
       mysteryStrangerRefuse: "🕵️ Yabancıyı reddettin, tedbirli davrandın.",
       rivalOfferPending: "💼 Rakip bir tüccar toplu alım teklifi sundu: {qty} {good}!",
       rivalOfferAccepted: "💼 Rakibe {qty} {good} sattın, +{amount} 🪙 kazandın!",
@@ -899,19 +1004,23 @@ export const STRINGS = {
       rivalOfferDeclined: "💼 Rakibin toplu alım teklifini reddettin.",
       tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
       metropolUnlocked: "🏙️ Metropollerle ticaret açıldı! Baharat, ipek ve mücevher artık çok daha kârlı.",
-      legendaryUnlocked: "🐉 Efsanevi Tüccar açıldı! Artık bu ortağın kapısı her yeni kasabada da açık kalacak.",
-      mythicUnlocked: "🌌 Mitik Tüccar açıldı! Oyundaki en iyi fiyatlar artık her yeni kasabada da açık kalacak.",
+      legendaryUnlocked:
+        "🐉 Efsanevi Tüccar açıldı! Artık bu ortağın kapısı her yeni kasabada da açık kalacak.",
+      mythicUnlocked:
+        "🌌 Mitik Tüccar açıldı! Oyundaki en iyi fiyatlar artık her yeni kasabada da açık kalacak.",
       townRankUp: "🎖️ Kasaba unvanı yükseldi: {icon} {title} (+{reward} 🪙)",
       investSoldProfit: "📈 {qty} {asset} sattın, +{amount} 🪙 kâr ettin!",
       investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
-      investSoldProfitStreak: "🔥 {streak} seri! {qty} {asset} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
+      investSoldProfitStreak:
+        "🔥 {streak} seri! {qty} {asset} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
       contractProfit: "📑 {good} vadeli işlemi kapandı, +{amount} 🪙 kâr!",
       contractLoss: "📑 {good} vadeli işlemi kapandı, -{amount} 🪙 zarar.",
       bulkContractDelivered: "📦 Toptan sözleşme teslim edildi: {qty} {good}, +{amount} 🪙 kazandın!",
       weeklyChallengeComplete: "🏆 Haftalık meydan okuma tamamlandı: {title}, +{amount} 🪙!",
       goodSoldProfit: "📈 {qty} {good} sattın, +{amount} 🪙 kâr ettin!",
       goodSoldLoss: "📉 {qty} {good} sattın, -{amount} 🪙 zarar ettin.",
-      goodSoldProfitStreak: "🔥 {streak} seri! {qty} {good} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
+      goodSoldProfitStreak:
+        "🔥 {streak} seri! {qty} {good} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
     },
   },
   en: {
@@ -941,6 +1050,8 @@ export const STRINGS = {
       pause: "Pause game",
       resume: "Resume game",
       newGame: "Start new game",
+      homeTown: "Your own town: {name}",
+      townLocked: "{name}, locked",
     },
     tabs: {
       market: "Market",
@@ -1029,19 +1140,22 @@ export const STRINGS = {
       metropolSectionLabel: "METROPOLISES",
       metropolLocked: {
         title: "Metropolises Not Unlocked Yet",
-        description: "Grow your town's net worth to {target} 🪙 to unlock trade with distant metropolises. Spice, silk, and jewelry sell for far more there.",
+        description:
+          "Grow your town's net worth to {target} 🪙 to unlock trade with distant metropolises. Spice, silk, and jewelry sell for far more there.",
         progress: "{current} / {target} 🪙",
       },
       legendarySectionLabel: "LEGENDARY TRADER",
       legendaryLocked: {
         title: "Legendary Trader Not Unlocked Yet",
-        description: "The one partner gated by prestige level, not net worth — reach prestige level {target}. Unbeatable prices on everything and the lowest tariff anywhere.",
+        description:
+          "The one partner gated by prestige level, not net worth — reach prestige level {target}. Unbeatable prices on everything and the lowest tariff anywhere.",
         progress: "Prestige {current} / {target}",
       },
       mythicSectionLabel: "MYTHIC TRADER",
       mythicLocked: {
         title: "Mythic Trader Not Unlocked Yet",
-        description: "Once the Legendary Trader is open, every prestige after it earns 1 legendary point — reach {target} legendary points. The best prices and lowest tariff in the game.",
+        description:
+          "Once the Legendary Trader is open, every prestige after it earns 1 legendary point — reach {target} legendary points. The best prices and lowest tariff in the game.",
         progress: "Legendary Points {current} / {target}",
       },
       contract: {
@@ -1106,7 +1220,8 @@ export const STRINGS = {
       },
       prestige: {
         title: "🌟 Prestige",
-        description: "Reset your town for a permanent production and starting-cash bonus that lasts forever. The bonus carries over through every future reset.",
+        description:
+          "Reset your town for a permanent production and starting-cash bonus that lasts forever. The bonus carries over through every future reset.",
         level: "Level {level}",
         bonus: "+{pct}% production, +{cash} 🪙 starting cash (permanent)",
         locked: "Grow your net worth to {target} 🪙 to prestige.",
@@ -1143,7 +1258,8 @@ export const STRINGS = {
       propertyOwnedBtn: "Owned",
       merchantsSectionLabel: "MERCHANT STATUS",
       workersSectionLabel: "WORKERS",
-      workersNote: "Hire permanent, waged staff to boost a good's production. Wages come out of the treasury on an ongoing basis.",
+      workersNote:
+        "Hire permanent, waged staff to boost a good's production. Wages come out of the treasury on an ongoing basis.",
       workerWage: "{amount} 🪙/day wage",
       workerBonus: "+{pct}% production",
       eventsSectionLabel: "RECENT EVENTS",
@@ -1155,7 +1271,7 @@ export const STRINGS = {
       happiness: {
         revolt: {
           v0: "Voices are raised on the corner — patience is running out.",
-          v1: "\"This town isn't livable anymore!\" someone shouts in the square.",
+          v1: '"This town isn\'t livable anymore!" someone shouts in the square.',
         },
         unrest: {
           v0: "Villagers cross the market with furrowed brows.",
@@ -1171,13 +1287,13 @@ export const STRINGS = {
         },
         veryContent: {
           v0: "Music plays in the square — the whole town feels festive!",
-          v1: "\"We've never had leadership like this!\" beams an old villager.",
+          v1: '"We\'ve never had leadership like this!" beams an old villager.',
         },
       },
       mood: {
         crisis: {
           v0: "Price tags change almost by the hour — everyone's on edge.",
-          v1: "\"Bread wasn't this much yesterday!\" a customer mutters.",
+          v1: '"Bread wasn\'t this much yesterday!" a customer mutters.',
         },
         heating: {
           v0: "Merchants are watching prices closely — something's shifting.",
@@ -1189,27 +1305,27 @@ export const STRINGS = {
         },
         cooling: {
           v0: "Prices are easing back — the merchants look relieved.",
-          v1: "\"Finally, things got a little cheaper,\" says a satisfied villager.",
+          v1: '"Finally, things got a little cheaper," says a satisfied villager.',
         },
       },
       highTax: {
         v0: "People sigh when they spot the tax collector passing by.",
-        v1: "\"How are we supposed to live with these taxes?\" someone grumbles.",
+        v1: '"How are we supposed to live with these taxes?" someone grumbles.',
       },
       noTax: {
-        v0: "\"No taxes in this town — paradise!\" a traveling merchant remarks.",
+        v0: '"No taxes in this town — paradise!" a traveling merchant remarks.',
       },
       caravanActive: {
         v0: "Caravan bells echo in the distance — everyone wonders what it's carrying.",
         v1: "Someone at the gate asks when the caravan will be back.",
       },
       loanActive: {
-        v0: "\"Still paying off that bank loan?\" a neighbor asks.",
+        v0: '"Still paying off that bank loan?" a neighbor asks.',
         v1: "The banker's making rounds, reminding folks of due dates.",
       },
       prestige: {
         v0: "The elders tell stories of the old town, of starting over from nothing.",
-        v1: "\"This town rose from its ashes once again,\" they say.",
+        v1: '"This town rose from its ashes once again," they say.',
       },
       workers: {
         v0: "Workers head out to the workshops early in the morning.",
@@ -1345,7 +1461,8 @@ export const STRINGS = {
       confirmButton: "Yes, Reset",
       back: "Back",
       ngPlusTitle: "🔁 NG+ Difficulty Modifiers",
-      ngPlusSubtitle: "Optional: each one makes this run harder but pays out more skill points at your next prestige.",
+      ngPlusSubtitle:
+        "Optional: each one makes this run harder but pays out more skill points at your next prestige.",
       ngPlusPointsBadge: "+{points} 🎖️",
       ngPlusTotalBonus: "+{points} 🎖️ bonus skill points total at your next prestige",
     },
@@ -1385,7 +1502,7 @@ export const STRINGS = {
     },
     bargain: {
       title: "🤝 Bargaining Opportunity!",
-      subtitle: "Say \"Stop!\" at just the right moment to cut this caravan's tariff.",
+      subtitle: 'Say "Stop!" at just the right moment to cut this caravan\'s tariff.',
       stopBtn: "✋ STOP!",
       skipBtn: "Skip bargaining, send directly",
       resultPerfect: "🎯 Perfect deal! Tariff cut {pct}% on this caravan.",
@@ -1470,10 +1587,26 @@ export const STRINGS = {
       beyondTitle: "{base} {n}",
     },
     upgrade: {
-      market: { name: "Marketplace", description: "Softens how sharply trades move prices, and narrows the buy/sell spread.", effect: "Market impact -{pct}%" },
-      caravanserai: { name: "Caravanserai", description: "Lowers the tariff on trade with neighboring towns.", effect: "Tariff -{pct}%" },
-      townhall: { name: "Town Hall", description: "Good governance softens the severity of economic crises.", effect: "Crisis severity -{pct}%" },
-      bank: { name: "Bank", description: "Increases the daily login bonus.", effect: "Daily bonus +{amount} 🪙" },
+      market: {
+        name: "Marketplace",
+        description: "Softens how sharply trades move prices, and narrows the buy/sell spread.",
+        effect: "Market impact -{pct}%",
+      },
+      caravanserai: {
+        name: "Caravanserai",
+        description: "Lowers the tariff on trade with neighboring towns.",
+        effect: "Tariff -{pct}%",
+      },
+      townhall: {
+        name: "Town Hall",
+        description: "Good governance softens the severity of economic crises.",
+        effect: "Crisis severity -{pct}%",
+      },
+      bank: {
+        name: "Bank",
+        description: "Increases the daily login bonus.",
+        effect: "Daily bonus +{amount} 🪙",
+      },
       guardTower: {
         name: "Guard Tower",
         description: "Permanently lowers the chance of any caravan being raided by bandits.",
@@ -1486,7 +1619,8 @@ export const STRINGS = {
       },
       storageYard: {
         name: "Storage Yard",
-        description: "Permanently increases your total goods storage capacity, so buying doesn't hit a ceiling.",
+        description:
+          "Permanently increases your total goods storage capacity, so buying doesn't hit a ceiling.",
         effect: "+{amount} storage capacity",
       },
     },
@@ -1498,7 +1632,8 @@ export const STRINGS = {
       },
       house: {
         name: "House",
-        description: "A residence whose rent drops a small passive income into the treasury on an ongoing basis.",
+        description:
+          "A residence whose rent drops a small passive income into the treasury on an ongoing basis.",
         effect: "+{amount} 🪙/day passive income",
       },
       warehouse: {
@@ -1573,7 +1708,10 @@ export const STRINGS = {
       },
       wood: {
         t1: { name: "Wood Efficiency", description: "Sharper axes and saws boost wood production." },
-        t2: { name: "Lumber Mastery", description: "Skilled carpentry raises lumber's value and production." },
+        t2: {
+          name: "Lumber Mastery",
+          description: "Skilled carpentry raises lumber's value and production.",
+        },
       },
       iron: {
         t1: { name: "Iron Efficiency", description: "Deeper shafts boost iron production." },
@@ -1585,11 +1723,20 @@ export const STRINGS = {
       },
       fish: {
         t1: { name: "Fishing Efficiency", description: "Better nets and boats boost your catch." },
-        t2: { name: "Fish Processing Mastery", description: "Skilled processing raises fish's value and catch." },
+        t2: {
+          name: "Fish Processing Mastery",
+          description: "Skilled processing raises fish's value and catch.",
+        },
       },
       wine: {
-        t1: { name: "Viticulture Efficiency", description: "More productive vineyards boost the grape harvest." },
-        t2: { name: "Winemaking Mastery", description: "Master winemaking raises wine's value and production." },
+        t1: {
+          name: "Viticulture Efficiency",
+          description: "More productive vineyards boost the grape harvest.",
+        },
+        t2: {
+          name: "Winemaking Mastery",
+          description: "Master winemaking raises wine's value and production.",
+        },
       },
       leather: {
         t1: { name: "Leatherworking Efficiency", description: "Healthier herds boost leather production." },
@@ -1597,19 +1744,29 @@ export const STRINGS = {
       },
       spice: {
         t1: { name: "Spice Efficiency", description: "Better harvesting techniques boost spice production." },
-        t2: { name: "Spice Mastery", description: "Master spice trading raises spice's value and production." },
+        t2: {
+          name: "Spice Mastery",
+          description: "Master spice trading raises spice's value and production.",
+        },
       },
       silk: {
         t1: { name: "Silkworm Efficiency", description: "Healthier silkworm farms boost silk production." },
-        t2: { name: "Silk Weaving Mastery", description: "Master silk weaving raises silk's value and production." },
+        t2: {
+          name: "Silk Weaving Mastery",
+          description: "Master silk weaving raises silk's value and production.",
+        },
       },
       jewelry: {
         t1: { name: "Jewelry Efficiency", description: "Better tools boost jewelry production." },
-        t2: { name: "Master Jewelers", description: "Master jewelry-crafting raises jewelry's value and production." },
+        t2: {
+          name: "Master Jewelers",
+          description: "Master jewelry-crafting raises jewelry's value and production.",
+        },
       },
     },
     invest: {
-      sectionNote: "Invest in gold, oil, and stocks. Prices move independently of supply — you can profit, or you can lose.",
+      sectionNote:
+        "Invest in gold, oil, and stocks. Prices move independently of supply — you can profit, or you can lose.",
       portfolioLabel: "Investment Value",
       holdingLabel: "You own: {qty}",
       avgCostLabel: "Avg. cost {price} 🪙",
@@ -1620,13 +1777,19 @@ export const STRINGS = {
     difficulty: {
       easy: { label: "Easy", description: "More starting capital, slower inflation, rare and mild events." },
       normal: { label: "Normal", description: "A balanced town economy. Standard gameplay." },
-      hard: { label: "Hard", description: "Little capital, fast inflation, frequent and severe crises. Manage carefully." },
+      hard: {
+        label: "Hard",
+        description: "Little capital, fast inflation, frequent and severe crises. Manage carefully.",
+      },
     },
     achievement: {
       first_trade: { title: "First Step", description: "Make your first buy or sell on the market." },
       trader_10: { title: "Trading Spirit", description: "Complete 10 trades." },
       trader_50: { title: "Seasoned Trader", description: "Complete 50 trades." },
-      first_caravan: { title: "First Caravan", description: "Send your first caravan to a neighboring town." },
+      first_caravan: {
+        title: "First Caravan",
+        description: "Send your first caravan to a neighboring town.",
+      },
       caravan_master_10: { title: "Road Master", description: "Complete 10 caravan trips." },
       three_towns: { title: "Friend of Three Towns", description: "Trade with all three neighboring towns." },
       diversify: { title: "Diversifier", description: "Hold 5 different goods at once." },
@@ -1667,12 +1830,24 @@ export const STRINGS = {
     },
     weeklyChallenge: {
       weekly_trader: { title: "Trader of the Week", description: "Make {target} trades this week." },
-      weekly_logistics: { title: "Logistics of the Week", description: "Complete {target} caravans this week." },
-      weekly_profiteer: { title: "Profit of the Week", description: "Realize {target} 🪙 in profit this week." },
+      weekly_logistics: {
+        title: "Logistics of the Week",
+        description: "Complete {target} caravans this week.",
+      },
+      weekly_profiteer: {
+        title: "Profit of the Week",
+        description: "Realize {target} 🪙 in profit this week.",
+      },
     },
     ngPlus: {
-      harsherInflation: { label: "Harsh Inflation", description: "Inflation rises faster and with a higher ceiling." },
-      frequentEvents: { label: "Frequent Events", description: "Market events happen more often and hit harder." },
+      harsherInflation: {
+        label: "Harsh Inflation",
+        description: "Inflation rises faster and with a higher ceiling.",
+      },
+      frequentEvents: {
+        label: "Frequent Events",
+        description: "Market events happen more often and hit harder.",
+      },
       leanStart: { label: "Lean Start", description: "Your starting cash is cut in half." },
       tightMargin: { label: "Tight Margin", description: "Hyperinflation collapse triggers much sooner." },
     },
@@ -1747,12 +1922,30 @@ export const STRINGS = {
       weaversStrike: "A strike at the weavery pushed cloth prices up.",
     },
     seasonalEvent: {
-      spice_festival: { title: "Spice Festival", description: "A spice festival is on — spice prices are up!" },
-      wine_harvest: { title: "Wine Harvest", description: "A bountiful grape harvest raised demand for wine!" },
-      silk_road_boom: { title: "Silk Road Boom", description: "Silk Road trade is booming — silk and spice are worth more!" },
-      jewelry_gala: { title: "Jewelry Gala", description: "A jewelry gala is in town — jewelry prices have spiked!" },
-      harvest_festival: { title: "Harvest Festival", description: "A bountiful harvest festival raised demand for bread and milk!" },
-      smiths_fair: { title: "Smiths' Fair", description: "A smiths' fair has begun — iron and leather are worth more!" },
+      spice_festival: {
+        title: "Spice Festival",
+        description: "A spice festival is on — spice prices are up!",
+      },
+      wine_harvest: {
+        title: "Wine Harvest",
+        description: "A bountiful grape harvest raised demand for wine!",
+      },
+      silk_road_boom: {
+        title: "Silk Road Boom",
+        description: "Silk Road trade is booming — silk and spice are worth more!",
+      },
+      jewelry_gala: {
+        title: "Jewelry Gala",
+        description: "A jewelry gala is in town — jewelry prices have spiked!",
+      },
+      harvest_festival: {
+        title: "Harvest Festival",
+        description: "A bountiful harvest festival raised demand for bread and milk!",
+      },
+      smiths_fair: {
+        title: "Smiths' Fair",
+        description: "A smiths' fair has begun — iron and leather are worth more!",
+      },
     },
     msg: {
       decisionPending: "📢 {title}: a decision needs your attention.",
@@ -1768,8 +1961,10 @@ export const STRINGS = {
       contentDonation: "😊 Villagers, pleased with fair taxes, made a voluntary donation! +{amount} 🪙.",
       caravanReturnedExport: "🚚 The caravan returned from {town}: +{amount} 🪙 ({qty} {good})",
       caravanReturnedImport: "🚚 The caravan returned from {town}: {qty} {good} delivered",
-      caravanRaidedExport: "🏴‍☠️ Bandits raided your caravan on the road to {town}! You only recovered +{amount} 🪙 (it carried {qty} {good}).",
-      caravanRaidedImport: "🏴‍☠️ Bandits raided your caravan returning from {town}! You only recovered {qty} {good}.",
+      caravanRaidedExport:
+        "🏴‍☠️ Bandits raided your caravan on the road to {town}! You only recovered +{amount} 🪙 (it carried {qty} {good}).",
+      caravanRaidedImport:
+        "🏴‍☠️ Bandits raided your caravan returning from {town}! You only recovered {qty} {good}.",
       newNetWorthRecord: "🏆 New personal record! Your net worth reached {amount} 🪙.",
       rivalTownOvertookYou: "🏘️ The rival town overtook you! Their net worth reached {amount} 🪙.",
       rivalTownOvertaken: "🎉 You overtook the rival town! Your net worth reached {amount} 🪙.",
@@ -1780,7 +1975,8 @@ export const STRINGS = {
       dailyCheckInFirst: "🌅 Welcome to your town! Your login streak has begun. +{bonus} 🪙 bonus.",
       achievementUnlocked: "🏆 Achievement unlocked: {icon} {title} (+{reward} 🪙)",
       questCompleted: "✅ Quest completed: {icon} {title} (+{reward} 🪙)",
-      villagerGiveInsufficient: "🙋 You didn't have enough {good} to give, so the villager left empty-handed.",
+      villagerGiveInsufficient:
+        "🙋 You didn't have enough {good} to give, so the villager left empty-handed.",
       villagerGiveSuccess: "🙋 You gave {qty} {good}, and the villagers are grateful. (+{amount} happiness)",
       villagerRefuse: "🙋 You refused the request, and the villagers are disappointed. (-{amount} happiness)",
       famineReliefNoBread: "🌾 You wanted to donate, but you had no bread at all.",
@@ -1813,20 +2009,25 @@ export const STRINGS = {
       rivalOfferInsufficient: "💼 You wanted to take the deal, but didn't have enough {good}.",
       rivalOfferDeclined: "💼 You declined the rival's bulk-buy offer.",
       tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
-      metropolUnlocked: "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
-      legendaryUnlocked: "🐉 Legendary Trader unlocked! This partner's door stays open in every future town too.",
-      mythicUnlocked: "🌌 Mythic Trader unlocked! The best prices in the game stay open in every future town too.",
+      metropolUnlocked:
+        "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
+      legendaryUnlocked:
+        "🐉 Legendary Trader unlocked! This partner's door stays open in every future town too.",
+      mythicUnlocked:
+        "🌌 Mythic Trader unlocked! The best prices in the game stay open in every future town too.",
       townRankUp: "🎖️ Town rank up: {icon} {title} (+{reward} 🪙)",
       investSoldProfit: "📈 Sold {qty} {asset}, +{amount} 🪙 profit!",
       investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",
-      investSoldProfitStreak: "🔥 {streak}-win streak! Sold {qty} {asset}, +{amount} 🪙 profit (includes +{bonusPct}% bonus)!",
+      investSoldProfitStreak:
+        "🔥 {streak}-win streak! Sold {qty} {asset}, +{amount} 🪙 profit (includes +{bonusPct}% bonus)!",
       contractProfit: "📑 {good} contract settled, +{amount} 🪙 profit!",
       contractLoss: "📑 {good} contract settled, -{amount} 🪙 loss.",
       bulkContractDelivered: "📦 Bulk contract delivered: {qty} {good}, +{amount} 🪙 earned!",
       weeklyChallengeComplete: "🏆 Weekly challenge complete: {title}, +{amount} 🪙!",
       goodSoldProfit: "📈 Sold {qty} {good}, +{amount} 🪙 profit!",
       goodSoldLoss: "📉 Sold {qty} {good}, -{amount} 🪙 loss.",
-      goodSoldProfitStreak: "🔥 {streak}-win streak! Sold {qty} {good}, +{amount} 🪙 profit (includes +{bonusPct}% bonus)!",
+      goodSoldProfitStreak:
+        "🔥 {streak}-win streak! Sold {qty} {good}, +{amount} 🪙 profit (includes +{bonusPct}% bonus)!",
     },
   },
 } as const;

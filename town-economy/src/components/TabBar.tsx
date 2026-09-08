@@ -4,14 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { COLORS, FONT, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 
-export type ScreenId =
-  | "market"
-  | "inventory"
-  | "trade"
-  | "town"
-  | "research"
-  | "invest"
-  | "achievements";
+export type ScreenId = "market" | "inventory" | "trade" | "town" | "research" | "invest" | "achievements";
 
 const TABS: { id: ScreenId; labelKey: string; icon: string; color: string }[] = [
   { id: "market", labelKey: "tabs.market", icon: "📈", color: "#e8c777" },
@@ -50,7 +43,7 @@ export function TabBar({ active, onChange }: Props) {
   });
 
   return (
-    <View style={styles.wrap}>
+    <View style={styles.wrap} accessibilityRole="tablist">
       <Animated.View
         pointerEvents="none"
         style={[styles.indicatorSlot, { left: indicatorLeft, width: `${100 / TABS.length}%` }]}
@@ -65,8 +58,20 @@ export function TabBar({ active, onChange }: Props) {
       {TABS.map((tab) => {
         const isActive = tab.id === active;
         return (
-          <ScalePressable key={tab.id} onPress={() => onChange(tab.id)} style={styles.tab} scaleTo={0.9}>
-            <Text style={[styles.icon, isActive && styles.iconActive]}>{tab.icon}</Text>
+          <ScalePressable
+            key={tab.id}
+            onPress={() => onChange(tab.id)}
+            style={styles.tab}
+            scaleTo={0.9}
+            accessibilityRole="tab"
+            aria-selected={isActive}
+            accessibilityLabel={t(tab.labelKey)}
+          >
+            {/* The emoji is decoration for a label that is already read out;
+                left visible it makes every tab announce a stray icon name. */}
+            <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
+              {tab.icon}
+            </Text>
             <Text style={[styles.label, isActive && { color: tab.color }]}>{t(tab.labelKey)}</Text>
           </ScalePressable>
         );
@@ -100,5 +105,11 @@ const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: "center", paddingVertical: 4 },
   icon: { fontSize: TYPE.heading, opacity: 0.5 },
   iconActive: { opacity: 1 },
-  label: { fontSize: TYPE.micro, color: COLORS.textMuted, marginTop: 2, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  label: {
+    fontSize: TYPE.micro,
+    color: COLORS.textMuted,
+    marginTop: 2,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
 });

@@ -14,9 +14,12 @@ interface Props {
  * browsers) the wash alone still reads as a normal modal backdrop. */
 export function ModalBackdrop({ children }: Props) {
   return (
-    <View style={styles.fill}>
+    // aria-modal keeps a screen reader inside the dialog: without it
+    // a screen reader walks straight past the modal into the blurred screen
+    // behind it, which is unreachable by touch and reads as a dead end.
+    <View style={styles.fill} aria-modal>
       <BlurView intensity={50} tint="dark" style={StyleSheet.absoluteFill} />
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.wash]} />
+      <View pointerEvents="none" aria-hidden style={[StyleSheet.absoluteFill, styles.wash]} />
       {children}
     </View>
   );

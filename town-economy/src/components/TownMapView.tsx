@@ -204,7 +204,7 @@ export function TownMapView({
     <View style={styles.card}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
       <View style={styles.mapWrap}>
-        <Svg width={MAP_WIDTH} height={MAP_HEIGHT} viewBox={`0 0 ${BASE_W} ${BASE_H}`}>
+        <Svg width={MAP_WIDTH} height={MAP_HEIGHT} viewBox={`0 0 ${BASE_W} ${BASE_H}`} aria-hidden>
           <Defs>
             <LinearGradient id="mapSea" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={SEA_TOP} />
@@ -317,10 +317,27 @@ export function TownMapView({
 
           {/* compass rose, out on the open water like a proper chart */}
           <G>
-            <Circle cx={42} cy={46} r={17} fill="#e8dcbe" fillOpacity={0.28} stroke={INK} strokeOpacity={0.5} strokeWidth={1.2} />
+            <Circle
+              cx={42}
+              cy={46}
+              r={17}
+              fill="#e8dcbe"
+              fillOpacity={0.28}
+              stroke={INK}
+              strokeOpacity={0.5}
+              strokeWidth={1.2}
+            />
             <Polygon points="42,29 45.5,46 42,63 38.5,46" fill="#f0e6cc" fillOpacity={0.85} />
             <Polygon points="25,46 42,42.5 59,46 42,49.5" fill={INK} fillOpacity={0.55} />
-            <SvgText x={42} y={24} fontSize={9} fontWeight="bold" fill="#f0e6cc" fillOpacity={0.9} textAnchor="middle">
+            <SvgText
+              x={42}
+              y={24}
+              fontSize={9}
+              fontWeight="bold"
+              fill="#f0e6cc"
+              fillOpacity={0.9}
+              textAnchor="middle"
+            >
               N
             </SvgText>
           </G>
@@ -328,7 +345,15 @@ export function TownMapView({
           <Rect x={0} y={0} width={BASE_W} height={BASE_H} fill="url(#mapVignette)" />
 
           {/* frame */}
-          <Rect x={1.5} y={1.5} width={BASE_W - 3} height={BASE_H - 3} fill="none" stroke={INK} strokeWidth={3} />
+          <Rect
+            x={1.5}
+            y={1.5}
+            width={BASE_W - 3}
+            height={BASE_H - 3}
+            fill="none"
+            stroke={INK}
+            strokeWidth={3}
+          />
           <Rect
             x={6}
             y={6}
@@ -351,7 +376,12 @@ export function TownMapView({
               <ScalePressable
                 disabled={!unlocked}
                 onPress={() => onSelectTown(tn.id)}
-                accessibilityLabel={t(tn.nameKey)}
+                // A pin is a destination picker, so it announces its own name,
+                // whether it is still locked, and whether it is the one the
+                // trade panel below is currently pointed at.
+                accessibilityLabel={unlocked ? t(tn.nameKey) : t("a11y.townLocked", { name: t(tn.nameKey) })}
+                aria-selected={selected}
+                aria-disabled={!unlocked}
                 style={[
                   styles.pin,
                   { left: pos.x * SCALE - PIN_SIZE / 2, top: pos.y * SCALE - PIN_SIZE / 2 },
@@ -360,7 +390,9 @@ export function TownMapView({
                 ]}
                 scaleTo={0.9}
               >
-                <Text style={styles.pinIcon}>{unlocked ? tn.icon : "🔒"}</Text>
+                <Text aria-hidden style={styles.pinIcon}>
+                  {unlocked ? tn.icon : "🔒"}
+                </Text>
               </ScalePressable>
               <View
                 pointerEvents="none"
@@ -405,20 +437,28 @@ export function TownMapView({
           const progress = total > 0 ? clamp01((tick - c.departedTick) / total) : 1;
           const pt = pointOnRoad(pos, layout.bend, progress);
           return (
-            <Text key={c.id} style={[styles.caravanIcon, { left: pt.x * SCALE - 9, top: pt.y * SCALE - 9 }]}>
+            <Text
+              key={c.id}
+              aria-hidden
+              style={[styles.caravanIcon, { left: pt.x * SCALE - 9, top: pt.y * SCALE - 9 }]}
+            >
               🐫
             </Text>
           );
         })}
 
         <View
+          accessible
+          accessibilityLabel={t("a11y.homeTown", { name: townName })}
           style={[
             styles.pin,
             styles.homePin,
             { left: HOME_X * SCALE - HOME_PIN_SIZE / 2, top: HOME_Y * SCALE - HOME_PIN_SIZE / 2 },
           ]}
         >
-          <Text style={styles.homeIcon}>{homeIcon}</Text>
+          <Text aria-hidden style={styles.homeIcon}>
+            {homeIcon}
+          </Text>
         </View>
         <View
           pointerEvents="none"
