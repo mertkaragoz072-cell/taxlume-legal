@@ -331,6 +331,13 @@ html, body {
 .furniture.tier-3 .tierMax2, .furniture.tier-4 .tierMax2 { display: none; }
 .furniture.tier-4 .tierMax3 { display: none; }
 
+/* Frame shape swaps entirely per tier (not just accessories) */
+.tierIs1, .tierIs2, .tierIs3, .tierIs4 { display: none; }
+.furniture.tier-1 .tierIs1 { display: inline; }
+.furniture.tier-2 .tierIs2 { display: inline; }
+.furniture.tier-3 .tierIs3 { display: inline; }
+.furniture.tier-4 .tierIs4 { display: inline; }
+
 .bed-led { animation: ledPulse 1.6s ease-in-out infinite; }
 @keyframes ledPulse {
   0%, 100% { opacity: 0.7; }
