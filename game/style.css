@@ -472,6 +472,7 @@ html, body {
   pointer-events: none;
 }
 .room-item.owned { display: block; }
+.room-item .upgrade-badge { pointer-events: auto; }
 .room-item svg { display: block; overflow: visible; }
 .room-item.rug { left: 20%; bottom: 12%; width: 60%; height: 40px; z-index: 1; }
 .room-item.lamp { left: 59%; bottom: 21%; width: 44px; height: 132px; z-index: 3; }
@@ -553,3 +554,8 @@ html, body {
 }
 .shop-buy.owned { background: #3a3a40; color: #9aa0a6; cursor: default; }
 .shop-buy.poor { background: #3a3a40; color: #ffb4a8; }
+
+/* Room decor tiers: art swaps as the item levels up */
+.room-item.tier-1 .tierIs1, .room-item.tier-2 .tierIs2, .room-item.tier-3 .tierIs3 { display: inline; }
+.room-item .upgrade-badge { top: -18px; }
+.room-item.rug .upgrade-badge { top: -22px; }

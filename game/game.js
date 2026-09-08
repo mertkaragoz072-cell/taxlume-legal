@@ -31,17 +31,30 @@
     hunger: 100,
     isSleeping: false,
     furniture: { bed: 1, fridge: 1, plant: 1 },
-    items: { rug: false, lamp: false, picture: false, shelf: false, tv: false },
+    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0 },
     lastSeen: Date.now(),
   };
 
+  // Room decor: level 0 = not owned. Levels 1-3 basic art, 4-6 standard, 7-9 modern/luxury.
   var SHOP_ITEMS = {
-    rug: { name: "Halı", icon: "🧶", price: 2000, bonus: 0.05 },
-    lamp: { name: "Lambader", icon: "💡", price: 3500, bonus: 0.08 },
-    picture: { name: "Tablo", icon: "🖼️", price: 5000, bonus: 0.1 },
-    shelf: { name: "Kitaplık", icon: "📚", price: 8000, bonus: 0.12 },
-    tv: { name: "Televizyon", icon: "📺", price: 12000, bonus: 0.15 },
+    rug: { name: "Halı", icon: "🧶", baseCost: 2000, growth: 1.5, bonus: 0.02, maxLevel: 9 },
+    lamp: { name: "Lambader", icon: "💡", baseCost: 3500, growth: 1.5, bonus: 0.03, maxLevel: 9 },
+    picture: { name: "Tablo", icon: "🖼️", baseCost: 5000, growth: 1.5, bonus: 0.03, maxLevel: 9 },
+    shelf: { name: "Kitaplık", icon: "📚", baseCost: 8000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
+    tv: { name: "Televizyon", icon: "📺", baseCost: 12000, growth: 1.5, bonus: 0.05, maxLevel: 9 },
   };
+  var ITEM_TIER_NAMES = ["", "Basit", "Standart", "Modern"];
+
+  function itemTier(level) {
+    if (level >= 7) return 3;
+    if (level >= 4) return 2;
+    return 1;
+  }
+
+  function itemCost(key) {
+    var cfg = SHOP_ITEMS[key];
+    return Math.round(cfg.baseCost * Math.pow(cfg.growth, state.items[key]));
+  }
 
   var state = loadState();
 
@@ -108,7 +121,15 @@
       var raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return Object.assign({}, defaultState);
       var parsed = JSON.parse(raw);
-      return Object.assign({}, defaultState, parsed);
+      var merged = Object.assign({}, defaultState, parsed);
+      // Migrate old saves: decor used to be owned/not-owned booleans, now it is a level.
+      var items = Object.assign({}, defaultState.items);
+      Object.keys(items).forEach(function (key) {
+        var v = parsed.items ? parsed.items[key] : 0;
+        items[key] = v === true ? 1 : typeof v === "number" ? v : 0;
+      });
+      merged.items = items;
+      return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
     }
@@ -133,7 +154,7 @@
       mult += FURNITURE_CONFIG[key].bonus * (state.furniture[key] - 1);
     });
     Object.keys(SHOP_ITEMS).forEach(function (key) {
-      if (state.items[key]) mult += SHOP_ITEMS[key].bonus;
+      mult += SHOP_ITEMS[key].bonus * state.items[key];
     });
     return mult;
   }
@@ -327,7 +348,17 @@
   function renderRoomItems() {
     var nodes = document.querySelectorAll(".room-item");
     nodes.forEach(function (node) {
-      node.classList.toggle("owned", !!state.items[node.getAttribute("data-item")]);
+      var key = node.getAttribute("data-item");
+      var level = state.items[key];
+      var cfg = SHOP_ITEMS[key];
+      var maxed = level >= cfg.maxLevel;
+
+      node.classList.toggle("owned", level > 0);
+      node.classList.remove("tier-1", "tier-2", "tier-3");
+      node.classList.add("tier-" + itemTier(level));
+
+      document.getElementById(key + "Cost").textContent = maxed ? "MAX" : formatMoney(itemCost(key));
+      document.getElementById(key + "UpgradeBtn").classList.toggle("maxed", maxed);
     });
   }
 
@@ -338,7 +369,9 @@
 
     Object.keys(SHOP_ITEMS).forEach(function (key) {
       var item = SHOP_ITEMS[key];
-      var owned = !!state.items[key];
+      var level = state.items[key];
+      var maxed = level >= item.maxLevel;
+      var cost = itemCost(key);
 
       var row = document.createElement("div");
       row.className = "shop-row";
@@ -351,19 +384,23 @@
       info.className = "shop-info";
       var name = document.createElement("div");
       name.className = "shop-name";
-      name.textContent = item.name;
+      name.textContent =
+        item.name + (level > 0 ? " · " + ITEM_TIER_NAMES[itemTier(level)] + " (" + level + "/" + item.maxLevel + ")" : "");
       var bonus = document.createElement("div");
       bonus.className = "shop-bonus";
-      bonus.textContent = "+%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
+      bonus.textContent =
+        level > 0
+          ? "Şu an +%" + Math.round(item.bonus * level * 100) + " · her seviye +%" + Math.round(item.bonus * 100)
+          : "Her seviye +%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
       info.appendChild(name);
       info.appendChild(bonus);
 
       var buy = document.createElement("button");
-      buy.className = "shop-buy" + (owned ? " owned" : state.money < item.price ? " poor" : "");
-      buy.textContent = owned ? "Alındı ✓" : formatMoney(item.price);
-      buy.disabled = owned;
+      buy.className = "shop-buy" + (maxed ? " owned" : state.money < cost ? " poor" : "");
+      buy.textContent = maxed ? "MAX ✓" : (level > 0 ? "Yükselt " : "Satın Al ") + formatMoney(cost);
+      buy.disabled = maxed;
       buy.addEventListener("click", function () {
-        buyItem(key);
+        upgradeItem(key);
       });
 
       row.appendChild(icon);
@@ -373,18 +410,32 @@
     });
   }
 
-  function buyItem(key) {
+  function upgradeItem(key) {
     var item = SHOP_ITEMS[key];
-    if (state.items[key]) return;
-    if (state.money < item.price) {
-      showToast("Yetersiz para! Gerekli: " + formatMoney(item.price));
+    var level = state.items[key];
+    if (level >= item.maxLevel) {
+      showToast(item.name + " zaten maksimum seviyede!");
       return;
     }
-    state.money -= item.price;
-    state.items[key] = true;
-    showToast(item.name + " alındı! +%" + Math.round(item.bonus * 100) + " kazanç");
+    var cost = itemCost(key);
+    if (state.money < cost) {
+      showToast("Yetersiz para! Gerekli: " + formatMoney(cost));
+      return;
+    }
+    state.money -= cost;
+    state.items[key] = level + 1;
+
+    var tierBefore = itemTier(level);
+    var tierAfter = itemTier(level + 1);
+    if (level === 0) {
+      showToast(item.name + " alındı! +%" + Math.round(item.bonus * 100) + " kazanç");
+    } else if (tierAfter !== tierBefore) {
+      showToast(item.name + " yenilendi: " + ITEM_TIER_NAMES[tierAfter] + " model!");
+    } else {
+      showToast(item.name + " seviye " + (level + 1) + "! Kazanç arttı.");
+    }
     render();
-    renderShop();
+    if (els.shop.classList.contains("open")) renderShop();
     saveState();
   }
 
@@ -533,6 +584,13 @@
     els[UPGRADE_ELS[key].btn].addEventListener("click", function (e) {
       e.stopPropagation();
       onUpgrade(key);
+    });
+  });
+
+  Object.keys(SHOP_ITEMS).forEach(function (key) {
+    document.getElementById(key + "UpgradeBtn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      upgradeItem(key);
     });
   });
 
