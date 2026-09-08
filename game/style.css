@@ -275,9 +275,33 @@ html, body {
   background: radial-gradient(ellipse at center, rgba(255,255,255,0.55), rgba(255,255,255,0) 70%);
   pointer-events: none;
 }
-.tap-btn:active {
-  transform: translateY(3px) scale(0.98);
-  box-shadow: 0 3px 8px rgba(20,70,31,0.3), inset 0 3px 6px rgba(255,255,255,0.25), inset 0 -4px 8px rgba(0,0,0,0.12);
+/* The button is only a hint: taps land anywhere on the room. It fades out once
+   the player starts tapping and returns after a few idle minutes. */
+.tap-btn {
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 1.8s ease, transform 1.8s ease;
+}
+.tap-btn.hint-hidden {
+  opacity: 0;
+  transform: scale(0.85);
+}
+.scene { cursor: pointer; }
+.tap-ripple {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.85);
+  box-shadow: 0 0 0 2px rgba(63,185,80,0.35);
+  pointer-events: none;
+  z-index: 5;
+  animation: ripple 0.5s ease-out forwards;
+}
+@keyframes ripple {
+  from { transform: scale(0.3); opacity: 0.9; }
+  to { transform: scale(1.5); opacity: 0; }
 }
 .tap-btn.tired {
   background: radial-gradient(circle at 35% 28%, #c2c6ca, #8a9095 65%, #6e7378 100%);

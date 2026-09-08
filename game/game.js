@@ -11,6 +11,7 @@
   var FOOD_COST = 200;
   var FOOD_HUNGER_GAIN = 40;
 
+  var TAP_HINT_IDLE_MS = 4.5 * 60 * 1000;
   var OFFLINE_EARN_RATE = 0.05;
   var OFFLINE_MIN_SECONDS = 60;
   var OFFLINE_MAX_SECONDS = 8 * 3600;
@@ -569,11 +570,38 @@
     }
 
     checkCollapse();
+    if (lastTapAt && Date.now() - lastTapAt > TAP_HINT_IDLE_MS) showTapHint(true);
     render();
     saveState();
   }
 
-  els.tapBtn.addEventListener("click", onTap);
+  var lastTapAt = 0;
+
+  function showTapHint(show) {
+    els.tapBtn.classList.toggle("hint-hidden", !show);
+  }
+
+  function spawnRipple(x, y) {
+    var el = document.createElement("div");
+    el.className = "tap-ripple";
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    els.scene.appendChild(el);
+    setTimeout(function () {
+      el.remove();
+    }, 500);
+  }
+
+  // Tapping anywhere on the room earns money; furniture, badges and icons keep their own actions.
+  els.scene.addEventListener("click", function (e) {
+    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .room-item")) return;
+    var rect = els.scene.getBoundingClientRect();
+    spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
+    lastTapAt = Date.now();
+    showTapHint(false);
+    onTap();
+  });
+
   els.bedBtn.addEventListener("click", onBed);
   els.fridgeBtn.addEventListener("click", onFridge);
   els.questBtn.addEventListener("click", function () {
