@@ -989,3 +989,6 @@ html, body {
 /* Sheets must not cover the bottom nav: the player switches sections from there. */
 .navbar { position: relative; z-index: 40; }
 .shop { bottom: 52px; inset-block-end: 52px; }
+
+/* The purchase confirmation is a modal decision: it sits above the nav bar. */
+.sheet { z-index: 50; }
