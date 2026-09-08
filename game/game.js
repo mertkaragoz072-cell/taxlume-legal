@@ -34,7 +34,6 @@
     tapBtn: document.getElementById("tapBtn"),
     tapLabel: document.getElementById("tapLabel"),
     bedBtn: document.getElementById("bedBtn"),
-    bedLabel: document.getElementById("bedLabel"),
     zzz: document.getElementById("zzz"),
     fridgeBtn: document.getElementById("fridgeBtn"),
     floaters: document.getElementById("floaters"),
@@ -143,7 +142,6 @@
     els.tapBtn.classList.toggle("sleeping", state.isSleeping);
     els.tapLabel.textContent = state.isSleeping ? "..." : "DOKUN";
 
-    els.bedLabel.textContent = state.isSleeping ? "Uyandır" : "Yatak";
     els.zzz.classList.toggle("show", state.isSleeping);
   }
 
