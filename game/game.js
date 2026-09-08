@@ -31,7 +31,16 @@
     hunger: 100,
     isSleeping: false,
     furniture: { bed: 1, fridge: 1, plant: 1 },
+    items: { rug: false, lamp: false, picture: false, shelf: false, tv: false },
     lastSeen: Date.now(),
+  };
+
+  var SHOP_ITEMS = {
+    rug: { name: "Halı", icon: "🧶", price: 2000, bonus: 0.05 },
+    lamp: { name: "Lambader", icon: "💡", price: 3500, bonus: 0.08 },
+    picture: { name: "Tablo", icon: "🖼️", price: 5000, bonus: 0.1 },
+    shelf: { name: "Kitaplık", icon: "📚", price: 8000, bonus: 0.12 },
+    tv: { name: "Televizyon", icon: "📺", price: 12000, bonus: 0.15 },
   };
 
   var state = loadState();
@@ -52,6 +61,10 @@
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
+    shop: document.getElementById("shop"),
+    shopList: document.getElementById("shopList"),
+    shopSub: document.getElementById("shopSub"),
+    shopClose: document.getElementById("shopClose"),
     plantBtn: document.getElementById("plantBtn"),
     bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
     bedCost: document.getElementById("bedCost"),
@@ -118,6 +131,9 @@
     var mult = 1;
     Object.keys(FURNITURE_CONFIG).forEach(function (key) {
       mult += FURNITURE_CONFIG[key].bonus * (state.furniture[key] - 1);
+    });
+    Object.keys(SHOP_ITEMS).forEach(function (key) {
+      if (state.items[key]) mult += SHOP_ITEMS[key].bonus;
     });
     return mult;
   }
@@ -305,6 +321,80 @@
     els.zzz.classList.toggle("show", state.isSleeping);
 
     renderUpgradeBadges();
+    renderRoomItems();
+  }
+
+  function renderRoomItems() {
+    var nodes = document.querySelectorAll(".room-item");
+    nodes.forEach(function (node) {
+      node.classList.toggle("owned", !!state.items[node.getAttribute("data-item")]);
+    });
+  }
+
+  function renderShop() {
+    els.shopSub.textContent =
+      "Ev çarpanı ×" + homeMultiplier().toFixed(2) + " · Tık başına " + formatMoney(tapValue());
+    els.shopList.textContent = "";
+
+    Object.keys(SHOP_ITEMS).forEach(function (key) {
+      var item = SHOP_ITEMS[key];
+      var owned = !!state.items[key];
+
+      var row = document.createElement("div");
+      row.className = "shop-row";
+
+      var icon = document.createElement("div");
+      icon.className = "shop-icon";
+      icon.textContent = item.icon;
+
+      var info = document.createElement("div");
+      info.className = "shop-info";
+      var name = document.createElement("div");
+      name.className = "shop-name";
+      name.textContent = item.name;
+      var bonus = document.createElement("div");
+      bonus.className = "shop-bonus";
+      bonus.textContent = "+%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
+      info.appendChild(name);
+      info.appendChild(bonus);
+
+      var buy = document.createElement("button");
+      buy.className = "shop-buy" + (owned ? " owned" : state.money < item.price ? " poor" : "");
+      buy.textContent = owned ? "Alındı ✓" : formatMoney(item.price);
+      buy.disabled = owned;
+      buy.addEventListener("click", function () {
+        buyItem(key);
+      });
+
+      row.appendChild(icon);
+      row.appendChild(info);
+      row.appendChild(buy);
+      els.shopList.appendChild(row);
+    });
+  }
+
+  function buyItem(key) {
+    var item = SHOP_ITEMS[key];
+    if (state.items[key]) return;
+    if (state.money < item.price) {
+      showToast("Yetersiz para! Gerekli: " + formatMoney(item.price));
+      return;
+    }
+    state.money -= item.price;
+    state.items[key] = true;
+    showToast(item.name + " alındı! +%" + Math.round(item.bonus * 100) + " kazanç");
+    render();
+    renderShop();
+    saveState();
+  }
+
+  function openShop() {
+    renderShop();
+    els.shop.classList.add("open");
+  }
+
+  function closeShop() {
+    els.shop.classList.remove("open");
   }
 
   function levelUpIfReady() {
@@ -450,16 +540,36 @@
   navButtons.forEach(function (btn) {
     btn.addEventListener("click", function () {
       var target = btn.getAttribute("data-nav");
-      if (target === "home") return;
+      navButtons.forEach(function (b) {
+        b.classList.toggle("active", b === btn);
+      });
+      if (target === "home") {
+        closeShop();
+        return;
+      }
+      if (target === "shop") {
+        openShop();
+        return;
+      }
+      closeShop();
       var labels = {
         school: "Eğitim",
         job: "Kariyer",
         bank: "Banka",
-        shop: "Market",
         world: "Dünya",
       };
       showToast((labels[target] || "Bu bölüm") + " yakında geliyor!");
     });
+  });
+
+  els.shopClose.addEventListener("click", function () {
+    closeShop();
+    navButtons.forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-nav") === "home");
+    });
+  });
+  els.shop.addEventListener("click", function (e) {
+    if (e.target === els.shop) els.shopClose.click();
   });
 
   setInterval(function () {

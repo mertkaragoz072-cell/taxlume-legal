@@ -197,7 +197,7 @@ html, body {
 .quest-icon {
   position: absolute;
   left: 5%;
-  top: 42%;
+  top: 33%;
   z-index: 6;
   background: none;
   border: none;
@@ -464,3 +464,92 @@ html, body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* Purchasable room items */
+.room-item {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+}
+.room-item.owned { display: block; }
+.room-item svg { display: block; overflow: visible; }
+.room-item.rug { left: 20%; bottom: 12%; width: 60%; height: 40px; z-index: 1; }
+.room-item.lamp { left: 59%; bottom: 21%; width: 44px; height: 132px; z-index: 3; }
+.room-item.picture { left: 4%; top: 43%; width: 64px; height: 46px; z-index: 2; }
+.room-item.shelf { left: 71%; top: 39%; width: 26%; height: 36px; z-index: 2; }
+.room-item.tv { left: 43%; top: 44%; width: 100px; height: 66px; z-index: 2; }
+
+/* Shop panel */
+.shop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  align-items: flex-end;
+  z-index: 30;
+}
+.shop.open { display: flex; }
+.shop-panel {
+  width: 100%;
+  max-height: 72%;
+  background: var(--topbar-bg);
+  border-radius: 20px 20px 0 0;
+  padding: 14px 14px 18px;
+  color: #fff;
+  overflow-y: auto;
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.4);
+}
+.shop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.shop-title { font-size: 18px; font-weight: 900; }
+.shop-sub { font-size: 12px; color: #9aa0a6; margin-top: 2px; }
+.shop-close {
+  background: #111318;
+  border: none;
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+}
+.shop-list { display: flex; flex-direction: column; gap: 8px; }
+.shop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #111318;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.shop-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #1f2128;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.shop-info { flex: 1; min-width: 0; }
+.shop-name { font-weight: 800; font-size: 14px; }
+.shop-bonus { font-size: 12px; color: #8ee89a; margin-top: 2px; }
+.shop-buy {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--green);
+  color: #fff;
+  white-space: nowrap;
+}
+.shop-buy.owned { background: #3a3a40; color: #9aa0a6; cursor: default; }
+.shop-buy.poor { background: #3a3a40; color: #ffb4a8; }
