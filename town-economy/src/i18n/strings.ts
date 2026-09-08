@@ -460,6 +460,8 @@ export const STRINGS = {
       wonTitle: "🎉 Kazandın!",
       wonAmount: "+{amount} 🪙",
       claimBtn: "Harika!",
+      bonusSpinBtn: "📺 Reklam İzle, Bir Kez Daha Çevir",
+      watchingAd: "Reklam izleniyor...",
     },
     combo: {
       milestone: "{count}x KOMBO!",
@@ -1372,6 +1374,8 @@ export const STRINGS = {
       wonTitle: "🎉 You Won!",
       wonAmount: "+{amount} 🪙",
       claimBtn: "Awesome!",
+      bonusSpinBtn: "📺 Watch Ad, Spin Once More",
+      watchingAd: "Watching ad...",
     },
     combo: {
       milestone: "{count}x COMBO!",

@@ -442,7 +442,8 @@ type Action =
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "ACTIVATE_SPEED_BOOST" }
-  | { type: "DISMISS_DAILY_BONUS" };
+  | { type: "DISMISS_DAILY_BONUS" }
+  | { type: "CLAIM_BONUS_SPIN" };
 
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -2391,6 +2392,15 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return dismissOfflineSummary(state);
     case "DISMISS_DAILY_BONUS":
       return state.dailyBonusPending === null ? state : { ...state, dailyBonusPending: null };
+    case "CLAIM_BONUS_SPIN":
+      // A "watch an ad to spin again" bonus round on the daily reward wheel
+      // — grants the same already-computed amount a second time. Limited
+      // to once per day by the modal's own local UI state (it stops
+      // offering the button after one use); dailyBonusPending stays set
+      // until the player finally dismisses, same as the first spin.
+      return state.dailyBonusPending === null
+        ? state
+        : { ...state, cash: state.cash + state.dailyBonusPending };
     case "RESOLVE_DECISION":
       return resolveDecision(state, action.optionId);
     case "RESOLVE_REQUEST":
@@ -2539,6 +2549,7 @@ export function useEconomy() {
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
   const dismissDailyBonus = useCallback(() => dispatch({ type: "DISMISS_DAILY_BONUS" }), []);
+  const claimBonusSpin = useCallback(() => dispatch({ type: "CLAIM_BONUS_SPIN" }), []);
   const resolveDecision_ = useCallback(
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
     []
@@ -2601,6 +2612,7 @@ export function useEconomy() {
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
     dismissDailyBonus,
+    claimBonusSpin,
     resolveDecision: resolveDecision_,
     resolveRequest,
     resolveRivalOffer: resolveRivalOffer_,
