@@ -800,3 +800,17 @@ html, body {
 .banner.progress .banner-tut { display: none; }
 .banner.progress .xp-bar { display: block; }
 .banner.progress { padding: 12px 0 14px; }
+
+/* ---------- Real-world proportions (1 m ≈ 80 px): character is the reference ---------- */
+.furniture.plant { left: 56%; }
+.character { left: 37%; width: 82px; height: 136px; }
+.character.eating { left: 66%; }
+.character.sleeping { left: 6px; bottom: calc(21% + 46px); width: 38px; height: 31px; }
+.room-item.rug { left: 36%; bottom: 9%; width: 150px; height: 34px; }
+.room-item.lamp { left: 66%; bottom: 21%; width: 43px; height: 128px; }
+.room-item.picture { left: 36%; top: auto; bottom: calc(21% + 150px); width: 56px; height: 40px; }
+.room-item.shelf { left: 52%; top: auto; bottom: calc(21% + 170px); width: 80px; height: 29px; }
+.room-item.tv { left: 71%; top: auto; bottom: calc(21% + 160px); width: 96px; height: 63px; }
+.window { left: 8%; top: auto; bottom: calc(21% + 114px); width: 88px; height: 72px; }
+.lamp-light { left: calc(66% - 70px); bottom: calc(21% + 40px); width: 180px; height: 190px; }
+.zzz-stack { top: -22px; right: 6px; }
