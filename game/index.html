@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tap Life - Tıkla ve Kazan</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="phone">
+
+  <div class="topbar">
+    <div class="profile">
+      <div class="avatar">🧑‍🍳</div>
+      <div class="level-badge" id="levelBadge">1</div>
+    </div>
+    <div class="money-pill">
+      <span class="coin">💰</span>
+      <span id="moneyText">$0</span>
+    </div>
+    <div class="day-pill">
+      <span id="dayText">Gün 1</span>
+    </div>
+  </div>
+
+  <div class="statsbar">
+    <div class="stat">
+      <span class="stat-icon">❤️</span>
+      <div class="bar"><div class="bar-fill health" id="healthFill"></div></div>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">⚡</span>
+      <div class="bar"><div class="bar-fill energy" id="energyFill"></div></div>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">🍴</span>
+      <div class="bar"><div class="bar-fill hunger" id="hungerFill"></div></div>
+    </div>
+  </div>
+
+  <div class="scene" id="scene">
+    <div class="floaters" id="floaters"></div>
+
+    <div class="tap-wrap">
+      <button class="tap-btn" id="tapBtn">
+        <span id="tapLabel">DOKUN</span>
+      </button>
+    </div>
+
+    <div class="furniture bed" id="bedBtn">
+      <div class="bed-icon">🛏️<span class="zzz" id="zzz">💤</span></div>
+      <div class="furniture-label" id="bedLabel">Yatak</div>
+    </div>
+
+    <div class="furniture fridge" id="fridgeBtn">
+      <div class="fridge-icon">🧊</div>
+      <div class="furniture-label">Buzdolabı</div>
+    </div>
+
+    <div class="banner">DOKUN VE KAZAN!</div>
+  </div>
+
+  <div class="navbar">
+    <button class="nav-btn active" data-nav="home">🏠</button>
+    <button class="nav-btn" data-nav="school">🎓</button>
+    <button class="nav-btn" data-nav="job">💼</button>
+    <button class="nav-btn" data-nav="bank">🏦</button>
+    <button class="nav-btn" data-nav="shop">🛒</button>
+    <button class="nav-btn" data-nav="world">🌍</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
