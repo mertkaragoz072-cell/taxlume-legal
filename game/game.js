@@ -32,7 +32,10 @@
     hunger: 100,
     isSleeping: false,
     furniture: { bed: 1, fridge: 1, plant: 1 },
-    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0 },
+    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0, pet: 0 },
+    pet: { happiness: 100 },
+    perkPoints: 0,
+    perks: { critChance: 0, critMult: 0, comboCap: 0, offlineRate: 0, energySaver: 0 },
     taps: 0,
     muted: false,
     edu: 0,
@@ -43,7 +46,7 @@
     bank: { balance: 0, level: 0 },
     quests: { day: 0, list: [] },
     ach: {},
-    stats: { taps: 0, earned: 0, eats: 0, sleeps: 0, upgrades: 0, workSec: 0, golds: 0, crits: 0 },
+    stats: { taps: 0, earned: 0, eats: 0, sleeps: 0, upgrades: 0, workSec: 0, golds: 0, crits: 0, petFeeds: 0 },
     legacy: 0,
     prestiges: 0,
     streak: { day: 0, count: 0 },
@@ -61,7 +64,21 @@
     shelf: { name: "Kitaplık", icon: "📚", baseCost: 8000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
     tv: { name: "Televizyon", icon: "📺", baseCost: 12000, growth: 1.5, bonus: 0.05, maxLevel: 9 },
     room: { name: "Oda (duvar + zemin)", icon: "🏠", baseCost: 15000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
+    pet: { name: "Evcil Hayvan", icon: "🐶", baseCost: 6000, growth: 1.5, bonus: 0.035, maxLevel: 9 },
   };
+
+  // Legacy points (earned from prestige and legacy-tagged achievements) buy permanent perks.
+  var PERKS = {
+    critChance: { name: "Şanslı Vuruş", icon: "🎯", desc: "Kritik vuruş şansı +%2", maxLevel: 5 },
+    critMult: { name: "Güçlü Vuruş", icon: "💪", desc: "Kritik çarpanı +1", maxLevel: 5 },
+    comboCap: { name: "Kombo Ustası", icon: "🔥", desc: "Maksimum kombo +5", maxLevel: 5 },
+    offlineRate: { name: "Pasif Kazanç", icon: "🌙", desc: "Çevrimdışı kazanç oranı +%1", maxLevel: 5 },
+    energySaver: { name: "Dayanıklılık", icon: "🔋", desc: "Tıklama enerji maliyeti -0.3", maxLevel: 5 },
+  };
+
+  function perkCost(key) {
+    return state.perks[key] + 1; // 1, 2, 3... legacy points per level
+  }
   var ITEM_TIER_NAMES = ["", "Basit", "Standart", "Modern"];
 
   function itemTier(level) {
@@ -120,6 +137,8 @@
     panelClose: document.getElementById("panelClose"),
     workChip: document.getElementById("workChip"),
     comboChip: document.getElementById("comboChip"),
+    petItem: document.querySelector('.room-item[data-item="pet"]'),
+    petMeterFill: document.getElementById("petMeterFill"),
     buySheet: document.getElementById("buySheet"),
     buyTitle: document.getElementById("buyTitle"),
     buyClose: document.getElementById("buyClose"),
@@ -186,6 +205,8 @@
       merged.stats = Object.assign({}, defaultState.stats, parsed.stats);
       merged.streak = Object.assign({}, defaultState.streak, parsed.streak);
       merged.ach = Object.assign({}, parsed.ach);
+      merged.pet = Object.assign({}, defaultState.pet, parsed.pet);
+      merged.perks = Object.assign({}, defaultState.perks, parsed.perks);
       return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
@@ -211,7 +232,9 @@
       mult += FURNITURE_CONFIG[key].bonus * (state.furniture[key] - 1);
     });
     Object.keys(SHOP_ITEMS).forEach(function (key) {
-      mult += SHOP_ITEMS[key].bonus * state.items[key];
+      // A hungry pet still keeps the player company, but only pulls half its weight.
+      var factor = key === "pet" && state.pet.happiness <= 0 ? 0.5 : 1;
+      mult += SHOP_ITEMS[key].bonus * state.items[key] * factor;
     });
     return mult;
   }
@@ -220,8 +243,28 @@
     return Math.round(tapBase() * homeMultiplier());
   }
 
+  function effectiveOfflineRate() {
+    return OFFLINE_EARN_RATE + 0.01 * state.perks.offlineRate;
+  }
+
   function offlineRatePerSecond() {
-    return tapValue() * OFFLINE_EARN_RATE;
+    return tapValue() * effectiveOfflineRate();
+  }
+
+  function tapEnergyCost() {
+    return Math.max(0.5, TAP_ENERGY_COST - 0.3 * state.perks.energySaver);
+  }
+
+  function critChance() {
+    return CRIT_CHANCE + 0.02 * state.perks.critChance;
+  }
+
+  function critMultiplier() {
+    return CRIT_MULT + state.perks.critMult;
+  }
+
+  function comboCap() {
+    return COMBO_MAX + 5 * state.perks.comboCap;
   }
 
   function furnitureCost(key) {
@@ -427,6 +470,43 @@
       document.getElementById(key + "Cost").textContent = maxed ? "MAX" : formatMoney(itemCost(key));
       document.getElementById(key + "UpgradeBtn").classList.toggle("maxed", maxed);
     });
+    renderPet();
+  }
+
+  var PET_FEED_COST = 40;
+
+  function petHungry() {
+    return state.pet.happiness <= 30;
+  }
+
+  function renderPet() {
+    if (state.items.pet <= 0) return;
+    var node = els.petItem;
+    node.classList.toggle("hungry", petHungry());
+    els.petMeterFill.style.width = state.pet.happiness + "%";
+  }
+
+  function feedPet() {
+    if (state.items.pet <= 0) return;
+    if (state.pet.happiness >= 100) {
+      showToast("Miniğin zaten tok, mutlu görünüyor!");
+      return;
+    }
+    if (state.money < PET_FEED_COST) {
+      sfx.deny();
+      showToast("Mama için yeterli paran yok.");
+      return;
+    }
+    state.money -= PET_FEED_COST;
+    state.pet.happiness = clamp(state.pet.happiness + 35, 0, 100);
+    bumpStat("petFeeds", 1);
+    els.petItem.classList.remove("fed-pop");
+    void els.petItem.offsetWidth;
+    els.petItem.classList.add("fed-pop");
+    pushPill("+35 🦴", false);
+    sfx.coin();
+    render();
+    saveState();
   }
 
   function renderShop() {
@@ -792,7 +872,7 @@
     var lines = [
       "Kazanç bonusu: +%" + Math.round(info.bonusNow * 100) + " → +%" + Math.round(info.bonusNext * 100),
       "Tık başına: " + formatMoney(Math.round(base * multNow)) + " → " + formatMoney(Math.round(base * multNext)),
-      "Çevrimdışı: " + formatMoney(Math.round(base * multNow * OFFLINE_EARN_RATE * 3600)) + "/sa → " + formatMoney(Math.round(base * multNext * OFFLINE_EARN_RATE * 3600)) + "/sa",
+      "Çevrimdışı: " + formatMoney(Math.round(base * multNow * effectiveOfflineRate() * 3600)) + "/sa → " + formatMoney(Math.round(base * multNext * effectiveOfflineRate() * 3600)) + "/sa",
     ];
     if (!newModel && info.levelsToNextTier > 0) {
       lines.push(info.levelsToNextTier + " seviye sonra: " + info.names[info.tierNow + 1] + " model");
@@ -1109,7 +1189,7 @@
   var comboTimer = null;
 
   function comboMultiplier() {
-    return 1 + Math.min(comboCount, COMBO_MAX) * 0.05;
+    return 1 + Math.min(comboCount, comboCap()) * 0.05;
   }
 
   function bumpCombo() {
@@ -1128,7 +1208,7 @@
     els.comboChip.classList.toggle("show", showCombo);
     if (showCombo) {
       els.comboChip.textContent = "🔥 Kombo ×" + comboMultiplier().toFixed(2);
-      els.comboChip.style.setProperty("--fill", Math.min(100, (comboCount / COMBO_MAX) * 100) + "%");
+      els.comboChip.style.setProperty("--fill", Math.min(100, (comboCount / comboCap()) * 100) + "%");
     }
 
     var working = isWorking();
@@ -1560,7 +1640,8 @@
       return state.ach[a.id];
     }).length;
     els.panelSub.textContent =
-      unlocked + "/" + ACHIEVEMENTS.length + " başarım · Miras ×" + legacyMultiplier().toFixed(2);
+      unlocked + "/" + ACHIEVEMENTS.length + " başarım · Miras ×" + legacyMultiplier().toFixed(2) +
+      " · 💎 " + state.perkPoints + " puan";
 
     var canPrestige = state.stats.earned >= PRESTIGE_MIN_EARNED;
     var gain = prestigeGain();
@@ -1575,6 +1656,27 @@
       onClick: canPrestige ? doPrestige : null,
     });
 
+    addNote("💎 Kalıcı Yetenekler — miras puanıyla satın al, prestij sonrası da kalır");
+    Object.keys(PERKS).forEach(function (key) {
+      var cfg = PERKS[key];
+      var level = state.perks[key];
+      var maxed = level >= cfg.maxLevel;
+      var cost = perkCost(key);
+      var affordable = !maxed && state.perkPoints >= cost;
+      makeRow(cfg.icon, cfg.name + " (Seviye " + level + "/" + cfg.maxLevel + ")",
+        cfg.desc + (maxed ? " · Maksimum seviyede" : " · Bedeli 💎 " + cost), {
+        rowClass: maxed ? "done" : affordable ? "highlight" : "locked",
+        progress: (level / cfg.maxLevel) * 100,
+        button: maxed ? "Tamam ✓" : "Satın Al",
+        buttonClass: maxed ? "owned" : affordable ? "" : "owned",
+        disabled: maxed || !affordable,
+        onClick: !maxed ? function () {
+          buyPerk(key);
+        } : null,
+      });
+    });
+
+    addNote("🏆 Başarımlar");
     ACHIEVEMENTS.forEach(function (a) {
       var have = !!state.ach[a.id];
       var ready = !have && a.test(state);
@@ -1598,7 +1700,10 @@
       state.money += a.money;
       bumpStat("earned", a.money);
     }
-    if (a.legacy) state.legacy += a.legacy;
+    if (a.legacy) {
+      state.legacy += a.legacy;
+      state.perkPoints += a.legacy;
+    }
     celebrate(a.icon, a.name, a.legacy ? "+" + a.legacy + " miras puanı" : "+" + formatMoney(a.money));
     sfx.purchase();
     render();
@@ -1614,6 +1719,7 @@
     if (state.stats.earned < PRESTIGE_MIN_EARNED) return;
     var gain = prestigeGain();
     state.legacy += gain;
+    state.perkPoints += gain;
     state.prestiges += 1;
 
     state.money = 0;
@@ -1634,8 +1740,29 @@
     state.jobXp = 0;
     state.working = false;
     state.bank.balance = 0;
+    state.pet.happiness = 100;
 
     celebrate("🌟", "Yeni hayat başladı!", "+" + gain + " miras puanı · kalıcı ×" + legacyMultiplier().toFixed(2));
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function buyPerk(key) {
+    var cfg = PERKS[key];
+    if (!cfg) return;
+    var level = state.perks[key];
+    if (level >= cfg.maxLevel) return;
+    var cost = perkCost(key);
+    if (state.perkPoints < cost) {
+      sfx.deny();
+      showToast("Yeterli miras puanın yok.");
+      return;
+    }
+    state.perkPoints -= cost;
+    state.perks[key] = level + 1;
+    celebrate(cfg.icon, cfg.name + " geliştirildi!", "Seviye " + (level + 1) + "/" + cfg.maxLevel);
     sfx.purchase();
     render();
     renderPanel();
@@ -1673,10 +1800,10 @@
     }
 
     bumpCombo();
-    var crit = Math.random() < CRIT_CHANCE;
-    var earned = Math.round(tapValue() * comboMultiplier() * (crit ? CRIT_MULT : 1));
+    var crit = Math.random() < critChance();
+    var earned = Math.round(tapValue() * comboMultiplier() * (crit ? critMultiplier() : 1));
     state.money += earned;
-    state.energy = clamp(state.energy - TAP_ENERGY_COST, 0, 100);
+    state.energy = clamp(state.energy - tapEnergyCost(), 0, 100);
     state.xp += TAP_XP_GAIN;
     state.taps += 1;
     bumpStat("taps", 1);
@@ -1764,6 +1891,9 @@
 
     accrueBank(PASSIVE_TICK_MS / 1000);
     tickStudy();
+    if (state.items.pet > 0) {
+      state.pet.happiness = clamp(state.pet.happiness - 0.3 * (PASSIVE_TICK_MS / 3000), 0, 100);
+    }
 
     if (state.hunger <= 0 || state.energy <= 0) {
       state.health = clamp(state.health - 3, 0, 100);
@@ -1808,6 +1938,10 @@
 
   els.bedBtn.addEventListener("click", onBed);
   els.fridgeBtn.addEventListener("click", onFridge);
+  els.petItem.addEventListener("click", function (e) {
+    e.stopPropagation();
+    feedPet();
+  });
   els.questBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("quests");
@@ -1896,6 +2030,9 @@
   (function grantOfflineEarnings() {
     var elapsedSec = Math.floor((Date.now() - (state.lastSeen || Date.now())) / 1000);
     var countedSec = Math.min(Math.max(elapsedSec, 0), OFFLINE_MAX_SECONDS);
+    if (state.items.pet > 0) {
+      state.pet.happiness = clamp(state.pet.happiness - 0.1 * Math.max(elapsedSec, 0), 0, 100);
+    }
     if (countedSec < OFFLINE_MIN_SECONDS) return;
 
     var idle = offlineRatePerSecond() * countedSec;
