@@ -35,6 +35,18 @@
     items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0 },
     taps: 0,
     muted: false,
+    edu: 0,
+    eduStudy: null,
+    job: null,
+    jobXp: 0,
+    working: false,
+    bank: { balance: 0, level: 0 },
+    quests: { day: 0, list: [] },
+    ach: {},
+    stats: { taps: 0, earned: 0, eats: 0, sleeps: 0, upgrades: 0, workSec: 0, golds: 0, crits: 0 },
+    legacy: 0,
+    prestiges: 0,
+    streak: { day: 0, count: 0 },
     lastSeen: Date.now(),
   };
 
@@ -101,6 +113,13 @@
     rewardTitle: document.getElementById("rewardTitle"),
     rewardSub: document.getElementById("rewardSub"),
     muteBtn: document.getElementById("muteBtn"),
+    panel: document.getElementById("panel"),
+    panelTitle: document.getElementById("panelTitle"),
+    panelSub: document.getElementById("panelSub"),
+    panelBody: document.getElementById("panelBody"),
+    panelClose: document.getElementById("panelClose"),
+    workChip: document.getElementById("workChip"),
+    comboChip: document.getElementById("comboChip"),
     buySheet: document.getElementById("buySheet"),
     buyTitle: document.getElementById("buyTitle"),
     buyClose: document.getElementById("buyClose"),
@@ -161,6 +180,12 @@
         items[key] = v === true ? 1 : typeof v === "number" ? v : 0;
       });
       merged.items = items;
+      // Nested objects added later must not be half-filled by an older save.
+      merged.bank = Object.assign({}, defaultState.bank, parsed.bank);
+      merged.quests = Object.assign({}, defaultState.quests, parsed.quests);
+      merged.stats = Object.assign({}, defaultState.stats, parsed.stats);
+      merged.streak = Object.assign({}, defaultState.streak, parsed.streak);
+      merged.ach = Object.assign({}, parsed.ach);
       return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
@@ -192,8 +217,7 @@
   }
 
   function tapValue() {
-    var base = 100 + (state.level - 1) * 20;
-    return Math.round(base * homeMultiplier());
+    return Math.round(tapBase() * homeMultiplier());
   }
 
   function offlineRatePerSecond() {
@@ -239,9 +263,9 @@
     });
   }
 
-  function pushPill(text, bad) {
+  function pushPill(text, bad, crit) {
     var el = document.createElement("div");
-    el.className = "floater-pill" + (bad ? " bad" : "");
+    el.className = "floater-pill" + (bad ? " bad" : "") + (crit ? " crit" : "");
     el.textContent = text;
     el.style.bottom = "-40px";
     el.style.opacity = "0";
@@ -380,6 +404,11 @@
     renderCharacter();
     renderBanner();
     renderAvatar();
+    renderHud();
+    renderNavBadges();
+    // Only the time-driven tabs need rebuilding on every tick; the others
+    // would rip out the row the player is about to tap.
+    if (panelTab === "school" || panelTab === "job" || panelTab === "bank") renderPanel();
   }
 
   function renderRoomItems() {
@@ -758,7 +787,7 @@
 
     var multNow = homeMultiplier();
     var multNext = multNow + info.cfg.bonus;
-    var base = 100 + (state.level - 1) * 20;
+    var base = tapBase();
     els.buyStats.textContent = "";
     var lines = [
       "Kazanç bonusu: +%" + Math.round(info.bonusNow * 100) + " → +%" + Math.round(info.bonusNext * 100),
@@ -861,6 +890,7 @@
 
     var moneyBefore = state.money;
     state.money -= info.cost;
+    bumpStat("upgrades", 1);
     if (info.isF) state.furniture[key] += 1;
     else state.items[key] += 1;
     var newModel = info.tierNext !== info.tierNow || (!info.isF && info.level === 0);
@@ -903,6 +933,715 @@
     }
   }
 
+  /* =====================================================================
+     Progression systems: education, career, bank, quests, achievements,
+     combos, golden coins and prestige.
+     ===================================================================== */
+
+  var EDU = [
+    { name: "İlkokul", icon: "🎒", cost: 0, mins: 1, bonus: 0.1 },
+    { name: "Lise", icon: "📗", cost: 5000, mins: 3, bonus: 0.15 },
+    { name: "Üniversite", icon: "🎓", cost: 40000, mins: 8, bonus: 0.25 },
+    { name: "Yüksek Lisans", icon: "📜", cost: 250000, mins: 15, bonus: 0.4 },
+    { name: "Doktora", icon: "🔬", cost: 1500000, mins: 30, bonus: 0.6 },
+  ];
+
+  var JOBS = {
+    courier: { name: "Kurye", icon: "🛵", edu: 1, income: 8 },
+    cashier: { name: "Kasiyer", icon: "🧾", edu: 2, income: 25 },
+    office: { name: "Ofis Elemanı", icon: "🗂️", edu: 2, income: 60 },
+    dev: { name: "Yazılımcı", icon: "💻", edu: 3, income: 180 },
+    doctor: { name: "Doktor", icon: "🩺", edu: 4, income: 520 },
+    ceo: { name: "CEO", icon: "🏢", edu: 5, income: 1600 },
+  };
+  var JOB_XP_PER_LEVEL = 600; // seconds worked per promotion
+  var JOB_MAX_LEVEL = 5;
+
+  var BANK_MAX_LEVEL = 5;
+  var BANK_BASE_RATE = 0.02; // per hour
+  var BANK_RATE_STEP = 0.006;
+  var BANK_UPGRADE_COST = [50000, 250000, 1000000, 5000000, 25000000];
+
+  var PRESTIGE_MIN_EARNED = 10000000;
+  var LEGACY_BONUS = 0.05;
+
+  var QUEST_POOL = [
+    { id: "tap150", icon: "👆", stat: "taps", target: 150, text: "150 kez dokun", reward: 30 },
+    { id: "tap400", icon: "👆", stat: "taps", target: 400, text: "400 kez dokun", reward: 80 },
+    { id: "crit8", icon: "💥", stat: "crits", target: 8, text: "8 kritik vuruş yap", reward: 60 },
+    { id: "gold3", icon: "🪙", stat: "golds", target: 3, text: "3 altın para topla", reward: 70 },
+    { id: "eat3", icon: "🍗", stat: "eats", target: 3, text: "3 kez yemek ye", reward: 40 },
+    { id: "sleep2", icon: "🛏️", stat: "sleeps", target: 2, text: "2 kez uyu", reward: 40 },
+    { id: "upg2", icon: "⬆️", stat: "upgrades", target: 2, text: "2 eşya yükselt", reward: 90 },
+    { id: "work300", icon: "💼", stat: "workSec", target: 300, text: "5 dakika çalış", reward: 70 },
+    { id: "work900", icon: "💼", stat: "workSec", target: 900, text: "15 dakika çalış", reward: 140 },
+  ];
+
+  var ACHIEVEMENTS = [
+    { id: "tap1", icon: "👆", name: "İlk Dokunuş", desc: "İlk kez dokun", money: 500, test: function (s) { return s.stats.taps >= 1; } },
+    { id: "tap1k", icon: "🖐️", name: "Bin Dokunuş", desc: "1.000 kez dokun", money: 5000, test: function (s) { return s.stats.taps >= 1000; } },
+    { id: "tap10k", icon: "🙌", name: "On Bin Dokunuş", desc: "10.000 kez dokun", money: 60000, test: function (s) { return s.stats.taps >= 10000; } },
+    { id: "earn100k", icon: "💵", name: "İlk 100 Bin", desc: "Toplam $100.000 kazan", money: 10000, test: function (s) { return s.stats.earned >= 100000; } },
+    { id: "earn1m", icon: "💰", name: "Milyoner", desc: "Toplam $1.000.000 kazan", money: 100000, test: function (s) { return s.stats.earned >= 1000000; } },
+    { id: "earn10m", icon: "🤑", name: "Multimilyoner", desc: "Toplam $10.000.000 kazan", legacy: 1, test: function (s) { return s.stats.earned >= 10000000; } },
+    { id: "lvl10", icon: "⭐", name: "Seviye 10", desc: "10. seviyeye ulaş", money: 25000, test: function (s) { return s.level >= 10; } },
+    { id: "edu3", icon: "🎓", name: "Üniversiteli", desc: "Üniversiteyi bitir", money: 50000, test: function (s) { return s.edu >= 3; } },
+    { id: "edu5", icon: "🔬", name: "Doktor Unvanı", desc: "Doktorayı bitir", legacy: 1, test: function (s) { return s.edu >= 5; } },
+    { id: "job1", icon: "💼", name: "İlk İş", desc: "Bir işe gir", money: 5000, test: function (s) { return !!s.job; } },
+    { id: "work1h", icon: "⏱️", name: "Mesai", desc: "Toplam 1 saat çalış", money: 40000, test: function (s) { return s.stats.workSec >= 3600; } },
+    { id: "ceo", icon: "🏢", name: "Patron", desc: "CEO olarak çalış", legacy: 1, test: function (s) { return s.job === "ceo"; } },
+    { id: "shopAll", icon: "🛒", name: "Ev Sahibi", desc: "Marketteki tüm eşyaları al", money: 80000, test: function (s) { return Object.keys(SHOP_ITEMS).every(function (k) { return s.items[k] > 0; }); } },
+    { id: "maxItem", icon: "✨", name: "En İyisi", desc: "Bir eşyayı MAX seviyeye çıkar", money: 150000, test: function (s) { return Object.keys(SHOP_ITEMS).some(function (k) { return s.items[k] >= SHOP_ITEMS[k].maxLevel; }) || Object.keys(FURNITURE_CONFIG).some(function (k) { return s.furniture[k] >= FURNITURE_CONFIG[k].maxLevel; }); } },
+    { id: "bank1m", icon: "🏦", name: "Yatırımcı", desc: "Bankada $1.000.000 tut", money: 120000, test: function (s) { return s.bank.balance >= 1000000; } },
+    { id: "streak7", icon: "🔥", name: "Sadık Oyuncu", desc: "7 gün üst üste oyna", legacy: 1, test: function (s) { return s.streak.count >= 7; } },
+    { id: "prestige1", icon: "🌟", name: "Yeni Hayat", desc: "İlk kez yeniden doğ", money: 0, test: function (s) { return s.prestiges >= 1; } },
+  ];
+
+  /* ---------- Derived economy ---------- */
+  function eduMultiplier() {
+    var mult = 1;
+    for (var i = 0; i < state.edu && i < EDU.length; i++) mult += EDU[i].bonus;
+    return mult;
+  }
+
+  function legacyMultiplier() {
+    return 1 + state.legacy * LEGACY_BONUS;
+  }
+
+  function tapBase() {
+    return (100 + (state.level - 1) * 20) * eduMultiplier() * legacyMultiplier();
+  }
+
+  function jobLevel() {
+    return Math.min(JOB_MAX_LEVEL, Math.floor(state.jobXp / JOB_XP_PER_LEVEL) + 1);
+  }
+
+  function salaryPerSecond() {
+    if (!state.job || !JOBS[state.job]) return 0;
+    return JOBS[state.job].income * (1 + 0.25 * (jobLevel() - 1)) * legacyMultiplier();
+  }
+
+  function bankRate() {
+    return BANK_BASE_RATE + BANK_RATE_STEP * state.bank.level;
+  }
+
+  function isWorking() {
+    return state.working && !!state.job && !state.isSleeping && state.energy > 0;
+  }
+
+  /* ---------- Stats & quest progress ---------- */
+  function bumpStat(key, amount) {
+    state.stats[key] = (state.stats[key] || 0) + amount;
+  }
+
+  function questProgress(q) {
+    return clamp((state.stats[q.stat] || 0) - q.start, 0, q.target);
+  }
+
+  function questReward(q) {
+    return Math.round(q.reward * tapBase() * (1 + state.level * 0.15));
+  }
+
+  function todayIndex() {
+    return Math.floor(Date.now() / 86400000);
+  }
+
+  function refreshQuests(force) {
+    var today = todayIndex();
+    if (!force && state.quests.day === today && state.quests.list.length) return;
+
+    var seed = today * 9301 + 49297;
+    var pool = QUEST_POOL.slice();
+    var picked = [];
+    for (var i = 0; i < 3 && pool.length; i++) {
+      seed = (seed * 9301 + 49297) % 233280;
+      var idx = Math.floor((seed / 233280) * pool.length);
+      var base = pool.splice(idx, 1)[0];
+      picked.push({
+        id: base.id,
+        icon: base.icon,
+        text: base.text,
+        stat: base.stat,
+        target: base.target,
+        reward: base.reward,
+        start: state.stats[base.stat] || 0,
+        claimed: false,
+      });
+    }
+    state.quests = { day: today, list: picked };
+  }
+
+  function claimableQuests() {
+    return state.quests.list.filter(function (q) {
+      return !q.claimed && questProgress(q) >= q.target;
+    }).length;
+  }
+
+  function claimableAchievements() {
+    return ACHIEVEMENTS.filter(function (a) {
+      return !state.ach[a.id] && a.test(state);
+    }).length;
+  }
+
+  /* ---------- Daily streak ---------- */
+  function checkStreak() {
+    var today = todayIndex();
+    if (state.streak.day === today) return;
+    var prev = state.streak.day;
+    state.streak.count = prev === today - 1 ? state.streak.count + 1 : 1;
+    state.streak.day = today;
+    var bonus = Math.round(tapBase() * 40 * state.streak.count);
+    state.money += bonus;
+    bumpStat("earned", bonus);
+    setTimeout(function () {
+      celebrate("🔥", state.streak.count + ". gün serisi!", "Günlük bonus " + formatMoney(bonus));
+      sfx.purchase();
+    }, 900);
+  }
+
+  /* ---------- Combo & critical taps ---------- */
+  var COMBO_WINDOW_MS = 1400;
+  var COMBO_MAX = 20;
+  var CRIT_CHANCE = 0.08;
+  var CRIT_MULT = 5;
+  var comboCount = 0;
+  var comboAt = 0;
+  var comboTimer = null;
+
+  function comboMultiplier() {
+    return 1 + Math.min(comboCount, COMBO_MAX) * 0.05;
+  }
+
+  function bumpCombo() {
+    var now = Date.now();
+    comboCount = now - comboAt < COMBO_WINDOW_MS ? comboCount + 1 : 1;
+    comboAt = now;
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(function () {
+      comboCount = 0;
+      renderHud();
+    }, COMBO_WINDOW_MS);
+  }
+
+  function renderHud() {
+    var showCombo = comboCount >= 3;
+    els.comboChip.classList.toggle("show", showCombo);
+    if (showCombo) {
+      els.comboChip.textContent = "🔥 Kombo ×" + comboMultiplier().toFixed(2);
+      els.comboChip.style.setProperty("--fill", Math.min(100, (comboCount / COMBO_MAX) * 100) + "%");
+    }
+
+    var working = isWorking();
+    els.workChip.classList.toggle("show", !!state.job);
+    if (state.job) {
+      els.workChip.textContent = working
+        ? JOBS[state.job].icon + " " + formatMoney(salaryPerSecond()) + "/sn"
+        : JOBS[state.job].icon + " Mesai kapalı";
+      els.workChip.classList.toggle("off", !working);
+    }
+    els.character.classList.toggle("working", working);
+  }
+
+  function renderNavBadges() {
+    var alerts = {
+      school: state.eduStudy ? false : state.edu < EDU.length && state.money >= EDU[state.edu].cost,
+      job: !state.job && state.edu >= 1,
+      bank: false,
+      world: claimableAchievements() > 0,
+      shop: false,
+    };
+    navButtons.forEach(function (btn) {
+      btn.classList.toggle("has-alert", !!alerts[btn.getAttribute("data-nav")]);
+    });
+    els.questBtn.classList.toggle("has-alert", claimableQuests() > 0);
+  }
+
+  /* ---------- Golden coin ---------- */
+  var goldTimer = null;
+
+  function scheduleGoldCoin() {
+    clearTimeout(goldTimer);
+    goldTimer = setTimeout(spawnGoldCoin, 45000 + Math.random() * 45000);
+  }
+
+  function spawnGoldCoin() {
+    scheduleGoldCoin();
+    if (state.isSleeping || document.querySelector(".gold-coin")) return;
+
+    var coin = document.createElement("button");
+    coin.className = "gold-coin";
+    coin.textContent = "🪙";
+    coin.style.left = 12 + Math.random() * 64 + "%";
+    coin.style.top = 14 + Math.random() * 34 + "%";
+    coin.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var prize = Math.round(tapValue() * 25);
+      state.money += prize;
+      bumpStat("earned", prize);
+      bumpStat("golds", 1);
+      coin.remove();
+      sfx.purchase();
+      celebrate("🪙", "Altın para!", "+" + formatMoney(prize));
+      render();
+      saveState();
+    });
+    els.scene.appendChild(coin);
+    setTimeout(function () {
+      coin.remove();
+    }, 7000);
+  }
+
+  /* ---------- Generic panel ---------- */
+  var panelTab = null;
+
+  var PANEL_META = {
+    school: { title: "🎓 Eğitim", build: buildSchool },
+    job: { title: "💼 Kariyer", build: buildJob },
+    bank: { title: "🏦 Banka", build: buildBank },
+    world: { title: "🏆 Başarımlar", build: buildAchievements },
+    quests: { title: "📋 Görevler", build: buildQuests },
+  };
+
+  function openPanel(tab) {
+    panelTab = tab;
+    closeShop();
+    els.panel.classList.add("open");
+    renderPanel();
+  }
+
+  function closePanel() {
+    panelTab = null;
+    els.panel.classList.remove("open");
+  }
+
+  function renderPanel() {
+    if (!panelTab) return;
+    var meta = PANEL_META[panelTab];
+    els.panelTitle.textContent = meta.title;
+    els.panelBody.textContent = "";
+    meta.build();
+  }
+
+  function makeRow(icon, title, sub, opts) {
+    opts = opts || {};
+    var row = document.createElement("div");
+    row.className = "shop-row" + (opts.rowClass ? " " + opts.rowClass : "");
+
+    var ic = document.createElement("div");
+    ic.className = "shop-icon";
+    ic.textContent = icon;
+
+    var info = document.createElement("div");
+    info.className = "shop-info";
+    var name = document.createElement("div");
+    name.className = "shop-name";
+    name.textContent = title;
+    info.appendChild(name);
+    if (sub) {
+      var s = document.createElement("div");
+      s.className = "shop-bonus";
+      s.textContent = sub;
+      info.appendChild(s);
+    }
+    if (opts.progress != null) {
+      var bar = document.createElement("div");
+      bar.className = "row-bar";
+      var fill = document.createElement("div");
+      fill.className = "row-fill";
+      fill.style.width = clamp(opts.progress, 0, 100) + "%";
+      bar.appendChild(fill);
+      info.appendChild(bar);
+    }
+
+    row.appendChild(ic);
+    row.appendChild(info);
+
+    if (opts.button) {
+      var btn = document.createElement("button");
+      btn.className = "shop-buy" + (opts.buttonClass ? " " + opts.buttonClass : "");
+      btn.textContent = opts.button;
+      btn.disabled = !!opts.disabled;
+      if (opts.onClick) btn.addEventListener("click", opts.onClick);
+      row.appendChild(btn);
+    }
+    els.panelBody.appendChild(row);
+    return row;
+  }
+
+  function addNote(text) {
+    var note = document.createElement("div");
+    note.className = "panel-note";
+    note.textContent = text;
+    els.panelBody.appendChild(note);
+  }
+
+  /* ---------- Education ---------- */
+  function buildSchool() {
+    els.panelSub.textContent =
+      "Eğitim çarpanı ×" + eduMultiplier().toFixed(2) + " · Tık başına " + formatMoney(tapValue());
+
+    EDU.forEach(function (course, i) {
+      var done = state.edu > i;
+      var current = state.eduStudy && state.eduStudy.idx === i;
+      var locked = i > state.edu;
+      var sub = "+%" + Math.round(course.bonus * 100) + " kalıcı kazanç · " + course.mins + " dk";
+      var opts = { rowClass: done ? "done" : locked ? "locked" : "" };
+
+      if (done) {
+        opts.button = "Bitti ✓";
+        opts.buttonClass = "owned";
+        opts.disabled = true;
+      } else if (current) {
+        var left = Math.max(0, Math.round((state.eduStudy.endsAt - Date.now()) / 1000));
+        sub = "Okuyorsun · " + formatDuration(left) + " kaldı";
+        opts.progress = 100 - (left / (course.mins * 60)) * 100;
+        opts.button = "Okuyor…";
+        opts.buttonClass = "owned";
+        opts.disabled = true;
+      } else if (locked) {
+        opts.button = "Kilitli 🔒";
+        opts.buttonClass = "owned";
+        opts.disabled = true;
+      } else {
+        var poor = state.money < course.cost;
+        opts.button = course.cost ? formatMoney(course.cost) : "Ücretsiz";
+        opts.buttonClass = poor ? "poor" : "";
+        opts.onClick = function () {
+          startStudy(i);
+        };
+      }
+      makeRow(course.icon, course.name, sub, opts);
+    });
+    addNote("Eğitim hem tık başına kazancı kalıcı artırır hem de yeni işlerin kilidini açar.");
+  }
+
+  function startStudy(i) {
+    var course = EDU[i];
+    if (state.eduStudy) return;
+    if (state.money < course.cost) {
+      sfx.deny();
+      showToast("Yetersiz para! Gerekli: " + formatMoney(course.cost));
+      return;
+    }
+    state.money -= course.cost;
+    state.eduStudy = { idx: i, endsAt: Date.now() + course.mins * 60000 };
+    sfx.coin();
+    showToast(course.name + " başladı! " + course.mins + " dakika sürecek.");
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function tickStudy() {
+    if (!state.eduStudy) return;
+    if (Date.now() < state.eduStudy.endsAt) {
+      if (panelTab === "school") renderPanel();
+      return;
+    }
+    var course = EDU[state.eduStudy.idx];
+    state.edu = state.eduStudy.idx + 1;
+    state.eduStudy = null;
+    celebrate(course.icon, course.name + " tamamlandı!", "+%" + Math.round(course.bonus * 100) + " kalıcı kazanç");
+    sfx.purchase();
+    if (panelTab === "school") renderPanel();
+  }
+
+  /* ---------- Career ---------- */
+  function buildJob() {
+    var lvl = jobLevel();
+    els.panelSub.textContent = state.job
+      ? JOBS[state.job].name + " · Kıdem " + lvl + "/" + JOB_MAX_LEVEL + " · " + formatMoney(salaryPerSecond()) + "/sn"
+      : "Henüz bir işin yok";
+
+    if (state.job) {
+      var next = lvl < JOB_MAX_LEVEL ? (lvl * JOB_XP_PER_LEVEL - state.jobXp) : 0;
+      makeRow(
+        isWorking() ? "🟢" : "⏸️",
+        isWorking() ? "Mesaidesin" : "Mesai kapalı",
+        next
+          ? "Kıdem " + (lvl + 1) + " için " + formatDuration(next) + " çalış"
+          : "En yüksek kıdemdesin",
+        {
+          rowClass: "highlight",
+          progress: lvl < JOB_MAX_LEVEL ? ((state.jobXp % JOB_XP_PER_LEVEL) / JOB_XP_PER_LEVEL) * 100 : 100,
+          button: state.working ? "Paydos" : "İşe Başla",
+          buttonClass: state.working ? "owned" : "",
+          onClick: toggleWork,
+        }
+      );
+    }
+
+    Object.keys(JOBS).forEach(function (key) {
+      var job = JOBS[key];
+      var locked = state.edu < job.edu;
+      var isCurrent = state.job === key;
+      var sub = formatMoney(job.income * legacyMultiplier()) + "/sn · " + EDU[job.edu - 1].name + " gerekli";
+      makeRow(job.icon, job.name, sub, {
+        rowClass: isCurrent ? "done" : locked ? "locked" : "",
+        button: isCurrent ? "Çalışıyorsun" : locked ? "Kilitli 🔒" : "İşe Gir",
+        buttonClass: isCurrent || locked ? "owned" : "",
+        disabled: isCurrent || locked,
+        onClick: locked || isCurrent ? null : function () {
+          takeJob(key);
+        },
+      });
+    });
+    addNote("Mesaideyken saniye başına maaş kazanırsın; oyun kapalıyken de işlemeye devam eder. Enerjin biterse mesai durur.");
+  }
+
+  function takeJob(key) {
+    var job = JOBS[key];
+    if (state.edu < job.edu) return;
+    var changing = state.job && state.job !== key;
+    state.job = key;
+    if (changing) state.jobXp = 0;
+    state.working = true;
+    celebrate(job.icon, job.name + " işine girdin!", formatMoney(salaryPerSecond()) + "/sn maaş");
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function toggleWork() {
+    state.working = !state.working;
+    showToast(state.working ? "Mesai başladı!" : "Paydos ettin.");
+    sfx.coin();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  /* ---------- Bank ---------- */
+  function buildBank() {
+    els.panelSub.textContent =
+      "Faiz " + (bankRate() * 100).toFixed(1) + "%/saat · Bakiye " + formatMoney(state.bank.balance);
+
+    var perHour = state.bank.balance * bankRate();
+    makeRow("🏦", "Banka hesabı", formatMoney(perHour) + " /saat faiz kazancı", {
+      rowClass: "highlight",
+    });
+
+    var amounts = [
+      { label: "%25 Yatır", ratio: 0.25 },
+      { label: "%50 Yatır", ratio: 0.5 },
+      { label: "Tümünü Yatır", ratio: 1 },
+    ];
+    amounts.forEach(function (a) {
+      var amount = Math.floor(state.money * a.ratio);
+      makeRow("⬇️", a.label, "Cebindeki paradan " + formatMoney(amount), {
+        button: "Yatır",
+        buttonClass: amount <= 0 ? "poor" : "",
+        onClick: function () {
+          deposit(amount);
+        },
+      });
+    });
+
+    makeRow("⬆️", "Parayı çek", "Bankadaki " + formatMoney(state.bank.balance), {
+      button: "Çek",
+      buttonClass: state.bank.balance <= 0 ? "poor" : "",
+      onClick: function () {
+        withdraw();
+      },
+    });
+
+    if (state.bank.level < BANK_MAX_LEVEL) {
+      var cost = BANK_UPGRADE_COST[state.bank.level];
+      makeRow("📈", "Faiz oranını yükselt", "%" + (bankRate() * 100).toFixed(1) + " → %" + ((bankRate() + BANK_RATE_STEP) * 100).toFixed(1) + "/saat", {
+        button: formatMoney(cost),
+        buttonClass: state.money < cost ? "poor" : "",
+        onClick: function () {
+          upgradeBank(cost);
+        },
+      });
+    } else {
+      makeRow("📈", "Faiz oranı", "En yüksek seviyede", { button: "MAX ✓", buttonClass: "owned", disabled: true });
+    }
+    addNote("Bankadaki para faiz işler; oyunu kapatsan bile birikmeye devam eder.");
+  }
+
+  function deposit(amount) {
+    if (amount <= 0) {
+      sfx.deny();
+      showToast("Yatıracak paran yok.");
+      return;
+    }
+    state.money -= amount;
+    state.bank.balance += amount;
+    sfx.coin();
+    showToast(formatMoney(amount) + " bankaya yatırıldı.");
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function withdraw() {
+    if (state.bank.balance <= 0) {
+      sfx.deny();
+      showToast("Bankada paran yok.");
+      return;
+    }
+    var amount = Math.floor(state.bank.balance);
+    state.money += amount;
+    state.bank.balance = 0;
+    sfx.coin();
+    showToast(formatMoney(amount) + " çekildi.");
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function upgradeBank(cost) {
+    if (state.money < cost) {
+      sfx.deny();
+      showToast("Yetersiz para! Gerekli: " + formatMoney(cost));
+      return;
+    }
+    state.money -= cost;
+    state.bank.level += 1;
+    celebrate("📈", "Faiz oranı arttı!", "%" + (bankRate() * 100).toFixed(1) + " / saat");
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function accrueBank(seconds) {
+    if (state.bank.balance <= 0 || seconds <= 0) return 0;
+    var gain = state.bank.balance * bankRate() * (seconds / 3600);
+    state.bank.balance += gain;
+    return gain;
+  }
+
+  /* ---------- Quests ---------- */
+  function buildQuests() {
+    refreshQuests();
+    var done = state.quests.list.filter(function (q) {
+      return q.claimed;
+    }).length;
+    els.panelSub.textContent = "Günlük görevler · " + done + "/" + state.quests.list.length + " tamamlandı";
+
+    state.quests.list.forEach(function (q) {
+      var progress = questProgress(q);
+      var ready = progress >= q.target;
+      makeRow(q.icon, q.text, progress + " / " + q.target + " · Ödül " + formatMoney(questReward(q)), {
+        rowClass: q.claimed ? "done" : ready ? "highlight" : "",
+        progress: (progress / q.target) * 100,
+        button: q.claimed ? "Alındı ✓" : ready ? "Ödülü Al" : "Devam",
+        buttonClass: q.claimed || !ready ? "owned" : "",
+        disabled: q.claimed || !ready,
+        onClick: ready && !q.claimed ? function () {
+          claimQuest(q);
+        } : null,
+      });
+    });
+    addNote("Görevler her gün yenilenir. Seri bozulmadan her gün gir, günlük bonusun büyüsün!");
+  }
+
+  function claimQuest(q) {
+    if (q.claimed || questProgress(q) < q.target) return;
+    q.claimed = true;
+    var reward = questReward(q);
+    state.money += reward;
+    bumpStat("earned", reward);
+    state.xp += 10;
+    levelUpIfReady();
+    celebrate("📋", "Görev tamamlandı!", "+" + formatMoney(reward));
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  /* ---------- Achievements & prestige ---------- */
+  function buildAchievements() {
+    var unlocked = ACHIEVEMENTS.filter(function (a) {
+      return state.ach[a.id];
+    }).length;
+    els.panelSub.textContent =
+      unlocked + "/" + ACHIEVEMENTS.length + " başarım · Miras ×" + legacyMultiplier().toFixed(2);
+
+    var canPrestige = state.stats.earned >= PRESTIGE_MIN_EARNED;
+    var gain = prestigeGain();
+    makeRow("🌟", "Yeni Hayat (Prestij)", canPrestige
+      ? "Her şeyi sıfırla, +" + gain + " miras puanı kazan (kalıcı +%" + Math.round(gain * LEGACY_BONUS * 100) + ")"
+      : "Toplam " + formatMoney(PRESTIGE_MIN_EARNED) + " kazanınca açılır (" + formatMoney(state.stats.earned) + ")", {
+      rowClass: canPrestige ? "highlight" : "locked",
+      progress: (state.stats.earned / PRESTIGE_MIN_EARNED) * 100,
+      button: canPrestige ? "Yeniden Doğ" : "Kilitli 🔒",
+      buttonClass: canPrestige ? "" : "owned",
+      disabled: !canPrestige,
+      onClick: canPrestige ? doPrestige : null,
+    });
+
+    ACHIEVEMENTS.forEach(function (a) {
+      var have = !!state.ach[a.id];
+      var ready = !have && a.test(state);
+      var reward = a.legacy ? "+" + a.legacy + " miras puanı" : formatMoney(a.money);
+      makeRow(a.icon, a.name, a.desc + " · Ödül " + reward, {
+        rowClass: have ? "done" : ready ? "highlight" : "locked",
+        button: have ? "Alındı ✓" : ready ? "Ödülü Al" : "Kilitli 🔒",
+        buttonClass: have ? "owned" : ready ? "" : "owned",
+        disabled: have || !ready,
+        onClick: ready ? function () {
+          claimAchievement(a);
+        } : null,
+      });
+    });
+  }
+
+  function claimAchievement(a) {
+    if (state.ach[a.id] || !a.test(state)) return;
+    state.ach[a.id] = true;
+    if (a.money) {
+      state.money += a.money;
+      bumpStat("earned", a.money);
+    }
+    if (a.legacy) state.legacy += a.legacy;
+    celebrate(a.icon, a.name, a.legacy ? "+" + a.legacy + " miras puanı" : "+" + formatMoney(a.money));
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function prestigeGain() {
+    return Math.max(1, Math.floor(Math.sqrt(state.stats.earned / 1000000)));
+  }
+
+  function doPrestige() {
+    if (state.stats.earned < PRESTIGE_MIN_EARNED) return;
+    var gain = prestigeGain();
+    state.legacy += gain;
+    state.prestiges += 1;
+
+    state.money = 0;
+    state.level = 1;
+    state.xp = 0;
+    state.day = 1;
+    state.health = 100;
+    state.energy = 100;
+    state.hunger = 100;
+    state.isSleeping = false;
+    state.furniture = { bed: 1, fridge: 1, plant: 1 };
+    Object.keys(SHOP_ITEMS).forEach(function (k) {
+      state.items[k] = 0;
+    });
+    state.edu = 0;
+    state.eduStudy = null;
+    state.job = null;
+    state.jobXp = 0;
+    state.working = false;
+    state.bank.balance = 0;
+
+    celebrate("🌟", "Yeni hayat başladı!", "+" + gain + " miras puanı · kalıcı ×" + legacyMultiplier().toFixed(2));
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
+  }
+
   function levelUpIfReady() {
     var leveled = false;
     while (state.xp >= xpForNextLevel()) {
@@ -933,13 +1672,18 @@
       return;
     }
 
-    var earned = tapValue();
+    bumpCombo();
+    var crit = Math.random() < CRIT_CHANCE;
+    var earned = Math.round(tapValue() * comboMultiplier() * (crit ? CRIT_MULT : 1));
     state.money += earned;
     state.energy = clamp(state.energy - TAP_ENERGY_COST, 0, 100);
     state.xp += TAP_XP_GAIN;
     state.taps += 1;
+    bumpStat("taps", 1);
+    bumpStat("earned", earned);
+    if (crit) bumpStat("crits", 1);
 
-    pushPill("+ $" + earned + " 💰", false);
+    pushPill((crit ? "KRİTİK ×5  " : "") + "+ " + formatMoney(earned) + " 💰", false, crit);
     characterBounce();
     flyCoin();
     levelUpIfReady();
@@ -954,6 +1698,7 @@
     }
     state.isSleeping = !state.isSleeping;
     if (state.isSleeping) {
+      bumpStat("sleeps", 1);
       showToast("Uyuyorsun... Zzz");
     } else {
       showToast("Uyandın!");
@@ -977,6 +1722,7 @@
     }
     state.money -= FOOD_COST;
     state.hunger = clamp(state.hunger + FOOD_HUNGER_GAIN, 0, 100);
+    bumpStat("eats", 1);
     pushPill("+" + FOOD_HUNGER_GAIN + " 🍗", false);
     showToast("Karnını doyurdun!");
     characterEat();
@@ -1001,7 +1747,23 @@
     } else {
       state.hunger = clamp(state.hunger - 1, 0, 100);
       state.energy = clamp(state.energy - 1, 0, 100);
+
+      if (isWorking()) {
+        var wage = salaryPerSecond() * (PASSIVE_TICK_MS / 1000);
+        state.money += wage;
+        bumpStat("earned", wage);
+        bumpStat("workSec", PASSIVE_TICK_MS / 1000);
+        state.jobXp += PASSIVE_TICK_MS / 1000;
+        state.energy = clamp(state.energy - 1, 0, 100);
+        if (state.energy <= 0) {
+          state.working = false;
+          showToast("Enerjin bitti, mesai durdu!");
+        }
+      }
     }
+
+    accrueBank(PASSIVE_TICK_MS / 1000);
+    tickStudy();
 
     if (state.hunger <= 0 || state.energy <= 0) {
       state.health = clamp(state.health - 3, 0, 100);
@@ -1046,8 +1808,9 @@
 
   els.bedBtn.addEventListener("click", onBed);
   els.fridgeBtn.addEventListener("click", onFridge);
-  els.questBtn.addEventListener("click", function () {
-    showToast("Görevler yakında geliyor!");
+  els.questBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("quests");
   });
 
   Object.keys(UPGRADE_ELS).forEach(function (key) {
@@ -1075,21 +1838,29 @@
       });
       if (target === "home") {
         closeShop();
+        closePanel();
         return;
       }
       if (target === "shop") {
+        closePanel();
         openShop();
         return;
       }
-      closeShop();
-      var labels = {
-        school: "Eğitim",
-        job: "Kariyer",
-        bank: "Banka",
-        world: "Dünya",
-      };
-      showToast((labels[target] || "Bu bölüm") + " yakında geliyor!");
+      openPanel(target);
     });
+  });
+
+  function backToHome() {
+    closeShop();
+    closePanel();
+    navButtons.forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-nav") === "home");
+    });
+  }
+
+  els.panelClose.addEventListener("click", backToHome);
+  els.panel.addEventListener("click", function (e) {
+    if (e.target === els.panel) backToHome();
   });
 
   els.shopClose.addEventListener("click", function () {
@@ -1118,18 +1889,30 @@
     passiveTick();
   }, PASSIVE_TICK_MS);
 
+  refreshQuests();
+  checkStreak();
+  scheduleGoldCoin();
+
   (function grantOfflineEarnings() {
     var elapsedSec = Math.floor((Date.now() - (state.lastSeen || Date.now())) / 1000);
     var countedSec = Math.min(Math.max(elapsedSec, 0), OFFLINE_MAX_SECONDS);
     if (countedSec < OFFLINE_MIN_SECONDS) return;
 
-    var earnings = Math.round(offlineRatePerSecond() * countedSec);
-    if (earnings <= 0) return;
+    var idle = offlineRatePerSecond() * countedSec;
+    var wages = isWorking() ? salaryPerSecond() * countedSec : 0;
+    var interest = accrueBank(countedSec);
+    var earnings = Math.round(idle + wages);
+    if (earnings > 0) {
+      state.money += earnings;
+      bumpStat("earned", earnings);
+      if (wages > 0) bumpStat("workSec", countedSec);
+    }
+    if (earnings <= 0 && interest <= 0) return;
 
-    state.money += earnings;
-    showToast(
-      formatDuration(countedSec) + " yoktun, " + formatMoney(earnings) + " kazandın!"
-    );
+    var parts = [];
+    if (earnings > 0) parts.push(formatMoney(earnings));
+    if (interest >= 1) parts.push(formatMoney(interest) + " faiz");
+    showToast(formatDuration(countedSec) + " yoktun, " + parts.join(" + ") + " kazandın!");
     saveState();
   })();
 
