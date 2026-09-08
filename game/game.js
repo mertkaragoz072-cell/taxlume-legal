@@ -209,19 +209,19 @@
 
   var TIER_PALETTES = {
     bed: [
-      { wood: ["#a4713a", "#6b4420"], knob: "#6b4420", blanket: ["#7cc6f5", "#3f8fd1"], trim: "#f5c518" },
+      { wood: ["#b97d42", "#7a4a22"], knob: "#6f4220", blanket: ["#66c4ff", "#2f8fe6"], trim: "#ffcf33" },
       { wood: ["#c98f52", "#8a5a2c"], knob: "#8a5a2c", blanket: ["#7ed6a0", "#2f9e5c"], trim: "#ffd54f" },
       { wood: ["#d9a860", "#8a5a2c"], knob: "#4a2e12", blanket: ["#b48be0", "#7a4fc9"], trim: "#ffe066" },
       { wood: ["#f7d774", "#c9a227"], knob: "#c9a227", blanket: ["#2ecc71", "#1c8f4e"], trim: "#fff2b0" },
     ],
     fridge: [
-      { body: ["#a9ece6", "#7fd9d4", "#5cb8b2"], handle: "#2f7570" },
+      { body: ["#b6f3ec", "#7fe0d8", "#4fc4ba"], handle: "#2c6f6a" },
       { body: ["#bfe9ff", "#8fd0f5", "#5aa9d9"], handle: "#2b6f8f" },
       { body: ["#e6d8ff", "#c6a8f0", "#9b6fd6"], handle: "#5a3a8f" },
       { body: ["#fff2c2", "#ffd75e", "#e0ab1f"], handle: "#8a6a10" },
     ],
     plant: [
-      { pot: ["#b5651d", "#8a4513"], leaf: ["#3a9d4a", "#4cb85c", "#5fcf6f"] },
+      { pot: ["#c9752a", "#8f4a1a"], leaf: ["#3fae52", "#57cc6a", "#7fe08c"] },
       { pot: ["#c97a2b", "#9c5518"], leaf: ["#43b85a", "#57cf6c", "#78e089"] },
       { pot: ["#8f8f96", "#5c5c63"], leaf: ["#57cf6c", "#78e089", "#9df0ac"] },
       { pot: ["#f7d774", "#c9a227"], leaf: ["#7be08c", "#9df0ac", "#c2ffce"] },
