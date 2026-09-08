@@ -108,18 +108,18 @@
     hungerFill: document.getElementById("hungerFill"),
     tapBtn: document.getElementById("tapBtn"),
     tapLabel: document.getElementById("tapLabel"),
+    bedBtn: document.getElementById("bedBtn"),
+    zzz: document.getElementById("zzz"),
+    fridgeBtn: document.getElementById("fridgeBtn"),
     floaters: document.getElementById("floaters"),
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
-    worldCanvas: document.getElementById("worldCanvas"),
-    badgeLayer: document.getElementById("badgeLayer"),
-    petMeter: document.getElementById("petMeter"),
-    petUpgradeBtn: document.getElementById("petUpgradeBtn"),
     lotteryBtn: document.getElementById("lotteryBtn"),
     recordsBtn: document.getElementById("recordsBtn"),
     eventBtn: document.getElementById("eventBtn"),
     eventChip: document.getElementById("eventChip"),
+    eventFx: document.getElementById("eventFx"),
     shop: document.getElementById("shop"),
     shopList: document.getElementById("shopList"),
     shopSub: document.getElementById("shopSub"),
@@ -130,6 +130,10 @@
     banner: document.getElementById("banner"),
     xpFill: document.getElementById("xpFill"),
     xpText: document.getElementById("xpText"),
+    character: document.getElementById("character"),
+    windowEl: document.getElementById("window"),
+    nightOverlay: document.getElementById("nightOverlay"),
+    lampLight: document.getElementById("lampLight"),
     fxLayer: document.getElementById("fxLayer"),
     rewardCard: document.getElementById("rewardCard"),
     rewardIcon: document.getElementById("rewardIcon"),
@@ -143,6 +147,7 @@
     panelClose: document.getElementById("panelClose"),
     workChip: document.getElementById("workChip"),
     comboChip: document.getElementById("comboChip"),
+    petItem: document.querySelector('.room-item[data-item="pet"]'),
     petMeterFill: document.getElementById("petMeterFill"),
     buySheet: document.getElementById("buySheet"),
     buyTitle: document.getElementById("buyTitle"),
@@ -153,12 +158,40 @@
     buyCapNext: document.getElementById("buyCapNext"),
     buyStats: document.getElementById("buyStats"),
     buyConfirm: document.getElementById("buyConfirm"),
+    plantBtn: document.getElementById("plantBtn"),
     bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
     bedCost: document.getElementById("bedCost"),
     fridgeUpgradeBtn: document.getElementById("fridgeUpgradeBtn"),
     fridgeCost: document.getElementById("fridgeCost"),
     plantUpgradeBtn: document.getElementById("plantUpgradeBtn"),
     plantCost: document.getElementById("plantCost"),
+
+    woodStop1: document.getElementById("woodStop1"),
+    woodStop2: document.getElementById("woodStop2"),
+    blanketStop1: document.getElementById("blanketStop1"),
+    blanketStop2: document.getElementById("blanketStop2"),
+    bedTrim: document.getElementById("bedTrim"),
+    bedKnob1: document.getElementById("bedKnob1"),
+    bedKnob2: document.getElementById("bedKnob2"),
+    bedKnob3: document.getElementById("bedKnob3"),
+
+    fridgeStop1: document.getElementById("fridgeStop1"),
+    fridgeStop2: document.getElementById("fridgeStop2"),
+    fridgeStop3: document.getElementById("fridgeStop3"),
+    fridgeHandle1: document.getElementById("fridgeHandle1"),
+    fridgeHandle2: document.getElementById("fridgeHandle2"),
+    fridgeBodyStroke: document.getElementById("fridgeBodyStroke"),
+    fridgeDivider: document.getElementById("fridgeDivider"),
+
+    plantLeaf1: document.getElementById("plantLeaf1"),
+    plantLeaf2: document.getElementById("plantLeaf2"),
+    plantLeaf3: document.getElementById("plantLeaf3"),
+    plantLeaf4: document.getElementById("plantLeaf4"),
+    plantLeaf5: document.getElementById("plantLeaf5"),
+    plantPotBody: document.getElementById("plantPotBody"),
+    plantPotRim: document.getElementById("plantPotRim"),
+    plantPotBodyModern: document.getElementById("plantPotBodyModern"),
+    plantPotRimModern: document.getElementById("plantPotRimModern"),
   };
 
   var floaterStack = [];
@@ -316,9 +349,30 @@
   }
 
   var UPGRADE_ELS = {
-    bed: { btn: "bedUpgradeBtn", cost: "bedCost" },
-    fridge: { btn: "fridgeUpgradeBtn", cost: "fridgeCost" },
-    plant: { btn: "plantUpgradeBtn", cost: "plantCost" },
+    bed: { btn: "bedUpgradeBtn", cost: "bedCost", item: "bedBtn" },
+    fridge: { btn: "fridgeUpgradeBtn", cost: "fridgeCost", item: "fridgeBtn" },
+    plant: { btn: "plantUpgradeBtn", cost: "plantCost", item: "plantBtn" },
+  };
+
+  var TIER_PALETTES = {
+    bed: [
+      { wood: ["#b97d42", "#7a4a22"], knob: "#6f4220", blanket: ["#66c4ff", "#2f8fe6"], trim: "#ffcf33" },
+      { wood: ["#c98f52", "#8a5a2c"], knob: "#8a5a2c", blanket: ["#7ed6a0", "#2f9e5c"], trim: "#ffd54f" },
+      { wood: ["#d9a860", "#8a5a2c"], knob: "#4a2e12", blanket: ["#b48be0", "#7a4fc9"], trim: "#ffe066" },
+      { wood: ["#f7d774", "#c9a227"], knob: "#c9a227", blanket: ["#2ecc71", "#1c8f4e"], trim: "#fff2b0" },
+    ],
+    fridge: [
+      { body: ["#b6f3ec", "#7fe0d8", "#4fc4ba"], handle: "#2c6f6a" },
+      { body: ["#bfe9ff", "#8fd0f5", "#5aa9d9"], handle: "#2b6f8f" },
+      { body: ["#e6d8ff", "#c6a8f0", "#9b6fd6"], handle: "#5a3a8f" },
+      { body: ["#fff2c2", "#ffd75e", "#e0ab1f"], handle: "#8a6a10" },
+    ],
+    plant: [
+      { pot: ["#c9752a", "#8f4a1a"], leaf: ["#3fae52", "#57cc6a", "#7fe08c"] },
+      { pot: ["#c97a2b", "#9c5518"], leaf: ["#43b85a", "#57cf6c", "#78e089"] },
+      { pot: ["#8f8f96", "#5c5c63"], leaf: ["#57cf6c", "#78e089", "#9df0ac"] },
+      { pot: ["#f7d774", "#c9a227"], leaf: ["#7be08c", "#9df0ac", "#c2ffce"] },
+    ],
   };
 
   function furnitureTier(level) {
@@ -328,6 +382,37 @@
     return 1;
   }
 
+  function applyFurnitureVisual(key, tier) {
+    var palette = TIER_PALETTES[key][tier - 1];
+    if (key === "bed") {
+      els.woodStop1.setAttribute("stop-color", palette.wood[0]);
+      els.woodStop2.setAttribute("stop-color", palette.wood[1]);
+      els.blanketStop1.setAttribute("stop-color", palette.blanket[0]);
+      els.blanketStop2.setAttribute("stop-color", palette.blanket[1]);
+      els.bedTrim.setAttribute("fill", palette.trim);
+      els.bedKnob1.setAttribute("fill", palette.knob);
+      els.bedKnob2.setAttribute("fill", palette.knob);
+      els.bedKnob3.setAttribute("fill", palette.knob);
+    } else if (key === "fridge") {
+      els.fridgeStop1.setAttribute("stop-color", palette.body[0]);
+      els.fridgeStop2.setAttribute("stop-color", palette.body[1]);
+      els.fridgeStop3.setAttribute("stop-color", palette.body[2]);
+      els.fridgeHandle1.setAttribute("fill", palette.handle);
+      els.fridgeHandle2.setAttribute("fill", palette.handle);
+      els.fridgeBodyStroke.setAttribute("stroke", palette.handle);
+      els.fridgeDivider.setAttribute("stroke", palette.handle);
+    } else {
+      els.plantLeaf1.setAttribute("fill", palette.leaf[0]);
+      els.plantLeaf2.setAttribute("fill", palette.leaf[1]);
+      els.plantLeaf3.setAttribute("fill", palette.leaf[2]);
+      els.plantLeaf4.setAttribute("fill", palette.leaf[2]);
+      els.plantLeaf5.setAttribute("fill", palette.leaf[1]);
+      els.plantPotBody.setAttribute("fill", palette.pot[0]);
+      els.plantPotRim.setAttribute("fill", palette.pot[1]);
+      els.plantPotBodyModern.setAttribute("fill", palette.pot[0]);
+      els.plantPotRimModern.setAttribute("fill", palette.pot[1]);
+    }
+  }
 
   function renderUpgradeBadges() {
     Object.keys(FURNITURE_CONFIG).forEach(function (key) {
@@ -338,8 +423,12 @@
 
       els[refs.cost].textContent = maxed ? "MAX" : formatMoney(furnitureCost(key));
       els[refs.btn].classList.toggle("maxed", maxed);
-      els[refs.btn].classList.toggle("too-poor", !maxed && state.money < furnitureCost(key));
-      World.setFurniture(key, level, furnitureTier(level));
+      els[refs.item].classList.toggle("is-max", maxed);
+
+      var tier = furnitureTier(level);
+      els[refs.item].classList.remove("tier-1", "tier-2", "tier-3", "tier-4");
+      els[refs.item].classList.add("tier-" + tier);
+      applyFurnitureVisual(key, tier);
     });
   }
 
@@ -361,6 +450,7 @@
     els.tapBtn.classList.toggle("sleeping", state.isSleeping);
     els.tapLabel.textContent = state.isSleeping ? "..." : "DOKUN";
 
+    els.zzz.classList.toggle("show", state.isSleeping);
 
     renderUpgradeBadges();
     renderRoomItems();
@@ -376,21 +466,20 @@
   }
 
   function renderRoomItems() {
-    Object.keys(SHOP_ITEMS).forEach(function (key) {
+    var nodes = document.querySelectorAll(".room-item");
+    nodes.forEach(function (node) {
+      var key = node.getAttribute("data-item");
       var level = state.items[key];
       var cfg = SHOP_ITEMS[key];
       var maxed = level >= cfg.maxLevel;
 
-      World.setItem(key, level, itemTier(level));
+      node.classList.toggle("owned", level > 0);
+      node.classList.toggle("is-max", maxed);
+      node.classList.remove("tier-1", "tier-2", "tier-3");
+      node.classList.add("tier-" + itemTier(level));
 
-      var costEl = document.getElementById(key + "Cost");
-      if (costEl) costEl.textContent = maxed ? "MAX" : formatMoney(itemCost(key));
-      var btn = document.getElementById(key + "UpgradeBtn");
-      if (btn) {
-        btn.classList.toggle("maxed", maxed);
-        btn.classList.toggle("unowned", level <= 0);
-        btn.classList.toggle("too-poor", !maxed && state.money < itemCost(key));
-      }
+      document.getElementById(key + "Cost").textContent = maxed ? "MAX" : formatMoney(itemCost(key));
+      document.getElementById(key + "UpgradeBtn").classList.toggle("maxed", maxed);
     });
     renderPet();
   }
@@ -402,9 +491,9 @@
   }
 
   function renderPet() {
-    els.petMeter.classList.toggle("hidden", state.items.pet <= 0);
     if (state.items.pet <= 0) return;
-    els.petMeter.classList.toggle("hungry", petHungry());
+    var node = els.petItem;
+    node.classList.toggle("hungry", petHungry());
     els.petMeterFill.style.width = state.pet.happiness + "%";
   }
 
@@ -422,9 +511,9 @@
     state.money -= PET_FEED_COST;
     state.pet.happiness = clamp(state.pet.happiness + 35, 0, 100);
     bumpStat("petFeeds", 1);
-    els.petUpgradeBtn.classList.remove("fed-pop");
-    void els.petUpgradeBtn.offsetWidth;
-    els.petUpgradeBtn.classList.add("fed-pop");
+    els.petItem.classList.remove("fed-pop");
+    void els.petItem.offsetWidth;
+    els.petItem.classList.add("fed-pop");
     pushPill("+35 🦴", false);
     sfx.coin();
     render();
@@ -504,26 +593,58 @@
 
   function renderAmbient() {
     var phase = skyPhase();
-    var t = ((Date.now() % SKY_CYCLE_MS) / SKY_CYCLE_MS);
-    World.setDaylight(phase, t);
-    World.setLamp(phase === "night" && state.items.lamp > 0);
-    World.setRoomTier(itemTier(state.items.room));
+    els.windowEl.classList.remove("day", "sunset", "night");
+    els.windowEl.classList.add(phase);
+    els.nightOverlay.style.background = phase === "sunset" ? "#c8562a" : "#1b2350";
+    els.nightOverlay.style.opacity =
+      phase === "night" ? (state.isSleeping ? "0.5" : "0.4") : phase === "sunset" ? "0.12" : "0";
+    els.lampLight.classList.toggle("on", phase === "night" && state.items.lamp > 0);
+
+    els.scene.classList.remove("room-t1", "room-t2", "room-t3");
+    els.scene.classList.add("room-t" + itemTier(state.items.room));
+
+    // The depth layers need the sky phase too: the light pooled on the floor
+    // fades as the sun goes down.
+    els.scene.classList.remove("sky-day", "sky-sunset", "sky-night");
+    els.scene.classList.add("sky-" + phase);
   }
 
   /* ---------- Character ---------- */
   var happyTimer = null;
 
   function renderCharacter() {
-    World.setSleeping(state.isSleeping);
+    els.character.classList.toggle("sleeping", state.isSleeping);
   }
 
   function characterBounce() {
-    World.action("tap");
+    var c = els.character;
+    c.classList.remove("bounce");
+    void c.offsetWidth;
+    c.classList.add("bounce");
+    c.classList.add("happy");
+    clearTimeout(happyTimer);
+    happyTimer = setTimeout(function () {
+      c.classList.remove("happy");
+    }, 600);
   }
 
   function characterEat() {
-    World.action("eat");
+    var c = els.character;
+    c.classList.add("eating");
+    setTimeout(function () {
+      c.classList.add("happy");
+    }, 700);
+    setTimeout(function () {
+      c.classList.remove("eating");
+    }, 1500);
+    setTimeout(function () {
+      c.classList.remove("happy");
+    }, 2300);
   }
+
+  els.character.addEventListener("animationend", function (e) {
+    if (e.animationName === "bounce") els.character.classList.remove("bounce");
+  });
 
   /* ---------- Money flying to the wallet ---------- */
   var lastTapPoint = null;
@@ -661,9 +782,26 @@
   /* ---------- Purchase sheet: see the old model, the new model, pay, replace ---------- */
   var buyCtx = null;
 
-  // Previews are real renders of the 3D model at that tier, so the sheet shows
-  // exactly what the room will look like after the purchase.
-  function buildPreview(kind, key, level, container) {
+  var PREVIEW_PAINT = {
+    bed: [
+      ["woodStop1", "stop-color", ["wood", 0]], ["woodStop2", "stop-color", ["wood", 1]],
+      ["blanketStop1", "stop-color", ["blanket", 0]], ["blanketStop2", "stop-color", ["blanket", 1]],
+      ["bedTrim", "fill", ["trim"]], ["bedKnob1", "fill", ["knob"]], ["bedKnob2", "fill", ["knob"]], ["bedKnob3", "fill", ["knob"]],
+    ],
+    fridge: [
+      ["fridgeStop1", "stop-color", ["body", 0]], ["fridgeStop2", "stop-color", ["body", 1]], ["fridgeStop3", "stop-color", ["body", 2]],
+      ["fridgeHandle1", "fill", ["handle"]], ["fridgeHandle2", "fill", ["handle"]],
+      ["fridgeBodyStroke", "stroke", ["handle"]], ["fridgeDivider", "stroke", ["handle"]],
+    ],
+    plant: [
+      ["plantLeaf1", "fill", ["leaf", 0]], ["plantLeaf2", "fill", ["leaf", 1]], ["plantLeaf3", "fill", ["leaf", 2]],
+      ["plantLeaf4", "fill", ["leaf", 2]], ["plantLeaf5", "fill", ["leaf", 1]],
+      ["plantPotBody", "fill", ["pot", 0]], ["plantPotBodyModern", "fill", ["pot", 0]],
+      ["plantPotRim", "fill", ["pot", 1]], ["plantPotRimModern", "fill", ["pot", 1]],
+    ],
+  };
+
+  function buildPreview(kind, key, level, container, suffix) {
     container.textContent = "";
     container.className = "preview";
     if (level <= 0) {
@@ -675,19 +813,30 @@
     }
     var tier = kind === "furniture" ? furnitureTier(level) : itemTier(level);
     container.classList.add("tier-" + tier);
-    var url = World.previewImage(key, tier);
-    if (!url) {
+    var src = kind === "furniture" ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
+    var svg = src ? src.querySelector("svg") : null;
+    if (!svg) {
       var em = document.createElement("div");
       em.className = "preview-emoji";
-      em.textContent = (SHOP_ITEMS[key] || FURNITURE_CONFIG[key]).icon || "\ud83c\udfe0";
+      em.textContent = SHOP_ITEMS[key].icon;
       container.appendChild(em);
       return;
     }
-    var img = document.createElement("img");
-    img.className = "preview-img";
-    img.src = url;
-    img.alt = "";
-    container.appendChild(img);
+    // Clone the item's art with unique ids so each preview keeps its own gradients/clips.
+    var html = svg.outerHTML
+      .replace(/id="([^"]+)"/g, 'id="$1' + suffix + '"')
+      .replace(/url\(#([^)]+)\)/g, "url(#$1" + suffix + ")");
+    container.insertAdjacentHTML("beforeend", html);
+    if (kind === "furniture") {
+      var palette = TIER_PALETTES[key][tier - 1];
+      PREVIEW_PAINT[key].forEach(function (rule) {
+        var node = container.querySelector("#" + rule[0] + suffix);
+        if (!node) return;
+        var value = palette[rule[2][0]];
+        if (rule[2].length > 1) value = value[rule[2][1]];
+        node.setAttribute(rule[1], value);
+      });
+    }
   }
 
   function purchaseInfo(kind, key) {
@@ -726,8 +875,8 @@
     var isNew = !info.isF && info.level === 0;
 
     els.buyTitle.textContent = isNew ? info.cfg.name + " satın al" : info.cfg.name + " yükselt";
-    buildPreview(kind, key, info.level, els.buyPrevNow);
-    buildPreview(kind, key, info.level + 1, els.buyPrevNext);
+    buildPreview(kind, key, info.level, els.buyPrevNow, "_a");
+    buildPreview(kind, key, info.level + 1, els.buyPrevNext, "_b");
     els.buyCapNow.textContent = info.level > 0 ? info.names[info.tierNow] + " · Sv " + info.level : "Sahip değilsin";
     els.buyCapNext.textContent =
       info.names[info.tierNext] + " · Sv " + (info.level + 1) + (newModel ? " · YENİ MODEL" : "");
@@ -841,7 +990,7 @@
     if (info.isF) state.furniture[key] += 1;
     else state.items[key] += 1;
     var newModel = info.tierNext !== info.tierNow || (!info.isF && info.level === 0);
-    var node = document.getElementById(key + "UpgradeBtn");
+    var node = info.isF ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
 
     closeBuySheet();
     animateMoney(moneyBefore, state.money);
@@ -1169,7 +1318,7 @@
         : JOBS[state.job].icon + " Mesai kapalı";
       els.workChip.classList.toggle("off", !working);
     }
-    World.setWorking(working);
+    els.character.classList.toggle("working", working);
 
     var ev = activeEvent();
     els.eventChip.classList.toggle("show", !!ev);
@@ -1178,13 +1327,33 @@
   }
 
   /* ---------- Seasonal weather layer ---------- */
+  var EVENT_FX_ART = {
+    snow: ["❄️", "🌨️", "❄️"],
+    petal: ["🌸", "🌺", "🌷"],
+    confetti: ["🎊", "🎉", "✨"],
+    leaf: ["🍂", "🍁", "🎃"],
+    sun: ["☀️", "🌴", "🏖️"],
+  };
   var eventFxId = null;
 
   function renderEventFx(ev) {
     var id = ev ? ev.id : null;
     if (id === eventFxId) return;
     eventFxId = id;
-    World.setWeather(ev ? ev.fx : null);
+    els.eventFx.textContent = "";
+    if (!ev) return;
+
+    var art = EVENT_FX_ART[ev.fx] || EVENT_FX_ART.confetti;
+    for (var i = 0; i < 12; i++) {
+      var bit = document.createElement("span");
+      bit.className = "event-bit";
+      bit.textContent = art[i % art.length];
+      bit.style.left = Math.random() * 96 + "%";
+      bit.style.animationDelay = (Math.random() * 8).toFixed(2) + "s";
+      bit.style.animationDuration = (7 + Math.random() * 6).toFixed(2) + "s";
+      bit.style.fontSize = (11 + Math.random() * 9).toFixed(0) + "px";
+      els.eventFx.appendChild(bit);
+    }
   }
 
   function renderNavBadges() {
@@ -1215,24 +1384,29 @@
 
   function spawnGoldCoin() {
     scheduleGoldCoin();
-    if (state.isSleeping || World.hasCoin()) return;
-    World.spawnCoin();
-    setTimeout(function () {
-      World.removeCoin();
-    }, 9000);
-  }
+    if (state.isSleeping || document.querySelector(".gold-coin")) return;
 
-  function collectGoldCoin() {
-    if (!World.hasCoin()) return;
-    var prize = Math.round(tapValue() * 25);
-    state.money += prize;
-    bumpStat("earned", prize);
-    bumpStat("golds", 1);
-    World.removeCoin();
-    sfx.purchase();
-    celebrate("🪙", "Altın para!", "+" + formatMoney(prize));
-    render();
-    saveState();
+    var coin = document.createElement("button");
+    coin.className = "gold-coin";
+    coin.textContent = "🪙";
+    coin.style.left = 12 + Math.random() * 64 + "%";
+    coin.style.top = 14 + Math.random() * 34 + "%";
+    coin.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var prize = Math.round(tapValue() * 25);
+      state.money += prize;
+      bumpStat("earned", prize);
+      bumpStat("golds", 1);
+      coin.remove();
+      sfx.purchase();
+      celebrate("🪙", "Altın para!", "+" + formatMoney(prize));
+      render();
+      saveState();
+    });
+    els.scene.appendChild(coin);
+    setTimeout(function () {
+      coin.remove();
+    }, 7000);
   }
 
   /* ---------- Generic panel ---------- */
@@ -2213,43 +2387,23 @@
     }, 500);
   }
 
-  // What the player clicked is decided by raycasting into the 3D room: the bed
-  // sleeps, the fridge feeds, the pet gets a snack, and bare room earns money.
-  var PICK_ACTIONS = {
-    bed: onBed,
-    fridge: onFridge,
-    pet: feedPet,
-    coin: collectGoldCoin,
-  };
-
-  var dragMoved = false;
-
-  els.worldCanvas.addEventListener("pointerdown", function (e) {
-    dragMoved = false;
-    World.dragStart(e.clientX, e.clientY);
-  });
-  window.addEventListener("pointermove", function (e) {
-    if (World.dragMove(e.clientX, e.clientY)) dragMoved = true;
-  });
-  window.addEventListener("pointerup", function () {
-    World.dragEnd();
-  });
-
-  els.worldCanvas.addEventListener("click", function (e) {
-    if (dragMoved) return; // the player was turning the camera, not tapping
-    var rect = els.worldCanvas.getBoundingClientRect();
-    var hit = World.pick((e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height);
-    if (hit && PICK_ACTIONS[hit]) {
-      PICK_ACTIONS[hit]();
-      return;
-    }
-    var sceneRect = els.scene.getBoundingClientRect();
-    spawnRipple(e.clientX - sceneRect.left, e.clientY - sceneRect.top);
+  // Tapping anywhere on the room earns money; furniture, badges and icons keep their own actions.
+  els.scene.addEventListener("click", function (e) {
+    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item")) return;
+    var rect = els.scene.getBoundingClientRect();
+    spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
     lastTapAt = Date.now();
     sfx.tap();
     showTapHint(false);
     onTap();
+  });
+
+  els.bedBtn.addEventListener("click", onBed);
+  els.fridgeBtn.addEventListener("click", onFridge);
+  els.petItem.addEventListener("click", function (e) {
+    e.stopPropagation();
+    feedPet();
   });
   els.questBtn.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -2339,43 +2493,6 @@
     render();
     saveState();
   });
-
-  /* ---------- 3D world boot ---------- */
-  var BADGE_KEYS = ["bed", "fridge", "plant", "rug", "lamp", "picture", "shelf", "tv", "pet"];
-
-  function sizeWorld() {
-    var rect = els.scene.getBoundingClientRect();
-    els.worldCanvas.style.width = rect.width + "px";
-    els.worldCanvas.style.height = rect.height + "px";
-    World.resize(rect.width, rect.height);
-  }
-
-  // Badges are DOM, but they belong to objects in the 3D room, so every frame
-  // their anchor is projected back into screen space.
-  function placeBadges() {
-    var rect = els.scene.getBoundingClientRect();
-    BADGE_KEYS.forEach(function (key) {
-      var btn = document.getElementById(key + "UpgradeBtn");
-      if (!btn) return;
-      var p = World.screenPos(key, rect.width, rect.height);
-      if (!p) {
-        btn.classList.add("hidden");
-        return;
-      }
-      btn.classList.remove("hidden");
-      btn.style.transform = "translate(-50%, -50%) translate(" + p.x + "px," + p.y + "px)";
-      if (key === "pet" && !els.petMeter.classList.contains("hidden")) {
-        els.petMeter.style.transform =
-          "translate(-50%, -50%) translate(" + p.x + "px," + (p.y - 20) + "px)";
-      }
-    });
-    requestAnimationFrame(placeBadges);
-  }
-
-  World.init(els.worldCanvas);
-  sizeWorld();
-  window.addEventListener("resize", sizeWorld);
-  requestAnimationFrame(placeBadges);
 
   setInterval(function () {
     passiveTick();

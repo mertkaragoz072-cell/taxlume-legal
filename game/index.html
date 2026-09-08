@@ -43,6 +43,18 @@
 
   <div class="scene" id="scene">
 
+    <!-- Depth layers. They only paint: the room reads as a space rather than
+         a flat sticker sheet. Never take input. -->
+    <div class="room-depth" aria-hidden="true">
+      <div class="wall-shade"></div>
+      <div class="floor-boards"></div>
+      <div class="sun-pool"></div>
+      <div class="skirting"></div>
+      <div class="front-vignette"></div>
+    </div>
+
+    <div class="event-fx" id="eventFx"></div>
+
     <div class="side-icons">
     <button class="quest-icon side-icon" id="questBtn" aria-label="Görevler">
       <svg viewBox="0 0 24 24" width="22" height="22">
@@ -68,26 +80,676 @@
       </button>
     </div>
 
-    <!-- The room itself is rendered in 3D; see world.js -->
-    <canvas class="world-canvas" id="worldCanvas"></canvas>
+    <div class="furniture plant" id="plantBtn">
+      <button class="upgrade-badge" id="plantUpgradeBtn">
+        <span class="cost" id="plantCost">$250</span>
+      </button>
+      <svg viewBox="0 0 40 46" width="60" height="69">
+        <defs>
+          <linearGradient id="leafShade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="56%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="56%" stop-color="#000" stop-opacity="0.24"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.24"/>
+          </linearGradient>
+          <linearGradient id="potShade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0.34"/>
+            <stop offset="30%" stop-color="#fff" stop-opacity="0.34"/>
+            <stop offset="30%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="70%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="70%" stop-color="#000" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.28"/>
+          </linearGradient>
+        </defs>
 
-    <!-- Upgrade badges float above the 3D objects they belong to. Their screen
-         positions are projected from the world every frame. -->
-    <div class="badge-layer" id="badgeLayer">
-      <button class="upgrade-badge world-badge" id="bedUpgradeBtn" data-badge="bed"><span class="cost" id="bedCost">$500</span></button>
-      <button class="upgrade-badge world-badge" id="fridgeUpgradeBtn" data-badge="fridge"><span class="cost" id="fridgeCost">$500</span></button>
-      <button class="upgrade-badge world-badge" id="plantUpgradeBtn" data-badge="plant"><span class="cost" id="plantCost">$250</span></button>
-      <button class="upgrade-badge world-badge" id="rugUpgradeBtn" data-badge="rug"><span class="cost" id="rugCost">$2,000</span></button>
-      <button class="upgrade-badge world-badge" id="lampUpgradeBtn" data-badge="lamp"><span class="cost" id="lampCost">$3,500</span></button>
-      <button class="upgrade-badge world-badge" id="pictureUpgradeBtn" data-badge="picture"><span class="cost" id="pictureCost">$5,000</span></button>
-      <button class="upgrade-badge world-badge" id="shelfUpgradeBtn" data-badge="shelf"><span class="cost" id="shelfCost">$8,000</span></button>
-      <button class="upgrade-badge world-badge" id="tvUpgradeBtn" data-badge="tv"><span class="cost" id="tvCost">$12,000</span></button>
-      <button class="upgrade-badge world-badge" id="petUpgradeBtn" data-badge="pet"><span class="cost" id="petCost">$6,000</span></button>
-      <div class="pet-meter world-badge" id="petMeter" data-badge="petMeter">
-        <div class="pet-meter-fill" id="petMeterFill"></div>
+        <ellipse cx="20" cy="44.6" rx="14" ry="1.6" fill="#3a2a22" opacity="0.22"/>
+        <ellipse cx="20" cy="27.5" rx="11.5" ry="2.8" fill="#4a3320"/>
+
+        <g class="leaves">
+        <!-- Chunky leaves -->
+        <path id="plantLeaf1" d="M20 28c-4-9-11-6-13-15 8-1 13 6 13 15z" fill="#3fae52"/>
+        <path d="M20 28c-4-9-11-6-13-15 8-1 13 6 13 15z" fill="url(#leafShade)"/>
+        <path d="M20 28c-4-9-11-6-13-15 8-1 13 6 13 15z" fill="none" stroke="#1f5a2a" stroke-width="1.1" stroke-linejoin="round"/>
+        <path id="plantLeaf2" d="M20 28c1-12 11-10 13-20-9 1-14 9-13 20z" fill="#57cc6a"/>
+        <path d="M20 28c1-12 11-10 13-20-9 1-14 9-13 20z" fill="url(#leafShade)"/>
+        <path d="M20 28c1-12 11-10 13-20-9 1-14 9-13 20z" fill="none" stroke="#1f5a2a" stroke-width="1.1" stroke-linejoin="round"/>
+        <path id="plantLeaf3" d="M20 28c-2-7-8-4-9-12 7 0 9 5 9 12z" fill="#7fe08c"/>
+        <path d="M20 28c-2-7-8-4-9-12 7 0 9 5 9 12z" fill="url(#leafShade)"/>
+        <path d="M20 28c-2-7-8-4-9-12 7 0 9 5 9 12z" fill="none" stroke="#1f5a2a" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M9.5 15c2 1 4 3 5.5 6" stroke="#fff" stroke-opacity="0.45" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+        <path d="M31 10c-2 2-4 5-5.5 9" stroke="#fff" stroke-opacity="0.45" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+        <g class="tierMin3">
+          <path id="plantLeaf4" d="M20 28c4-8 11-5 14-12-7-1-12 4-14 12z" fill="#7fe08c"/>
+          <path d="M20 28c4-8 11-5 14-12-7-1-12 4-14 12z" fill="url(#leafShade)"/>
+          <path d="M20 28c4-8 11-5 14-12-7-1-12 4-14 12z" fill="none" stroke="#1f5a2a" stroke-width="1" stroke-linejoin="round"/>
+          <path id="plantLeaf5" d="M20 28c-4-6-10-3-13-9 6-2 11 2 13 9z" fill="#57cc6a"/>
+          <path d="M20 28c-4-6-10-3-13-9 6-2 11 2 13 9z" fill="url(#leafShade)"/>
+          <path d="M20 28c-4-6-10-3-13-9 6-2 11 2 13 9z" fill="none" stroke="#1f5a2a" stroke-width="1" stroke-linejoin="round"/>
+        </g>
+        <g class="tierMin4 plant-flowers">
+          <circle cx="12" cy="12" r="2.6" fill="#ff9fd0" stroke="#8a3f6a" stroke-width="0.8"/>
+          <circle cx="11.2" cy="11.2" r="1" fill="#fff" opacity="0.7"/>
+          <circle cx="12" cy="12" r="1" fill="#ffd54f"/>
+          <circle cx="26" cy="8" r="2.3" fill="#ff9fd0" stroke="#8a3f6a" stroke-width="0.8"/>
+          <circle cx="25.3" cy="7.3" r="0.9" fill="#fff" opacity="0.7"/>
+          <circle cx="26" cy="8" r="0.9" fill="#ffd54f"/>
+        </g>
+
+        </g>
+        <!-- Chunky pot -->
+        <g class="tierMax2">
+          <path id="plantPotBody" d="M8 29h24l-3.5 15H11.5z" fill="#c9752a"/>
+          <path d="M8 29h24l-3.5 15H11.5z" fill="url(#potShade)"/>
+          <rect x="9" y="30.5" width="22" height="2" fill="#000" opacity="0.22"/>
+          <path d="M8 29h24l-3.5 15H11.5z" fill="none" stroke="#3a2a22" stroke-width="1.4" stroke-linejoin="round"/>
+          <rect id="plantPotRim" x="6.5" y="24" width="27" height="7" rx="3" fill="#8f4a1a"/>
+          <rect x="6.5" y="24" width="27" height="7" rx="3" fill="url(#potShade)"/>
+          <rect x="6.5" y="24" width="27" height="7" rx="3" fill="none" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="11" y="33" width="3" height="8" rx="1.5" fill="#fff" opacity="0.4"/>
+        </g>
+        <g class="tierMin3">
+          <path id="plantPotBodyModern" d="M8 29h24l-2.5 14a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2z" fill="#9a9aa3"/>
+          <path d="M8 29h24l-2.5 14a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2z" fill="url(#potShade)"/>
+          <rect x="9" y="30.5" width="22" height="2" fill="#000" opacity="0.2"/>
+          <path d="M8 29h24l-2.5 14a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2z" fill="none" stroke="#3a2a22" stroke-width="1.4" stroke-linejoin="round"/>
+          <rect id="plantPotRimModern" x="6.5" y="25" width="27" height="6" rx="3" fill="#5c5c63"/>
+          <rect x="6.5" y="25" width="27" height="6" rx="3" fill="url(#potShade)"/>
+          <rect x="6.5" y="25" width="27" height="6" rx="3" fill="none" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="11" y="33" width="3" height="8" rx="1.5" fill="#fff" opacity="0.4"/>
+          <rect class="tierMin4" x="7.5" y="25.6" width="25" height="1.6" fill="#ffe066"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="furniture bed" id="bedBtn">
+      <button class="upgrade-badge" id="bedUpgradeBtn">
+        <span class="cost" id="bedCost">$500</span>
+      </button>
+      <div class="bed-wrap">
+        <div class="zzz-stack" id="zzz">
+          <span>z</span><span>z</span><span>Z</span>
+        </div>
+        <svg viewBox="0 0 200 110" width="160" height="88">
+          <defs>
+            <linearGradient id="woodGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop id="woodStop1" offset="0%" stop-color="#b97d42"/>
+              <stop id="woodStop2" offset="100%" stop-color="#7a4a22"/>
+            </linearGradient>
+            <linearGradient id="blanketGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop id="blanketStop1" offset="0%" stop-color="#66c4ff"/>
+              <stop id="blanketStop2" offset="100%" stop-color="#2f8fe6"/>
+            </linearGradient>
+            <linearGradient id="celH" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#fff" stop-opacity="0.32"/>
+              <stop offset="34%" stop-color="#fff" stop-opacity="0.32"/>
+              <stop offset="34%" stop-color="#fff" stop-opacity="0"/>
+              <stop offset="70%" stop-color="#000" stop-opacity="0"/>
+              <stop offset="70%" stop-color="#000" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0.22"/>
+            </linearGradient>
+            <linearGradient id="celV" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff" stop-opacity="0.3"/>
+              <stop offset="36%" stop-color="#fff" stop-opacity="0.3"/>
+              <stop offset="36%" stop-color="#fff" stop-opacity="0"/>
+              <stop offset="68%" stop-color="#000" stop-opacity="0"/>
+              <stop offset="68%" stop-color="#000" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0.2"/>
+            </linearGradient>
+            <clipPath id="clipBlanket"><path d="M21 46q0-8 8-8h142q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z"/></clipPath>
+          </defs>
+
+          <ellipse cx="100" cy="106" rx="98" ry="3.8" fill="#3a2a22" opacity="0.22"/>
+
+          <!-- Posts: identical body/proportions at every tier, so it always reads as a bed -->
+          <rect x="3" y="6" width="18" height="102" rx="6" fill="url(#woodGrad)"/>
+          <rect x="3" y="6" width="18" height="102" rx="6" fill="url(#celH)"/>
+          <rect x="3" y="6" width="18" height="102" rx="6" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="179" y="30" width="18" height="78" rx="6" fill="url(#woodGrad)"/>
+          <rect x="179" y="30" width="18" height="78" rx="6" fill="url(#celH)"/>
+          <rect x="179" y="30" width="18" height="78" rx="6" fill="none" stroke="#3a2a22" stroke-width="2"/>
+
+          <!-- Tier 1: big round wooden knobs -->
+          <g class="tierIs1">
+            <circle id="bedKnob1" cx="12" cy="9" r="6" fill="#6f4220"/>
+            <circle cx="12" cy="9" r="6" fill="url(#celH)"/>
+            <circle cx="12" cy="9" r="6" fill="none" stroke="#3a2a22" stroke-width="2"/>
+            <circle cx="10" cy="7" r="1.8" fill="#fff" opacity="0.7"/>
+            <circle id="bedKnob2" cx="12" cy="23" r="4" fill="#6f4220"/>
+            <circle cx="12" cy="23" r="4" fill="url(#celH)"/>
+            <circle cx="12" cy="23" r="4" fill="none" stroke="#3a2a22" stroke-width="1.6"/>
+            <circle id="bedKnob3" cx="188" cy="33" r="5" fill="#6f4220"/>
+            <circle cx="188" cy="33" r="5" fill="url(#celH)"/>
+            <circle cx="188" cy="33" r="5" fill="none" stroke="#3a2a22" stroke-width="2"/>
+            <circle cx="186.4" cy="31.4" r="1.5" fill="#fff" opacity="0.7"/>
+          </g>
+
+          <!-- Tier 2: flared wooden cap -->
+          <g class="tierIs2">
+            <rect x="0" y="3" width="24" height="10" rx="5" fill="url(#woodGrad)"/>
+            <rect x="0" y="3" width="24" height="10" rx="5" fill="url(#celV)"/>
+            <rect x="0" y="3" width="24" height="10" rx="5" fill="none" stroke="#3a2a22" stroke-width="2"/>
+            <rect x="176" y="27" width="24" height="10" rx="5" fill="url(#woodGrad)"/>
+            <rect x="176" y="27" width="24" height="10" rx="5" fill="url(#celV)"/>
+            <rect x="176" y="27" width="24" height="10" rx="5" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          </g>
+
+          <!-- Tier 3: flat steel cap -->
+          <g class="tierIs3">
+            <rect x="2" y="3" width="20" height="8" rx="3" fill="#d3d8de"/>
+            <rect x="2" y="3" width="20" height="8" rx="3" fill="url(#celV)"/>
+            <rect x="2" y="3" width="20" height="8" rx="3" fill="none" stroke="#3a2a22" stroke-width="2"/>
+            <rect x="178" y="27" width="20" height="8" rx="3" fill="#d3d8de"/>
+            <rect x="178" y="27" width="20" height="8" rx="3" fill="url(#celV)"/>
+            <rect x="178" y="27" width="20" height="8" rx="3" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          </g>
+
+          <!-- Tier 4: gilded ornamental cap -->
+          <g class="tierIs4">
+            <rect x="2" y="2" width="20" height="9" rx="4" fill="#ffd54f"/>
+            <rect x="2" y="2" width="20" height="9" rx="4" fill="url(#celV)"/>
+            <rect x="2" y="2" width="20" height="9" rx="4" fill="none" stroke="#3a2a22" stroke-width="2"/>
+            <circle cx="12" cy="6.5" r="2.2" fill="#fff8d6"/>
+            <rect x="178" y="26" width="20" height="9" rx="4" fill="#ffd54f"/>
+            <rect x="178" y="26" width="20" height="9" rx="4" fill="url(#celV)"/>
+            <rect x="178" y="26" width="20" height="9" rx="4" fill="none" stroke="#3a2a22" stroke-width="2"/>
+            <circle cx="188" cy="30.5" r="2" fill="#fff8d6"/>
+          </g>
+
+          <!-- Rail -->
+          <rect x="5" y="73" width="190" height="12" rx="3" fill="url(#woodGrad)"/>
+          <rect x="5" y="73" width="190" height="12" rx="3" fill="url(#celV)"/>
+          <rect x="5" y="73" width="190" height="12" rx="3" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          <g class="tierMin4 bed-led">
+            <rect x="8" y="86.5" width="184" height="5" rx="2.5" fill="#4fd8ff" opacity="0.35"/>
+            <rect x="9" y="87.5" width="182" height="3" rx="1.5" fill="#8ff0ff"/>
+          </g>
+
+          <!-- Mattress -->
+          <rect x="21" y="50" width="158" height="23" rx="5" fill="#fbf6ea"/>
+          <rect x="21" y="61" width="158" height="6" fill="#e3d9c4"/>
+          <rect id="bedTrim" x="21" y="67" width="158" height="6" rx="2" fill="#ffcf33"/>
+          <rect x="21" y="67" width="158" height="6" rx="2" fill="url(#celV)"/>
+          <rect x="21" y="50" width="158" height="23" rx="5" fill="none" stroke="#3a2a22" stroke-width="2"/>
+
+          <!-- Puffy blanket with scalloped hem -->
+          <path d="M21 46q0-8 8-8h142q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" transform="translate(0 3)" fill="#3a2a22" opacity="0.22"/>
+          <path d="M21 46q0-8 8-8h142q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="url(#blanketGrad)"/>
+          <rect x="21" y="38" width="158" height="9" fill="#fff" opacity="0.28" clip-path="url(#clipBlanket)"/>
+          <rect x="21" y="56" width="158" height="12" fill="#000" opacity="0.14" clip-path="url(#clipBlanket)"/>
+          <g clip-path="url(#clipBlanket)">
+            <path d="M44 40c3 7 3 14 0 21M72 40c3 7 3 14 0 21M100 40c3 7 3 14 0 21M128 40c3 7 3 14 0 21M156 40c3 7 3 14 0 21" stroke="#fff" stroke-width="2.2" fill="none" opacity="0.38"/>
+            <path d="M48 40c3 7 3 14 0 21M76 40c3 7 3 14 0 21M104 40c3 7 3 14 0 21M132 40c3 7 3 14 0 21M160 40c3 7 3 14 0 21" stroke="#000" stroke-width="1.6" fill="none" opacity="0.14"/>
+          </g>
+          <path d="M21 46q0-8 8-8h142q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
+
+          <g class="tierMin4 bed-throw" transform="rotate(-3 167 50)">
+            <rect x="153" y="46" width="30" height="12" rx="4" fill="#3a2a22" opacity="0.22"/>
+            <rect x="152" y="44" width="30" height="12" rx="4" fill="#fff1d6"/>
+            <rect x="152" y="44" width="30" height="12" rx="4" fill="url(#celV)"/>
+            <rect x="152" y="44" width="30" height="12" rx="4" fill="none" stroke="#3a2a22" stroke-width="1.8"/>
+            <line x1="156" y1="50" x2="178" y2="50" stroke="#d9c39a" stroke-width="1.4"/>
+          </g>
+
+          <!-- Puffy pillows -->
+          <ellipse cx="34" cy="49" rx="18" ry="3" fill="#3a2a22" opacity="0.2"/>
+          <g class="tierMin3">
+            <rect x="44" y="31" width="28" height="17" rx="8.5" fill="#ffffff"/>
+            <rect x="44" y="31" width="28" height="17" rx="8.5" fill="url(#celV)" opacity="0.55"/>
+            <rect x="44" y="31" width="28" height="17" rx="8.5" fill="none" stroke="#3a2a22" stroke-width="1.8"/>
+          </g>
+          <rect x="15" y="28" width="34" height="20" rx="10" fill="#ffffff"/>
+          <rect x="15" y="28" width="34" height="20" rx="10" fill="url(#celV)" opacity="0.55"/>
+          <rect x="15" y="28" width="34" height="20" rx="10" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          <path d="M22 35c4-2.5 9-2.5 13 0" stroke="#aeb7c4" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
       </div>
     </div>
 
+    <div class="furniture fridge" id="fridgeBtn">
+      <button class="upgrade-badge" id="fridgeUpgradeBtn">
+        <span class="cost" id="fridgeCost">$500</span>
+      </button>
+      <svg viewBox="0 0 90 154" width="84" height="144">
+        <defs>
+          <linearGradient id="fridgeGrad" x1="0" y1="0" x2="1" y2="0.25">
+            <stop id="fridgeStop1" offset="0%" stop-color="#b6f3ec"/>
+            <stop id="fridgeStop2" offset="55%" stop-color="#7fe0d8"/>
+            <stop id="fridgeStop3" offset="100%" stop-color="#4fc4ba"/>
+          </linearGradient>
+          <linearGradient id="doorGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+            <stop offset="10%" stop-color="#ffffff" stop-opacity="0.3"/>
+            <stop offset="10%" stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="celHf" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0.5"/>
+            <stop offset="34%" stop-color="#fff" stop-opacity="0.5"/>
+            <stop offset="34%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="66%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="66%" stop-color="#000" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.28"/>
+          </linearGradient>
+          <clipPath id="clipFridge"><rect x="4" y="4" width="78" height="142" rx="13"/></clipPath>
+        </defs>
+
+        <ellipse cx="45" cy="151" rx="40" ry="3.6" fill="#3a2a22" opacity="0.22"/>
+
+        <!-- Side face for depth -->
+        <path d="M82 14l5 4v118l-5 4z" fill="url(#fridgeGrad)"/>
+        <path d="M82 14l5 4v118l-5 4z" fill="#000" opacity="0.32"/>
+        <path d="M82 14l5 4v118l-5 4z" fill="none" stroke="#2b2b33" stroke-width="1.6" stroke-linejoin="round"/>
+
+        <!-- Feet -->
+        <rect x="11" y="144" width="9" height="8" rx="3" fill="#2b2b33"/>
+        <rect x="66" y="144" width="9" height="8" rx="3" fill="#2b2b33"/>
+
+        <!-- Body -->
+        <rect id="fridgeBodyStroke" x="4" y="4" width="78" height="142" rx="13" fill="url(#fridgeGrad)" stroke="#2c6f6a" stroke-width="2.6"/>
+        <rect x="4" y="4" width="78" height="142" rx="13" fill="url(#doorGrad)"/>
+        <rect x="66" y="4" width="16" height="142" fill="#000" opacity="0.1" clip-path="url(#clipFridge)"/>
+
+        <!-- Big glossy cel highlights -->
+        <rect x="10" y="10" width="12" height="30" rx="6" fill="#fff" opacity="0.45"/>
+        <circle cx="16" cy="45" r="2.4" fill="#fff" opacity="0.45"/>
+        <rect x="10" y="62" width="12" height="60" rx="6" fill="#fff" opacity="0.38"/>
+        <circle cx="16" cy="128" r="2.4" fill="#fff" opacity="0.38"/>
+
+        <!-- Door gap -->
+        <line x1="4" y1="50.5" x2="82" y2="50.5" stroke="#fff" stroke-opacity="0.35" stroke-width="1.5"/>
+        <line id="fridgeDivider" x1="4" y1="53" x2="82" y2="53" stroke="#2c6f6a" stroke-width="4"/>
+        <line x1="4" y1="56" x2="82" y2="56" stroke="#000" stroke-opacity="0.2" stroke-width="2"/>
+
+        <!-- Chunky handles -->
+        <g class="tierMax3 fridge-handles">
+          <rect x="68.5" y="14" width="9" height="28" rx="4.5" fill="#000" opacity="0.18"/>
+          <rect id="fridgeHandle1" x="66" y="12" width="9" height="28" rx="4.5" fill="#2c6f6a"/>
+          <rect x="66" y="12" width="9" height="28" rx="4.5" fill="url(#celHf)"/>
+          <rect x="66" y="12" width="9" height="28" rx="4.5" fill="none" stroke="#2b2b33" stroke-width="1.6"/>
+          <rect x="68.5" y="64" width="9" height="60" rx="4.5" fill="#000" opacity="0.18"/>
+          <rect id="fridgeHandle2" x="66" y="62" width="9" height="60" rx="4.5" fill="#2c6f6a"/>
+          <rect x="66" y="62" width="9" height="60" rx="4.5" fill="url(#celHf)"/>
+          <rect x="66" y="62" width="9" height="60" rx="4.5" fill="none" stroke="#2b2b33" stroke-width="1.6"/>
+        </g>
+        <g class="tierMin4 fridge-slim-handles">
+          <rect x="71" y="13" width="3.5" height="28" rx="1.7" fill="#000" opacity="0.25"/>
+          <rect x="70" y="12" width="3.5" height="28" rx="1.7" fill="#f4f8f8" stroke="#2b2b33" stroke-width="1"/>
+          <rect x="71" y="63" width="3.5" height="60" rx="1.7" fill="#000" opacity="0.25"/>
+          <rect x="70" y="62" width="3.5" height="60" rx="1.7" fill="#f4f8f8" stroke="#2b2b33" stroke-width="1"/>
+        </g>
+
+        <!-- Sticky notes (basic tiers) -->
+        <g class="tierMax2 fridge-notes">
+          <g transform="translate(28,72) rotate(-6)">
+            <rect x="1.2" y="1.8" width="20" height="16" rx="1" fill="#000" opacity="0.18"/>
+            <rect width="20" height="16" rx="1" fill="#ffd94a" stroke="#2b2b33" stroke-width="1.2"/>
+            <rect x="1" y="1" width="18" height="4" fill="#fff" opacity="0.35"/>
+            <line x1="4" y1="8" x2="16" y2="8" stroke="#b58e17" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="4" y1="12" x2="12" y2="12" stroke="#b58e17" stroke-width="1.4" stroke-linecap="round"/>
+          </g>
+          <g transform="translate(40,94) rotate(4)">
+            <rect x="1.2" y="1.8" width="18" height="15" rx="1" fill="#000" opacity="0.18"/>
+            <rect width="18" height="15" rx="1" fill="#ffd94a" stroke="#2b2b33" stroke-width="1.2"/>
+            <rect x="1" y="1" width="16" height="4" fill="#fff" opacity="0.35"/>
+            <line x1="4" y1="8" x2="14" y2="8" stroke="#b58e17" stroke-width="1.4" stroke-linecap="round"/>
+          </g>
+        </g>
+
+        <!-- Smart display (upgraded tiers) -->
+        <g class="tierMin3 fridge-screen">
+          <rect x="14" y="14" width="44" height="22" rx="6" fill="#101c1b" stroke="#2b2b33" stroke-width="1.6"/>
+          <rect x="16" y="16" width="40" height="8" rx="4" fill="#fff" opacity="0.12"/>
+          <rect x="19" y="27" width="26" height="3.5" rx="1.75" fill="#7fe8c9"/>
+          <circle cx="52" cy="20" r="2.4" fill="#7fe8c9"/>
+          <g class="tierMin4">
+            <rect x="19" y="20" width="18" height="3.5" rx="1.75" fill="#ffe066"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Window with day / sunset / night sky -->
+    <div class="window day" id="window">
+      <svg viewBox="0 0 100 82" width="100%" height="100%">
+        <defs>
+          <linearGradient id="skyDay" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6ec6ff"/><stop offset="100%" stop-color="#d6f1ff"/></linearGradient>
+          <linearGradient id="skySunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7a4fb0"/><stop offset="55%" stop-color="#ff8a5b"/><stop offset="100%" stop-color="#ffd27a"/></linearGradient>
+          <linearGradient id="skyNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#141c44"/><stop offset="100%" stop-color="#3a4a8a"/></linearGradient>
+        </defs>
+        <rect x="6" y="8" width="88" height="64" fill="#3a2a22" opacity="0.15" transform="translate(2 2)"/>
+        <g class="sky sky-day">
+          <rect x="8" y="8" width="84" height="64" fill="url(#skyDay)"/>
+          <circle cx="70" cy="26" r="9" fill="#ffd54f"/>
+          <ellipse cx="30" cy="30" rx="12" ry="5" fill="#fff"/><ellipse cx="38" cy="27" rx="8" ry="5" fill="#fff"/>
+          <ellipse cx="62" cy="52" rx="10" ry="4" fill="#fff" opacity="0.9"/>
+          <path d="M8 72V60c14-8 26-10 42-4s22 6 42-2v18z" fill="#57cc6a"/>
+        </g>
+        <g class="sky sky-sunset">
+          <rect x="8" y="8" width="84" height="64" fill="url(#skySunset)"/>
+          <circle cx="56" cy="52" r="10" fill="#fff0b3"/>
+          <ellipse cx="30" cy="30" rx="12" ry="4" fill="#ffb3c6" opacity="0.8"/>
+          <path d="M8 72V60c14-8 26-10 42-4s22 6 42-2v18z" fill="#2a1e4d"/>
+        </g>
+        <g class="sky sky-night">
+          <rect x="8" y="8" width="84" height="64" fill="url(#skyNight)"/>
+          <circle cx="70" cy="24" r="8" fill="#fff4c2"/>
+          <circle cx="66" cy="21" r="6" fill="#141c44" opacity="0.9"/>
+          <g fill="#fff"><circle cx="20" cy="18" r="1.2"/><circle cx="34" cy="30" r="0.9"/><circle cx="48" cy="16" r="1"/><circle cx="84" cy="40" r="1.1"/><circle cx="26" cy="46" r="0.8"/><circle cx="58" cy="36" r="0.8"/></g>
+          <path d="M8 72V60c14-8 26-10 42-4s22 6 42-2v18z" fill="#101530"/>
+        </g>
+        <rect x="47" y="8" width="6" height="64" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.4"/>
+        <rect x="8" y="37" width="84" height="6" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.4"/>
+        <rect x="4" y="4" width="92" height="72" rx="3" fill="none" stroke="#f4f1ea" stroke-width="6"/>
+        <rect x="4" y="4" width="92" height="72" rx="3" fill="none" stroke="#3a2a22" stroke-width="2"/>
+        <rect x="0" y="74" width="100" height="7" rx="2" fill="#e6dcc6" stroke="#3a2a22" stroke-width="2"/>
+        <path d="M0 2h12c-2 20 2 40-2 60l-2 12H0z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M100 2H88c2 20-2 40 2 60l2 12h8z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
+        <rect x="0" y="0" width="100" height="5" rx="2" fill="#b97d42" stroke="#3a2a22" stroke-width="1.6"/>
+      </svg>
+    </div>
+
+    <!-- Night tint + lamp light -->
+    <div class="night-overlay" id="nightOverlay"></div>
+    <div class="lamp-light" id="lampLight"></div>
+
+    <!-- Player character -->
+    <div class="character" id="character">
+      <svg class="pose-stand" viewBox="0 0 60 100" width="100%" height="100%">
+        <ellipse cx="30" cy="97" rx="16" ry="2.8" fill="#3a2a22" opacity="0.22"/>
+        <rect x="19" y="64" width="9" height="24" rx="3.5" fill="#4f8ef0" stroke="#3a2a22" stroke-width="2"/>
+        <rect x="32" y="64" width="9" height="24" rx="3.5" fill="#4f8ef0" stroke="#3a2a22" stroke-width="2"/>
+        <rect x="16" y="85" width="14" height="8" rx="4" fill="#3a2a22"/>
+        <rect x="30" y="85" width="14" height="8" rx="4" fill="#3a2a22"/>
+        <rect x="14" y="42" width="32" height="30" rx="9" fill="#57cc6a" stroke="#3a2a22" stroke-width="2"/>
+        <rect x="14" y="42" width="32" height="8" rx="4" fill="#fff" opacity="0.25"/>
+        <g class="arm arm-l"><rect x="7" y="46" width="8" height="22" rx="4" fill="#57cc6a" stroke="#3a2a22" stroke-width="2"/><circle cx="11" cy="69" r="4" fill="#ffd9b3" stroke="#3a2a22" stroke-width="1.8"/></g>
+        <g class="arm arm-r"><rect x="45" y="46" width="8" height="22" rx="4" fill="#57cc6a" stroke="#3a2a22" stroke-width="2"/><circle cx="49" cy="69" r="4" fill="#ffd9b3" stroke="#3a2a22" stroke-width="1.8"/></g>
+        <g class="plate">
+          <ellipse cx="49" cy="66" rx="11" ry="4" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.6"/>
+          <circle cx="46" cy="63" r="3.2" fill="#e0574f" stroke="#3a2a22" stroke-width="1.2"/>
+          <circle cx="52" cy="63.5" r="2.6" fill="#ffd54f" stroke="#3a2a22" stroke-width="1.2"/>
+        </g>
+        <circle cx="30" cy="25" r="21" fill="#ffd9b3" stroke="#3a2a22" stroke-width="2"/>
+        <path d="M9 22c2-16 12-20 21-20s19 4 21 20c-6-7-13-8-21-7-8-1-15 0-21 7z" fill="#6b4420" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="19" cy="31" r="3" fill="#ff9fb0" opacity="0.5"/><circle cx="41" cy="31" r="3" fill="#ff9fb0" opacity="0.5"/>
+        <g class="eyes-open"><circle cx="23" cy="27" r="2.3" fill="#3a2a22"/><circle cx="37" cy="27" r="2.3" fill="#3a2a22"/><circle cx="23.8" cy="26.2" r="0.8" fill="#fff"/><circle cx="37.8" cy="26.2" r="0.8" fill="#fff"/></g>
+        <g class="eyes-happy"><path d="M20 28q3-4 6 0M34 28q3-4 6 0" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/></g>
+        <path class="mouth" d="M25 34q5 4 10 0" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <svg class="pose-sleep" viewBox="0 0 50 40" width="100%" height="100%">
+        <circle cx="24" cy="20" r="17" fill="#ffd9b3" stroke="#3a2a22" stroke-width="2"/>
+        <path d="M7 17c2-13 10-16 17-16s15 3 17 16c-5-6-11-7-17-6-6-1-12 0-17 6z" fill="#6b4420" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M15 23q3 3 6 0M29 23q3 3 6 0" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
+        <path d="M21 29q3 2 6 0" fill="none" stroke="#3a2a22" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="14" cy="26" r="2.6" fill="#ff9fb0" opacity="0.5"/><circle cx="36" cy="26" r="2.6" fill="#ff9fb0" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <!-- Purchasable room items (shown once bought; art swaps by tier) -->
+    <div class="room-item rug" data-item="rug">
+      <button class="upgrade-badge" id="rugUpgradeBtn"><span class="cost" id="rugCost">$2,000</span></button>
+      <svg viewBox="0 0 120 40" width="100%" height="100%">
+        <g class="tierIs1">
+          <ellipse cx="60" cy="21" rx="38" ry="11" fill="#3a2a22" opacity="0.18"/>
+          <ellipse cx="60" cy="19" rx="38" ry="11" fill="#d9b98a" stroke="#3a2a22" stroke-width="2"/>
+          <ellipse cx="60" cy="19" rx="28" ry="7" fill="none" stroke="#b8956a" stroke-width="1.6" stroke-dasharray="4 3"/>
+          <ellipse cx="48" cy="14" rx="9" ry="2" fill="#fff" opacity="0.3"/>
+        </g>
+        <g class="tierIs2">
+          <ellipse cx="60" cy="21" rx="58" ry="17" fill="#3a2a22" opacity="0.2"/>
+          <ellipse cx="60" cy="19" rx="58" ry="17" fill="#e0574f" stroke="#3a2a22" stroke-width="2"/>
+          <ellipse cx="60" cy="19" rx="46" ry="12" fill="#f2a25b"/>
+          <ellipse cx="60" cy="19" rx="32" ry="7" fill="#e0574f"/>
+          <ellipse cx="60" cy="19" rx="16" ry="3.5" fill="#f2a25b"/>
+          <ellipse cx="40" cy="10" rx="14" ry="2.5" fill="#fff" opacity="0.25"/>
+        </g>
+        <g class="tierIs3">
+          <rect x="5" y="8" width="112" height="28" rx="3" fill="#3a2a22" opacity="0.2"/>
+          <rect x="4" y="6" width="112" height="28" rx="3" fill="#2d3e6b" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="10" y="10" width="100" height="20" fill="none" stroke="#ffd54f" stroke-width="1.6"/>
+          <g fill="#ffd54f" opacity="0.9">
+            <path d="M30 14l5 6-5 6-5-6z"/><path d="M50 14l5 6-5 6-5-6z"/><path d="M70 14l5 6-5 6-5-6z"/><path d="M90 14l5 6-5 6-5-6z"/>
+          </g>
+          <g stroke="#ffd54f" stroke-width="1.4" stroke-linecap="round">
+            <line x1="4" y1="10" x2="1" y2="10"/><line x1="4" y1="16" x2="1" y2="16"/><line x1="4" y1="22" x2="1" y2="22"/><line x1="4" y1="28" x2="1" y2="28"/>
+            <line x1="116" y1="10" x2="119" y2="10"/><line x1="116" y1="16" x2="119" y2="16"/><line x1="116" y1="22" x2="119" y2="22"/><line x1="116" y1="28" x2="119" y2="28"/>
+          </g>
+          <rect x="4" y="6" width="112" height="6" rx="3" fill="#fff" opacity="0.12"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="room-item lamp" data-item="lamp">
+      <button class="upgrade-badge" id="lampUpgradeBtn"><span class="cost" id="lampCost">$3,500</span></button>
+      <svg viewBox="0 0 40 120" width="100%" height="100%">
+        <defs>
+          <radialGradient id="lampRing" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="70%" stop-color="#fff7d6"/>
+            <stop offset="100%" stop-color="#ffd54f"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="20" cy="117" rx="14" ry="2.6" fill="#3a2a22" opacity="0.22"/>
+        <g class="tierIs1">
+          <ellipse cx="20" cy="113" rx="10" ry="4" fill="#8a8a94" stroke="#3a2a22" stroke-width="1.8"/>
+          <rect x="18.8" y="46" width="2.4" height="67" fill="#6b6b78" stroke="#3a2a22" stroke-width="1.2"/>
+          <path d="M9 46L31 46 26 24 14 24Z" fill="#e6d8b8" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M14 24L16.5 46" stroke="#fff" stroke-opacity="0.5" stroke-width="2"/>
+        </g>
+        <g class="tierIs2">
+          <ellipse cx="20" cy="112" rx="13" ry="5" fill="#4a3a30" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="18" y="34" width="4" height="78" fill="#6b5a4e" stroke="#3a2a22" stroke-width="1.6"/>
+          <ellipse class="lamp-glow" cx="20" cy="42" rx="18" ry="6" fill="#ffd54f" opacity="0.28"/>
+          <path d="M5 36L35 36 29 8 11 8Z" fill="#ffd54f" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M11 8L14 36" stroke="#fff" stroke-opacity="0.45" stroke-width="2.5"/>
+          <path d="M29 8L26 36" stroke="#000" stroke-opacity="0.15" stroke-width="3"/>
+        </g>
+        <g class="tierIs3">
+          <ellipse cx="14" cy="113" rx="12" ry="3.5" fill="#2b2b33" stroke="#3a2a22" stroke-width="1.8"/>
+          <path d="M14 112V40q0-26 18-26" fill="none" stroke="#2b2b33" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M14 112V40q0-26 18-26" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="1"/>
+          <circle class="lamp-glow" cx="30" cy="20" r="11" fill="#ffd54f" opacity="0.28"/>
+          <circle cx="30" cy="20" r="7.5" fill="url(#lampRing)" stroke="#3a2a22" stroke-width="1.8"/>
+          <circle cx="30" cy="20" r="3.5" fill="none" stroke="#2b2b33" stroke-width="1.6"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="room-item picture" data-item="picture">
+      <button class="upgrade-badge" id="pictureUpgradeBtn"><span class="cost" id="pictureCost">$5,000</span></button>
+      <svg viewBox="0 0 70 50" width="100%" height="100%">
+        <g class="tierIs1" transform="rotate(-3 35 25)">
+          <rect x="12" y="6" width="46" height="38" fill="#3a2a22" opacity="0.15"/>
+          <rect x="10" y="4" width="46" height="38" fill="#fff7e0" stroke="#3a2a22" stroke-width="1.6"/>
+          <circle cx="33" cy="21" r="9" fill="#ffd54f" stroke="#3a2a22" stroke-width="1.4"/>
+          <circle cx="29.5" cy="19" r="1.3" fill="#3a2a22"/><circle cx="36.5" cy="19" r="1.3" fill="#3a2a22"/>
+          <path d="M28 24q5 5 10 0" stroke="#3a2a22" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <rect x="6" y="2" width="10" height="4" fill="#cfe8ff" opacity="0.9" transform="rotate(-30 11 4)"/>
+          <rect x="50" y="2" width="10" height="4" fill="#cfe8ff" opacity="0.9" transform="rotate(30 55 4)"/>
+        </g>
+        <g class="tierIs2">
+          <rect x="2" y="2" width="66" height="46" rx="3" fill="#8a5a2c" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="8" y="8" width="54" height="34" fill="#7cc6f5"/>
+          <circle cx="50" cy="17" r="5" fill="#ffd54f"/>
+          <path d="M8 42c8-10 14-14 22-8s12 6 32-6v14H8z" fill="#57cc6a"/>
+          <path d="M8 42c10-4 18-8 28-4s16 2 26 0v4H8z" fill="#3fae52"/>
+          <rect x="8" y="8" width="54" height="34" fill="none" stroke="#3a2a22" stroke-opacity="0.5" stroke-width="1.5"/>
+        </g>
+        <g class="tierIs3">
+          <rect x="3" y="4" width="66" height="46" rx="3" fill="#3a2a22" opacity="0.2"/>
+          <rect x="1" y="1" width="68" height="48" rx="3" fill="#ffd54f" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="4" y="4" width="62" height="42" rx="2" fill="none" stroke="#c99a1e" stroke-width="1.4"/>
+          <rect x="7" y="7" width="56" height="36" fill="#1f2a5a"/>
+          <circle cx="47" cy="18" r="7" fill="#fff4c2"/>
+          <path d="M7 43l14-18 10 12 8-9 24 15z" fill="#4f6fc9"/>
+          <path d="M7 43l14-18 6 8-8 10z" fill="#3a56a8"/>
+          <path d="M7 43h56v-4c-10 2-20-2-30 0s-18 3-26 0z" fill="#8fd3ff" opacity="0.6"/>
+          <rect x="7" y="7" width="56" height="36" fill="none" stroke="#3a2a22" stroke-opacity="0.5" stroke-width="1.4"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="room-item shelf" data-item="shelf">
+      <button class="upgrade-badge" id="shelfUpgradeBtn"><span class="cost" id="shelfCost">$8,000</span></button>
+      <svg viewBox="0 0 110 40" width="100%" height="100%">
+        <g class="tierIs1">
+          <rect x="34" y="14" width="8" height="18" rx="1.5" fill="#e0574f" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="44" y="10" width="8" height="22" rx="1.5" fill="#4f8ef0" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="54" y="16" width="7" height="16" rx="1.5" fill="#ffd54f" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="66" y="22" width="9" height="10" rx="2" fill="#fff" stroke="#3a2a22" stroke-width="1.5"/>
+          <path d="M75 25q4 0 4 3t-4 3" fill="none" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="24" y="32" width="62" height="6" rx="1.5" fill="#d9b98a" stroke="#3a2a22" stroke-width="1.8"/>
+          <rect x="24" y="32" width="62" height="2" fill="#fff" opacity="0.3"/>
+        </g>
+        <g class="tierIs2">
+          <rect x="8" y="6" width="9" height="24" rx="1.5" fill="#e0574f" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="19" y="3" width="9" height="27" rx="1.5" fill="#4f8ef0" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="30" y="8" width="8" height="22" rx="1.5" fill="#ffd54f" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="40" y="4" width="10" height="26" rx="1.5" fill="#57cc6a" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="52" y="9" width="8" height="21" rx="1.5" fill="#b48be0" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M63 30l6-24 9 1-6 23z" fill="#f2a25b" stroke="#3a2a22" stroke-width="1.6" stroke-linejoin="round"/>
+          <rect x="80" y="12" width="12" height="18" rx="2" fill="#7cc6f5" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="2" y="30" width="106" height="7" rx="2" fill="#b97d42" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="2" y="30" width="106" height="2.5" fill="#fff" opacity="0.3"/>
+        </g>
+        <g class="tierIs3">
+          <rect x="6" y="6" width="7" height="12" rx="1.5" fill="#2d3e6b" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="15" y="4" width="7" height="14" rx="1.5" fill="#e0574f" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="24" y="8" width="6" height="10" rx="1.5" fill="#ffd54f" stroke="#3a2a22" stroke-width="1.4"/>
+          <path d="M50 18h8l-1-6h-6zM49 6h10l-1.5 6h-7z" fill="#ffd54f" stroke="#3a2a22" stroke-width="1.4" stroke-linejoin="round"/>
+          <rect x="52" y="17" width="4" height="2" fill="#3a2a22"/>
+          <ellipse cx="86" cy="12" rx="5" ry="4" fill="#57cc6a" stroke="#3a2a22" stroke-width="1.3"/>
+          <rect x="82" y="14" width="8" height="5" rx="1" fill="#f2a25b" stroke="#3a2a22" stroke-width="1.3"/>
+          <rect x="2" y="19" width="106" height="5" rx="2" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.8"/>
+          <rect x="30" y="27" width="8" height="10" rx="1.5" fill="#57cc6a" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="40" y="25" width="7" height="12" rx="1.5" fill="#b48be0" stroke="#3a2a22" stroke-width="1.4"/>
+          <rect x="60" y="28" width="16" height="9" rx="2" fill="#2b2b33" stroke="#3a2a22" stroke-width="1.4"/>
+          <circle cx="68" cy="32.5" r="2.4" fill="#7b7b8a"/>
+          <rect x="18" y="37" width="80" height="5" rx="2" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.8"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="room-item tv" data-item="tv">
+      <button class="upgrade-badge" id="tvUpgradeBtn"><span class="cost" id="tvCost">$12,000</span></button>
+      <svg viewBox="0 0 100 66" width="100%" height="100%">
+        <defs>
+          <linearGradient id="tvPitch" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5ed07a"/>
+            <stop offset="100%" stop-color="#2f9e4e"/>
+          </linearGradient>
+          <linearGradient id="tvSunset" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5b3fa0"/>
+            <stop offset="55%" stop-color="#f2735b"/>
+            <stop offset="100%" stop-color="#ffd54f"/>
+          </linearGradient>
+        </defs>
+        <!-- Tier 1: old CRT on a wall bracket -->
+        <g class="tierIs1">
+          <path d="M40 10L30 0M60 10L70 0" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
+          <rect x="14" y="10" width="72" height="48" rx="6" fill="#b9b9c4" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="20" y="16" width="46" height="34" rx="6" fill="#1a2430" stroke="#3a2a22" stroke-width="1.6"/>
+          <g>
+            <rect x="22" y="18" width="6" height="24" fill="#e0574f"/><rect x="28" y="18" width="6" height="24" fill="#ffd54f"/>
+            <rect x="34" y="18" width="6" height="24" fill="#57cc6a"/><rect x="40" y="18" width="6" height="24" fill="#4f8ef0"/>
+            <rect x="46" y="18" width="6" height="24" fill="#b48be0"/><rect x="52" y="18" width="6" height="24" fill="#8fd3ff"/>
+            <rect x="58" y="18" width="6" height="24" fill="#fff"/>
+            <rect x="22" y="42" width="42" height="6" fill="#0f1218"/>
+          </g>
+          <path d="M22 18h18L22 40z" fill="#fff" opacity="0.2"/>
+          <circle cx="76" cy="24" r="3.5" fill="#6b6b78" stroke="#3a2a22" stroke-width="1.4"/>
+          <circle cx="76" cy="35" r="3.5" fill="#6b6b78" stroke="#3a2a22" stroke-width="1.4"/>
+          <g stroke="#6b6b78" stroke-width="1.4"><line x1="71" y1="43" x2="81" y2="43"/><line x1="71" y1="46" x2="81" y2="46"/><line x1="71" y1="49" x2="81" y2="49"/></g>
+          <rect x="10" y="58" width="80" height="5" rx="2" fill="#b97d42" stroke="#3a2a22" stroke-width="1.8"/>
+        </g>
+        <!-- Tier 2: flat screen with a match -->
+        <g class="tierIs2">
+          <rect x="-1" y="-1" width="102" height="60" rx="10" fill="#8fd3ff" opacity="0.16"/>
+          <rect x="5" y="6" width="96" height="54" rx="6" fill="#3a2a22" opacity="0.2"/>
+          <rect x="2" y="2" width="96" height="54" rx="6" fill="#2b2b33" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="5.5" y="5.5" width="89" height="45" rx="3" fill="#0f1218"/>
+          <rect x="7" y="7" width="86" height="42" rx="2" fill="url(#tvPitch)"/>
+          <rect x="7" y="7" width="86" height="42" rx="2" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+          <line x1="50" y1="7" x2="50" y2="49" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+          <circle cx="50" cy="28" r="8.5" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+          <rect x="7" y="17" width="12" height="22" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+          <rect x="81" y="17" width="12" height="22" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+          <rect x="7" y="7" width="86" height="10" fill="#000" opacity="0.08"/>
+          <g class="tv-ball"><circle cx="40" cy="34" r="2.7" fill="#fff" stroke="#2b2b33" stroke-width="0.9"/><circle cx="40" cy="34" r="0.9" fill="#2b2b33"/></g>
+          <rect x="24" y="9" width="6" height="2.4" rx="1.2" fill="#e0574f"/>
+          <rect x="31" y="9" width="10" height="2.4" rx="1.2" fill="#fff" opacity="0.9"/>
+          <path d="M7 7h44L7 41z" fill="#fff" opacity="0.16"/>
+          <circle cx="50" cy="53" r="1.3" fill="#e0574f"/>
+          <rect x="14" y="58" width="72" height="6.5" rx="3.25" fill="#3a3a45" stroke="#3a2a22" stroke-width="1.6"/>
+          <g fill="#7b7b8a">
+            <circle cx="24" cy="61.2" r="0.9"/><circle cx="30" cy="61.2" r="0.9"/><circle cx="36" cy="61.2" r="0.9"/><circle cx="42" cy="61.2" r="0.9"/>
+            <circle cx="58" cy="61.2" r="0.9"/><circle cx="64" cy="61.2" r="0.9"/><circle cx="70" cy="61.2" r="0.9"/><circle cx="76" cy="61.2" r="0.9"/>
+          </g>
+        </g>
+        <!-- Tier 3: ultra-thin OLED with ambient light -->
+        <g class="tierIs3">
+          <rect x="-4" y="-3" width="108" height="62" rx="12" fill="#f2735b" opacity="0.22"/>
+          <rect x="3" y="5" width="98" height="52" rx="4" fill="#3a2a22" opacity="0.2"/>
+          <rect x="0" y="2" width="100" height="52" rx="4" fill="#15151c" stroke="#3a2a22" stroke-width="2"/>
+          <rect x="2.5" y="4.5" width="95" height="47" rx="2" fill="url(#tvSunset)"/>
+          <circle class="tv-sun" cx="66" cy="27" r="9" fill="#fff4c2"/>
+          <path d="M2.5 51.5V40c10-8 18-10 28-4s16 4 26-2 20-8 41-2v19.5z" fill="#2a1e4d"/>
+          <path d="M2.5 51.5V46c14-3 24-3 34 0s18 2 30-1 20-3 31 0v6.5z" fill="#1c1436"/>
+          <path d="M12 46l3-8 3 8z M28 46l2-6 2 6z" fill="#1c1436"/>
+          <path d="M2.5 4.5h50L2.5 40z" fill="#fff" opacity="0.14"/>
+          <rect x="24" y="57" width="52" height="6" rx="3" fill="#2b2b33" stroke="#3a2a22" stroke-width="1.6"/>
+          <rect x="30" y="59.5" width="40" height="1.4" rx="0.7" fill="#8fd3ff" opacity="0.8"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="room-item pet" data-item="pet">
+      <button class="upgrade-badge" id="petUpgradeBtn"><span class="cost" id="petCost">$6,000</span></button>
+      <div class="pet-meter"><div class="pet-meter-fill" id="petMeterFill"></div></div>
+      <svg viewBox="0 0 60 50" width="100%" height="100%">
+        <ellipse cx="30" cy="46" rx="22" ry="3" fill="#3a2a22" opacity="0.18"/>
+        <!-- Tier 1: scruffy street pup -->
+        <g class="tierIs1">
+          <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="#b5834f" stroke="#3a2a22" stroke-width="2"/>
+          <ellipse cx="30" cy="22" rx="13" ry="11" fill="#c99a63" stroke="#3a2a22" stroke-width="2"/>
+          <path d="M19 15c-4-5-6-3-5 3z" fill="#8a5a2c" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M41 15c4-5 6-3 5 3z" fill="#8a5a2c" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M12 40c-4 2-6 0-5-3" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <!-- Tier 2: groomed pet with a collar -->
+        <g class="tierIs2">
+          <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="#f5ecd9" stroke="#3a2a22" stroke-width="2"/>
+          <ellipse cx="30" cy="22" rx="13" ry="11" fill="#fff7ea" stroke="#3a2a22" stroke-width="2"/>
+          <path d="M18 14c-3-6-6-4-5 3z" fill="#e7d7b2" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M42 14c3-6 6-4 5 3z" fill="#e7d7b2" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M20 31c4 8 16 8 20 0" fill="none" stroke="#e0574f" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="30" cy="33" r="2.2" fill="#ffd54f" stroke="#3a2a22" stroke-width="1"/>
+          <path d="M12 40c-4 2-6 0-5-3" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <!-- Tier 3: show-dog with a bow and jeweled collar -->
+        <g class="tierIs3">
+          <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="#ffffff" stroke="#3a2a22" stroke-width="2"/>
+          <ellipse cx="30" cy="22" rx="13" ry="11" fill="#fdfdff" stroke="#3a2a22" stroke-width="2"/>
+          <path d="M17 13c-3-7-7-5-6 3z" fill="#e8e6f5" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M43 13c3-7 7-5 6 3z" fill="#e8e6f5" stroke="#3a2a22" stroke-width="1.6"/>
+          <path d="M20 31c4 8 16 8 20 0" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="30" cy="33" r="2.4" fill="#8fd3ff" stroke="#3a2a22" stroke-width="1"/>
+          <path d="M22 9l4 4-4 4-4-4z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.4" stroke-linejoin="round"/>
+          <circle cx="10" cy="18" r="1.6" fill="#ffd54f"/>
+          <circle cx="50" cy="14" r="1.3" fill="#ffd54f"/>
+          <path d="M12 40c-4 2-6 0-5-3" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <g class="pet-face-happy">
+          <circle cx="25" cy="21" r="1.8" fill="#3a2a22"/>
+          <circle cx="35" cy="21" r="1.8" fill="#3a2a22"/>
+          <path d="M25 27q5 4 10 0" fill="none" stroke="#3a2a22" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <g class="pet-face-sad">
+          <path d="M23 22q2-2 4 0M33 22q2-2 4 0" fill="none" stroke="#3a2a22" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M25 29q5-3 10 0" fill="none" stroke="#3a2a22" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
 
     <div class="hud-chips">
       <div class="hud-chip event-chip" id="eventChip"></div>
@@ -186,8 +848,6 @@
   </div>
 </div>
 
-<script src="three.min.js"></script>
-<script src="world.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
