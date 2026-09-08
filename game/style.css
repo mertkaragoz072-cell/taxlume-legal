@@ -274,6 +274,34 @@ html, body {
 }
 .furniture.plant:active { transform: none; }
 
+.upgrade-badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #1b1b1f;
+  border: 2px solid var(--yellow);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+}
+.upgrade-badge .lvl { color: var(--yellow); }
+.upgrade-badge .cost { color: #8ee89a; }
+.upgrade-badge.maxed {
+  border-color: var(--green);
+  cursor: default;
+}
+.upgrade-badge.maxed .cost { color: #9aa0a6; }
+
 .bed-wrap, .fridge svg {
   position: relative;
   filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25));

@@ -11,6 +11,16 @@
   var FOOD_COST = 200;
   var FOOD_HUNGER_GAIN = 40;
 
+  var OFFLINE_EARN_RATE = 0.05;
+  var OFFLINE_MIN_SECONDS = 60;
+  var OFFLINE_MAX_SECONDS = 8 * 3600;
+
+  var FURNITURE_CONFIG = {
+    bed: { name: "Yatak", baseCost: 500, growth: 1.6, bonus: 0.08, maxLevel: 20 },
+    fridge: { name: "Buzdolabı", baseCost: 500, growth: 1.6, bonus: 0.08, maxLevel: 20 },
+    plant: { name: "Saksı", baseCost: 250, growth: 1.5, bonus: 0.04, maxLevel: 20 },
+  };
+
   var defaultState = {
     money: 0,
     level: 1,
@@ -20,6 +30,8 @@
     energy: 100,
     hunger: 100,
     isSleeping: false,
+    furniture: { bed: 1, fridge: 1, plant: 1 },
+    lastSeen: Date.now(),
   };
 
   var state = loadState();
@@ -40,6 +52,15 @@
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
+    bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
+    bedLvl: document.getElementById("bedLvl"),
+    bedCost: document.getElementById("bedCost"),
+    fridgeUpgradeBtn: document.getElementById("fridgeUpgradeBtn"),
+    fridgeLvl: document.getElementById("fridgeLvl"),
+    fridgeCost: document.getElementById("fridgeCost"),
+    plantUpgradeBtn: document.getElementById("plantUpgradeBtn"),
+    plantLvl: document.getElementById("plantLvl"),
+    plantCost: document.getElementById("plantCost"),
   };
 
   var floaterStack = [];
@@ -57,6 +78,7 @@
 
   function saveState() {
     try {
+      state.lastSeen = Date.now();
       localStorage.setItem(SAVE_KEY, JSON.stringify(state));
     } catch (e) {
       /* storage unavailable, ignore */
@@ -67,8 +89,38 @@
     return Math.max(min, Math.min(max, v));
   }
 
+  function homeMultiplier() {
+    var mult = 1;
+    Object.keys(FURNITURE_CONFIG).forEach(function (key) {
+      mult += FURNITURE_CONFIG[key].bonus * (state.furniture[key] - 1);
+    });
+    return mult;
+  }
+
   function tapValue() {
-    return 100 + (state.level - 1) * 20;
+    var base = 100 + (state.level - 1) * 20;
+    return Math.round(base * homeMultiplier());
+  }
+
+  function offlineRatePerSecond() {
+    return tapValue() * OFFLINE_EARN_RATE;
+  }
+
+  function furnitureCost(key) {
+    var cfg = FURNITURE_CONFIG[key];
+    var level = state.furniture[key];
+    return Math.round(cfg.baseCost * Math.pow(cfg.growth, level - 1));
+  }
+
+  function formatMoney(n) {
+    return "$" + Math.floor(n).toLocaleString("en-US");
+  }
+
+  function formatDuration(sec) {
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    if (h > 0) return m > 0 ? h + "s " + m + "d" : h + "s";
+    return Math.max(m, 1) + "d";
   }
 
   function xpForNextLevel() {
@@ -124,8 +176,27 @@
     return "";
   }
 
+  var UPGRADE_ELS = {
+    bed: { btn: "bedUpgradeBtn", lvl: "bedLvl", cost: "bedCost" },
+    fridge: { btn: "fridgeUpgradeBtn", lvl: "fridgeLvl", cost: "fridgeCost" },
+    plant: { btn: "plantUpgradeBtn", lvl: "plantLvl", cost: "plantCost" },
+  };
+
+  function renderUpgradeBadges() {
+    Object.keys(FURNITURE_CONFIG).forEach(function (key) {
+      var cfg = FURNITURE_CONFIG[key];
+      var level = state.furniture[key];
+      var refs = UPGRADE_ELS[key];
+      var maxed = level >= cfg.maxLevel;
+
+      els[refs.lvl].textContent = "Lv." + level;
+      els[refs.cost].textContent = maxed ? "MAX" : formatMoney(furnitureCost(key));
+      els[refs.btn].classList.toggle("maxed", maxed);
+    });
+  }
+
   function render() {
-    els.moneyText.textContent = "$" + Math.floor(state.money).toLocaleString("en-US");
+    els.moneyText.textContent = formatMoney(state.money);
     els.levelBadge.textContent = state.level;
     els.dayText.textContent = "Gün " + state.day;
 
@@ -143,6 +214,8 @@
     els.tapLabel.textContent = state.isSleeping ? "..." : "DOKUN";
 
     els.zzz.classList.toggle("show", state.isSleeping);
+
+    renderUpgradeBadges();
   }
 
   function levelUpIfReady() {
@@ -222,6 +295,28 @@
     saveState();
   }
 
+  function onUpgrade(key) {
+    var cfg = FURNITURE_CONFIG[key];
+    var level = state.furniture[key];
+
+    if (level >= cfg.maxLevel) {
+      showToast(cfg.name + " zaten maksimum seviyede!");
+      return;
+    }
+
+    var cost = furnitureCost(key);
+    if (state.money < cost) {
+      showToast("Yetersiz para! Gerekli: " + formatMoney(cost));
+      return;
+    }
+
+    state.money -= cost;
+    state.furniture[key] += 1;
+    showToast(cfg.name + " seviye " + state.furniture[key] + "! Kazanç arttı.");
+    render();
+    saveState();
+  }
+
   function passiveTick() {
     if (state.isSleeping) {
       var wasFull = state.energy >= 100;
@@ -255,6 +350,13 @@
     showToast("Görevler yakında geliyor!");
   });
 
+  Object.keys(UPGRADE_ELS).forEach(function (key) {
+    els[UPGRADE_ELS[key].btn].addEventListener("click", function (e) {
+      e.stopPropagation();
+      onUpgrade(key);
+    });
+  });
+
   var navButtons = document.querySelectorAll(".nav-btn");
   navButtons.forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -274,6 +376,21 @@
   setInterval(function () {
     passiveTick();
   }, PASSIVE_TICK_MS);
+
+  (function grantOfflineEarnings() {
+    var elapsedSec = Math.floor((Date.now() - (state.lastSeen || Date.now())) / 1000);
+    var countedSec = Math.min(Math.max(elapsedSec, 0), OFFLINE_MAX_SECONDS);
+    if (countedSec < OFFLINE_MIN_SECONDS) return;
+
+    var earnings = Math.round(offlineRatePerSecond() * countedSec);
+    if (earnings <= 0) return;
+
+    state.money += earnings;
+    showToast(
+      formatDuration(countedSec) + " yoktun, " + formatMoney(earnings) + " kazandın!"
+    );
+    saveState();
+  })();
 
   render();
 })();
