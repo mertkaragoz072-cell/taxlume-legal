@@ -80,8 +80,12 @@
     plantLeaf1: document.getElementById("plantLeaf1"),
     plantLeaf2: document.getElementById("plantLeaf2"),
     plantLeaf3: document.getElementById("plantLeaf3"),
+    plantLeaf4: document.getElementById("plantLeaf4"),
+    plantLeaf5: document.getElementById("plantLeaf5"),
     plantPotBody: document.getElementById("plantPotBody"),
     plantPotRim: document.getElementById("plantPotRim"),
+    plantPotBodyModern: document.getElementById("plantPotBodyModern"),
+    plantPotRimModern: document.getElementById("plantPotRimModern"),
   };
 
   var floaterStack = [];
@@ -254,8 +258,12 @@
       els.plantLeaf1.setAttribute("fill", palette.leaf[0]);
       els.plantLeaf2.setAttribute("fill", palette.leaf[1]);
       els.plantLeaf3.setAttribute("fill", palette.leaf[2]);
+      els.plantLeaf4.setAttribute("fill", palette.leaf[2]);
+      els.plantLeaf5.setAttribute("fill", palette.leaf[1]);
       els.plantPotBody.setAttribute("fill", palette.pot[0]);
       els.plantPotRim.setAttribute("fill", palette.pot[1]);
+      els.plantPotBodyModern.setAttribute("fill", palette.pot[0]);
+      els.plantPotRimModern.setAttribute("fill", palette.pot[1]);
     }
   }
 

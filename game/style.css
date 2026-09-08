@@ -324,6 +324,20 @@ html, body {
   50% { filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25)) drop-shadow(0 0 14px rgba(255,209,102,1)); }
 }
 
+/* Structural upgrades: extra detail parts fade in as furniture levels up, not just recolored */
+.tierMin3, .tierMin4 { display: none; }
+.furniture.tier-3 .tierMin3, .furniture.tier-4 .tierMin3 { display: inline; }
+.furniture.tier-4 .tierMin4 { display: inline; }
+.furniture.tier-3 .tierMax2, .furniture.tier-4 .tierMax2 { display: none; }
+.furniture.tier-4 .tierMax3 { display: none; }
+
+.bed-led { animation: ledPulse 1.6s ease-in-out infinite; }
+@keyframes ledPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.fridge-screen circle { animation: ledPulse 1.6s ease-in-out infinite; }
+
 .zzz-stack {
   position: absolute;
   top: -6px;
