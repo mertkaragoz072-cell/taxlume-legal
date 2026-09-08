@@ -153,9 +153,7 @@ html, body {
   position: relative;
   flex: 1;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 50% -10%, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%),
-    linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0.06) 60%, rgba(0,0,0,0.22)),
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0) 45%, rgba(0,0,0,0.1)),
     repeating-linear-gradient(
       90deg,
       var(--wall),
@@ -163,7 +161,6 @@ html, body {
       var(--wall-stripe) 24px,
       var(--wall-stripe) 48px
     );
-  background-blend-mode: overlay, normal, multiply, normal;
   overflow: hidden;
 }
 .scene::after {
@@ -172,23 +169,19 @@ html, body {
   left: 0; right: 0; bottom: 0;
   height: 22%;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='60'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015 0.6' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.28'/%3E%3C/svg%3E"),
     repeating-linear-gradient(
       90deg,
-      rgba(0,0,0,0.22) 0,
-      rgba(0,0,0,0.22) 1.5px,
-      rgba(255,255,255,0.08) 1.5px,
-      rgba(255,255,255,0.08) 3px,
-      transparent 3px,
+      rgba(0,0,0,0.2) 0,
+      rgba(0,0,0,0.2) 2px,
+      rgba(255,255,255,0.1) 2px,
+      rgba(255,255,255,0.1) 4px,
+      transparent 4px,
       transparent 72px
     ),
-    linear-gradient(180deg, rgba(0,0,0,0.18), rgba(255,255,255,0.08) 35%, rgba(0,0,0,0.12) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0) 30%, rgba(0,0,0,0.08) 100%),
     var(--floor);
-  background-blend-mode: multiply, normal, normal, normal;
   border-top: 5px solid #ece2cb;
-  box-shadow:
-    inset 0 5px 8px rgba(0,0,0,0.35),
-    inset 0 -1px 0 rgba(0,0,0,0.2);
+  box-shadow: inset 0 4px 0 rgba(0,0,0,0.18);
 }
 .scene::before {
   content: "";

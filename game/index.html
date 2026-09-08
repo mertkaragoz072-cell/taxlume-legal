@@ -69,35 +69,33 @@
       <svg viewBox="0 0 40 46" width="60" height="69">
         <defs>
           <linearGradient id="leafShade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff" stop-opacity="0.28"/>
-            <stop offset="45%" stop-color="#fff" stop-opacity="0"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0.42"/>
+            <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="58%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="58%" stop-color="#000" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.26"/>
           </linearGradient>
           <linearGradient id="potShade" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stop-color="#fff" stop-opacity="0.32"/>
-            <stop offset="35%" stop-color="#fff" stop-opacity="0"/>
-            <stop offset="65%" stop-color="#000" stop-opacity="0"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0.38"/>
+            <stop offset="28%" stop-color="#fff" stop-opacity="0.32"/>
+            <stop offset="28%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="70%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="70%" stop-color="#000" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.3"/>
           </linearGradient>
-          <radialGradient id="petal" cx="40%" cy="35%" r="70%">
-            <stop offset="0%" stop-color="#fff0f7"/>
-            <stop offset="100%" stop-color="#f7a9cf"/>
-          </radialGradient>
-          <filter id="plantBlur" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="1.2"/></filter>
         </defs>
 
-        <ellipse cx="20" cy="44.6" rx="13" ry="1.6" fill="#000" opacity="0.32" filter="url(#plantBlur)"/>
-        <ellipse cx="20" cy="27.5" rx="11" ry="2.6" fill="#3f2b1a"/>
+        <ellipse cx="20" cy="44.6" rx="13" ry="1.5" fill="#2f2418" opacity="0.22"/>
+        <ellipse cx="20" cy="27.5" rx="11" ry="2.6" fill="#4a3320"/>
 
         <path id="plantLeaf1" d="M20 28c-2-9-9-7-11-15 7 0 11 5 11 15z" fill="#3a9d4a"/>
         <path d="M20 28c-2-9-9-7-11-15 7 0 11 5 11 15z" fill="url(#leafShade)"/>
-        <path d="M18.5 26.5c-2-6-6-8-8.5-12" stroke="#000" stroke-opacity="0.28" stroke-width="0.6" fill="none"/>
+        <path d="M18.5 26.5c-2-6-6-8-8.5-12" stroke="#1f5a2a" stroke-opacity="0.5" stroke-width="0.7" fill="none"/>
         <path id="plantLeaf2" d="M20 28c2-11 11-9 12-19-8 1-12 8-12 19z" fill="#4cb85c"/>
         <path d="M20 28c2-11 11-9 12-19-8 1-12 8-12 19z" fill="url(#leafShade)"/>
-        <path d="M20.5 25.5c1-8 6-11 9.5-15.5" stroke="#000" stroke-opacity="0.28" stroke-width="0.6" fill="none"/>
+        <path d="M20.5 25.5c1-8 6-11 9.5-15.5" stroke="#1f5a2a" stroke-opacity="0.5" stroke-width="0.7" fill="none"/>
         <path id="plantLeaf3" d="M20 28c-1-7-7-5-8-13 6 0 8 4 8 13z" fill="#5fcf6f"/>
         <path d="M20 28c-1-7-7-5-8-13 6 0 8 4 8 13z" fill="url(#leafShade)"/>
-        <path d="M19 25.5c-1-5-4-6-6-10" stroke="#000" stroke-opacity="0.25" stroke-width="0.5" fill="none"/>
+        <path d="M19 25.5c-1-5-4-6-6-10" stroke="#1f5a2a" stroke-opacity="0.45" stroke-width="0.6" fill="none"/>
         <g class="tierMin3">
           <path id="plantLeaf4" d="M20 28c3-8 10-6 13-12-6 0-11 4-13 12z" fill="#5fcf6f"/>
           <path d="M20 28c3-8 10-6 13-12-6 0-11 4-13 12z" fill="url(#leafShade)"/>
@@ -105,27 +103,32 @@
           <path d="M20 28c-3-6-9-4-12-9 5-1 10 2 12 9z" fill="url(#leafShade)"/>
         </g>
         <g class="tierMin4 plant-flowers">
-          <circle cx="13" cy="13" r="2.2" fill="url(#petal)"/>
+          <circle cx="13" cy="13" r="2.2" fill="#ffb6d9"/>
+          <circle cx="12.3" cy="12.2" r="1" fill="#fff" opacity="0.6"/>
           <circle cx="13" cy="13" r="0.9" fill="#ffd54f"/>
-          <circle cx="25" cy="9" r="1.9" fill="url(#petal)"/>
+          <circle cx="25" cy="9" r="1.9" fill="#ffb6d9"/>
+          <circle cx="24.4" cy="8.3" r="0.9" fill="#fff" opacity="0.6"/>
           <circle cx="25" cy="9" r="0.8" fill="#ffd54f"/>
         </g>
 
         <g class="tierMax2">
           <path id="plantPotBody" d="M9 28h22l-3 16H12z" fill="#b5651d"/>
           <path d="M9 28h22l-3 16H12z" fill="url(#potShade)"/>
-          <rect x="9.5" y="30" width="21" height="1.6" fill="#000" opacity="0.25"/>
+          <path d="M9 28h22l-3 16H12z" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="0.9"/>
+          <rect x="9.5" y="30" width="21" height="1.8" fill="#000" opacity="0.22"/>
           <rect id="plantPotRim" x="8" y="24" width="24" height="6" rx="1.5" fill="#8a4513"/>
           <rect x="8" y="24" width="24" height="6" rx="1.5" fill="url(#potShade)"/>
-          <rect x="8.5" y="24.4" width="23" height="1.2" rx="0.6" fill="#fff" opacity="0.28"/>
+          <rect x="8" y="24" width="24" height="6" rx="1.5" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="0.9"/>
         </g>
         <g class="tierMin3">
           <path id="plantPotBodyModern" d="M9 28h22l-2 15a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2z" fill="#8f8f96"/>
           <path d="M9 28h22l-2 15a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2z" fill="url(#potShade)"/>
-          <rect x="9.5" y="30" width="21" height="1.6" fill="#000" opacity="0.22"/>
+          <path d="M9 28h22l-2 15a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2z" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="0.9"/>
+          <rect x="9.5" y="30" width="21" height="1.8" fill="#000" opacity="0.2"/>
           <rect id="plantPotRimModern" x="8" y="25" width="24" height="5" rx="2" fill="#5c5c63"/>
           <rect x="8" y="25" width="24" height="5" rx="2" fill="url(#potShade)"/>
-          <rect class="tierMin4" x="8" y="25" width="24" height="1.4" fill="#ffe066" opacity="0.95"/>
+          <rect x="8" y="25" width="24" height="5" rx="2" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="0.9"/>
+          <rect class="tierMin4" x="8" y="25" width="24" height="1.4" fill="#ffe066"/>
         </g>
       </svg>
     </div>
@@ -148,144 +151,133 @@
               <stop id="blanketStop1" offset="0%" stop-color="#7cc6f5"/>
               <stop id="blanketStop2" offset="100%" stop-color="#3f8fd1"/>
             </linearGradient>
-            <radialGradient id="pillowGrad" cx="35%" cy="28%" r="85%">
-              <stop offset="0%" stop-color="#ffffff"/>
-              <stop offset="65%" stop-color="#eef0f2"/>
-              <stop offset="100%" stop-color="#c9ced5"/>
-            </radialGradient>
-            <linearGradient id="mattressGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fbf9f4"/>
-              <stop offset="100%" stop-color="#d6d0c4"/>
+            <!-- Cel-shading bands: hard-edged highlight / shadow -->
+            <linearGradient id="celH" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#fff" stop-opacity="0.28"/>
+              <stop offset="30%" stop-color="#fff" stop-opacity="0.28"/>
+              <stop offset="30%" stop-color="#fff" stop-opacity="0"/>
+              <stop offset="72%" stop-color="#000" stop-opacity="0"/>
+              <stop offset="72%" stop-color="#000" stop-opacity="0.24"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0.24"/>
             </linearGradient>
-            <linearGradient id="shadeV" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff" stop-opacity="0.25"/>
-              <stop offset="45%" stop-color="#fff" stop-opacity="0"/>
-              <stop offset="100%" stop-color="#000" stop-opacity="0.3"/>
-            </linearGradient>
-            <linearGradient id="shadeH" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#fff" stop-opacity="0.3"/>
-              <stop offset="35%" stop-color="#fff" stop-opacity="0"/>
+            <linearGradient id="celV" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff" stop-opacity="0.26"/>
+              <stop offset="32%" stop-color="#fff" stop-opacity="0.26"/>
+              <stop offset="32%" stop-color="#fff" stop-opacity="0"/>
               <stop offset="70%" stop-color="#000" stop-opacity="0"/>
-              <stop offset="100%" stop-color="#000" stop-opacity="0.38"/>
+              <stop offset="70%" stop-color="#000" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0.22"/>
             </linearGradient>
-            <linearGradient id="throwGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fbf4e4"/>
-              <stop offset="100%" stop-color="#e2d6bc"/>
-            </linearGradient>
-            <filter id="bedBlur2" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter>
-            <filter id="bedBlur1" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.9"/></filter>
-            <filter id="woodGrain" x="0" y="0" width="100%" height="100%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.06 0.85" numOctaves="3" seed="3"/>
-              <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.33 0.33 0.33 0 0"/>
-            </filter>
-            <filter id="fabricNoise" x="0" y="0" width="100%" height="100%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="7"/>
-              <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.33 0.33 0.33 0 0"/>
-            </filter>
-            <clipPath id="clipPostL"><rect x="4" y="6" width="15" height="102" rx="4"/></clipPath>
-            <clipPath id="clipPostR"><rect x="101" y="30" width="15" height="78" rx="4"/></clipPath>
-            <clipPath id="clipRail"><rect x="6" y="74" width="108" height="10" rx="2"/></clipPath>
             <clipPath id="clipBlanket"><path d="M19 44q0-6 6-6h74q6 0 6 6v16c-6 3-12 0-16 1s-9 3-14 1-9-3-14-1-9 3-14 1-9-3-14-1-5 3-8 1z"/></clipPath>
           </defs>
 
-          <ellipse cx="60" cy="106" rx="58" ry="3.6" fill="#000" opacity="0.32" filter="url(#bedBlur2)"/>
+          <ellipse cx="60" cy="106" rx="57" ry="3.4" fill="#2f2418" opacity="0.2"/>
 
           <!-- Posts: identical body/proportions at every tier, so it always reads as a bed -->
           <rect x="4" y="6" width="15" height="102" rx="4" fill="url(#woodGrad)"/>
-          <rect x="4" y="6" width="15" height="102" rx="4" filter="url(#woodGrain)" opacity="0.32" clip-path="url(#clipPostL)"/>
-          <rect x="4" y="6" width="15" height="102" rx="4" fill="url(#shadeH)"/>
+          <rect x="4" y="6" width="15" height="102" rx="4" fill="url(#celH)"/>
+          <rect x="4" y="6" width="15" height="102" rx="4" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1.2"/>
           <rect x="101" y="30" width="15" height="78" rx="4" fill="url(#woodGrad)"/>
-          <rect x="101" y="30" width="15" height="78" rx="4" filter="url(#woodGrain)" opacity="0.32" clip-path="url(#clipPostR)"/>
-          <rect x="101" y="30" width="15" height="78" rx="4" fill="url(#shadeH)"/>
+          <rect x="101" y="30" width="15" height="78" rx="4" fill="url(#celH)"/>
+          <rect x="101" y="30" width="15" height="78" rx="4" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1.2"/>
 
           <!-- Tier 1: round wooden knobs -->
           <g class="tierIs1">
             <circle id="bedKnob1" cx="11.5" cy="10" r="4.6" fill="#6b4420"/>
-            <circle cx="11.5" cy="10" r="4.6" fill="url(#shadeH)"/>
-            <circle cx="10" cy="8.4" r="1.5" fill="#fff" opacity="0.55"/>
+            <circle cx="11.5" cy="10" r="4.6" fill="url(#celH)"/>
+            <circle cx="11.5" cy="10" r="4.6" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
+            <circle cx="10" cy="8.4" r="1.4" fill="#fff" opacity="0.6"/>
             <circle id="bedKnob2" cx="11.5" cy="21" r="3.2" fill="#6b4420"/>
-            <circle cx="11.5" cy="21" r="3.2" fill="url(#shadeH)"/>
+            <circle cx="11.5" cy="21" r="3.2" fill="url(#celH)"/>
             <circle id="bedKnob3" cx="108.5" cy="34" r="3.9" fill="#6b4420"/>
-            <circle cx="108.5" cy="34" r="3.9" fill="url(#shadeH)"/>
-            <circle cx="107.2" cy="32.6" r="1.2" fill="#fff" opacity="0.55"/>
+            <circle cx="108.5" cy="34" r="3.9" fill="url(#celH)"/>
+            <circle cx="108.5" cy="34" r="3.9" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
+            <circle cx="107.2" cy="32.6" r="1.2" fill="#fff" opacity="0.6"/>
           </g>
 
           <!-- Tier 2: flared wooden cap -->
           <g class="tierIs2">
             <rect x="1.5" y="4" width="20" height="9" rx="4" fill="url(#woodGrad)"/>
-            <rect x="1.5" y="4" width="20" height="9" rx="4" fill="url(#shadeV)"/>
+            <rect x="1.5" y="4" width="20" height="9" rx="4" fill="url(#celV)"/>
+            <rect x="1.5" y="4" width="20" height="9" rx="4" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
             <rect x="98.5" y="28" width="20" height="9" rx="4" fill="url(#woodGrad)"/>
-            <rect x="98.5" y="28" width="20" height="9" rx="4" fill="url(#shadeV)"/>
+            <rect x="98.5" y="28" width="20" height="9" rx="4" fill="url(#celV)"/>
+            <rect x="98.5" y="28" width="20" height="9" rx="4" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
           </g>
 
-          <!-- Tier 3: flat brushed-steel cap -->
+          <!-- Tier 3: flat steel cap -->
           <g class="tierIs3">
             <rect x="3" y="4" width="17" height="7" rx="2" fill="#c7ccd1"/>
-            <rect x="3" y="4" width="17" height="7" rx="2" fill="url(#shadeV)"/>
+            <rect x="3" y="4" width="17" height="7" rx="2" fill="url(#celV)"/>
+            <rect x="3" y="4" width="17" height="7" rx="2" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
             <rect x="100" y="28" width="17" height="7" rx="2" fill="#c7ccd1"/>
-            <rect x="100" y="28" width="17" height="7" rx="2" fill="url(#shadeV)"/>
+            <rect x="100" y="28" width="17" height="7" rx="2" fill="url(#celV)"/>
+            <rect x="100" y="28" width="17" height="7" rx="2" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
           </g>
 
           <!-- Tier 4: gilded ornamental cap -->
           <g class="tierIs4">
-            <rect x="3" y="3" width="17" height="8" rx="3" fill="#e9c657"/>
-            <rect x="3" y="3" width="17" height="8" rx="3" fill="url(#shadeV)"/>
+            <rect x="3" y="3" width="17" height="8" rx="3" fill="#f0cf6b"/>
+            <rect x="3" y="3" width="17" height="8" rx="3" fill="url(#celV)"/>
+            <rect x="3" y="3" width="17" height="8" rx="3" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
             <circle cx="11.5" cy="7" r="1.9" fill="#fff6c8"/>
-            <rect x="100" y="27" width="17" height="8" rx="3" fill="#e9c657"/>
-            <rect x="100" y="27" width="17" height="8" rx="3" fill="url(#shadeV)"/>
+            <rect x="100" y="27" width="17" height="8" rx="3" fill="#f0cf6b"/>
+            <rect x="100" y="27" width="17" height="8" rx="3" fill="url(#celV)"/>
+            <rect x="100" y="27" width="17" height="8" rx="3" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1"/>
             <circle cx="108.5" cy="31" r="1.7" fill="#fff6c8"/>
           </g>
 
           <!-- Rail -->
           <rect x="6" y="74" width="108" height="10" rx="2" fill="url(#woodGrad)"/>
-          <rect x="6" y="74" width="108" height="10" rx="2" filter="url(#woodGrain)" opacity="0.3" clip-path="url(#clipRail)"/>
-          <rect x="6" y="74" width="108" height="10" rx="2" fill="url(#shadeV)"/>
-          <rect x="7" y="83" width="106" height="2" fill="#000" opacity="0.25"/>
+          <rect x="6" y="74" width="108" height="10" rx="2" fill="url(#celV)"/>
+          <rect x="6" y="74" width="108" height="10" rx="2" fill="none" stroke="#2f2418" stroke-opacity="0.35" stroke-width="1.2"/>
           <g class="tierMin4 bed-led">
-            <rect x="10" y="86" width="100" height="3" rx="1.5" fill="#4fd8ff" opacity="0.8" filter="url(#bedBlur2)"/>
-            <rect x="10" y="86" width="100" height="2.2" rx="1.1" fill="#7fe6ff"/>
+            <rect x="9" y="85.5" width="102" height="4" rx="2" fill="#4fd8ff" opacity="0.35"/>
+            <rect x="10" y="86.3" width="100" height="2.4" rx="1.2" fill="#8ff0ff"/>
           </g>
 
           <!-- Mattress -->
-          <rect x="19" y="48" width="86" height="26" rx="3" fill="url(#mattressGrad)"/>
-          <rect x="19" y="48" width="86" height="26" rx="3" fill="url(#shadeH)" opacity="0.5"/>
-          <line x1="21" y1="66" x2="103" y2="66" stroke="#b9b2a4" stroke-width="0.6" opacity="0.6"/>
+          <rect x="19" y="48" width="86" height="26" rx="3" fill="#f7f2e6"/>
+          <rect x="19" y="62" width="86" height="7" fill="#dcd3c2"/>
           <rect id="bedTrim" x="19" y="69" width="86" height="5" rx="1.5" fill="#f5c518"/>
-          <rect x="19" y="69" width="86" height="5" rx="1.5" fill="url(#shadeV)"/>
+          <rect x="19" y="69" width="86" height="5" rx="1.5" fill="url(#celV)"/>
+          <rect x="19" y="48" width="86" height="26" rx="3" fill="none" stroke="#2f2418" stroke-opacity="0.28" stroke-width="1.2"/>
 
-          <!-- Blanket draped over the mattress -->
+          <!-- Blanket draped over the mattress (cel shaded) -->
+          <path d="M19 44q0-6 6-6h74q6 0 6 6v16c-6 3-12 0-16 1s-9 3-14 1-9-3-14-1-9 3-14 1-9-3-14-1-5 3-8 1z" transform="translate(0 3)" fill="#2f2418" opacity="0.2"/>
           <path d="M19 44q0-6 6-6h74q6 0 6 6v16c-6 3-12 0-16 1s-9 3-14 1-9-3-14-1-9 3-14 1-9-3-14-1-5 3-8 1z" fill="url(#blanketGrad)"/>
-          <rect x="19" y="38" width="86" height="26" filter="url(#fabricNoise)" opacity="0.14" clip-path="url(#clipBlanket)"/>
-          <path d="M19 44q0-6 6-6h74q6 0 6 6v16c-6 3-12 0-16 1s-9 3-14 1-9-3-14-1-9 3-14 1-9-3-14-1-5 3-8 1z" fill="url(#shadeV)"/>
-          <g clip-path="url(#clipBlanket)" filter="url(#bedBlur1)">
-            <path d="M34 40c3 7 3 15 0 22" stroke="#000" stroke-width="3" fill="none" opacity="0.18"/>
-            <path d="M31 40c3 7 3 15 0 22" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.18"/>
-            <path d="M58 39c3 8 3 16 0 24" stroke="#000" stroke-width="3" fill="none" opacity="0.18"/>
-            <path d="M55 39c3 8 3 16 0 24" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.18"/>
-            <path d="M82 40c3 7 3 15 0 22" stroke="#000" stroke-width="3" fill="none" opacity="0.18"/>
-            <path d="M79 40c3 7 3 15 0 22" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.18"/>
-            <path d="M19 60c10 5 20-2 30 2s20 6 30 0 16-4 26 0" stroke="#000" stroke-width="2.5" fill="none" opacity="0.2"/>
+          <rect x="19" y="38" width="86" height="8" fill="#fff" opacity="0.22" clip-path="url(#clipBlanket)"/>
+          <rect x="19" y="56" width="86" height="10" fill="#000" opacity="0.14" clip-path="url(#clipBlanket)"/>
+          <g clip-path="url(#clipBlanket)">
+            <path d="M34 40c3 7 3 15 0 22" stroke="#000" stroke-width="1.6" fill="none" opacity="0.2"/>
+            <path d="M31.5 40c3 7 3 15 0 22" stroke="#fff" stroke-width="1.2" fill="none" opacity="0.3"/>
+            <path d="M58 39c3 8 3 16 0 24" stroke="#000" stroke-width="1.6" fill="none" opacity="0.2"/>
+            <path d="M55.5 39c3 8 3 16 0 24" stroke="#fff" stroke-width="1.2" fill="none" opacity="0.3"/>
+            <path d="M82 40c3 7 3 15 0 22" stroke="#000" stroke-width="1.6" fill="none" opacity="0.2"/>
+            <path d="M79.5 40c3 7 3 15 0 22" stroke="#fff" stroke-width="1.2" fill="none" opacity="0.3"/>
           </g>
+          <path d="M19 44q0-6 6-6h74q6 0 6 6v16c-6 3-12 0-16 1s-9 3-14 1-9-3-14-1-9 3-14 1-9-3-14-1-5 3-8 1z" fill="none" stroke="#2f2418" stroke-opacity="0.32" stroke-width="1.2"/>
 
           <g class="tierMin4 bed-throw" transform="rotate(-3 87 50)">
-            <rect x="72" y="45" width="30" height="11" rx="2.5" fill="#000" opacity="0.2" filter="url(#bedBlur1)"/>
-            <rect x="72" y="44" width="30" height="11" rx="2.5" fill="url(#throwGrad)"/>
-            <rect x="72" y="44" width="30" height="11" rx="2.5" fill="url(#shadeV)"/>
-            <line x1="75" y1="49.5" x2="99" y2="49.5" stroke="#c9b892" stroke-width="0.8" opacity="0.8"/>
-            <line x1="75" y1="52" x2="99" y2="52" stroke="#c9b892" stroke-width="0.6" opacity="0.6"/>
+            <rect x="73" y="46" width="30" height="11" rx="2.5" fill="#2f2418" opacity="0.2"/>
+            <rect x="72" y="44" width="30" height="11" rx="2.5" fill="#f7eed9"/>
+            <rect x="72" y="44" width="30" height="11" rx="2.5" fill="url(#celV)"/>
+            <rect x="72" y="44" width="30" height="11" rx="2.5" fill="none" stroke="#2f2418" stroke-opacity="0.3" stroke-width="1"/>
+            <line x1="75" y1="49.5" x2="99" y2="49.5" stroke="#c9b892" stroke-width="0.9"/>
           </g>
 
           <!-- Pillows -->
-          <ellipse cx="33" cy="47" rx="17" ry="3" fill="#000" opacity="0.22" filter="url(#bedBlur1)"/>
+          <ellipse cx="33" cy="47" rx="17" ry="2.6" fill="#2f2418" opacity="0.2"/>
           <g class="tierMin3">
-            <rect x="41" y="30" width="27" height="16" rx="7" fill="url(#pillowGrad)" stroke="#c4c9d0" stroke-width="0.8"/>
-            <rect x="41" y="30" width="27" height="16" rx="7" fill="url(#shadeV)" opacity="0.6"/>
+            <rect x="41" y="30" width="27" height="16" rx="7" fill="#ffffff"/>
+            <rect x="41" y="30" width="27" height="16" rx="7" fill="url(#celV)" opacity="0.7"/>
+            <rect x="41" y="30" width="27" height="16" rx="7" fill="none" stroke="#2f2418" stroke-opacity="0.3" stroke-width="1.1"/>
           </g>
-          <rect x="16" y="27" width="31" height="19" rx="8" fill="url(#pillowGrad)" stroke="#c4c9d0" stroke-width="0.8"/>
-          <rect x="16" y="27" width="31" height="19" rx="8" fill="url(#shadeV)" opacity="0.6"/>
-          <path d="M20 33c4-2 8-2 12 0" stroke="#b9bfc7" stroke-width="0.9" fill="none" opacity="0.8"/>
-          <path d="M22 39c4-2 8-2 12 0" stroke="#b9bfc7" stroke-width="0.7" fill="none" opacity="0.6"/>
-          <ellipse cx="25" cy="31" rx="5" ry="2" fill="#fff" opacity="0.6"/>
+          <rect x="16" y="27" width="31" height="19" rx="8" fill="#ffffff"/>
+          <rect x="16" y="27" width="31" height="19" rx="8" fill="url(#celV)" opacity="0.7"/>
+          <rect x="16" y="27" width="31" height="19" rx="8" fill="none" stroke="#2f2418" stroke-opacity="0.3" stroke-width="1.1"/>
+          <path d="M20 33c4-2 8-2 12 0" stroke="#b4bcc6" stroke-width="1" fill="none"/>
+          <path d="M22 39c4-2 8-2 12 0" stroke="#b4bcc6" stroke-width="0.8" fill="none" opacity="0.8"/>
         </svg>
       </div>
     </div>
@@ -302,104 +294,88 @@
             <stop id="fridgeStop3" offset="100%" stop-color="#5cb8b2"/>
           </linearGradient>
           <linearGradient id="doorGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
-            <stop offset="18%" stop-color="#ffffff" stop-opacity="0"/>
-            <stop offset="85%" stop-color="#000000" stop-opacity="0"/>
-            <stop offset="100%" stop-color="#000000" stop-opacity="0.2"/>
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+            <stop offset="12%" stop-color="#ffffff" stop-opacity="0.3"/>
+            <stop offset="12%" stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
           </linearGradient>
-          <linearGradient id="specular" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#fff" stop-opacity="0"/>
-            <stop offset="50%" stop-color="#fff" stop-opacity="0.34"/>
-            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          <linearGradient id="celHf" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fff" stop-opacity="0.45"/>
+            <stop offset="30%" stop-color="#fff" stop-opacity="0.45"/>
+            <stop offset="30%" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="68%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="68%" stop-color="#000" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.3"/>
           </linearGradient>
-          <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#fff" stop-opacity="0.6"/>
-            <stop offset="45%" stop-color="#fff" stop-opacity="0.05"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0.38"/>
-          </linearGradient>
-          <linearGradient id="screenGloss" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff" stop-opacity="0.16"/>
-            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-          </linearGradient>
-          <filter id="fridgeBlur2" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter>
-          <filter id="steel" x="0" y="0" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.9 0.02" numOctaves="2" seed="5"/>
-            <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.4 0.4 0.4 0 -0.08"/>
-          </filter>
-          <filter id="noteShadow" x="-20%" y="-20%" width="150%" height="150%">
-            <feDropShadow dx="0.6" dy="1" stdDeviation="0.8" flood-opacity="0.35"/>
-          </filter>
-          <clipPath id="clipFridge"><rect x="4" y="4" width="78" height="142" rx="9"/></clipPath>
         </defs>
 
-        <ellipse cx="45" cy="151" rx="38" ry="3.4" fill="#000" opacity="0.34" filter="url(#fridgeBlur2)"/>
+        <ellipse cx="45" cy="151" rx="38" ry="3.2" fill="#2f2418" opacity="0.22"/>
 
         <!-- Side face for depth -->
         <path d="M81 8l5 3v134l-5 3z" fill="url(#fridgeGrad)"/>
-        <path d="M81 8l5 3v134l-5 3z" fill="#000" opacity="0.38"/>
+        <path d="M81 8l5 3v134l-5 3z" fill="#000" opacity="0.35"/>
+        <path d="M81 8l5 3v134l-5 3z" fill="none" stroke="#1f3533" stroke-opacity="0.45" stroke-width="1"/>
 
         <!-- Feet -->
         <rect x="12" y="145" width="7" height="7" rx="1.5" fill="#2c3e3d"/>
         <rect x="67" y="145" width="7" height="7" rx="1.5" fill="#2c3e3d"/>
 
         <!-- Body -->
-        <rect id="fridgeBodyStroke" x="4" y="4" width="78" height="142" rx="9" fill="url(#fridgeGrad)" stroke="#4fb3ab" stroke-width="2"/>
-        <rect x="4" y="4" width="78" height="142" rx="9" filter="url(#steel)" opacity="0.25" clip-path="url(#clipFridge)"/>
+        <rect id="fridgeBodyStroke" x="4" y="4" width="78" height="142" rx="9" fill="url(#fridgeGrad)" stroke="#4fb3ab" stroke-width="2.5"/>
         <rect x="4" y="4" width="78" height="142" rx="9" fill="url(#doorGrad)"/>
-        <rect x="9" y="6" width="16" height="138" fill="url(#specular)"/>
+        <rect x="70" y="8" width="10" height="134" fill="#000" opacity="0.1"/>
+        <rect x="10" y="9" width="8" height="133" rx="4" fill="#fff" opacity="0.3"/>
 
         <!-- Door panel bevels -->
-        <rect x="8.8" y="8.8" width="70" height="40" rx="6" fill="none" stroke="#000" stroke-opacity="0.12" stroke-width="1"/>
-        <rect x="8" y="8" width="70" height="40" rx="6" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/>
-        <rect x="8.8" y="58.8" width="70" height="84" rx="6" fill="none" stroke="#000" stroke-opacity="0.12" stroke-width="1"/>
-        <rect x="8" y="58" width="70" height="84" rx="6" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/>
+        <rect x="8" y="8" width="70" height="40" rx="6" fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="1.2"/>
+        <rect x="8" y="58" width="70" height="84" rx="6" fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="1.2"/>
 
         <!-- Door gap -->
-        <line x1="4" y1="51.2" x2="82" y2="51.2" stroke="#fff" stroke-opacity="0.25" stroke-width="1"/>
+        <line x1="4" y1="51" x2="82" y2="51" stroke="#fff" stroke-opacity="0.3" stroke-width="1.2"/>
         <line id="fridgeDivider" x1="4" y1="53" x2="82" y2="53" stroke="#4fb3ab" stroke-width="3"/>
-        <line x1="4" y1="55.3" x2="82" y2="55.3" stroke="#000" stroke-opacity="0.28" stroke-width="1.6"/>
+        <line x1="4" y1="55.5" x2="82" y2="55.5" stroke="#000" stroke-opacity="0.22" stroke-width="2"/>
 
         <!-- Handles -->
         <g class="tierMax3 fridge-handles">
-          <rect x="74" y="13" width="3" height="24" fill="#000" opacity="0.18" filter="url(#fridgeBlur2)"/>
+          <rect x="70" y="13.5" width="7" height="26" rx="3.5" fill="#000" opacity="0.18"/>
           <rect id="fridgeHandle1" x="68" y="12" width="7" height="26" rx="3.5" fill="#2f7570"/>
-          <rect x="68" y="12" width="7" height="26" rx="3.5" fill="url(#chrome)"/>
-          <rect x="74" y="63" width="3" height="56" fill="#000" opacity="0.18" filter="url(#fridgeBlur2)"/>
+          <rect x="68" y="12" width="7" height="26" rx="3.5" fill="url(#celHf)"/>
+          <rect x="70" y="63.5" width="7" height="58" rx="3.5" fill="#000" opacity="0.18"/>
           <rect id="fridgeHandle2" x="68" y="62" width="7" height="58" rx="3.5" fill="#2f7570"/>
-          <rect x="68" y="62" width="7" height="58" rx="3.5" fill="url(#chrome)"/>
+          <rect x="68" y="62" width="7" height="58" rx="3.5" fill="url(#celHf)"/>
         </g>
         <g class="tierMin4 fridge-slim-handles">
-          <rect x="73" y="12.5" width="2.5" height="26" rx="1.2" fill="#000" opacity="0.25"/>
-          <rect x="72" y="12" width="2.5" height="26" rx="1.2" fill="#eef2f2"/>
-          <rect x="73" y="62.5" width="2.5" height="58" rx="1.2" fill="#000" opacity="0.25"/>
-          <rect x="72" y="62" width="2.5" height="58" rx="1.2" fill="#eef2f2"/>
+          <rect x="73" y="12.8" width="2.5" height="26" rx="1.2" fill="#000" opacity="0.25"/>
+          <rect x="72" y="12" width="2.5" height="26" rx="1.2" fill="#f2f6f6"/>
+          <rect x="73" y="62.8" width="2.5" height="58" rx="1.2" fill="#000" opacity="0.25"/>
+          <rect x="72" y="62" width="2.5" height="58" rx="1.2" fill="#f2f6f6"/>
         </g>
 
         <!-- Sticky notes (basic tiers) -->
         <g class="tierMax2 fridge-notes">
-          <g transform="translate(28,72) rotate(-6)" filter="url(#noteShadow)">
+          <g transform="translate(28,72) rotate(-6)">
+            <rect x="1" y="1.5" width="20" height="16" fill="#000" opacity="0.18"/>
             <rect width="20" height="16" fill="#f7d34a"/>
-            <rect width="20" height="16" fill="url(#doorGrad)"/>
-            <line x1="3" y1="4" x2="16" y2="4" stroke="#b58e17" stroke-width="1" opacity="0.6"/>
-            <line x1="3" y1="8" x2="13" y2="8" stroke="#b58e17" stroke-width="1" opacity="0.6"/>
+            <rect width="20" height="4" fill="#fff" opacity="0.3"/>
+            <line x1="3" y1="7" x2="16" y2="7" stroke="#b58e17" stroke-width="1"/>
+            <line x1="3" y1="11" x2="13" y2="11" stroke="#b58e17" stroke-width="1"/>
           </g>
-          <g transform="translate(40,94) rotate(4)" filter="url(#noteShadow)">
+          <g transform="translate(40,94) rotate(4)">
+            <rect x="1" y="1.5" width="18" height="15" fill="#000" opacity="0.18"/>
             <rect width="18" height="15" fill="#f7d34a"/>
-            <rect width="18" height="15" fill="url(#doorGrad)"/>
-            <line x1="3" y1="4" x2="14" y2="4" stroke="#b58e17" stroke-width="1" opacity="0.6"/>
+            <rect width="18" height="4" fill="#fff" opacity="0.3"/>
+            <line x1="3" y1="7" x2="14" y2="7" stroke="#b58e17" stroke-width="1"/>
           </g>
         </g>
 
         <!-- Smart display (upgraded tiers) -->
         <g class="tierMin3 fridge-screen">
           <rect x="14" y="14" width="44" height="22" rx="4" fill="#0b1615"/>
-          <rect x="14.6" y="14.6" width="42.8" height="20.8" rx="3.6" fill="none" stroke="#2b4441" stroke-width="0.8"/>
-          <rect x="15" y="15" width="42" height="9" rx="3" fill="url(#screenGloss)"/>
-          <rect x="19" y="27" width="26" height="3" rx="1.5" fill="#7fe8c9" opacity="0.9"/>
-          <rect x="19" y="27" width="26" height="3" rx="1.5" fill="#7fe8c9" opacity="0.6" filter="url(#fridgeBlur2)"/>
-          <circle cx="52" cy="20" r="2" fill="#7fe8c9" opacity="0.8"/>
+          <rect x="15" y="15" width="42" height="8" rx="3" fill="#fff" opacity="0.12"/>
+          <rect x="19" y="27" width="26" height="3" rx="1.5" fill="#7fe8c9"/>
+          <circle cx="52" cy="20" r="2" fill="#7fe8c9"/>
           <g class="tierMin4">
-            <rect x="19" y="20" width="18" height="3" rx="1.5" fill="#ffe066" opacity="0.9"/>
+            <rect x="19" y="20" width="18" height="3" rx="1.5" fill="#ffe066"/>
           </g>
         </g>
       </svg>
