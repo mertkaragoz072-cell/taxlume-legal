@@ -15,7 +15,7 @@ import Svg, {
 import { TOWN_EMBLEMS_BY_ID } from "../economy/emblems";
 import { ForeignTown, TownId } from "../economy/towns";
 import { Caravan } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -48,7 +48,10 @@ const MAP_HEIGHT = BASE_H * SCALE;
 
 const PIN_SIZE = 32;
 const HOME_PIN_SIZE = 40;
-const LABEL_WIDTH = 76;
+// Place names sit on little parchment cartouches. The width tracks SCALE so
+// the plaques compress with the map instead of colliding on a narrow phone.
+const LABEL_WIDTH = Math.round(108 * SCALE);
+const HOME_LABEL_WIDTH = Math.round(152 * SCALE);
 
 // Parchment cartography palette — an aged map object sitting inside the
 // app's dark wood UI, rather than another dark panel.
@@ -61,6 +64,15 @@ const ROAD = "#6d5231";
 const FOREST = "#75874f";
 const FOREST_DARK = "#5d6d3e";
 const ROCK = "#9c8459";
+
+// Each tier gets its own ink for the cartouche border and hairline, so the
+// map reads its own progression at a glance without extra badges.
+const TIER_INK: Record<ForeignTown["tier"], string> = {
+  town: "#6d5231",
+  metropol: "#9a6320",
+  legendary: "#7c4a86",
+  mythic: "#3d5f8f",
+};
 
 // A stylized fan-out: nearer tiers hug home, metropolises sit up on the
 // coast, and the legendary/mythic pair are out on islands across the sea.
@@ -350,20 +362,37 @@ export function TownMapView({
               >
                 <Text style={styles.pinIcon}>{unlocked ? tn.icon : "🔒"}</Text>
               </ScalePressable>
-              <Text
+              <View
+                pointerEvents="none"
                 style={[
-                  styles.townLabel,
+                  styles.labelWrap,
                   {
                     left: pos.x * SCALE - LABEL_WIDTH / 2,
-                    top: pos.y * SCALE + PIN_SIZE / 2 + 1,
+                    top: pos.y * SCALE + PIN_SIZE / 2 + 2,
                   },
-                  selected && styles.townLabelSelected,
-                  !unlocked && styles.townLabelLocked,
                 ]}
-                numberOfLines={1}
               >
-                {t(tn.nameKey)}
-              </Text>
+                <View
+                  style={[
+                    styles.plaque,
+                    { borderColor: TIER_INK[tn.tier] },
+                    selected && styles.plaqueSelected,
+                    !unlocked && styles.plaqueLocked,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.townLabel,
+                      selected && styles.townLabelSelected,
+                      !unlocked && styles.townLabelLocked,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {t(tn.nameKey)}
+                  </Text>
+                  <View style={[styles.plaqueRule, { backgroundColor: TIER_INK[tn.tier] }]} />
+                </View>
+              </View>
             </React.Fragment>
           );
         })}
@@ -391,15 +420,25 @@ export function TownMapView({
         >
           <Text style={styles.homeIcon}>{homeIcon}</Text>
         </View>
-        <Text
+        <View
+          pointerEvents="none"
           style={[
-            styles.homeLabel,
-            { left: HOME_X * SCALE - 70, top: HOME_Y * SCALE + HOME_PIN_SIZE / 2 + 1 },
+            styles.labelWrap,
+            {
+              width: HOME_LABEL_WIDTH,
+              left: HOME_X * SCALE - HOME_LABEL_WIDTH / 2,
+              top: HOME_Y * SCALE + HOME_PIN_SIZE / 2 + 2,
+            },
           ]}
-          numberOfLines={1}
         >
-          {townName}
-        </Text>
+          <View style={styles.homePlaque}>
+            <Text style={styles.homeFlourish}>✦</Text>
+            <Text style={styles.homeLabel} numberOfLines={1}>
+              {townName}
+            </Text>
+            <Text style={styles.homeFlourish}>✦</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -438,32 +477,69 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   homeIcon: { fontSize: 19 },
-  townLabel: {
-    position: "absolute",
-    width: LABEL_WIDTH,
-    textAlign: "center",
-    color: "#3f2d18",
-    fontSize: 9,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    textShadowColor: "rgba(236, 223, 190, 0.95)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
+  // A place name is a little parchment cartouche pinned to the map, not bare
+  // text floating over terrain: the plaque keeps it legible over sea, forest
+  // and mountain alike, and the hairline under it reads as engraved.
+  labelWrap: { position: "absolute", width: LABEL_WIDTH, alignItems: "center" },
+  plaque: {
+    maxWidth: "100%",
+    paddingHorizontal: 5,
+    paddingTop: 1,
+    paddingBottom: 2,
+    borderRadius: 3,
+    borderWidth: 1,
+    backgroundColor: "rgba(245, 235, 210, 0.94)",
+    alignItems: "center",
+    shadowColor: "#2a1c0c",
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
   },
-  townLabelSelected: { color: "#2a1c0c" },
-  townLabelLocked: { color: "#5b5142", opacity: 0.9 },
-  homeLabel: {
-    position: "absolute",
-    width: 140,
+  plaqueSelected: {
+    backgroundColor: "#f7e6b0",
+    borderWidth: 1.5,
+    borderColor: "#8a6320",
+  },
+  plaqueLocked: {
+    backgroundColor: "rgba(228, 221, 204, 0.7)",
+    borderColor: "#8d8069",
+    opacity: 0.85,
+  },
+  // the engraved hairline under the name — the detail that sells "cartouche"
+  plaqueRule: { height: 1, width: "70%", marginTop: 1, opacity: 0.45 },
+  townLabel: {
     textAlign: "center",
-    color: "#33230f",
+    color: "#3a2913",
+    fontSize: 9.5,
+    letterSpacing: 0.2,
+    fontFamily: FONT.display,
+  },
+  townLabelSelected: { color: "#241704" },
+  townLabelLocked: { color: "#5b5142" },
+  homePlaque: {
+    flexDirection: "row",
+    alignItems: "center",
+    maxWidth: "100%",
+    paddingHorizontal: 7,
+    paddingTop: 1,
+    paddingBottom: 2,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: "#7a5a22",
+    backgroundColor: "#f4e4ba",
+    shadowColor: "#2a1c0c",
+    shadowOpacity: 0.35,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  homeFlourish: { color: "#9a7328", fontSize: 7, marginHorizontal: 3 },
+  homeLabel: {
+    flexShrink: 1,
+    textAlign: "center",
+    color: "#2c1d08",
     fontSize: TYPE.micro,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    letterSpacing: 0.3,
-    textShadowColor: "rgba(240, 228, 198, 0.95)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
+    letterSpacing: 0.4,
+    fontFamily: FONT.display,
   },
   caravanIcon: { position: "absolute", fontSize: 15, transform: [{ scaleX: -1 }] },
 });
