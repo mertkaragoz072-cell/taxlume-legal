@@ -1270,3 +1270,90 @@ html, body {
 .character::before { width: 74%; height: 13px; bottom: -2px; }
 .room-item.pet::before { width: 80%; height: 11px; bottom: 0; }
 .character.sleeping::before { display: none; }
+
+/* ---------- Two rooms ----------
+   Both rooms occupy the whole scene; only one is mounted at a time. The
+   wrappers carry no z-index of their own, so everything inside keeps
+   stacking against the scene exactly as it did when there was one room. */
+.room-view {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+.room-view.active { display: block; }
+
+/* The kitchen wears tiles on the wall and a cooler floor, so the two rooms
+   are never mistaken for each other. */
+.kitchen-skin { position: absolute; inset: 0; pointer-events: none; }
+.kitchen-skin::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  bottom: 22%;
+  background:
+    repeating-linear-gradient(0deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(90deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
+    linear-gradient(180deg, rgba(223,244,238,0.75), rgba(206,235,228,0.6));
+}
+
+
+.counter {
+  position: absolute;
+  left: 15%;
+  bottom: 21%;
+  width: 138px;
+  height: 79px;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 5px rgba(58,42,34,0.3));
+}
+
+/* Doors: the way between rooms, standing on the floor like real ones. */
+.room-door {
+  position: absolute;
+  bottom: 21%;
+  width: 56px;
+  height: 112px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  z-index: 3;
+  filter: drop-shadow(0 6px 5px rgba(58,42,34,0.32));
+  transition: transform 0.12s ease;
+}
+.room-door:active { transform: scale(0.96); }
+.room-door.to-kitchen { right: 4%; }
+.room-door.to-bedroom { left: 3%; }
+.door-label {
+  position: absolute;
+  top: -21px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  background: #1b1b1f;
+  border: 2px solid var(--yellow);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+}
+
+/* The kitchen window sits above the counter rather than over the bed. */
+.kitchen-window { left: 28% !important; }
+
+/* Doors sit at the very edge of the frame, so their labels hang inward
+   instead of off screen. */
+.room-door.to-bedroom .door-label { left: 0; transform: none; }
+.room-door.to-kitchen .door-label { left: auto; right: 0; transform: none; }
+
+/* Kitchen floor: pale tile instead of the bedroom's boards. The perspective
+   seam layer stays, so it reads as grout running away from the viewer. */
+.scene.in-kitchen::after {
+  background:
+    linear-gradient(180deg, rgba(58,42,34,0.2), rgba(0,0,0,0) 26%, rgba(0,0,0,0.06) 100%),
+    #cfd8d4;
+}

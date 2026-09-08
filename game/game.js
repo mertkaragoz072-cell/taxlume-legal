@@ -55,6 +55,7 @@
     legacy: 0,
     prestiges: 0,
     streak: { day: 0, count: 0 },
+    viewRoom: "bedroom",
     lastSeen: Date.now(),
   };
 
@@ -131,7 +132,7 @@
     xpFill: document.getElementById("xpFill"),
     xpText: document.getElementById("xpText"),
     character: document.getElementById("character"),
-    windowEl: document.getElementById("window"),
+    windows: document.querySelectorAll(".window"),
     nightOverlay: document.getElementById("nightOverlay"),
     lampLight: document.getElementById("lampLight"),
     fxLayer: document.getElementById("fxLayer"),
@@ -593,8 +594,10 @@
 
   function renderAmbient() {
     var phase = skyPhase();
-    els.windowEl.classList.remove("day", "sunset", "night");
-    els.windowEl.classList.add(phase);
+    els.windows.forEach(function (w) {
+      w.classList.remove("day", "sunset", "night");
+      w.classList.add(phase);
+    });
     els.nightOverlay.style.background = phase === "sunset" ? "#c8562a" : "#1b2350";
     els.nightOverlay.style.opacity =
       phase === "night" ? (state.isSleeping ? "0.5" : "0.4") : phase === "sunset" ? "0.12" : "0";
@@ -607,6 +610,28 @@
     // fades as the sun goes down.
     els.scene.classList.remove("sky-day", "sky-sunset", "sky-night");
     els.scene.classList.add("sky-" + phase);
+  }
+
+  /* ---------- Rooms ----------
+     The home is two rooms. Only the mounted one is on screen, which is what
+     makes the bed and the fridge feel like they live somewhere: to eat you
+     walk to the kitchen, to sleep you go back to the bedroom. */
+  var ROOM_NAMES = { bedroom: "Yatak Odası", kitchen: "Mutfak" };
+
+  function setRoom(name, quiet) {
+    if (!ROOM_NAMES[name]) return;
+    if (name !== "bedroom" && state.isSleeping) {
+      showToast("Önce uyanmalısın.");
+      return;
+    }
+    state.viewRoom = name;
+    document.querySelectorAll(".room-view").forEach(function (view) {
+      view.classList.toggle("active", view.getAttribute("data-room") === name);
+    });
+    els.scene.classList.toggle("in-kitchen", name === "kitchen");
+    if (!quiet) sfx.coin();
+    render();
+    saveState();
   }
 
   /* ---------- Character ---------- */
@@ -2286,6 +2311,7 @@
       showToast("Zaten dinlenmişsin!");
       return;
     }
+    if (state.viewRoom !== "bedroom") setRoom("bedroom", true);
     state.isSleeping = !state.isSleeping;
     if (state.isSleeping) {
       bumpStat("sleeps", 1);
@@ -2389,7 +2415,7 @@
 
   // Tapping anywhere on the room earns money; furniture, badges and icons keep their own actions.
   els.scene.addEventListener("click", function (e) {
-    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item")) return;
+    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item, .room-door")) return;
     var rect = els.scene.getBoundingClientRect();
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
@@ -2435,6 +2461,13 @@
     badge.addEventListener("click", function (e) {
       e.stopPropagation();
       upgradeItem(key);
+    });
+  });
+
+  document.querySelectorAll(".room-door").forEach(function (door) {
+    door.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setRoom(door.getAttribute("data-goto"));
     });
   });
 
@@ -2498,6 +2531,7 @@
     passiveTick();
   }, PASSIVE_TICK_MS);
 
+  setRoom(state.viewRoom === "kitchen" ? "kitchen" : "bedroom", true);
   refreshQuests();
   checkStreak();
   scheduleGoldCoin();
