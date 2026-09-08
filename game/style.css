@@ -212,11 +212,11 @@ html, body {
 
 .tap-wrap {
   position: absolute;
-  top: 38%;
+  top: 32%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 160px;
-  height: 160px;
+  width: 142px;
+  height: 142px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -234,13 +234,13 @@ html, body {
 
 .tap-btn {
   position: relative;
-  width: 128px;
-  height: 128px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
-  border: 8px solid var(--green-dark);
+  border: 7px solid var(--green-dark);
   background: radial-gradient(circle at 35% 30%, #6be27f, var(--green) 70%);
   color: #fff;
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 900;
   letter-spacing: 1px;
   cursor: pointer;
