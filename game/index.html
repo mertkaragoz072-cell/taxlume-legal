@@ -437,21 +437,40 @@
     </div>
     <div class="room-item tv" data-item="tv">
       <svg viewBox="0 0 100 66" width="100%" height="100%">
-        <rect x="42" y="52" width="16" height="6" fill="#2b2b33"/>
-        <rect x="30" y="57" width="40" height="5" rx="2.5" fill="#2b2b33" stroke="#3a2a22" stroke-width="1.5"/>
-        <rect x="2" y="2" width="96" height="52" rx="5" fill="#2b2b33" stroke="#3a2a22" stroke-width="2"/>
-        <rect x="7" y="7" width="86" height="42" rx="3" fill="#1c6bd6"/>
-        <rect x="7" y="7" width="86" height="42" rx="3" fill="url(#tvGlow)"/>
-        <path d="M7 7h34L7 40z" fill="#fff" opacity="0.18"/>
-        <circle cx="70" cy="22" r="9" fill="#ffd54f"/>
-        <path d="M7 49c14-14 26-16 40-8s24 2 46-6v14H7z" fill="#57cc6a"/>
-        <circle cx="50" cy="56" r="1.4" fill="#57cc6a"/>
         <defs>
-          <linearGradient id="tvGlow" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#8fd3ff"/>
-            <stop offset="100%" stop-color="#1c6bd6" stop-opacity="0"/>
+          <linearGradient id="tvPitch" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5ed07a"/>
+            <stop offset="100%" stop-color="#2f9e4e"/>
           </linearGradient>
         </defs>
+        <!-- screen glow on the wall + bracket shadow -->
+        <rect x="-1" y="-1" width="102" height="60" rx="10" fill="#8fd3ff" opacity="0.16"/>
+        <rect x="5" y="6" width="96" height="54" rx="6" fill="#3a2a22" opacity="0.2"/>
+        <!-- slim bezel body -->
+        <rect x="2" y="2" width="96" height="54" rx="6" fill="#2b2b33" stroke="#3a2a22" stroke-width="2"/>
+        <rect x="5.5" y="5.5" width="89" height="45" rx="3" fill="#0f1218"/>
+        <!-- broadcast: football pitch -->
+        <rect x="7" y="7" width="86" height="42" rx="2" fill="url(#tvPitch)"/>
+        <rect x="7" y="7" width="86" height="42" rx="2" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+        <line x1="50" y1="7" x2="50" y2="49" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+        <circle cx="50" cy="28" r="8.5" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+        <rect x="7" y="17" width="12" height="22" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+        <rect x="81" y="17" width="12" height="22" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+        <rect x="7" y="7" width="86" height="10" fill="#000" opacity="0.08"/>
+        <circle cx="40" cy="34" r="2.7" fill="#fff" stroke="#2b2b33" stroke-width="0.9"/>
+        <circle cx="40" cy="34" r="0.9" fill="#2b2b33"/>
+        <rect x="24" y="9" width="6" height="2.4" rx="1.2" fill="#e0574f"/>
+        <rect x="31" y="9" width="10" height="2.4" rx="1.2" fill="#fff" opacity="0.9"/>
+        <!-- glass gloss -->
+        <path d="M7 7h44L7 41z" fill="#fff" opacity="0.16"/>
+        <!-- standby LED -->
+        <circle cx="50" cy="53" r="1.3" fill="#e0574f"/>
+        <!-- soundbar -->
+        <rect x="14" y="58" width="72" height="6.5" rx="3.25" fill="#3a3a45" stroke="#3a2a22" stroke-width="1.6"/>
+        <g fill="#7b7b8a">
+          <circle cx="24" cy="61.2" r="0.9"/><circle cx="30" cy="61.2" r="0.9"/><circle cx="36" cy="61.2" r="0.9"/><circle cx="42" cy="61.2" r="0.9"/>
+          <circle cx="58" cy="61.2" r="0.9"/><circle cx="64" cy="61.2" r="0.9"/><circle cx="70" cy="61.2" r="0.9"/><circle cx="76" cy="61.2" r="0.9"/>
+        </g>
       </svg>
     </div>
 
