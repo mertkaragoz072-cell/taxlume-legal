@@ -274,10 +274,10 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 .furniture:active { transform: scale(0.95); }
-.furniture.bed { left: 9%; }
-.furniture.fridge { right: 6%; }
+.furniture.bed { left: 1%; }
+.furniture.fridge { right: 2%; }
 .furniture.plant {
-  left: 1%;
+  left: -1%;
   bottom: 15%;
   z-index: 2;
   cursor: default;
