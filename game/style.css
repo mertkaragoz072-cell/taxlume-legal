@@ -265,8 +265,7 @@ html, body {
 
 .furniture {
   position: absolute;
-  bottom: 17%;
-  text-align: center;
+  bottom: 21%;
   cursor: pointer;
   z-index: 3;
   transition: transform 0.15s ease;
@@ -278,7 +277,7 @@ html, body {
 .furniture.fridge { right: 0; }
 .furniture.plant {
   left: 34%;
-  bottom: 19%;
+  bottom: 21%;
   z-index: 2;
   cursor: default;
 }
@@ -319,14 +318,17 @@ html, body {
 }
 
 .furniture-label {
-  margin-top: 2px;
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  transform: translateX(-50%);
   background: rgba(0,0,0,0.55);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
-  display: inline-block;
+  white-space: nowrap;
 }
 
 .banner {
