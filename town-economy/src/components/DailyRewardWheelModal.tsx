@@ -4,6 +4,7 @@ import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-nativ
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { ConfettiBurst } from "./ConfettiBurst";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -53,6 +54,7 @@ export function DailyRewardWheelModal({ visible, amount, streakCount, onDismiss,
   const { t } = useEconomyContext();
   const [spinning, setSpinning] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -77,6 +79,10 @@ export function DailyRewardWheelModal({ visible, amount, streakCount, onDismiss,
       setSpinning(false);
       setRevealed(true);
       sounds.playSuccess();
+      // The app-level confetti (App.tsx) renders behind this modal's own
+      // native portal layer and would be invisible here, so this modal
+      // pops its own burst on top of its own content instead.
+      setConfettiTrigger((n) => n + 1);
       onRevealed();
     });
   };
@@ -170,6 +176,7 @@ export function DailyRewardWheelModal({ visible, amount, streakCount, onDismiss,
           )}
         </View>
       </ModalBackdrop>
+      <ConfettiBurst trigger={confettiTrigger} />
     </Modal>
   );
 }
