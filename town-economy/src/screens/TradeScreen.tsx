@@ -6,6 +6,7 @@ import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
+import { TownMapView } from "../components/TownMapView";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
@@ -188,6 +189,21 @@ export function TradeScreen({ sounds }: Props) {
             })}
         </View>
       )}
+
+      <SectionLabel text={t("trade.mapSectionLabel")} color="#5fd884" />
+      <TownMapView
+        townName={state.townName}
+        selectedEmblem={state.selectedEmblem}
+        towns={ALL_TOWNS}
+        selectedTownId={townId}
+        onSelectTown={setTownId}
+        metropolUnlocked={state.metropolUnlocked}
+        legendaryUnlocked={state.legendaryUnlocked}
+        mythicUnlocked={state.mythicUnlocked}
+        caravans={state.caravans}
+        tick={state.tick}
+        t={t}
+      />
 
       <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>

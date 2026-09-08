@@ -87,6 +87,7 @@ export const STRINGS = {
       rowSub: "{qty} adet @ {price} 🪙",
     },
     trade: {
+      mapSectionLabel: "KASABA HARİTASI",
       neighborsSectionLabel: "KOMŞU KASABALAR",
       townMeta: "{days} gün · %{tariff} vergi",
       heatmapSectionLabel: "FIRSAT HARİTASI",
@@ -1001,6 +1002,7 @@ export const STRINGS = {
       rowSub: "{qty} units @ {price} 🪙",
     },
     trade: {
+      mapSectionLabel: "TOWN MAP",
       neighborsSectionLabel: "NEIGHBORING TOWNS",
       townMeta: "{days}d away · {tariff}% tariff",
       heatmapSectionLabel: "OPPORTUNITY MAP",
