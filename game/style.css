@@ -276,7 +276,7 @@ html, body {
 .furniture.bed { left: 0; }
 .furniture.fridge { right: 0; }
 .furniture.plant {
-  left: 34%;
+  left: 44%;
   bottom: 21%;
   z-index: 2;
   cursor: default;
