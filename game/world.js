@@ -1,9 +1,13 @@
 /* =============================================================================
-   Tap Life 3D world.
+   Tap Life room.
+
+   The room itself is flat: a straight-on orthographic camera turns the wall
+   and the floor into two plain bands, exactly like the 2D version. Only the
+   objects keep their volume - each one is a real mesh, turned a little off
+   axis so you can see round it, with a soft shadow pooled at its feet.
 
    Deliberately minimal and soft: pastel colours, rounded shapes, no outlines
-   and gentle shading. Everything is built from a handful of primitives, so the
-   room reads as a cute little diorama rather than a detailed simulation.
+   and gentle shading.
 
    The game rules stay in game.js and drive this module through the World.*
    API at the bottom. Units are metres.
@@ -11,9 +15,11 @@
 window.World = (function () {
   "use strict";
 
-  var ROOM_W = 4.6;
-  var ROOM_D = 5.2;
-  var ROOM_H = 4.8;   // taller than the frame, so no wall top is ever visible
+  // How much of the room's width the canvas shows. Everything else is derived
+  // from it, so the layout keeps the same proportions on any screen.
+  var VIEW_W = 3.6;
+  var FLOOR_FRAC = 0.24;   // share of the canvas taken by the floor band
+  var TILT = 0.34;         // radians each object is turned, to show its depth
 
   var scene, camera, renderer, clock;
   var raycaster, pointer;
@@ -130,61 +136,65 @@ window.World = (function () {
   };
 
   var ROOM_PALETTE = [
-    { wall: 0xfff1de, floor: 0xf0d3ac },
-    { wall: 0xe6f2ff, floor: 0xe8dcc6 },
-    { wall: 0xf1ebff, floor: 0xd9cfe8 },
+    { wall: 0xfdeed8, floor: 0xe7c49b, skirt: 0xfff8ee },
+    { wall: 0xe4f0ff, floor: 0xdfd2bb, skirt: 0xffffff },
+    { wall: 0xefe8ff, floor: 0xcfc3e0, skirt: 0xfaf6ff },
   ];
 
   /* ------------------------------------------------------------- room shell */
 
-  var wallMat, floorMat;
+  var wallMat, floorMat, skirtMat;
+  var roomTierIndex = 0;
 
   function buildRoom() {
     var g = new THREE.Group();
     var pal = ROOM_PALETTE[0];
 
-    floorMat = new THREE.MeshToonMaterial({ color: pal.floor, gradientMap: ramp() });
-    var floorD = ROOM_D + 3.4;
-    var floorGeo = new THREE.BoxGeometry(ROOM_W, 0.2, floorD, 3, 3, 3);
-    roundGeometry(floorGeo, ROOM_W, 0.2, floorD, 0.09);
-    var floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.position.set(0, -0.1, (floorD - ROOM_D) / 2);
-    floor.receiveShadow = true;
+    // Two flat bands meeting at y = 0: wall above, floor below. Both are drawn
+    // far wider and taller than the frame so their edges are never in shot.
+    wallMat = new THREE.MeshBasicMaterial({ color: pal.wall });
+    var wall = new THREE.Mesh(new THREE.PlaneGeometry(16, 14), wallMat);
+    wall.position.set(0, 7, -1.2);
+    g.add(wall);
+
+    floorMat = new THREE.MeshBasicMaterial({ color: pal.floor });
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), floorMat);
+    floor.position.set(0, -5, -1.1);
     g.add(floor);
 
-    wallMat = new THREE.MeshToonMaterial({ color: pal.wall, gradientMap: ramp() });
-    var back = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W, ROOM_H, 0.14), wallMat);
-    back.position.set(0, ROOM_H / 2, -ROOM_D / 2 - 0.07);
-    back.receiveShadow = true;
-    g.add(back);
-
-    // Low side walls only: enough to frame the room without boxing it in.
-    [-1, 1].forEach(function (side) {
-      var w = new THREE.Mesh(new THREE.BoxGeometry(0.14, ROOM_H, ROOM_D + 3.4), wallMat);
-      w.position.set(side * (ROOM_W / 2 + 0.07), ROOM_H / 2, 1.7);
-      w.receiveShadow = true;
-      g.add(w);
-    });
+    // Skirting board along the seam, the one line that says "this is a room".
+    skirtMat = new THREE.MeshBasicMaterial({ color: pal.skirt });
+    var skirt = new THREE.Mesh(new THREE.PlaneGeometry(16, 0.12), skirtMat);
+    skirt.position.set(0, 0.06, -1.05);
+    g.add(skirt);
 
     return g;
   }
 
   function applyRoomTier(tier) {
-    var pal = ROOM_PALETTE[Math.max(0, Math.min(2, tier - 1))];
-    wallMat.color.set(pal.wall);
-    floorMat.color.set(pal.floor);
+    roomTierIndex = Math.max(0, Math.min(2, tier - 1));
+    applyRoomLook();
+  }
+
+  function applyRoomLook() {
+    var pal = ROOM_PALETTE[roomTierIndex];
+    var tint = (DAY[dayPhase] || DAY.day).room;
+    wallMat.color.set(pal.wall).multiply(tint);
+    floorMat.color.set(pal.floor).multiply(tint);
+    skirtMat.color.set(pal.skirt).multiply(tint);
+    if (windowFrame) windowFrame.material.color.set(0xffffff).multiply(tint);
   }
 
   /* ------------------------------------------------------------------ window */
 
-  var windowGroup, windowSky, windowSun, windowHills;
+  var windowGroup, windowSky, windowSun, windowHills, windowFrame;
 
   function buildWindow() {
     var g = new THREE.Group();
     var PW = 1.15, PH = 0.95;
 
-    var frame = plate(PW + 0.18, PH + 0.18, 0xffffff);
-    g.add(frame);
+    windowFrame = plate(PW + 0.18, PH + 0.18, 0xffffff);
+    g.add(windowFrame);
 
     windowSky = plate(PW, PH, 0xbfe8ff);
     windowSky.position.z = 0.006;
@@ -215,29 +225,29 @@ window.World = (function () {
     var frameCol = [0xe8c39e, 0xdcb08a, 0xe6e9ee, 0xf5dfa0][tier - 1];
     var duvetCol = [0xa8ddd4, 0x8fd0e8, 0xc9c4e8, 0xf5b8c4][tier - 1];
 
-    var base = pill(1.95, 0.34, 1.05, frameCol, 0.12);
+    var base = pill(1.6, 0.34, 1.0, frameCol, 0.12);
     at(base, 0, 0.24, 0);
     g.add(base);
 
-    var head = pill(0.16, 0.62, 1.0, frameCol, 0.08);
-    at(head, -0.94, 0.5, 0);
+    var head = pill(0.15, 0.6, 0.95, frameCol, 0.07);
+    at(head, -0.78, 0.5, 0);
     g.add(head);
 
-    var mattress = pill(1.85, 0.2, 0.98, 0xfffaf2, 0.08);
+    var mattress = pill(1.5, 0.2, 0.93, 0xfffaf2, 0.08);
     at(mattress, 0, 0.5, 0);
     g.add(mattress);
 
-    var duvet = pill(1.25, 0.18, 1.0, duvetCol, 0.08);
-    at(duvet, 0.3, 0.63, 0);
+    var duvet = pill(1.0, 0.18, 0.95, duvetCol, 0.08);
+    at(duvet, 0.26, 0.63, 0);
     g.add(duvet);
 
-    var pillowG = pill(0.46, 0.16, 0.56, 0xffffff, 0.08);
-    at(pillowG, -0.62, 0.65, 0);
+    var pillowG = pill(0.42, 0.16, 0.52, 0xffffff, 0.08);
+    at(pillowG, -0.5, 0.65, 0);
     g.add(pillowG);
 
     if (tier >= 3) {
-      var pillow2 = pill(0.4, 0.14, 0.48, duvetCol, 0.07);
-      at(pillow2, -0.6, 0.78, 0);
+      var pillow2 = pill(0.36, 0.14, 0.44, duvetCol, 0.07);
+      at(pillow2, -0.48, 0.78, 0);
       g.add(pillow2);
     }
     return g;
@@ -305,23 +315,22 @@ window.World = (function () {
     var base = [0xf3ddc4, 0xf0c8c8, 0xc9d6f0][tier - 1];
     var trim = [0xe6c7a4, 0xf5b8c4, 0xa8bde0][tier - 1];
 
-    var r = cyl(1.05, 1.05, 0.03, base, 32);
-    r.scale.z = 0.72;
-    at(r, 0, 0.015, 0);
-    r.receiveShadow = true;
-    g.add(r);
+    var outer = new THREE.Mesh(new THREE.CircleGeometry(1.05, 32), mat(base));
+    outer.scale.y = 0.3;
+    g.add(outer);
 
-    var inner = cyl(0.72, 0.72, 0.035, trim, 32);
-    inner.scale.z = 0.72;
-    at(inner, 0, 0.022, 0);
+    var inner = new THREE.Mesh(new THREE.CircleGeometry(0.72, 32), mat(trim));
+    inner.scale.y = 0.3;
+    inner.position.z = 0.004;
     g.add(inner);
 
     if (tier >= 3) {
-      var core = cyl(0.38, 0.38, 0.04, base, 28);
-      core.scale.z = 0.72;
-      at(core, 0, 0.028, 0);
+      var core = new THREE.Mesh(new THREE.CircleGeometry(0.38, 28), mat(base));
+      core.scale.y = 0.3;
+      core.position.z = 0.008;
       g.add(core);
     }
+    g.position.y = 0.16;
     return g;
   }
 
@@ -334,12 +343,12 @@ window.World = (function () {
     at(base, 0, 0.03, 0);
     g.add(base);
 
-    var pole = cyl(0.03, 0.03, 1.25, poleCol, 12);
-    at(pole, 0, 0.66, 0);
+    var pole = cyl(0.03, 0.03, 1.05, poleCol, 12);
+    at(pole, 0, 0.56, 0);
     g.add(pole);
 
-    var shade = cyl(0.2, 0.3, 0.3, shadeCol, 24);
-    at(shade, 0, 1.4, 0);
+    var shade = cyl(0.19, 0.28, 0.28, shadeCol, 24);
+    at(shade, 0, 1.2, 0);
     g.add(shade);
     g.userData.shade = shade;
 
@@ -558,17 +567,20 @@ window.World = (function () {
 
   /* ------------------------------------------------------------- placements */
 
+  // A flat stage: x spreads objects across the room, y lifts wall items, and z
+  // only decides what overlaps what. Floor items all stand on y = 0.
   var LAYOUT = {
-    // The bed runs along the left wall, so it never crowds the back wall.
-    bed:     { pos: [-1.45, 0, -0.55],   rot: Math.PI / 2, anchor: [0, 1.05, 0] },
-    fridge:  { pos: [1.65, 0, -1.95],    rot: -0.25, anchor: [0, 1.8, 0] },
-    plant:   { pos: [1.5, 0, 0.35],      rot: 0,     anchor: [0, 0.95, 0] },
-    rug:     { pos: [0.15, 0, 0.75],     rot: 0,     anchor: [0, 0.25, 0] },
-    lamp:    { pos: [-1.15, 0, 0.95],    rot: 0,     anchor: [0, 1.75, 0] },
-    picture: { pos: [-1.15, 1.75, -2.53], rot: 0,    anchor: [0, 0.38, 0] },
-    shelf:   { pos: [1.35, 1.6, -2.5],   rot: 0,     anchor: [0, 0.32, 0] },
-    tv:      { pos: [0.2, 1.4, -2.52],   rot: 0,     anchor: [0, 0.5, 0] },
-    pet:     { pos: [0.95, 0, 1.5],      rot: -0.6,  anchor: [0, 0.6, 0] },
+    bed:     { pos: [-0.95, 0, -0.35],   anchor: [0, 0.95, 0] },
+    // The lamp stands in front of the bed rather than beside it: overlapping
+    // layers are what give this flat room its sense of depth.
+    lamp:    { pos: [-1.5, 0, 0.55],     anchor: [0, 1.45, 0] },
+    rug:     { pos: [0.15, 0, 0.2],      anchor: [0, 0.32, 0] },
+    pet:     { pos: [0.35, 0, 0.5],      anchor: [0, 0.58, 0] },
+    plant:   { pos: [0.78, 0, -0.15],    anchor: [0, 0.9, 0] },
+    fridge:  { pos: [1.45, 0, -0.3],     anchor: [0, 1.75, 0] },
+    picture: { pos: [-1.3, 2.9, -0.9],   anchor: [0, 0.34, 0] },
+    shelf:   { pos: [-1.3, 2.15, -0.9],  anchor: [0, 0.3, 0] },
+    tv:      { pos: [1.15, 1.8, -0.9],   anchor: [0, 0.44, 0] },
   };
 
   var BUILDERS = {
@@ -577,6 +589,18 @@ window.World = (function () {
     shelf: buildShelf, tv: buildTv, pet: buildPet,
   };
 
+  // A flat disc of shade under an object is what sells its weight here; real
+  // shadow maps do nothing useful against a straight-on camera.
+  function shadowPool(width) {
+    var pool = new THREE.Mesh(
+      new THREE.CircleGeometry(width * 0.5, 24),
+      new THREE.MeshBasicMaterial({ color: 0x8a6a4a, transparent: true, opacity: 0.22 })
+    );
+    pool.scale.y = 0.2;
+    pool.position.set(0, 0.03, 0.02);
+    return pool;
+  }
+
   function mountSlot(key, tier) {
     var slot = slots[key];
     if (slot && slot.group) {
@@ -584,16 +608,31 @@ window.World = (function () {
       disposeTree(slot.group);
     }
     var layout = LAYOUT[key];
+    var holder = new THREE.Group();
+    holder.position.set(layout.pos[0], layout.pos[1], layout.pos[2]);
+
     var group = BUILDERS[key](tier);
-    group.position.set(layout.pos[0], layout.pos[1], layout.pos[2]);
-    group.rotation.y = layout.rot;
-    group.traverse(function (o) {
+    // Turning each object off axis is the whole trick: the room stays flat,
+    // the things in it do not.
+    group.rotation.y = TILT;
+    holder.add(group);
+
+    if (layout.pos[1] === 0 && key !== "rug") {
+      var bounds = new THREE.Box3().setFromObject(group);
+      var size = bounds.getSize(new THREE.Vector3());
+      holder.add(shadowPool(Math.max(size.x, 0.4) * 1.1));
+    }
+
+    Object.keys(group.userData).forEach(function (k) {
+      holder.userData[k] = group.userData[k];
+    });
+    holder.traverse(function (o) {
       if (o.isMesh) o.userData.pick = key;
     });
-    root.add(group);
-    slots[key] = { group: group, layout: layout };
+    root.add(holder);
+    slots[key] = { group: holder, layout: layout, art: group };
     rebuildPicks();
-    return group;
+    return holder;
   }
 
   function disposeTree(obj) {
@@ -621,16 +660,18 @@ window.World = (function () {
   var walkPhase = 0;
   var actionTimer = 0;
   var facing = 0;
-  var petTarget = null;
+  var petTarget = null;   // an x position, or null while resting
   var petTimer = 0;
 
+  // Everything happens on one line across the room; only x varies.
+  var STAGE_Z = 0.55;
   var SPOTS = {
-    centre: new THREE.Vector3(0.1, 0, 0.35),
-    window: new THREE.Vector3(-0.5, 0, -1.55),
-    fridge: new THREE.Vector3(1.0, 0, -1.45),
-    bed: new THREE.Vector3(-0.55, 0, -0.4),
-    tv: new THREE.Vector3(0.3, 0, -1.3),
-    lamp: new THREE.Vector3(-1.0, 0, 1.4),
+    centre: new THREE.Vector3(-0.2, 0, STAGE_Z),
+    window: new THREE.Vector3(0.35, 0, STAGE_Z),
+    fridge: new THREE.Vector3(0.95, 0, STAGE_Z),
+    bed: new THREE.Vector3(-1.0, 0, STAGE_Z),
+    tv: new THREE.Vector3(0.6, 0, STAGE_Z),
+    lamp: new THREE.Vector3(-1.25, 0, STAGE_Z),
   };
 
   function pickWanderSpot() {
@@ -658,10 +699,10 @@ window.World = (function () {
 
     if (charState === "sleep") {
       var bed = slots.bed;
-      var target = new THREE.Vector3(bed.layout.pos[0], 0.78, bed.layout.pos[2] + 0.6);
+      var target = new THREE.Vector3(bed.layout.pos[0] + 0.72, 0.82, bed.layout.pos[2] + 0.35);
       character.position.lerp(target, Math.min(1, dt * 4));
       character.rotation.z = lerp(character.rotation.z, Math.PI / 2, Math.min(1, dt * 4));
-      character.rotation.y = lerpAngle(character.rotation.y, -Math.PI / 2, Math.min(1, dt * 4));
+      character.rotation.y = lerpAngle(character.rotation.y, 0, Math.min(1, dt * 4));
       legs.userData.leg0.rotation.x = 0;
       legs.userData.leg1.rotation.x = 0;
       arms.userData.arm0.rotation.x = 0.15;
@@ -687,7 +728,8 @@ window.World = (function () {
       } else {
         to.normalize();
         character.position.addScaledVector(to, Math.min(dist, dt * 1.1));
-        facing = Math.atan2(to.x, to.z);
+        // Lean toward the walk without ever turning away from the player.
+        facing = to.x > 0 ? 0.42 : -0.42;
         walkPhase += dt * 8.5;
         var swing = Math.sin(walkPhase) * 0.6;
         legs.userData.leg0.rotation.x = swing;
@@ -758,22 +800,21 @@ window.World = (function () {
     p.userData.head.position.y = 0.32 + Math.sin(t * 2.4) * 0.014;
 
     petTimer -= dt;
-    if (!petTarget && petTimer <= 0) {
-      petTarget = new THREE.Vector3(-1.0 + Math.random() * 2.4, 0, -0.6 + Math.random() * 2.4);
+    if (petTarget === null && petTimer <= 0) {
+      petTarget = -0.9 + Math.random() * 1.9;
     }
-    if (petTarget) {
-      var to = petTarget.clone().sub(p.position);
-      to.y = 0;
-      var d = to.length();
-      if (d < 0.06) {
+    if (petTarget !== null) {
+      var dx = petTarget - p.position.x;
+      if (Math.abs(dx) < 0.05) {
         petTarget = null;
         petTimer = 2 + Math.random() * 4;
         p.position.y = 0;
       } else {
-        to.normalize();
-        p.position.addScaledVector(to, Math.min(d, dt * 0.55));
-        p.rotation.y = lerpAngle(p.rotation.y, Math.atan2(to.x, to.z) - Math.PI / 2, Math.min(1, dt * 5));
-        p.position.y = Math.abs(Math.sin(t * 9)) * 0.035;
+        var step = Math.sign(dx) * Math.min(Math.abs(dx), dt * 0.5);
+        p.position.x += step;
+        // Face the way it trots, keeping the tilt that gives it depth.
+        p.rotation.y = lerp(p.rotation.y, step > 0 ? 0 : Math.PI, Math.min(1, dt * 5));
+        p.position.y = Math.abs(Math.sin(t * 9)) * 0.03;
       }
     }
   }
@@ -806,9 +847,9 @@ window.World = (function () {
       var m = new THREE.Mesh(geo, flat(color, 0.95));
       if (kind !== "snow") m.scale.set(1.2, 0.5, 1);
       m.position.set(
-        -ROOM_W / 2 + Math.random() * ROOM_W,
-        Math.random() * ROOM_H,
-        -ROOM_D / 2 + Math.random() * ROOM_D
+        -VIEW_W / 2 + Math.random() * VIEW_W,
+        Math.random() * 5.5,
+        0.7 + Math.random() * 0.5
       );
       m.userData.speed = 0.22 + Math.random() * 0.35;
       m.userData.spin = (Math.random() - 0.5) * 2.5;
@@ -826,19 +867,32 @@ window.World = (function () {
       m.position.y -= m.userData.speed * dt;
       m.rotation.z += m.userData.spin * dt;
       m.position.x += Math.sin(t * 1.2 + m.userData.sway) * dt * 0.14;
-      if (m.position.y < 0) {
-        m.position.y = ROOM_H;
-        m.position.x = -ROOM_W / 2 + Math.random() * ROOM_W;
+      if (m.position.y < -1.6) {
+        m.position.y = 5.5;
+        m.position.x = -VIEW_W / 2 + Math.random() * VIEW_W;
       }
     });
   }
 
   /* ------------------------------------------------------------- day cycle */
 
+  // `room` tints the unlit wall and floor; the lights handle everything else.
   var DAY = {
-    day:    { sky: 0xbfe8ff, hill: [0xaee0a8, 0x9ad49a], sun: 0xfff6e8, sunI: 1.15, hemiI: 1.0, amb: 0xffffff, ambI: 0.85, bg: 0xdfeaf2 },
-    sunset: { sky: 0xffc9a0, hill: [0x9ec49a, 0x8ab08a], sun: 0xffd2a8, sunI: 1.0, hemiI: 0.8, amb: 0xffe4d4, ambI: 0.7, bg: 0xe8c9b8 },
-    night:  { sky: 0x3a4470, hill: [0x50608a, 0x45547a], sun: 0xa8b8e8, sunI: 0.35, hemiI: 0.45, amb: 0xc4cfea, ambI: 0.55, bg: 0x2a3050 },
+    day: {
+      sky: 0xbfe8ff, hill: [0xaee0a8, 0x9ad49a], sun: 0xfff6e8, sunI: 1.15,
+      hemiI: 1.0, amb: 0xffffff, ambI: 0.85, bg: 0xdfeaf2,
+      room: new THREE.Color(1, 1, 1),
+    },
+    sunset: {
+      sky: 0xffc9a0, hill: [0x9ec49a, 0x8ab08a], sun: 0xffd2a8, sunI: 1.0,
+      hemiI: 0.8, amb: 0xffe4d4, ambI: 0.7, bg: 0xe8c9b8,
+      room: new THREE.Color(0.98, 0.82, 0.7),
+    },
+    night: {
+      sky: 0x3a4470, hill: [0x50608a, 0x45547a], sun: 0xa8b8e8, sunI: 0.35,
+      hemiI: 0.45, amb: 0xc4cfea, ambI: 0.55, bg: 0x2a3050,
+      room: new THREE.Color(0.42, 0.48, 0.72),
+    },
   };
   var dayPhase = "day";
 
@@ -856,6 +910,7 @@ window.World = (function () {
     ambient.color.set(p.amb);
     ambient.intensity = p.ambI;
     scene.background.set(p.bg);
+    applyRoomLook();
 
     var a = angle != null ? angle : 0.5;
     sun.position.set(-1.2 + a * 2.4, 2.2 + Math.sin(a * Math.PI) * 2.0, -1.8);
@@ -876,7 +931,7 @@ window.World = (function () {
     var disc = cyl(0.16, 0.16, 0.04, 0xffd98a, 24);
     disc.rotation.x = Math.PI / 2;
     g.add(disc);
-    g.position.set(-1.1 + Math.random() * 2.2, 0.9 + Math.random() * 0.7, 0.3 + Math.random() * 0.5);
+    g.position.set(-1.4 + Math.random() * 2.8, 1.4 + Math.random() * 1.6, 0.9);
     g.traverse(function (o) {
       if (o.isMesh) o.userData.pick = "coin";
     });
@@ -932,10 +987,7 @@ window.World = (function () {
 
   /* ------------------------------------------------------------------- loop */
 
-  var CAM_RADIUS = 7.8;
-  var camBase = new THREE.Vector3(0, 3.8, CAM_RADIUS);
-  var camLook = new THREE.Vector3(0, 0.85, 0.15);
-  var orbit = { x: 0, y: 0, tx: 0, ty: 0, dragging: false, lastX: 0, lastY: 0 };
+  var camera2D = { halfW: VIEW_W / 2, halfH: VIEW_W / 2 };
 
   function tick() {
     requestAnimationFrame(tick);
@@ -959,17 +1011,6 @@ window.World = (function () {
       slots.tv.group.userData.light.intensity = dayPhase === "night" ? flick * 1.3 : flick * 0.4;
     }
 
-    orbit.x += (orbit.tx - orbit.x) * Math.min(1, dt * 4);
-    orbit.y += (orbit.ty - orbit.y) * Math.min(1, dt * 4);
-    var ax = orbit.x + Math.sin(t * 0.22) * 0.04;
-    var ay = orbit.y + Math.sin(t * 0.17) * 0.02;
-    camera.position.set(
-      camLook.x + Math.sin(ax) * CAM_RADIUS,
-      camBase.y + ay * 2.0,
-      camLook.z + Math.cos(ax) * CAM_RADIUS
-    );
-    camera.lookAt(camLook);
-
     renderer.render(scene, camera);
   }
 
@@ -978,8 +1019,6 @@ window.World = (function () {
   function init(canvas) {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xdfeaf2);
@@ -987,7 +1026,8 @@ window.World = (function () {
     raycaster = new THREE.Raycaster();
     pointer = new THREE.Vector2();
 
-    camera = new THREE.PerspectiveCamera(42, 1, 0.1, 60);
+    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
+    camera.position.set(0, 0, 12);
 
     root = new THREE.Group();
     scene.add(root);
@@ -996,7 +1036,7 @@ window.World = (function () {
     root.add(slots.room.group);
 
     windowGroup = buildWindow();
-    windowGroup.position.set(-0.5, 1.62, -ROOM_D / 2 + 0.01);
+    windowGroup.position.set(1.0, 2.85, -0.92);
     root.add(windowGroup);
 
     hemi = new THREE.HemisphereLight(0xffffff, 0xe8dcc8, 1.0);
@@ -1005,25 +1045,15 @@ window.World = (function () {
     scene.add(ambient);
 
     sun = new THREE.DirectionalLight(0xfff6e8, 1.15);
-    sun.position.set(-0.4, 3.4, -1.8);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.near = 0.5;
-    sun.shadow.camera.far = 16;
-    sun.shadow.camera.left = -4;
-    sun.shadow.camera.right = 4;
-    sun.shadow.camera.top = 4;
-    sun.shadow.camera.bottom = -3;
-    sun.shadow.bias = -0.002;
-    sun.shadow.radius = 3;
+    sun.position.set(-2.6, 4.2, 6);
     scene.add(sun);
     sunTarget = new THREE.Object3D();
-    sunTarget.position.set(0, 0.6, 0.3);
+    sunTarget.position.set(0, 0.8, 0);
     scene.add(sunTarget);
     sun.target = sunTarget;
 
     lampLight = new THREE.PointLight(0xffd9a0, 0, 4.2, 2);
-    lampLight.position.set(LAYOUT.lamp.pos[0], 1.4, LAYOUT.lamp.pos[2]);
+    lampLight.position.set(LAYOUT.lamp.pos[0], 1.2, LAYOUT.lamp.pos[2] + 0.6);
     scene.add(lampLight);
 
     character = buildCharacter();
@@ -1044,7 +1074,19 @@ window.World = (function () {
   function resize(w, h) {
     if (!ready) return;
     renderer.setSize(w, h, false);
-    camera.aspect = w / Math.max(h, 1);
+
+    var aspect = w / Math.max(h, 1);
+    var halfW = VIEW_W / 2;
+    var halfH = halfW / aspect;
+    camera2D.halfW = halfW;
+    camera2D.halfH = halfH;
+
+    camera.left = -halfW;
+    camera.right = halfW;
+    camera.top = halfH;
+    camera.bottom = -halfH;
+    // Sit the camera so the wall/floor seam lands FLOOR_FRAC up from the bottom.
+    camera.position.y = halfH * (1 - 2 * FLOOR_FRAC);
     camera.updateProjectionMatrix();
   }
 
@@ -1137,24 +1179,11 @@ window.World = (function () {
     return null;
   }
 
-  function dragStart(x, y) {
-    orbit.dragging = true;
-    orbit.lastX = x;
-    orbit.lastY = y;
-  }
-  function dragMove(x, y) {
-    if (!orbit.dragging) return false;
-    var dx = x - orbit.lastX;
-    var dy = y - orbit.lastY;
-    orbit.lastX = x;
-    orbit.lastY = y;
-    orbit.tx = Math.max(-0.45, Math.min(0.45, orbit.tx + dx * 0.004));
-    orbit.ty = Math.max(-0.3, Math.min(0.55, orbit.ty - dy * 0.003));
-    return Math.abs(dx) + Math.abs(dy) > 2;
-  }
-  function dragEnd() {
-    orbit.dragging = false;
-  }
+  // The room is flat, so there is nothing to orbit. These stay as no-ops so
+  // game.js keeps one code path for pointer handling.
+  function dragStart() {}
+  function dragMove() { return false; }
+  function dragEnd() {}
 
   return {
     init: init,

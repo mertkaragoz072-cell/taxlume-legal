@@ -235,7 +235,7 @@ html, body {
 
 .tap-wrap {
   position: absolute;
-  top: 68%;
+  top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 118px;
