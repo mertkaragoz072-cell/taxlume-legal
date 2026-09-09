@@ -629,6 +629,7 @@
       view.classList.toggle("active", view.getAttribute("data-room") === name);
     });
     els.scene.classList.toggle("in-kitchen", name === "kitchen");
+    markRoomNav();
     if (!quiet) sfx.coin();
     render();
     saveState();
@@ -2415,7 +2416,7 @@
 
   // Tapping anywhere on the room earns money; furniture, badges and icons keep their own actions.
   els.scene.addEventListener("click", function (e) {
-    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item, .room-door")) return;
+    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item")) return;
     var rect = els.scene.getBoundingClientRect();
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
@@ -2464,12 +2465,6 @@
     });
   });
 
-  document.querySelectorAll(".room-door").forEach(function (door) {
-    door.addEventListener("click", function (e) {
-      e.stopPropagation();
-      setRoom(door.getAttribute("data-goto"));
-    });
-  });
 
   var navButtons = document.querySelectorAll(".nav-btn");
   navButtons.forEach(function (btn) {
@@ -2478,9 +2473,10 @@
       navButtons.forEach(function (b) {
         b.classList.toggle("active", b === btn);
       });
-      if (target === "home") {
+      if (target.indexOf("room-") === 0) {
         closeShop();
         closePanel();
+        setRoom(target.slice(5), true);
         return;
       }
       if (target === "shop") {
@@ -2495,8 +2491,13 @@
   function backToHome() {
     closeShop();
     closePanel();
+    markRoomNav();
+  }
+
+  // The active nav button is whichever room is on screen.
+  function markRoomNav() {
     navButtons.forEach(function (b) {
-      b.classList.toggle("active", b.getAttribute("data-nav") === "home");
+      b.classList.toggle("active", b.getAttribute("data-nav") === "room-" + state.viewRoom);
     });
   }
 
@@ -2507,9 +2508,7 @@
 
   els.shopClose.addEventListener("click", function () {
     closeShop();
-    navButtons.forEach(function (b) {
-      b.classList.toggle("active", b.getAttribute("data-nav") === "home");
-    });
+    markRoomNav();
   });
   els.shop.addEventListener("click", function (e) {
     if (e.target === els.shop) els.shopClose.click();
