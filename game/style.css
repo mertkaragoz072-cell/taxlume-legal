@@ -884,12 +884,12 @@ html, body {
    Everything here is one scale, so the room stays in proportion; the walls
    were reading empty at the old size. Positions are spread to match, since
    larger pieces no longer fit side by side where they used to. */
-.furniture.plant { left: 2%; }
-.character { left: 37%; width: 115px; height: 190px; }
+.furniture.plant { left: 2%; bottom: calc(21% - 3px); }
+.character { left: 37%; bottom: calc(21% - 8px); width: 115px; height: 190px; }
 .character.eating { left: 62%; }
 .character.sleeping { left: 8px; bottom: calc(21% + 64px); width: 53px; height: 43px; }
 .room-item.rug { left: 36%; bottom: 9%; width: 210px; height: 48px; }
-.room-item.lamp { left: 66%; bottom: 21%; width: 60px; height: 179px; }
+.room-item.lamp { left: 66%; bottom: calc(21% - 5px); width: 60px; height: 179px; }
 .room-item.picture { left: 46%; top: auto; bottom: calc(21% + 210px); width: 78px; height: 56px; }
 .room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 238px); width: 112px; height: 41px; }
 .room-item.tv { left: 58%; top: auto; bottom: calc(21% + 224px); width: 134px; height: 88px; }
@@ -1269,7 +1269,7 @@ html, body {
   background: radial-gradient(50% 50% at 50% 50%, rgba(58,42,34,0.4), rgba(58,42,34,0) 72%);
   pointer-events: none;
 }
-.character::before { width: 74%; height: 13px; bottom: -2px; }
+.character::before { width: 62%; height: 14px; bottom: 7px; }
 .room-item.pet::before { width: 80%; height: 11px; bottom: 0; }
 .character.sleeping::before { display: none; }
 
