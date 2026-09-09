@@ -8,8 +8,22 @@
   var SLEEP_ENERGY_PER_TICK = 6;
   var SLEEP_HUNGER_DRAIN_PER_TICK = 1;
   var PASSIVE_TICK_MS = 3000;
-  var FOOD_COST = 200;
-  var FOOD_HUNGER_GAIN = 40;
+  // Meals: cost is priced in "taps worth" so it stays meaningful as income
+  // grows, with a floor for the early game. Energy is what makes the pricier
+  // plates worth it - the cheap ones barely wake you up.
+  var FOODS = [
+    { id: "bread",    icon: "🍞", name: "Kuru ekmek",        taps: 1,  min: 60,   hunger: 15,  energy: 6 },
+    { id: "toast",    icon: "🧀", name: "Peynirli tost",     taps: 3,  min: 200,  hunger: 30,  energy: 14 },
+    { id: "soup",     icon: "🍲", name: "Mercimek çorbası",  taps: 6,  min: 450,  hunger: 42,  energy: 22 },
+    { id: "rice",     icon: "🍗", name: "Tavuklu pilav",     taps: 12, min: 900,  hunger: 55,  energy: 32 },
+    { id: "kofte",    icon: "🍖", name: "Izgara köfte",      taps: 22, min: 1800, hunger: 70,  energy: 46 },
+    { id: "lahmacun", icon: "🥙", name: "Lahmacun & ayran",  taps: 38, min: 3200, hunger: 85,  energy: 62 },
+    { id: "kahvalti", icon: "🍳", name: "Kral kahvaltısı",   taps: 60, min: 5200, hunger: 100, energy: 85 },
+  ];
+
+  function foodCost(food) {
+    return Math.max(food.min, Math.round(tapValue() * food.taps));
+  }
 
   var TAP_HINT_IDLE_MS = 4.5 * 60 * 1000;
   var OFFLINE_EARN_RATE = 0.05;
@@ -1444,6 +1458,7 @@
     bank: { title: "🏦 Banka", build: buildBank },
     world: { title: "🏆 Başarımlar", build: buildAchievements },
     quests: { title: "📋 Görevler", build: buildQuests },
+    fridge: { title: "🧊 Buzdolabı", build: buildFridge },
     lottery: { title: "🎟️ Kazı Kazan", build: buildLottery },
     records: { title: "📊 Rekorlar", build: buildRecords },
     events: { title: "🎉 Etkinlikler", build: buildEvents },
@@ -2329,19 +2344,55 @@
       showToast("Önce uyanmalısın.");
       return;
     }
-    if (state.hunger >= 100) {
-      showToast("Aç değilsin.");
-      return;
-    }
-    if (state.money < FOOD_COST) {
+    openPanel("fridge");
+  }
+
+  function buildFridge() {
+    els.panelSub.textContent =
+      "Tokluk %" + Math.round(state.hunger) + " · Enerji %" + Math.round(state.energy);
+
+    FOODS.forEach(function (food) {
+      var cost = foodCost(food);
+      var poor = state.money < cost;
+      var full = state.hunger >= 100 && state.energy >= 100;
+      makeRow(food.icon, food.name, "+" + food.hunger + " tokluk · +" + food.energy + " enerji", {
+        rowClass: poor || full ? "locked" : "",
+        button: formatMoney(cost),
+        buttonClass: poor ? "poor" : "",
+        disabled: poor || full,
+        onClick: poor || full ? null : function () {
+          eatFood(food);
+        },
+      });
+    });
+
+    addNote(state.hunger >= 100 && state.energy >= 100
+      ? "Ne açsın ne de yorgun. Şimdilik dolabı kapatabilirsin."
+      : "Pahalı yemekler daha çok enerji verir. Enerjin bitmeden yemek, uyumaktan hızlıdır.");
+  }
+
+  function eatFood(food) {
+    var cost = foodCost(food);
+    if (state.money < cost) {
+      sfx.deny();
       showToast("Yemek için yeterli paran yok.");
       return;
     }
-    state.money -= FOOD_COST;
-    state.hunger = clamp(state.hunger + FOOD_HUNGER_GAIN, 0, 100);
+    if (state.hunger >= 100 && state.energy >= 100) {
+      showToast("Ne açsın ne de yorgun.");
+      return;
+    }
+
+    state.money -= cost;
+    state.hunger = clamp(state.hunger + food.hunger, 0, 100);
+    state.energy = clamp(state.energy + food.energy, 0, 100);
     bumpStat("eats", 1);
-    pushPill("+" + FOOD_HUNGER_GAIN + " 🍗", false);
-    showToast("Karnını doyurdun!");
+
+    closePanel();
+    pushPill("+" + food.hunger + " 🍗", false);
+    pushPill("+" + food.energy + " ⚡", false);
+    showToast(food.name + " yedin!");
+    sfx.coin();
     characterEat();
     render();
     saveState();
