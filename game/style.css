@@ -880,19 +880,22 @@ html, body {
 .banner.progress .xp-bar { display: block; }
 .banner.progress { padding: 12px 0 14px; }
 
-/* ---------- Real-world proportions (1 m ≈ 80 px): character is the reference ---------- */
-.furniture.plant { left: 56%; }
-.character { left: 37%; width: 82px; height: 136px; }
-.character.eating { left: 66%; }
-.character.sleeping { left: 6px; bottom: calc(21% + 46px); width: 38px; height: 31px; }
-.room-item.rug { left: 36%; bottom: 9%; width: 150px; height: 34px; }
-.room-item.lamp { left: 66%; bottom: 21%; width: 43px; height: 128px; }
-.room-item.picture { left: 36%; top: auto; bottom: calc(21% + 150px); width: 56px; height: 40px; }
-.room-item.shelf { left: 52%; top: auto; bottom: calc(21% + 170px); width: 80px; height: 29px; }
-.room-item.tv { left: 71%; top: auto; bottom: calc(21% + 160px); width: 96px; height: 63px; }
-.window { left: 8%; top: auto; bottom: calc(21% + 114px); width: 88px; height: 72px; }
-.lamp-light { left: calc(66% - 70px); bottom: calc(21% + 40px); width: 180px; height: 190px; }
-.zzz-stack { top: -22px; right: 6px; }
+/* ---------- Real-world proportions (1 m ≈ 112 px): character is the reference ----------
+   Everything here is one scale, so the room stays in proportion; the walls
+   were reading empty at the old size. Positions are spread to match, since
+   larger pieces no longer fit side by side where they used to. */
+.furniture.plant { left: 2%; }
+.character { left: 37%; width: 115px; height: 190px; }
+.character.eating { left: 62%; }
+.character.sleeping { left: 8px; bottom: calc(21% + 64px); width: 53px; height: 43px; }
+.room-item.rug { left: 36%; bottom: 9%; width: 210px; height: 48px; }
+.room-item.lamp { left: 66%; bottom: 21%; width: 60px; height: 179px; }
+.room-item.picture { left: 46%; top: auto; bottom: calc(21% + 210px); width: 78px; height: 56px; }
+.room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 238px); width: 112px; height: 41px; }
+.room-item.tv { left: 58%; top: auto; bottom: calc(21% + 224px); width: 134px; height: 88px; }
+.window { left: 8%; top: auto; bottom: calc(21% + 160px); width: 123px; height: 101px; }
+.lamp-light { left: calc(66% - 98px); bottom: calc(21% + 56px); width: 252px; height: 266px; }
+.zzz-stack { top: -26px; right: 8px; }
 
 /* ---------- Purchase experience ---------- */
 .mute-btn { background: #111318; border: none; border-radius: 999px; width: 34px; height: 34px; font-size: 15px; cursor: pointer; flex-shrink: 0; }
@@ -1075,10 +1078,10 @@ html, body {
 
 /* ---------- Pet companion ---------- */
 .room-item.pet {
-  left: 7%;
-  bottom: 4%;
-  width: 56px;
-  height: 46px;
+  left: 6%;
+  bottom: 3%;
+  width: 78px;
+  height: 64px;
   z-index: 5;
   pointer-events: auto;
   cursor: pointer;
@@ -1297,17 +1300,17 @@ html, body {
 
 .counter {
   position: absolute;
-  left: 15%;
+  left: 24%;
   bottom: 21%;
-  width: 138px;
-  height: 79px;
+  width: 193px;
+  height: 111px;
   z-index: 2;
   pointer-events: none;
   filter: drop-shadow(0 6px 5px rgba(58,42,34,0.3));
 }
 
 /* The kitchen window sits above the counter rather than over the bed. */
-.kitchen-window { left: 28% !important; }
+.kitchen-window { left: 30% !important; }
 
 /* Kitchen floor: pale tile instead of the bedroom's boards. The perspective
    seam layer stays, so it reads as grout running away from the viewer. */
