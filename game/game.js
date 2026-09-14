@@ -687,7 +687,21 @@
   var happyTimer = null;
 
   function renderCharacter() {
-    els.character.classList.toggle("sleeping", state.isSleeping);
+    var c = els.character;
+    var wasSleeping = c.classList.contains("sleeping");
+    if (wasSleeping === state.isSleeping) return;
+
+    // The sleeping pose swaps to a tiny head-only sprite at a different size
+    // and height instantly (nothing else transitions those), but "left" has
+    // a 0.7s slide for the walk-to-eat animation. Left over on its own here,
+    // that slide makes the sleeping head drift across the room to the
+    // pillow instead of just appearing on it - so this one change is a hard
+    // cut in both directions, and the slide is restored right after for the
+    // next time the character actually walks somewhere.
+    c.style.transition = "none";
+    c.classList.toggle("sleeping", state.isSleeping);
+    void c.offsetWidth;
+    c.style.transition = "";
   }
 
   function characterBounce() {
