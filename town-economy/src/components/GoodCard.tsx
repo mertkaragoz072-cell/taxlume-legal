@@ -25,6 +25,9 @@ interface Props {
   state: { price: number; history: number[]; holding: number };
   selected: boolean;
   onPress: () => void;
+  /** optional corner tag, e.g. the demand cycle marking this good as sought
+   * after or glutted — kept generic so the invest screen can leave it off */
+  badge?: { text: string; color: string };
 }
 
 function pctChange(history: number[]): number {
@@ -35,7 +38,7 @@ function pctChange(history: number[]): number {
   return ((curr - prev) / prev) * 100;
 }
 
-export function GoodCard({ good, state, selected, onPress }: Props) {
+export function GoodCard({ good, state, selected, onPress, badge }: Props) {
   const { t } = useEconomyContext();
   const change = pctChange(state.history);
   const positive = change >= 0;
@@ -64,8 +67,17 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
       />
+      {badge && (
+        <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.9) }]}>
+          <Text style={styles.badgeText} numberOfLines={1}>
+            {badge.text}
+          </Text>
+        </View>
+      )}
       <View style={styles.topRow}>
-        <Text style={styles.icon}>{good.icon}</Text>
+        <Text aria-hidden style={styles.icon}>
+          {good.icon}
+        </Text>
         <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
           {positive ? "+" : ""}
           {change.toFixed(1)}%
@@ -87,6 +99,17 @@ export function GoodCard({ good, state, selected, onPress }: Props) {
 }
 
 const styles = StyleSheet.create({
+  badge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    borderTopRightRadius: RADIUS.card,
+    borderBottomLeftRadius: RADIUS.card,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    zIndex: 2,
+  },
+  badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     width: 108,
     borderRadius: RADIUS.card,

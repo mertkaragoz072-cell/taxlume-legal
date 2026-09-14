@@ -3,6 +3,7 @@ import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
+import { isGlutted, isHot } from "../economy/demandCycles";
 import { SEASONAL_EVENT_TEMPLATES_BY_ID } from "../economy/seasonalEvents";
 import {
   AUTO_TRADE_MAX_RULES,
@@ -13,6 +14,7 @@ import {
 } from "../economy/useEconomy";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
+import { DemandForecastCard } from "../components/DemandForecastCard";
 import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
@@ -176,6 +178,10 @@ export function MarketScreen({ sounds }: Props) {
         )}
       </View>
 
+      {state.demandCycle && (
+        <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
+      )}
+
       <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
         {unlockedGoods.map((g) => (
@@ -185,6 +191,13 @@ export function MarketScreen({ sounds }: Props) {
             state={state.goods[g.id]}
             selected={g.id === state.selectedGood}
             onPress={() => selectGood(g.id)}
+            badge={
+              isHot(state.demandCycle, g.id)
+                ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
+                : isGlutted(state.demandCycle, g.id)
+                  ? { text: t("market.demand.glutBadge"), color: "#6fb8f2" }
+                  : undefined
+            }
           />
         ))}
       </ScrollView>

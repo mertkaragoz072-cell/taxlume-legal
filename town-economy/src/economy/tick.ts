@@ -9,6 +9,7 @@ import { ASSETS } from "./assets";
 import { DECISION_TEMPLATES } from "./decisions";
 import { DIFFICULTIES } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
+import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./demandCycles";
 import { EVENT_TEMPLATES } from "./events";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
 import {
@@ -73,6 +74,7 @@ import {
   RIVAL_TOWN_GROWTH_JITTER,
   RIVAL_TOWN_GROWTH_RATE,
   SEASONAL_EVENT_CHANCE,
+  TICKS_PER_GAME_DAY,
   TOWN_RANK_PRODUCTION_BONUS_PER_RANK,
   VILLAGER_REQUEST_CHANCE,
 } from "./constants";
@@ -80,6 +82,7 @@ import {
   clamp,
   computeNetWorth,
   estimateTaxIncomePerTick,
+  isGoodUnlocked,
   priceFromSupply,
   pushCapped,
   supplyBounds,
@@ -265,6 +268,27 @@ export function tick(state: EconomyState): EconomyState {
     }
   }
 
+  // The demand cycle rolls over on its own fixed schedule (unlike the random
+  // seasonal event below): when the current one ends the already-published
+  // forecast takes over, and a fresh forecast is rolled for the cycle after
+  // it. Rolling the forecast one cycle ahead is what lets the player stockpile
+  // before a spike instead of only reacting once prices have already moved.
+  let demandCycle = state.demandCycle;
+  let nextDemandCycle = state.nextDemandCycle;
+  if (demandCycle && nextDemandCycle && state.tick + 1 >= demandCycle.endTick) {
+    demandCycle = nextDemandCycle;
+    const eligible = GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id);
+    nextDemandCycle = rollDemandCycle(demandCycle.endTick, TICKS_PER_GAME_DAY, eligible);
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.demandCycleStarted", {
+        hot: demandCycle.hotGoodIds.map((id) => GOODS_BY_ID[id].icon).join(" "),
+        glut: GOODS_BY_ID[demandCycle.gluttedGoodId].icon,
+      }),
+      tone: "neutral",
+    });
+  }
+
   // Seasonal events run purely on ticks — no player action can complete or
   // interrupt one, so both the expiry check and the spawn roll live here
   // rather than in a reducer post-processing step (contrast with mini quests).
@@ -373,6 +397,10 @@ export function tick(state: EconomyState): EconomyState {
       seasonalTemplate && seasonalTemplate.affectedGoods.includes(good.id)
         ? seasonalTemplate.priceMultiplier
         : 1;
+    // A demand cycle bites twice: once directly on the price, and once through
+    // supply below, which the scarcity curve then prices in again. Neither half
+    // alone reads as a real shortage.
+    const demandMult = demandPriceMultiplier(demandCycle, good.id);
     const workerProductionMult = 1 + workers[good.id] * WORKER_PRODUCTION_BONUS_PER_WORKER;
     const propertyProductionMult = propertyProductionMultiplier(state.ownedProperties, good.id);
     const production =
@@ -383,7 +411,7 @@ export function tick(state: EconomyState): EconomyState {
       prestigeProductionMult *
       workerProductionMult *
       propertyProductionMult;
-    let supply = gs.supply + (production - good.baseProduction);
+    let supply = gs.supply + (production - good.baseProduction) + demandSupplyDelta(demandCycle, good);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
     supply = clamp(supply, minSupply, maxSupply);
@@ -394,7 +422,7 @@ export function tick(state: EconomyState): EconomyState {
     );
     const price =
       priceFromSupply(
-        good.basePrice * researchedValueMult * seasonalMult,
+        good.basePrice * researchedValueMult * seasonalMult * demandMult,
         good.baseSupply,
         good.elasticity,
         supply,
@@ -645,6 +673,8 @@ export function tick(state: EconomyState): EconomyState {
     pendingRivalOffer,
     activeMiniQuest,
     activeSeasonalEvent,
+    demandCycle,
+    nextDemandCycle,
     loan,
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),

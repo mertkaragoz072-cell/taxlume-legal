@@ -5,6 +5,7 @@ import { DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
+import { rollDemandCycle } from "./demandCycles";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { PROPERTIES_BY_ID } from "./properties";
 import { perkHeadStartBonus, PRESTIGE_PERKS_BY_ID } from "./prestigePerks";
@@ -286,6 +287,8 @@ export function initialState(
   for (const a of ASSETS) {
     assets[a.id] = makeInitialAssetState(a);
   }
+  const day1GoodIds = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
+  const firstCycle = rollDemandCycle(0, TICKS_PER_GAME_DAY, day1GoodIds);
   return {
     townName: t(language, "app.defaultTownName"),
     selectedEmblem: "village",
@@ -366,6 +369,11 @@ export function initialState(
     activeNgPlusModifiers: ngPlusModifierIds,
     speedBoostExpiresAt: null,
     dailyBonusPending: null,
+    // Both cycles exist from tick 0, so a brand-new town already has a market
+    // rhythm to read and a forecast to plan against. Only day-1 goods are
+    // eligible; the later ones join the draw as they unlock.
+    demandCycle: firstCycle,
+    nextDemandCycle: rollDemandCycle(firstCycle.endTick, TICKS_PER_GAME_DAY, day1GoodIds),
   };
 }
 export function todayString(): string {

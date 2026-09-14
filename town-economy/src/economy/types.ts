@@ -1,4 +1,5 @@
 import { AssetId } from "./assets";
+import { DemandCycle } from "./demandCycles";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -368,6 +369,13 @@ export interface EconomyState {
    * it back to null. The wheel is a spin-to-reveal animation over an amount
    * that's already fixed by the streak-based formula, not real randomness. */
   dailyBonusPending: number | null;
+  /** which goods the town currently wants and which it is glutted on — see
+   * demandCycles.ts. Always set; the cycle rolls over on its own schedule. */
+  demandCycle: DemandCycle | null;
+  /** the cycle that takes over when the current one ends, rolled as soon as
+   * the current one starts so it can be shown as a forecast. Knowing what is
+   * coming is the whole point: it turns stockpiling into a plan. */
+  nextDemandCycle: DemandCycle | null;
 }
 
 export interface WeeklyChallenge {

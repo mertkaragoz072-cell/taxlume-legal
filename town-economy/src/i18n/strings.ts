@@ -39,6 +39,17 @@ export const STRINGS = {
       achievements: "Hedefler",
     },
     market: {
+      demand: {
+        sectionLabel: "TALEP MEVSİMİ",
+        hotLabel: "Aranıyor",
+        glutLabel: "Bollukta",
+        nextLabel: "Sırada",
+        daysLeft: "{days} gün kaldı",
+        lastDay: "Son gün",
+        hotBadge: "Aranıyor",
+        glutBadge: "Bollukta",
+        hint: "Aranan malı satmak kârlı; bollaşacak malı önceden elden çıkarın.",
+      },
       sectionLabel: "KASABA PİYASASI",
       sentiment: {
         bullish: "Boğa Piyasası",
@@ -949,6 +960,7 @@ export const STRINGS = {
       miniQuestExpired: "⌛ Anlık görev süresi doldu: {icon} {title}",
       prestiged: "🌟 Prestij yapıldı! Seviye {level}. Kasaba sıfırlandı, kalıcı bonusun aktif.",
       seasonalEventStarted: "🎉 {icon} {title} başladı! Fiyatlar yükseldi.",
+      demandCycleStarted: "📣 Talep değişti: {hot} aranıyor, {glut} bollukta.",
       seasonalEventEnded: "🍂 {icon} {title} sona erdi.",
       workersLaidOff: "😢 Kasa yetersiz kaldığı için {count} işçi işten çıkarıldı.",
       angryUprising: "😡 Köylüler vergiden bıktı, ayaklandı! -{amount} 🪙 zarar.",
@@ -1063,6 +1075,17 @@ export const STRINGS = {
       achievements: "Goals",
     },
     market: {
+      demand: {
+        sectionLabel: "DEMAND SEASON",
+        hotLabel: "In demand",
+        glutLabel: "In surplus",
+        nextLabel: "Next",
+        daysLeft: "{days} days left",
+        lastDay: "Last day",
+        hotBadge: "In demand",
+        glutBadge: "Surplus",
+        hint: "Sell into demand, and clear stock before a good floods the market.",
+      },
       sectionLabel: "TOWN MARKET",
       sentiment: {
         bullish: "Bull Market",
@@ -1955,6 +1978,7 @@ export const STRINGS = {
       miniQuestExpired: "⌛ Flash quest expired: {icon} {title}",
       prestiged: "🌟 Prestige reached! Level {level}. The town reset, and your permanent bonus is active.",
       seasonalEventStarted: "🎉 {icon} {title} has begun! Prices are up.",
+      demandCycleStarted: "📣 Demand has shifted: {hot} sought after, {glut} in surplus.",
       seasonalEventEnded: "🍂 {icon} {title} has ended.",
       workersLaidOff: "😢 The treasury couldn't cover wages — {count} worker(s) were laid off.",
       angryUprising: "😡 Villagers, fed up with taxes, revolted! -{amount} 🪙 lost.",
