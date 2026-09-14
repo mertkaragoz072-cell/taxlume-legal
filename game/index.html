@@ -116,7 +116,7 @@
                 <stop offset="100%" stop-color="#000" stop-opacity="0.2"/>
               </linearGradient>
               <clipPath id="clipBlanket"><path d="M21 46q0-8 8-8h142q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z"/></clipPath>
-              <clipPath id="clipBlanketSleep"><path d="M21 46q0-8 8-8C40 18,55 14,80 14C115 14,140 22,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z"/></clipPath>
+              <clipPath id="clipBlanketSleep"><path d="M21 46q0-8 8-8C38 22,46 18,60 18C74 18,82 25,96 28C110 25,118 19,131 19C146 19,158 27,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z"/></clipPath>
             </defs>
 
             <ellipse cx="100" cy="106" rx="98" ry="3.8" fill="#3a2a22" opacity="0.22"/>
@@ -205,18 +205,23 @@
               <path d="M21 46q0-8 8-8h142q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
             </g>
 
-            <!-- Someone under the covers: the blanket's own outline puffs up into a body mound -->
+            <!-- Someone under the covers: shoulder bump, waist dip, knee bump - a real body silhouette -->
             <g class="bed-cover-sleep">
-              <path d="M21 46q0-8 8-8C40 18,55 14,80 14C115 14,140 22,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" transform="translate(0 3)" fill="#3a2a22" opacity="0.25"/>
-              <path d="M21 46q0-8 8-8C40 18,55 14,80 14C115 14,140 22,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="url(#blanketGrad)"/>
-              <rect x="15" y="9" width="170" height="34" fill="#fff" opacity="0.26" clip-path="url(#clipBlanketSleep)"/>
-              <rect x="21" y="50" width="158" height="12" fill="#000" opacity="0.16" clip-path="url(#clipBlanketSleep)"/>
+              <path d="M21 46q0-8 8-8C38 22,46 18,60 18C74 18,82 25,96 28C110 25,118 19,131 19C146 19,158 27,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" transform="translate(0 3)" fill="#3a2a22" opacity="0.28"/>
+              <path d="M21 46q0-8 8-8C38 22,46 18,60 18C74 18,82 25,96 28C110 25,118 19,131 19C146 19,158 27,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="url(#blanketGrad)"/>
+              <rect x="21" y="50" width="158" height="12" fill="#000" opacity="0.18" clip-path="url(#clipBlanketSleep)"/>
               <g clip-path="url(#clipBlanketSleep)">
-                <path d="M44 27c3 7 3 14 0 21M72 17c3 7 3 14 0 21M100 15c3 7 3 14 0 21M128 18c3 7 3 14 0 21M156 30c3 7 3 14 0 21" stroke="#fff" stroke-width="2.2" fill="none" opacity="0.35"/>
-                <path d="M48 27c3 7 3 14 0 21M76 17c3 7 3 14 0 21M104 15c3 7 3 14 0 21M132 18c3 7 3 14 0 21M160 30c3 7 3 14 0 21" stroke="#000" stroke-width="1.6" fill="none" opacity="0.13"/>
-                <ellipse cx="95" cy="19" rx="42" ry="8" fill="#fff" opacity="0.3"/>
+                <ellipse cx="58" cy="24" rx="21" ry="9" fill="#fff" opacity="0.34"/>
+                <ellipse cx="131" cy="25" rx="19" ry="8" fill="#fff" opacity="0.28"/>
+                <ellipse cx="96" cy="34" rx="24" ry="10" fill="#16283d" opacity="0.24"/>
+                <ellipse cx="40" cy="42" rx="14" ry="7" fill="#16283d" opacity="0.16"/>
+                <ellipse cx="152" cy="42" rx="16" ry="7" fill="#16283d" opacity="0.16"/>
+                <path d="M44 28c3 7 3 14 0 21M72 23c3 8 3 16 0 24M100 31c3 7 3 14 0 21M128 22c3 8 3 16 0 24M156 30c3 7 3 14 0 21" stroke="#fff" stroke-width="2.2" fill="none" opacity="0.28"/>
+                <path d="M48 28c3 7 3 14 0 21M76 23c3 8 3 16 0 24M104 31c3 7 3 14 0 21M132 22c3 8 3 16 0 24M160 30c3 7 3 14 0 21" stroke="#000" stroke-width="1.6" fill="none" opacity="0.14"/>
               </g>
-              <path d="M21 46q0-8 8-8C40 18,55 14,80 14C115 14,140 22,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M32 33C40 24,49 20,60 20" stroke="#fff" stroke-width="1.6" fill="none" opacity="0.55" stroke-linecap="round"/>
+              <path d="M113 22C121 21,128 22,138 26" stroke="#fff" stroke-width="1.4" fill="none" opacity="0.45" stroke-linecap="round"/>
+              <path d="M21 46q0-8 8-8C38 22,46 18,60 18C74 18,82 25,96 28C110 25,118 19,131 19C146 19,158 27,171 38q8 0 8 8v13c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-4 6-12 6-16 0c-3 5-10 5-14 0z" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linejoin="round"/>
             </g>
 
             <g class="tierMin4 bed-throw" transform="rotate(-3 167 50)">
