@@ -599,7 +599,7 @@ html, body {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
-  padding: 12px 0 16px;
+  padding: 12px 0 14px;
   text-shadow: 1px 1px 0 #fff8dd;
   z-index: 4;
   letter-spacing: 0.5px;
@@ -991,9 +991,8 @@ html, body {
   50% { filter: drop-shadow(0 0 10px rgba(255,213,79,0.95)); }
 }
 
-/* Banner: tutorial text for new players, then an XP progress bar */
+/* Banner: XP progress bar */
 .banner .xp-bar {
-  display: none;
   position: relative;
   margin: 0 18px;
   height: 16px;
@@ -1017,9 +1016,6 @@ html, body {
   color: #7a1c1c;
   text-shadow: none;
 }
-.banner.progress .banner-tut { display: none; }
-.banner.progress .xp-bar { display: block; }
-.banner.progress { padding: 12px 0 14px; }
 
 /* ---------- Real-world proportions (1 m ≈ 112 px): character is the reference ----------
    Everything here is one scale, so the room stays in proportion; the walls

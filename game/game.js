@@ -811,9 +811,6 @@
 
   /* ---------- Banner (tutorial -> XP bar) and avatar ---------- */
   function renderBanner() {
-    var done = state.taps >= 10;
-    els.banner.classList.toggle("progress", done);
-    if (!done) return;
     var need = xpForNextLevel();
     els.xpFill.style.width = Math.min(100, (state.xp / need) * 100) + "%";
     els.xpText.textContent = "Seviye " + state.level + " · " + state.xp + "/" + need + " XP";
