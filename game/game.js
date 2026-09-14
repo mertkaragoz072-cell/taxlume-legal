@@ -29,6 +29,11 @@
   var OFFLINE_EARN_RATE = 0.05;
   var OFFLINE_MIN_SECONDS = 60;
   var OFFLINE_MAX_SECONDS = 8 * 3600;
+  // While away, energy/hunger drift the same way they would if the tab had
+  // stayed open - but only down to this floor, never to 0. That way the
+  // character is visibly hungry/tired on return (a reason to come back and
+  // tend to it) without ever punishing a long absence with a health crash.
+  var OFFLINE_STAT_FLOOR = 30;
 
   var FURNITURE_CONFIG = {
     bed: { name: "Yatak", baseCost: 500, growth: 1.6, bonus: 0.08, maxLevel: 20 },
@@ -114,6 +119,9 @@
   }
 
   var state = loadState();
+  // Captured before any of the init calls below can save (and so overwrite
+  // lastSeen with "now") - this is the one true gap since the player left.
+  var lastSeenAtLoad = state.lastSeen || Date.now();
 
   var els = {
     moneyText: document.getElementById("moneyText"),
@@ -163,6 +171,11 @@
     panelClose: document.getElementById("panelClose"),
     workChip: document.getElementById("workChip"),
     comboChip: document.getElementById("comboChip"),
+    goalTicker: document.getElementById("goalTicker"),
+    goalIcon: document.getElementById("goalIcon"),
+    goalText: document.getElementById("goalText"),
+    goalFill: document.getElementById("goalFill"),
+    goalReward: document.getElementById("goalReward"),
     petItem: document.querySelector('.room-item[data-item="pet"]'),
     petMeterFill: document.getElementById("petMeterFill"),
     buySheet: document.getElementById("buySheet"),
@@ -470,6 +483,7 @@
     renderAvatar();
     renderHud();
     renderNavBadges();
+    renderGoal();
     // Only the time-driven tabs need rebuilding on every tick; the others
     // would rip out the row the player is about to tap.
     if (panelTab === "school" || panelTab === "job" || panelTab === "bank") renderPanel();
@@ -1237,32 +1251,51 @@
     { id: "feed3", icon: "🦴", stat: "petFeeds", target: 3, text: "Miniğini 3 kez besle", reward: 50 },
   ];
 
+  // progress() is optional: it reports {cur, target} for a numeric goal so the
+  // HUD's next-goal ticker can show a live progress bar. Achievements that are
+  // a one-off flag (own a job, hit a title) have no meaningful bar and are
+  // skipped by the ticker in favor of one that does.
   var ACHIEVEMENTS = [
-    { id: "tap1", icon: "👆", name: "İlk Dokunuş", desc: "İlk kez dokun", money: 500, test: function (s) { return s.stats.taps >= 1; } },
-    { id: "tap1k", icon: "🖐️", name: "Bin Dokunuş", desc: "1.000 kez dokun", money: 5000, test: function (s) { return s.stats.taps >= 1000; } },
-    { id: "tap10k", icon: "🙌", name: "On Bin Dokunuş", desc: "10.000 kez dokun", money: 60000, test: function (s) { return s.stats.taps >= 10000; } },
-    { id: "earn100k", icon: "💵", name: "İlk 100 Bin", desc: "Toplam $100.000 kazan", money: 10000, test: function (s) { return s.stats.earned >= 100000; } },
-    { id: "earn1m", icon: "💰", name: "Milyoner", desc: "Toplam $1.000.000 kazan", money: 100000, test: function (s) { return s.stats.earned >= 1000000; } },
-    { id: "earn10m", icon: "🤑", name: "Multimilyoner", desc: "Toplam $10.000.000 kazan", legacy: 1, test: function (s) { return s.stats.earned >= 10000000; } },
-    { id: "lvl10", icon: "⭐", name: "Seviye 10", desc: "10. seviyeye ulaş", money: 25000, test: function (s) { return s.level >= 10; } },
-    { id: "edu3", icon: "🎓", name: "Üniversiteli", desc: "Üniversiteyi bitir", money: 50000, test: function (s) { return s.edu >= 3; } },
-    { id: "edu5", icon: "🔬", name: "Doktor Unvanı", desc: "Doktorayı bitir", legacy: 1, test: function (s) { return s.edu >= 5; } },
+    { id: "tap1", icon: "👆", name: "İlk Dokunuş", desc: "İlk kez dokun", money: 500, test: function (s) { return s.stats.taps >= 1; }, progress: function (s) { return { cur: s.stats.taps, target: 1 }; } },
+    { id: "tap1k", icon: "🖐️", name: "Bin Dokunuş", desc: "1.000 kez dokun", money: 5000, test: function (s) { return s.stats.taps >= 1000; }, progress: function (s) { return { cur: s.stats.taps, target: 1000 }; } },
+    { id: "tap10k", icon: "🙌", name: "On Bin Dokunuş", desc: "10.000 kez dokun", money: 60000, test: function (s) { return s.stats.taps >= 10000; }, progress: function (s) { return { cur: s.stats.taps, target: 10000 }; } },
+    { id: "earn100k", icon: "💵", name: "İlk 100 Bin", desc: "Toplam $100.000 kazan", money: 10000, test: function (s) { return s.stats.earned >= 100000; }, progress: function (s) { return { cur: s.stats.earned, target: 100000 }; } },
+    { id: "earn1m", icon: "💰", name: "Milyoner", desc: "Toplam $1.000.000 kazan", money: 100000, test: function (s) { return s.stats.earned >= 1000000; }, progress: function (s) { return { cur: s.stats.earned, target: 1000000 }; } },
+    { id: "earn10m", icon: "🤑", name: "Multimilyoner", desc: "Toplam $10.000.000 kazan", legacy: 1, test: function (s) { return s.stats.earned >= 10000000; }, progress: function (s) { return { cur: s.stats.earned, target: 10000000 }; } },
+    { id: "lvl10", icon: "⭐", name: "Seviye 10", desc: "10. seviyeye ulaş", money: 25000, test: function (s) { return s.level >= 10; }, progress: function (s) { return { cur: s.level, target: 10 }; } },
+    { id: "edu3", icon: "🎓", name: "Üniversiteli", desc: "Üniversiteyi bitir", money: 50000, test: function (s) { return s.edu >= 3; }, progress: function (s) { return { cur: s.edu, target: 3 }; } },
+    { id: "edu5", icon: "🔬", name: "Doktor Unvanı", desc: "Doktorayı bitir", legacy: 1, test: function (s) { return s.edu >= 5; }, progress: function (s) { return { cur: s.edu, target: 5 }; } },
     { id: "job1", icon: "💼", name: "İlk İş", desc: "Bir işe gir", money: 5000, test: function (s) { return !!s.job; } },
-    { id: "work1h", icon: "⏱️", name: "Mesai", desc: "Toplam 1 saat çalış", money: 40000, test: function (s) { return s.stats.workSec >= 3600; } },
+    { id: "work1h", icon: "⏱️", name: "Mesai", desc: "Toplam 1 saat çalış", money: 40000, test: function (s) { return s.stats.workSec >= 3600; }, progress: function (s) { return { cur: s.stats.workSec, target: 3600 }; } },
     { id: "ceo", icon: "🏢", name: "Patron", desc: "CEO olarak çalış", legacy: 1, test: function (s) { return s.job === "ceo"; } },
-    { id: "shopAll", icon: "🛒", name: "Ev Sahibi", desc: "Marketteki tüm eşyaları al", money: 80000, test: function (s) { return Object.keys(SHOP_ITEMS).every(function (k) { return s.items[k] > 0; }); } },
+    { id: "shopAll", icon: "🛒", name: "Ev Sahibi", desc: "Marketteki tüm eşyaları al", money: 80000, test: function (s) { return Object.keys(SHOP_ITEMS).every(function (k) { return s.items[k] > 0; }); }, progress: function (s) { return { cur: Object.keys(SHOP_ITEMS).filter(function (k) { return s.items[k] > 0; }).length, target: Object.keys(SHOP_ITEMS).length }; } },
     { id: "maxItem", icon: "✨", name: "En İyisi", desc: "Bir eşyayı MAX seviyeye çıkar", money: 150000, test: function (s) { return Object.keys(SHOP_ITEMS).some(function (k) { return s.items[k] >= SHOP_ITEMS[k].maxLevel; }) || Object.keys(FURNITURE_CONFIG).some(function (k) { return s.furniture[k] >= FURNITURE_CONFIG[k].maxLevel; }); } },
-    { id: "bank1m", icon: "🏦", name: "Yatırımcı", desc: "Bankada $1.000.000 tut", money: 120000, test: function (s) { return s.bank.balance >= 1000000; } },
-    { id: "streak7", icon: "🔥", name: "Sadık Oyuncu", desc: "7 gün üst üste oyna", legacy: 1, test: function (s) { return s.streak.count >= 7; } },
+    { id: "bank1m", icon: "🏦", name: "Yatırımcı", desc: "Bankada $1.000.000 tut", money: 120000, test: function (s) { return s.bank.balance >= 1000000; }, progress: function (s) { return { cur: s.bank.balance, target: 1000000 }; } },
+    { id: "streak7", icon: "🔥", name: "Sadık Oyuncu", desc: "7 gün üst üste oyna", legacy: 1, test: function (s) { return s.streak.count >= 7; }, progress: function (s) { return { cur: s.streak.count, target: 7 }; } },
     { id: "prestige1", icon: "🌟", name: "Yeni Hayat", desc: "İlk kez yeniden doğ", money: 0, test: function (s) { return s.prestiges >= 1; } },
-    { id: "edu7", icon: "🏅", name: "Nobel Sahibi", desc: "Nobel Ödülü'nü kazan", legacy: 2, test: function (s) { return s.edu >= 7; } },
+    { id: "edu7", icon: "🏅", name: "Nobel Sahibi", desc: "Nobel Ödülü'nü kazan", legacy: 2, test: function (s) { return s.edu >= 7; }, progress: function (s) { return { cur: s.edu, target: 7 }; } },
     { id: "astronaut", icon: "🚀", name: "Yıldızlara", desc: "Astronot olarak çalış", legacy: 2, test: function (s) { return s.job === "astronaut"; } },
     { id: "scratchWin", icon: "🎟️", name: "Şansın Açık", desc: "Kazı kazanda ilk kez kazan", money: 20000, test: function (s) { return s.stats.scratchWins >= 1; } },
     { id: "jackpot", icon: "👑", name: "Büyük İkramiye", desc: "Kazı kazanda jackpot yakala", legacy: 2, test: function (s) { return s.stats.jackpots >= 1; } },
-    { id: "petLove", icon: "🐶", name: "Can Yoldaşı", desc: "Miniğini 50 kez besle", money: 60000, test: function (s) { return s.stats.petFeeds >= 50; } },
-    { id: "combo30", icon: "🔥", name: "Kombo Kralı", desc: "30'luk kombo yap", money: 90000, test: function (s) { return s.stats.bestCombo >= 30; } },
+    { id: "petLove", icon: "🐶", name: "Can Yoldaşı", desc: "Miniğini 50 kez besle", money: 60000, test: function (s) { return s.stats.petFeeds >= 50; }, progress: function (s) { return { cur: s.stats.petFeeds, target: 50 }; } },
+    { id: "combo30", icon: "🔥", name: "Kombo Kralı", desc: "30'luk kombo yap", money: 90000, test: function (s) { return s.stats.bestCombo >= 30; }, progress: function (s) { return { cur: s.stats.bestCombo, target: 30 }; } },
     { id: "event1", icon: "🎉", name: "Kutlama Vakti", desc: "Bir etkinlik sırasında oyna", money: 15000, test: function () { return !!activeEvent(); } },
   ];
+
+  // Whichever unlockable goal the player is closest to finishing, shown in the
+  // always-visible HUD ticker so there is always an obvious "almost there"
+  // pull toward the next reward instead of needing to open the achievements
+  // panel to find one.
+  function nextGoal() {
+    var best = null;
+    ACHIEVEMENTS.forEach(function (a) {
+      if (state.ach[a.id] || !a.progress) return;
+      var p = a.progress(state);
+      var ratio = p.target > 0 ? clamp(p.cur / p.target, 0, 1) : 0;
+      if (!best || ratio > best.ratio) best = { a: a, cur: p.cur, target: p.target, ratio: ratio };
+    });
+    return best;
+  }
 
   /* ---------- Derived economy ---------- */
   function eduMultiplier() {
@@ -1461,6 +1494,23 @@
     els.eventBtn.classList.toggle("has-alert", !!activeEvent());
     var ev = activeEvent();
     els.eventBtn.textContent = ev ? ev.icon : "🎉";
+  }
+
+  function renderGoal() {
+    var goal = nextGoal();
+    if (!goal) {
+      els.goalTicker.classList.add("done");
+      els.goalIcon.textContent = "🏆";
+      els.goalText.textContent = "Tüm hedefler tamam! Yeni ödüller için başarımlara bak.";
+      els.goalFill.style.width = "100%";
+      els.goalReward.textContent = "";
+      return;
+    }
+    els.goalTicker.classList.remove("done");
+    els.goalIcon.textContent = goal.a.icon;
+    els.goalText.textContent = goal.a.name + " · " + goal.a.desc;
+    els.goalFill.style.width = Math.round(goal.ratio * 100) + "%";
+    els.goalReward.textContent = goal.a.legacy ? "+" + goal.a.legacy + " miras" : (goal.a.money ? "+" + formatMoney(goal.a.money) : "");
   }
 
   /* ---------- Golden coin ---------- */
@@ -2451,6 +2501,32 @@
     openBuySheet("furniture", key);
   }
 
+  // Mirrors passiveTick's per-tick hunger/energy math as a single lump sum for
+  // the elapsed offline time, so a returning player finds the character
+  // visibly hungrier/more tired (or freshly woken up) instead of frozen
+  // exactly as they left it - down to OFFLINE_STAT_FLOOR, never lower.
+  function applyOfflineStatDrift(countedSec) {
+    var perTickSec = PASSIVE_TICK_MS / 1000;
+    if (state.isSleeping) {
+      var energyPerSec = SLEEP_ENERGY_PER_TICK / perTickSec;
+      var hungerPerSec = SLEEP_HUNGER_DRAIN_PER_TICK / perTickSec;
+      var secToFull = energyPerSec > 0 ? (100 - state.energy) / energyPerSec : 0;
+      if (countedSec >= secToFull) {
+        state.hunger = clamp(state.hunger - hungerPerSec * secToFull, OFFLINE_STAT_FLOOR, 100);
+        state.energy = 100;
+        state.isSleeping = false;
+        state.day += 1;
+      } else {
+        state.energy = clamp(state.energy + energyPerSec * countedSec, 0, 100);
+        state.hunger = clamp(state.hunger - hungerPerSec * countedSec, OFFLINE_STAT_FLOOR, 100);
+      }
+    } else {
+      var drainPerSec = 1 / perTickSec;
+      state.hunger = clamp(state.hunger - drainPerSec * countedSec, OFFLINE_STAT_FLOOR, 100);
+      state.energy = clamp(state.energy - drainPerSec * countedSec, OFFLINE_STAT_FLOOR, 100);
+    }
+  }
+
   function passiveTick() {
     if (state.isSleeping) {
       var wasFull = state.energy >= 100;
@@ -2548,6 +2624,10 @@
     e.stopPropagation();
     openPanel("events");
   });
+  els.goalTicker.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("world");
+  });
 
 
   var navButtons = document.querySelectorAll(".nav-btn");
@@ -2620,7 +2700,7 @@
   scheduleGoldCoin();
 
   (function grantOfflineEarnings() {
-    var elapsedSec = Math.floor((Date.now() - (state.lastSeen || Date.now())) / 1000);
+    var elapsedSec = Math.floor((Date.now() - lastSeenAtLoad) / 1000);
     var countedSec = Math.min(Math.max(elapsedSec, 0), OFFLINE_MAX_SECONDS);
     if (state.items.pet > 0) {
       state.pet.happiness = clamp(state.pet.happiness - 0.1 * Math.max(elapsedSec, 0), 0, 100);
@@ -2636,7 +2716,13 @@
       bumpStat("earned", earnings);
       if (wages > 0) bumpStat("workSec", countedSec);
     }
-    if (earnings <= 0 && interest <= 0) return;
+
+    applyOfflineStatDrift(countedSec);
+
+    if (earnings <= 0 && interest <= 0) {
+      saveState();
+      return;
+    }
 
     var parts = [];
     if (earnings > 0) parts.push(formatMoney(earnings));

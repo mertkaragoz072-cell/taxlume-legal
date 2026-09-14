@@ -181,6 +181,58 @@ html, body {
 .bar-fill.low { background: linear-gradient(180deg, #fb7185, var(--red)) !important; }
 .bar-fill.mid { background: linear-gradient(180deg, var(--yellow-light), var(--yellow)) !important; }
 
+/* Next-goal ticker: always shows whichever achievement is closest to done */
+.goal-ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--topbar-bg-2);
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 7px 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.goal-ticker:active { background: var(--panel-bg); }
+.goal-icon { font-size: 16px; flex-shrink: 0; }
+.goal-info { flex: 1; min-width: 0; }
+.goal-text {
+  color: #e7e9ee;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.goal-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #000;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.goal-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--yellow-light), var(--yellow));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: width 0.4s ease;
+}
+.goal-reward {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--yellow-light);
+  white-space: nowrap;
+}
+
 /* Divider strip between stat bars and the room */
 .topstrip {
   height: 22px;
