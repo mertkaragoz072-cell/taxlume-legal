@@ -917,7 +917,12 @@ html, body {
   z-index: 2;
   pointer-events: none;
   filter: drop-shadow(0 3px 3px rgba(0,0,0,0.18));
+  box-shadow: 0 0 34px 8px rgba(255,244,214,0.22);
+  border-radius: 8px;
+  transition: box-shadow 2.5s ease;
 }
+.window.sunset { box-shadow: 0 0 36px 9px rgba(255,178,120,0.3); }
+.window.night { box-shadow: 0 0 20px 5px rgba(130,150,255,0.14); }
 .window .sky { opacity: 0; transition: opacity 2.5s ease; }
 .window.day .sky-day, .window.sunset .sky-sunset, .window.night .sky-night { opacity: 1; }
 .night-overlay {
@@ -1106,7 +1111,7 @@ html, body {
 .room-item.picture { left: 46%; top: auto; bottom: calc(21% + 210px); width: 78px; height: 56px; }
 .room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 238px); width: 112px; height: 41px; }
 .room-item.tv { left: 58%; top: auto; bottom: calc(21% + 224px); width: 134px; height: 88px; }
-.window { left: 8%; top: auto; bottom: calc(21% + 160px); width: 123px; height: 101px; }
+.window { left: 6%; top: auto; bottom: calc(21% + 158px); width: 140px; height: 115px; }
 .lamp-light { left: calc(68% - 98px); bottom: calc(16% + 56px); width: 252px; height: 266px; }
 .zzz-stack { top: -26px; right: 8px; }
 

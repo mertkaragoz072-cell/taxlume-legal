@@ -404,6 +404,7 @@
             <linearGradient id="skyDay" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6ec6ff"/><stop offset="100%" stop-color="#d6f1ff"/></linearGradient>
             <linearGradient id="skySunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7a4fb0"/><stop offset="55%" stop-color="#ff8a5b"/><stop offset="100%" stop-color="#ffd27a"/></linearGradient>
             <linearGradient id="skyNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#141c44"/><stop offset="100%" stop-color="#3a4a8a"/></linearGradient>
+            <clipPath id="clipWindowGlass"><rect x="8" y="8" width="84" height="64"/></clipPath>
           </defs>
           <rect x="6" y="8" width="88" height="64" fill="#3a2a22" opacity="0.15" transform="translate(2 2)"/>
           <g class="sky sky-day">
@@ -432,10 +433,14 @@
             <g class="skyline-lights"><rect x="24" y="40" width="2" height="2"/><rect x="40" y="48" width="2" height="2"/><rect x="56" y="52" width="2" height="2"/><rect x="70" y="44" width="2" height="2"/></g>
           </g>
           <g class="skyline skyline-t4"><path d="M8 72V60h20V64h14V58h10V50h4V44h2V50h4V58h16V62h14V72Z"/></g>
+          <g clip-path="url(#clipWindowGlass)" class="win-glass-shine">
+            <path d="M14 8 L30 8 L14 72 L4 72 Z" fill="#fff" opacity="0.16"/>
+            <path d="M38 8 L48 8 L26 72 L18 72 Z" fill="#fff" opacity="0.09"/>
+          </g>
           <rect class="win-mullion" x="47" y="8" width="6" height="64" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.4"/>
           <rect class="win-mullion" x="8" y="37" width="84" height="6" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.4"/>
-          <rect class="win-frame-outer" x="4" y="4" width="92" height="72" rx="3" fill="none" stroke="#f4f1ea" stroke-width="6"/>
-          <rect x="4" y="4" width="92" height="72" rx="3" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          <rect class="win-frame-outer" x="4" y="4" width="92" height="72" rx="6" fill="none" stroke="#f4f1ea" stroke-width="6"/>
+          <rect x="4" y="4" width="92" height="72" rx="6" fill="none" stroke="#3a2a22" stroke-width="2"/>
           <rect class="win-sill" x="0" y="74" width="100" height="7" rx="2" fill="#e6dcc6" stroke="#3a2a22" stroke-width="2"/>
           <path class="win-shutter" d="M0 2h12c-2 20 2 40-2 60l-2 12H0z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
           <path class="win-shutter" d="M100 2H88c2 20-2 40 2 60l2 12h8z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
@@ -778,10 +783,14 @@
             <g class="skyline-lights"><rect x="24" y="40" width="2" height="2"/><rect x="40" y="48" width="2" height="2"/><rect x="56" y="52" width="2" height="2"/><rect x="70" y="44" width="2" height="2"/></g>
           </g>
           <g class="skyline skyline-t4"><path d="M8 72V60h20V64h14V58h10V50h4V44h2V50h4V58h16V62h14V72Z"/></g>
+          <g clip-path="url(#clipWindowGlass)" class="win-glass-shine">
+            <path d="M14 8 L30 8 L14 72 L4 72 Z" fill="#fff" opacity="0.16"/>
+            <path d="M38 8 L48 8 L26 72 L18 72 Z" fill="#fff" opacity="0.09"/>
+          </g>
           <rect class="win-mullion" x="47" y="8" width="6" height="64" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.4"/>
           <rect class="win-mullion" x="8" y="37" width="84" height="6" fill="#f4f1ea" stroke="#3a2a22" stroke-width="1.4"/>
-          <rect class="win-frame-outer" x="4" y="4" width="92" height="72" rx="3" fill="none" stroke="#f4f1ea" stroke-width="6"/>
-          <rect x="4" y="4" width="92" height="72" rx="3" fill="none" stroke="#3a2a22" stroke-width="2"/>
+          <rect class="win-frame-outer" x="4" y="4" width="92" height="72" rx="6" fill="none" stroke="#f4f1ea" stroke-width="6"/>
+          <rect x="4" y="4" width="92" height="72" rx="6" fill="none" stroke="#3a2a22" stroke-width="2"/>
           <rect class="win-sill" x="0" y="74" width="100" height="7" rx="2" fill="#e6dcc6" stroke="#3a2a22" stroke-width="2"/>
           <path class="win-shutter" d="M0 2h12c-2 20 2 40-2 60l-2 12H0z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
           <path class="win-shutter" d="M100 2H88c2 20-2 40 2 60l2 12h8z" fill="#e0574f" stroke="#3a2a22" stroke-width="1.8" stroke-linejoin="round"/>
