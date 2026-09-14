@@ -54,6 +54,8 @@ import {
   toggleAutoTradeRule,
   totalGoodsHolding,
   trade,
+  chooseDoctrine,
+  researchCost,
 } from "../useEconomy";
 
 describe("gameDayFromTick", () => {
@@ -1016,3 +1018,63 @@ function statsWithMetricAtValue(base: EconomyStats, templateId: string, value: n
       throw new Error(`unknown weekly challenge template: ${templateId}`);
   }
 }
+
+describe("chooseDoctrine", () => {
+  const rich = () => ({ ...initialState(), cash: 5000 });
+
+  it("refuses before the town is worth enough", () => {
+    const poor = { ...initialState(), cash: 10 };
+    expect(chooseDoctrine(poor, "merchants").doctrine).toBeNull();
+  });
+
+  it("commits the doctrine once the town qualifies", () => {
+    expect(chooseDoctrine(rich(), "merchants").doctrine).toBe("merchants");
+  });
+
+  it("is one-way: a second choice is ignored", () => {
+    const first = chooseDoctrine(rich(), "merchants");
+    expect(chooseDoctrine(first, "bankers").doctrine).toBe("merchants");
+  });
+
+  it("ignores an id that is not a doctrine", () => {
+    expect(chooseDoctrine(rich(), "bakers").doctrine).toBeNull();
+  });
+
+  it("hands the choice back at prestige", () => {
+    const chosen = { ...chooseDoctrine(rich(), "artisans"), cash: PRESTIGE_UNLOCK_NET_WORTH * 2 };
+    expect(prestige(chosen).doctrine).toBeNull();
+  });
+});
+
+describe("doctrine effects on the economy", () => {
+  it("makes a merchant town's tariffs cheaper than an artisan town's", () => {
+    const base = initialState();
+    const town = TOWNS[0];
+    const merchant = effectiveTariffRate({ ...base, doctrine: "merchants" }, town);
+    const artisan = effectiveTariffRate({ ...base, doctrine: "artisans" }, town);
+    expect(merchant).toBeLessThan(effectiveTariffRate(base, town));
+    expect(artisan).toBeGreaterThan(effectiveTariffRate(base, town));
+  });
+
+  it("makes a banker town's credit cheaper", () => {
+    const base = initialState();
+    expect(loanInterestRatePerDay({ ...base, doctrine: "bankers" }, 6)).toBeLessThan(
+      loanInterestRatePerDay(base, 6)
+    );
+  });
+
+  it("makes an artisan town out-produce a merchant one", () => {
+    const base = { ...initialState(), paused: false, happiness: 80 };
+    const artisan = tick({ ...base, doctrine: "artisans" });
+    const merchant = tick({ ...base, doctrine: "merchants" });
+    expect(artisan.goods.bread.supply).toBeGreaterThan(merchant.goods.bread.supply);
+  });
+
+  it("discounts research for an artisan town and leaves others at list price", () => {
+    const base = initialState();
+    const node = { cost: 100 };
+    expect(researchCost({ ...base, doctrine: "artisans" }, node)).toBeLessThan(100);
+    expect(researchCost({ ...base, doctrine: "bankers" }, node)).toBe(100);
+    expect(researchCost(base, node)).toBe(100);
+  });
+});

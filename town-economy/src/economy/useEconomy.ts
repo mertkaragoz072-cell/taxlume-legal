@@ -6,6 +6,7 @@ import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { rollDemandCycle } from "./demandCycles";
+import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { PROPERTIES_BY_ID } from "./properties";
 import { perkHeadStartBonus, PRESTIGE_PERKS_BY_ID } from "./prestigePerks";
@@ -58,6 +59,7 @@ import {
   DAILY_BONUS_PER_STREAK_DAY,
   DAILY_QUEST_COUNT,
   DEFAULT_DIFFICULTY,
+  DOCTRINE_UNLOCK_NET_WORTH,
   DEMAND_PRESSURE_MAX,
   DEMAND_PRESSURE_SENSITIVITY,
   EVENT_LOG_CAP,
@@ -89,6 +91,7 @@ import {
   marketDepthFactor,
   marketSpread,
   nextTradeStreak,
+  researchCost,
   storageCapacity,
   supplyBounds,
   totalGoodsHolding,
@@ -141,6 +144,7 @@ export {
   MARKET_SPREAD,
   MAX_OFFLINE_MS,
   MAX_OFFLINE_TICKS,
+  DOCTRINE_UNLOCK_NET_WORTH,
   METROPOL_UNLOCK_NET_WORTH,
   MIN_OFFLINE_MS_TO_SHOW,
   MYTHIC_UNLOCK_LEGENDARY_POINTS,
@@ -176,6 +180,7 @@ export {
   loanTickRateToDayRate,
   marketDepthFactor,
   marketSpread,
+  researchCost,
   storageCapacity,
   totalGoodsHolding,
 } from "./formulas";
@@ -200,6 +205,7 @@ type Action =
   | { type: "RESET"; difficulty: DifficultyId; ngPlusModifiers?: string[] }
   | { type: "PRESTIGE" }
   | { type: "UNLOCK_PRESTIGE_PERK"; perkId: string }
+  | { type: "CHOOSE_DOCTRINE"; doctrineId: string }
   | {
       type: "OPEN_CONTRACT";
       goodId: GoodId;
@@ -371,6 +377,7 @@ export function initialState(
     demandCycle: firstCycle,
     nextDemandCycle: rollDemandCycle(firstCycle.endTick, TICKS_PER_GAME_DAY, day1GoodIds),
     pendingCrisis: null,
+    doctrine: null,
   };
 }
 export function todayString(): string {
@@ -575,6 +582,10 @@ export function sendCaravan(
   const townsTradedToday = state.dailyProgress.townsTraded.includes(townId)
     ? state.dailyProgress.townsTraded
     : [...state.dailyProgress.townsTraded, townId];
+  // A merchant town's caravans are on the road less time; every other
+  // doctrine leaves the distance exactly as the map says.
+  const travelTicks =
+    town.distanceDays * TICKS_PER_GAME_DAY * doctrineModifiers(state.doctrine).caravanSpeedMult;
   const tariffRate = effectiveTariffRate(state, town) * (1 - clamp(tariffDiscountBonus, 0, 1));
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
 
@@ -596,7 +607,7 @@ export function sendCaravan(
       qty: amount,
       amount: net,
       departedTick: state.tick,
-      arrivesAtTick: state.tick + town.distanceDays * TICKS_PER_GAME_DAY,
+      arrivesAtTick: state.tick + Math.max(1, Math.round(travelTicks)),
       insured,
     };
     return {
@@ -644,7 +655,7 @@ export function sendCaravan(
     qty: amount,
     amount,
     departedTick: state.tick,
-    arrivesAtTick: state.tick + town.distanceDays * TICKS_PER_GAME_DAY,
+    arrivesAtTick: state.tick + Math.max(1, Math.round(travelTicks)),
     insured,
   };
   return {
@@ -903,10 +914,11 @@ function research(state: EconomyState, nodeId: string): EconomyState {
   const node = RESEARCH_NODES_BY_ID[nodeId];
   if (!node) return state;
   if (node.requires && !state.researched.includes(node.requires)) return state;
-  if (state.cash < node.cost) return state;
+  const cost = researchCost(state, node);
+  if (state.cash < cost) return state;
   return {
     ...state,
-    cash: state.cash - node.cost,
+    cash: state.cash - cost,
     researched: [...state.researched, nodeId],
   };
 }
@@ -1108,6 +1120,31 @@ export function prestige(state: EconomyState): EconomyState {
     eventLog: [event],
   };
 }
+/** Commit the town to a doctrine. Deliberately one-way for the rest of the
+ * run: the choice only means something if it cannot be walked back, and
+ * prestige is what hands the decision back to the player. */
+export function chooseDoctrine(state: EconomyState, doctrineId: string): EconomyState {
+  if (state.gameOver) return state;
+  if (state.doctrine !== null) return state;
+  if (!isDoctrineId(doctrineId)) return state;
+  if (computeNetWorth(state) < DOCTRINE_UNLOCK_NET_WORTH) return state;
+  const event: EconomyEvent = {
+    id: state.nextId,
+    message: t(state.language, "msg.doctrineChosen", {
+      icon: DOCTRINES_BY_ID[doctrineId].icon,
+      name: t(state.language, DOCTRINES_BY_ID[doctrineId].nameKey),
+    }),
+    tone: "good",
+  };
+  return {
+    ...state,
+    doctrine: doctrineId,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+
 function unlockPrestigePerk(state: EconomyState, perkId: string): EconomyState {
   if (state.prestigePerks.includes(perkId)) return state;
   const def = PRESTIGE_PERKS_BY_ID[perkId];
@@ -1212,6 +1249,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return prestige(state);
     case "UNLOCK_PRESTIGE_PERK":
       return unlockPrestigePerk(state, action.perkId);
+    case "CHOOSE_DOCTRINE":
+      return chooseDoctrine(state, action.doctrineId);
     case "OPEN_CONTRACT":
       return openContract(state, action.goodId, action.direction, action.qty, action.termDays);
     case "OPEN_BULK_CONTRACT":
@@ -1355,6 +1394,10 @@ export function useEconomy() {
     (perkId: string) => dispatch({ type: "UNLOCK_PRESTIGE_PERK", perkId }),
     []
   );
+  const chooseDoctrine_ = useCallback(
+    (doctrineId: string) => dispatch({ type: "CHOOSE_DOCTRINE", doctrineId }),
+    []
+  );
   const openContract_ = useCallback(
     (goodId: GoodId, direction: ContractDirection, qty: number, termDays: number) =>
       dispatch({ type: "OPEN_CONTRACT", goodId, direction, qty, termDays }),
@@ -1443,6 +1486,7 @@ export function useEconomy() {
     reset,
     prestige: prestige_,
     unlockPrestigePerk: unlockPrestigePerk_,
+    chooseDoctrine: chooseDoctrine_,
     openContract: openContract_,
     openBulkContract: openBulkContract_,
     addAutoTradeRule: addAutoTradeRule_,

@@ -10,6 +10,7 @@ import { DECISION_TEMPLATES } from "./decisions";
 import { DIFFICULTIES } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./demandCycles";
+import { doctrineModifiers } from "./doctrines";
 import {
   CRISIS_CHANCE,
   CRISIS_TEMPLATES_BY_ID,
@@ -159,6 +160,10 @@ export function tick(state: EconomyState): EconomyState {
     config.inflationMin,
     config.inflationMax
   );
+
+  // Read once: the doctrine is fixed for the run, and half a dozen places
+  // below need a number from it.
+  const doctrineMods = doctrineModifiers(state.doctrine);
 
   let nextId = state.nextId;
   const newEvents: EconomyEvent[] = [];
@@ -355,7 +360,7 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
-  let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness });
+  let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness }) * doctrineMods.taxIncomeMult;
   if (happiness <= ANGRY_THRESHOLD && Math.random() < ANGRY_EVENT_CHANCE) {
     const penalty = Math.min(state.cash + taxCashDelta, ANGRY_CASH_PENALTY);
     taxCashDelta -= penalty;
@@ -432,6 +437,7 @@ export function tick(state: EconomyState): EconomyState {
     // alone reads as a real shortage.
     const demandMult = demandPriceMultiplier(demandCycle, good.id);
     const workerProductionMult = 1 + workers[good.id] * WORKER_PRODUCTION_BONUS_PER_WORKER;
+    const doctrineProductionMult = doctrineMods.productionMult;
     const propertyProductionMult = propertyProductionMultiplier(state.ownedProperties, good.id);
     const production =
       good.baseProduction *
@@ -440,7 +446,8 @@ export function tick(state: EconomyState): EconomyState {
       researchedProductionMult *
       prestigeProductionMult *
       workerProductionMult *
-      propertyProductionMult;
+      propertyProductionMult *
+      doctrineProductionMult;
     let supply = gs.supply + (production - good.baseProduction) + demandSupplyDelta(demandCycle, good);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
@@ -516,7 +523,8 @@ export function tick(state: EconomyState): EconomyState {
 
   const nextTick = state.tick + 1;
   const stillTraveling: Caravan[] = [];
-  const propertyIncomePerTick = propertyPassiveIncomePerTick(state.ownedProperties);
+  const propertyIncomePerTick =
+    propertyPassiveIncomePerTick(state.ownedProperties) * doctrineMods.propertyIncomeMult;
   let cash = state.cash + taxCashDelta + propertyIncomePerTick - workerWageCost;
   let dailyCashEarned = state.dailyProgress.cashEarned + Math.max(0, taxCashDelta) + propertyIncomePerTick;
   let totalCaravansCompleted = state.stats.totalCaravansCompleted;
@@ -708,6 +716,7 @@ export function tick(state: EconomyState): EconomyState {
     demandCycle,
     nextDemandCycle,
     pendingCrisis,
+    doctrine: state.doctrine,
     loan,
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),

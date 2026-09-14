@@ -27,6 +27,12 @@ export const TRADE_UNLOCK_NET_WORTH = 500;
 // pricier caravans, but far better payoff for the luxury goods) open up.
 // Sticky once crossed — see applyMetropolUnlock.
 export const METROPOL_UNLOCK_NET_WORTH = 3000;
+// --- Town doctrine ---------------------------------------------------------
+// The run's one irreversible choice (see doctrines.ts), offered between the
+// trade and metropol milestones: late enough that the player has felt how
+// tariffs, production and credit actually behave, early enough that the
+// choice still shapes most of the run.
+export const DOCTRINE_UNLOCK_NET_WORTH = 2000;
 // The one content gate tied to prestigeLevel rather than the current run's
 // net worth — see towns.ts' "legendary" tier and applyLegendaryUnlock.
 export const LEGENDARY_UNLOCK_PRESTIGE_LEVEL = 3;

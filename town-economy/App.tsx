@@ -24,6 +24,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
+import { DoctrineModal } from "./src/components/DoctrineModal";
 import { SpeedBoostModal } from "./src/components/SpeedBoostModal";
 import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
@@ -31,7 +32,7 @@ import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { TOWN_EMBLEMS_BY_ID } from "./src/economy/emblems";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
-import { gameDayFromTick } from "./src/economy/useEconomy";
+import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { seasonalBackgroundGradient } from "./src/theme";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
@@ -88,6 +89,19 @@ function Game() {
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
   const [speedBoostModalVisible, setSpeedBoostModalVisible] = useState(false);
+  const [doctrineModalVisible, setDoctrineModalVisible] = useState(false);
+  // Offered once per session when the town first qualifies. Declining is
+  // free — the Town screen keeps the choice available — so this never has
+  // to nag, and the answer it gets is a considered one.
+  const doctrineOffered = useRef(false);
+
+  useEffect(() => {
+    if (doctrineOffered.current) return;
+    if (state.doctrine !== null) return;
+    if (netWorth < DOCTRINE_UNLOCK_NET_WORTH) return;
+    doctrineOffered.current = true;
+    setDoctrineModalVisible(true);
+  }, [netWorth, state.doctrine]);
 
   const rankTitle = townRankTitle(state.townRankIndex, t);
 
@@ -207,7 +221,7 @@ function Game() {
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
         {screen === "trade" && <TradeScreen sounds={sounds} />}
-        {screen === "town" && <TownScreen />}
+        {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
         {screen === "research" && <ResearchScreen />}
         {screen === "invest" && <InvestScreen sounds={sounds} />}
         {screen === "achievements" && <AchievementsScreen />}
@@ -256,6 +270,7 @@ function Game() {
           onCancel={() => setNameModalVisible(false)}
         />
 
+        <DoctrineModal visible={doctrineModalVisible} onClose={() => setDoctrineModalVisible(false)} />
         <SpeedBoostModal
           visible={speedBoostModalVisible}
           onClose={() => setSpeedBoostModalVisible(false)}

@@ -1,6 +1,7 @@
 import { AssetId } from "./assets";
 import { DemandCycle } from "./demandCycles";
 import { ScheduledCrisis } from "./crises";
+import { DoctrineId } from "./doctrines";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -381,6 +382,10 @@ export interface EconomyState {
    * crises.ts. The gap between the two is the point: it is the window the
    * player has to stockpile, sell or insure. */
   pendingCrisis: ScheduledCrisis | null;
+  /** the town's chosen doctrine (see doctrines.ts), or null before the choice
+   * is made. The only irreversible choice in a run: it holds until prestige,
+   * and it is what makes two towns play differently. */
+  doctrine: DoctrineId | null;
 }
 
 export interface WeeklyChallenge {

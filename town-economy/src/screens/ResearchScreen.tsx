@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { RESEARCH_NODES, RESEARCH_NODES_BY_ID, ResearchNode } from "../economy/research";
+import { researchCost } from "../economy/formulas";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import {
@@ -22,7 +23,8 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
   const researched = state.researched.includes(node.id);
   const prereq = node.requires ? RESEARCH_NODES_BY_ID[node.requires] : null;
   const locked = !researched && !!prereq && !state.researched.includes(prereq.id);
-  const affordable = state.cash >= node.cost;
+  const cost = researchCost(state, node);
+  const affordable = state.cash >= cost;
   const disabled = researched || locked || !affordable;
 
   return (
@@ -67,7 +69,7 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
           scaleTo={0.95}
         >
           {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-          <Text style={styles.researchBtnText}>{t("research.researchBtn", { cost: node.cost })}</Text>
+          <Text style={styles.researchBtnText}>{t("research.researchBtn", { cost })}</Text>
         </ScalePressable>
       )}
     </View>

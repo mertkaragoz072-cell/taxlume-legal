@@ -14,6 +14,7 @@ import {
   perkUnlockThresholdMult,
 } from "./prestigePerks";
 import { ForeignTown } from "./towns";
+import { doctrineModifiers } from "./doctrines";
 import { UPGRADES_BY_ID } from "./upgrades";
 import { EconomyState, Good } from "./types";
 import {
@@ -99,13 +100,16 @@ export function pushCapped(arr: number[], value: number, cap: number): number[] 
  * the Kervansaray upgrade, any owned property, and any prestige perk —
  * shared by the reducer and the trade screen's previews so they never drift. */
 export function effectiveTariffRate(state: EconomyState, town: ForeignTown): number {
-  return Math.max(
+  const base = Math.max(
     0,
     town.tariffRate -
       state.upgrades.caravanserai * UPGRADES_BY_ID.caravanserai.effectPerLevel -
       propertyCaravanTariffDiscount(state.ownedProperties) -
       perkCaravanTariffDiscount(state.prestigePerks)
   );
+  // The doctrine scales whatever the discounts left, so a merchant town's
+  // advantage compounds with its upgrades instead of replacing them.
+  return base * doctrineModifiers(state.doctrine).tariffMult;
 }
 export function computeNetWorth(state: EconomyState): number {
   return (
@@ -138,15 +142,19 @@ export function loanInterestRatePerDay(state: EconomyState, termMonths: number):
     LOAN_MAX_INFLATION_DAY_CONTRIB
   );
   const termContribution = termMonths * LOAN_TERM_RATE_PER_MONTH_PER_DAY;
-  return clamp(
-    LOAN_BASE_INTEREST_RATE_PER_DAY +
-      inflationContribution +
-      termContribution -
-      state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY -
-      propertyLoanRateDiscountPerDay(state.ownedProperties) -
-      perkLoanRateDiscountPerDay(state.prestigePerks),
-    LOAN_MIN_INTEREST_RATE_PER_DAY,
-    LOAN_MAX_INTEREST_RATE_PER_DAY
+  const doctrineRate = doctrineModifiers(state.doctrine).loanRateMult;
+  return (
+    doctrineRate *
+    clamp(
+      LOAN_BASE_INTEREST_RATE_PER_DAY +
+        inflationContribution +
+        termContribution -
+        state.upgrades.bank * LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY -
+        propertyLoanRateDiscountPerDay(state.ownedProperties) -
+        perkLoanRateDiscountPerDay(state.prestigePerks),
+      LOAN_MIN_INTEREST_RATE_PER_DAY,
+      LOAN_MAX_INTEREST_RATE_PER_DAY
+    )
   );
 }
 /** loanInterestRatePerDay converted to the equivalent per-tick rate — this
@@ -170,4 +178,11 @@ export function effectiveTradeUnlockNetWorth(state: EconomyState): number {
 /** METROPOL_UNLOCK_NET_WORTH discounted by the earlyExplorer prestige perk. */
 export function effectiveMetropolUnlockNetWorth(state: EconomyState): number {
   return METROPOL_UNLOCK_NET_WORTH * perkUnlockThresholdMult(state.prestigePerks);
+}
+
+/** What a research node costs this town right now — the node's list price
+ * scaled by the doctrine. Shared by the research action and the screen that
+ * quotes the price, so the two can never disagree. */
+export function researchCost(state: EconomyState, node: { cost: number }): number {
+  return Math.round(node.cost * doctrineModifiers(state.doctrine).researchCostMult);
 }

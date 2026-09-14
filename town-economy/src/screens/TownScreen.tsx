@@ -12,10 +12,12 @@ import {
   LOAN_TERM_MONTHS_STEPS,
   PRESTIGE_CASH_BONUS_PER_LEVEL,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
+  DOCTRINE_UNLOCK_NET_WORTH,
   PRESTIGE_UNLOCK_NET_WORTH,
   TAX_RATE_STEPS,
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
+import { DOCTRINES_BY_ID } from "../economy/doctrines";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
@@ -63,7 +65,12 @@ function happinessFor(h: number): { labelKey: string; emoji: string; color: stri
   return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
 }
 
-export function TownScreen() {
+interface Props {
+  /** opens the doctrine picker; owned by App so the modal sits above every screen */
+  onOpenDoctrine: () => void;
+}
+
+export function TownScreen({ onOpenDoctrine }: Props) {
   const {
     state,
     upgrade,
@@ -79,6 +86,7 @@ export function TownScreen() {
     t,
     formatCoins,
   } = useEconomyContext();
+  const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
   const rankTitle = townRankTitle(state.townRankIndex, t);
@@ -272,6 +280,35 @@ export function TownScreen() {
               })}
             </Text>
           </>
+        )}
+      </View>
+
+      <SectionLabel text={t("doctrine.activeLabel")} color="#e8c777" />
+      <View style={styles.doctrineCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        {activeDoctrine ? (
+          <>
+            <View style={styles.doctrineHead}>
+              <Text aria-hidden style={styles.doctrineIcon}>
+                {activeDoctrine.icon}
+              </Text>
+              <Text style={styles.doctrineName}>{t(activeDoctrine.nameKey)}</Text>
+            </View>
+            <Text style={styles.doctrineBonus}>+ {t(activeDoctrine.bonusKey)}</Text>
+            <Text style={styles.doctrinePenalty}>− {t(activeDoctrine.penaltyKey)}</Text>
+          </>
+        ) : netWorth >= DOCTRINE_UNLOCK_NET_WORTH ? (
+          <>
+            <Text style={styles.doctrinePrompt}>{t("doctrine.choosePrompt")}</Text>
+            <ScalePressable onPress={onOpenDoctrine} style={styles.doctrineBtn} scaleTo={0.96}>
+              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+              <Text style={styles.doctrineBtnText}>{t("doctrine.chooseBtn")}</Text>
+            </ScalePressable>
+          </>
+        ) : (
+          <Text style={styles.doctrineLocked}>
+            🔒 {t("doctrine.lockedNote", { amount: DOCTRINE_UNLOCK_NET_WORTH })}
+          </Text>
         )}
       </View>
 
@@ -613,6 +650,38 @@ export function TownScreen() {
 }
 
 const styles = StyleSheet.create({
+  doctrineCard: {
+    borderRadius: RADIUS.feature,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  doctrineHead: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.xs },
+  doctrineIcon: { fontSize: 20, marginRight: SPACING.sm },
+  doctrineName: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.body,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
+  doctrineBonus: {
+    color: COLORS.positive,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  doctrinePenalty: {
+    color: COLORS.negative,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    marginTop: 2,
+  },
+  doctrinePrompt: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: SPACING.sm, lineHeight: 15 },
+  doctrineBtn: { borderRadius: 12, paddingVertical: 10, alignItems: "center", overflow: "hidden" },
+  doctrineBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 13 },
+  doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
   body: { padding: SPACING.lg, paddingBottom: 40 },
   moodCard: {
     flexDirection: "row",
