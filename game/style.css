@@ -576,9 +576,9 @@ html, body {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
-.zzz-stack span:nth-child(1) { font-size: 12px; }
-.zzz-stack span:nth-child(2) { font-size: 15px; }
-.zzz-stack span:nth-child(3) { font-size: 19px; }
+.zzz-stack span:nth-child(1) { font-size: 14px; }
+.zzz-stack span:nth-child(2) { font-size: 18px; }
+.zzz-stack span:nth-child(3) { font-size: 22px; }
 .zzz-stack.show {
   opacity: 1;
   animation: zzzFloat 1.6s ease-in-out infinite;
@@ -1118,23 +1118,24 @@ html, body {
 .furniture.bed { left: 0; bottom: 13%; z-index: 4; }
 .furniture.fridge { right: 0; bottom: 19%; z-index: 2; }
 .furniture.plant { left: 3%; bottom: 10%; z-index: 5; }
-.character { left: 37%; bottom: 7%; width: 115px; height: 190px; z-index: 6; }
-.character.eating { left: 60%; }
+.character { left: 37%; bottom: 7%; width: 136px; height: 224px; z-index: 6; }
+.character.eating { left: 58%; }
 /* The sleeping head has to land on the bed's own pillow, which is drawn at a
    fixed spot inside the bed's art (unaffected by tier). Since the bed moved
    to bottom:13% for depth, this offset is measured from there, not from the
    old wall-line position - that mismatch was leaving the head floating well
-   above the pillow. */
-.character.sleeping { left: 9px; bottom: calc(13% + 59px); width: 53px; height: 43px; z-index: 4; }
-.room-item.rug { left: 36%; bottom: 8%; width: 210px; height: 48px; z-index: 1; }
-.room-item.lamp { left: 68%; bottom: 16%; width: 60px; height: 179px; z-index: 3; }
+   above the pillow. Scaled by the same ~1.18x as everything else here, so it
+   still lands in the same spot on the now-bigger pillow. */
+.character.sleeping { left: 11px; bottom: calc(13% + 70px); width: 63px; height: 51px; z-index: 4; }
+.room-item.rug { left: 36%; bottom: 8%; width: 248px; height: 57px; z-index: 1; }
+.room-item.lamp { left: 68%; bottom: 16%; width: 71px; height: 211px; z-index: 3; }
 .room-item.pet { z-index: 7; }
-.room-item.picture { left: 46%; top: auto; bottom: calc(21% + 210px); width: 78px; height: 56px; }
-.room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 238px); width: 112px; height: 41px; }
-.room-item.tv { left: 58%; top: auto; bottom: calc(21% + 224px); width: 134px; height: 88px; }
-.window { left: 6%; top: auto; bottom: calc(21% + 158px); width: 140px; height: 115px; }
-.lamp-light { left: calc(68% - 98px); bottom: calc(16% + 56px); width: 252px; height: 266px; }
-.zzz-stack { top: -26px; right: 8px; }
+.room-item.picture { left: 46%; top: auto; bottom: calc(21% + 248px); width: 92px; height: 66px; }
+.room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 281px); width: 132px; height: 48px; }
+.room-item.tv { left: 58%; top: auto; bottom: calc(21% + 264px); width: 158px; height: 104px; }
+.window { left: 6%; top: auto; bottom: calc(21% + 186px); width: 165px; height: 136px; }
+.lamp-light { left: calc(68% - 116px); bottom: calc(16% + 66px); width: 297px; height: 314px; }
+.zzz-stack { top: -31px; right: 9px; }
 
 /* ---------- Purchase experience ---------- */
 .mute-btn {
@@ -1400,8 +1401,8 @@ html, body {
 .room-item.pet {
   left: 6%;
   bottom: 3%;
-  width: 78px;
-  height: 64px;
+  width: 92px;
+  height: 76px;
   z-index: 5;
   pointer-events: auto;
   cursor: pointer;
@@ -1409,11 +1410,11 @@ html, body {
 .room-item.pet:active { transform: scale(0.93); }
 .pet-meter {
   position: absolute;
-  top: -30px;
+  top: -35px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 6px;
+  width: 47px;
+  height: 7px;
   border-radius: 999px;
   background: #101014;
   border: 1.5px solid #3a2a22;
@@ -1583,16 +1584,16 @@ html, body {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -4px;
+  bottom: -5px;
   width: 92%;
-  height: 15px;
+  height: 18px;
   transform: translateX(-50%);
   border-radius: 50%;
   background: radial-gradient(50% 50% at 50% 50%, rgba(58,42,34,0.4), rgba(58,42,34,0) 72%);
   pointer-events: none;
 }
-.character::before { width: 62%; height: 14px; bottom: 7px; }
-.room-item.pet::before { width: 80%; height: 11px; bottom: 0; }
+.character::before { width: 62%; height: 17px; bottom: 8px; }
+.room-item.pet::before { width: 80%; height: 13px; bottom: 0; }
 .character.sleeping::before { display: none; }
 
 /* ---------- Two rooms ----------
@@ -1644,8 +1645,8 @@ html, body {
   position: absolute;
   left: 24%;
   bottom: 21%;
-  width: 193px;
-  height: 111px;
+  width: 228px;
+  height: 131px;
   z-index: 2;
   pointer-events: none;
   filter: drop-shadow(0 6px 5px rgba(58,42,34,0.3));
