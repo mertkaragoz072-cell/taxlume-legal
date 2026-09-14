@@ -7,6 +7,7 @@ import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
 import { TownMapView } from "../components/TownMapView";
+import { TradingHousesCard } from "../components/TradingHousesCard";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
@@ -184,6 +185,9 @@ export function TradeScreen({ sounds }: Props) {
               })}
           </View>
         )}
+
+        <SectionLabel text={t("tradingHouse.sectionLabel")} color="#f0a04b" />
+        <TradingHousesCard activities={state.tradingHouses} />
 
         <SectionLabel text={t("trade.mapSectionLabel")} color="#5fd884" />
         <TownMapView

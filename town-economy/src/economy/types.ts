@@ -2,6 +2,7 @@ import { AssetId } from "./assets";
 import { DemandCycle } from "./demandCycles";
 import { ScheduledCrisis } from "./crises";
 import { DoctrineId } from "./doctrines";
+import { TradingHouseActivity } from "./tradingHouses";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -386,6 +387,10 @@ export interface EconomyState {
    * is made. The only irreversible choice in a run: it holds until prestige,
    * and it is what makes two towns play differently. */
   doctrine: DoctrineId | null;
+  /** what each rival trading house is working right now — see
+   * tradingHouses.ts. They move the same foreign markets the player does,
+   * which is what stops a good route from staying good forever. */
+  tradingHouses: TradingHouseActivity[];
 }
 
 export interface WeeklyChallenge {

@@ -11,6 +11,7 @@ import { DIFFICULTIES } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./demandCycles";
 import { doctrineModifiers } from "./doctrines";
+import { houseSupplyDelta, rollActivity } from "./tradingHouses";
 import {
   CRISIS_CHANCE,
   CRISIS_TEMPLATES_BY_ID,
@@ -476,6 +477,17 @@ export function tick(state: EconomyState): EconomyState {
     };
   }
 
+  // Each house works one market for a couple of days, then moves on. Rolling
+  // the next spell here (rather than on demand) keeps what they are doing
+  // stable long enough for the player to send a caravan at it.
+  const eligibleGoodIds = GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id);
+  const allTownIds = TOWNS.map((tn) => tn.id);
+  const tradingHouses = state.tradingHouses.map((a) =>
+    state.tick + 1 >= a.untilTick
+      ? rollActivity(a.houseId, state.tick + 1, TICKS_PER_GAME_DAY, allTownIds, eligibleGoodIds)
+      : a
+  );
+
   const foreignTowns = { ...state.foreignTowns };
   for (const town of TOWNS) {
     const ts = foreignTowns[town.id];
@@ -487,7 +499,10 @@ export function tick(state: EconomyState): EconomyState {
       const reverted =
         s +
         (good.baseSupply - s) * FOREIGN_SUPPLY_REVERSION +
-        (Math.random() - 0.5) * good.baseProduction * FOREIGN_NOISE;
+        (Math.random() - 0.5) * good.baseProduction * FOREIGN_NOISE +
+        // A house cornering this market bends its price through the same
+        // scarcity curve everything else uses, rather than by fiat.
+        houseSupplyDelta(tradingHouses, town.id, good.id, good.baseProduction);
       const clamped = clamp(reverted, minSupply, maxSupply);
       supply[good.id] = clamped;
       const researchedValueMult = researchMultiplier(state.researched, good.id, "value");
@@ -717,6 +732,7 @@ export function tick(state: EconomyState): EconomyState {
     nextDemandCycle,
     pendingCrisis,
     doctrine: state.doctrine,
+    tradingHouses,
     loan,
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),

@@ -6,6 +6,7 @@ import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { rollDemandCycle } from "./demandCycles";
+import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { PROPERTIES_BY_ID } from "./properties";
@@ -290,6 +291,7 @@ export function initialState(
     assets[a.id] = makeInitialAssetState(a);
   }
   const day1GoodIds = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
+  const allTownIds = TOWNS.map((tn) => tn.id);
   const firstCycle = rollDemandCycle(0, TICKS_PER_GAME_DAY, day1GoodIds);
   return {
     townName: t(language, "app.defaultTownName"),
@@ -378,6 +380,11 @@ export function initialState(
     nextDemandCycle: rollDemandCycle(firstCycle.endTick, TICKS_PER_GAME_DAY, day1GoodIds),
     pendingCrisis: null,
     doctrine: null,
+    // Every house is already at work on day one, so the foreign markets
+    // are contested from the first caravan rather than only later.
+    tradingHouses: TRADING_HOUSES.map((h) =>
+      rollActivity(h.id, 0, TICKS_PER_GAME_DAY, allTownIds, day1GoodIds)
+    ),
   };
 }
 export function todayString(): string {

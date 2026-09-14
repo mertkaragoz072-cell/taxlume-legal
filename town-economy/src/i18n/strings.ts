@@ -38,6 +38,17 @@ export const STRINGS = {
       invest: "Yatırım",
       achievements: "Hedefler",
     },
+    tradingHouse: {
+      sectionLabel: "RAKİP TİCARET EVLERİ",
+      buyingIn: "{town} pazarında {good} topluyor",
+      sellingIn: "{town} pazarına {good} boşaltıyor",
+      priceUp: "FİYAT ↑",
+      priceDown: "FİYAT ↓",
+      hint: "Onların topladığı malı o kasabaya satmak, boşalttığı malı oradan almak kârlıdır.",
+      goldenScales: { name: "Altın Terazi Evi" },
+      saltRoad: { name: "Tuz Yolu Kumpanyası" },
+      blackSail: { name: "Kara Yelken Loncası" },
+    },
     doctrine: {
       title: "Kasaba Yolunu Seç",
       subtitle:
@@ -1125,6 +1136,17 @@ export const STRINGS = {
       research: "Research",
       invest: "Invest",
       achievements: "Goals",
+    },
+    tradingHouse: {
+      sectionLabel: "RIVAL TRADING HOUSES",
+      buyingIn: "buying up {good} in {town}",
+      sellingIn: "dumping {good} on {town}",
+      priceUp: "PRICE ↑",
+      priceDown: "PRICE ↓",
+      hint: "Sell into the market they are buying, and buy from the one they are flooding.",
+      goldenScales: { name: "House of Golden Scales" },
+      saltRoad: { name: "Salt Road Company" },
+      blackSail: { name: "Black Sail Guild" },
     },
     doctrine: {
       title: "Choose Your Town's Path",
