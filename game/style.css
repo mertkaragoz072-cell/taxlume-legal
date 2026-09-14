@@ -967,7 +967,12 @@ html, body {
 .furniture.plant { left: 3%; bottom: 10%; z-index: 5; }
 .character { left: 37%; bottom: 7%; width: 115px; height: 190px; z-index: 6; }
 .character.eating { left: 60%; }
-.character.sleeping { left: 8px; bottom: calc(21% + 64px); width: 53px; height: 43px; z-index: 4; }
+/* The sleeping head has to land on the bed's own pillow, which is drawn at a
+   fixed spot inside the bed's art (unaffected by tier). Since the bed moved
+   to bottom:13% for depth, this offset is measured from there, not from the
+   old wall-line position - that mismatch was leaving the head floating well
+   above the pillow. */
+.character.sleeping { left: 9px; bottom: calc(13% + 59px); width: 53px; height: 43px; z-index: 4; }
 .room-item.rug { left: 36%; bottom: 8%; width: 210px; height: 48px; z-index: 1; }
 .room-item.lamp { left: 68%; bottom: 16%; width: 60px; height: 179px; z-index: 3; }
 .room-item.pet { z-index: 7; }
