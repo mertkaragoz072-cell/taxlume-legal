@@ -1168,6 +1168,19 @@
 
   var PRESTIGE_MIN_EARNED = 10000000;
   var LEGACY_BONUS = 0.05;
+  // Reward for finishing everything in one life instead of prestiging early
+  // and often: a flat bonus (never worse than the normal earned-based gain),
+  // so going for full completion is always worth at least this much.
+  var GRAND_PRESTIGE_BONUS = 50;
+  var TOP_JOB_KEY = "astronaut";
+
+  function isFullyMaxed() {
+    var shopMaxed = Object.keys(SHOP_ITEMS).every(function (k) { return state.items[k] >= SHOP_ITEMS[k].maxLevel; });
+    var furnitureMaxed = Object.keys(FURNITURE_CONFIG).every(function (k) { return state.furniture[k] >= FURNITURE_CONFIG[k].maxLevel; });
+    var eduMaxed = state.edu >= EDU.length;
+    var jobMaxed = state.job === TOP_JOB_KEY && jobLevel() >= JOB_MAX_LEVEL;
+    return shopMaxed && furnitureMaxed && eduMaxed && jobMaxed;
+  }
 
   /* ---------- Seasonal events ----------
      Dates are real calendar days, so the room and the economy change with
@@ -2242,9 +2255,12 @@
       " · 💎 " + state.perkPoints + " puan";
 
     var canPrestige = state.stats.earned >= PRESTIGE_MIN_EARNED;
+    var maxedOut = isFullyMaxed();
     var gain = prestigeGain();
-    makeRow("🌟", "Yeni Hayat (Prestij)", canPrestige
-      ? "Her şeyi sıfırla, +" + gain + " miras puanı kazan (kalıcı +%" + Math.round(gain * LEGACY_BONUS * 100) + ")"
+    makeRow(maxedOut ? "🏆" : "🌟", maxedOut ? "Tam Tamamlama Bonusu!" : "Yeni Hayat (Prestij)", canPrestige
+      ? (maxedOut
+        ? "Her şeyi bitirdin! Sabit +" + gain + " miras puanı ile yeniden doğ (kalıcı +%" + Math.round(gain * LEGACY_BONUS * 100) + ")"
+        : "Her şeyi sıfırla, +" + gain + " miras puanı kazan (kalıcı +%" + Math.round(gain * LEGACY_BONUS * 100) + ")")
       : "Toplam " + formatMoney(PRESTIGE_MIN_EARNED) + " kazanınca açılır (" + formatMoney(state.stats.earned) + ")", {
       rowClass: canPrestige ? "highlight" : "locked",
       progress: (state.stats.earned / PRESTIGE_MIN_EARNED) * 100,
@@ -2310,11 +2326,13 @@
   }
 
   function prestigeGain() {
-    return Math.max(1, Math.floor(Math.sqrt(state.stats.earned / 1000000)));
+    var earnedGain = Math.max(1, Math.floor(Math.sqrt(state.stats.earned / 1000000)));
+    return isFullyMaxed() ? Math.max(earnedGain, GRAND_PRESTIGE_BONUS) : earnedGain;
   }
 
   function doPrestige() {
     if (state.stats.earned < PRESTIGE_MIN_EARNED) return;
+    var maxedOut = isFullyMaxed();
     var gain = prestigeGain();
     state.legacy += gain;
     state.perkPoints += gain;
@@ -2340,7 +2358,8 @@
     state.bank.balance = 0;
     state.pet.happiness = 100;
 
-    celebrate("🌟", "Yeni hayat başladı!", "+" + gain + " miras puanı · kalıcı ×" + legacyMultiplier().toFixed(2));
+    celebrate(maxedOut ? "🏆" : "🌟", maxedOut ? "Tam tamamlama bonusu!" : "Yeni hayat başladı!",
+      "+" + gain + " miras puanı · kalıcı ×" + legacyMultiplier().toFixed(2));
     sfx.purchase();
     render();
     renderPanel();
