@@ -827,12 +827,12 @@ html, body {
   /* Müstakil Ev: a cozier, warmer home of one's own */
   background:
     linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0) 45%, rgba(0,0,0,0.08)),
-    radial-gradient(circle, rgba(255,255,255,0.4) 1.5px, transparent 2px) 0 0 / 26px 26px,
+    radial-gradient(circle, rgba(255,255,255,0.4) 1.5px, transparent 2px) 0 0 / 30px 30px,
     #dfe9f7;
 }
 .scene.room-t2::after {
   background:
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 2px, rgba(255,255,255,0.12) 2px 4px, transparent 4px 72px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 2px, rgba(255,255,255,0.12) 2px 4px, transparent 4px 84px),
     linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0) 30%, rgba(0,0,0,0.06)),
     #d9b071;
 }
@@ -840,12 +840,12 @@ html, body {
   /* Lüks Manzaralı Rezidans: deep plum walls with a gold sheen */
   background:
     linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0) 45%, rgba(0,0,0,0.14)),
-    repeating-linear-gradient(45deg, rgba(255,213,79,0.08) 0 10px, transparent 10px 20px),
+    repeating-linear-gradient(45deg, rgba(255,213,79,0.08) 0 14px, transparent 14px 28px),
     #332c46;
 }
 .scene.room-t3::after {
   background:
-    repeating-linear-gradient(90deg, rgba(255,213,79,0.24) 0 2px, transparent 2px 58px),
+    repeating-linear-gradient(90deg, rgba(255,213,79,0.24) 0 2px, transparent 2px 74px),
     linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0) 30%, rgba(0,0,0,0.1)),
     #4a3220;
   border-top-color: #f4f1ea;
@@ -854,13 +854,13 @@ html, body {
   /* Depo: a raw industrial loft - poured concrete walls and floor */
   background:
     linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0) 45%, rgba(0,0,0,0.18)),
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.09) 0 3px, transparent 3px 46px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.09) 0 3px, transparent 3px 60px),
     #8b8e93;
 }
 .scene.room-t4::after {
   background:
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0 2px, transparent 2px 130px),
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 130px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0 2px, transparent 2px 162px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 162px),
     linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0) 30%, rgba(0,0,0,0.12)),
     #6b6f74;
   border-top-color: #cfd2d6;
@@ -906,6 +906,27 @@ html, body {
 .scene.room-t4 .win-frame-outer { stroke: #3a3d42; }
 .scene.room-t4 .win-shutter { fill: #6b6f74; stroke: #3a3d42; }
 .scene.room-t4 .win-header { fill: #7a7e84; }
+
+/* A grander home reads as taller and roomier, not just differently
+   colored: the picture rail (implying ceiling height) rises with each
+   tier, and the wall/floor motifs scale up (the same pattern spanning
+   more physical space suggests a bigger room). */
+.scene.room-t2 .room-depth::before { top: 32px; }
+.scene.room-t3 .room-depth::before { top: 40px; }
+.scene.room-t4 .room-depth::before { top: 48px; }
+
+/* Every piece of furniture and decor picks up the home's material
+   family too, on top of its own upgrade tier - a "Klasik" bed still
+   looks like it belongs in whichever home it's standing in. */
+.scene.room-t2 .furniture svg, .scene.room-t2 .room-item svg {
+  filter: saturate(1.1) sepia(0.07) hue-rotate(-3deg);
+}
+.scene.room-t3 .furniture svg, .scene.room-t3 .room-item svg {
+  filter: saturate(1.3) brightness(1.05) sepia(0.1) hue-rotate(-4deg) drop-shadow(0 0 4px rgba(212,175,55,0.28));
+}
+.scene.room-t4 .furniture svg, .scene.room-t4 .room-item svg {
+  filter: saturate(0.3) contrast(1.1) brightness(0.94);
+}
 
 /* Window + day/night */
 .window {
@@ -1602,20 +1623,20 @@ html, body {
    home's palette instead of always washing back out to the same mint. */
 .scene.room-t2 .kitchen-skin::before {
   background:
-    repeating-linear-gradient(0deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
-    repeating-linear-gradient(90deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(0deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 34px),
+    repeating-linear-gradient(90deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 34px),
     linear-gradient(180deg, rgba(255,244,214,0.75), rgba(250,232,196,0.6));
 }
 .scene.room-t3 .kitchen-skin::before {
   background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1.5px, transparent 1.5px 30px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1.5px, transparent 1.5px 42px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1.5px, transparent 1.5px 42px),
     linear-gradient(180deg, rgba(60,52,78,0.72), rgba(40,34,56,0.56));
 }
 .scene.room-t4 .kitchen-skin::before {
   background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 1.5px, transparent 1.5px 30px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 1.5px, transparent 1.5px 52px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 1.5px, transparent 1.5px 52px),
     linear-gradient(180deg, rgba(180,184,188,0.6), rgba(150,154,158,0.5));
 }
 
