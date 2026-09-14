@@ -89,7 +89,7 @@
     picture: { name: "Tablo", icon: "🖼️", baseCost: 5000, growth: 1.5, bonus: 0.03, maxLevel: 9 },
     shelf: { name: "Kitaplık", icon: "📚", baseCost: 8000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
     tv: { name: "Televizyon", icon: "📺", baseCost: 12000, growth: 1.5, bonus: 0.05, maxLevel: 9 },
-    room: { name: "Oda (duvar + zemin)", icon: "🏠", baseCost: 15000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
+    room: { name: "Ev", icon: "🏠", baseCost: 15000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
     pet: { name: "Evcil Hayvan", icon: "🐶", baseCost: 6000, growth: 1.5, bonus: 0.035, maxLevel: 9 },
   };
 
@@ -110,6 +110,20 @@
   function itemTier(level) {
     if (level >= 7) return 3;
     if (level >= 4) return 2;
+    return 1;
+  }
+
+  // The "Ev" (home) item reuses the decor item's level track (0-9), but
+  // upgrading it far enough moves the player into a whole new home instead
+  // of just swapping a wallpaper pattern - so it gets its own 4-stage
+  // naming/art track rather than the generic 3-tier decor one.
+  var HOME_TIER_NAMES = ["", "Apartman Odası", "Müstakil Ev", "Lüks Manzaralı Rezidans", "Depo"];
+  var HOME_TIER_ICONS = ["", "🏠", "🏡", "🌇", "🏭"];
+
+  function homeTier(level) {
+    if (level >= 8) return 4;
+    if (level >= 5) return 3;
+    if (level >= 3) return 2;
     return 1;
   }
 
@@ -597,22 +611,31 @@
       var row = document.createElement("div");
       row.className = "shop-row";
 
+      var isHome = key === "room";
       var icon = document.createElement("div");
       icon.className = "shop-icon";
-      icon.textContent = item.icon;
+      icon.textContent = isHome ? HOME_TIER_ICONS[homeTier(level)] : item.icon;
 
       var info = document.createElement("div");
       info.className = "shop-info";
       var name = document.createElement("div");
       name.className = "shop-name";
-      name.textContent =
-        item.name + (level > 0 ? " · " + ITEM_TIER_NAMES[itemTier(level)] + " (" + level + "/" + item.maxLevel + ")" : "");
+      name.textContent = isHome
+        ? HOME_TIER_NAMES[homeTier(level)] + " (Sv " + level + "/" + item.maxLevel + ")"
+        : item.name + (level > 0 ? " · " + ITEM_TIER_NAMES[itemTier(level)] + " (" + level + "/" + item.maxLevel + ")" : "");
       var bonus = document.createElement("div");
       bonus.className = "shop-bonus";
-      bonus.textContent =
-        level > 0
-          ? "Şu an +%" + Math.round(item.bonus * level * 100) + " · her seviye +%" + Math.round(item.bonus * 100)
-          : "Her seviye +%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
+      if (isHome && !maxed) {
+        var nextTier = homeTier(level + 1);
+        bonus.textContent = nextTier !== homeTier(level)
+          ? "Sıradaki ev: " + HOME_TIER_NAMES[nextTier] + " · +%" + Math.round(item.bonus * 100) + " kazanç"
+          : "Şu an +%" + Math.round(item.bonus * level * 100) + " · her seviye +%" + Math.round(item.bonus * 100);
+      } else {
+        bonus.textContent =
+          level > 0
+            ? "Şu an +%" + Math.round(item.bonus * level * 100) + " · her seviye +%" + Math.round(item.bonus * 100)
+            : "Her seviye +%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
+      }
       info.appendChild(name);
       info.appendChild(bonus);
 
@@ -665,8 +688,8 @@
       phase === "night" ? (state.isSleeping ? "0.5" : "0.4") : phase === "sunset" ? "0.12" : "0";
     els.lampLight.classList.toggle("on", phase === "night" && state.items.lamp > 0);
 
-    els.scene.classList.remove("room-t1", "room-t2", "room-t3");
-    els.scene.classList.add("room-t" + itemTier(state.items.room));
+    els.scene.classList.remove("room-t1", "room-t2", "room-t3", "room-t4");
+    els.scene.classList.add("room-t" + homeTier(state.items.room));
 
     // The depth layers need the sky phase too: the light pooled on the floor
     // fades as the sun goes down.
@@ -911,14 +934,15 @@
       container.appendChild(empty);
       return;
     }
-    var tier = kind === "furniture" ? furnitureTier(level) : itemTier(level);
+    var isHome = kind !== "furniture" && key === "room";
+    var tier = kind === "furniture" ? furnitureTier(level) : isHome ? homeTier(level) : itemTier(level);
     container.classList.add("tier-" + tier);
     var src = kind === "furniture" ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
     var svg = src ? src.querySelector("svg") : null;
     if (!svg) {
       var em = document.createElement("div");
       em.className = "preview-emoji";
-      em.textContent = SHOP_ITEMS[key].icon;
+      em.textContent = isHome ? HOME_TIER_ICONS[tier] : SHOP_ITEMS[key].icon;
       container.appendChild(em);
       return;
     }
@@ -941,13 +965,15 @@
 
   function purchaseInfo(kind, key) {
     var isF = kind === "furniture";
+    var isHome = !isF && key === "room";
     var cfg = isF ? FURNITURE_CONFIG[key] : SHOP_ITEMS[key];
     var level = isF ? state.furniture[key] : state.items[key];
-    var tierOf = isF ? furnitureTier : itemTier;
-    var names = isF ? FURNITURE_TIER_NAMES : ITEM_TIER_NAMES;
+    var tierOf = isF ? furnitureTier : isHome ? homeTier : itemTier;
+    var names = isF ? FURNITURE_TIER_NAMES : isHome ? HOME_TIER_NAMES : ITEM_TIER_NAMES;
     var maxed = level >= cfg.maxLevel;
     return {
       isF: isF,
+      isHome: isHome,
       cfg: cfg,
       level: level,
       maxed: maxed,
@@ -1107,7 +1133,13 @@
           node.classList.remove("swap-in");
         }, 650);
       }
-      if (newModel) {
+      if (newModel && info.isHome) {
+        celebrate(
+          HOME_TIER_ICONS[info.tierNext],
+          "Yeni evine taşındın!",
+          info.names[info.tierNext] + " · +%" + Math.round(info.bonusNext * 100) + " kazanç"
+        );
+      } else if (newModel) {
         celebrate(
           info.isF ? "✨" : info.cfg.icon,
           info.level === 0 && !info.isF ? info.cfg.name + " alındı!" : info.cfg.name + " yenilendi!",

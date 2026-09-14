@@ -820,8 +820,11 @@ html, body {
   background: radial-gradient(circle, rgba(255,255,255,0.55) 1.5px, transparent 2px) 0 0 / 14px 6px repeat-x;
 }
 
-/* Room tiers: wallpaper + floor upgrade with the "Oda" item */
+/* Home tiers: upgrading the "Ev" item moves the player into a whole new
+   home - wallpaper, floor and skirting all reskin together. Tier 1
+   (Apartman Odası) is the base .scene styling above; t2-t4 override it. */
 .scene.room-t2 {
+  /* Müstakil Ev: a cozier, warmer home of one's own */
   background:
     linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0) 45%, rgba(0,0,0,0.08)),
     radial-gradient(circle, rgba(255,255,255,0.4) 1.5px, transparent 2px) 0 0 / 26px 26px,
@@ -834,19 +837,36 @@ html, body {
     #d9b071;
 }
 .scene.room-t3 {
+  /* Lüks Manzaralı Rezidans: deep plum walls with a gold sheen */
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0) 45%, rgba(0,0,0,0.1)),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 10px, transparent 10px 20px),
-    #cfd4d9;
+    linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0) 45%, rgba(0,0,0,0.14)),
+    repeating-linear-gradient(45deg, rgba(255,213,79,0.08) 0 10px, transparent 10px 20px),
+    #332c46;
 }
 .scene.room-t3::after {
   background:
-    repeating-linear-gradient(45deg, rgba(0,0,0,0.16) 0 2px, transparent 2px 22px),
-    repeating-linear-gradient(-45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 22px),
-    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0) 30%, rgba(0,0,0,0.08)),
-    #6e4a2f;
+    repeating-linear-gradient(90deg, rgba(255,213,79,0.24) 0 2px, transparent 2px 58px),
+    linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0) 30%, rgba(0,0,0,0.1)),
+    #4a3220;
   border-top-color: #f4f1ea;
 }
+.scene.room-t4 {
+  /* Depo: a raw industrial loft - poured concrete walls and floor */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0) 45%, rgba(0,0,0,0.18)),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.09) 0 3px, transparent 3px 46px),
+    #8b8e93;
+}
+.scene.room-t4::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0 2px, transparent 2px 130px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 130px),
+    linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0) 30%, rgba(0,0,0,0.12)),
+    #6b6f74;
+  border-top-color: #cfd2d6;
+}
+.scene.room-t3 .skirting { background: linear-gradient(180deg, #f5d98a 0%, #d9ab3f 55%, #a97f1f 100%); }
+.scene.room-t4 .skirting { background: linear-gradient(180deg, #d7dade 0%, #b7bbc0 55%, #94989d 100%); }
 
 /* Window + day/night */
 .window {
