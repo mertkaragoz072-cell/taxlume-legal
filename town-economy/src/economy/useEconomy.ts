@@ -123,10 +123,6 @@ export {
   CONTRACT_MARGIN_PCT,
   CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
-  EARTHQUAKE_CHANCE,
-  EARTHQUAKE_LOSS_FLOOR,
-  EARTHQUAKE_LOSS_MAX,
-  EARTHQUAKE_LOSS_MIN,
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
   LEGENDARY_POINTS_PER_PRESTIGE,
@@ -374,6 +370,7 @@ export function initialState(
     // eligible; the later ones join the draw as they unlock.
     demandCycle: firstCycle,
     nextDemandCycle: rollDemandCycle(firstCycle.endTick, TICKS_PER_GAME_DAY, day1GoodIds),
+    pendingCrisis: null,
   };
 }
 export function todayString(): string {

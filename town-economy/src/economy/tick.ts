@@ -10,6 +10,14 @@ import { DECISION_TEMPLATES } from "./decisions";
 import { DIFFICULTIES } from "./difficulty";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./demandCycles";
+import {
+  CRISIS_CHANCE,
+  CRISIS_TEMPLATES_BY_ID,
+  CRISIS_WARNING_DAYS,
+  crisisAffectedGoodIds,
+  crisisSupplyLoss,
+  rollCrisisTemplate,
+} from "./crises";
 import { EVENT_TEMPLATES } from "./events";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
 import {
@@ -48,10 +56,6 @@ import {
   DECISION_EVENT_CHANCE,
   DEMAND_PRESSURE_DECAY,
   DEMAND_PRESSURE_MAX,
-  EARTHQUAKE_CHANCE,
-  EARTHQUAKE_LOSS_FLOOR,
-  EARTHQUAKE_LOSS_MAX,
-  EARTHQUAKE_LOSS_MIN,
   EFFICIENCY_MAX,
   EFFICIENCY_MIN,
   EVENT_LOG_CAP,
@@ -180,22 +184,48 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
-  // A rare, broad disaster — unlike the passive news above (which shocks at
-  // most one good), this hits every good's home supply at once. The
-  // Earthquake Fund upgrade softens the severity (never fully to zero) but
-  // never touches the chance, so it stays a genuine "when," not "if."
-  if (Math.random() < EARTHQUAKE_CHANCE) {
-    const rawLossPct = EARTHQUAKE_LOSS_MIN + Math.random() * (EARTHQUAKE_LOSS_MAX - EARTHQUAKE_LOSS_MIN);
-    const lossPct = Math.max(
-      EARTHQUAKE_LOSS_FLOOR,
-      rawLossPct - state.upgrades.earthquakeFund * UPGRADES_BY_ID.earthquakeFund.effectPerLevel
-    );
-    for (const good of GOODS) {
-      supplyShocks[good.id] = -lossPct;
+  // A broad disaster, announced before it lands. Scheduling it rather than
+  // rolling it on the spot is the whole design: the days between the warning
+  // and the strike are the player's to use — stockpile what is about to go
+  // scarce, sell what is about to be dumped, insure the caravans on the road.
+  let pendingCrisis = state.pendingCrisis;
+  let crisisHappinessLoss = 0;
+  if (pendingCrisis && state.tick + 1 >= pendingCrisis.strikesAtTick) {
+    const template = CRISIS_TEMPLATES_BY_ID[pendingCrisis.templateId];
+    if (template) {
+      const fundReduction = state.upgrades.earthquakeFund * UPGRADES_BY_ID.earthquakeFund.effectPerLevel;
+      const lossPct = crisisSupplyLoss(template, fundReduction);
+      for (const goodId of crisisAffectedGoodIds(template)) {
+        supplyShocks[goodId] = (supplyShocks[goodId] ?? 0) - lossPct;
+      }
+      crisisHappinessLoss = template.happinessLoss;
+      newEvents.push({
+        id: nextId++,
+        message: t(state.language, "msg.crisisStruck", {
+          icon: template.icon,
+          title: t(state.language, template.titleKey),
+          pct: Math.round(lossPct * 100),
+        }),
+        tone: "bad",
+      });
     }
+    pendingCrisis = null;
+  }
+  if (!pendingCrisis && Math.random() < CRISIS_CHANCE) {
+    const template = rollCrisisTemplate();
+    pendingCrisis = {
+      id: nextId,
+      templateId: template.id,
+      announcedAtTick: state.tick + 1,
+      strikesAtTick: state.tick + 1 + CRISIS_WARNING_DAYS * TICKS_PER_GAME_DAY,
+    };
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.earthquakeHit", { pct: Math.round(lossPct * 100) }),
+      message: t(state.language, "msg.crisisWarned", {
+        icon: template.icon,
+        title: t(state.language, template.titleKey),
+        days: CRISIS_WARNING_DAYS,
+      }),
       tone: "bad",
     });
   }
@@ -660,7 +690,9 @@ export function tick(state: EconomyState): EconomyState {
     contracts: stillOpenContracts,
     bulkContracts: stillOpenBulkContracts,
     cash,
-    happiness,
+    // A crisis knocks the villagers' mood down on the tick it lands, on top
+    // of the supply damage; it eases back up from there at the usual rate.
+    happiness: clamp(happiness - crisisHappinessLoss, 0, 100),
     nextId,
     lastEvent,
     eventLog,
@@ -675,6 +707,7 @@ export function tick(state: EconomyState): EconomyState {
     activeSeasonalEvent,
     demandCycle,
     nextDemandCycle,
+    pendingCrisis,
     loan,
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),

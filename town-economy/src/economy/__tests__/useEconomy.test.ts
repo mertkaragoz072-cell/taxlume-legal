@@ -601,35 +601,82 @@ describe("lost treasure", () => {
   });
 });
 
-describe("earthquake disaster", () => {
+describe("telegraphed crises", () => {
   const originalRandom = Math.random;
   afterEach(() => {
     Math.random = originalRandom;
   });
 
-  it("does not report a quake when the rare roll misses", () => {
+  const scheduled = (templateId: string) => ({
+    id: 1,
+    templateId,
+    announcedAtTick: 0,
+    strikesAtTick: 1,
+  });
+
+  it("schedules nothing when the rare roll misses", () => {
     Math.random = () => 0.999999;
-    const state = { ...initialState(), happiness: 50, paused: false };
-    const next = tick(state);
-    expect(next.eventLog.some((e) => /deprem|earthquake/i.test(e.message))).toBe(false);
+    const next = tick({ ...initialState(), happiness: 50, paused: false });
+    expect(next.pendingCrisis).toBeNull();
   });
 
-  it("reports a quake in the event log when the rare roll hits", () => {
-    Math.random = () => 0.001; // clears EARTHQUAKE_CHANCE and sets the severity roll
-    const state = { ...initialState(), happiness: 50, paused: false };
-    const next = tick(state);
-    expect(next.eventLog.some((e) => /deprem|earthquake/i.test(e.message))).toBe(true);
-  });
-
-  it("a maxed Earthquake Fund softens the supply loss relative to no fund at all", () => {
+  it("announces a crisis for later rather than striking on the spot", () => {
     Math.random = () => 0.001;
+    const next = tick({ ...initialState(), happiness: 50, paused: false });
+    expect(next.pendingCrisis).not.toBeNull();
+    expect(next.pendingCrisis!.strikesAtTick).toBeGreaterThan(next.tick);
+    // The warning is the whole feature: the damage must not land with it.
+    expect(next.eventLog.some((e) => /geliyor|strikes in/i.test(e.message))).toBe(true);
+    expect(next.eventLog.some((e) => /vurdu|hit!/i.test(e.message))).toBe(false);
+  });
+
+  it("strikes once the scheduled tick arrives, then clears itself", () => {
+    Math.random = () => 0.999999;
     const base = { ...initialState(), happiness: 50, paused: false };
+    const next = tick({ ...base, pendingCrisis: scheduled("earthquake") });
+    expect(next.eventLog.some((e) => /vurdu|hit!/i.test(e.message))).toBe(true);
+    expect(next.pendingCrisis).toBeNull();
+    expect(next.goods.bread.supply).toBeLessThan(base.goods.bread.supply);
+  });
+
+  it("a maxed Earthquake Fund softens a strike it covers", () => {
+    Math.random = () => 0.001;
+    const base = {
+      ...initialState(),
+      happiness: 50,
+      paused: false,
+      pendingCrisis: scheduled("earthquake"),
+    };
     const withoutFund = tick(base);
     const withFund = tick({
       ...base,
       upgrades: { ...base.upgrades, earthquakeFund: UPGRADES_BY_ID.earthquakeFund.maxLevel },
     });
     expect(withFund.goods.bread.supply).toBeGreaterThan(withoutFund.goods.bread.supply);
+  });
+
+  it("leaves a crisis the fund does not cover at full strength", () => {
+    Math.random = () => 0.001;
+    const base = {
+      ...initialState(),
+      happiness: 50,
+      paused: false,
+      pendingCrisis: scheduled("unrest"),
+    };
+    const withoutFund = tick(base);
+    const withFund = tick({
+      ...base,
+      upgrades: { ...base.upgrades, earthquakeFund: UPGRADES_BY_ID.earthquakeFund.maxLevel },
+    });
+    expect(withFund.goods.bread.supply).toBeCloseTo(withoutFund.goods.bread.supply, 6);
+  });
+
+  it("knocks happiness down on the tick a crisis lands", () => {
+    Math.random = () => 0.999999;
+    const base = { ...initialState(), happiness: 90, paused: false, taxRate: 0 };
+    const calm = tick(base);
+    const struck = tick({ ...base, pendingCrisis: scheduled("unrest") });
+    expect(struck.happiness).toBeLessThan(calm.happiness);
   });
 });
 

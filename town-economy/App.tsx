@@ -12,6 +12,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ComboBanner } from "./src/components/ComboBanner";
+import { CrisisWarningBanner } from "./src/components/CrisisWarningBanner";
 import { ConfettiBurst } from "./src/components/ConfettiBurst";
 import { DailyRewardWheelModal } from "./src/components/DailyRewardWheelModal";
 import { DecisionModal } from "./src/components/DecisionModal";
@@ -195,6 +196,10 @@ function Game() {
           onEditName={() => setNameModalVisible(true)}
           onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
         />
+        {/* Above the screens rather than inside one: a crisis lands on the
+            whole town, so the countdown has to follow the player wherever
+            they are preparing — market, trade or town hall. */}
+        <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
         <EventBanner event={state.lastEvent} />
         <ComboBanner event={comboEvent} />
         <ConfettiBurst trigger={confettiTrigger} />

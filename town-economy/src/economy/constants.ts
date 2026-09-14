@@ -237,12 +237,6 @@ export const LOST_TREASURE_MIN_AMOUNT = 20;
 // player does affects it directly.
 export const RIVAL_TOWN_GROWTH_RATE = 0.0015;
 export const RIVAL_TOWN_GROWTH_JITTER = 0.002;
-// A rare, broad disaster hitting every good's home supply at once — see the
-// earthquake roll in tick() and the Earthquake Fund upgrade that softens it.
-export const EARTHQUAKE_CHANCE = 0.003;
-export const EARTHQUAKE_LOSS_MIN = 0.1;
-export const EARTHQUAKE_LOSS_MAX = 0.25;
-export const EARTHQUAKE_LOSS_FLOOR = 0.02;
 // A generous default so this never binds during ordinary early/mid-game
 // play — it only starts to matter once a player is genuinely hoarding
 // several goods at once, which is exactly the late-game tension it's meant

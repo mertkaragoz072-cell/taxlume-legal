@@ -38,6 +38,26 @@ export const STRINGS = {
       invest: "Yatırım",
       achievements: "Hedefler",
     },
+    crisis: {
+      warningPrefix: "Yaklaşıyor:",
+      daysUnit: "gün",
+      earthquake: {
+        title: "Deprem",
+        advice: "Bütün depolar zarar görecek. Stoklarınızı şimdi satmayı düşünün.",
+      },
+      drought: {
+        title: "Kuraklık",
+        advice: "Gıda kıtlaşacak. Ekmek, süt ve balık almak için son günler.",
+      },
+      fire: {
+        title: "Atölye Yangını",
+        advice: "El işi mallar yanacak. Kumaş ve deri stoklayın, fiyatlar fırlayacak.",
+      },
+      unrest: {
+        title: "Halk Huzursuzluğu",
+        advice: "Halkın keyfi kaçacak, üretim düşecek. Vergiyi şimdi indirmek işe yarar.",
+      },
+    },
     market: {
       demand: {
         sectionLabel: "TALEP MEVSİMİ",
@@ -961,6 +981,8 @@ export const STRINGS = {
       prestiged: "🌟 Prestij yapıldı! Seviye {level}. Kasaba sıfırlandı, kalıcı bonusun aktif.",
       seasonalEventStarted: "🎉 {icon} {title} başladı! Fiyatlar yükseldi.",
       demandCycleStarted: "📣 Talep değişti: {hot} aranıyor, {glut} bollukta.",
+      crisisWarned: "⚠️ {icon} {title} {days} gün içinde geliyor. Hazırlanın!",
+      crisisStruck: "{icon} {title} vurdu! Stoklar %{pct} azaldı.",
       seasonalEventEnded: "🍂 {icon} {title} sona erdi.",
       workersLaidOff: "😢 Kasa yetersiz kaldığı için {count} işçi işten çıkarıldı.",
       angryUprising: "😡 Köylüler vergiden bıktı, ayaklandı! -{amount} 🪙 zarar.",
@@ -974,7 +996,6 @@ export const STRINGS = {
       newNetWorthRecord: "🏆 Yeni kişisel rekor! Net servetin {amount} 🪙'e ulaştı.",
       rivalTownOvertookYou: "🏘️ Rakip kasaba seni geçti! Onların net serveti {amount} 🪙'e ulaştı.",
       rivalTownOvertaken: "🎉 Rakip kasabayı geçtin! Net servetin {amount} 🪙'e ulaştı.",
-      earthquakeHit: "🏚️ Deprem oldu! Tüm malların üretimi %{pct} azaldı.",
       lostTreasureFound: "💰 Kayıp bir hazine buldun! +{amount} 🪙 kazandın.",
       hyperinflationGameOver: "Hiperenflasyon! Kasaba ekonomisi çöktü. Yeniden başlat.",
       dailyCheckInReturning: "🌅 Hoş geldin! {count}. gün üst üste giriş serisi. +{bonus} 🪙 günlük bonus.",
@@ -1073,6 +1094,26 @@ export const STRINGS = {
       research: "Research",
       invest: "Invest",
       achievements: "Goals",
+    },
+    crisis: {
+      warningPrefix: "Incoming:",
+      daysUnit: "days",
+      earthquake: {
+        title: "Earthquake",
+        advice: "Every store will take damage. Consider selling your stock now.",
+      },
+      drought: {
+        title: "Drought",
+        advice: "Food is about to go scarce. Last days to buy bread, milk and fish.",
+      },
+      fire: {
+        title: "Workshop Fire",
+        advice: "Crafted goods will burn. Stockpile cloth and leather before prices spike.",
+      },
+      unrest: {
+        title: "Civil Unrest",
+        advice: "Spirits will drop and production with them. Cutting tax now helps.",
+      },
     },
     market: {
       demand: {
@@ -1979,6 +2020,8 @@ export const STRINGS = {
       prestiged: "🌟 Prestige reached! Level {level}. The town reset, and your permanent bonus is active.",
       seasonalEventStarted: "🎉 {icon} {title} has begun! Prices are up.",
       demandCycleStarted: "📣 Demand has shifted: {hot} sought after, {glut} in surplus.",
+      crisisWarned: "⚠️ {icon} {title} strikes in {days} days. Get ready!",
+      crisisStruck: "{icon} {title} hit! Stores down {pct}%.",
       seasonalEventEnded: "🍂 {icon} {title} has ended.",
       workersLaidOff: "😢 The treasury couldn't cover wages — {count} worker(s) were laid off.",
       angryUprising: "😡 Villagers, fed up with taxes, revolted! -{amount} 🪙 lost.",
@@ -1992,7 +2035,6 @@ export const STRINGS = {
       newNetWorthRecord: "🏆 New personal record! Your net worth reached {amount} 🪙.",
       rivalTownOvertookYou: "🏘️ The rival town overtook you! Their net worth reached {amount} 🪙.",
       rivalTownOvertaken: "🎉 You overtook the rival town! Your net worth reached {amount} 🪙.",
-      earthquakeHit: "🏚️ An earthquake struck! Every good's supply dropped {pct}%.",
       lostTreasureFound: "💰 You found a lost treasure! +{amount} 🪙.",
       hyperinflationGameOver: "Hyperinflation! The town's economy collapsed. Start over.",
       dailyCheckInReturning: "🌅 Welcome back! Day {count} of your streak. +{bonus} 🪙 daily bonus.",

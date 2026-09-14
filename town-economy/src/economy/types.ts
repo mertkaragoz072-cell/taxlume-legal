@@ -1,5 +1,6 @@
 import { AssetId } from "./assets";
 import { DemandCycle } from "./demandCycles";
+import { ScheduledCrisis } from "./crises";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -376,6 +377,10 @@ export interface EconomyState {
    * the current one starts so it can be shown as a forecast. Knowing what is
    * coming is the whole point: it turns stockpiling into a plan. */
   nextDemandCycle: DemandCycle | null;
+  /** a disaster that has been announced but has not struck yet — see
+   * crises.ts. The gap between the two is the point: it is the window the
+   * player has to stockpile, sell or insure. */
+  pendingCrisis: ScheduledCrisis | null;
 }
 
 export interface WeeklyChallenge {
