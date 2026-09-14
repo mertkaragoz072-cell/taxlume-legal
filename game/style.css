@@ -868,6 +868,45 @@ html, body {
 .scene.room-t3 .skirting { background: linear-gradient(180deg, #f5d98a 0%, #d9ab3f 55%, #a97f1f 100%); }
 .scene.room-t4 .skirting { background: linear-gradient(180deg, #d7dade 0%, #b7bbc0 55%, #94989d 100%); }
 
+/* The view outside the window - and the window itself - change with the
+   home too, so a new tier reads as a different building, not a repaint. */
+.skyline { display: none; }
+.scene.room-t1 .skyline-t1,
+.scene.room-t2 .skyline-t2,
+.scene.room-t3 .skyline-t3,
+.scene.room-t4 .skyline-t4 { display: block; }
+
+.skyline-t1 path { fill: #57cc6a; }
+.window.sunset .skyline-t1 path { fill: #2a1e4d; }
+.window.night .skyline-t1 path { fill: #101530; }
+
+.skyline-t2 path { fill: #6fbf5a; }
+.window.sunset .skyline-t2 path { fill: #35284a; }
+.window.night .skyline-t2 path { fill: #121b3a; }
+
+.skyline-t3 path { fill: #8fa3c9; }
+.window.sunset .skyline-t3 path { fill: #4a2e5c; }
+.window.night .skyline-t3 path { fill: #1a1430; }
+.skyline-t3 .skyline-lights rect { fill: #ffe27a; }
+.window.day .skyline-t3 .skyline-lights { display: none; }
+
+.skyline-t4 path { fill: #9aa0a6; }
+.window.sunset .skyline-t4 path { fill: #5a4a42; }
+.window.night .skyline-t4 path { fill: #14161c; }
+
+.scene.room-t2 .win-shutter { fill: #6b8f52; }
+.scene.room-t2 .win-header { fill: #8a5a34; }
+
+.scene.room-t3 .win-mullion, .scene.room-t3 .win-sill { fill: #efe6c8; stroke: #1c1c22; }
+.scene.room-t3 .win-frame-outer { stroke: #1c1c22; }
+.scene.room-t3 .win-shutter { fill: #241f2c; stroke: #0e0c12; }
+.scene.room-t3 .win-header { fill: #d4af37; }
+
+.scene.room-t4 .win-mullion, .scene.room-t4 .win-sill { fill: #9aa0a6; stroke: #3a3d42; }
+.scene.room-t4 .win-frame-outer { stroke: #3a3d42; }
+.scene.room-t4 .win-shutter { fill: #6b6f74; stroke: #3a3d42; }
+.scene.room-t4 .win-header { fill: #7a7e84; }
+
 /* Window + day/night */
 .window {
   position: absolute;
@@ -1553,6 +1592,26 @@ html, body {
     repeating-linear-gradient(0deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
     repeating-linear-gradient(90deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
     linear-gradient(180deg, rgba(223,244,238,0.75), rgba(206,235,228,0.6));
+}
+/* The kitchen tiles stay tiles at every tier, but their tint follows the
+   home's palette instead of always washing back out to the same mint. */
+.scene.room-t2 .kitchen-skin::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(90deg, rgba(58,42,34,0.1) 0 1.5px, transparent 1.5px 30px),
+    linear-gradient(180deg, rgba(255,244,214,0.75), rgba(250,232,196,0.6));
+}
+.scene.room-t3 .kitchen-skin::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1.5px, transparent 1.5px 30px),
+    linear-gradient(180deg, rgba(60,52,78,0.72), rgba(40,34,56,0.56));
+}
+.scene.room-t4 .kitchen-skin::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 1.5px, transparent 1.5px 30px),
+    linear-gradient(180deg, rgba(180,184,188,0.6), rgba(150,154,158,0.5));
 }
 
 .counter {
