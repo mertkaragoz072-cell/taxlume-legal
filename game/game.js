@@ -688,6 +688,7 @@
 
   function renderCharacter() {
     var c = els.character;
+    els.bedBtn.classList.toggle("occupied", state.isSleeping);
     var wasSleeping = c.classList.contains("sleeping");
     if (wasSleeping === state.isSleeping) return;
 
