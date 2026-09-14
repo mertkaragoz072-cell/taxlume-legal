@@ -491,6 +491,7 @@ html, body {
 .furniture.tier-4 .tierIs4 { display: inline; }
 
 .bed-cover-sleep { display: none; }
+.furniture.bed.occupied .bed-cover-idle { display: none; }
 .furniture.bed.occupied .bed-cover-sleep { display: inline; }
 
 .bed-led { animation: ledPulse 1.6s ease-in-out infinite; }
