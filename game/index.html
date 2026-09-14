@@ -355,19 +355,33 @@
       <div class="room-item pet" data-item="pet">
         <div class="pet-meter"><div class="pet-meter-fill" id="petMeterFill"></div></div>
         <svg viewBox="0 0 60 50" width="100%" height="100%">
+          <defs>
+            <linearGradient id="petFur1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d9ac74"/>
+              <stop offset="100%" stop-color="#9c6f3f"/>
+            </linearGradient>
+            <linearGradient id="petFur2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff7ea"/>
+              <stop offset="100%" stop-color="#e3d3ab"/>
+            </linearGradient>
+            <linearGradient id="petFur3" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#dcdaf0"/>
+            </linearGradient>
+          </defs>
           <ellipse cx="30" cy="46" rx="22" ry="3" fill="#3a2a22" opacity="0.18"/>
           <!-- Tier 1: scruffy street pup -->
           <g class="tierIs1">
-            <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="#b5834f" stroke="#3a2a22" stroke-width="2"/>
-            <ellipse cx="30" cy="22" rx="13" ry="11" fill="#c99a63" stroke="#3a2a22" stroke-width="2"/>
+            <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="url(#petFur1)" stroke="#3a2a22" stroke-width="2"/>
+            <ellipse cx="30" cy="22" rx="13" ry="11" fill="url(#petFur1)" stroke="#3a2a22" stroke-width="2"/>
             <path d="M19 15c-4-5-6-3-5 3z" fill="#8a5a2c" stroke="#3a2a22" stroke-width="1.6"/>
             <path d="M41 15c4-5 6-3 5 3z" fill="#8a5a2c" stroke="#3a2a22" stroke-width="1.6"/>
             <path d="M12 40c-4 2-6 0-5-3" fill="none" stroke="#3a2a22" stroke-width="2" stroke-linecap="round"/>
           </g>
           <!-- Tier 2: groomed pet with a collar -->
           <g class="tierIs2">
-            <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="#f5ecd9" stroke="#3a2a22" stroke-width="2"/>
-            <ellipse cx="30" cy="22" rx="13" ry="11" fill="#fff7ea" stroke="#3a2a22" stroke-width="2"/>
+            <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="url(#petFur2)" stroke="#3a2a22" stroke-width="2"/>
+            <ellipse cx="30" cy="22" rx="13" ry="11" fill="url(#petFur2)" stroke="#3a2a22" stroke-width="2"/>
             <path d="M18 14c-3-6-6-4-5 3z" fill="#e7d7b2" stroke="#3a2a22" stroke-width="1.6"/>
             <path d="M42 14c3-6 6-4 5 3z" fill="#e7d7b2" stroke="#3a2a22" stroke-width="1.6"/>
             <path d="M20 31c4 8 16 8 20 0" fill="none" stroke="#e0574f" stroke-width="4" stroke-linecap="round"/>
@@ -376,8 +390,8 @@
           </g>
           <!-- Tier 3: show-dog with a bow and jeweled collar -->
           <g class="tierIs3">
-            <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="#ffffff" stroke="#3a2a22" stroke-width="2"/>
-            <ellipse cx="30" cy="22" rx="13" ry="11" fill="#fdfdff" stroke="#3a2a22" stroke-width="2"/>
+            <path d="M14 44c-2-10 2-18 8-18h16c6 0 10 8 8 18z" fill="url(#petFur3)" stroke="#3a2a22" stroke-width="2"/>
+            <ellipse cx="30" cy="22" rx="13" ry="11" fill="url(#petFur3)" stroke="#3a2a22" stroke-width="2"/>
             <path d="M17 13c-3-7-7-5-6 3z" fill="#e8e6f5" stroke="#3a2a22" stroke-width="1.6"/>
             <path d="M43 13c3-7 7-5 6 3z" fill="#e8e6f5" stroke="#3a2a22" stroke-width="1.6"/>
             <path d="M20 31c4 8 16 8 20 0" fill="none" stroke="#ffd54f" stroke-width="4" stroke-linecap="round"/>
