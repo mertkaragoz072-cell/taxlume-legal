@@ -411,33 +411,6 @@ html, body {
 }
 .furniture.plant:active { transform: none; }
 
-.upgrade-badge {
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 6;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: #1b1b1f;
-  border: 2px solid var(--yellow);
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  color: #fff;
-  white-space: nowrap;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
-}
-.upgrade-badge .cost { color: #8ee89a; }
-.upgrade-badge.maxed {
-  border-color: var(--green);
-  cursor: default;
-}
-.upgrade-badge.maxed .cost { color: #9aa0a6; }
-
 .bed-wrap, .fridge svg {
   position: relative;
   filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25));
@@ -574,8 +547,7 @@ html, body {
   pointer-events: none;
 }
 .room-item.owned { display: block; }
-.room-item .upgrade-badge { pointer-events: auto; }
-.room-item svg { display: block; overflow: visible; }
+.room-item .room-item svg { display: block; overflow: visible; }
 .room-item.rug { left: 20%; bottom: 12%; width: 60%; height: 40px; z-index: 1; }
 .room-item.lamp { left: 59%; bottom: 21%; width: 44px; height: 132px; z-index: 3; }
 .room-item.picture { left: 4%; top: 43%; width: 64px; height: 46px; z-index: 2; }
@@ -660,9 +632,7 @@ html, body {
 
 /* Room decor tiers: art swaps as the item levels up */
 .room-item.tier-1 .tierIs1, .room-item.tier-2 .tierIs2, .room-item.tier-3 .tierIs3 { display: inline; }
-.room-item .upgrade-badge { top: -18px; }
-.room-item.rug .upgrade-badge { top: -22px; }
-
+.room-item .room-item.rug 
 /* ===== Visual polish pass ===== */
 
 /* Wallpaper border / cornice instead of a flat strip */

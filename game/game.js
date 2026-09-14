@@ -75,6 +75,7 @@
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
   var FURNITURE_TIER_NAMES = ["", "Klasik", "Kaliteli", "Modern", "Lüks"];
+  var FURNITURE_ICONS = { bed: "🛏️", fridge: "🧊", plant: "🪴" };
 
   // Room decor: level 0 = not owned. Levels 1-3 basic art, 4-6 standard, 7-9 modern/luxury.
   var SHOP_ITEMS = {
@@ -174,12 +175,6 @@
     buyStats: document.getElementById("buyStats"),
     buyConfirm: document.getElementById("buyConfirm"),
     plantBtn: document.getElementById("plantBtn"),
-    bedUpgradeBtn: document.getElementById("bedUpgradeBtn"),
-    bedCost: document.getElementById("bedCost"),
-    fridgeUpgradeBtn: document.getElementById("fridgeUpgradeBtn"),
-    fridgeCost: document.getElementById("fridgeCost"),
-    plantUpgradeBtn: document.getElementById("plantUpgradeBtn"),
-    plantCost: document.getElementById("plantCost"),
 
     woodStop1: document.getElementById("woodStop1"),
     woodStop2: document.getElementById("woodStop2"),
@@ -363,10 +358,12 @@
     return "";
   }
 
+  // Furniture no longer wears a price tag in the room; these just point at the
+  // art so purchases can animate on the piece itself.
   var UPGRADE_ELS = {
-    bed: { btn: "bedUpgradeBtn", cost: "bedCost", item: "bedBtn" },
-    fridge: { btn: "fridgeUpgradeBtn", cost: "fridgeCost", item: "fridgeBtn" },
-    plant: { btn: "plantUpgradeBtn", cost: "plantCost", item: "plantBtn" },
+    bed: { item: "bedBtn" },
+    fridge: { item: "fridgeBtn" },
+    plant: { item: "plantBtn" },
   };
 
   var TIER_PALETTES = {
@@ -436,8 +433,6 @@
       var refs = UPGRADE_ELS[key];
       var maxed = level >= cfg.maxLevel;
 
-      els[refs.cost].textContent = maxed ? "MAX" : formatMoney(furnitureCost(key));
-      els[refs.btn].classList.toggle("maxed", maxed);
       els[refs.item].classList.toggle("is-max", maxed);
 
       var tier = furnitureTier(level);
@@ -492,9 +487,6 @@
       node.classList.toggle("is-max", maxed);
       node.classList.remove("tier-1", "tier-2", "tier-3");
       node.classList.add("tier-" + itemTier(level));
-
-      document.getElementById(key + "Cost").textContent = maxed ? "MAX" : formatMoney(itemCost(key));
-      document.getElementById(key + "UpgradeBtn").classList.toggle("maxed", maxed);
     });
     renderPet();
   }
@@ -539,6 +531,48 @@
     els.shopSub.textContent =
       "Ev çarpanı ×" + homeMultiplier().toFixed(2) + " · Tık başına " + formatMoney(tapValue());
     els.shopList.textContent = "";
+
+    // Furniture lives here too now that the room carries no price tags.
+    Object.keys(FURNITURE_CONFIG).forEach(function (key) {
+      var cfg = FURNITURE_CONFIG[key];
+      var level = state.furniture[key];
+      var maxed = level >= cfg.maxLevel;
+      var cost = furnitureCost(key);
+
+      var row = document.createElement("div");
+      row.className = "shop-row";
+
+      var icon = document.createElement("div");
+      icon.className = "shop-icon";
+      icon.textContent = FURNITURE_ICONS[key];
+
+      var info = document.createElement("div");
+      info.className = "shop-info";
+      var name = document.createElement("div");
+      name.className = "shop-name";
+      name.textContent =
+        cfg.name + " · " + FURNITURE_TIER_NAMES[furnitureTier(level)] + " (" + level + "/" + cfg.maxLevel + ")";
+      var bonus = document.createElement("div");
+      bonus.className = "shop-bonus";
+      bonus.textContent =
+        "Şu an +%" + Math.round(cfg.bonus * (level - 1) * 100) +
+        " · her seviye +%" + Math.round(cfg.bonus * 100);
+      info.appendChild(name);
+      info.appendChild(bonus);
+
+      var buy = document.createElement("button");
+      buy.className = "shop-buy" + (maxed ? " owned" : state.money < cost ? " poor" : "");
+      buy.textContent = maxed ? "MAX ✓" : "Yükselt " + formatMoney(cost);
+      buy.disabled = maxed;
+      buy.addEventListener("click", function () {
+        onUpgrade(key);
+      });
+
+      row.appendChild(icon);
+      row.appendChild(info);
+      row.appendChild(buy);
+      els.shopList.appendChild(row);
+    });
 
     Object.keys(SHOP_ITEMS).forEach(function (key) {
       var item = SHOP_ITEMS[key];
@@ -2467,7 +2501,7 @@
 
   // Tapping anywhere on the room earns money; furniture, badges and icons keep their own actions.
   els.scene.addEventListener("click", function (e) {
-    if (e.target.closest(".furniture, .upgrade-badge, .quest-icon, .side-icon, .room-item")) return;
+    if (e.target.closest(".furniture, .quest-icon, .side-icon, .room-item")) return;
     var rect = els.scene.getBoundingClientRect();
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
@@ -2498,22 +2532,6 @@
   els.eventBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("events");
-  });
-
-  Object.keys(UPGRADE_ELS).forEach(function (key) {
-    els[UPGRADE_ELS[key].btn].addEventListener("click", function (e) {
-      e.stopPropagation();
-      onUpgrade(key);
-    });
-  });
-
-  Object.keys(SHOP_ITEMS).forEach(function (key) {
-    var badge = document.getElementById(key + "UpgradeBtn");
-    if (!badge) return; // items without room art (e.g. the room itself) are upgraded from the Market only
-    badge.addEventListener("click", function (e) {
-      e.stopPropagation();
-      upgradeItem(key);
-    });
   });
 
 
