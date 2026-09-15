@@ -18,7 +18,12 @@
       <div class="level-badge" id="levelBadge">1</div>
     </div>
     <div class="money-pill">
-      <span class="coin">💰</span>
+      <span class="coin"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.5" fill="#ffd54f" stroke="#c9861a" stroke-width="1.6"/>
+        <circle cx="12" cy="12" r="7.4" fill="none" stroke="#c9861a" stroke-width="1.1" opacity="0.6"/>
+        <text x="12" y="16.2" text-anchor="middle" font-family="Arial, sans-serif" font-size="10.5" font-weight="800" fill="#c9861a">$</text>
+        <ellipse cx="8.6" cy="8" rx="3.2" ry="1.8" fill="#fff8dd" opacity="0.55" transform="rotate(-25 8.6 8)"/>
+      </svg></span>
       <span id="moneyText">$0</span>
     </div>
     <div class="day-pill">
@@ -92,6 +97,7 @@
 
     <div class="tap-wrap">
       <div class="tap-stack" id="floaters"></div>
+      <div class="tap-hint-hand" id="tapHintHand">👆</div>
     </div>
 
     <div class="room-view bedroom active" data-room="bedroom">

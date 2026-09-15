@@ -282,6 +282,9 @@
   // lastSeen with "now") - this is the one true gap since the player left.
   var lastSeenAtLoad = state.lastSeen || Date.now();
   var lastMoneyForBounce = state.money;
+  // Flips true once the initial render is done, so the very first room paint
+  // never plays a "just navigated here" entrance animation.
+  var appBooted = false;
 
   var els = {
     moneyText: document.getElementById("moneyText"),
@@ -294,6 +297,7 @@
     zzz: document.getElementById("zzz"),
     fridgeBtn: document.getElementById("fridgeBtn"),
     floaters: document.getElementById("floaters"),
+    tapHintHand: document.getElementById("tapHintHand"),
     toast: document.getElementById("toast"),
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
@@ -590,10 +594,10 @@
     });
   }
 
-  function pushPill(text, bad, crit) {
+  function pushPill(html, bad, crit) {
     var el = document.createElement("div");
     el.className = "floater-pill" + (bad ? " bad" : "") + (crit ? " crit" : "");
-    el.textContent = text;
+    el.innerHTML = html;
     el.style.bottom = "-40px";
     el.style.opacity = "0";
     els.floaters.appendChild(el);
@@ -726,6 +730,7 @@
     els.hungerFill.className = "bar-fill hunger " + fillClass(state.hunger);
 
     els.zzz.classList.toggle("show", state.isSleeping);
+    els.tapHintHand.classList.toggle("show", state.stats.taps === 0 && !state.isSleeping);
 
     renderUpgradeBadges();
     renderRoomItems();
@@ -1051,7 +1056,13 @@
     }
     state.viewRoom = name;
     document.querySelectorAll(".room-view").forEach(function (view) {
-      view.classList.toggle("active", view.getAttribute("data-room") === name);
+      var isActive = view.getAttribute("data-room") === name;
+      view.classList.toggle("active", isActive);
+      if (isActive && appBooted) {
+        view.classList.remove("entering");
+        void view.offsetWidth;
+        view.classList.add("entering");
+      }
     });
     els.scene.classList.toggle("in-kitchen", name === "kitchen");
     markRoomNav();
@@ -1115,13 +1126,23 @@
   /* ---------- Money flying to the wallet ---------- */
   var lastTapPoint = null;
 
+  // One coin icon used everywhere money shows up as an icon (topbar, the
+  // flying coin, tap-earning pills) instead of the generic 💰 emoji, so the
+  // currency reads as this game's own rather than a system emoji font.
+  var COIN_ICON_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10.5" fill="#ffd54f" stroke="#c9861a" stroke-width="1.6"/>' +
+    '<circle cx="12" cy="12" r="7.4" fill="none" stroke="#c9861a" stroke-width="1.1" opacity="0.6"/>' +
+    '<text x="12" y="16.2" text-anchor="middle" font-family="Arial, sans-serif" font-size="10.5" font-weight="800" fill="#c9861a">$</text>' +
+    '<ellipse cx="8.6" cy="8" rx="3.2" ry="1.8" fill="#fff8dd" opacity="0.55" transform="rotate(-25 8.6 8)"/>' +
+    "</svg>";
+
   function flyCoin() {
     if (!lastTapPoint) return;
     var phoneRect = els.phone.getBoundingClientRect();
     var target = els.moneyText.getBoundingClientRect();
     var coin = document.createElement("span");
     coin.className = "coin-fly";
-    coin.textContent = "💰";
+    coin.innerHTML = COIN_ICON_SVG;
     coin.style.left = lastTapPoint.x - phoneRect.left - 9 + "px";
     coin.style.top = lastTapPoint.y - phoneRect.top - 9 + "px";
     els.phone.appendChild(coin);
@@ -3413,7 +3434,7 @@
     if (comboCount > (state.stats.bestCombo || 0)) state.stats.bestCombo = comboCount;
 
     var prefix = (rhythmHit ? "⚡ RİTİM ×" + RHYTHM_MULT + "  " : "") + (crit ? "KRİTİK ×" + critMultiplier() + "  " : "");
-    pushPill(prefix + "+ " + formatMoney(earned) + " 💰", false, crit || rhythmHit);
+    pushPill(prefix + "+ " + formatMoney(earned) + " " + COIN_ICON_SVG, false, crit || rhythmHit);
     vibrate(crit || rhythmHit ? [12, 30, 12] : 6);
     characterBounce();
     flyCoin();
@@ -3785,4 +3806,5 @@
 
   applyOutfit();
   render();
+  appBooted = true;
 })();
