@@ -266,7 +266,6 @@
     energyFill: document.getElementById("energyFill"),
     hungerFill: document.getElementById("hungerFill"),
     tapBtn: document.getElementById("tapBtn"),
-    tapLabel: document.getElementById("tapLabel"),
     bedBtn: document.getElementById("bedBtn"),
     zzz: document.getElementById("zzz"),
     fridgeBtn: document.getElementById("fridgeBtn"),
@@ -665,7 +664,6 @@
 
     els.tapBtn.classList.toggle("tired", state.energy <= 0 && !state.isSleeping);
     els.tapBtn.classList.toggle("sleeping", state.isSleeping);
-    els.tapLabel.textContent = state.isSleeping ? "..." : "DOKUN";
 
     els.zzz.classList.toggle("show", state.isSleeping);
 
