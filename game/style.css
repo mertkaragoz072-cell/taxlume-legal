@@ -217,12 +217,14 @@ html, body {
   overflow: hidden;
 }
 .goal-bar-fill {
+  position: relative;
   height: 100%;
   width: 0%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--yellow-light), var(--yellow));
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
   transition: width 0.4s ease;
+  overflow: hidden;
 }
 .goal-reward {
   flex-shrink: 0;
@@ -450,47 +452,6 @@ html, body {
   z-index: 3;
 }
 
-.tap-btn {
-  position: relative;
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  border: 3px solid #2f9e46;
-  background: radial-gradient(circle at 35% 28%, #8bec9a, var(--green) 65%, var(--green-dark) 100%);
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 21px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  box-shadow: 0 8px 16px rgba(20,70,31,0.35), inset 0 3px 6px rgba(255,255,255,0.35), inset 0 -6px 10px rgba(0,0,0,0.12);
-  transition: transform 0.08s ease, box-shadow 0.08s ease;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.tap-btn::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  left: 20px;
-  width: 56px;
-  height: 28px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(255,255,255,0.55), rgba(255,255,255,0) 70%);
-  pointer-events: none;
-}
-/* The button is only a hint: taps land anywhere on the room. It fades out once
-   the player starts tapping and returns after a few idle minutes. */
-.tap-btn {
-  pointer-events: none;
-  opacity: 0.6;
-  transition: opacity 1.8s ease, transform 1.8s ease;
-}
-.tap-btn.hint-hidden {
-  opacity: 0;
-  transform: scale(0.85);
-}
 .scene { cursor: pointer; }
 .tap-ripple {
   position: absolute;
@@ -508,26 +469,15 @@ html, body {
   from { transform: scale(0.3); opacity: 0.9; }
   to { transform: scale(1.5); opacity: 0; }
 }
-.tap-btn.tired {
-  background: radial-gradient(circle at 35% 28%, #c2c6ca, #8a9095 65%, #6e7378 100%);
-  border-color: #5b6166;
-}
-.tap-btn.sleeping {
-  opacity: 0.35;
-  pointer-events: none;
-}
-.tap-btn.rhythm {
+.rhythm-chip {
+  border-color: var(--yellow);
+  color: #3a2a06;
+  background: linear-gradient(160deg, #fff2b0, var(--yellow) 65%, #f5a623 100%);
   animation: rhythmPulse 0.55s ease-in-out infinite;
 }
 @keyframes rhythmPulse {
-  0%, 100% {
-    box-shadow: 0 8px 16px rgba(20,70,31,0.35), inset 0 3px 6px rgba(255,255,255,0.35),
-      inset 0 -6px 10px rgba(0,0,0,0.12), 0 0 0 0 rgba(255,214,64,0.7);
-  }
-  50% {
-    box-shadow: 0 8px 16px rgba(20,70,31,0.35), inset 0 3px 6px rgba(255,255,255,0.35),
-      inset 0 -6px 10px rgba(0,0,0,0.12), 0 0 0 14px rgba(255,214,64,0);
-  }
+  0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 0 rgba(255,214,64,0.7); }
+  50% { transform: scale(1.06); box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 8px rgba(255,214,64,0); }
 }
 
 .furniture {
@@ -1145,11 +1095,13 @@ html, body {
   overflow: hidden;
 }
 .banner .xp-fill {
+  position: relative;
   height: 100%;
   width: 0;
   background: linear-gradient(90deg, #57cc6a, #8ff0a0);
   border-radius: 999px;
   transition: width 0.3s ease;
+  overflow: hidden;
 }
 .banner .xp-text {
   position: absolute;
@@ -1442,10 +1394,32 @@ html, body {
   overflow: hidden;
 }
 .row-fill {
+  position: relative;
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--green), var(--green-light));
   transition: width 0.4s ease;
+  overflow: hidden;
+}
+
+/* A soft light sweeping across every progress bar's filled portion - the
+   "premium idle" touch that makes a static gradient read as alive. */
+.goal-bar-fill::after,
+.banner .xp-fill::after,
+.row-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.65) 50%, rgba(255,255,255,0) 100%);
+  animation: barShineSweep 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes barShineSweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
 }
 
 /* Nav / quest alert dots */

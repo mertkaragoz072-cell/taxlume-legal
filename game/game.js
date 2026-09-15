@@ -49,7 +49,6 @@
     });
   }
 
-  var TAP_HINT_IDLE_MS = 4.5 * 60 * 1000;
   var OFFLINE_EARN_RATE = 0.05;
   var OFFLINE_MIN_SECONDS = 60;
   var OFFLINE_MAX_SECONDS = 8 * 3600;
@@ -282,6 +281,7 @@
   // Captured before any of the init calls below can save (and so overwrite
   // lastSeen with "now") - this is the one true gap since the player left.
   var lastSeenAtLoad = state.lastSeen || Date.now();
+  var lastMoneyForBounce = state.money;
 
   var els = {
     moneyText: document.getElementById("moneyText"),
@@ -290,7 +290,6 @@
     healthFill: document.getElementById("healthFill"),
     energyFill: document.getElementById("energyFill"),
     hungerFill: document.getElementById("hungerFill"),
-    tapBtn: document.getElementById("tapBtn"),
     bedBtn: document.getElementById("bedBtn"),
     zzz: document.getElementById("zzz"),
     fridgeBtn: document.getElementById("fridgeBtn"),
@@ -305,6 +304,7 @@
     sideIconsLeft: document.getElementById("sideIconsLeft"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
+    rhythmChip: document.getElementById("rhythmChip"),
     bossChip: document.getElementById("bossChip"),
     eventFx: document.getElementById("eventFx"),
     shop: document.getElementById("shop"),
@@ -707,6 +707,12 @@
 
   function render() {
     els.moneyText.textContent = formatMoney(state.money);
+    if (state.money > lastMoneyForBounce) {
+      els.moneyPill.classList.remove("pop");
+      void els.moneyPill.offsetWidth;
+      els.moneyPill.classList.add("pop");
+    }
+    lastMoneyForBounce = state.money;
     els.levelBadge.textContent = state.level;
     els.dayText.textContent = "Gün " + state.day;
 
@@ -718,9 +724,6 @@
 
     els.hungerFill.style.width = state.hunger + "%";
     els.hungerFill.className = "bar-fill hunger " + fillClass(state.hunger);
-
-    els.tapBtn.classList.toggle("tired", state.energy <= 0 && !state.isSleeping);
-    els.tapBtn.classList.toggle("sleeping", state.isSleeping);
 
     els.zzz.classList.toggle("show", state.isSleeping);
 
@@ -1132,9 +1135,6 @@
     });
     setTimeout(function () {
       coin.remove();
-      els.moneyPill.classList.remove("pop");
-      void els.moneyPill.offsetWidth;
-      els.moneyPill.classList.add("pop");
     }, 760);
   }
 
@@ -2170,20 +2170,21 @@
       return;
     }
     rhythmActive = true;
-    els.tapBtn.classList.add("rhythm");
+    els.rhythmChip.textContent = "⚡ Şimdi dokun! ×" + RHYTHM_MULT;
+    els.rhythmChip.classList.add("show");
     rhythmTimer = setTimeout(missRhythm, RHYTHM_WINDOW_MS);
   }
 
   function missRhythm() {
     rhythmActive = false;
-    els.tapBtn.classList.remove("rhythm");
+    els.rhythmChip.classList.remove("show");
     scheduleRhythm();
   }
 
   function hitRhythm() {
     rhythmActive = false;
     clearTimeout(rhythmTimer);
-    els.tapBtn.classList.remove("rhythm");
+    els.rhythmChip.classList.remove("show");
     scheduleRhythm();
   }
 
@@ -3613,15 +3614,8 @@
     refreshDeal();
     refreshSeason();
     refreshWeekly();
-    if (lastTapAt && Date.now() - lastTapAt > TAP_HINT_IDLE_MS) showTapHint(true);
     render();
     saveState();
-  }
-
-  var lastTapAt = 0;
-
-  function showTapHint(show) {
-    els.tapBtn.classList.toggle("hint-hidden", !show);
   }
 
   function spawnRipple(x, y) {
@@ -3641,9 +3635,7 @@
     var rect = els.scene.getBoundingClientRect();
     spawnRipple(e.clientX - rect.left, e.clientY - rect.top);
     lastTapPoint = { x: e.clientX, y: e.clientY };
-    lastTapAt = Date.now();
     sfx.tap();
-    showTapHint(false);
     onTap();
   });
 
