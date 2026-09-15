@@ -358,13 +358,13 @@ html, body {
   z-index: 6;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
 }
 .quest-icon,
 .side-icon {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 47px;
+  height: 47px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -380,7 +380,7 @@ html, body {
 }
 .side-icon:active { transform: scale(0.88); }
 .side-icon.emoji {
-  font-size: 19px;
+  font-size: 23px;
   line-height: 1;
 }
 

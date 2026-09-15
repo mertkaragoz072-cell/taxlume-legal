@@ -156,6 +156,7 @@
     lotteryBtn: document.getElementById("lotteryBtn"),
     recordsBtn: document.getElementById("recordsBtn"),
     eventBtn: document.getElementById("eventBtn"),
+    goalsBtn: document.getElementById("goalsBtn"),
     eventChip: document.getElementById("eventChip"),
     eventFx: document.getElementById("eventFx"),
     shop: document.getElementById("shop"),
@@ -1534,6 +1535,7 @@
     els.questBtn.classList.toggle("has-alert", claimableQuests() > 0);
     els.lotteryBtn.classList.toggle("has-alert", freeCardAvailable() || !!state.scratch.card);
     els.eventBtn.classList.toggle("has-alert", !!activeEvent());
+    els.goalsBtn.classList.toggle("has-alert", claimableAchievements() > 0);
     var ev = activeEvent();
     els.eventBtn.textContent = ev ? ev.icon : "🎉";
   }
@@ -2671,6 +2673,10 @@
   els.eventBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("events");
+  });
+  els.goalsBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("world");
   });
   els.goalTicker.addEventListener("click", function (e) {
     e.stopPropagation();
