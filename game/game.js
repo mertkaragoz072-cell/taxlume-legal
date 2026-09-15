@@ -74,7 +74,7 @@
     hunger: 100,
     isSleeping: false,
     furniture: { bed: 1, fridge: 1, plant: 1 },
-    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0, pet: 0 },
+    items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0, pet: 0, wardrobe: 0, spice: 0 },
     pet: { happiness: 100 },
     perkPoints: 0,
     perks: { critChance: 0, critMult: 0, comboCap: 0, offlineRate: 0, energySaver: 0, autoTap: 0 },
@@ -125,6 +125,8 @@
     tv: { name: "Televizyon", icon: "📺", baseCost: 12000, growth: 1.5, bonus: 0.05, maxLevel: 9 },
     room: { name: "Ev", icon: "🏠", baseCost: 15000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
     pet: { name: "Evcil Hayvan", icon: "🐶", baseCost: 6000, growth: 1.5, bonus: 0.035, maxLevel: 9 },
+    wardrobe: { name: "Gardırop", icon: "🧥", baseCost: 10000, growth: 1.5, bonus: 0.045, maxLevel: 9 },
+    spice: { name: "Baharatlık", icon: "🫙", baseCost: 1500, growth: 1.5, bonus: 0.015, maxLevel: 9 },
   };
 
   // Rare item variants: every upgrade purchase has a small, flat chance to
@@ -137,7 +139,7 @@
   var RARITY_BONUS = [0, 0.05, 0.12];
   var RARITY_MAX = RARITY_BONUS.length - 1;
   var RARITY_UPGRADE_CHANCE = 0.1;
-  var RARITY_ITEMS = ["bed", "fridge", "plant", "rug", "lamp", "picture", "shelf", "tv", "room", "pet"];
+  var RARITY_ITEMS = ["bed", "fridge", "plant", "rug", "lamp", "picture", "shelf", "tv", "room", "pet", "wardrobe", "spice"];
 
   function itemRarity(key) {
     return state.rarity[key] || 0;
@@ -306,6 +308,10 @@
     decorateBtn: document.getElementById("decorateBtn"),
     settingsBtn: document.getElementById("settingsBtn"),
     sideIconsLeft: document.getElementById("sideIconsLeft"),
+    clockHourHand: document.getElementById("clockHourHand"),
+    clockMinuteHand: document.getElementById("clockMinuteHand"),
+    clockHourHand2: document.getElementById("clockHourHand2"),
+    clockMinuteHand2: document.getElementById("clockMinuteHand2"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
     rhythmChip: document.getElementById("rhythmChip"),
@@ -1040,6 +1046,21 @@
     // fades as the sun goes down.
     els.scene.classList.remove("sky-day", "sky-sunset", "sky-night");
     els.scene.classList.add("sky-" + phase);
+  }
+
+  // The wall clocks show the player's actual local time (not the fast
+  // stylized day/night cycle above) - a small detail that rewards actually
+  // looking at the room rather than just the HUD.
+  function updateWallClock() {
+    var now = new Date();
+    var hourDeg = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
+    var minuteDeg = now.getMinutes() * 6;
+    [els.clockHourHand, els.clockHourHand2].forEach(function (hand) {
+      hand.style.transform = "rotate(" + hourDeg + "deg)";
+    });
+    [els.clockMinuteHand, els.clockMinuteHand2].forEach(function (hand) {
+      hand.style.transform = "rotate(" + minuteDeg + "deg)";
+    });
   }
 
   /* ---------- Rooms ----------
@@ -3761,6 +3782,8 @@
   setInterval(function () {
     autoTapTick();
   }, AUTO_TAP_TICK_MS);
+  setInterval(updateWallClock, 30000);
+  updateWallClock();
 
   setRoom(state.viewRoom === "kitchen" ? "kitchen" : "bedroom", true);
   refreshQuests();

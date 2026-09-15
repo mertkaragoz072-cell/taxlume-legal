@@ -685,15 +685,27 @@ html, body {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Purchasable room items */
+/* Purchasable room items. Unowned slots stay laid out (not display:none)
+   so their ghost outline can show where the piece would go - only the
+   real tiered art is gated on ownership, further down in this file. */
 .room-item {
   position: absolute;
-  display: none;
+  display: block;
   pointer-events: none;
   transform: translate(var(--decor-dx, 0px), var(--decor-dy, 0px));
 }
-.room-item.owned { display: block; }
 .room-item svg { display: block; overflow: visible; }
+/* The pet's face groups swap on their own "hungry" class rather than an
+   owned-gate like the tier groups, so they need an explicit owned-gate
+   here too, or an unadopted pet would show a bare floating face. */
+.room-item.pet:not(.owned) .pet-face-happy,
+.room-item.pet:not(.owned) .pet-face-sad { display: none; }
+.ghostOutline { display: none; }
+.room-item:not(.owned) .ghostOutline { display: inline; animation: ghostPulse 2.4s ease-in-out infinite; }
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
 .room-item.rug { left: 20%; bottom: 12%; width: 60%; height: 40px; z-index: 1; }
 .room-item.lamp { left: 59%; bottom: 21%; width: 44px; height: 132px; z-index: 3; }
 .room-item.picture { left: 4%; top: 43%; width: 64px; height: 46px; z-index: 2; }
@@ -842,7 +854,7 @@ html, body {
 .shop-buy.poor { background: linear-gradient(180deg, #55555e, #3a3a40); color: #ffb4a8; box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 3px 0 #2a2a30; }
 
 /* Room decor tiers: art swaps as the item levels up */
-.room-item.tier-1 .tierIs1, .room-item.tier-2 .tierIs2, .room-item.tier-3 .tierIs3 { display: inline; }
+.room-item.owned.tier-1 .tierIs1, .room-item.owned.tier-2 .tierIs2, .room-item.owned.tier-3 .tierIs3 { display: inline; }
 
 /* ===== Visual polish pass ===== */
 
@@ -1175,6 +1187,8 @@ html, body {
 .room-item.picture { left: 46%; top: auto; bottom: calc(21% + 248px); width: 92px; height: 66px; }
 .room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 281px); width: 132px; height: 48px; }
 .room-item.tv { left: 58%; top: auto; bottom: calc(21% + 264px); width: 158px; height: 104px; }
+.room-item.wardrobe { left: 87%; bottom: 8%; width: 46px; height: 120px; z-index: 3; }
+.room-item.spice { left: 45%; top: auto; bottom: calc(21% + 385px); width: 56px; height: 40px; z-index: 2; }
 .window { left: 6%; top: auto; bottom: calc(21% + 186px); width: 165px; height: 136px; }
 .lamp-light { left: calc(68% - 116px); bottom: calc(16% + 66px); width: 297px; height: 314px; }
 .zzz-stack { top: -31px; right: 9px; }
@@ -1596,6 +1610,7 @@ html, body {
   cursor: pointer;
 }
 .room-item.pet:active { transform: translate(var(--decor-dx, 0px), var(--decor-dy, 0px)) scale(0.93); }
+.room-item.pet:not(.owned) .pet-meter { display: none; }
 .pet-meter {
   position: absolute;
   top: -35px;
@@ -1844,6 +1859,31 @@ html, body {
   pointer-events: none;
   filter: drop-shadow(0 6px 5px rgba(58,42,34,0.3));
 }
+
+/* Fixed, non-purchasable atmosphere: never for sale, just makes a room
+   read as a real lived-in space regardless of how much the player owns. */
+.curtains {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.15));
+}
+.bedroom-curtains { left: calc(6% - 28px); bottom: calc(21% + 170px); width: 220px; height: 175px; }
+.kitchen-curtains { left: calc(30% - 28px); bottom: calc(21% + 170px); width: 220px; height: 175px; }
+
+.wall-clock {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));
+}
+.wall-clock:not(.kitchen-clock) { left: 52%; top: 18%; width: 58px; height: 58px; }
+.kitchen-clock { left: 38%; bottom: calc(21% + 315px); width: 56px; height: 56px; }
+#clockHourHand, #clockMinuteHand, #clockHourHand2, #clockMinuteHand2 {
+  transform-origin: 30px 30px;
+  transition: transform 0.6s cubic-bezier(0.4, 2, 0.6, 1);
+}
+
 
 /* The kitchen window sits above the counter rather than over the bed. */
 .kitchen-window { left: 30% !important; }
