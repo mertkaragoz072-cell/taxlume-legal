@@ -107,6 +107,8 @@
     outfits: { green: true },
     season: { period: 0, points: 0, claimed: {} },
     scratchPity: 0,
+    weekly: { period: 0, step: 0, stepStart: 0 },
+    layout: {},
   };
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
@@ -147,6 +149,7 @@
     ice: { name: "Buz Mavisi", icon: "🔵", shirt: ["#d6f1ff", "#6ec6ff"], pants: ["#2a6fb0", "#164a7a"], cost: 6 },
     gold: { name: "Altın Zafer", icon: "🟡", shirt: ["#fff2b0", "#ffd54f"], pants: ["#c9a227", "#8a6a10"], cost: 10 },
     season: { name: "Sezon Tacı", icon: "🧡", shirt: ["#ffb37a", "#ff7a3d"], pants: ["#2e2a3a", "#18151f"], cost: Infinity },
+    challenge: { name: "Şampiyon Zırhı", icon: "🛡️", shirt: ["#c9d6e3", "#5c7a94"], pants: ["#2a3441", "#171c23"], cost: Infinity },
   };
 
   function applyOutfit() {
@@ -276,6 +279,8 @@
     eventBtn: document.getElementById("eventBtn"),
     goalsBtn: document.getElementById("goalsBtn"),
     seasonBtn: document.getElementById("seasonBtn"),
+    weeklyBtn: document.getElementById("weeklyBtn"),
+    decorateBtn: document.getElementById("decorateBtn"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
     eventFx: document.getElementById("eventFx"),
@@ -385,6 +390,8 @@
       merged.outfits = Object.assign({}, defaultState.outfits, parsed.outfits);
       merged.season = Object.assign({}, defaultState.season, parsed.season);
       merged.season.claimed = Object.assign({}, parsed.season && parsed.season.claimed);
+      merged.weekly = Object.assign({}, defaultState.weekly, parsed.weekly);
+      merged.layout = Object.assign({}, parsed.layout);
       return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
@@ -692,8 +699,88 @@
       node.classList.toggle("is-max", maxed);
       node.classList.remove("tier-1", "tier-2", "tier-3");
       node.classList.add("tier-" + itemTier(level));
+      if (!node.classList.contains("dragging")) applyLayoutOffset(node);
     });
     renderPet();
+  }
+
+  /* ---------- Home decorate mode ---------- */
+  // Purely cosmetic: a small drag range per item, remembered per room, so the
+  // player can nudge furniture into an arrangement that feels like theirs
+  // without any free-form placement system to build and validate.
+  var DECOR_RANGE_PX = 40;
+  var decorateMode = false;
+
+  function layoutKey(room, item) {
+    return room + ":" + item;
+  }
+
+  function layoutOffset(room, item) {
+    return state.layout[layoutKey(room, item)] || { dx: 0, dy: 0 };
+  }
+
+  function setLayoutOffset(room, item, dx, dy) {
+    state.layout[layoutKey(room, item)] = { dx: dx, dy: dy };
+  }
+
+  function itemRoom(node) {
+    var view = node.closest(".room-view");
+    return view ? view.getAttribute("data-room") : null;
+  }
+
+  function applyLayoutOffset(node) {
+    var room = itemRoom(node);
+    var item = node.getAttribute("data-item");
+    if (!room || !item) return;
+    var off = layoutOffset(room, item);
+    node.style.setProperty("--decor-dx", off.dx + "px");
+    node.style.setProperty("--decor-dy", off.dy + "px");
+  }
+
+  function toggleDecorateMode() {
+    decorateMode = !decorateMode;
+    els.scene.classList.toggle("decorate-mode", decorateMode);
+    els.decorateBtn.classList.toggle("on", decorateMode);
+    showToast(decorateMode ? "Eşyaları sürükleyip yerini değiştirebilirsin." : "Düzenleme kapatıldı.");
+    if (!decorateMode) saveState();
+  }
+
+  function setupDecorDrag(node) {
+    var item = node.getAttribute("data-item");
+    var dragging = false;
+    var startX = 0, startY = 0, baseDx = 0, baseDy = 0, room = null;
+
+    node.addEventListener("pointerdown", function (e) {
+      if (!decorateMode || state.items[item] <= 0) return;
+      room = itemRoom(node);
+      if (!room) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      var off = layoutOffset(room, item);
+      baseDx = off.dx;
+      baseDy = off.dy;
+      node.classList.add("dragging");
+      node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      var dx = clamp(baseDx + (e.clientX - startX), -DECOR_RANGE_PX, DECOR_RANGE_PX);
+      var dy = clamp(baseDy + (e.clientY - startY), -DECOR_RANGE_PX, DECOR_RANGE_PX);
+      node.style.setProperty("--decor-dx", dx + "px");
+      node.style.setProperty("--decor-dy", dy + "px");
+      setLayoutOffset(room, item, dx, dy);
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      node.classList.remove("dragging");
+      saveState();
+    }
+    node.addEventListener("pointerup", endDrag);
+    node.addEventListener("pointercancel", endDrag);
   }
 
   var PET_FEED_COST = 40;
@@ -1710,6 +1797,84 @@
     saveState();
   }
 
+  // Weekly challenge: unlike the season meter (one running point total), this
+  // is a short sequential chain - each step must be cleared before the next
+  // one even shows its target, so a week reads as a handful of concrete
+  // to-dos rather than another number to passively accumulate.
+  var WEEKLY_LENGTH_MS = 7 * 86400000;
+  var WEEKLY_CHAIN = [
+    { id: "w1", icon: "👆", stat: "taps", target: 300, text: "300 kez dokun", reward: { money: 40 } },
+    { id: "w2", icon: "💰", stat: "earned", target: 15000, text: "15.000$ kazan", reward: { money: 100 } },
+    { id: "w3", icon: "🍗", stat: "eats", target: 4, text: "4 kez yemek ye", reward: { perkPoints: 2 } },
+    { id: "w4", icon: "⬆️", stat: "upgrades", target: 3, text: "3 eşya yükselt", reward: { outfit: "challenge" } },
+  ];
+
+  function currentWeekPeriod() {
+    return Math.floor(Date.now() / WEEKLY_LENGTH_MS);
+  }
+
+  function refreshWeekly() {
+    var period = currentWeekPeriod();
+    if (state.weekly.period !== period) {
+      state.weekly = { period: period, step: 0, stepStart: state.stats[WEEKLY_CHAIN[0].stat] || 0 };
+    }
+  }
+
+  function weeklyMsLeft() {
+    return (state.weekly.period + 1) * WEEKLY_LENGTH_MS - Date.now();
+  }
+
+  function weeklyChainDone() {
+    return state.weekly.step >= WEEKLY_CHAIN.length;
+  }
+
+  function weeklyStepProgress() {
+    var step = WEEKLY_CHAIN[state.weekly.step];
+    if (!step) return { cur: 0, target: 0 };
+    return { cur: clamp((state.stats[step.stat] || 0) - state.weekly.stepStart, 0, step.target), target: step.target };
+  }
+
+  function claimableWeekly() {
+    if (weeklyChainDone()) return 0;
+    var p = weeklyStepProgress();
+    return p.cur >= p.target ? 1 : 0;
+  }
+
+  function claimWeeklyStep() {
+    var step = WEEKLY_CHAIN[state.weekly.step];
+    if (!step) return;
+    var p = weeklyStepProgress();
+    if (p.cur < p.target) return;
+
+    var parts = [];
+    if (step.reward.money) {
+      var amt = Math.round(tapBase() * step.reward.money);
+      state.money += amt;
+      bumpStat("earned", amt);
+      parts.push("+" + formatMoney(amt));
+    }
+    if (step.reward.perkPoints) {
+      state.perkPoints += step.reward.perkPoints;
+      parts.push("+" + step.reward.perkPoints + " miras puanı");
+    }
+    if (step.reward.outfit) {
+      state.outfits[step.reward.outfit] = true;
+      parts.push(OUTFITS[step.reward.outfit].name + " kıyafeti");
+    }
+
+    state.weekly.step += 1;
+    if (!weeklyChainDone()) {
+      var next = WEEKLY_CHAIN[state.weekly.step];
+      state.weekly.stepStart = state.stats[next.stat] || 0;
+    }
+
+    sfx.purchase();
+    celebrate(step.icon, "Haftalık Görev Tamamlandı!", parts.join(" · "));
+    render();
+    renderPanel();
+    saveState();
+  }
+
   /* ---------- Combo & critical taps ---------- */
   var COMBO_WINDOW_MS = 1400;
   var COMBO_MAX = 20;
@@ -1812,6 +1977,7 @@
     els.eventBtn.classList.toggle("has-alert", !!activeEvent());
     els.goalsBtn.classList.toggle("has-alert", claimableAchievements() > 0);
     els.seasonBtn.classList.toggle("has-alert", claimableSeasonRewards() > 0);
+    els.weeklyBtn.classList.toggle("has-alert", claimableWeekly() > 0);
     var ev = activeEvent();
     els.eventBtn.textContent = ev ? ev.icon : "🎉";
   }
@@ -1868,6 +2034,45 @@
     }, 7000);
   }
 
+  /* ---------- Rhythm tap bonus ---------- */
+  // A short glowing window on the tap button itself, rather than a separate
+  // spawned target like the gold coin - it rewards staying on the core tap
+  // loop with good timing instead of giving a reason to look away from it.
+  var RHYTHM_MIN_GAP_MS = 18000;
+  var RHYTHM_MAX_GAP_MS = 34000;
+  var RHYTHM_WINDOW_MS = 1300;
+  var RHYTHM_MULT = 3;
+  var rhythmTimer = null;
+  var rhythmActive = false;
+
+  function scheduleRhythm() {
+    clearTimeout(rhythmTimer);
+    rhythmTimer = setTimeout(triggerRhythmWindow, RHYTHM_MIN_GAP_MS + Math.random() * (RHYTHM_MAX_GAP_MS - RHYTHM_MIN_GAP_MS));
+  }
+
+  function triggerRhythmWindow() {
+    if (state.isSleeping) {
+      scheduleRhythm();
+      return;
+    }
+    rhythmActive = true;
+    els.tapBtn.classList.add("rhythm");
+    rhythmTimer = setTimeout(missRhythm, RHYTHM_WINDOW_MS);
+  }
+
+  function missRhythm() {
+    rhythmActive = false;
+    els.tapBtn.classList.remove("rhythm");
+    scheduleRhythm();
+  }
+
+  function hitRhythm() {
+    rhythmActive = false;
+    clearTimeout(rhythmTimer);
+    els.tapBtn.classList.remove("rhythm");
+    scheduleRhythm();
+  }
+
   /* ---------- Generic panel ---------- */
   var panelTab = null;
 
@@ -1882,6 +2087,7 @@
     records: { title: "📊 Rekorlar", build: buildRecords },
     events: { title: "🎉 Etkinlikler", build: buildEvents },
     season: { title: "🎖️ Sezon", build: buildSeason },
+    weekly: { title: "🚩 Haftalık Görev", build: buildWeekly },
   };
 
   function openPanel(tab) {
@@ -2615,6 +2821,44 @@
     addNote("Her dokunuş +1 sezon puanı verir. Sezon 14 günde bir sıfırlanıp yeniden başlar.");
   }
 
+  function buildWeekly() {
+    refreshWeekly();
+    var daysLeft = Math.max(0, Math.ceil(weeklyMsLeft() / 86400000));
+    els.panelSub.textContent = "Adım " + Math.min(state.weekly.step + 1, WEEKLY_CHAIN.length) + "/" +
+      WEEKLY_CHAIN.length + " · " + daysLeft + " gün kaldı";
+
+    WEEKLY_CHAIN.forEach(function (step, idx) {
+      var done = idx < state.weekly.step;
+      var active = idx === state.weekly.step;
+      var locked = idx > state.weekly.step;
+      var rewardLabel = step.reward.money
+        ? "+" + formatMoney(Math.round(tapBase() * step.reward.money))
+        : step.reward.perkPoints
+          ? "+" + step.reward.perkPoints + " miras puanı"
+          : OUTFITS[step.reward.outfit].name + " kıyafeti";
+
+      if (locked) {
+        makeRow(step.icon, "???", "Önceki adımı bitirince açılır", { rowClass: "locked" });
+        return;
+      }
+
+      var p = active ? weeklyStepProgress() : { cur: step.target, target: step.target };
+      var ready = active && p.cur >= p.target;
+      makeRow(step.icon, step.text, "Ödül " + rewardLabel, {
+        rowClass: done ? "done" : ready ? "highlight" : "locked",
+        progress: (p.cur / p.target) * 100,
+        button: done ? "Alındı ✓" : ready ? "Ödülü Al" : p.cur + "/" + p.target,
+        buttonClass: done || !ready ? "owned" : "",
+        disabled: !ready,
+        onClick: ready ? claimWeeklyStep : null,
+      });
+    });
+
+    addNote(weeklyChainDone()
+      ? "Bu haftanın zincirini tamamladın! Yeni zincir haftalık sıfırlanınca başlar."
+      : "Sıradaki adımı bitirip ödülünü al - bir sonraki adım ancak o zaman açılır.");
+  }
+
   /* ---------- Achievements & prestige ---------- */
   function buildAchievements() {
     var unlocked = ACHIEVEMENTS.filter(function (a) {
@@ -2808,7 +3052,9 @@
 
     bumpCombo();
     var crit = Math.random() < critChance();
-    var earned = Math.round(tapValue() * comboMultiplier() * (crit ? critMultiplier() : 1));
+    var rhythmHit = rhythmActive;
+    if (rhythmHit) hitRhythm();
+    var earned = Math.round(tapValue() * comboMultiplier() * (crit ? critMultiplier() : 1) * (rhythmHit ? RHYTHM_MULT : 1));
     if (welcomeBonusMsLeft() > 0) earned *= WELCOME_BONUS_MULT;
     state.money += earned;
     state.energy = clamp(state.energy - tapEnergyCost(), 0, 100);
@@ -2821,7 +3067,8 @@
     if (earned > (state.stats.bestTap || 0)) state.stats.bestTap = earned;
     if (comboCount > (state.stats.bestCombo || 0)) state.stats.bestCombo = comboCount;
 
-    pushPill((crit ? "KRİTİK ×" + critMultiplier() + "  " : "") + "+ " + formatMoney(earned) + " 💰", false, crit);
+    var prefix = (rhythmHit ? "⚡ RİTİM ×" + RHYTHM_MULT + "  " : "") + (crit ? "KRİTİK ×" + critMultiplier() + "  " : "");
+    pushPill(prefix + "+ " + formatMoney(earned) + " 💰", false, crit || rhythmHit);
     characterBounce();
     flyCoin();
     levelUpIfReady();
@@ -3019,6 +3266,7 @@
     checkCollapse();
     refreshDeal();
     refreshSeason();
+    refreshWeekly();
     if (lastTapAt && Date.now() - lastTapAt > TAP_HINT_IDLE_MS) showTapHint(true);
     render();
     saveState();
@@ -3057,8 +3305,10 @@
   els.fridgeBtn.addEventListener("click", onFridge);
   els.petItem.addEventListener("click", function (e) {
     e.stopPropagation();
+    if (decorateMode) return;
     feedPet();
   });
+  document.querySelectorAll(".room-item").forEach(setupDecorDrag);
   els.questBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("quests");
@@ -3082,6 +3332,14 @@
   els.seasonBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("season");
+  });
+  els.weeklyBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("weekly");
+  });
+  els.decorateBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleDecorateMode();
   });
   els.goalTicker.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -3162,7 +3420,9 @@
   checkStreak();
   refreshDeal();
   refreshSeason();
+  refreshWeekly();
   scheduleGoldCoin();
+  scheduleRhythm();
 
   (function grantOfflineEarnings() {
     var elapsedSec = Math.floor((Date.now() - lastSeenAtLoad) / 1000);

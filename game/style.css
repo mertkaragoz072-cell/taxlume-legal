@@ -491,6 +491,19 @@ html, body {
   opacity: 0.35;
   pointer-events: none;
 }
+.tap-btn.rhythm {
+  animation: rhythmPulse 0.55s ease-in-out infinite;
+}
+@keyframes rhythmPulse {
+  0%, 100% {
+    box-shadow: 0 8px 16px rgba(20,70,31,0.35), inset 0 3px 6px rgba(255,255,255,0.35),
+      inset 0 -6px 10px rgba(0,0,0,0.12), 0 0 0 0 rgba(255,214,64,0.7);
+  }
+  50% {
+    box-shadow: 0 8px 16px rgba(20,70,31,0.35), inset 0 3px 6px rgba(255,255,255,0.35),
+      inset 0 -6px 10px rgba(0,0,0,0.12), 0 0 0 14px rgba(255,214,64,0);
+  }
+}
 
 .furniture {
   position: absolute;
@@ -684,6 +697,7 @@ html, body {
   position: absolute;
   display: none;
   pointer-events: none;
+  transform: translate(var(--decor-dx, 0px), var(--decor-dy, 0px));
 }
 .room-item.owned { display: block; }
 .room-item svg { display: block; overflow: visible; }
@@ -692,6 +706,26 @@ html, body {
 .room-item.picture { left: 4%; top: 43%; width: 64px; height: 46px; z-index: 2; }
 .room-item.shelf { left: 71%; top: 39%; width: 26%; height: 36px; z-index: 2; }
 .room-item.tv { left: 43%; top: 44%; width: 100px; height: 66px; z-index: 2; }
+
+/* Home decorate mode: a bounded drag to nudge owned items within a room */
+.scene.decorate-mode .room-item.owned {
+  pointer-events: auto;
+  cursor: grab;
+  outline: 1.5px dashed rgba(255,255,255,0.45);
+  outline-offset: 4px;
+  border-radius: 10px;
+  touch-action: none;
+}
+.room-item.dragging {
+  cursor: grabbing;
+  z-index: 60;
+  outline: 1.5px dashed var(--yellow);
+  touch-action: none;
+}
+.side-icon.on {
+  border-color: var(--yellow);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 10px rgba(251,191,36,0.55);
+}
 
 /* Shop panel */
 .shop {
@@ -1446,7 +1480,7 @@ html, body {
   pointer-events: auto;
   cursor: pointer;
 }
-.room-item.pet:active { transform: scale(0.93); }
+.room-item.pet:active { transform: translate(var(--decor-dx, 0px), var(--decor-dy, 0px)) scale(0.93); }
 .pet-meter {
   position: absolute;
   top: -35px;
