@@ -20,6 +20,7 @@
   var SLEEP_ENERGY_PER_TICK = 6;
   var SLEEP_HUNGER_DRAIN_PER_TICK = 1;
   var PASSIVE_TICK_MS = 3000;
+  var AUTO_TAP_TICK_MS = 6000;
   // Meals: cost is priced in "taps worth" so it stays meaningful as income
   // grows, with a floor for the early game. Energy is what makes the pricier
   // plates worth it - the cheap ones barely wake you up.
@@ -35,6 +36,17 @@
 
   function foodCost(food) {
     return Math.max(food.min, Math.round(tapValue() * food.taps));
+  }
+
+  // A little "eat every dish once" collection running alongside the fridge -
+  // a permanent reason to try the pricier meals instead of only ever buying
+  // whichever is cheapest.
+  var FOOD_COLLECTION_BONUS = 0.1;
+
+  function foodCollectionComplete() {
+    return FOODS.every(function (f) {
+      return !!state.collection.foods[f.id];
+    });
   }
 
   var TAP_HINT_IDLE_MS = 4.5 * 60 * 1000;
@@ -66,7 +78,7 @@
     items: { rug: 0, lamp: 0, picture: 0, shelf: 0, tv: 0, room: 0, pet: 0 },
     pet: { happiness: 100 },
     perkPoints: 0,
-    perks: { critChance: 0, critMult: 0, comboCap: 0, offlineRate: 0, energySaver: 0 },
+    perks: { critChance: 0, critMult: 0, comboCap: 0, offlineRate: 0, energySaver: 0, autoTap: 0 },
     taps: 0,
     muted: false,
     edu: 0,
@@ -90,6 +102,11 @@
     lastSeen: Date.now(),
     deal: null,
     notifyEnabled: false,
+    collection: { foods: {} },
+    outfit: "green",
+    outfits: { green: true },
+    season: { period: 0, points: 0, claimed: {} },
+    scratchPity: 0,
   };
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
@@ -114,11 +131,61 @@
     comboCap: { name: "Kombo Ustası", icon: "🔥", desc: "Maksimum kombo +5", maxLevel: 5 },
     offlineRate: { name: "Pasif Kazanç", icon: "🌙", desc: "Çevrimdışı kazanç oranı +%1", maxLevel: 5 },
     energySaver: { name: "Dayanıklılık", icon: "🔋", desc: "Tıklama enerji maliyeti -0.3", maxLevel: 5 },
+    autoTap: { name: "Otomatik Yardımcı", icon: "🤖", desc: "Her 6 saniyede bir kendiliğinden 1 tık değerinde kazanç", maxLevel: 5 },
   };
 
   function perkCost(key) {
     return state.perks[key] + 1; // 1, 2, 3... legacy points per level
   }
+
+  // Cosmetic outfits: pure status, bought once with perk points, no effect
+  // on tapValue/homeMultiplier/anything else - just a look to show off.
+  var OUTFITS = {
+    green: { name: "Yeşil (Varsayılan)", icon: "👕", shirt: ["#7ee08c", "#3fae52"], pants: ["#6fa4f5", "#3a6fd0"], cost: 0 },
+    red: { name: "Kırmızı Forma", icon: "🔴", shirt: ["#ff9b91", "#e0574f"], pants: ["#3a3a45", "#22222a"], cost: 3 },
+    royal: { name: "Mor Cübbe", icon: "🟣", shirt: ["#c6a8f0", "#7a4fc9"], pants: ["#4a2e8f", "#2e1a5c"], cost: 5 },
+    ice: { name: "Buz Mavisi", icon: "🔵", shirt: ["#d6f1ff", "#6ec6ff"], pants: ["#2a6fb0", "#164a7a"], cost: 6 },
+    gold: { name: "Altın Zafer", icon: "🟡", shirt: ["#fff2b0", "#ffd54f"], pants: ["#c9a227", "#8a6a10"], cost: 10 },
+    season: { name: "Sezon Tacı", icon: "🧡", shirt: ["#ffb37a", "#ff7a3d"], pants: ["#2e2a3a", "#18151f"], cost: Infinity },
+  };
+
+  function applyOutfit() {
+    var outfit = OUTFITS[state.outfit] || OUTFITS.green;
+    els.charShirtStop1.setAttribute("stop-color", outfit.shirt[0]);
+    els.charShirtStop2.setAttribute("stop-color", outfit.shirt[1]);
+    els.charPantsStop1.setAttribute("stop-color", outfit.pants[0]);
+    els.charPantsStop2.setAttribute("stop-color", outfit.pants[1]);
+  }
+
+  function equipOutfit(key) {
+    if (!state.outfits[key] || state.outfit === key) return;
+    state.outfit = key;
+    applyOutfit();
+    sfx.coin();
+    render();
+    renderPanel();
+    saveState();
+  }
+
+  function buyOutfit(key) {
+    var outfit = OUTFITS[key];
+    if (!outfit || state.outfits[key]) return;
+    if (state.perkPoints < outfit.cost) {
+      sfx.deny();
+      showToast("Yetersiz miras puanı.");
+      return;
+    }
+    state.perkPoints -= outfit.cost;
+    state.outfits[key] = true;
+    state.outfit = key;
+    applyOutfit();
+    sfx.purchase();
+    showToast(outfit.name + " satın alındı ve giyildi!");
+    render();
+    renderPanel();
+    saveState();
+  }
+
   var ITEM_TIER_NAMES = ["", "Basit", "Standart", "Modern"];
 
   function itemTier(level) {
@@ -208,6 +275,7 @@
     recordsBtn: document.getElementById("recordsBtn"),
     eventBtn: document.getElementById("eventBtn"),
     goalsBtn: document.getElementById("goalsBtn"),
+    seasonBtn: document.getElementById("seasonBtn"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
     eventFx: document.getElementById("eventFx"),
@@ -257,6 +325,10 @@
     buyConfirm: document.getElementById("buyConfirm"),
     plantBtn: document.getElementById("plantBtn"),
 
+    charShirtStop1: document.getElementById("charShirtStop1"),
+    charShirtStop2: document.getElementById("charShirtStop2"),
+    charPantsStop1: document.getElementById("charPantsStop1"),
+    charPantsStop2: document.getElementById("charPantsStop2"),
     woodStop1: document.getElementById("woodStop1"),
     woodStop2: document.getElementById("woodStop2"),
     blanketStop1: document.getElementById("blanketStop1"),
@@ -309,6 +381,10 @@
       merged.pet = Object.assign({}, defaultState.pet, parsed.pet);
       merged.perks = Object.assign({}, defaultState.perks, parsed.perks);
       merged.scratch = Object.assign({}, defaultState.scratch, parsed.scratch);
+      merged.collection = { foods: Object.assign({}, parsed.collection && parsed.collection.foods) };
+      merged.outfits = Object.assign({}, defaultState.outfits, parsed.outfits);
+      merged.season = Object.assign({}, defaultState.season, parsed.season);
+      merged.season.claimed = Object.assign({}, parsed.season && parsed.season.claimed);
       return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
@@ -338,6 +414,7 @@
       var factor = key === "pet" && state.pet.happiness <= 0 ? 0.5 : 1;
       mult += SHOP_ITEMS[key].bonus * state.items[key] * factor;
     });
+    if (foodCollectionComplete()) mult += FOOD_COLLECTION_BONUS;
     return mult;
   }
 
@@ -1569,6 +1646,70 @@
     }, 900);
   }
 
+  /* ---------- Season pass ----------
+     A rotating ~2-week reward track, separate from the daily streak: points
+     build up from ordinary tapping and the track resets on a fixed
+     calendar cadence, so there's always a fresh set of thresholds to chase
+     instead of one that's either already finished or years away. */
+  var SEASON_LENGTH_MS = 14 * 86400000;
+  var SEASON_TRACK = [
+    { at: 50, icon: "💰", reward: { money: 8 } },
+    { at: 150, icon: "💰", reward: { money: 25 } },
+    { at: 350, icon: "💎", reward: { perkPoints: 2 } },
+    { at: 700, icon: "💰", reward: { money: 70 } },
+    { at: 1200, icon: "💎", reward: { perkPoints: 4 } },
+    { at: 2000, icon: "🧡", reward: { outfit: "season" } },
+  ];
+
+  function currentSeasonPeriod() {
+    return Math.floor(Date.now() / SEASON_LENGTH_MS);
+  }
+
+  function refreshSeason() {
+    var period = currentSeasonPeriod();
+    if (state.season.period !== period) {
+      state.season = { period: period, points: 0, claimed: {} };
+    }
+  }
+
+  function seasonMsLeft() {
+    return (state.season.period + 1) * SEASON_LENGTH_MS - Date.now();
+  }
+
+  function claimableSeasonRewards() {
+    var n = 0;
+    SEASON_TRACK.forEach(function (tier, idx) {
+      if (!state.season.claimed[idx] && state.season.points >= tier.at) n++;
+    });
+    return n;
+  }
+
+  function claimSeasonReward(idx) {
+    var tier = SEASON_TRACK[idx];
+    if (!tier || state.season.claimed[idx] || state.season.points < tier.at) return;
+    state.season.claimed[idx] = true;
+    var parts = [];
+    if (tier.reward.money) {
+      var amt = Math.round(tapBase() * tier.reward.money);
+      state.money += amt;
+      bumpStat("earned", amt);
+      parts.push("+" + formatMoney(amt));
+    }
+    if (tier.reward.perkPoints) {
+      state.perkPoints += tier.reward.perkPoints;
+      parts.push("+" + tier.reward.perkPoints + " miras puanı");
+    }
+    if (tier.reward.outfit) {
+      state.outfits[tier.reward.outfit] = true;
+      parts.push(OUTFITS[tier.reward.outfit].name + " kıyafeti");
+    }
+    sfx.purchase();
+    celebrate(tier.icon, "Sezon Ödülü!", parts.join(" · "));
+    render();
+    renderPanel();
+    saveState();
+  }
+
   /* ---------- Combo & critical taps ---------- */
   var COMBO_WINDOW_MS = 1400;
   var COMBO_MAX = 20;
@@ -1670,6 +1811,7 @@
     els.lotteryBtn.classList.toggle("has-alert", freeCardAvailable() || !!state.scratch.card);
     els.eventBtn.classList.toggle("has-alert", !!activeEvent());
     els.goalsBtn.classList.toggle("has-alert", claimableAchievements() > 0);
+    els.seasonBtn.classList.toggle("has-alert", claimableSeasonRewards() > 0);
     var ev = activeEvent();
     els.eventBtn.textContent = ev ? ev.icon : "🎉";
   }
@@ -1739,6 +1881,7 @@
     lottery: { title: "🎟️ Kazı Kazan", build: buildLottery },
     records: { title: "📊 Rekorlar", build: buildRecords },
     events: { title: "🎉 Etkinlikler", build: buildEvents },
+    season: { title: "🎖️ Sezon", build: buildSeason },
   };
 
   function openPanel(tab) {
@@ -2106,6 +2249,11 @@
     crown: { icon: "👑", mult: 100, weight: 0.4 },
   };
   var SCRATCH_WIN_CHANCE = 0.22;
+  // A long losing streak feels rigged even at a fair 22% rate (0.78^8 ≈ 13%
+  // chance of going this long legitimately) - a hard cap on bad luck reads
+  // as generous rather than making wins less exciting when they do land
+  // naturally, since this only ever kicks in after a real dry spell.
+  var SCRATCH_PITY_LIMIT = 8;
   var SCRATCH_TICKET_TAPS = 30; // ticket price in "taps worth of money"
 
   function ticketCost() {
@@ -2187,7 +2335,9 @@
     state.money -= cost;
     if (free) state.scratch.freeUsed = true;
 
-    var winSym = Math.random() < SCRATCH_WIN_CHANCE ? pickWinningSymbol() : null;
+    var forcedWin = state.scratchPity >= SCRATCH_PITY_LIMIT;
+    var winSym = forcedWin || Math.random() < SCRATCH_WIN_CHANCE ? pickWinningSymbol() : null;
+    state.scratchPity = winSym ? 0 : state.scratchPity + 1;
     var basis = free ? ticketCost() : cost;
     state.scratch.card = {
       cells: buildCardCells(winSym),
@@ -2319,6 +2469,15 @@
       });
     }
 
+    if (state.scratchPity > 0) {
+      var pityLeft = Math.max(0, SCRATCH_PITY_LIMIT - state.scratchPity);
+      addNote(
+        pityLeft > 0
+          ? "🍀 Şansın birikiyor! En fazla " + pityLeft + " kart daha alırsan garanti kazanırsın."
+          : "🍀 Şansın doldu! Bir sonraki kart kesin kazandırır."
+      );
+    }
+
     addNote("İkramiye tablosu (bilet bedelinin katı olarak)");
     Object.keys(SCRATCH_SYMBOLS).forEach(function (key) {
       var sym = SCRATCH_SYMBOLS[key];
@@ -2353,6 +2512,22 @@
     var s = state.stats;
     els.panelSub.textContent =
       "Seviye " + state.level + " · Gün " + state.day + " · " + state.prestiges + " kez yeniden doğdun";
+
+    var collectedCount = FOODS.filter(function (f) { return !!state.collection.foods[f.id]; }).length;
+    var foodDone = collectedCount >= FOODS.length;
+    addNote("📖 Yemek Defteri (" + collectedCount + "/" + FOODS.length + ")" +
+      (foodDone ? " · ✓ Tamamlandı! Kalıcı +%" + Math.round(FOOD_COLLECTION_BONUS * 100) + " ev çarpanı" : ""));
+    var grid = document.createElement("div");
+    grid.className = "food-collection-grid";
+    FOODS.forEach(function (food) {
+      var cell = document.createElement("div");
+      cell.className = "food-collection-item" + (state.collection.foods[food.id] ? " collected" : "");
+      cell.textContent = food.icon;
+      cell.title = food.name;
+      grid.appendChild(cell);
+    });
+    els.panelBody.appendChild(grid);
+    if (!foodDone) addNote("Her yemeği en az bir kez ye - hepsini tamamlayınca kalıcı bir ev çarpanı kazanırsın.");
 
     addNote("🏅 Kişisel rekorlar");
     makeStatGrid([
@@ -2413,6 +2588,33 @@
     addNote("Etkinlik günlerinde hem tık kazancın hem de maaşın çarpanla artar. Hafta sonları her zaman ×1.25!");
   }
 
+  function buildSeason() {
+    refreshSeason();
+    var daysLeft = Math.max(0, Math.ceil(seasonMsLeft() / 86400000));
+    els.panelSub.textContent = state.season.points + " sezon puanı · " + daysLeft + " gün kaldı";
+
+    SEASON_TRACK.forEach(function (tier, idx) {
+      var reached = state.season.points >= tier.at;
+      var claimed = !!state.season.claimed[idx];
+      var rewardLabel = tier.reward.money
+        ? "+" + formatMoney(Math.round(tapBase() * tier.reward.money))
+        : tier.reward.perkPoints
+          ? "+" + tier.reward.perkPoints + " miras puanı"
+          : OUTFITS[tier.reward.outfit].name + " kıyafeti";
+      makeRow(tier.icon, tier.at + " puan", rewardLabel, {
+        rowClass: claimed ? "done" : reached ? "highlight" : "locked",
+        progress: Math.min(100, (state.season.points / tier.at) * 100),
+        button: claimed ? "Alındı ✓" : reached ? "Ödülü Al" : "Kilitli 🔒",
+        buttonClass: claimed || !reached ? "owned" : "",
+        disabled: claimed || !reached,
+        onClick: reached && !claimed ? function () {
+          claimSeasonReward(idx);
+        } : null,
+      });
+    });
+    addNote("Her dokunuş +1 sezon puanı verir. Sezon 14 günde bir sıfırlanıp yeniden başlar.");
+  }
+
   /* ---------- Achievements & prestige ---------- */
   function buildAchievements() {
     var unlocked = ACHIEVEMENTS.filter(function (a) {
@@ -2454,6 +2656,26 @@
         disabled: maxed || !affordable,
         onClick: !maxed ? function () {
           buyPerk(key);
+        } : null,
+      });
+    });
+
+    addNote("👕 Gardırop — statü içindir, oynanışı etkilemez");
+    Object.keys(OUTFITS).forEach(function (key) {
+      var outfit = OUTFITS[key];
+      var owned = !!state.outfits[key];
+      var equipped = state.outfit === key;
+      var seasonLocked = outfit.cost === Infinity && !owned;
+      var affordable = !owned && !seasonLocked && state.perkPoints >= outfit.cost;
+      makeRow(outfit.icon, outfit.name,
+        equipped ? "Şu an giyili" : owned ? "Sahipsin" : seasonLocked ? "Sezon ödülüyle kazanılır" : "Bedeli 💎 " + outfit.cost, {
+        rowClass: equipped ? "done" : owned || affordable ? "highlight" : "locked",
+        button: equipped ? "Giyili ✓" : owned ? "Giy" : seasonLocked ? "Kilitli 🔒" : "Satın Al",
+        buttonClass: equipped ? "owned" : owned || affordable ? "" : "owned",
+        disabled: equipped || seasonLocked || (!owned && !affordable),
+        onClick: !equipped && !seasonLocked ? function () {
+          if (owned) equipOutfit(key);
+          else buyOutfit(key);
         } : null,
       });
     });
@@ -2593,6 +2815,7 @@
     state.xp += TAP_XP_GAIN;
     state.taps += 1;
     bumpStat("taps", 1);
+    state.season.points += 1;
     bumpStat("earned", earned);
     if (crit) bumpStat("crits", 1);
     if (earned > (state.stats.bestTap || 0)) state.stats.bestTap = earned;
@@ -2671,6 +2894,9 @@
     state.hunger = clamp(state.hunger + food.hunger, 0, 100);
     state.energy = clamp(state.energy + food.energy, 0, 100);
     bumpStat("eats", 1);
+    var wasComplete = foodCollectionComplete();
+    state.collection.foods[food.id] = true;
+    var justCompleted = !wasComplete && foodCollectionComplete();
 
     closePanel();
     pushPill("+" + food.hunger + " 🍗", false);
@@ -2680,6 +2906,12 @@
     characterEat();
     render();
     saveState();
+    if (justCompleted) {
+      setTimeout(function () {
+        celebrate("📖", "Yemek Defterin Tamamlandı!", "Kalıcı +%" + Math.round(FOOD_COLLECTION_BONUS * 100) + " ev çarpanı!");
+        sfx.purchase();
+      }, 1600);
+    }
   }
 
   function onUpgrade(key) {
@@ -2716,6 +2948,20 @@
   // that already went out - these are just "don't repeat yourself" latches.
   var notifiedLowHunger = false;
   var notifiedPetSad = false;
+
+  // The "manager" staple of the genre: once bought, it keeps earning by
+  // itself - independent of energy or being asleep, since the whole point
+  // is it works without you.
+  function autoTapTick() {
+    if (!state.perks.autoTap) return;
+    var earned = Math.round(tapValue() * state.perks.autoTap);
+    if (earned <= 0) return;
+    state.money += earned;
+    bumpStat("earned", earned);
+    pushPill("🤖 +" + formatMoney(earned), false);
+    render();
+    saveState();
+  }
 
   function passiveTick() {
     if (state.isSleeping) {
@@ -2772,6 +3018,7 @@
 
     checkCollapse();
     refreshDeal();
+    refreshSeason();
     if (lastTapAt && Date.now() - lastTapAt > TAP_HINT_IDLE_MS) showTapHint(true);
     render();
     saveState();
@@ -2831,6 +3078,10 @@
   els.goalsBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("world");
+  });
+  els.seasonBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("season");
   });
   els.goalTicker.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -2902,11 +3153,15 @@
   setInterval(function () {
     passiveTick();
   }, PASSIVE_TICK_MS);
+  setInterval(function () {
+    autoTapTick();
+  }, AUTO_TAP_TICK_MS);
 
   setRoom(state.viewRoom === "kitchen" ? "kitchen" : "bedroom", true);
   refreshQuests();
   checkStreak();
   refreshDeal();
+  refreshSeason();
   scheduleGoldCoin();
 
   (function grantOfflineEarnings() {
@@ -2941,5 +3196,6 @@
     saveState();
   })();
 
+  applyOutfit();
   render();
 })();
