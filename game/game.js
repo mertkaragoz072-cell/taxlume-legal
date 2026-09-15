@@ -110,6 +110,7 @@
     weekly: { period: 0, step: 0, stepStart: 0 },
     layout: {},
     rarity: {},
+    prestigeEarnedStart: 0,
   };
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
@@ -1142,6 +1143,7 @@
   var CONFETTI_COLORS = ["#e0574f", "#ffd54f", "#57cc6a", "#4f8ef0", "#b48be0", "#f2a25b"];
 
   function celebrate(icon, title, sub) {
+    vibrate([20, 60, 20]);
     for (var i = 0; i < 24; i++) {
       var p = document.createElement("span");
       p.className = "confetti";
@@ -1239,6 +1241,19 @@
       tone(170, t + 0.14, 0.2, "sawtooth", 0.08);
     },
   };
+
+  // Haptics: tied to the same mute toggle as sound rather than a separate
+  // setting, since the two nearly always get turned off together and this
+  // avoids adding yet another switch to the UI. Silently a no-op wherever
+  // the Vibration API doesn't exist (iOS Safari, desktop).
+  function vibrate(pattern) {
+    if (state.muted || !navigator.vibrate) return;
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {
+      /* unsupported, ignore */
+    }
+  }
 
   /* ---------- Purchase sheet: see the old model, the new model, pay, replace ---------- */
   var buyCtx = null;
@@ -2059,8 +2074,13 @@
   }
 
   function renderSideIconUnlocks() {
+    // Prestiging resets the player's level back to 1 as a fresh start, but
+    // it's not the same as being new to the game - someone who has already
+    // prestiged has necessarily unlocked everything before, so the rail
+    // shouldn't hide itself again every time they reset.
+    var everPrestiged = state.prestiges > 0;
     Object.keys(ICON_UNLOCK_LEVEL).forEach(function (key) {
-      els[key].classList.toggle("locked-hidden", state.level < ICON_UNLOCK_LEVEL[key]);
+      els[key].classList.toggle("locked-hidden", !everPrestiged && state.level < ICON_UNLOCK_LEVEL[key]);
     });
     els.decorateBtn.classList.toggle("locked-hidden", !decorateUnlocked());
     var anyVisible = ["questBtn", "lotteryBtn", "hubBtn", "decorateBtn"].some(function (key) {
@@ -3174,16 +3194,16 @@
       unlocked + "/" + ACHIEVEMENTS.length + " başarım · Miras ×" + legacyMultiplier().toFixed(2) +
       " · 💎 " + state.perkPoints + " puan";
 
-    var canPrestige = state.stats.earned >= PRESTIGE_MIN_EARNED;
+    var canPrestige = earnedSincePrestige() >= PRESTIGE_MIN_EARNED;
     var maxedOut = isFullyMaxed();
     var gain = prestigeGain();
     makeRow(maxedOut ? "🏆" : "🌟", maxedOut ? "Tam Tamamlama Bonusu!" : "Yeni Hayat (Prestij)", canPrestige
       ? (maxedOut
         ? "Her şeyi bitirdin! Sabit +" + gain + " miras puanı ile yeniden doğ (kalıcı +%" + Math.round(gain * LEGACY_BONUS * 100) + ")"
         : "Her şeyi sıfırla, +" + gain + " miras puanı kazan (kalıcı +%" + Math.round(gain * LEGACY_BONUS * 100) + ")")
-      : "Toplam " + formatMoney(PRESTIGE_MIN_EARNED) + " kazanınca açılır (" + formatMoney(state.stats.earned) + ")", {
+      : "Bu hayatta " + formatMoney(PRESTIGE_MIN_EARNED) + " kazanınca açılır (" + formatMoney(earnedSincePrestige()) + ")", {
       rowClass: canPrestige ? "highlight" : "locked",
-      progress: (state.stats.earned / PRESTIGE_MIN_EARNED) * 100,
+      progress: (earnedSincePrestige() / PRESTIGE_MIN_EARNED) * 100,
       button: canPrestige ? "Yeniden Doğ" : "Kilitli 🔒",
       buttonClass: canPrestige ? "" : "owned",
       disabled: !canPrestige,
@@ -3265,18 +3285,28 @@
     saveState();
   }
 
+  // stats.earned is a lifetime total (also shown as-is in Records), so the
+  // prestige gate tracks its own baseline instead of reading that stat
+  // directly - otherwise, once a player crossed 10M once, the gate would
+  // stay permanently open and every subsequent prestige would be free,
+  // since that lifetime total never goes back down.
+  function earnedSincePrestige() {
+    return state.stats.earned - (state.prestigeEarnedStart || 0);
+  }
+
   function prestigeGain() {
-    var earnedGain = Math.max(1, Math.floor(Math.sqrt(state.stats.earned / 1000000)));
+    var earnedGain = Math.max(1, Math.floor(Math.sqrt(earnedSincePrestige() / 1000000)));
     return isFullyMaxed() ? Math.max(earnedGain, GRAND_PRESTIGE_BONUS) : earnedGain;
   }
 
   function doPrestige() {
-    if (state.stats.earned < PRESTIGE_MIN_EARNED) return;
+    if (earnedSincePrestige() < PRESTIGE_MIN_EARNED) return;
     var maxedOut = isFullyMaxed();
     var gain = prestigeGain();
     state.legacy += gain;
     state.perkPoints += gain;
     state.prestiges += 1;
+    state.prestigeEarnedStart = state.stats.earned;
 
     state.money = 0;
     state.level = 1;
@@ -3383,6 +3413,7 @@
 
     var prefix = (rhythmHit ? "⚡ RİTİM ×" + RHYTHM_MULT + "  " : "") + (crit ? "KRİTİK ×" + critMultiplier() + "  " : "");
     pushPill(prefix + "+ " + formatMoney(earned) + " 💰", false, crit || rhythmHit);
+    vibrate(crit || rhythmHit ? [12, 30, 12] : 6);
     characterBounce();
     flyCoin();
     levelUpIfReady();
