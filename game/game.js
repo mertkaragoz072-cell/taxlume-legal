@@ -275,11 +275,7 @@
     scene: document.getElementById("scene"),
     questBtn: document.getElementById("questBtn"),
     lotteryBtn: document.getElementById("lotteryBtn"),
-    recordsBtn: document.getElementById("recordsBtn"),
-    eventBtn: document.getElementById("eventBtn"),
-    goalsBtn: document.getElementById("goalsBtn"),
-    seasonBtn: document.getElementById("seasonBtn"),
-    weeklyBtn: document.getElementById("weeklyBtn"),
+    hubBtn: document.getElementById("hubBtn"),
     decorateBtn: document.getElementById("decorateBtn"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
@@ -1974,12 +1970,9 @@
     });
     els.questBtn.classList.toggle("has-alert", claimableQuests() > 0);
     els.lotteryBtn.classList.toggle("has-alert", freeCardAvailable() || !!state.scratch.card);
-    els.eventBtn.classList.toggle("has-alert", !!activeEvent());
-    els.goalsBtn.classList.toggle("has-alert", claimableAchievements() > 0);
-    els.seasonBtn.classList.toggle("has-alert", claimableSeasonRewards() > 0);
-    els.weeklyBtn.classList.toggle("has-alert", claimableWeekly() > 0);
-    var ev = activeEvent();
-    els.eventBtn.textContent = ev ? ev.icon : "🎉";
+    els.hubBtn.classList.toggle("has-alert", HUB_TABS.some(function (t) {
+      return hubTabAlert(t.tab);
+    }));
   }
 
   function renderGoal() {
@@ -2089,6 +2082,41 @@
     season: { title: "🎖️ Sezon", build: buildSeason },
     weekly: { title: "🚩 Haftalık Görev", build: buildWeekly },
   };
+
+  // These five panels used to each get their own side icon; now they share
+  // one "Hedefler" entry point and switch between each other with an
+  // in-panel tab strip, so the side rail stops growing with every new
+  // progression system.
+  var HUB_TABS = [
+    { tab: "world", icon: "🏆", label: "Başarım" },
+    { tab: "season", icon: "🎖️", label: "Sezon" },
+    { tab: "weekly", icon: "🚩", label: "Haftalık" },
+    { tab: "records", icon: "📊", label: "Rekor" },
+    { tab: "events", icon: "🎉", label: "Etkinlik" },
+  ];
+
+  function hubTabAlert(tab) {
+    if (tab === "world") return claimableAchievements() > 0;
+    if (tab === "season") return claimableSeasonRewards() > 0;
+    if (tab === "weekly") return claimableWeekly() > 0;
+    if (tab === "events") return !!activeEvent();
+    return false;
+  }
+
+  function renderHubTabs(active) {
+    var strip = document.createElement("div");
+    strip.className = "hub-tabs";
+    HUB_TABS.forEach(function (t) {
+      var btn = document.createElement("button");
+      btn.className = "hub-tab" + (t.tab === active ? " active" : "") + (hubTabAlert(t.tab) ? " has-alert" : "");
+      btn.textContent = t.icon + " " + t.label;
+      btn.addEventListener("click", function () {
+        openPanel(t.tab);
+      });
+      strip.appendChild(btn);
+    });
+    els.panelBody.appendChild(strip);
+  }
 
   function openPanel(tab) {
     panelTab = tab;
@@ -2715,6 +2743,7 @@
   }
 
   function buildRecords() {
+    renderHubTabs(panelTab);
     var s = state.stats;
     els.panelSub.textContent =
       "Seviye " + state.level + " · Gün " + state.day + " · " + state.prestiges + " kez yeniden doğdun";
@@ -2772,6 +2801,7 @@
 
   /* ---------- Seasonal events ---------- */
   function buildEvents() {
+    renderHubTabs(panelTab);
     var current = activeEvent();
     els.panelSub.textContent = current
       ? current.icon + " " + current.name + " sürüyor · kazanç ×" + current.mult
@@ -2795,6 +2825,7 @@
   }
 
   function buildSeason() {
+    renderHubTabs(panelTab);
     refreshSeason();
     var daysLeft = Math.max(0, Math.ceil(seasonMsLeft() / 86400000));
     els.panelSub.textContent = state.season.points + " sezon puanı · " + daysLeft + " gün kaldı";
@@ -2822,6 +2853,7 @@
   }
 
   function buildWeekly() {
+    renderHubTabs(panelTab);
     refreshWeekly();
     var daysLeft = Math.max(0, Math.ceil(weeklyMsLeft() / 86400000));
     els.panelSub.textContent = "Adım " + Math.min(state.weekly.step + 1, WEEKLY_CHAIN.length) + "/" +
@@ -2861,6 +2893,7 @@
 
   /* ---------- Achievements & prestige ---------- */
   function buildAchievements() {
+    renderHubTabs(panelTab);
     var unlocked = ACHIEVEMENTS.filter(function (a) {
       return state.ach[a.id];
     }).length;
@@ -3317,25 +3350,9 @@
     e.stopPropagation();
     openPanel("lottery");
   });
-  els.recordsBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    openPanel("records");
-  });
-  els.eventBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    openPanel("events");
-  });
-  els.goalsBtn.addEventListener("click", function (e) {
+  els.hubBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("world");
-  });
-  els.seasonBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    openPanel("season");
-  });
-  els.weeklyBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    openPanel("weekly");
   });
   els.decorateBtn.addEventListener("click", function (e) {
     e.stopPropagation();

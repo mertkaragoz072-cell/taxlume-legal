@@ -1298,6 +1298,49 @@ html, body {
 
 /* ---------- Progression panels (education, career, bank, quests, trophies) ---------- */
 #panel .shop-panel { max-height: 78vh; }
+/* Shared tab strip for the merged achievements/season/weekly/records/events hub */
+.hub-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hub-tabs::-webkit-scrollbar { display: none; }
+.hub-tab {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card-bg-2);
+  color: #9aa0a6;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.hub-tab.active {
+  background: linear-gradient(160deg, var(--green), var(--green-dark));
+  border-color: var(--green-dark);
+  color: #fff;
+}
+.hub-tab.has-alert::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #ff8a65, var(--red));
+  box-shadow: 0 0 6px rgba(239,68,68,0.7);
+  animation: alertPulse 1.4s ease-in-out infinite;
+}
 .panel-note {
   margin-top: 6px;
   font-size: 12px;
