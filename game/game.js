@@ -3,6 +3,18 @@
 
   var SAVE_KEY = "tap-life-save-v1";
 
+  // Rewards jumping straight into a session instead of leaving the tab
+  // idle: any tap in the first few minutes after opening earns double.
+  // Deliberately session-only (a plain var, not saved state) - it's about
+  // encouraging an immediate first tap this visit, not something to bank.
+  var sessionStartAt = Date.now();
+  var WELCOME_BONUS_MS = 5 * 60 * 1000;
+  var WELCOME_BONUS_MULT = 2;
+
+  function welcomeBonusMsLeft() {
+    return WELCOME_BONUS_MS - (Date.now() - sessionStartAt);
+  }
+
   var TAP_ENERGY_COST = 2;
   var TAP_XP_GAIN = 1;
   var SLEEP_ENERGY_PER_TICK = 6;
@@ -76,6 +88,8 @@
     streak: { day: 0, count: 0 },
     viewRoom: "bedroom",
     lastSeen: Date.now(),
+    deal: null,
+    notifyEnabled: false,
   };
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
@@ -127,9 +141,46 @@
     return 1;
   }
 
+  // Time-limited deal: one random shop item or furniture piece gets a
+  // temporary discount, so there's always a reason to check back in before
+  // it runs out rather than just whenever the mood strikes.
+  var DEAL_DURATION_MS = 3 * 3600 * 1000;
+  var DEAL_MIN_GAP_MS = 45 * 60 * 1000;
+  var DEAL_PCT = 0.35;
+
+  function activeDeal() {
+    var d = state.deal;
+    return d && Date.now() < d.expiresAt ? d : null;
+  }
+
+  function dealPctFor(kind, key) {
+    var d = activeDeal();
+    return d && d.kind === kind && d.key === key ? d.pct : 0;
+  }
+
+  function refreshDeal() {
+    if (activeDeal()) return;
+    // Leave a quiet gap after one expires instead of instantly rolling
+    // another, so it reads as an occasional event, not a permanent discount.
+    if (state.deal && Date.now() < state.deal.expiresAt + DEAL_MIN_GAP_MS) return;
+    var candidates = [];
+    Object.keys(SHOP_ITEMS).forEach(function (k) {
+      if (state.items[k] < SHOP_ITEMS[k].maxLevel) candidates.push({ kind: "item", key: k });
+    });
+    Object.keys(FURNITURE_CONFIG).forEach(function (k) {
+      if (state.furniture[k] < FURNITURE_CONFIG[k].maxLevel) candidates.push({ kind: "furniture", key: k });
+    });
+    if (!candidates.length) return;
+    var pick = candidates[Math.floor(Math.random() * candidates.length)];
+    state.deal = { kind: pick.kind, key: pick.key, pct: DEAL_PCT, expiresAt: Date.now() + DEAL_DURATION_MS };
+    if (state.notifyEnabled) notify("🏷️ Sınırlı süreli fırsat!", "Mağazada %" + Math.round(DEAL_PCT * 100) + " indirim var - kaçırma!");
+  }
+
   function itemCost(key) {
     var cfg = SHOP_ITEMS[key];
-    return Math.round(cfg.baseCost * Math.pow(cfg.growth, state.items[key]));
+    var cost = Math.round(cfg.baseCost * Math.pow(cfg.growth, state.items[key]));
+    var pct = dealPctFor("item", key);
+    return pct ? Math.round(cost * (1 - pct)) : cost;
   }
 
   var state = loadState();
@@ -158,6 +209,7 @@
     eventBtn: document.getElementById("eventBtn"),
     goalsBtn: document.getElementById("goalsBtn"),
     eventChip: document.getElementById("eventChip"),
+    welcomeChip: document.getElementById("welcomeChip"),
     eventFx: document.getElementById("eventFx"),
     shop: document.getElementById("shop"),
     shopList: document.getElementById("shopList"),
@@ -179,6 +231,7 @@
     rewardTitle: document.getElementById("rewardTitle"),
     rewardSub: document.getElementById("rewardSub"),
     muteBtn: document.getElementById("muteBtn"),
+    notifyBtn: document.getElementById("notifyBtn"),
     panel: document.getElementById("panel"),
     panelTitle: document.getElementById("panelTitle"),
     panelSub: document.getElementById("panelSub"),
@@ -319,7 +372,9 @@
   function furnitureCost(key) {
     var cfg = FURNITURE_CONFIG[key];
     var level = state.furniture[key];
-    return Math.round(cfg.baseCost * Math.pow(cfg.growth, level - 1));
+    var cost = Math.round(cfg.baseCost * Math.pow(cfg.growth, level - 1));
+    var pct = dealPctFor("furniture", key);
+    return pct ? Math.round(cost * (1 - pct)) : cost;
   }
 
   function formatMoney(n) {
@@ -345,6 +400,50 @@
     toastTimer = setTimeout(function () {
       els.toast.classList.remove("show");
     }, 1500);
+  }
+
+  // Only ever fires while the tab is in the background and the player has
+  // opted in - this is what pulls them back after they've tabbed away,
+  // which a toast (only visible in this tab) can never do.
+  function notify(title, body) {
+    if (!state.notifyEnabled || typeof Notification === "undefined") return;
+    if (Notification.permission !== "granted" || !document.hidden) return;
+    try {
+      new Notification(title, { body: body });
+    } catch (e) {
+      /* not all contexts allow it (e.g. insecure origin); fail quietly */
+    }
+  }
+
+  function toggleNotify() {
+    if (typeof Notification === "undefined") {
+      showToast("Bu tarayıcı bildirimleri desteklemiyor.");
+      return;
+    }
+    if (state.notifyEnabled) {
+      state.notifyEnabled = false;
+      render();
+      saveState();
+      showToast("Bildirimler kapatıldı.");
+      return;
+    }
+    if (Notification.permission === "granted") {
+      state.notifyEnabled = true;
+      render();
+      saveState();
+      showToast("Bildirimler açık! Sekmeden uzaklaşsan bile haberin olur.");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      showToast("Bildirimlere izin verilmemiş - tarayıcı ayarlarından açman gerekiyor.");
+      return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      state.notifyEnabled = perm === "granted";
+      render();
+      saveState();
+      showToast(state.notifyEnabled ? "Bildirimler açık!" : "Bildirim izni verilmedi.");
+    });
   }
 
   function updateFloaterPositions() {
@@ -561,15 +660,27 @@
       "Ev çarpanı ×" + homeMultiplier().toFixed(2) + " · Tık başına " + formatMoney(tapValue());
     els.shopList.textContent = "";
 
+    var deal = activeDeal();
+    if (deal) {
+      var dealCfg = deal.kind === "furniture" ? FURNITURE_CONFIG[deal.key] : SHOP_ITEMS[deal.key];
+      var dealName = deal.kind === "item" && deal.key === "room" ? HOME_TIER_NAMES[homeTier(state.items.room)] : dealCfg.name;
+      var note = document.createElement("div");
+      note.className = "panel-note deal-note";
+      note.textContent = "🏷️ Sınırlı süreli fırsat: " + dealName + " · %" + Math.round(deal.pct * 100) +
+        " indirim · " + formatDuration(Math.max(0, Math.round((deal.expiresAt - Date.now()) / 1000))) + " kaldı";
+      els.shopList.appendChild(note);
+    }
+
     // Furniture lives here too now that the room carries no price tags.
     Object.keys(FURNITURE_CONFIG).forEach(function (key) {
       var cfg = FURNITURE_CONFIG[key];
       var level = state.furniture[key];
       var maxed = level >= cfg.maxLevel;
       var cost = furnitureCost(key);
+      var onDeal = !maxed && dealPctFor("furniture", key) > 0;
 
       var row = document.createElement("div");
-      row.className = "shop-row";
+      row.className = "shop-row" + (onDeal ? " highlight" : "");
 
       var icon = document.createElement("div");
       icon.className = "shop-icon";
@@ -585,7 +696,8 @@
       bonus.className = "shop-bonus";
       bonus.textContent =
         "Şu an +%" + Math.round(cfg.bonus * (level - 1) * 100) +
-        " · her seviye +%" + Math.round(cfg.bonus * 100);
+        " · her seviye +%" + Math.round(cfg.bonus * 100) +
+        (onDeal ? " · 🏷️ %" + Math.round(dealPctFor("furniture", key) * 100) + " indirim!" : "");
       info.appendChild(name);
       info.appendChild(bonus);
 
@@ -608,9 +720,10 @@
       var level = state.items[key];
       var maxed = level >= item.maxLevel;
       var cost = itemCost(key);
+      var onItemDeal = !maxed && dealPctFor("item", key) > 0;
 
       var row = document.createElement("div");
-      row.className = "shop-row";
+      row.className = "shop-row" + (onItemDeal ? " highlight" : "");
 
       var isHome = key === "room";
       var icon = document.createElement("div");
@@ -637,6 +750,7 @@
             ? "Şu an +%" + Math.round(item.bonus * level * 100) + " · her seviye +%" + Math.round(item.bonus * 100)
             : "Her seviye +%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
       }
+      if (onItemDeal) bonus.textContent += " · 🏷️ %" + Math.round(dealPctFor("item", key) * 100) + " indirim!";
       info.appendChild(name);
       info.appendChild(bonus);
 
@@ -844,6 +958,8 @@
     var mult = homeMultiplier();
     els.avatar.textContent = mult < 1.5 ? "🧑" : mult < 2.5 ? "🧑‍💼" : mult < 4 ? "🤵" : "👑";
     els.muteBtn.textContent = state.muted ? "🔇" : "🔊";
+    els.notifyBtn.textContent = state.notifyEnabled ? "🔔" : "🔕";
+    els.notifyBtn.classList.toggle("off", !state.notifyEnabled);
   }
 
   /* ---------- Sound effects (synthesised, no assets) ---------- */
@@ -1427,6 +1543,11 @@
   }
 
   /* ---------- Daily streak ---------- */
+  // Extra perk points on top of the usual daily bonus at a few milestone
+  // days, so the streak has concrete "hold out for this" markers instead of
+  // just a steadily growing number.
+  var STREAK_MILESTONES = { 3: 2, 7: 5, 14: 10, 30: 25 };
+
   function checkStreak() {
     var today = todayIndex();
     if (state.streak.day === today) return;
@@ -1437,8 +1558,13 @@
     var bonus = Math.round(tapBase() * 40 * state.streak.count);
     state.money += bonus;
     bumpStat("earned", bonus);
+    var milestone = STREAK_MILESTONES[state.streak.count];
+    if (milestone) state.perkPoints += milestone;
     setTimeout(function () {
-      celebrate("🔥", state.streak.count + ". gün serisi!", "Günlük bonus " + formatMoney(bonus));
+      celebrate("🔥", state.streak.count + ". gün serisi!",
+        milestone
+          ? "Günlük bonus " + formatMoney(bonus) + " · 🏁 " + state.streak.count + " gün bonusu +" + milestone + " miras puanı!"
+          : "Günlük bonus " + formatMoney(bonus));
       sfx.purchase();
     }, 900);
   }
@@ -1489,6 +1615,14 @@
     els.eventChip.classList.toggle("show", !!ev);
     if (ev) els.eventChip.textContent = ev.icon + " " + ev.name + " ×" + ev.mult;
     renderEventFx(ev);
+
+    var welcomeLeft = welcomeBonusMsLeft();
+    els.welcomeChip.classList.toggle("show", welcomeLeft > 0);
+    if (welcomeLeft > 0) {
+      var wm = Math.floor(welcomeLeft / 60000);
+      var ws = Math.floor((welcomeLeft % 60000) / 1000);
+      els.welcomeChip.textContent = "🎉 Hoş geldin ×" + WELCOME_BONUS_MULT + " · " + wm + ":" + (ws < 10 ? "0" : "") + ws;
+    }
   }
 
   /* ---------- Seasonal weather layer ---------- */
@@ -2453,6 +2587,7 @@
     bumpCombo();
     var crit = Math.random() < critChance();
     var earned = Math.round(tapValue() * comboMultiplier() * (crit ? critMultiplier() : 1));
+    if (welcomeBonusMsLeft() > 0) earned *= WELCOME_BONUS_MULT;
     state.money += earned;
     state.energy = clamp(state.energy - tapEnergyCost(), 0, 100);
     state.xp += TAP_XP_GAIN;
@@ -2577,6 +2712,11 @@
     }
   }
 
+  // In-memory (not persisted) so a reload doesn't immediately re-fire one
+  // that already went out - these are just "don't repeat yourself" latches.
+  var notifiedLowHunger = false;
+  var notifiedPetSad = false;
+
   function passiveTick() {
     if (state.isSleeping) {
       var wasFull = state.energy >= 100;
@@ -2586,10 +2726,17 @@
         state.isSleeping = false;
         state.day += 1;
         showToast("Günaydın! Gün " + state.day);
+        notify("☀️ Günaydın!", "Enerjin doldu, tekrar kazanmaya başlayabilirsin.");
       }
     } else {
       state.hunger = clamp(state.hunger - 1, 0, 100);
       state.energy = clamp(state.energy - 1, 0, 100);
+      if (state.hunger <= 20 && !notifiedLowHunger) {
+        notifiedLowHunger = true;
+        notify("🍗 Acıktın!", "Buzdolabına uğrayıp bir şeyler ye.");
+      } else if (state.hunger > 20) {
+        notifiedLowHunger = false;
+      }
 
       if (isWorking()) {
         var wage = salaryPerSecond() * (PASSIVE_TICK_MS / 1000);
@@ -2609,6 +2756,12 @@
     tickStudy();
     if (state.items.pet > 0) {
       state.pet.happiness = clamp(state.pet.happiness - 0.3 * (PASSIVE_TICK_MS / 3000), 0, 100);
+      if (state.pet.happiness <= 20 && !notifiedPetSad) {
+        notifiedPetSad = true;
+        notify("🐶 Evcil hayvanın seni özledi!", "Onu besleyip mutlu et.");
+      } else if (state.pet.happiness > 20) {
+        notifiedPetSad = false;
+      }
     }
 
     if (state.hunger <= 0 || state.energy <= 0) {
@@ -2618,6 +2771,7 @@
     }
 
     checkCollapse();
+    refreshDeal();
     if (lastTapAt && Date.now() - lastTapAt > TAP_HINT_IDLE_MS) showTapHint(true);
     render();
     saveState();
@@ -2743,6 +2897,7 @@
     render();
     saveState();
   });
+  els.notifyBtn.addEventListener("click", toggleNotify);
 
   setInterval(function () {
     passiveTick();
@@ -2751,6 +2906,7 @@
   setRoom(state.viewRoom === "kitchen" ? "kitchen" : "bedroom", true);
   refreshQuests();
   checkStreak();
+  refreshDeal();
   scheduleGoldCoin();
 
   (function grantOfflineEarnings() {
