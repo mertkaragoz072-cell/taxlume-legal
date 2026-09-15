@@ -301,6 +301,7 @@
     hubBtn: document.getElementById("hubBtn"),
     decorateBtn: document.getElementById("decorateBtn"),
     settingsBtn: document.getElementById("settingsBtn"),
+    sideIconsLeft: document.getElementById("sideIconsLeft"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
     bossChip: document.getElementById("bossChip"),
@@ -485,8 +486,34 @@
     return pct ? Math.round(cost * (1 - pct)) : cost;
   }
 
+  // Below 1M, exact comma-grouped numbers stay the most readable. Above
+  // that, idle-game amounts grow fast enough that the full digit string
+  // becomes noise - a K/M/B/T-style suffix keeps the number scannable at a
+  // glance, which is what actually matters once the count is this large.
+  var MONEY_SUFFIXES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp"];
+
   function formatMoney(n) {
-    return "$" + Math.floor(n).toLocaleString("en-US");
+    n = Math.floor(n);
+    var neg = n < 0;
+    n = Math.abs(n);
+    var sign = neg ? "-$" : "$";
+    if (n < 1000000) return sign + n.toLocaleString("en-US");
+
+    var tier = 0;
+    var scaled = n;
+    while (scaled >= 1000 && tier < MONEY_SUFFIXES.length - 1) {
+      scaled /= 1000;
+      tier++;
+    }
+    var text = scaled < 10 ? scaled.toFixed(2) : scaled < 100 ? scaled.toFixed(1) : scaled.toFixed(0);
+    // Rounding can push e.g. 999.996 to "1000" - bump a tier instead of
+    // ever displaying a 4-digit number in front of the suffix.
+    if (parseFloat(text) >= 1000 && tier < MONEY_SUFFIXES.length - 1) {
+      tier++;
+      scaled /= 1000;
+      text = scaled < 10 ? scaled.toFixed(2) : scaled < 100 ? scaled.toFixed(1) : scaled.toFixed(0);
+    }
+    return sign + String(parseFloat(text)) + MONEY_SUFFIXES[tier];
   }
 
   function formatDuration(sec) {
@@ -704,6 +731,7 @@
     renderAvatar();
     renderHud();
     renderNavBadges();
+    renderSideIconUnlocks();
     renderGoal();
     // Only the time-driven tabs need rebuilding on every tick; the others
     // would rip out the row the player is about to tap.
@@ -1421,10 +1449,12 @@
     }
 
     var moneyBefore = state.money;
+    var hadDecor = decorateUnlocked();
     state.money -= info.cost;
     bumpStat("upgrades", 1);
     if (info.isF) state.furniture[key] += 1;
     else state.items[key] += 1;
+    if (!hadDecor && decorateUnlocked()) announceIconUnlock("decorateBtn");
     var rarityUp = rollRarityUpgrade(key);
     var newModel = info.tierNext !== info.tierNow || (!info.isF && info.level === 0);
     var node = info.isF ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
@@ -2014,6 +2044,36 @@
     els.hubBtn.classList.toggle("has-alert", HUB_TABS.some(function (t) {
       return hubTabAlert(t.tab);
     }));
+  }
+
+  // A brand-new player sees only the tap loop, bed, and fridge at first -
+  // the side rail fills in gradually as there's actually something to do
+  // in each panel, instead of dumping every system on screen from level 1.
+  var ICON_UNLOCK_LEVEL = { questBtn: 2, lotteryBtn: 3, hubBtn: 4 };
+  var ICON_UNLOCK_NAMES = { questBtn: "📋 Görevler", lotteryBtn: "🎟️ Kazı Kazan", hubBtn: "🏆 Hedefler", decorateBtn: "🖐️ Düzenle" };
+
+  function decorateUnlocked() {
+    return Object.keys(SHOP_ITEMS).some(function (key) {
+      return state.items[key] > 0;
+    });
+  }
+
+  function renderSideIconUnlocks() {
+    Object.keys(ICON_UNLOCK_LEVEL).forEach(function (key) {
+      els[key].classList.toggle("locked-hidden", state.level < ICON_UNLOCK_LEVEL[key]);
+    });
+    els.decorateBtn.classList.toggle("locked-hidden", !decorateUnlocked());
+    var anyVisible = ["questBtn", "lotteryBtn", "hubBtn", "decorateBtn"].some(function (key) {
+      return !els[key].classList.contains("locked-hidden");
+    });
+    els.sideIconsLeft.classList.toggle("empty", !anyVisible);
+  }
+
+  function announceIconUnlock(key) {
+    setTimeout(function () {
+      celebrate("🆕", "Yeni özellik açıldı!", ICON_UNLOCK_NAMES[key] + " artık kullanılabilir");
+      sfx.purchase();
+    }, 900);
   }
 
   function renderGoal() {
@@ -3267,6 +3327,7 @@
   }
 
   function levelUpIfReady() {
+    var oldLevel = state.level;
     var leveled = false;
     while (state.xp >= xpForNextLevel()) {
       state.xp -= xpForNextLevel();
@@ -3274,7 +3335,14 @@
       state.health = clamp(state.health + 15, 0, 100);
       leveled = true;
     }
-    if (leveled) showToast("Seviye atladın! Seviye " + state.level);
+    if (leveled) {
+      showToast("Seviye atladın! Seviye " + state.level);
+      Object.keys(ICON_UNLOCK_LEVEL).forEach(function (key) {
+        if (oldLevel < ICON_UNLOCK_LEVEL[key] && state.level >= ICON_UNLOCK_LEVEL[key]) {
+          announceIconUnlock(key);
+        }
+      });
+    }
   }
 
   function checkCollapse() {

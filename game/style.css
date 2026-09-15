@@ -373,6 +373,14 @@ html, body {
   left: auto;
   right: 10px;
 }
+.side-icons.empty {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 .quest-icon,
 .side-icon {
   position: relative;
@@ -395,6 +403,10 @@ html, body {
   font-size: 20px;
   line-height: 1;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+.side-icon.locked-hidden,
+.quest-icon.locked-hidden {
+  display: none;
 }
 
 /* Floating money pill stack above the tap button */
