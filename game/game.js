@@ -92,7 +92,7 @@
     stats: {
       taps: 0, earned: 0, eats: 0, sleeps: 0, upgrades: 0, workSec: 0, golds: 0, crits: 0, petFeeds: 0,
       scratches: 0, scratchWins: 0, scratchWon: 0, jackpots: 0,
-      bestTap: 0, bestCombo: 0, bestStreak: 0,
+      bestTap: 0, bestCombo: 0, bestStreak: 0, bossWins: 0, bossAttempts: 0,
     },
     scratch: { day: 0, freeUsed: false, card: null },
     legacy: 0,
@@ -109,6 +109,7 @@
     scratchPity: 0,
     weekly: { period: 0, step: 0, stepStart: 0 },
     layout: {},
+    rarity: {},
   };
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
@@ -125,6 +126,29 @@
     room: { name: "Ev", icon: "🏠", baseCost: 15000, growth: 1.5, bonus: 0.04, maxLevel: 9 },
     pet: { name: "Evcil Hayvan", icon: "🐶", baseCost: 6000, growth: 1.5, bonus: 0.035, maxLevel: 9 },
   };
+
+  // Rare item variants: every upgrade purchase has a small, flat chance to
+  // bump that piece's rarity by one step (capped at gold), stacking a small
+  // permanent bonus on top of its normal level bonus. Purely additive luck -
+  // never a cost or a choice - so it rewards playing more without gating
+  // anything behind it.
+  var RARITY_NAMES = ["", "Gümüş", "Altın"];
+  var RARITY_ICONS = ["", "🥈", "🥇"];
+  var RARITY_BONUS = [0, 0.05, 0.12];
+  var RARITY_MAX = RARITY_BONUS.length - 1;
+  var RARITY_UPGRADE_CHANCE = 0.1;
+  var RARITY_ITEMS = ["bed", "fridge", "plant", "rug", "lamp", "picture", "shelf", "tv", "room", "pet"];
+
+  function itemRarity(key) {
+    return state.rarity[key] || 0;
+  }
+
+  function rollRarityUpgrade(key) {
+    if (itemRarity(key) >= RARITY_MAX) return false;
+    if (Math.random() >= RARITY_UPGRADE_CHANCE) return false;
+    state.rarity[key] = itemRarity(key) + 1;
+    return true;
+  }
 
   // Legacy points (earned from prestige and legacy-tagged achievements) buy permanent perks.
   var PERKS = {
@@ -276,8 +300,10 @@
     lotteryBtn: document.getElementById("lotteryBtn"),
     hubBtn: document.getElementById("hubBtn"),
     decorateBtn: document.getElementById("decorateBtn"),
+    settingsBtn: document.getElementById("settingsBtn"),
     eventChip: document.getElementById("eventChip"),
     welcomeChip: document.getElementById("welcomeChip"),
+    bossChip: document.getElementById("bossChip"),
     eventFx: document.getElementById("eventFx"),
     shop: document.getElementById("shop"),
     shopList: document.getElementById("shopList"),
@@ -387,6 +413,7 @@
       merged.season.claimed = Object.assign({}, parsed.season && parsed.season.claimed);
       merged.weekly = Object.assign({}, defaultState.weekly, parsed.weekly);
       merged.layout = Object.assign({}, parsed.layout);
+      merged.rarity = Object.assign({}, parsed.rarity);
       return merged;
     } catch (e) {
       return Object.assign({}, defaultState);
@@ -410,11 +437,13 @@
     var mult = 1;
     Object.keys(FURNITURE_CONFIG).forEach(function (key) {
       mult += FURNITURE_CONFIG[key].bonus * (state.furniture[key] - 1);
+      mult += RARITY_BONUS[itemRarity(key)];
     });
     Object.keys(SHOP_ITEMS).forEach(function (key) {
       // A hungry pet still keeps the player company, but only pulls half its weight.
       var factor = key === "pet" && state.pet.happiness <= 0 ? 0.5 : 1;
       mult += SHOP_ITEMS[key].bonus * state.items[key] * factor;
+      if (state.items[key] > 0) mult += RARITY_BONUS[itemRarity(key)];
     });
     if (foodCollectionComplete()) mult += FOOD_COLLECTION_BONUS;
     return mult;
@@ -849,12 +878,14 @@
       var name = document.createElement("div");
       name.className = "shop-name";
       name.textContent =
-        cfg.name + " · " + FURNITURE_TIER_NAMES[furnitureTier(level)] + " (" + level + "/" + cfg.maxLevel + ")";
+        cfg.name + " · " + FURNITURE_TIER_NAMES[furnitureTier(level)] + " (" + level + "/" + cfg.maxLevel + ")" +
+        (itemRarity(key) ? " " + RARITY_ICONS[itemRarity(key)] : "");
       var bonus = document.createElement("div");
       bonus.className = "shop-bonus";
       bonus.textContent =
         "Şu an +%" + Math.round(cfg.bonus * (level - 1) * 100) +
         " · her seviye +%" + Math.round(cfg.bonus * 100) +
+        (itemRarity(key) ? " · " + RARITY_ICONS[itemRarity(key)] + " " + RARITY_NAMES[itemRarity(key)] + " +%" + Math.round(RARITY_BONUS[itemRarity(key)] * 100) : "") +
         (onDeal ? " · 🏷️ %" + Math.round(dealPctFor("furniture", key) * 100) + " indirim!" : "");
       info.appendChild(name);
       info.appendChild(bonus);
@@ -892,9 +923,10 @@
       info.className = "shop-info";
       var name = document.createElement("div");
       name.className = "shop-name";
-      name.textContent = isHome
+      name.textContent = (isHome
         ? HOME_TIER_NAMES[homeTier(level)] + " (Sv " + level + "/" + item.maxLevel + ")"
-        : item.name + (level > 0 ? " · " + ITEM_TIER_NAMES[itemTier(level)] + " (" + level + "/" + item.maxLevel + ")" : "");
+        : item.name + (level > 0 ? " · " + ITEM_TIER_NAMES[itemTier(level)] + " (" + level + "/" + item.maxLevel + ")" : "")) +
+        (level > 0 && itemRarity(key) ? " " + RARITY_ICONS[itemRarity(key)] : "");
       var bonus = document.createElement("div");
       bonus.className = "shop-bonus";
       if (isHome && !maxed) {
@@ -907,6 +939,9 @@
           level > 0
             ? "Şu an +%" + Math.round(item.bonus * level * 100) + " · her seviye +%" + Math.round(item.bonus * 100)
             : "Her seviye +%" + Math.round(item.bonus * 100) + " kazanç (tık + çevrimdışı)";
+      }
+      if (level > 0 && itemRarity(key)) {
+        bonus.textContent += " · " + RARITY_ICONS[itemRarity(key)] + " " + RARITY_NAMES[itemRarity(key)] + " +%" + Math.round(RARITY_BONUS[itemRarity(key)] * 100);
       }
       if (onItemDeal) bonus.textContent += " · 🏷️ %" + Math.round(dealPctFor("item", key) * 100) + " indirim!";
       info.appendChild(name);
@@ -1390,6 +1425,7 @@
     bumpStat("upgrades", 1);
     if (info.isF) state.furniture[key] += 1;
     else state.items[key] += 1;
+    var rarityUp = rollRarityUpgrade(key);
     var newModel = info.tierNext !== info.tierNow || (!info.isF && info.level === 0);
     var node = info.isF ? els[UPGRADE_ELS[key].item] : document.querySelector('.room-item[data-item="' + key + '"]');
 
@@ -1423,6 +1459,13 @@
       } else {
         sfx.coin();
         showToast(info.cfg.name + " seviye " + (info.level + 1) + "! Kazanç arttı.");
+      }
+      if (rarityUp) {
+        setTimeout(function () {
+          celebrate(RARITY_ICONS[itemRarity(key)], info.cfg.name + " " + RARITY_NAMES[itemRarity(key)] + " oldu!",
+            "Kalıcı +%" + Math.round(RARITY_BONUS[itemRarity(key)] * 100) + " ev çarpanı!");
+          sfx.purchase();
+        }, 1600);
       }
       if (els.shop.classList.contains("open")) renderShop();
       saveState();
@@ -2064,6 +2107,77 @@
     scheduleRhythm();
   }
 
+  /* ---------- Boss burst challenge ---------- */
+  // A rarer, longer event than the rhythm window: instead of one well-timed
+  // tap, it asks for a sustained burst of ordinary taps against a visible
+  // countdown, so it reads as a distinct "sprint" moment rather than more of
+  // the same single-tap timing game.
+  var BOSS_MIN_GAP_MS = 90000;
+  var BOSS_MAX_GAP_MS = 150000;
+  var BOSS_DURATION_MS = 10000;
+  var BOSS_TARGET_BASE = 25;
+  var BOSS_REWARD_MULT = 40;
+  var bossTimer = null;
+  var bossTickTimer = null;
+  var bossActive = false;
+  var bossProgress = 0;
+  var bossTarget = 0;
+  var bossEndAt = 0;
+
+  function scheduleBoss() {
+    clearTimeout(bossTimer);
+    bossTimer = setTimeout(triggerBoss, BOSS_MIN_GAP_MS + Math.random() * (BOSS_MAX_GAP_MS - BOSS_MIN_GAP_MS));
+  }
+
+  function triggerBoss() {
+    if (state.isSleeping) {
+      scheduleBoss();
+      return;
+    }
+    bossActive = true;
+    bossProgress = 0;
+    bossTarget = BOSS_TARGET_BASE + Math.floor(state.level / 2);
+    bossEndAt = Date.now() + BOSS_DURATION_MS;
+    bumpStat("bossAttempts", 1);
+    els.bossChip.classList.add("show");
+    updateBossChip();
+    clearInterval(bossTickTimer);
+    bossTickTimer = setInterval(updateBossChip, 200);
+  }
+
+  function updateBossChip() {
+    if (!bossActive) return;
+    var left = Math.max(0, bossEndAt - Date.now());
+    els.bossChip.textContent = "👊 Patlama! " + bossProgress + "/" + bossTarget + " · " + (left / 1000).toFixed(1) + "s";
+    if (left <= 0) finishBoss(false);
+  }
+
+  function bumpBoss() {
+    if (!bossActive) return;
+    bossProgress += 1;
+    if (bossProgress >= bossTarget) finishBoss(true);
+    else updateBossChip();
+  }
+
+  function finishBoss(success) {
+    clearInterval(bossTickTimer);
+    bossActive = false;
+    els.bossChip.classList.remove("show");
+    scheduleBoss();
+    if (success) {
+      var prize = Math.round(tapValue() * BOSS_REWARD_MULT);
+      state.money += prize;
+      bumpStat("earned", prize);
+      bumpStat("bossWins", 1);
+      celebrate("👊", "Patlama Başarılı!", "+" + formatMoney(prize));
+      sfx.purchase();
+      render();
+      saveState();
+    } else {
+      showToast("Patlama görevini kaçırdın, bir dahaki sefere!");
+    }
+  }
+
   /* ---------- Generic panel ---------- */
   var panelTab = null;
 
@@ -2079,6 +2193,7 @@
     events: { title: "🎉 Etkinlikler", build: buildEvents },
     season: { title: "🎖️ Sezon", build: buildSeason },
     weekly: { title: "🚩 Haftalık Görev", build: buildWeekly },
+    settings: { title: "⚙️ Ayarlar", build: buildSettings },
   };
 
   // These five panels used to each get their own side icon; now they share
@@ -2762,6 +2877,25 @@
     els.panelBody.appendChild(grid);
     if (!foodDone) addNote("Her yemeği en az bir kez ye - hepsini tamamlayınca kalıcı bir ev çarpanı kazanırsın.");
 
+    addNote("💎 Nadir Eşya Koleksiyonu");
+    var rarityGrid = document.createElement("div");
+    rarityGrid.className = "food-collection-grid";
+    RARITY_ITEMS.forEach(function (key) {
+      var isF = !!FURNITURE_CONFIG[key];
+      var owned = isF ? state.furniture[key] > 0 : state.items[key] > 0;
+      var baseName = isF ? FURNITURE_CONFIG[key].name : key === "room" ? "Ev" : SHOP_ITEMS[key].name;
+      var icon = isF ? FURNITURE_ICONS[key] : key === "room" ? HOME_TIER_ICONS[homeTier(state.items.room)] : SHOP_ITEMS[key].icon;
+      var rarity = itemRarity(key);
+      var cell = document.createElement("div");
+      cell.className = "food-collection-item" + (owned ? " collected" : "") + (rarity ? " rarity-" + rarity : "");
+      cell.textContent = rarity ? RARITY_ICONS[rarity] : icon;
+      cell.title = baseName + (rarity ? " · " + RARITY_NAMES[rarity] : "");
+      rarityGrid.appendChild(cell);
+    });
+    els.panelBody.appendChild(rarityGrid);
+    addNote("Her yükseltme satın alışında %" + Math.round(RARITY_UPGRADE_CHANCE * 100) +
+      " şansla eşyan gümüş/altın nadir versiyona geçer - kalıcı ekstra ev çarpanı kazandırır.");
+
     addNote("🏅 Kişisel rekorlar");
     makeStatGrid([
       { label: "En yüksek tek tık", value: formatMoney(s.bestTap || 0) },
@@ -2782,6 +2916,7 @@
       { label: "Uyuma", value: (s.sleeps || 0).toLocaleString("tr-TR") },
       { label: "Mama verme", value: (s.petFeeds || 0).toLocaleString("tr-TR") },
       { label: "Oynanan kart", value: (s.scratches || 0).toLocaleString("tr-TR") },
+      { label: "Patlama başarısı", value: (s.bossWins || 0) + "/" + (s.bossAttempts || 0) },
     ]);
 
     addNote("✖️ Aktif çarpanlar");
@@ -2887,6 +3022,86 @@
     addNote(weeklyChainDone()
       ? "Bu haftanın zincirini tamamladın! Yeni zincir haftalık sıfırlanınca başlar."
       : "Sıradaki adımı bitirip ödülünü al - bir sonraki adım ancak o zaman açılır.");
+  }
+
+  /* ---------- Settings: save export/import ---------- */
+  // The game has no backend, so localStorage is the only copy of a save -
+  // a code the player can copy out and paste back in (here or on another
+  // device) is the only backup path available.
+  function encodeSave() {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  }
+
+  function decodeSave(code) {
+    return JSON.parse(decodeURIComponent(escape(atob(code))));
+  }
+
+  function importSaveCode(code) {
+    if (!code) {
+      showToast("Önce bir kayıt kodu yapıştır.");
+      return;
+    }
+    var parsed;
+    try {
+      parsed = decodeSave(code);
+    } catch (e) {
+      showToast("Kod okunamadı, doğru kopyaladığından emin ol.");
+      return;
+    }
+    if (!parsed || typeof parsed.money !== "number" || typeof parsed.level !== "number") {
+      showToast("Bu geçerli bir Tap Life kayıt kodu değil.");
+      return;
+    }
+    if (!window.confirm("Bu, şu anki ilerlemenin üzerine yazılacak. Devam edilsin mi?")) return;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(parsed));
+    location.reload();
+  }
+
+  function buildSettings() {
+    els.panelSub.textContent = "Kayıt yönetimi";
+
+    addNote("💾 Kaydını Dışa Aktar — bu kodu kopyalayıp sakla, başka bir cihazda içe aktararak ilerlemeni taşıyabilirsin.");
+    var exportBox = document.createElement("textarea");
+    exportBox.className = "save-code-box";
+    exportBox.readOnly = true;
+    exportBox.rows = 4;
+    exportBox.value = encodeSave();
+    els.panelBody.appendChild(exportBox);
+
+    var copyBtn = document.createElement("button");
+    copyBtn.className = "buy-btn";
+    copyBtn.textContent = "📋 Kodu Kopyala";
+    copyBtn.addEventListener("click", function () {
+      exportBox.select();
+      var ok = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(exportBox.value);
+          ok = true;
+        } else {
+          ok = document.execCommand("copy");
+        }
+      } catch (e) {
+        ok = false;
+      }
+      showToast(ok ? "Kod kopyalandı!" : "Kodu elle seçip kopyala.");
+    });
+    els.panelBody.appendChild(copyBtn);
+
+    addNote("📥 Kayıt Kodunu İçe Aktar — DİKKAT: mevcut ilerlemenin üzerine yazılır.");
+    var importBox = document.createElement("textarea");
+    importBox.className = "save-code-box";
+    importBox.rows = 4;
+    importBox.placeholder = "Kodu buraya yapıştır...";
+    els.panelBody.appendChild(importBox);
+
+    var importBtn = document.createElement("button");
+    importBtn.className = "buy-btn danger";
+    importBtn.textContent = "📥 İçe Aktar";
+    importBtn.addEventListener("click", function () {
+      importSaveCode(importBox.value.trim());
+    });
+    els.panelBody.appendChild(importBtn);
   }
 
   /* ---------- Achievements & prestige ---------- */
@@ -3103,6 +3318,7 @@
     characterBounce();
     flyCoin();
     levelUpIfReady();
+    bumpBoss();
     render();
     saveState();
   }
@@ -3356,6 +3572,10 @@
     e.stopPropagation();
     toggleDecorateMode();
   });
+  els.settingsBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    openPanel("settings");
+  });
   els.goalTicker.addEventListener("click", function (e) {
     e.stopPropagation();
     openPanel("world");
@@ -3438,6 +3658,7 @@
   refreshWeekly();
   scheduleGoldCoin();
   scheduleRhythm();
+  scheduleBoss();
 
   (function grantOfflineEarnings() {
     var elapsedSec = Math.floor((Date.now() - lastSeenAtLoad) / 1000);
