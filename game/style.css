@@ -2167,3 +2167,55 @@ html, body {
   0%, 100% { opacity: 1; filter: drop-shadow(0 0 1px rgba(110,198,255,0.6)); }
   50% { opacity: 0.7; filter: drop-shadow(0 0 3px rgba(110,198,255,0.9)); }
 }
+
+/* ---- Era-specific bed art ----
+   Instead of just recoloring the modern bed's silhouette, the bed itself
+   is a different object per era (stone slab, reed mat, four-poster,
+   cryo-pod...). era-5 keeps the original hand-tiered bed (posts/knobs/
+   blanket) exactly as it was; every other era swaps in its own group and
+   ignores the furniture-quality tier (owning a nicer bed still upgrades
+   its bonus, just not a second axis of era-specific art). */
+.era-bed { display: none; }
+.scene:not(.era-5) .furniture.bed .modern-bed { display: none; }
+.scene.era-0 .furniture.bed .era-bed-0,
+.scene.era-1 .furniture.bed .era-bed-1,
+.scene.era-2 .furniture.bed .era-bed-2,
+.scene.era-3 .furniture.bed .era-bed-3,
+.scene.era-4 .furniture.bed .era-bed-4,
+.scene.era-6 .furniture.bed .era-bed-6,
+.scene.era-7 .furniture.bed .era-bed-7,
+.scene.era-8 .furniture.bed .era-bed-8 { display: block; }
+/* The era-bed art is already hand-colored for its era - the generic
+   furniture recolor filter above would double-process it (e.g. a cyan
+   accent rotating into brown under hue-rotate), so it's reset to none
+   wherever a custom era-bed is showing. */
+.scene.era-0 .furniture.bed svg,
+.scene.era-1 .furniture.bed svg,
+.scene.era-2 .furniture.bed svg,
+.scene.era-3 .furniture.bed svg,
+.scene.era-4 .furniture.bed svg,
+.scene.era-6 .furniture.bed svg,
+.scene.era-7 .furniture.bed svg,
+.scene.era-8 .furniture.bed svg { filter: none; }
+
+/* ---- Era-specific cold-storage art (the fridge equivalent) ----
+   Same pattern as the bed: a meat rack, amphorae, a cellar door, an
+   icebox... instead of a recolored fridge. era-5 keeps the original. */
+.era-fridge { display: none; }
+.scene:not(.era-5) .furniture.fridge .modern-fridge { display: none; }
+.scene.era-0 .furniture.fridge .era-fridge-0,
+.scene.era-1 .furniture.fridge .era-fridge-1,
+.scene.era-2 .furniture.fridge .era-fridge-2,
+.scene.era-3 .furniture.fridge .era-fridge-3,
+.scene.era-4 .furniture.fridge .era-fridge-4,
+.scene.era-6 .furniture.fridge .era-fridge-6,
+.scene.era-7 .furniture.fridge .era-fridge-7,
+.scene.era-8 .furniture.fridge .era-fridge-8 { display: block; }
+.scene.era-0 .furniture.fridge svg,
+.scene.era-1 .furniture.fridge svg,
+.scene.era-2 .furniture.fridge svg,
+.scene.era-3 .furniture.fridge svg,
+.scene.era-4 .furniture.fridge svg,
+.scene.era-6 .furniture.fridge svg,
+.scene.era-7 .furniture.fridge svg,
+.scene.era-8 .furniture.fridge svg { filter: none; }
