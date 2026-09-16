@@ -775,6 +775,10 @@
   // player can nudge furniture into an arrangement that feels like theirs
   // without any free-form placement system to build and validate.
   var DECOR_RANGE_PX = 40;
+  // Must match --room-zoom in style.css: drag deltas are computed from real
+  // screen pixels, but applied as a local translate *inside* the scaled
+  // .room-stage, so they need to be scaled back up to track the pointer 1:1.
+  var ROOM_ZOOM = 0.8;
   var decorateMode = false;
 
   function layoutKey(room, item) {
@@ -833,8 +837,8 @@
     });
     node.addEventListener("pointermove", function (e) {
       if (!dragging) return;
-      var dx = clamp(baseDx + (e.clientX - startX), -DECOR_RANGE_PX, DECOR_RANGE_PX);
-      var dy = clamp(baseDy + (e.clientY - startY), -DECOR_RANGE_PX, DECOR_RANGE_PX);
+      var dx = clamp(baseDx + (e.clientX - startX) / ROOM_ZOOM, -DECOR_RANGE_PX, DECOR_RANGE_PX);
+      var dy = clamp(baseDy + (e.clientY - startY) / ROOM_ZOOM, -DECOR_RANGE_PX, DECOR_RANGE_PX);
       node.style.setProperty("--decor-dx", dx + "px");
       node.style.setProperty("--decor-dy", dy + "px");
       setLayoutOffset(room, item, dx, dy);

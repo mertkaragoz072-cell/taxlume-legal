@@ -1799,6 +1799,24 @@ html, body {
 .room-item.pet::before { width: 80%; height: 13px; bottom: 0; }
 .character.sleeping::before { display: none; }
 
+/* ---------- Camera pulled back ----------
+   Everything that reads as "in the room" (furniture, decor, the window,
+   the character) lives inside .room-stage and is scaled down as one
+   unit, anchored to the floor. The wall/floor backdrop behind it and the
+   UI chrome in front of it are outside this wrapper and stay full size,
+   so the shrink reads as more visible room rather than a smaller picture. */
+.room-stage {
+  position: absolute;
+  inset: 0;
+  /* The transform makes this its own stacking context, so without an
+     explicit z-index here it would rank as z-index:auto against
+     .room-depth's z-index:1 sibling and lose - hiding the character and
+     items behind the floor texture regardless of their own z-index. */
+  z-index: 2;
+  transform: scale(var(--room-zoom, 0.8));
+  transform-origin: 50% 100%;
+}
+
 /* ---------- Two rooms ----------
    Both rooms occupy the whole scene; only one is mounted at a time. The
    wrappers carry no z-index of their own, so everything inside keeps
@@ -1817,7 +1835,11 @@ html, body {
 
 /* The kitchen wears tiles on the wall and a cooler floor, so the two rooms
    are never mistaken for each other. */
-.kitchen-skin { position: absolute; inset: 0; pointer-events: none; }
+/* Moved out of .room-view.kitchen so it stays full-bleed and unscaled
+   under .room-stage's zoom - its own display now follows .in-kitchen
+   directly instead of inheriting visibility from the room-view parent. */
+.kitchen-skin { position: absolute; inset: 0; pointer-events: none; display: none; }
+.scene.in-kitchen .kitchen-skin { display: block; }
 .kitchen-skin::before {
   content: "";
   position: absolute;

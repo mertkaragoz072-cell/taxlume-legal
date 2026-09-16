@@ -71,6 +71,11 @@
       <div class="front-vignette"></div>
     </div>
 
+    <!-- Full-bleed layers that must never shrink with the zoomed-out room
+         content below: the kitchen tile skin and the day/night tint. -->
+    <div class="kitchen-skin" aria-hidden="true"></div>
+    <div class="night-overlay" id="nightOverlay"></div>
+
     <div class="event-fx" id="eventFx"></div>
 
     <div class="side-icons" id="sideIconsLeft">
@@ -100,6 +105,11 @@
       <div class="tap-hint-hand" id="tapHintHand">👆</div>
     </div>
 
+    <!-- Everything that should visually shrink together when the camera
+         pulls back: both rooms' furniture/decor and the character. The
+         wall/floor backdrop and UI chrome outside this wrapper stay full
+         size, which is what makes the room read as more spacious. -->
+    <div class="room-stage" id="roomStage">
     <div class="room-view bedroom active" data-room="bedroom">
       <!-- Fixed bedroom fittings: not for sale, just make the room read as lived-in -->
       <div class="curtains bedroom-curtains" aria-hidden="true">
@@ -560,7 +570,6 @@
     </div>
 
     <div class="room-view kitchen" data-room="kitchen">
-      <div class="kitchen-skin" aria-hidden="true"></div>
       <!-- Fixed kitchen fittings: they make the room read as a kitchen -->
       <div class="curtains kitchen-curtains" aria-hidden="true">
         <svg viewBox="0 0 200 130" width="100%" height="100%">
@@ -990,10 +999,6 @@
 
 
 
-    <!-- Window with day / sunset / night sky -->
-
-    <!-- Night tint + lamp light -->
-    <div class="night-overlay" id="nightOverlay"></div>
 
     <!-- Player character -->
     <div class="character" id="character">
@@ -1047,6 +1052,7 @@
         <circle cx="14" cy="26" r="2.6" fill="#ff9fb0" opacity="0.5"/><circle cx="36" cy="26" r="2.6" fill="#ff9fb0" opacity="0.5"/>
       </svg>
     </div>
+    </div><!-- /.room-stage -->
 
     <!-- Purchasable room items (shown once bought; art swaps by tier) -->
 
