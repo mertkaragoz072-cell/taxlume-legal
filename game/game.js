@@ -778,7 +778,7 @@
   // Must match --room-zoom in style.css: drag deltas are computed from real
   // screen pixels, but applied as a local translate *inside* the scaled
   // .room-stage, so they need to be scaled back up to track the pointer 1:1.
-  var ROOM_ZOOM = 0.8;
+  var ROOM_ZOOM = 0.74;
   var decorateMode = false;
 
   function layoutKey(room, item) {

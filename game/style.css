@@ -1184,9 +1184,9 @@ html, body {
 .room-item.rug { left: 36%; bottom: 8%; width: 248px; height: 57px; z-index: 1; }
 .room-item.lamp { left: 68%; bottom: 16%; width: 71px; height: 211px; z-index: 3; }
 .room-item.pet { z-index: 7; }
-.room-item.picture { left: 46%; top: auto; bottom: calc(21% + 248px); width: 92px; height: 66px; }
-.room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 281px); width: 132px; height: 48px; }
-.room-item.tv { left: 58%; top: auto; bottom: calc(21% + 264px); width: 158px; height: 104px; }
+.room-item.picture { left: 53%; top: auto; bottom: calc(21% + 248px); width: 92px; height: 66px; }
+.room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 335px); width: 132px; height: 48px; }
+.room-item.tv { left: 58%; top: auto; bottom: calc(21% + 330px); width: 158px; height: 104px; }
 .room-item.wardrobe { left: 87%; bottom: 8%; width: 46px; height: 120px; z-index: 3; }
 .room-item.spice { left: 45%; top: auto; bottom: calc(21% + 385px); width: 56px; height: 40px; z-index: 2; }
 .window { left: 6%; top: auto; bottom: calc(21% + 186px); width: 165px; height: 136px; }
@@ -1602,7 +1602,7 @@ html, body {
 /* ---------- Pet companion ---------- */
 .room-item.pet {
   left: 6%;
-  bottom: 3%;
+  bottom: 7%;
   width: 92px;
   height: 76px;
   z-index: 5;
@@ -1813,7 +1813,7 @@ html, body {
      .room-depth's z-index:1 sibling and lose - hiding the character and
      items behind the floor texture regardless of their own z-index. */
   z-index: 2;
-  transform: scale(var(--room-zoom, 0.8));
+  transform: scale(var(--room-zoom, 0.74));
   transform-origin: 50% 100%;
 }
 
@@ -1900,7 +1900,7 @@ html, body {
   filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));
 }
 .wall-clock:not(.kitchen-clock) { left: 52%; top: 18%; width: 58px; height: 58px; }
-.kitchen-clock { left: 38%; bottom: calc(21% + 315px); width: 56px; height: 56px; }
+.kitchen-clock { left: 38%; bottom: calc(21% + 335px); width: 56px; height: 56px; }
 #clockHourHand, #clockMinuteHand, #clockHourHand2, #clockMinuteHand2 {
   transform-origin: 30px 30px;
   transition: transform 0.6s cubic-bezier(0.4, 2, 0.6, 1);
@@ -1908,7 +1908,7 @@ html, body {
 
 
 /* The kitchen window sits above the counter rather than over the bed. */
-.kitchen-window { left: 30% !important; }
+.kitchen-window { left: 21% !important; }
 
 /* Kitchen floor: pale tile instead of the bedroom's boards. The perspective
    seam layer stays, so it reads as grout running away from the viewer. */
