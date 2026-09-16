@@ -1156,6 +1156,7 @@
     // cut in both directions, and the slide is restored right after for the
     // next time the character actually walks somewhere.
     c.style.transition = "none";
+    c.style.left = ""; // drop any idle-wander position so the sleeping/standing CSS spot applies cleanly
     c.classList.toggle("sleeping", state.isSleeping);
     void c.offsetWidth;
     c.style.transition = "";
@@ -1175,6 +1176,7 @@
 
   function characterEat() {
     var c = els.character;
+    c.style.left = ""; // drop any idle-wander position so the walk-to-fridge slide starts from the CSS default
     c.classList.add("eating");
     setTimeout(function () {
       c.classList.add("happy");
@@ -1190,6 +1192,43 @@
   els.character.addEventListener("animationend", function (e) {
     if (e.animationName === "bounce") els.character.classList.remove("bounce");
   });
+
+  /* ---------- Idle wandering ----------
+     Between naps, meals and work, the character isn't just standing on one
+     spot forever - it drifts to a few other natural spots in whichever room
+     is open, using the same "left" transition the walk-to-fridge slide
+     already relies on. Purely cosmetic, nothing here touches game state. */
+  var WALK_SPOTS = [20, 37, 50, 58];
+  var wanderTimer = null;
+  var wanderWalkTimer = null;
+
+  function canWander() {
+    return (
+      !state.isSleeping &&
+      !state.working &&
+      !els.character.classList.contains("eating") &&
+      !els.scene.classList.contains("decorate-mode")
+    );
+  }
+
+  function wanderTick() {
+    if (canWander()) {
+      var c = els.character;
+      var cur = c.style.left;
+      var choices = WALK_SPOTS.filter(function (s) {
+        return s + "%" !== cur;
+      });
+      var next = choices[Math.floor(Math.random() * choices.length)];
+      c.classList.add("walking");
+      c.style.left = next + "%";
+      clearTimeout(wanderWalkTimer);
+      wanderWalkTimer = setTimeout(function () {
+        c.classList.remove("walking");
+      }, 720);
+    }
+    clearTimeout(wanderTimer);
+    wanderTimer = setTimeout(wanderTick, 7000 + Math.random() * 8000);
+  }
 
   /* ---------- Money flying to the wallet ---------- */
   var lastTapPoint = null;
@@ -3907,4 +3946,5 @@
   applyOutfit();
   render();
   appBooted = true;
+  wanderTimer = setTimeout(wanderTick, 5000 + Math.random() * 5000);
 })();

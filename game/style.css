@@ -1064,6 +1064,24 @@ html, body {
 .character.sleeping .pose-stand { display: none; }
 .character.sleeping .pose-sleep { display: block; }
 @keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
+
+/* Idle wandering: a brisk leg/arm swing for the ~0.7s it takes to slide
+   to the next spot, layered on top of the plain left-position transition
+   that already does the sliding. Legs pivot at the hip, arms at the
+   shoulder, each pair a half-cycle out of phase for a real walk cycle. */
+.character.walking { animation: none; }
+.character.walking .leg-l { animation: legSwingL 0.42s ease-in-out infinite; transform-origin: 23.5px 65px; }
+.character.walking .leg-r { animation: legSwingR 0.42s ease-in-out infinite; transform-origin: 36.5px 65px; }
+.character.walking .arm-l { animation: legSwingR 0.42s ease-in-out infinite; transform-origin: 11px 47px; }
+.character.walking .arm-r { animation: legSwingL 0.42s ease-in-out infinite; transform-origin: 49px 47px; }
+@keyframes legSwingL {
+  0%, 100% { transform: rotate(-16deg); }
+  50% { transform: rotate(16deg); }
+}
+@keyframes legSwingR {
+  0%, 100% { transform: rotate(16deg); }
+  50% { transform: rotate(-16deg); }
+}
 @keyframes bounce {
   0% { transform: scale(1, 1); }
   30% { transform: scale(1.18, 0.82); }
