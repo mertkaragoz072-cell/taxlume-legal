@@ -1773,19 +1773,19 @@ html, body {
 .character,
 .room-item.lamp,
 .room-item.pet {
-  filter: drop-shadow(0 6px 5px rgba(58,42,34,0.3));
+  filter: drop-shadow(0 8px 8px rgba(58,42,34,0.32));
 }
 .room-item.picture,
 .room-item.shelf,
 .room-item.tv {
-  filter: saturate(0.9) brightness(1.04) drop-shadow(0 5px 4px rgba(58,42,34,0.22));
+  filter: saturate(0.9) brightness(1.04) drop-shadow(0 7px 7px rgba(58,42,34,0.25));
 }
 .window {
-  filter: saturate(0.94) brightness(1.03) drop-shadow(0 4px 4px rgba(58,42,34,0.24));
+  filter: saturate(0.94) brightness(1.03) drop-shadow(0 6px 6px rgba(58,42,34,0.26));
 }
 /* The rug lies flat, so it only gets a whisper of contact shade. */
 .room-item.rug {
-  filter: drop-shadow(0 3px 3px rgba(58,42,34,0.22));
+  filter: drop-shadow(0 3px 4px rgba(58,42,34,0.24));
 }
 
 /* A pool of contact shade under anything standing on the floor. Drawn in
@@ -1802,7 +1802,7 @@ html, body {
   height: 18px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(58,42,34,0.4), rgba(58,42,34,0) 72%);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(58,42,34,0.46), rgba(58,42,34,0.12) 55%, rgba(58,42,34,0) 80%);
   pointer-events: none;
 }
 .character::before { width: 62%; height: 17px; bottom: 8px; }
