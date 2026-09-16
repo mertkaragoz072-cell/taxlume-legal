@@ -923,10 +923,20 @@ html, body {
 /* The view outside the window - and the window itself - change with the
    home too, so a new tier reads as a different building, not a repaint. */
 .skyline { display: none; }
-.scene.room-t1 .skyline-t1,
-.scene.room-t2 .skyline-t2,
-.scene.room-t3 .skyline-t3,
-.scene.room-t4 .skyline-t4 { display: block; }
+/* era-5 (Modern Çağ) is today's game unchanged, so the room-tier skyline
+   still drives the view; every other era overrides it with its own. */
+.scene.era-5.room-t1 .skyline-t1,
+.scene.era-5.room-t2 .skyline-t2,
+.scene.era-5.room-t3 .skyline-t3,
+.scene.era-5.room-t4 .skyline-t4 { display: block; }
+.scene.era-0 .skyline-era0,
+.scene.era-1 .skyline-era1,
+.scene.era-2 .skyline-era2,
+.scene.era-3 .skyline-era3,
+.scene.era-4 .skyline-era4,
+.scene.era-6 .skyline-era6,
+.scene.era-7 .skyline-era7,
+.scene.era-8 .skyline-era8 { display: block; }
 
 .skyline-t1 path { fill: #57cc6a; }
 .window.sunset .skyline-t1 path { fill: #2a1e4d; }
@@ -1892,6 +1902,9 @@ html, body {
 }
 .bedroom-curtains { left: calc(6% - 28px); bottom: calc(21% + 170px); width: 220px; height: 175px; }
 .kitchen-curtains { left: calc(30% - 28px); bottom: calc(21% + 170px); width: 220px; height: 175px; }
+/* Fabric drapes read as "modern home" - hidden for every other era so the
+   window frame's own era recolor reads clearly instead of fighting them. */
+.scene:not(.era-5) .curtains { display: none; }
 
 .wall-clock {
   position: absolute;
@@ -1916,4 +1929,241 @@ html, body {
   background:
     linear-gradient(180deg, rgba(58,42,34,0.2), rgba(0,0,0,0) 26%, rgba(0,0,0,0.06) 100%),
     #cfd8d4;
+}
+
+/* ========================================================================
+   Eras: Taş Devri -> Mars Çağı
+   A second, much slower progression on top of the home tier above. The
+   home tier is "how nice is your place"; the era is "what century are you
+   in". Placed at the end of the file so these rules win the cascade over
+   the room-tier ones for the same properties (wall, floor, skirting,
+   window and furniture recolor) - the era is the room's headline theme,
+   the home tier becomes a smaller wealth accent within it.
+   era-5 (Modern Çağ) is exactly today's game, so it has no rules here at
+   all: the room-tier art already drawn for it just shows through as-is.
+   ======================================================================== */
+
+/* The kitchen's tile-grout overlay was drawn to match the modern kitchen;
+   it doesn't belong on cave rock or Mars habitat walls, so it only shows
+   during the era it was made for. */
+.scene.in-kitchen:not(.era-5) .kitchen-skin { display: none; }
+
+/* ---- era-0: Taş Devri (cave) ---- */
+.scene.era-0 {
+  background:
+    radial-gradient(circle at 20% 28%, rgba(0,0,0,0.16) 0 42px, transparent 43px),
+    radial-gradient(circle at 72% 58%, rgba(0,0,0,0.13) 0 52px, transparent 53px),
+    radial-gradient(circle at 45% 82%, rgba(0,0,0,0.1) 0 34px, transparent 35px),
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0) 40%, rgba(0,0,0,0.14)),
+    #6b6156;
+}
+.scene.era-0::after {
+  background:
+    radial-gradient(circle at 30% 42%, rgba(0,0,0,0.22) 0 30px, transparent 31px),
+    radial-gradient(circle at 72% 68%, rgba(0,0,0,0.16) 0 26px, transparent 27px),
+    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0) 30%, rgba(0,0,0,0.08)),
+    #5a4632;
+}
+.scene.era-0 .skirting { background: linear-gradient(180deg, #8a7a63 0%, #5f4e3a 55%, #3d2f20 100%); }
+.scene.era-0 .win-shutter, .scene.era-0 .win-header { fill: #5f4e3a; stroke: #2b2018; }
+.scene.era-0 .win-mullion, .scene.era-0 .win-sill { fill: #7a6a52; stroke: #2b2018; }
+.scene.era-0 .win-frame-outer { stroke: #2b2018; }
+.scene.era-0 .furniture svg, .scene.era-0 .room-item svg {
+  filter: saturate(0.65) sepia(0.5) contrast(0.95) brightness(0.88) hue-rotate(-6deg);
+}
+.skyline-era0 path { fill: #4a4038; }
+.window.sunset .skyline-era0 path { fill: #2e2620; }
+.window.night .skyline-era0 path { fill: #1c1712; }
+.era-flame { animation: eraFlameFlicker 1.4s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes eraFlameFlicker {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.82; transform: scaleY(1.1); }
+}
+
+/* ---- era-1: Bronz Çağı (mudbrick village) ---- */
+.scene.era-1 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0) 40%, rgba(0,0,0,0.1)),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.08) 0 2px, transparent 2px 26px),
+    #c99b5c;
+}
+.scene.era-1::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0 2px, transparent 2px 40px),
+    linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0) 30%),
+    #a9793f;
+}
+.scene.era-1 .skirting { background: linear-gradient(180deg, #d9ab6a 0%, #a9793f 55%, #7a5228 100%); }
+.scene.era-1 .win-shutter, .scene.era-1 .win-header { fill: #8a5a34; stroke: #4a3220; }
+.scene.era-1 .furniture svg, .scene.era-1 .room-item svg {
+  filter: saturate(0.85) sepia(0.4) hue-rotate(6deg) brightness(0.98);
+}
+.skyline-era1 path { fill: #8a6a3a; }
+.window.sunset .skyline-era1 path { fill: #5a3f28; }
+.window.night .skyline-era1 path { fill: #362415; }
+
+/* ---- era-2: Antik Çağ (marble & columns) ---- */
+.scene.era-2 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(0,0,0,0) 45%, rgba(0,0,0,0.06)),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 60px),
+    #e8e2d0;
+}
+.scene.era-2::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0 1px, transparent 1px 34px),
+    #d8cfb2;
+}
+.scene.era-2 .skirting { background: linear-gradient(180deg, #f2ecd8 0%, #d8cfb2 55%, #b3a67e 100%); }
+.scene.era-2 .win-mullion, .scene.era-2 .win-sill { fill: #efe6c8; stroke: #776b4e; }
+.scene.era-2 .win-shutter { fill: #d8cfb2; stroke: #776b4e; }
+.scene.era-2 .win-header { fill: #c9bfa0; stroke: #776b4e; }
+.scene.era-2 .furniture svg, .scene.era-2 .room-item svg {
+  filter: saturate(0.55) sepia(0.15) brightness(1.12) contrast(0.95);
+}
+.skyline-era2 path { fill: #c9bfa0; }
+.window.sunset .skyline-era2 path { fill: #8f7a5a; }
+.window.night .skyline-era2 path { fill: #4a3f30; }
+
+/* ---- era-3: Orta Çağ (castle stone) ---- */
+.scene.era-3 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0) 40%, rgba(0,0,0,0.14)),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 3px, transparent 3px 34px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0 2px, transparent 2px 68px),
+    #7d7468;
+}
+.scene.era-3::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.16) 0 2px, transparent 2px 58px),
+    #5c5548;
+}
+.scene.era-3 .skirting { background: linear-gradient(180deg, #a89c86 0%, #786d5c 55%, #4a4238 100%); }
+.scene.era-3 .win-shutter { fill: #4a1e1a; stroke: #241210; }
+.scene.era-3 .win-header { fill: #8a6a1a; stroke: #241210; }
+.scene.era-3 .win-mullion, .scene.era-3 .win-sill { fill: #948872; stroke: #241210; }
+.scene.era-3 .furniture svg, .scene.era-3 .room-item svg {
+  filter: saturate(1.05) sepia(0.12) hue-rotate(-4deg) contrast(1.08) brightness(0.96);
+}
+.skyline-era3 path { fill: #4a4640; }
+.window.sunset .skyline-era3 path { fill: #302c26; }
+.window.night .skyline-era3 path { fill: #1c1a16; }
+
+/* ---- era-4: Sanayi Devri (brick & soot) ---- */
+.scene.era-4 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0) 40%, rgba(0,0,0,0.16)),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 40px),
+    #766b62;
+}
+.scene.era-4::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 70px),
+    #4a423c;
+}
+.scene.era-4 .skirting { background: linear-gradient(180deg, #8f8378 0%, #5f554a 55%, #3a3228 100%); }
+.scene.era-4 .win-shutter, .scene.era-4 .win-header { fill: #5a3d30; stroke: #241812; }
+.scene.era-4 .win-mullion, .scene.era-4 .win-sill { fill: #8f8378; stroke: #241812; }
+.scene.era-4 .furniture svg, .scene.era-4 .room-item svg {
+  filter: saturate(0.5) contrast(1.15) brightness(0.88) sepia(0.12) hue-rotate(8deg);
+}
+.skyline-era4 path { fill: #3a3632; }
+.window.sunset .skyline-era4 path { fill: #241f1c; }
+.window.night .skyline-era4 path { fill: #151210; }
+.era-smoke circle { animation: eraSmokePuff 3s ease-out infinite; }
+.era-smoke circle:nth-child(2) { animation-delay: 1s; }
+.era-smoke circle:nth-child(3) { animation-delay: 2s; }
+@keyframes eraSmokePuff {
+  0% { transform: translateY(0) scale(1); opacity: 0.65; }
+  100% { transform: translateY(-16px) scale(1.7); opacity: 0; }
+}
+
+/* era-5: Modern Çağ - no rules; today's game, unmodified. */
+
+/* ---- era-6: Dijital Çağ (smart home / neon) ---- */
+.scene.era-6 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0) 45%, rgba(0,0,0,0.1)),
+    repeating-linear-gradient(90deg, rgba(143,211,255,0.12) 0 2px, transparent 2px 40px),
+    #1c2430;
+}
+.scene.era-6::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(143,211,255,0.14) 0 1px, transparent 1px 36px),
+    linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0) 30%),
+    #10151d;
+}
+.scene.era-6 .skirting { background: linear-gradient(180deg, #3a4a5c 0%, #1c2430 55%, #0c1016 100%); }
+.scene.era-6 .win-mullion, .scene.era-6 .win-sill { fill: #2a3a4a; stroke: #8fd3ff; }
+.scene.era-6 .win-shutter { fill: #1c2430; stroke: #8fd3ff; }
+.scene.era-6 .win-header { fill: #16202c; stroke: #8fd3ff; }
+.scene.era-6 .win-frame-outer { stroke: #8fd3ff; }
+.scene.era-6 .furniture svg, .scene.era-6 .room-item svg {
+  filter: saturate(1.15) hue-rotate(165deg) brightness(1.05) contrast(1.05);
+}
+.skyline-era6 path { fill: #2a3a4a; }
+.window.sunset .skyline-era6 path { fill: #24303c; }
+.window.night .skyline-era6 path { fill: #141c26; }
+.skyline-era6 .skyline-lights rect { fill: #8fd3ff; }
+.window.day .skyline-era6 .skyline-lights { display: none; }
+
+/* ---- era-7: Uzay Çağı (orbital station) ---- */
+.scene.era-7 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0) 45%, rgba(0,0,0,0.14)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 42px),
+    #4a545e;
+}
+.scene.era-7::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0 2px, transparent 2px 46px),
+    #2e363e;
+}
+.scene.era-7 .skirting { background: linear-gradient(180deg, #7a8894 0%, #4a545e 55%, #262c32 100%); }
+.scene.era-7 .win-mullion, .scene.era-7 .win-sill { fill: #6b7682; stroke: #1c2126; }
+.scene.era-7 .win-shutter, .scene.era-7 .win-header { fill: #3a4248; stroke: #1c2126; }
+.scene.era-7 .win-frame-outer { stroke: #1c2126; }
+.scene.era-7 .furniture svg, .scene.era-7 .room-item svg {
+  filter: saturate(0.4) hue-rotate(190deg) contrast(1.1) brightness(0.96);
+}
+.skyline-era7 path { fill: #5a6672; }
+.window.night .skyline-era7 path, .window.sunset .skyline-era7 path { fill: #3a4450; }
+.era-stars circle { animation: eraStarTwinkle 2.2s ease-in-out infinite; }
+.era-stars circle:nth-child(2) { animation-delay: 0.4s; }
+.era-stars circle:nth-child(3) { animation-delay: 0.8s; }
+.era-stars circle:nth-child(4) { animation-delay: 1.2s; }
+.era-stars circle:nth-child(5) { animation-delay: 1.6s; }
+@keyframes eraStarTwinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+/* ---- era-8: Mars Çağı (red planet colony) ---- */
+.scene.era-8 {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0) 45%, rgba(0,0,0,0.14)),
+    radial-gradient(circle at 30% 58%, rgba(0,0,0,0.08) 0 60px, transparent 61px),
+    #8a4a34;
+}
+.scene.era-8::after {
+  background:
+    radial-gradient(circle at 40% 40%, rgba(0,0,0,0.15) 0 40px, transparent 41px),
+    linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0) 30%),
+    #6b3624;
+}
+.scene.era-8 .skirting { background: linear-gradient(180deg, #a85f42 0%, #6b3624 55%, #421f14 100%); }
+.scene.era-8 .win-mullion, .scene.era-8 .win-sill { fill: #8a4a34; stroke: #2a1610; }
+.scene.era-8 .win-shutter, .scene.era-8 .win-header { fill: #5a2e1e; stroke: #2a1610; }
+.scene.era-8 .win-frame-outer { stroke: #2a1610; }
+.scene.era-8 .furniture svg, .scene.era-8 .room-item svg {
+  filter: saturate(0.8) hue-rotate(-25deg) sepia(0.28) contrast(1.06) brightness(0.94);
+}
+.skyline-era8 path { fill: #7a3f2a; }
+.window.sunset .skyline-era8 path { fill: #5a2e1e; }
+.window.night .skyline-era8 path { fill: #2e170f; }
+.era-earth { animation: eraEarthGlow 3.4s ease-in-out infinite; }
+@keyframes eraEarthGlow {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 1px rgba(110,198,255,0.6)); }
+  50% { opacity: 0.7; filter: drop-shadow(0 0 3px rgba(110,198,255,0.9)); }
 }

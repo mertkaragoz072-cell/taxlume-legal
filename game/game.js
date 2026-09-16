@@ -110,6 +110,7 @@
     layout: {},
     rarity: {},
     prestigeEarnedStart: 0,
+    era: 0,
   };
 
   var SKY_CYCLE_MS = 6 * 60 * 1000;
@@ -235,6 +236,45 @@
     if (level >= 5) return 3;
     if (level >= 3) return 2;
     return 1;
+  }
+
+  // Eras are a second, much slower progression than the home tier above:
+  // the home tier is "how nice is your place", eras are "what century are
+  // you in". Gated on lifetime earnings (never reset by prestige) so it
+  // reads as a permanent civilization-wide ratchet, not something a reset
+  // could take away. Index 5 ("Modern Çağ") is exactly today's game as it
+  // already existed - it gets no extra CSS, the room-tier art already
+  // drawn for it just shows through unmodified.
+  var ERAS = [
+    { id: "stone", name: "Taş Devri", icon: "🔥", req: 0, tagline: "Mağarada ateşin başında yaşıyorsun." },
+    { id: "bronze", name: "Bronz Çağı", icon: "🏺", req: 60000, tagline: "Kerpiç kulübende bronz aletlerin var." },
+    { id: "antique", name: "Antik Çağ", icon: "🏛️", req: 450000, tagline: "Taş sütunlu bir evde yaşıyorsun." },
+    { id: "medieval", name: "Orta Çağ", icon: "🏰", req: 2800000, tagline: "Kalenin taş odasında ısınıyorsun." },
+    { id: "industrial", name: "Sanayi Devri", icon: "⚙️", req: 14000000, tagline: "Tuğla işçi evinde, bacalar tütüyor." },
+    { id: "modern", name: "Modern Çağ", icon: "🏙️", req: 60000000, tagline: "Bugünün apartmanında yaşıyorsun." },
+    { id: "digital", name: "Dijital Çağ", icon: "💻", req: 280000000, tagline: "Akıllı ev, neon ışıklı bir şehirde." },
+    { id: "space", name: "Uzay Çağı", icon: "🛰️", req: 1300000000, tagline: "Yörüngedeki bir istasyonda yaşıyorsun." },
+    { id: "mars", name: "Mars Çağı", icon: "🚀", req: 6000000000, tagline: "Mars'taki koloni kubbende yaşıyorsun." },
+  ];
+
+  function nextEra() {
+    return ERAS[state.era + 1] || null;
+  }
+
+  function canAdvanceEra() {
+    var next = nextEra();
+    return !!next && state.stats.earned >= next.req;
+  }
+
+  function advanceEra() {
+    if (!canAdvanceEra()) return;
+    state.era++;
+    var era = ERAS[state.era];
+    celebrate(era.icon, era.name + "!", era.tagline);
+    sfx.purchase();
+    render();
+    renderPanel();
+    saveState();
   }
 
   // Time-limited deal: one random shop item or furniture piece gets a
@@ -1045,6 +1085,9 @@
 
     els.scene.classList.remove("room-t1", "room-t2", "room-t3", "room-t4");
     els.scene.classList.add("room-t" + homeTier(state.items.room));
+
+    els.scene.classList.remove("era-0", "era-1", "era-2", "era-3", "era-4", "era-5", "era-6", "era-7", "era-8");
+    els.scene.classList.add("era-" + state.era);
 
     // The depth layers need the sky phase too: the light pooled on the floor
     // fades as the sun goes down.
@@ -2321,14 +2364,16 @@
     season: { title: "🎖️ Sezon", build: buildSeason },
     weekly: { title: "🚩 Haftalık Görev", build: buildWeekly },
     settings: { title: "⚙️ Ayarlar", build: buildSettings },
+    era: { title: "🌍 Çağ", build: buildEra },
   };
 
-  // These five panels used to each get their own side icon; now they share
+  // These six panels used to each get their own side icon; now they share
   // one "Hedefler" entry point and switch between each other with an
   // in-panel tab strip, so the side rail stops growing with every new
   // progression system.
   var HUB_TABS = [
     { tab: "world", icon: "🏆", label: "Başarım" },
+    { tab: "era", icon: "🌍", label: "Çağ" },
     { tab: "season", icon: "🎖️", label: "Sezon" },
     { tab: "weekly", icon: "🚩", label: "Haftalık" },
     { tab: "records", icon: "📊", label: "Rekor" },
@@ -2337,6 +2382,7 @@
 
   function hubTabAlert(tab) {
     if (tab === "world") return claimableAchievements() > 0;
+    if (tab === "era") return canAdvanceEra();
     if (tab === "season") return claimableSeasonRewards() > 0;
     if (tab === "weekly") return claimableWeekly() > 0;
     if (tab === "events") return !!activeEvent();
@@ -3149,6 +3195,33 @@
     addNote(weeklyChainDone()
       ? "Bu haftanın zincirini tamamladın! Yeni zincir haftalık sıfırlanınca başlar."
       : "Sıradaki adımı bitirip ödülünü al - bir sonraki adım ancak o zaman açılır.");
+  }
+
+  function buildEra() {
+    renderHubTabs(panelTab);
+    var cur = ERAS[state.era];
+    els.panelSub.textContent = cur.icon + " " + cur.name + " · Toplam kazanç " + formatMoney(state.stats.earned);
+
+    ERAS.forEach(function (era, idx) {
+      var reached = idx <= state.era;
+      var isNextUp = idx === state.era + 1;
+      var qualifies = state.stats.earned >= era.req;
+      var sub = reached ? era.tagline : "Gerekli toplam kazanç: " + formatMoney(era.req);
+      makeRow(era.icon, era.name, sub, {
+        rowClass: reached ? "done" : isNextUp && qualifies ? "highlight" : "locked",
+        progress: reached ? 100 : Math.min(100, (state.stats.earned / era.req) * 100),
+        button: reached
+          ? (idx === state.era ? "Buradasın" : "Geçildi ✓")
+          : isNextUp && qualifies
+            ? "Çağı Aç"
+            : formatMoney(state.stats.earned) + "/" + formatMoney(era.req),
+        buttonClass: reached || !(isNextUp && qualifies) ? "owned" : "",
+        disabled: !(isNextUp && qualifies),
+        onClick: isNextUp && qualifies ? advanceEra : null,
+      });
+    });
+
+    addNote("Her çağ, ömür boyu toplam kazancına göre açılır (harcasan da sayılır) - prestij bunu sıfırlamaz. Oda ve eşyaların görünümü çağa göre değişir, seviyeleri ve bonusları etkilenmez.");
   }
 
   /* ---------- Settings: save export/import ---------- */
