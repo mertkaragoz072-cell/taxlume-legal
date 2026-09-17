@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { TownSquareBackdrop } from "./TownSquareBackdrop";
 import { VillagerIllustration } from "./VillagerIllustration";
 
 interface Props {
@@ -10,6 +11,9 @@ interface Props {
   moodLabel: string;
   moodColor: string;
 }
+
+const SCENE_WIDTH = Math.min(Dimensions.get("window").width - 64, 340);
+const SCENE_HEIGHT = Math.round((SCENE_WIDTH * 128) / 320);
 
 function moodForHappiness(happiness: number): "happy" | "neutral" | "sad" {
   if (happiness >= 70) return "happy";
@@ -33,31 +37,39 @@ function Bobbing({ children, delay }: { children: React.ReactNode; delay: number
   return <Animated.View style={{ transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
-/** An ambient "town square" scene atop the Town screen — a small crowd of
- * villagers, reusing the mascot from VillagerIllustration, whose expression
- * reacts to the town's current happiness. Purely visual, no mechanical effect. */
+/** An ambient "town square" scene atop the Town screen: a painted backdrop of
+ * the square with a small crowd standing in it, whose expressions track the
+ * town's current happiness. Purely visual, no mechanical effect.
+ *
+ * The crowd is three different wardrobes rather than one villager three times,
+ * and the backdrop's lit windows warm up with happiness too — so a thriving
+ * town and a miserable one read differently at a glance, before the caption. */
 export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Props) {
   const mood = moodForHappiness(happiness);
+  const warmth = Math.max(0, Math.min(1, happiness / 100));
+
   return (
     <View style={styles.card}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(moodColor, 0.08) }]}
-      />
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.row}>
-        <Bobbing delay={0}>
-          <VillagerIllustration size={50} mood={mood} />
-        </Bobbing>
-        <Bobbing delay={220}>
-          <VillagerIllustration size={64} mood={mood} />
-        </Bobbing>
-        <Bobbing delay={440}>
-          <VillagerIllustration size={46} mood={mood} />
-        </Bobbing>
+
+      <View style={styles.scene}>
+        <View aria-hidden style={styles.backdrop}>
+          <TownSquareBackdrop width={SCENE_WIDTH} height={SCENE_HEIGHT} warmth={warmth} />
+        </View>
+        <View style={styles.crowd}>
+          <Bobbing delay={0}>
+            <VillagerIllustration size={46} mood={mood} variant={1} />
+          </Bobbing>
+          <Bobbing delay={220}>
+            <VillagerIllustration size={60} mood={mood} variant={0} />
+          </Bobbing>
+          <Bobbing delay={440}>
+            <VillagerIllustration size={42} mood={mood} variant={2} />
+          </Bobbing>
+        </View>
       </View>
-      <View style={styles.ground} />
+
       <Text style={[styles.moodCaption, { color: moodColor }]}>{moodLabel}</Text>
     </View>
   );
@@ -81,21 +93,24 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: SPACING.sm,
   },
-  row: {
+  scene: {
+    width: SCENE_WIDTH,
+    height: SCENE_HEIGHT,
+    borderRadius: RADIUS.card,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  backdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  crowd: {
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     gap: SPACING.lg,
-  },
-  ground: {
-    width: "70%",
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(0,0,0,0.28)",
-    marginTop: -6,
+    // the crowd stands on the square's ground line rather than the card's edge
+    paddingBottom: 4,
   },
   moodCaption: {
-    marginTop: SPACING.sm,
+    marginTop: SPACING.md,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,

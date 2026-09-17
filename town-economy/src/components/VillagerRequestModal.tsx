@@ -52,7 +52,7 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
               },
             ]}
           >
-            <VillagerIllustration size={76} />
+            <VillagerIllustration size={76} gesturing />
           </Animated.View>
 
           <View style={styles.card}>
