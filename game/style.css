@@ -1197,28 +1197,29 @@ html, body {
    "bottom" across the floor band (0% at the very front, 21% at the wall)
    is what actually reads as a room with depth rather than a shelf of props;
    z-index is set to match, so nearer pieces overlap farther ones correctly. */
-.furniture.bed { left: 0; bottom: 13%; z-index: 4; }
-.furniture.fridge { right: 0; bottom: 19%; z-index: 2; }
-.furniture.plant { left: 3%; bottom: 10%; z-index: 5; }
+.furniture.bed { left: 0; bottom: 17%; z-index: 4; }
+.furniture.fridge { right: 0; bottom: 20%; z-index: 2; }
+.furniture.plant { left: 3%; bottom: 17%; z-index: 5; }
 .character { left: 37%; bottom: 7%; width: 136px; height: 224px; z-index: 6; }
 .character.eating { left: 58%; }
 /* The sleeping head has to land on the bed's own pillow, which is drawn at a
    fixed spot inside the bed's art (unaffected by tier). Since the bed moved
-   to bottom:13% for depth, this offset is measured from there, not from the
-   old wall-line position - that mismatch was leaving the head floating well
-   above the pillow. Scaled by the same ~1.18x as everything else here, so it
-   still lands in the same spot on the now-bigger pillow. */
-.character.sleeping { left: 11px; bottom: calc(13% + 70px); width: 63px; height: 51px; z-index: 4; }
-.room-item.rug { left: 36%; bottom: 8%; width: 248px; height: 57px; z-index: 1; }
-.room-item.lamp { left: 68%; bottom: 16%; width: 71px; height: 211px; z-index: 3; }
+   to bottom:17% for depth (pulled back near the wall), this offset is
+   measured from there, not from the old wall-line position - that mismatch
+   was leaving the head floating well above the pillow. Scaled by the same
+   ~1.18x as everything else here, so it still lands in the same spot on the
+   now-bigger pillow. */
+.character.sleeping { left: 11px; bottom: calc(17% + 70px); width: 63px; height: 51px; z-index: 4; }
+.room-item.rug { left: 36%; bottom: 9%; width: 248px; height: 57px; z-index: 1; }
+.room-item.lamp { left: 68%; bottom: 19%; width: 71px; height: 211px; z-index: 3; }
 .room-item.pet { z-index: 7; }
 .room-item.picture { left: 53%; top: auto; bottom: calc(21% + 248px); width: 92px; height: 66px; }
 .room-item.shelf { left: 1%; top: auto; bottom: calc(21% + 335px); width: 132px; height: 48px; }
 .room-item.tv { left: 58%; top: auto; bottom: calc(21% + 330px); width: 158px; height: 104px; }
-.room-item.wardrobe { left: 87%; bottom: 8%; width: 46px; height: 120px; z-index: 3; }
+.room-item.wardrobe { left: 87%; bottom: 15%; width: 46px; height: 120px; z-index: 3; }
 .room-item.spice { left: 45%; top: auto; bottom: calc(21% + 385px); width: 56px; height: 40px; z-index: 2; }
 .window { left: 6%; top: auto; bottom: calc(21% + 186px); width: 165px; height: 136px; }
-.lamp-light { left: calc(68% - 116px); bottom: calc(16% + 66px); width: 297px; height: 314px; }
+.lamp-light { left: calc(68% - 116px); bottom: calc(19% + 66px); width: 297px; height: 314px; }
 .zzz-stack { top: -31px; right: 9px; }
 
 /* ---------- Purchase experience ---------- */
@@ -1630,7 +1631,7 @@ html, body {
 /* ---------- Pet companion ---------- */
 .room-item.pet {
   left: 6%;
-  bottom: 7%;
+  bottom: 9%;
   width: 92px;
   height: 76px;
   z-index: 5;
