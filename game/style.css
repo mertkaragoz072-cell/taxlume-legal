@@ -247,6 +247,18 @@ html, body {
 .scene {
   position: relative;
   flex: 1;
+  overflow: hidden;
+}
+/* Bedroom pilot: the flat CSS wallpaper/floor swapped for a hand-painted
+   illustration plate (wall+floor already meet at the right skirting
+   height in the art itself). Kitchen keeps the original CSS pattern -
+   this hasn't been done for it yet. */
+.scene:not(.in-kitchen) {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0) 42%, rgba(58,42,34,0.08)),
+    url('https://static.nim.video/output/wf-output/5e85d8a6-8254-4519-9e25-8f1b42333a18_00001.jpg') center / cover no-repeat;
+}
+.scene.in-kitchen {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.16), rgba(0,0,0,0) 42%, rgba(58,42,34,0.16)),
     repeating-linear-gradient(
@@ -256,17 +268,18 @@ html, body {
       var(--wall-stripe) 26px,
       var(--wall-stripe) 52px
     );
-  overflow: hidden;
 }
 .scene::after {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: 22%;
-  background:
-    linear-gradient(180deg, rgba(58,42,34,0.22), rgba(0,0,0,0) 26%, rgba(0,0,0,0.06) 100%),
-    var(--floor);
+  /* Bedroom: no fill here - the painted plate above already includes its
+     own floor, this would otherwise paint flat over it. Kitchen's own
+     ::after background is set further down in this file. */
 }
+/* The painted plate's own baseboard line replaces this flat CSS one. */
+.scene:not(.in-kitchen) .skirting { display: none; }
 /* ---------- Room depth ----------
    A flat room only reads as a space if the floor recedes, the corners fall
    away and everything casts something. These layers do that; the art itself
