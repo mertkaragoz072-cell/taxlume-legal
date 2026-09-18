@@ -32,6 +32,9 @@ look at a UI change.
 | `npm run check:i18n` | Fails if Turkish and English key sets have drifted |
 | `npm test`           | Jest unit tests                                    |
 
+New to the project? `CONTRIBUTING.md` covers the workflow and the few rules
+that are easy to miss.
+
 ## Layout
 
 ```
@@ -47,6 +50,9 @@ src/
   utils/             formatting and store-review helpers
   theme.ts           the single source of colour, type and spacing tokens
 scripts/             translation parity check, sound generation
+assets/              app icons, splash screen, sound effects
+store-assets/        screenshots for the store listings
+docs/                privacy policy and store copy
 ```
 
 ## How it works
@@ -126,8 +132,8 @@ runs the same sequence locally.
 ## Release
 
 Builds are produced with EAS (`eas.json`). App identity, icons and the splash
-screen are configured in `app.json`; store copy lives in `STORE_LISTING.md` and
-the privacy policy in `PRIVACY.md`.
+screen are configured in `app.json`; store copy lives in `docs/STORE_LISTING.md`
+and the privacy policy in `docs/PRIVACY.md`.
 
 ## Licence
 

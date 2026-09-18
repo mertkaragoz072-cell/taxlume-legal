@@ -178,7 +178,7 @@ preview video is included — that still needs to be recorded separately.
 
 - Both stores' descriptions claim "no ads, no in-app purchases, no account
   required" and "everything happens locally on your device" — verified
-  true against the codebase (see `PRIVACY.md`) as of this writing. If that
+  true against the codebase (see `PRIVACY.md`, alongside this file) as of this writing. If that
   ever changes (ads, IAP, or a backend get added), update this copy and
   `PRIVACY.md` together.
 - Category suggestion: Games → Simulation (App Store) / Simulation (Play
