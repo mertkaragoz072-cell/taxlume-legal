@@ -8,12 +8,13 @@ import { DifficultyId } from "./difficulty";
 
 export const HISTORY_LEN = 40;
 export const TICK_MS = 3000;
-// "Watch an ad to speed up" — a temporary, real-time-bound multiplier on the
-// tick rate itself (not on TICKS_PER_GAME_DAY or any per-day rate), so a
-// boosted day plays out faster in wall-clock time without changing what a
-// game day means anywhere else.
-export const SPEED_BOOST_MULTIPLIER = 3;
-export const SPEED_BOOST_DURATION_MS = 30 * 60 * 1000;
+// The daily speed boost: a temporary, real-time-bound multiplier on the tick
+// rate itself (not on TICKS_PER_GAME_DAY or any per-day rate), so a boosted
+// day plays out faster in wall-clock time without changing what a game day
+// means anywhere else. Claimed free once per calendar day — see
+// claimSpeedBoost, and speedBoostClaimedDate on EconomyState.
+export const SPEED_BOOST_MULTIPLIER = 2;
+export const SPEED_BOOST_DURATION_MS = 24 * 60 * 60 * 1000;
 export const BOOSTED_TICK_MS = Math.round(TICK_MS / SPEED_BOOST_MULTIPLIER);
 export const EVENT_LOG_CAP = 30;
 export const DEFAULT_DIFFICULTY: DifficultyId = "normal";

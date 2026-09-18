@@ -361,11 +361,15 @@ export interface EconomyState {
    * boosting the prestige point payout at the cost of a harsher run — see
    * effectiveDifficultyConfig/ngPlusPrestigeMultiplier in ngPlusModifiers.ts */
   activeNgPlusModifiers: string[];
-  /** epoch ms when a "watch an ad to speed up" boost expires; null when no
-   * boost is active — see SPEED_BOOST_DURATION_MS/activateSpeedBoost in
-   * useEconomy.ts. Wall-clock time, not tick-based, since the point is a
-   * real-world timer independent of how fast the game itself is ticking. */
+  /** epoch ms when the daily speed boost expires; null when no boost is
+   * active — see SPEED_BOOST_DURATION_MS/claimSpeedBoost in useEconomy.ts.
+   * Wall-clock time, not tick-based, since the point is a real-world timer
+   * independent of how fast the game itself is ticking. */
   speedBoostExpiresAt: number | null;
+  /** the calendar day (todayString) the boost was last claimed on, so it can
+   * be given away free once a day without being farmable. null before the
+   * player has ever claimed one. */
+  speedBoostClaimedDate: string | null;
   /** the amount just granted by today's check-in bonus (see dailyCheckIn in
    * useEconomy.ts), already added to cash — non-null only until the player
    * has seen the daily reward wheel reveal it, then dismissDailyBonus clears

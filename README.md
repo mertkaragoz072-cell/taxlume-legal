@@ -8,8 +8,8 @@ React Native. Turkish by default, with an in-app English toggle.
 | Path            | What it is                                                 |
 | --------------- | ---------------------------------------------------------- |
 | `town-economy/` | The game itself. Start here — it has its own README.       |
-| `privacy.html`  | The hosted privacy policy the store listings link to.      |
-| `terms.html`    | The hosted terms of use.                                   |
+| `privacy.html`  | Hosted legal pages for Taxlume, an earlier app of ours.    |
+| `terms.html`    | Ditto — not Golden Town's; see `town-economy/docs/`.       |
 | `.github/`      | CI: typecheck, lint, format, translation parity and tests. |
 
 ## Running the game

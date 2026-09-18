@@ -6,6 +6,7 @@ export const STRINGS = {
     common: {
       save: "Kaydet",
       cancel: "Vazgeç",
+      close: "Kapat",
       all: "TÜMÜ",
     },
     header: {
@@ -524,14 +525,15 @@ export const STRINGS = {
       emblemHint: "Sadece görünüm — hiçbir mekanik etkisi yok.",
     },
     speedBoost: {
-      title: "⚡ Hızlandır",
-      subtitle: "30 dakika boyunca kasabanı {multiplier} kat hızlandır.",
-      watchAdBtn: "📺 Reklam İzle ve Hızlan",
-      watching: "Reklam izleniyor...",
+      title: "⚡ Günlük Hızlandırma",
+      subtitle: "Kasabanı bir gün boyunca {multiplier} kat hızlandır. Ücretsiz, günde bir kez.",
+      claimBtn: "⚡ Hızlandırmayı Al",
       activeTitle: "⚡ Hızlandırma Aktif",
       activeSubtitle: "Kasaban şu an {multiplier} kat hızda ilerliyor.",
       remainingLabel: "Kalan süre",
-      watchAgainBtn: "📺 Tekrar İzle, Süreyi Yenile",
+      badgeHours: "{hours}sa",
+      claimedTitle: "⚡ Bugünlük Aldın",
+      claimedSubtitle: "Bugünkü hızlandırmanı kullandın. Yarın yenisi seni bekliyor.",
     },
     dailyWheel: {
       title: "🎡 Günlük Ödül",
@@ -542,8 +544,6 @@ export const STRINGS = {
       wonTitle: "🎉 Kazandın!",
       wonAmount: "+{amount} 🪙",
       claimBtn: "Harika!",
-      bonusSpinBtn: "📺 Reklam İzle, Bir Kez Daha Çevir",
-      watchingAd: "Reklam izleniyor...",
     },
     combo: {
       milestone: "{count}x KOMBO!",
@@ -1105,6 +1105,7 @@ export const STRINGS = {
     common: {
       save: "Save",
       cancel: "Cancel",
+      close: "Close",
       all: "ALL",
     },
     header: {
@@ -1622,14 +1623,15 @@ export const STRINGS = {
       emblemHint: "Cosmetic only — no mechanical effect.",
     },
     speedBoost: {
-      title: "⚡ Speed Boost",
-      subtitle: "Speed your town up {multiplier}x for 30 minutes.",
-      watchAdBtn: "📺 Watch Ad to Speed Up",
-      watching: "Watching ad...",
+      title: "⚡ Daily Speed Boost",
+      subtitle: "Run your town at {multiplier}x for a whole day. Free, once a day.",
+      claimBtn: "⚡ Claim Speed Boost",
       activeTitle: "⚡ Speed Boost Active",
       activeSubtitle: "Your town is running at {multiplier}x speed right now.",
       remainingLabel: "Time remaining",
-      watchAgainBtn: "📺 Watch Again to Refresh",
+      badgeHours: "{hours}h",
+      claimedTitle: "⚡ Claimed for Today",
+      claimedSubtitle: "You have used today's boost. A fresh one is waiting tomorrow.",
     },
     dailyWheel: {
       title: "🎡 Daily Reward",
@@ -1640,8 +1642,6 @@ export const STRINGS = {
       wonTitle: "🎉 You Won!",
       wonAmount: "+{amount} 🪙",
       claimBtn: "Awesome!",
-      bonusSpinBtn: "📺 Watch Ad, Spin Once More",
-      watchingAd: "Watching ad...",
     },
     combo: {
       milestone: "{count}x COMBO!",

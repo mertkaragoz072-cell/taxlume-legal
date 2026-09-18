@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-native-svg";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -38,9 +38,6 @@ const ICON_SIZE = 22;
 // the wheel reads as a real carved object that belongs in this game's
 // world, not a neon slot machine.
 const SEGMENT_COLORS = ["#3a2a1c", "#4a3520"];
-// Purely a UX placeholder for a rewarded-ad flow (no real ad SDK wired up
-// yet — see SpeedBoostModal's own AD_SIMULATION_MS for the same pattern).
-const AD_SIMULATION_MS = 2200;
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const angleRad = ((angleDeg - 90) * Math.PI) / 180;
@@ -72,36 +69,25 @@ export function DailyRewardWheelModal({
   onRevealed,
   sounds,
 }: Props) {
-  const { t, claimBonusSpin } = useEconomyContext();
+  const { t } = useEconomyContext();
   const [spinning, setSpinning] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const [bonusSpinUsed, setBonusSpinUsed] = useState(false);
-  const [watchingAd, setWatchingAd] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const lastDegRef = useRef(0);
-  const adTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (visible) {
       setSpinning(false);
       setRevealed(false);
-      setBonusSpinUsed(false);
-      setWatchingAd(false);
       rotateAnim.setValue(0);
       lastDegRef.current = 0;
     }
   }, [visible, rotateAnim]);
 
-  useEffect(() => {
-    return () => {
-      if (adTimeout.current) clearTimeout(adTimeout.current);
-    };
-  }, []);
-
   if (!visible) return null;
 
-  const runSpin = (isBonus: boolean) => {
+  const spin = () => {
     setRevealed(false);
     setSpinning(true);
     const nextDeg = lastDegRef.current + 360 * 5 + Math.floor(Math.random() * 360);
@@ -119,20 +105,8 @@ export function DailyRewardWheelModal({
       // native portal layer and would be invisible here, so this modal
       // pops its own burst on top of its own content instead.
       setConfettiTrigger((n) => n + 1);
-      if (isBonus) setBonusSpinUsed(true);
       onRevealed();
     });
-  };
-
-  const spin = () => runSpin(false);
-
-  const watchAdForBonusSpin = () => {
-    setWatchingAd(true);
-    adTimeout.current = setTimeout(() => {
-      claimBonusSpin();
-      setWatchingAd(false);
-      runSpin(true);
-    }, AD_SIMULATION_MS);
   };
 
   const rotateDeg = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "1deg"] });
@@ -212,26 +186,14 @@ export function DailyRewardWheelModal({
           </View>
 
           {revealed ? (
-            watchingAd ? (
-              <View style={styles.watchingBlock}>
-                <ActivityIndicator size="large" color={COLORS.accent} />
-                <Text style={styles.watchingText}>{t("dailyWheel.watchingAd")}</Text>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
-                <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
-                {!bonusSpinUsed && (
-                  <ScalePressable onPress={watchAdForBonusSpin} style={styles.bonusBtn} scaleTo={0.97}>
-                    <Text style={styles.bonusBtnText}>{t("dailyWheel.bonusSpinBtn")}</Text>
-                  </ScalePressable>
-                )}
-                <ScalePressable onPress={onDismiss} style={styles.spinBtn} scaleTo={0.96}>
-                  <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                  <Text style={styles.spinBtnText}>{t("dailyWheel.claimBtn")}</Text>
-                </ScalePressable>
-              </>
-            )
+            <>
+              <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
+              <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
+              <ScalePressable onPress={onDismiss} style={styles.spinBtn} scaleTo={0.96}>
+                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+                <Text style={styles.spinBtnText}>{t("dailyWheel.claimBtn")}</Text>
+              </ScalePressable>
+            </>
           ) : (
             <ScalePressable disabled={spinning} onPress={spin} style={styles.spinBtn} scaleTo={0.96}>
               <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
@@ -335,23 +297,4 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   spinBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
-  bonusBtn: {
-    width: "100%",
-    borderRadius: RADIUS.card,
-    paddingVertical: 11,
-    alignItems: "center",
-    marginBottom: SPACING.sm,
-    borderWidth: 2,
-    borderColor: COLORS.accent,
-    backgroundColor: withAlpha(COLORS.accent, 0.12),
-  },
-  bonusBtnText: { color: COLORS.accent, fontWeight: "800", fontFamily: FONT.black, fontSize: 13 },
-  watchingBlock: { alignItems: "center", paddingVertical: SPACING.md },
-  watchingText: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.body,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginTop: SPACING.md,
-  },
 });

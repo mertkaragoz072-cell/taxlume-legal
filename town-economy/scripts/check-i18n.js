@@ -1,6 +1,9 @@
-// Compares the key structure of STRINGS.tr and STRINGS.en so a new string
-// added to only one language doesn't silently fall back to the default
-// language forever. Run with: node scripts/check-i18n.js
+// Two checks over the translation tables. First: STRINGS.tr and STRINGS.en
+// must have the same key structure, so a string added to only one language
+// doesn't silently fall back to the other forever. Second: every literal key
+// passed to t() somewhere in src/ must actually exist, so a typo or a renamed
+// key shows up here rather than as a raw "common.close" dot-path on screen.
+// Run with: node scripts/check-i18n.js
 const fs = require("fs");
 const path = require("path");
 const ts = require("typescript");
@@ -51,9 +54,37 @@ const keysB = collectKeys(STRINGS[langB]);
 const missingInB = diff(keysA, keysB);
 const missingInA = diff(keysB, keysA);
 
-if (missingInB.length === 0 && missingInA.length === 0) {
+// t() is also called with template literals built at runtime (t(`goods.${id}.name`)),
+// which cannot be checked statically — only plain string literals are collected.
+const T_CALL = /\bt\(\s*"([A-Za-z0-9_.]+)"/g;
+
+function sourceFiles(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) sourceFiles(full, out);
+    else if (/\.tsx?$/.test(entry.name)) out.push(full);
+  }
+  return out;
+}
+
+function collectUsedKeys() {
+  const used = new Map();
+  for (const file of sourceFiles(path.join(__dirname, "..", "src"))) {
+    const source = fs.readFileSync(file, "utf8");
+    for (const match of source.matchAll(T_CALL)) {
+      if (!used.has(match[1])) used.set(match[1], path.relative(path.join(__dirname, ".."), file));
+    }
+  }
+  return used;
+}
+
+const usedKeys = collectUsedKeys();
+const unknownKeys = [...usedKeys].filter(([key]) => !keysA.has(key)).sort();
+
+if (missingInB.length === 0 && missingInA.length === 0 && unknownKeys.length === 0) {
   console.log(
-    `✅ i18n check passed — ${langA} and ${langB} have identical key structure (${keysA.size} keys).`
+    `✅ i18n check passed — ${langA} and ${langB} have identical key structure (${keysA.size} keys), ` +
+      `and all ${usedKeys.size} literal t() keys resolve.`
   );
   process.exit(0);
 }
@@ -65,6 +96,10 @@ if (missingInB.length > 0) {
 if (missingInA.length > 0) {
   console.error(`\n❌ Missing in "${langA}" (present in "${langB}"):`);
   missingInA.forEach((key) => console.error(`   - ${key}`));
+}
+if (unknownKeys.length > 0) {
+  console.error(`\n❌ t() called with keys that are not in the translation tables:`);
+  unknownKeys.forEach(([key, file]) => console.error(`   - ${key}  (${file})`));
 }
 console.error("");
 process.exit(1);

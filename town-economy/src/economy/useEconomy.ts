@@ -237,9 +237,8 @@ type Action =
   | { type: "SET_LANGUAGE"; language: Language }
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
-  | { type: "ACTIVATE_SPEED_BOOST" }
-  | { type: "DISMISS_DAILY_BONUS" }
-  | { type: "CLAIM_BONUS_SPIN" };
+  | { type: "CLAIM_SPEED_BOOST" }
+  | { type: "DISMISS_DAILY_BONUS" };
 function makeInitialGoodState(good: Good): GoodState {
   return {
     price: good.basePrice,
@@ -372,6 +371,7 @@ export function initialState(
     weeklyChallenge: null,
     activeNgPlusModifiers: ngPlusModifierIds,
     speedBoostExpiresAt: null,
+    speedBoostClaimedDate: null,
     dailyBonusPending: null,
     // Both cycles exist from tick 0, so a brand-new town already has a market
     // rhythm to read and a forecast to plan against. Only day-1 goods are
@@ -1130,6 +1130,23 @@ export function prestige(state: EconomyState): EconomyState {
 /** Commit the town to a doctrine. Deliberately one-way for the rest of the
  * run: the choice only means something if it cannot be walked back, and
  * prestige is what hands the decision back to the player. */
+/** Hand out today's speed boost. Free, but only once per calendar day, so
+ * it rewards showing up rather than being farmable in a single sitting.
+ *
+ * Deliberately not tied to rating the app: both stores forbid incentivising
+ * reviews, and expo-store-review's requestReview() resolves to void whether
+ * the player reviewed, dismissed the sheet, or never saw it at all — so
+ * "reward them if they rate us" is not something the app can actually know. */
+export function claimSpeedBoost(state: EconomyState, today: string = todayString()): EconomyState {
+  if (state.gameOver) return state;
+  if (state.speedBoostClaimedDate === today) return state;
+  return {
+    ...state,
+    speedBoostExpiresAt: Date.now() + SPEED_BOOST_DURATION_MS,
+    speedBoostClaimedDate: today,
+  };
+}
+
 export function chooseDoctrine(state: EconomyState, doctrineId: string): EconomyState {
   if (state.gameOver) return state;
   if (state.doctrine !== null) return state;
@@ -1228,8 +1245,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       );
     case "TOGGLE_PAUSE":
       return state.gameOver ? state : { ...state, paused: !state.paused };
-    case "ACTIVATE_SPEED_BOOST":
-      return state.gameOver ? state : { ...state, speedBoostExpiresAt: Date.now() + SPEED_BOOST_DURATION_MS };
+    case "CLAIM_SPEED_BOOST":
+      return claimSpeedBoost(state);
     case "RESET": {
       // A new difficulty starts the economy over, but the player's chosen
       // town name, language, and any earned prestige bonus are identity,
@@ -1294,15 +1311,6 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return dismissOfflineSummary(state);
     case "DISMISS_DAILY_BONUS":
       return state.dailyBonusPending === null ? state : { ...state, dailyBonusPending: null };
-    case "CLAIM_BONUS_SPIN":
-      // A "watch an ad to spin again" bonus round on the daily reward wheel
-      // — grants the same already-computed amount a second time. Limited
-      // to once per day by the modal's own local UI state (it stops
-      // offering the button after one use); dailyBonusPending stays set
-      // until the player finally dismisses, same as the first spin.
-      return state.dailyBonusPending === null
-        ? state
-        : { ...state, cash: state.cash + state.dailyBonusPending };
     case "RESOLVE_DECISION":
       return resolveDecision(state, action.optionId);
     case "RESOLVE_REQUEST":
@@ -1453,7 +1461,6 @@ export function useEconomy() {
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
   const dismissDailyBonus = useCallback(() => dispatch({ type: "DISMISS_DAILY_BONUS" }), []);
-  const claimBonusSpin = useCallback(() => dispatch({ type: "CLAIM_BONUS_SPIN" }), []);
   const resolveDecision_ = useCallback(
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
     []
@@ -1467,7 +1474,7 @@ export function useEconomy() {
   const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
   const setEmblemColor_ = useCallback((color: string) => dispatch({ type: "SET_EMBLEM_COLOR", color }), []);
   const setLanguage_ = useCallback((language: Language) => dispatch({ type: "SET_LANGUAGE", language }), []);
-  const activateSpeedBoost = useCallback(() => dispatch({ type: "ACTIVATE_SPEED_BOOST" }), []);
+  const claimSpeedBoost_ = useCallback(() => dispatch({ type: "CLAIM_SPEED_BOOST" }), []);
   const translate = useCallback(
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
     [state.language]
@@ -1511,7 +1518,6 @@ export function useEconomy() {
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
     dismissDailyBonus,
-    claimBonusSpin,
     resolveDecision: resolveDecision_,
     resolveRequest,
     resolveRivalOffer: resolveRivalOffer_,
@@ -1519,7 +1525,7 @@ export function useEconomy() {
     setEmblem: setEmblem_,
     setEmblemColor: setEmblemColor_,
     setLanguage: setLanguage_,
-    activateSpeedBoost,
+    claimSpeedBoost: claimSpeedBoost_,
     t: translate,
     formatCoins: (value: number, decimals?: number) => formatCoinsUtil(value, state.language, decimals),
     portfolioValue,

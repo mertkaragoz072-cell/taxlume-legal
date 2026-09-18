@@ -3,20 +3,25 @@ import { Animated, Easing, Pressable, StyleSheet, Text } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { FONT, TYPE, WEIGHT } from "../theme";
 
+/** h:mm:ss once there is an hour or more left, m:ss below that. The boost
+ * runs for a whole day, so a minutes-only clock would count down from
+ * "1440:00" and read as nonsense. */
 export function formatCountdown(ms: number): string {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const mmss = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  return hours > 0 ? `${hours}:${mmss}` : `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 interface Props {
   onPress: () => void;
 }
 
-/** Header icon for the "watch an ad to speed up" boost — a plain lightning
- * bolt when idle, or a pulsing pill with a live mm:ss countdown while a
- * boost is active. Tapping either state opens SpeedBoostModal. */
+/** Header icon for the daily speed boost — a plain lightning bolt when idle,
+ * or a pulsing pill with a live countdown while a boost is active. Tapping
+ * either state opens SpeedBoostModal. */
 export function SpeedBoostButton({ onPress }: Props) {
   const { state, t } = useEconomyContext();
   const active = state.speedBoostExpiresAt !== null;
@@ -33,6 +38,13 @@ export function SpeedBoostButton({ onPress }: Props) {
   }, [active]);
 
   const remainingMs = active ? Math.max(0, state.speedBoostExpiresAt! - now) : 0;
+  // The header pill is only a few characters wide, so it rounds up to whole
+  // hours for most of a day-long boost and falls back to m:ss for the last
+  // hour, where the seconds are the interesting part.
+  const badgeText =
+    remainingMs >= 3600_000
+      ? t("speedBoost.badgeHours", { hours: Math.ceil(remainingMs / 3600_000) })
+      : formatCountdown(remainingMs);
 
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -66,12 +78,10 @@ export function SpeedBoostButton({ onPress }: Props) {
       onPress={onPress}
       style={[styles.iconBtn, active && styles.iconBtnActive]}
       accessibilityRole="button"
-      accessibilityLabel={
-        active ? t("a11y.speedBoostActive", { time: formatCountdown(remainingMs) }) : t("a11y.speedBoost")
-      }
+      accessibilityLabel={active ? t("a11y.speedBoostActive", { time: badgeText }) : t("a11y.speedBoost")}
     >
       <Animated.Text style={[styles.icon, active && { transform: [{ scale }] }]}>⚡</Animated.Text>
-      {active && <Text style={styles.badge}>{formatCountdown(remainingMs)}</Text>}
+      {active && <Text style={styles.badge}>{badgeText}</Text>}
     </Pressable>
   );
 }

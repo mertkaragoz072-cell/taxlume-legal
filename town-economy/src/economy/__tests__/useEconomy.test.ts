@@ -24,12 +24,14 @@ import {
   LOAN_TERM_MONTHS_STEPS,
   RIVAL_TOWN_GROWTH_RATE,
   STORAGE_BASE_CAPACITY,
+  SPEED_BOOST_DURATION_MS,
   TICKS_PER_GAME_DAY,
   computeNetWorth,
   dailyCheckIn,
   effectiveTariffRate,
   estimateTaxIncomePerTick,
   gameDayFromTick,
+  claimSpeedBoost,
   initialState,
   isGoodUnlocked,
   loanCap,
@@ -149,6 +151,36 @@ describe("trade", () => {
     const full = trade(state, "bread", "buy", cap);
     const next = trade(full, "honey", "buy", 5);
     expect(next).toBe(full);
+  });
+});
+
+describe("claimSpeedBoost", () => {
+  it("starts a boost that runs for a full day", () => {
+    const before = Date.now();
+    const state = claimSpeedBoost(initialState(), "2026-09-18");
+    expect(state.speedBoostExpiresAt).not.toBeNull();
+    expect(state.speedBoostExpiresAt!).toBeGreaterThanOrEqual(before + SPEED_BOOST_DURATION_MS);
+    expect(state.speedBoostClaimedDate).toBe("2026-09-18");
+  });
+
+  it("refuses a second claim on the same calendar day", () => {
+    const claimed = claimSpeedBoost(initialState(), "2026-09-18");
+    const again = claimSpeedBoost({ ...claimed, speedBoostExpiresAt: null }, "2026-09-18");
+    // Not just "no new expiry" — the state must come back untouched, so the
+    // boost cannot be farmed by reopening the modal.
+    expect(again).toEqual({ ...claimed, speedBoostExpiresAt: null });
+  });
+
+  it("allows a fresh claim the next day", () => {
+    const claimed = claimSpeedBoost(initialState(), "2026-09-18");
+    const next = claimSpeedBoost({ ...claimed, speedBoostExpiresAt: null }, "2026-09-19");
+    expect(next.speedBoostExpiresAt).not.toBeNull();
+    expect(next.speedBoostClaimedDate).toBe("2026-09-19");
+  });
+
+  it("does nothing once the run is over", () => {
+    const over = { ...initialState(), gameOver: true };
+    expect(claimSpeedBoost(over, "2026-09-18")).toBe(over);
   });
 });
 

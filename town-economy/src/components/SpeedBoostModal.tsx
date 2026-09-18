@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Modal, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Modal, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { SPEED_BOOST_MULTIPLIER } from "../economy/useEconomy";
+import { SPEED_BOOST_MULTIPLIER, todayString } from "../economy/useEconomy";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -14,6 +14,7 @@ import {
   TYPE,
   WEIGHT,
 } from "../theme";
+import { maybeRequestReview } from "../utils/reviewPrompt";
 import { formatCountdown } from "./SpeedBoostButton";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -25,18 +26,26 @@ interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
 }
 
-// Purely a UX placeholder for a rewarded-ad flow (a real SDK — e.g. AdMob —
-// isn't wired up yet); the delay just gives the "watch ad" tap a believable
-// beat before the reward lands.
-const AD_SIMULATION_MS = 2200;
-
+/** Today's speed boost: free, claimable once a calendar day, and good for a
+ * full day of doubled tick rate once taken.
+ *
+ * It used to be gated behind a simulated "watch an ad" wait, which was a
+ * problem two ways over: no ad SDK was ever wired up, so the app was telling
+ * the player an ad was playing when none was, and both the store listing and
+ * the privacy policy state the game carries no advertising.
+ *
+ * Claiming is also where the app asks for a store review — a moment the
+ * player has just been handed something good. The boost is granted either
+ * way and the app never learns what they did with the sheet: rewarding a
+ * review is against both stores' rules, and requestReview() resolves to void
+ * regardless, so there is nothing to condition on even if it were allowed. */
 export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
-  const { state, t, activateSpeedBoost } = useEconomyContext();
-  const [watching, setWatching] = useState(false);
-  // Same reasoning as SpeedBoostButton: the countdown reads a clock this
-  // component owns, so rendering stays a pure function of props and state.
+  const { state, t, claimSpeedBoost } = useEconomyContext();
+  // The clock the countdown reads is state this component owns, so rendering
+  // stays a pure function of props and state.
   const [now, setNow] = useState(() => Date.now());
   const active = state.speedBoostExpiresAt !== null;
+  const claimedToday = state.speedBoostClaimedDate === todayString();
 
   useEffect(() => {
     if (!visible || !active) return;
@@ -45,28 +54,17 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
     return () => clearInterval(interval);
   }, [visible, active]);
 
-  useEffect(() => {
-    if (!visible) setWatching(false);
-  }, [visible]);
-
-  const watchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    return () => {
-      if (watchTimeout.current) clearTimeout(watchTimeout.current);
-    };
-  }, []);
-
   if (!visible) return null;
 
   const remainingMs = active ? Math.max(0, state.speedBoostExpiresAt! - now) : 0;
 
-  const watchAd = () => {
-    setWatching(true);
-    watchTimeout.current = setTimeout(() => {
-      activateSpeedBoost();
-      sounds.playSuccess();
-      setWatching(false);
-    }, AD_SIMULATION_MS);
+  const claim = () => {
+    claimSpeedBoost();
+    sounds.playSuccess();
+    onClose();
+    // Fire-and-forget: maybeRequestReview swallows its own failures and only
+    // ever asks once per install, so nothing here depends on the outcome.
+    void maybeRequestReview();
   };
 
   return (
@@ -75,12 +73,7 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
 
-          {watching ? (
-            <View style={styles.watchingBlock}>
-              <ActivityIndicator size="large" color={COLORS.accent} />
-              <Text style={styles.watchingText}>{t("speedBoost.watching")}</Text>
-            </View>
-          ) : active ? (
+          {active ? (
             <>
               <Text style={styles.title}>{t("speedBoost.activeTitle")}</Text>
               <Text style={styles.subtitle}>
@@ -90,10 +83,11 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
                 <Text style={styles.remainingLabel}>{t("speedBoost.remainingLabel")}</Text>
                 <Text style={styles.countdown}>{formatCountdown(remainingMs)}</Text>
               </View>
-              <ScalePressable onPress={watchAd} style={styles.watchBtn} scaleTo={0.96}>
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.watchBtnText}>{t("speedBoost.watchAgainBtn")}</Text>
-              </ScalePressable>
+            </>
+          ) : claimedToday ? (
+            <>
+              <Text style={styles.title}>{t("speedBoost.claimedTitle")}</Text>
+              <Text style={styles.subtitle}>{t("speedBoost.claimedSubtitle")}</Text>
             </>
           ) : (
             <>
@@ -101,15 +95,15 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
               <Text style={styles.subtitle}>
                 {t("speedBoost.subtitle", { multiplier: SPEED_BOOST_MULTIPLIER })}
               </Text>
-              <ScalePressable onPress={watchAd} style={styles.watchBtn} scaleTo={0.96}>
+              <ScalePressable onPress={claim} style={styles.claimBtn} scaleTo={0.96}>
                 <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.watchBtnText}>{t("speedBoost.watchAdBtn")}</Text>
+                <Text style={styles.claimBtnText}>{t("speedBoost.claimBtn")}</Text>
               </ScalePressable>
             </>
           )}
 
           <ScalePressable onPress={onClose} style={styles.cancelBtn} scaleTo={0.96}>
-            <Text style={styles.cancelBtnText}>{t("common.cancel")}</Text>
+            <Text style={styles.cancelBtnText}>{t("common.close")}</Text>
           </ScalePressable>
         </View>
       </ModalBackdrop>
@@ -127,15 +121,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg },
-  watchingBlock: { alignItems: "center", paddingVertical: SPACING.lg },
-  watchingText: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.body,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginTop: SPACING.md,
-  },
+  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg, lineHeight: 17 },
   countdownBlock: {
     alignItems: "center",
     backgroundColor: "#1a1410",
@@ -151,13 +137,13 @@ const styles = StyleSheet.create({
     fontFamily: FONT.black,
     marginTop: 2,
   },
-  watchBtn: {
+  claimBtn: {
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
     overflow: "hidden",
   },
-  watchBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
+  claimBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
   cancelBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
   cancelBtnText: { color: "#a0917a", fontSize: 13, fontWeight: "600", fontFamily: FONT.medium },
 });
