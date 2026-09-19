@@ -18,7 +18,7 @@ interface Props {
  * gives you first are yours. It says what is coming, how long you have, and
  * what to do with the time — and it pulses harder as the strike closes in. */
 export function CrisisWarningBanner({ crisis, tick }: Props) {
-  const { t } = useEconomyContext();
+  const { t, tPlural } = useEconomyContext();
   const pulse = useRef(new Animated.Value(0)).current;
   const template = crisis ? CRISIS_TEMPLATES_BY_ID[crisis.templateId] : null;
 
@@ -70,7 +70,7 @@ export function CrisisWarningBanner({ crisis, tick }: Props) {
       </View>
       <View style={styles.countBox}>
         <Text style={styles.countValue}>{daysLeft}</Text>
-        <Text style={styles.countUnit}>{t("crisis.daysUnit")}</Text>
+        <Text style={styles.countUnit}>{tPlural("crisis.daysUnit", daysLeft)}</Text>
       </View>
     </Animated.View>
   );

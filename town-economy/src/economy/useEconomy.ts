@@ -23,7 +23,7 @@ import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusMo
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
-import { DEFAULT_LANGUAGE, Language, t } from "../i18n/t";
+import { DEFAULT_LANGUAGE, Language, t, tPlural } from "../i18n/t";
 import {
   formatCoins as formatCoinsUtil,
   formatCompactNumber as formatNumberUtil,
@@ -1479,6 +1479,11 @@ export function useEconomy() {
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
     [state.language]
   );
+  const translatePlural = useCallback(
+    (key: string, count: number, params?: Record<string, string | number>) =>
+      tPlural(state.language, key, count, params),
+    [state.language]
+  );
 
   const portfolioValue = GOODS.reduce(
     (sum, g) => sum + state.goods[g.id].holding * state.goods[g.id].price,
@@ -1527,6 +1532,7 @@ export function useEconomy() {
     setLanguage: setLanguage_,
     claimSpeedBoost: claimSpeedBoost_,
     t: translate,
+    tPlural: translatePlural,
     formatCoins: (value: number, decimals?: number) => formatCoinsUtil(value, state.language, decimals),
     portfolioValue,
     assetsValue,

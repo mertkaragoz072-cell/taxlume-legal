@@ -99,7 +99,10 @@ function assertAchievementsInSync() {
 
 const HISTORY_LEN = 40;
 
-/** Deterministic PRNG, so a re-run produces byte-identical screenshots. */
+/** Deterministic PRNG, so the seeded numbers — and therefore the shape of
+ * every chart — are the same on every run. The PNGs themselves still differ
+ * slightly between runs: the app animates on entry and tints the header by
+ * time of day, so the pixels are not reproducible even when the data is. */
 function makeRng(seed) {
   let a = seed >>> 0;
   return () => {

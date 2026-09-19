@@ -91,7 +91,7 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
 }
 
 export function TradeScreen({ sounds }: Props) {
-  const { state, sendCaravan, openContract, openBulkContract, t, netWorth, formatCoins } =
+  const { state, sendCaravan, openContract, openBulkContract, t, tPlural, netWorth, formatCoins } =
     useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
   const [goodId, setGoodId] = useState<GoodId>(GOODS[0].id);
@@ -179,7 +179,7 @@ export function TradeScreen({ sounds }: Props) {
                     destinationIcon={cTown.icon}
                     accentColor={g.color}
                     label={`${c.direction === "export" ? "📤" : "📥"} ${t(cTown.nameKey)} · ${g.icon} ${t(g.nameKey)}`}
-                    etaLabel={t("trade.turnsLeft", { n: daysLeft })}
+                    etaLabel={tPlural("trade.turnsLeft", daysLeft, { n: daysLeft })}
                   />
                 );
               })}
@@ -559,7 +559,9 @@ export function TradeScreen({ sounds }: Props) {
                     {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
                     {c.insured ? " 🛡️" : ""}
                   </Text>
-                  <Text style={styles.caravanEta}>{t("trade.turnsLeft", { n: daysLeft })}</Text>
+                  <Text style={styles.caravanEta}>
+                    {tPlural("trade.turnsLeft", daysLeft, { n: daysLeft })}
+                  </Text>
                 </View>
                 <Text style={styles.caravanSub}>
                   {c.direction === "export"

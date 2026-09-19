@@ -83,6 +83,9 @@ export const STRINGS = {
     crisis: {
       warningPrefix: "Yaklaşıyor:",
       daysUnit: "gün",
+      // Identical to daysUnit on purpose: Turkish says "1 gün" and "5 gün"
+      // alike. It exists so tPlural has a sibling to find in both languages.
+      daysUnitOne: "gün",
       earthquake: {
         title: "Deprem",
         advice: "Bütün depolar zarar görecek. Stoklarınızı şimdi satmayı düşünün.",
@@ -125,6 +128,7 @@ export const STRINGS = {
       buyConfirm: "SATIN AL",
       sellConfirm: "SAT",
       seasonalEventTicksLeft: "{days} gün kaldı",
+      seasonalEventTicksLeftOne: "{days} gün kaldı",
       seasonalEventBonus: "+%{pct} fiyat",
       comingSoonLabel: "YAKINDA",
       unlocksInDays: "{days} gün sonra açılır",
@@ -179,6 +183,7 @@ export const STRINGS = {
       activeCaravansSectionLabel: "AKTİF KERVANLAR",
       noCaravans: "Yolda kervan yok. Yukarıdan bir sevkiyat başlat.",
       turnsLeft: "{n} gün kaldı",
+      turnsLeftOne: "{n} gün kaldı",
       caravanSentSub: "{qty} {good} gönderildi",
       caravanImportingSub: "{qty} {good} ithal ediliyor",
       locked: {
@@ -1023,6 +1028,7 @@ export const STRINGS = {
       seasonalEventStarted: "🎉 {icon} {title} başladı! Fiyatlar yükseldi.",
       demandCycleStarted: "📣 Talep değişti: {hot} aranıyor, {glut} bollukta.",
       crisisWarned: "⚠️ {icon} {title} {days} gün içinde geliyor. Hazırlanın!",
+      crisisWarnedOne: "⚠️ {icon} {title} {days} gün içinde geliyor. Hazırlanın!",
       crisisStruck: "{icon} {title} vurdu! Stoklar %{pct} azaldı.",
       doctrineChosen: "{icon} Kasaban artık {name} yolunda.",
       seasonalEventEnded: "🍂 {icon} {title} sona erdi.",
@@ -1182,6 +1188,7 @@ export const STRINGS = {
     crisis: {
       warningPrefix: "Incoming:",
       daysUnit: "days",
+      daysUnitOne: "day",
       earthquake: {
         title: "Earthquake",
         advice: "Every store will take damage. Consider selling your stock now.",
@@ -1224,6 +1231,7 @@ export const STRINGS = {
       buyConfirm: "BUY",
       sellConfirm: "SELL",
       seasonalEventTicksLeft: "{days} days left",
+      seasonalEventTicksLeftOne: "{days} day left",
       seasonalEventBonus: "+{pct}% price",
       comingSoonLabel: "COMING SOON",
       unlocksInDays: "Unlocks in {days}d",
@@ -1278,6 +1286,7 @@ export const STRINGS = {
       activeCaravansSectionLabel: "ACTIVE CARAVANS",
       noCaravans: "No caravans on the road. Start a shipment above.",
       turnsLeft: "{n} days left",
+      turnsLeftOne: "{n} day left",
       caravanSentSub: "{qty} {good} sent",
       caravanImportingSub: "{qty} {good} being imported",
       locked: {
@@ -2104,6 +2113,7 @@ export const STRINGS = {
       seasonalEventStarted: "🎉 {icon} {title} has begun! Prices are up.",
       demandCycleStarted: "📣 Demand has shifted: {hot} sought after, {glut} in surplus.",
       crisisWarned: "⚠️ {icon} {title} strikes in {days} days. Get ready!",
+      crisisWarnedOne: "⚠️ {icon} {title} strikes in {days} day. Get ready!",
       crisisStruck: "{icon} {title} hit! Stores down {pct}%.",
       doctrineChosen: "{icon} Your town now follows the {name}.",
       seasonalEventEnded: "🍂 {icon} {title} has ended.",

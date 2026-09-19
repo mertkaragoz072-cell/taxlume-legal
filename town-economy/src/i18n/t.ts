@@ -28,3 +28,16 @@ export function t(lang: Language, key: string, params?: Params): string {
   if (typeof fallback === "string") return interpolate(fallback, params);
   return key;
 }
+
+/** Picks between a count-bearing string and its `<key>One` sibling.
+ *
+ * English inflects the noun after a numeral, Turkish does not — "1 gün" and
+ * "5 gün" are both correct, while "1 days left" is not. So every string that
+ * renders next to a count carries a singular sibling in both trees: real
+ * singular in English, the same text again in Turkish.
+ *
+ * Only exactly 1 takes the singular. English says "0 days left", not
+ * "0 day left", so a `< 2` test would be wrong. */
+export function tPlural(lang: Language, key: string, count: number, params?: Params): string {
+  return t(lang, count === 1 ? `${key}One` : key, params);
+}

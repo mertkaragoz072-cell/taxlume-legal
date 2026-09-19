@@ -36,7 +36,7 @@ import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
 import { UPGRADES_BY_ID } from "./upgrades";
 import { rollVillagerRequest } from "./villagerRequests";
-import { t } from "../i18n/t";
+import { t, tPlural } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { BulkContract, Caravan, EconomyEvent, EconomyState, ForwardContract, GoodId } from "./types";
 import {
@@ -227,7 +227,7 @@ export function tick(state: EconomyState): EconomyState {
     };
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.crisisWarned", {
+      message: tPlural(state.language, "msg.crisisWarned", CRISIS_WARNING_DAYS, {
         icon: template.icon,
         title: t(state.language, template.titleKey),
         days: CRISIS_WARNING_DAYS,

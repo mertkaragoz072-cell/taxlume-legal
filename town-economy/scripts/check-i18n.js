@@ -56,13 +56,22 @@ const missingInA = diff(keysB, keysA);
 
 // t() is also called with template literals built at runtime (t(`goods.${id}.name`)),
 // which cannot be checked statically — only plain string literals are collected.
-const T_CALL = /\bt\(\s*"([A-Za-z0-9_.]+)"/g;
+// The optional leading identifier covers the reducer-side form, t(state.language,
+// "key", ...), alongside the component-side t("key", ...).
+const T_CALL = /\bt\(\s*(?:[A-Za-z_$][\w.$]*,\s*)?"([A-Za-z0-9_.]+)"/g;
+// tPlural picks between "key" and "keyOne" at runtime, so both have to exist.
+const T_PLURAL_CALL = /\btPlural\(\s*(?:[A-Za-z_$][\w.$]*,\s*)?"([A-Za-z0-9_.]+)"/g;
 
 function sourceFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) sourceFiles(full, out);
-    else if (/\.tsx?$/.test(entry.name)) out.push(full);
+    // Tests are skipped: they call the unbound t("en", "some.key", ...) with
+    // the language as the first argument, which reads as a key to the regex
+    // below. Nothing in a test renders to a player anyway, and a test that
+    // names a missing key fails on its own.
+    if (entry.isDirectory()) {
+      if (entry.name !== "__tests__") sourceFiles(full, out);
+    } else if (/\.tsx?$/.test(entry.name)) out.push(full);
   }
   return out;
 }
@@ -71,8 +80,14 @@ function collectUsedKeys() {
   const used = new Map();
   for (const file of sourceFiles(path.join(__dirname, "..", "src"))) {
     const source = fs.readFileSync(file, "utf8");
-    for (const match of source.matchAll(T_CALL)) {
-      if (!used.has(match[1])) used.set(match[1], path.relative(path.join(__dirname, ".."), file));
+    const relative = path.relative(path.join(__dirname, ".."), file);
+    const note = (key) => {
+      if (!used.has(key)) used.set(key, relative);
+    };
+    for (const match of source.matchAll(T_CALL)) note(match[1]);
+    for (const match of source.matchAll(T_PLURAL_CALL)) {
+      note(match[1]);
+      note(`${match[1]}One`);
     }
   }
   return used;

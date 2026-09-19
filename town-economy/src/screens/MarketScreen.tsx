@@ -54,6 +54,7 @@ export function MarketScreen({ sounds }: Props) {
     removeAutoTradeRule,
     toggleAutoTradeRule,
     t,
+    tPlural,
     marketSpreadPct,
   } = useEconomyContext();
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
@@ -67,6 +68,9 @@ export function MarketScreen({ sounds }: Props) {
   const seasonalTemplate = state.activeSeasonalEvent
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[state.activeSeasonalEvent.templateId]
     : null;
+  const seasonalDaysLeft = state.activeSeasonalEvent
+    ? Math.max(0, Math.ceil((state.activeSeasonalEvent.expiresAtTick - state.tick) / TICKS_PER_GAME_DAY))
+    : 0;
 
   const change =
     selectedState.history.length > 1
@@ -116,11 +120,8 @@ export function MarketScreen({ sounds }: Props) {
                 })}
               </Text>
               <Text style={styles.seasonalTicksLeft}>
-                {t("market.seasonalEventTicksLeft", {
-                  days: Math.max(
-                    0,
-                    Math.ceil((state.activeSeasonalEvent.expiresAtTick - state.tick) / TICKS_PER_GAME_DAY)
-                  ),
+                {tPlural("market.seasonalEventTicksLeft", seasonalDaysLeft, {
+                  days: seasonalDaysLeft,
                 })}
               </Text>
             </View>
