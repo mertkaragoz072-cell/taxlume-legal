@@ -39,20 +39,26 @@ There are two icons here on purpose, and they are not variations of each
 other — pick one.
 
 `icon.svg` is the **relief mark**: the brand, dark and gold, matching the
-game's own interior. It is quiet, it scales, and it sits beside the wordmark.
+game's interior. Quiet, scales well, sits beside the wordmark.
 
-`icon-character.svg` is the **store icon**: one big smiling merchant holding
-up a coin over a bright town, in the idiom casual and idle games actually use
-on the App Store — a face, saturated colour, a silhouette that still reads at
-38px. It shares nothing with the relief mark but the subject.
+`icon-coin.svg` is the **store icon**: a glossy three-dimensional gold coin
+with the town struck into its face, on a saturated indigo ground, flanked by
+two smaller coins. This is the register the App Store's casual and idle
+charts actually use — one big object, strong depth, hard specular light,
+saturated background, and a silhouette that still reads at 38px.
+`icon-coin-teal.svg` is the same icon on teal; both are cool grounds because
+gold loses most of its contrast on a warm one.
 
-The relief mark is the better *logo*. The character icon is the better
-*listing thumbnail*, because store browsing rewards a face over a monogram.
-Most games in this genre ship exactly this split.
+The relief mark is the better *logo*. The coin is the better *listing
+thumbnail*, because store browsing rewards one loud object over a monogram.
 
-`icon-character.svg` is hand-authored and is **not** produced by
-`scripts/build-logo.js` — edit it directly; re-running the script leaves it
-alone.
+An earlier attempt drew a cartoon merchant instead. It was not good enough
+and has been removed — hand-authored flat vector does not reach the finish of
+the painted and 3D-rendered character icons that genre uses, and a
+half-convincing character is worse than a confident object.
+
+Both `icon-coin*.svg` are hand-authored and are **not** produced by
+`scripts/build-logo.js` — edit them directly.
 
 ## Which file to use
 
@@ -61,7 +67,8 @@ alone.
 | `logo-stacked-<lang>.svg`     | The main logo. Title screen, splash, store art, press.        |
 | `logo-horizontal-<lang>.svg`  | Wide spaces: headers, footers, banners. Flat baseline.        |
 | `icon.svg` / `icon-1024.png`  | Relief app icon — the mark on the dark plate.                 |
-| `icon-character.svg`          | Casual-game store icon — character, coin, bright town.        |
+| `icon-coin.svg`               | Store icon — 3D gold coin on indigo. The listing thumbnail.    |
+| `icon-coin-teal.svg`          | Same icon on a teal ground.                                   |
 | `mark.svg`                    | Mark alone in relief, transparent ground.                     |
 | `mark-mono.svg`               | Flat, one colour via `currentColor`. Favicons, print, stamps. |
 | `mark-dark.svg`               | Flat dark, for light backgrounds.                             |
