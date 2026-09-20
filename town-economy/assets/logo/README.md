@@ -33,13 +33,35 @@ Two earlier attempts are worth not repeating. Bare chevrons with no bodies
 read as a mountain range. A flat gold mark with elegant Roman capitals read
 as a banking app.
 
+## Two directions
+
+There are two icons here on purpose, and they are not variations of each
+other — pick one.
+
+`icon.svg` is the **relief mark**: the brand, dark and gold, matching the
+game's own interior. It is quiet, it scales, and it sits beside the wordmark.
+
+`icon-character.svg` is the **store icon**: one big smiling merchant holding
+up a coin over a bright town, in the idiom casual and idle games actually use
+on the App Store — a face, saturated colour, a silhouette that still reads at
+38px. It shares nothing with the relief mark but the subject.
+
+The relief mark is the better *logo*. The character icon is the better
+*listing thumbnail*, because store browsing rewards a face over a monogram.
+Most games in this genre ship exactly this split.
+
+`icon-character.svg` is hand-authored and is **not** produced by
+`scripts/build-logo.js` — edit it directly; re-running the script leaves it
+alone.
+
 ## Which file to use
 
 | File                          | Use                                                          |
 | ----------------------------- | ------------------------------------------------------------ |
 | `logo-stacked-<lang>.svg`     | The main logo. Title screen, splash, store art, press.        |
 | `logo-horizontal-<lang>.svg`  | Wide spaces: headers, footers, banners. Flat baseline.        |
-| `icon.svg` / `icon-1024.png`  | App icon — the mark in relief on the dark plate.              |
+| `icon.svg` / `icon-1024.png`  | Relief app icon — the mark on the dark plate.                 |
+| `icon-character.svg`          | Casual-game store icon — character, coin, bright town.        |
 | `mark.svg`                    | Mark alone in relief, transparent ground.                     |
 | `mark-mono.svg`               | Flat, one colour via `currentColor`. Favicons, print, stamps. |
 | `mark-dark.svg`               | Flat dark, for light backgrounds.                             |
