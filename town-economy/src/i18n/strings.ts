@@ -9,6 +9,14 @@ export const STRINGS = {
       close: "Kapat",
       all: "TÜMÜ",
     },
+    title: {
+      logoAlt: "Altın Kasaba",
+      tagline: "Enflasyon her gün yiyip bitiriyor.\nSen kasabanı büyüt.",
+      start: "BAŞLA",
+      continue: "DEVAM ET",
+      loading: "YÜKLENİYOR…",
+      saveLine: "{town} · {day}. gün · {worth}",
+    },
     header: {
       cash: "Nakit",
       netWorth: "Net Servet",
@@ -1113,6 +1121,14 @@ export const STRINGS = {
       cancel: "Cancel",
       close: "Close",
       all: "ALL",
+    },
+    title: {
+      logoAlt: "Golden Town",
+      tagline: "Inflation eats away at it every day.\nYou grow the town.",
+      start: "START",
+      continue: "CONTINUE",
+      loading: "LOADING…",
+      saveLine: "{town} · Day {day} · {worth}",
     },
     header: {
       cash: "Cash",

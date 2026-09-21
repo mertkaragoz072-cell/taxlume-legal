@@ -364,12 +364,17 @@ for (const [lang, w] of Object.entries(WORDS)) {
 // SVG is the source of truth, but Expo's icon/splash fields and both store
 // consoles want PNG, so the sizes that actually get uploaded are rendered
 // here rather than exported by hand.
+//
+// The size goes in the name as a plain suffix (`-900`), never as `@3x`:
+// Metro reads `@3x` as a density variant of a base file, so a title screen
+// that requires `logo-stacked-tr@3x.png` asks for a 1x `logo-stacked-tr.png`
+// that does not exist.
 const RASTERS = [
   { src: "icon.svg", name: "icon-1024.png", width: 1024, height: 1024 },
   { src: "mark.svg", name: "mark-1024.png", height: 1024 },
   ...Object.keys(WORDS).flatMap((lang) => [
-    { src: `logo-stacked-${lang}.svg`, name: `logo-stacked-${lang}@3x.png`, height: 900 },
-    { src: `logo-horizontal-${lang}.svg`, name: `logo-horizontal-${lang}@3x.png`, height: 300 },
+    { src: `logo-stacked-${lang}.svg`, name: `logo-stacked-${lang}-900.png`, height: 900 },
+    { src: `logo-horizontal-${lang}.svg`, name: `logo-horizontal-${lang}-300.png`, height: 300 },
   ]),
 ];
 

@@ -91,6 +91,12 @@ from `COLORS.onLight`. Change the theme's gold there and re-run the script.
 **Clear space:** keep at least the width of one building body clear on every
 side.
 
+**Raster names carry the size, never `@3x`.** The PNGs are exported as
+`logo-stacked-<lang>-900.png` and so on because Metro reads an `@3x` suffix as
+a density variant of a base file — `logo-stacked-tr@3x.png` is a request for a
+1x `logo-stacked-tr.png` that does not exist. The title screen imports the
+stacked PNG directly, so this is not a hypothetical.
+
 **The icon PNG is square on purpose.** Both stores apply their own corner
 mask; baking a radius in leaves a pale halo inside theirs.
 

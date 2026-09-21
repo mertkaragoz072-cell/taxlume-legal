@@ -40,6 +40,7 @@ import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { InvestScreen } from "./src/screens/InvestScreen";
 import { MarketScreen } from "./src/screens/MarketScreen";
 import { ResearchScreen } from "./src/screens/ResearchScreen";
+import { TitleScreen } from "./src/screens/TitleScreen";
 import { TownScreen } from "./src/screens/TownScreen";
 import { TradeScreen } from "./src/screens/TradeScreen";
 import { hasSeenTutorial, markTutorialSeen } from "./src/tutorial/tutorialStorage";
@@ -82,9 +83,15 @@ function Game() {
     setLanguage,
     t,
     netWorth,
+    start,
   } = useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
+  // The title screen stands in front of the game until the player taps
+  // through it. It is Game's own state rather than App's so the economy
+  // is already mounted and hydrating behind it — by the time the button is
+  // pressed the save has usually loaded, and "Continue" is the true label.
+  const [titleVisible, setTitleVisible] = useState(true);
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
@@ -177,6 +184,26 @@ function Game() {
     wasGameOver.current = state.gameOver;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.lastEvent, state.gameOver]);
+
+  // Returned before the game's own tree so nothing behind the title can
+  // claim the screen first — the offline summary and the tutorial both open
+  // on mount, and they belong after the player has chosen to go in, not
+  // stacked on top of the logo.
+  if (titleVisible) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <StatusBar style="light" />
+        <View style={styles.content}>
+          <TitleScreen
+            onStart={() => {
+              start();
+              setTitleVisible(false);
+            }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>

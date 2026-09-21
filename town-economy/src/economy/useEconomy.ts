@@ -1344,15 +1344,28 @@ export function useEconomy() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  // Whether the launch found a save to restore. Not the same question as
+  // `state.tick > 0`: the clock makes that true a few seconds into a brand
+  // new game too, so a title screen asking it would offer to "continue" a
+  // town the player has never seen.
+  const [hasSave, setHasSave] = useState(false);
+  // The title screen holds the game in front of the player before they go
+  // in. The clock waits for `start()` rather than running from mount: an
+  // economy that ticks behind a menu spends the player's events and crises
+  // while nobody is watching, and the first thing they would see is the
+  // aftermath.
+  const [started, setStarted] = useState(false);
+  const start = useCallback(() => setStarted(true), []);
 
   const isSpeedBoosted = state.speedBoostExpiresAt !== null;
   useEffect(() => {
+    if (!hydrated || !started) return;
     const intervalMs = isSpeedBoosted ? BOOSTED_TICK_MS : TICK_MS;
     intervalRef.current = setInterval(() => dispatch({ type: "TICK" }), intervalMs);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isSpeedBoosted]);
+  }, [isSpeedBoosted, hydrated, started]);
 
   // Load any previous save once on mount, fast-forward the town through
   // however long the app was closed, then start persisting future changes.
@@ -1361,6 +1374,7 @@ export function useEconomy() {
     loadEconomyState().then((saved) => {
       if (cancelled) return;
       if (saved) {
+        setHasSave(true);
         dispatch({ type: "HYDRATE", state: saved });
         const lastSavedAt = saved.lastSavedAt ?? Date.now();
         const elapsedMs = clamp(Date.now() - lastSavedAt, 0, MAX_OFFLINE_MS);
@@ -1539,6 +1553,9 @@ export function useEconomy() {
     netWorth,
     marketSpreadPct,
     hydrated,
+    hasSave,
+    started,
+    start,
   };
 }
 
