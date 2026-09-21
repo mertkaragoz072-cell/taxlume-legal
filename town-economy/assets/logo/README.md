@@ -33,10 +33,28 @@ Two earlier attempts are worth not repeating. Bare chevrons with no bodies
 read as a mountain range. A flat gold mark with elegant Roman capitals read
 as a banking app.
 
-## Two directions
+## The app icon
 
-There are two icons here on purpose, and they are not variations of each
-other — pick one.
+`icon-art-merchant.webp` is the artwork the app actually ships with: a 3D
+render of the town's merchant holding up a gold coin, in the register the
+App Store's casual and idle charts use. It is the source, not an export —
+every slot in `app.json` is generated from it by
+
+```bash
+python3 scripts/build-app-icon.py assets/logo/icon-art-merchant.webp
+```
+
+Two things about it are worth knowing before re-cropping anything. The coin
+bleeds off the left edge of the frame, so a circular launcher mask cuts a
+piece of it no matter how the art is inset — the face is what has to survive,
+and it does, down to 40px. And the Android monochrome slot is *not* built
+from this file: a photoreal character makes an unreadable one-colour
+silhouette, so that layer stays the flat town mark from `mark-mono.svg`.
+
+## Two earlier directions
+
+The two icons below predate the merchant art and are kept as alternates.
+They are not variations of each other — pick one.
 
 `icon.svg` is the **relief mark**: the brand, dark and gold, matching the
 game's interior. Quiet, scales well, sits beside the wordmark.
@@ -66,8 +84,9 @@ Both `icon-coin*.svg` are hand-authored and are **not** produced by
 | ----------------------------- | ------------------------------------------------------------ |
 | `logo-stacked-<lang>.svg`     | The main logo. Title screen, splash, store art, press.        |
 | `logo-horizontal-<lang>.svg`  | Wide spaces: headers, footers, banners. Flat baseline.        |
-| `icon.svg` / `icon-1024.png`  | Relief app icon — the mark on the dark plate.                 |
-| `icon-coin.svg`               | Store icon — 3D gold coin on indigo. The listing thumbnail.    |
+| `icon-art-merchant.webp`      | **The shipping app icon's source art.** Feeds build-app-icon.py. |
+| `icon.svg` / `icon-1024.png`  | Alternate: relief icon — the mark on the dark plate.           |
+| `icon-coin.svg`               | Alternate: 3D gold coin on indigo.                            |
 | `icon-coin-teal.svg`          | Same icon on a teal ground.                                   |
 | `mark.svg`                    | Mark alone in relief, transparent ground.                     |
 | `mark-mono.svg`               | Flat, one colour via `currentColor`. Favicons, print, stamps. |

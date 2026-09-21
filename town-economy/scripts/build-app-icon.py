@@ -53,10 +53,10 @@ def main():
     art = src.resize((1024, 1024), Image.LANCZOS)
 
     # 1. iOS and the stores: full bleed, square, no alpha. Apple rejects an
-    #    icon with transparency.
+    #    icon with transparency. Both consoles want exactly this file, so
+    #    there is no separate store export — an earlier version wrote one and
+    #    it was byte-identical, a megabyte of duplicate in the repo.
     art.save(ASSETS / "icon.png")
-    (ROOT / "assets" / "logo").mkdir(exist_ok=True)
-    art.save(ASSETS / "logo" / "icon-store.png")
 
     # 2. Android adaptive. The launcher crops this to a circle, a squircle or
     #    whatever the device's mask is, and only the middle ~66% is guaranteed
@@ -83,7 +83,7 @@ def main():
     rounded(art).resize((196, 196), Image.LANCZOS).save(ASSETS / "favicon.png")
 
     print("✅ icon.png, android-icon-foreground.png, android-icon-background.png")
-    print("✅ splash-icon.png, favicon.png, logo/icon-store.png")
+    print("✅ splash-icon.png, favicon.png")
     print("ℹ  android-icon-monochrome.png is left alone — it has to be a flat")
     print("   silhouette, so it comes from assets/logo/mark-mono.svg, not from art.")
 
