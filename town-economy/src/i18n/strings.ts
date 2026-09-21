@@ -16,8 +16,6 @@ export const STRINGS = {
       continue: "DEVAM ET",
       loading: "YÜKLENİYOR…",
       saveLine: "{town} · {day}. gün · {worth}",
-      boardLabel: "KASABA PAZARI",
-      boardIndex: "Enflasyon (TPI)",
     },
     header: {
       cash: "Nakit",
@@ -1131,8 +1129,6 @@ export const STRINGS = {
       continue: "CONTINUE",
       loading: "LOADING…",
       saveLine: "{town} · Day {day} · {worth}",
-      boardLabel: "TOWN MARKET",
-      boardIndex: "Inflation (TPI)",
     },
     header: {
       cash: "Cash",
