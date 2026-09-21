@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
+import { Bobbing } from "./Bobbing";
 import { GradientFill } from "./GradientFill";
 import { TownSquareBackdrop } from "./TownSquareBackdrop";
 import { VillagerIllustration } from "./VillagerIllustration";
@@ -19,22 +20,6 @@ function moodForHappiness(happiness: number): "happy" | "neutral" | "sad" {
   if (happiness >= 70) return "happy";
   if (happiness < 45) return "sad";
   return "neutral";
-}
-
-function Bobbing({ children, delay }: { children: React.ReactNode; delay: number }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 1400, delay, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0, duration: 1400, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [anim, delay]);
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
-  return <Animated.View style={{ transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
 /** An ambient "town square" scene atop the Town screen: a painted backdrop of

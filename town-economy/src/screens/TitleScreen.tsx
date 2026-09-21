@@ -1,12 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import Svg, { Defs, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 import logoEn from "../../assets/logo/logo-stacked-en-900.png";
 import logoTr from "../../assets/logo/logo-stacked-tr-900.png";
+import { Bobbing } from "../components/Bobbing";
 import { GradientFill } from "../components/GradientFill";
+import { TownSquareBackdrop } from "../components/TownSquareBackdrop";
+import { VillagerIllustration } from "../components/VillagerIllustration";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { gameDayFromTick } from "../economy/useEconomy";
-import { COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, seasonalBackgroundGradient } from "../theme";
+import { GOODS_BY_ID, gameDayFromTick } from "../economy/useEconomy";
+import {
+  CARD_GRADIENT,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  seasonalBackgroundGradient,
+} from "../theme";
 
 // The wordmark comes from assets/logo, rendered per language — the Turkish
 // and English lockups are different widths, so the aspect ratio travels with
@@ -18,54 +29,89 @@ const LOGOS = {
   en: { src: logoEn, ratio: 2503 / 900 },
 } as const;
 
-/** A roofline of the logo's own buildings, repeated across the foot of the
- * screen. It is the mark's geometry — equal bodies, pitched roofs, a common
- * base — stretched into a skyline, so the decoration is the brand rather than
- * a stock silhouette. Drawn at a low opacity: it should register as depth
- * under the button, not as a second thing to read.
+// A staple, a raw material and a luxury — three rows that between them span
+// the range the game actually trades across, rather than three near-identical
+// numbers.
+const DEMO_GOODS = ["bread", "wood", "spice"] as const;
+
+// How fast the demo board climbs. Not the real economy's rate: this has to be
+// legible in the few seconds someone looks at the screen, so it runs far
+// hotter than a game does, and it loops back before the numbers stop being
+// believable prices.
+const DEMO_STEP_MS = 900;
+const DEMO_RATE = 0.019;
+const DEMO_RESET_AT = 1.9;
+
+/** The title screen's one moving part: a price board with the prices visibly
+ * climbing on it.
+ *
+ * This is the premise stated without a line of tutorial — goods have prices,
+ * the prices rise on their own, and the index at the bottom counts how far
+ * they have got. A still picture of a market could say the first part; only
+ * motion says the second, which is the part the game is about.
  */
-function Skyline() {
-  const HEIGHTS = [16, 26, 20, 34, 22, 30, 18, 28, 24, 32, 19, 27, 21, 31, 17, 25];
-  const BODY = 14;
-  const GAP = 6;
-  const EAVE = 3;
-  const PITCH = 9;
-  const FLOOR = 95;
-  const VIEW_W = HEIGHTS.length * (BODY + GAP);
+function MarketBoard({ width }: { width: number }) {
+  const { t, formatCoins } = useEconomyContext();
+  const [factor, setFactor] = useState(1);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setFactor((f) => (f >= DEMO_RESET_AT ? 1 : f * (1 + DEMO_RATE)));
+    }, DEMO_STEP_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  const pct = (factor - 1) * 100;
 
   return (
-    <Svg
-      style={styles.skyline}
-      viewBox={`0 0 ${VIEW_W} ${FLOOR}`}
-      // The box is sized to match the viewBox's proportions closely, so
-      // stretching it to fill costs almost no distortion — and it keeps the
-      // roofline flush with the bottom edge instead of letting "meet" scale
-      // the buildings up and crop them.
-      preserveAspectRatio="none"
-      pointerEvents="none"
-    >
-      <Defs>
-        <RadialGradient id="titleGlow" cx="0.5" cy="1" r="0.9">
-          <Stop offset="0" stopColor="#e8c777" stopOpacity="0.14" />
-          <Stop offset="1" stopColor="#e8c777" stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100%" height="100%" fill="url(#titleGlow)" />
-      {HEIGHTS.map((h, i) => {
-        const x = i * (BODY + GAP) + GAP / 2;
-        const top = FLOOR - h;
+    <View style={[styles.board, { width }]}>
+      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <Text style={styles.boardLabel}>{t("title.boardLabel")}</Text>
+
+      {DEMO_GOODS.map((id) => {
+        const good = GOODS_BY_ID[id];
         return (
-          <React.Fragment key={i}>
-            <Path d={`M${x} ${top} h${BODY} v${h} h-${BODY} Z`} fill="#e8c777" opacity={0.1} />
-            <Path
-              d={`M${x - EAVE} ${top} L${x + BODY / 2} ${top - PITCH} L${x + BODY + EAVE} ${top} Z`}
-              fill="#e8c777"
-              opacity={0.1}
-            />
-          </React.Fragment>
+          <View key={id} style={styles.row}>
+            <Text style={styles.rowIcon}>{good.icon}</Text>
+            <Text style={styles.rowName} numberOfLines={1}>
+              {t(good.nameKey)}
+            </Text>
+            <Text style={styles.rowPrice}>{formatCoins(good.basePrice * factor)}</Text>
+            <Text style={styles.rowDelta}>▲ {pct.toFixed(1)}%</Text>
+          </View>
         );
       })}
-    </Svg>
+
+      <View style={styles.boardFooter}>
+        <Text style={styles.footerLabel}>{t("title.boardIndex")}</Text>
+        <Text style={styles.footerValue}>{(100 * factor).toFixed(1)}</Text>
+      </View>
+    </View>
+  );
+}
+
+/** The town the prices are happening to: the same painted square the Town
+ * screen uses, with a small crowd standing in it. Without it the board is an
+ * abstraction; with it, the screen says whose bread this is. */
+function TownStrip({ width }: { width: number }) {
+  const height = Math.round(width / 2.5);
+  return (
+    <View style={[styles.strip, { width, height }]}>
+      <View aria-hidden style={StyleSheet.absoluteFill}>
+        <TownSquareBackdrop width={width} height={height} warmth={0.82} />
+      </View>
+      <View style={styles.crowd}>
+        <Bobbing delay={0}>
+          <VillagerIllustration size={44} mood="happy" variant={1} />
+        </Bobbing>
+        <Bobbing delay={220}>
+          <VillagerIllustration size={58} mood="happy" variant={0} />
+        </Bobbing>
+        <Bobbing delay={440}>
+          <VillagerIllustration size={40} mood="happy" variant={2} />
+        </Bobbing>
+      </View>
+    </View>
   );
 }
 
@@ -73,7 +119,7 @@ interface Props {
   onStart: () => void;
 }
 
-/** The first screen of the app: the logo, and one button into the town.
+/** The first screen of the app: what the game is, and one button into it.
  *
  * Its other job is to stop the save from being invisible. The game restores
  * silently on launch, so dropping straight into the market gave a returning
@@ -89,12 +135,12 @@ export function TitleScreen({ onStart }: Props) {
   // frame later.
   const inProgress = hasSave;
   const logo = LOGOS[state.language];
-  const logoWidth = Math.min(width - SPACING.xl * 2, 340);
+  const contentWidth = Math.min(width - SPACING.xl * 2, 432);
+  const logoWidth = Math.min(contentWidth, 300);
 
   return (
     <View style={styles.root}>
       <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
-      <Skyline />
 
       <Pressable
         style={styles.langButton}
@@ -105,16 +151,25 @@ export function TitleScreen({ onStart }: Props) {
         <Text style={styles.langLabel}>{state.language === "tr" ? "EN" : "TR"}</Text>
       </Pressable>
 
-      <View style={styles.center}>
-        <Image
-          source={logo.src}
-          style={{ width: logoWidth, height: logoWidth / logo.ratio }}
-          resizeMode="contain"
-          accessibilityRole="image"
-          accessibilityLabel={t("title.logoAlt")}
-        />
+      <View style={styles.spacerTop} />
+
+      <View style={styles.masthead}>
+        <Bobbing distance={5} duration={2600}>
+          <Image
+            source={logo.src}
+            style={{ width: logoWidth, height: logoWidth / logo.ratio }}
+            resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel={t("title.logoAlt")}
+          />
+        </Bobbing>
         <Text style={styles.tagline}>{t("title.tagline")}</Text>
       </View>
+
+      <View style={styles.spacerBottom} />
+
+      <MarketBoard width={contentWidth} />
+      <TownStrip width={contentWidth} />
 
       <View style={styles.actions}>
         {hydrated && inProgress ? (
@@ -145,20 +200,22 @@ export function TitleScreen({ onStart }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xl * 2 },
-  // The logo sits above the middle rather than dead centre: on a tall phone
-  // a centred lockup leaves a void between it and the button, and the button
-  // itself wants to stay inside thumb reach.
-  center: {
+  root: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.xl,
     gap: SPACING.lg,
-    paddingBottom: SPACING.xl * 3,
   },
-  // Absolutely placed so it underlays the button rather than taking layout
-  // space away from it.
-  skyline: { position: "absolute", left: 0, right: 0, bottom: 0, height: 128 },
+  masthead: { alignItems: "center", gap: SPACING.md },
+  // A tall screen has slack to give away, and where it goes decides whether
+  // the screen reads as composed or as broken. Two thirds above the logo
+  // reads as headroom; the same emptiness between the tagline and the price
+  // board reads as a layout that failed. On a short phone both collapse to
+  // nothing and the stack simply fills the screen.
+  spacerTop: { flex: 2 },
+  spacerBottom: { flex: 1 },
   tagline: {
     color: COLORS.textMuted,
     fontFamily: FONT.regular,
@@ -166,7 +223,68 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.4,
   },
-  actions: { alignItems: "center", gap: SPACING.md },
+
+  board: {
+    borderRadius: RADIUS.feature,
+    overflow: "hidden",
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    gap: SPACING.xs,
+    borderWidth: 1,
+    borderColor: "#4a3a1c",
+  },
+  boardLabel: {
+    color: COLORS.textMuted,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.micro,
+    letterSpacing: 1.4,
+    marginBottom: SPACING.xs,
+  },
+  row: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+  rowIcon: { fontSize: TYPE.title },
+  rowName: { flex: 1, color: COLORS.textPrimary, fontFamily: FONT.regular, fontSize: TYPE.body },
+  rowPrice: {
+    color: COLORS.textPrimary,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+    // A fixed slot, so the prices do not jitter sideways as digits change.
+    width: 78,
+    textAlign: "right",
+  },
+  rowDelta: {
+    color: COLORS.negative,
+    fontFamily: FONT.medium,
+    fontSize: TYPE.caption,
+    width: 58,
+    textAlign: "right",
+  },
+  boardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: SPACING.sm,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: "#4a3a1c",
+  },
+  footerLabel: {
+    color: COLORS.textMuted,
+    fontFamily: FONT.medium,
+    fontSize: TYPE.caption,
+    letterSpacing: 0.4,
+  },
+  footerValue: { color: COLORS.warning, fontFamily: FONT.bold, fontSize: TYPE.title },
+
+  strip: { borderRadius: RADIUS.card, overflow: "hidden", justifyContent: "flex-end" },
+  crowd: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    gap: SPACING.lg,
+    paddingBottom: 4,
+  },
+
+  actions: { alignSelf: "stretch", alignItems: "center", gap: SPACING.md },
   saveLine: {
     color: COLORS.accent,
     fontFamily: FONT.medium,
@@ -176,7 +294,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     width: "100%",
-    maxWidth: 320,
+    maxWidth: 432,
     height: 56,
     borderRadius: RADIUS.feature,
     overflow: "hidden",
