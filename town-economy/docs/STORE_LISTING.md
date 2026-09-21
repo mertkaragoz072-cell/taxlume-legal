@@ -220,7 +220,40 @@ The earlier five hand-taken screenshots are still in
 with no map, demand seasons, crises, doctrines or trading houses — do not
 upload them; delete them once the new set is live.
 
-No preview video is included — that still needs to be recorded separately.
+## Preview video
+
+Two cuts per language, in `store-assets/video/`, recorded from the running
+app in the same seeded town as the screenshots:
+
+| File                           | Size      | Where it goes                   |
+| ------------------------------ | --------- | ------------------------------- |
+| `preview-<lang>-886x1920.mp4`  | 886x1920  | App Store Connect app preview   |
+| `preview-<lang>-1080x1920.mp4` | 1080x1920 | TikTok, Reels, Meta, Play promo |
+
+```bash
+npx expo start --web --port 8251
+npm --prefix /tmp/video-tools install ffmpeg-static
+NODE_PATH=/tmp/video-tools/node_modules:/opt/node22/lib/node_modules \
+  node scripts/capture-preview-video.js --lang tr
+```
+
+Both are 25.6s, H.264 High / yuv420p / 30fps, no audio. The script refuses
+to write a clip outside App Store Connect's 15–30 second window rather than
+letting it be discovered at upload.
+
+The app's frame is 886x1920 because a phone is taller and narrower than 9:16.
+The social cut fills the difference with a blurred blow-up of the footage —
+every platform pads a narrow video anyway, and it pads it with black.
+
+**One caveat before submitting to Apple.** These are captured from the web
+build. The components are the same React Native code the phone runs, but
+Apple's guidance is that an app preview is captured on device or simulator.
+For Play and for ads this is fine as is; if App Review objects, the same
+beats have to be re-recorded on a simulator.
+
+Audio and captions are deliberately absent: an ad is usually watched muted,
+and the store cuts should not carry a voiceover the App Store would have to
+re-approve per locale.
 
 ## Notes
 
