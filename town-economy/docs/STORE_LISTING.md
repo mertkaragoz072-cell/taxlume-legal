@@ -279,6 +279,33 @@ Audio and captions are deliberately absent: an ad is usually watched muted,
 and the store cuts should not carry a voiceover the App Store would have to
 re-approve per locale.
 
+## URLs the consoles ask for
+
+Both stores refuse a submission without a reachable privacy policy URL, and
+App Store Connect also wants a support URL. `docs/PRIVACY.md` is a file in a
+repository, not a URL, so the policy is also published as a page:
+
+| Field              | Value                                                                          |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Privacy policy URL | `https://mertkaragoz072-cell.github.io/taxlume-legal/golden-town-privacy.html` |
+| Support URL        | `https://mertkaragoz072-cell.github.io/taxlume-legal/golden-town-support.html` |
+| Support email      | `mertkaragoz072@gmail.com`                                                     |
+
+Those two pages live at the repository root as `golden-town-privacy.html` and
+`golden-town-support.html`, in the same flat layout and house style as the
+`privacy.html` / `terms.html` already published there. Both are bilingual,
+English first, with anchors so a Turkish listing can link straight to
+`#turkce`.
+
+**They go live when the branch reaches `master`.** GitHub Pages serves this
+repository from the root of the default branch, and the default branch is
+`master` — the files existing on a feature branch publishes nothing. Check
+the URLs actually load before pasting them into a console; a privacy URL
+that 404s is a rejection.
+
+`docs/PRIVACY.md` stays as the source of the wording. If the policy changes,
+change both, and bump the "Last updated" date in each.
+
 ## Before a build goes out
 
 ```bash
