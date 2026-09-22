@@ -215,10 +215,10 @@ node scripts/capture-store-screenshots.js          # both languages
 node scripts/capture-store-screenshots.js --lang en
 ```
 
-The earlier five hand-taken screenshots are still in
-`store-assets/screenshots/` alongside the new folders. They show a build
-with no map, demand seasons, crises, doctrines or trading houses — do not
-upload them; delete them once the new set is live.
+The five hand-taken screenshots that used to sit loose in
+`store-assets/screenshots/` are gone. They showed a build with no map, demand
+seasons, crises, doctrines or trading houses, and leaving them next to the
+real set was an upload waiting to go wrong.
 
 ## Preview video
 
@@ -278,6 +278,23 @@ Play promo slot.
 Audio and captions are deliberately absent: an ad is usually watched muted,
 and the store cuts should not carry a voiceover the App Store would have to
 re-approve per locale.
+
+## Before a build goes out
+
+```bash
+npm run verify                                   # types, lint, format, i18n, tests
+npx expo start --web --port 8251                 # in another shell
+npm run smoke                                    # the first-run path, both languages
+```
+
+`npm run smoke` walks a brand-new install and a restored save, in Turkish and
+English, from the title screen through the tutorial and the daily wheel to
+every one of the seven tabs, and fails on any console error. It pauses the
+clock before walking, because the game's event modals — a rival trader's
+offer, a villager's request — are _meant_ to interrupt and wait for an
+answer; left running they block the walk at random and the failure says
+nothing about whether the screens work. When something does block a tap, the
+test names the overlay rather than printing a Playwright timeout.
 
 ## Notes
 
