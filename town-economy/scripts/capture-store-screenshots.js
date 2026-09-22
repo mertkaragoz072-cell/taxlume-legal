@@ -46,6 +46,11 @@ const APP_URL = `http://localhost:${PORT}`;
 const VIEWPORT = { width: 430, height: 932 };
 const SCALE = 3;
 
+// Both labels, because the seeded save could in principle be missing and the
+// button would read "start" instead — matching either keeps the capture from
+// failing on a distinction that does not matter to it.
+const START_BUTTON = { tr: /^(BAŞLA|DEVAM ET)$/, en: /^(START|CONTINUE)$/ };
+
 const SHOTS = [
   {
     name: "01-market",
@@ -129,6 +134,16 @@ async function main() {
       );
       await page.goto(APP_URL, { waitUntil: "networkidle" });
       await page.waitForTimeout(5_000);
+
+      // The app opens on the title screen, so every shot has to go through it
+      // first. A seeded save makes the button say "continue", not "start".
+      await page
+        .getByText(START_BUTTON[lang], { exact: true })
+        .click({ timeout: 20_000 })
+        .catch((err) => {
+          throw new Error(`${lang}/${shot.name}: could not leave the title screen`, { cause: err });
+        });
+      await page.waitForTimeout(2_500);
 
       try {
         // Retried rather than one long click: what blocks the tab bar is
