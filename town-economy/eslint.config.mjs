@@ -102,6 +102,16 @@ export default tseslint.config(
     rules: { "no-console": "off", "@typescript-eslint/no-require-imports": "off" },
   },
 
+  // The ad's timeline runs in a browser, not in Node: it is loaded by a page
+  // the renderer opens, so it sees DOM globals and none of Node's.
+  {
+    files: ["scripts/ad/**/*.js"],
+    languageOptions: {
+      sourceType: "script",
+      globals: { ...globals.browser },
+    },
+  },
+
   // Must stay last: turns off every rule Prettier already decides.
   prettier
 );

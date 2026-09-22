@@ -251,6 +251,30 @@ Apple's guidance is that an app preview is captured on device or simulator.
 For Play and for ads this is fine as is; if App Review objects, the same
 beats have to be re-recorded on a simulator.
 
+### The ad cut
+
+`store-assets/video/ad-<lang>-1080x1920.mp4` is a different thing from the
+preview above and should not be confused with it. It is a 15-second trailer
+drawn in the game's colours, type and artwork — the runaway prices, the town,
+the merchant, the fortune, the logo — rather than recorded off the game's
+screens. A feed is not the place to explain an economy sim; it is the place
+to make someone stop scrolling.
+
+```bash
+npm --prefix /tmp/video-tools install ffmpeg-static
+NODE_PATH=/tmp/video-tools/node_modules:/opt/node22/lib/node_modules \
+  node scripts/render-ad-video.js --lang tr
+```
+
+It renders from `scripts/ad/ad.html`, whose whole timeline is a pure function
+of one number — the renderer draws frame 137 of 450 by calling `__setT(t)`
+rather than recording in real time, so a dropped frame is impossible rather
+than merely unlikely.
+
+**Do not upload this one as an App Store preview.** Apple requires a preview
+to be the app itself; this is advertising, for TikTok, Reels, Meta and the
+Play promo slot.
+
 Audio and captions are deliberately absent: an ad is usually watched muted,
 and the store cuts should not carry a voiceover the App Store would have to
 re-approve per locale.
