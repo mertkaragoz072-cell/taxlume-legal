@@ -24,11 +24,38 @@ Pages can take a minute or two to rebuild after the push.
 
 ## 1. Build
 
+EAS builds in Expo's cloud, but the CLI uploads the project from your disk —
+so the repository has to be checked out locally first. Node 22 and npm 10 are
+what this was developed against.
+
 ```bash
-cd town-economy
-eas login
+git clone https://github.com/mertkaragoz072-cell/taxlume-legal.git
+cd taxlume-legal/town-economy
+npm ci                         # ci, not install: builds from the lockfile
+npm install -g eas-cli
+eas login                      # your Expo account, not Apple or Google
+eas init                       # links the app to an EAS project, first time only
 eas build --profile production --platform all
 ```
+
+`eas init` writes `extra.eas.projectId` into `app.json`. **Commit that.**
+Without it in the repository the next machine creates a second EAS project
+and the build numbering starts over.
+
+The first build asks for signing credentials and the answer to both is "let
+EAS handle it":
+
+- **iOS** — sign in with the Apple ID on the Developer Program. EAS creates
+  the distribution certificate and provisioning profile for you.
+- **Android** — EAS generates an upload keystore and keeps it. **This
+  keystore is how Google Play identifies the app forever.** Lose it and you
+  cannot ship an update to the same listing, only a new listing under a new
+  package name. Back it up the day it is created:
+  `eas credentials` → Android → download the keystore, and keep it somewhere
+  that is not only this laptop.
+
+Builds run for 10–25 minutes. The CLI prints a link; the artifacts also sit
+under Builds at expo.dev, and that is where the .ipa and .aab download from.
 
 `eas.json` sets `appVersionSource: "remote"` with `autoIncrement`, so EAS owns
 the build numbers from here on; `app.json`'s `buildNumber` / `versionCode` are
