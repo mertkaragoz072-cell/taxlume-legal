@@ -1,0 +1,144 @@
+# Codemagic build definitions for Golden Town.
+#
+# The app lives in town-economy/, not at the root of this repository, so every
+# workflow sets `working_directory` and every path below is relative to that.
+#
+# Neither workflow has a `triggering:` block: builds are started by hand from
+# the Codemagic UI. This is a game that ships when it is ready, not on every
+# push, and a mac_mini minute costs money.
+#
+# Before the first run, in Codemagic:
+#   Android — Teams/Personal settings → Code signing identities → Android
+#             keystores → upload the upload keystore with reference name
+#             `golden_town_upload`. If you name it anything else, change the
+#             name under environment.android_signing below to match.
+#   iOS     — Teams/Personal settings → Integrations → Developer Portal →
+#             connect the App Store Connect API key. The key's name must match
+#             `integrations.app_store_connect` below (`codemagic`), or change
+#             that line to whatever you called it.
+#
+# Both workflows run `expo prebuild`, which generates ios/ and android/ from
+# app.json. Those folders are gitignored on purpose — they are build output,
+# and regenerating them each run means app.json stays the single place the
+# app is configured.
+
+workflows:
+  android-release:
+    name: Golden Town — Android (AAB for Play)
+    instance_type: linux_x2
+    max_build_duration: 60
+    working_directory: town-economy
+
+    environment:
+      java: 17
+      node: 22
+      android_signing:
+        - golden_town_upload
+      vars:
+        PACKAGE_NAME: com.goldentown.app
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      # Cheap relative to a 20-minute Gradle build, and it fails in seconds
+      # rather than at the end. Only on this workflow — running it on the mac
+      # too would pay for the same 190 tests twice.
+      - name: Typecheck, lint and test
+        script: npm run verify
+
+      - name: Stamp the build number
+        script: node scripts/ci/set-build-number.js
+
+      - name: Generate the native project
+        script: npx expo prebuild --platform android --no-install --clean
+
+      # Must run after prebuild and before gradle. prebuild signs the release
+      # buildType with the debug key; this points it at the uploaded keystore
+      # and fails the build if the credentials are not there, so a debug-signed
+      # bundle cannot reach Play quietly.
+      - name: Point release signing at the upload keystore
+        script: node scripts/ci/patch-android-signing.js
+
+      - name: Build the app bundle
+        script: |
+          chmod +x android/gradlew
+          cd android && ./gradlew bundleRelease
+
+    artifacts:
+      - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/*.aab
+      - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/mapping.txt
+
+    # Uploading to Play needs a Google Play service account JSON stored as a
+    # secure environment variable. Until that exists, download the .aab from
+    # the build page and upload it in Play Console by hand — which is what you
+    # want for the very first release anyway, since Play will not accept an
+    # automated upload before the listing is complete.
+    #
+    # publishing:
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal
+
+  ios-release:
+    name: Golden Town — iOS (IPA for TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: town-economy
+
+    integrations:
+      app_store_connect: codemagic
+
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.goldentown.app
+      vars:
+        BUNDLE_ID: com.goldentown.app
+        XCODE_SCHEME: GoldenTown
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Stamp the build number
+        script: node scripts/ci/set-build-number.js
+
+      # --no-install because pods are installed in the next step, where a
+      # failure is legible instead of buried inside prebuild's output.
+      - name: Generate the native project
+        script: npx expo prebuild --platform ios --no-install --clean
+
+      - name: Install pods
+        script: cd ios && pod install
+
+      # Pulls the provisioning profiles Codemagic fetched from App Store
+      # Connect into the Xcode project. Without this the archive step fails
+      # with a signing error that says nothing useful.
+      - name: Apply provisioning profiles
+        script: xcode-project use-profiles
+
+      # The workspace, not the project: pod install created it, and building
+      # the .xcodeproj directly misses every pod dependency.
+      - name: Archive and export
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/GoldenTown.xcworkspace" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - $CM_BUILD_DIR/town-economy/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $CM_BUILD_DIR/town-economy/build/ios/xcarchive/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # TestFlight only. Promoting to the App Store is a decision made in
+        # App Store Connect with the screenshots and description in front of
+        # you, not something a green build should do on its own.
+        submit_to_testflight: true
+        submit_to_app_store: false

@@ -24,6 +24,63 @@ Pages can take a minute or two to rebuild after the push.
 
 ## 1. Build
 
+Two routes. **Codemagic** is the one this repository is set up for: the build
+runs on their machines from `codemagic.yaml`, so nothing has to be installed
+on your laptop, and the Apple account already connected there does the
+signing. EAS is the fallback, and it needs Node and a local checkout.
+
+### 1a. Codemagic — the checked-in route
+
+`codemagic.yaml` sits at the root of this repository and defines two
+workflows, `android-release` and `ios-release`. Both run `expo prebuild`
+themselves, so `ios/` and `android/` never need to exist on your disk.
+
+One-time setup:
+
+1. **Connect the repository.** codemagic.io → Add application → GitHub →
+   `mertkaragoz072-cell/taxlume-legal`. When it asks how the build is
+   configured, choose **codemagic.yaml**; it finds the file itself.
+
+2. **Upload the Android keystore.** Generate one if you have not:
+
+   ```bash
+   keytool -genkey -v -keystore golden-town-upload.jks -storetype JKS \
+     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+
+   **Back that file and its passwords up somewhere that is not this laptop.**
+   Google Play identifies the app by this key forever — lose it and you
+   cannot update the listing, only start a new one under a new package name.
+
+   Then: Codemagic → Teams/Personal settings → Code signing identities →
+   Android keystores → upload it with reference name **`golden_town_upload`**.
+   Exactly that name — `codemagic.yaml` asks for it by name, and a mismatch
+   stops the build at the signing step rather than shipping something broken.
+
+3. **Connect Apple.** Teams/Personal settings → Integrations → Developer
+   Portal → your App Store Connect API key, named **`codemagic`** (or change
+   `integrations.app_store_connect` in the YAML to whatever you called it).
+   The bundle identifier `com.goldentown.app` has to exist in App Store
+   Connect already, or there is no profile for the signing step to fetch.
+
+Then: **Start new build** → choose the workflow. Android takes roughly 15
+minutes and hands back a `.aab` to download; iOS takes 20–25 and uploads
+itself to TestFlight.
+
+Neither workflow has a `triggering:` block, so nothing builds on push — you
+start builds by hand. What the steps are for:
+
+| Step                                                | Why it is there                                                                                                                                                                                                                      |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm ci`                                            | Builds from the lockfile rather than the version ranges.                                                                                                                                                                             |
+| `npm run verify` (Android only)                     | Typecheck, lint, format, i18n, 190 tests — fails in a minute instead of at the end of a 20-minute Gradle run. Skipped on the mac so the same tests are not billed twice.                                                             |
+| `set-build-number.js`                               | Stamps Codemagic's `$BUILD_NUMBER` into `app.json` before prebuild copies it into Info.plist and build.gradle. Without it every build is number 1, and both stores refuse a number they have already seen.                           |
+| `expo prebuild`                                     | Generates `ios/` and `android/` from `app.json`. Gitignored on purpose: build output, not source.                                                                                                                                    |
+| `patch-android-signing.js`                          | prebuild signs the _release_ build type with the _debug_ key. This repoints it at the uploaded keystore, and throws if the keystore variables are absent — so a debug-signed bundle, which Play rejects, cannot be produced quietly. |
+| `gradlew bundleRelease` / `xcode-project build-ipa` | The artifact itself.                                                                                                                                                                                                                 |
+
+### 1b. EAS — the fallback
+
 EAS builds in Expo's cloud, but the CLI uploads the project from your disk —
 so the repository has to be checked out locally first. Node 22 and npm 10 are
 what this was developed against.
@@ -60,6 +117,8 @@ under Builds at expo.dev, and that is where the .ipa and .aab download from.
 `eas.json` sets `appVersionSource: "remote"` with `autoIncrement`, so EAS owns
 the build numbers from here on; `app.json`'s `buildNumber` / `versionCode` are
 only the starting point.
+
+### Either route: check it on a phone
 
 **Install the .aab or the iOS build on a phone before submitting.** It costs
 five minutes on a build you are producing anyway. On iOS this is not optional
@@ -127,15 +186,25 @@ Graphics Play asks for that the App Store does not:
 
 ## 4. Submit
 
+**From Codemagic.** iOS needs nothing further: `ios-release` publishes to
+TestFlight itself, and promoting that build to the App Store is a button in
+App Store Connect once the listing in step 2 is filled in. Android is a
+manual upload for the first release — download the `.aab` from the build
+page and drop it into Play Console. Automating it needs a Google Play
+service account JSON stored as a secure variable; the `publishing:` block
+for it is in `codemagic.yaml`, commented out, waiting for that file.
+
+**From EAS.**
+
 ```bash
 eas submit --profile production --platform ios
 eas submit --profile production --platform android
 ```
 
-iOS asks for the Apple ID and the App Store Connect app; Android needs a
-Google Play service account JSON. `eas.json`'s `submit.production` is empty
-on purpose — those are account credentials and they do not belong in a
-repository. Either let the CLI prompt, or set them through EAS secrets.
+iOS asks for the Apple ID and the App Store Connect app; Android needs the
+same Google Play service account JSON. `eas.json`'s `submit.production` is
+empty on purpose — those are account credentials and they do not belong in
+a repository. Either let the CLI prompt, or set them through EAS secrets.
 
 ## 5. After
 
@@ -149,7 +218,11 @@ crash on a device is the likeliest one here, for the reason in step 1.
 ## Version bookkeeping
 
 `app.json` holds 1.0.0 / buildNumber 1 / versionCode 1 as the starting point.
-For the next release bump `version`; EAS increments the build numbers itself.
+For the next release bump `version` — the marketing number is a decision, so
+no script touches it. The build numbers underneath it are a counter and are
+handled for you: Codemagic stamps `$BUILD_NUMBER` in via
+`scripts/ci/set-build-number.js`, and EAS increments them itself under
+`appVersionSource: "remote"`.
 `SAVE_VERSION` in `src/economy/persist.ts` is a different number and moves
 only when the save shape changes — it is 51, and bumping it discards every
 existing save, so never move it to match the app version.
