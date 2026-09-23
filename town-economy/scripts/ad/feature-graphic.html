@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        src: url("../../node_modules/@expo-google-fonts/cinzel/700Bold/Cinzel_700Bold.ttf");
+      }
+      @font-face {
+        font-family: "Manrope";
+        src: url("../../node_modules/@expo-google-fonts/manrope/600SemiBold/Manrope_600SemiBold.ttf");
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1024px;
+        height: 500px;
+        overflow: hidden;
+      }
+      #g {
+        position: relative;
+        width: 1024px;
+        height: 500px;
+        overflow: hidden;
+        background: linear-gradient(110deg, #2a2013 0%, #191309 55%, #0d0a06 100%);
+      }
+      /* The merchant anchors the right third, bled off the edge so the
+         graphic reads as a window onto something larger rather than a
+         portrait pasted onto a banner. */
+      #m {
+        position: absolute;
+        right: -60px;
+        bottom: -70px;
+        width: 470px;
+        height: 470px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow:
+          0 30px 90px rgba(0, 0, 0, 0.7),
+          0 0 0 10px rgba(232, 199, 119, 0.16);
+      }
+      #glow {
+        position: absolute;
+        right: -120px;
+        bottom: -160px;
+        width: 700px;
+        height: 700px;
+        background: radial-gradient(circle, rgba(255, 214, 100, 0.22) 0%, rgba(255, 214, 100, 0) 62%);
+      }
+      #logo {
+        position: absolute;
+        left: 66px;
+        top: 96px;
+        width: 430px;
+      }
+      #tag {
+        position: absolute;
+        left: 70px;
+        top: 312px;
+        width: 470px;
+        font-family: "Manrope", sans-serif;
+        font-size: 25px;
+        line-height: 1.42;
+        color: #d8c8a8;
+        letter-spacing: 0.2px;
+      }
+      #sky {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 1024px;
+        height: 150px;
+      }
+      .coin {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, #fff6cf 0%, #ffd764 42%, #d79422 100%);
+        box-shadow: 0 0 16px rgba(255, 214, 100, 0.45);
+      }
+      #vig {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 40% 50%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.45) 100%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="g">
+      <svg id="sky" viewBox="0 0 1024 150" preserveAspectRatio="none"></svg>
+      <div id="glow"></div>
+      <img id="m" src="../../assets/logo/icon-art-merchant.webp" alt="" />
+      <img id="logo" src="../../assets/logo/logo-stacked-tr-900.png" alt="" />
+      <div id="tag"></div>
+      <div id="vig"></div>
+    </div>
+    <script>
+      const LANG = new URLSearchParams(location.search).get("lang") === "en" ? "en" : "tr";
+      document.getElementById("logo").src = `../../assets/logo/logo-stacked-${LANG}-900.png`;
+      document.getElementById("tag").innerHTML =
+        LANG === "tr"
+          ? "Enflasyon her gün yiyip bitiriyor.<br/>Ucuza al, pahalıya sat, kasabanı büyüt."
+          : "Inflation eats away at it every day.<br/>Buy low, sell high, grow your town.";
+
+      // Same roofline as the ad and the title screen: the brand's own
+      // buildings, varied so it reads as a town rather than a fence.
+      (function () {
+        const houses = [
+          [46, 62],
+          [34, 88],
+          [58, 52],
+          [41, 104],
+          [52, 70],
+          [36, 85],
+          [61, 58],
+          [44, 78],
+          [50, 66],
+          [38, 92],
+          [56, 55],
+          [43, 82],
+          [48, 71],
+          [35, 96],
+          [59, 60],
+        ];
+        const gap = 4,
+          floor = 150;
+        const total = houses.reduce((n, h) => n + h[0] + gap, -gap);
+        let x = (1024 - total) / 2,
+          d = "";
+        for (const [w, h] of houses) {
+          const top = floor - h,
+            pitch = Math.round(w * 0.42);
+          d += `<path d="M${x} ${top} h${w} v${h} h-${w} Z" fill="url(#bg)"/>`;
+          d += `<path d="M${x - 6} ${top} L${x + w / 2} ${top - pitch} L${x + w + 6} ${top} Z" fill="url(#rf)"/>`;
+          d += `<rect x="${x + w / 2 - 6}" y="${top + 18}" width="12" height="16" rx="3" fill="#ffe9a8" opacity=".75"/>`;
+          x += w + gap;
+        }
+        document.getElementById("sky").innerHTML = `<defs>
+             <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+               <stop offset="0" stop-color="#8e7434"/><stop offset="1" stop-color="#3c2c10"/></linearGradient>
+             <linearGradient id="rf" x1="0" y1="0" x2="0" y2="1">
+               <stop offset="0" stop-color="#b08f3f"/><stop offset="1" stop-color="#6b4f1a"/></linearGradient>
+           </defs>${d}`;
+      })();
+
+      // A few coins, placed from a fixed list so the graphic is reproducible.
+      const coins = [
+        [612, 296, 17],
+        [566, 352, 12],
+        [648, 372, 10],
+        [598, 232, 13],
+        [540, 300, 9],
+      ];
+      for (const [cx, cy, r] of coins) {
+        const el = document.createElement("div");
+        el.className = "coin";
+        el.style.cssText = `left:${cx}px;top:${cy}px;width:${r * 2}px;height:${r * 2}px`;
+        document.getElementById("g").appendChild(el);
+      }
+    </script>
+  </body>
+</html>

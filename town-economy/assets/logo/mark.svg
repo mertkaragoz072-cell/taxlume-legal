@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="7.8 17 87.4 71" width="87" height="71">
+  <defs>
+    <linearGradient id="facer0" gradientUnits="userSpaceOnUse" x1="0" y1="19.5" x2="0" y2="110.25">
+      <stop offset="0" stop-color="#fff6d2"/>
+      <stop offset="0.42" stop-color="#f6c85a"/>
+      <stop offset="0.56" stop-color="#e0a637"/>
+      <stop offset="1" stop-color="#b9781f"/>
+    </linearGradient>
+    <linearGradient id="sheenr0" gradientUnits="userSpaceOnUse" x1="0" y1="19.5" x2="0" y2="110.25">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="0.38" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="dropr0" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="2.94" stdDeviation="2.52" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <g filter="url(#dropr0)">
+    <g fill="#241505" stroke="#241505" stroke-width="7" stroke-linejoin="round"><g transform="translate(0 0) scale(1.0000)"><path d="M19 56 h18 v18 h-18 Z"/><path d="M15.8 56 L28 45 L40.2 56 Z"/><path d="M42.5 47 h18 v27 h-18 Z"/><path d="M39.3 47 L51.5 36 L63.7 47 Z"/><path d="M66 36 h18 v38 h-18 Z"/><path d="M62.8 36 L75 25 L87.2 36 Z"/><path d="M16.5 75.4 h67 v4.6 h-67 Z"/></g></g>
+    <g fill="#a9691b" stroke="#a9691b" stroke-width="3.8" stroke-linejoin="round"><g transform="translate(0 0) scale(1.0000)"><path d="M19 56 h18 v18 h-18 Z"/><path d="M15.8 56 L28 45 L40.2 56 Z"/><path d="M42.5 47 h18 v27 h-18 Z"/><path d="M39.3 47 L51.5 36 L63.7 47 Z"/><path d="M66 36 h18 v38 h-18 Z"/><path d="M62.8 36 L75 25 L87.2 36 Z"/><path d="M16.5 75.4 h67 v4.6 h-67 Z"/></g></g>
+    <g fill="url(#facer0)"><g transform="translate(0 0) scale(1.0000)"><path d="M19 56 h18 v18 h-18 Z"/><path d="M15.8 56 L28 45 L40.2 56 Z"/><path d="M42.5 47 h18 v27 h-18 Z"/><path d="M39.3 47 L51.5 36 L63.7 47 Z"/><path d="M66 36 h18 v38 h-18 Z"/><path d="M62.8 36 L75 25 L87.2 36 Z"/><path d="M16.5 75.4 h67 v4.6 h-67 Z"/></g></g>
+    <g fill="url(#sheenr0)"><g transform="translate(0 0) scale(1.0000)"><path d="M19 56 h18 v18 h-18 Z"/><path d="M15.8 56 L28 45 L40.2 56 Z"/><path d="M42.5 47 h18 v27 h-18 Z"/><path d="M39.3 47 L51.5 36 L63.7 47 Z"/><path d="M66 36 h18 v38 h-18 Z"/><path d="M62.8 36 L75 25 L87.2 36 Z"/><path d="M16.5 75.4 h67 v4.6 h-67 Z"/></g></g>
+  </g>
+</svg>

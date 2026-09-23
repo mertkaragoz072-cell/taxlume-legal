@@ -1,0 +1,147 @@
+import React, { useEffect, useRef } from "react";
+import { Animated, Modal, StyleSheet, Text, View } from "react-native";
+import { useEconomyContext } from "../economy/EconomyContext";
+import { GOODS_BY_ID } from "../economy/goods";
+import { GoodState, VillagerRequest } from "../economy/types";
+import { CARD_GRADIENT, cardShadow, FONT, withAlpha } from "../theme";
+import { GradientFill } from "./GradientFill";
+import { ModalBackdrop } from "./ModalBackdrop";
+import { ScalePressable } from "./ScalePressable";
+import { VillagerIllustration } from "./VillagerIllustration";
+
+interface Props {
+  request: VillagerRequest | null;
+  holding: GoodState | null;
+  onResolve: (give: boolean) => void;
+}
+
+export function VillagerRequestModal({ request, holding, onResolve }: Props) {
+  const { t } = useEconomyContext();
+  const enterAnim = useRef(new Animated.Value(0)).current;
+  const requestId = request?.id;
+
+  useEffect(() => {
+    if (requestId == null) return;
+    enterAnim.setValue(0);
+    Animated.spring(enterAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 7,
+      tension: 55,
+    }).start();
+  }, [requestId, enterAnim]);
+
+  if (!request) return null;
+  const good = GOODS_BY_ID[request.goodId];
+  const canGive = (holding?.holding ?? 0) >= request.qty;
+
+  return (
+    <Modal visible transparent animationType="fade">
+      <ModalBackdrop>
+        <View style={styles.stage}>
+          <Animated.View
+            style={[
+              styles.villagerWrap,
+              {
+                opacity: enterAnim,
+                transform: [
+                  {
+                    translateX: enterAnim.interpolate({ inputRange: [0, 1], outputRange: [-40, 0] }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <VillagerIllustration size={76} gesturing />
+          </Animated.View>
+
+          <View style={styles.card}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.1) }]}
+            />
+            <Text style={styles.title}>{t("villagerRequest.title")}</Text>
+            <Text style={styles.description}>
+              {t("villagerRequest.description", {
+                qty: request.qty,
+                icon: good.icon,
+                good: t(good.nameKey),
+              })}
+            </Text>
+
+            <ScalePressable
+              onPress={() => onResolve(true)}
+              style={[
+                styles.option,
+                canGive && { borderColor: good.color },
+                !canGive && styles.optionDisabled,
+              ]}
+              scaleTo={0.96}
+            >
+              <Text style={styles.optionLabel}>
+                {t("villagerRequest.giveBtn", { qty: request.qty, icon: good.icon })}
+              </Text>
+              <Text style={styles.optionHint}>
+                {canGive
+                  ? t("villagerRequest.giveHint")
+                  : t("villagerRequest.insufficientHint", { good: t(good.nameKey) })}
+              </Text>
+            </ScalePressable>
+
+            <ScalePressable onPress={() => onResolve(false)} style={styles.option} scaleTo={0.96}>
+              <Text style={styles.optionLabel}>{t("villagerRequest.refuseBtn")}</Text>
+              <Text style={styles.optionHint}>{t("villagerRequest.refuseHint")}</Text>
+            </ScalePressable>
+          </View>
+        </View>
+      </ModalBackdrop>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  stage: {
+    width: "100%",
+    maxWidth: 360,
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  villagerWrap: {
+    marginRight: -22,
+    marginBottom: 14,
+    zIndex: 2,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 18,
+    paddingVertical: 20,
+    paddingRight: 20,
+    paddingLeft: 30,
+    alignItems: "center",
+    overflow: "hidden",
+    zIndex: 1,
+    ...cardShadow,
+  },
+  title: { color: "#f0e3c8", fontSize: 17, fontFamily: FONT.display, marginBottom: 8, textAlign: "center" },
+  description: {
+    color: "#a0917a",
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: 18,
+    lineHeight: 18,
+  },
+  option: {
+    width: "100%",
+    backgroundColor: "#1a1410",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: "#3a2d1e",
+  },
+  optionDisabled: { opacity: 0.5 },
+  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontFamily: FONT.bold, fontSize: 14, marginBottom: 3 },
+  optionHint: { color: "#a0917a", fontSize: 11 },
+});

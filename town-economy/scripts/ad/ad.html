@@ -1,0 +1,274 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Altın Kasaba — ad</title>
+    <style>
+      /* Fonts come off disk rather than Google Fonts: the renderer must not
+         depend on the network, and these are the exact files the app ships. */
+      @font-face {
+        font-family: "Cinzel";
+        src: url("../../node_modules/@expo-google-fonts/cinzel/700Bold/Cinzel_700Bold.ttf");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: "Manrope";
+        src: url("../../node_modules/@expo-google-fonts/manrope/800ExtraBold/Manrope_800ExtraBold.ttf");
+        font-weight: 800;
+      }
+      @font-face {
+        font-family: "Manrope";
+        src: url("../../node_modules/@expo-google-fonts/manrope/600SemiBold/Manrope_600SemiBold.ttf");
+        font-weight: 600;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #0d0a06;
+      }
+      #stage {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        font-family: "Manrope", system-ui, sans-serif;
+        /* The app's own backdrop gradient. */
+        background: linear-gradient(180deg, #2a2013 0%, #140f0a 62%, #0d0a06 100%);
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+      }
+      .center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* --- type ------------------------------------------------------ */
+      .head {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        color: #ffdf8e;
+        letter-spacing: 2px;
+        line-height: 1.08;
+        text-shadow:
+          0 6px 32px rgba(0, 0, 0, 0.8),
+          0 0 60px rgba(224, 166, 55, 0.28);
+      }
+      .sub {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-weight: 600;
+        color: #d8c8a8;
+        letter-spacing: 1px;
+      }
+
+      /* --- price rows ------------------------------------------------ */
+      .row {
+        position: absolute;
+        left: 110px;
+        width: 860px;
+        height: 150px;
+        border-radius: 26px;
+        background: linear-gradient(135deg, #3a2b19, #211a11);
+        border: 2px solid #55401f;
+        display: flex;
+        align-items: center;
+        padding: 0 40px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+      }
+      .row .icon {
+        font-size: 76px;
+        width: 110px;
+      }
+      .row .name {
+        flex: 1;
+        font-size: 46px;
+        font-weight: 600;
+        color: #f0e3c8;
+      }
+      .row .price {
+        font-size: 56px;
+        font-weight: 800;
+        color: #fff3d2;
+        font-variant-numeric: tabular-nums;
+      }
+      .row .delta {
+        width: 190px;
+        text-align: right;
+        font-size: 44px;
+        font-weight: 800;
+        color: #ff6b5e;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* --- chips ------------------------------------------------------ */
+      .chip {
+        position: absolute;
+        padding: 30px 54px;
+        border-radius: 999px;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 54px;
+        letter-spacing: 2px;
+        color: #12100b;
+        box-shadow: 0 20px 56px rgba(0, 0, 0, 0.5);
+        white-space: nowrap;
+      }
+      .chip.buy {
+        background: linear-gradient(180deg, #7ee79a, #2a9c53);
+      }
+      .chip.sell {
+        background: linear-gradient(180deg, #ffd06b, #e0a637);
+      }
+
+      /* --- misc ------------------------------------------------------- */
+      .coin {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, #fff6cf 0%, #ffd764 42%, #d79422 100%);
+        box-shadow:
+          0 0 22px rgba(255, 214, 100, 0.5),
+          inset 0 -6px 12px rgba(150, 95, 10, 0.45);
+      }
+      #merchant {
+        position: absolute;
+        width: 900px;
+        height: 900px;
+        border-radius: 42%;
+        object-fit: cover;
+        box-shadow: 0 40px 120px rgba(0, 0, 0, 0.65);
+      }
+      #logo {
+        position: absolute;
+        left: 90px;
+        width: 900px;
+      }
+      #shine {
+        position: absolute;
+        width: 420px;
+        height: 1400px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.42) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(18deg);
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+      #flash {
+        position: absolute;
+        inset: 0;
+        background: #ff5a48;
+        pointer-events: none;
+      }
+      #vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.55) 100%);
+      }
+      #cta {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: #12100b;
+      }
+      #ctaPill {
+        display: inline-block;
+        padding: 30px 74px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #ffdf8e, #e0a637);
+        box-shadow: 0 22px 60px rgba(224, 166, 55, 0.35);
+      }
+      #skyline {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 1080px;
+        height: 620px;
+      }
+      .stackCoin {
+        position: absolute;
+        width: 132px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffe9a0 0%, #ffd05a 45%, #c9861c 100%);
+        box-shadow:
+          0 3px 0 #8a5a12,
+          0 10px 26px rgba(0, 0, 0, 0.45);
+      }
+      #counter {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        color: #ffdf8e;
+        font-variant-numeric: tabular-nums;
+        text-shadow:
+          0 8px 40px rgba(0, 0, 0, 0.8),
+          0 0 70px rgba(224, 166, 55, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div class="layer" id="coins"></div>
+      <div class="layer" id="stacks"></div>
+      <svg id="skyline" viewBox="0 0 1080 560" preserveAspectRatio="none"></svg>
+
+      <div class="row" id="row0">
+        <span class="icon">🍞</span><span class="name"></span><span class="price"></span
+        ><span class="delta"></span>
+      </div>
+      <div class="row" id="row1">
+        <span class="icon">🪵</span><span class="name"></span><span class="price"></span
+        ><span class="delta"></span>
+      </div>
+      <div class="row" id="row2">
+        <span class="icon">🌶️</span><span class="name"></span><span class="price"></span
+        ><span class="delta"></span>
+      </div>
+
+      <img id="merchant" src="../../assets/logo/icon-art-merchant.webp" alt="" />
+      <div class="chip buy" id="chipBuy"></div>
+      <div class="chip sell" id="chipSell"></div>
+
+      <div class="head" id="head"></div>
+      <div class="sub" id="sub"></div>
+      <div id="counter"></div>
+
+      <img id="logo" src="../../assets/logo/logo-stacked-tr-900.png" alt="" />
+      <div id="shine"></div>
+      <div id="cta"><span id="ctaPill"></span></div>
+
+      <div id="vignette"></div>
+      <div id="flash"></div>
+    </div>
+
+    <script src="ad.js"></script>
+  </body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Cinzel";
+        src: url("../../node_modules/@expo-google-fonts/cinzel/700Bold/Cinzel_700Bold.ttf");
+      }
+      @font-face {
+        font-family: "Manrope";
+        src: url("../../node_modules/@expo-google-fonts/manrope/600SemiBold/Manrope_600SemiBold.ttf");
+        font-weight: 600;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1290px;
+        height: 2796px;
+        overflow: hidden;
+      }
+      #c {
+        position: relative;
+        width: 1290px;
+        height: 2796px;
+        overflow: hidden;
+        background: linear-gradient(165deg, #33261628 0%, #1a1309 38%, #0d0a06 100%), #0d0a06;
+      }
+      /* A warm pool of light behind the headline, so the type sits on
+         something rather than floating on flat black. */
+      #halo {
+        position: absolute;
+        left: -180px;
+        top: -420px;
+        width: 1650px;
+        height: 1200px;
+        background: radial-gradient(
+          ellipse at 50% 50%,
+          rgba(224, 166, 55, 0.2) 0%,
+          rgba(224, 166, 55, 0) 62%
+        );
+      }
+      #head {
+        position: absolute;
+        left: 90px;
+        right: 90px;
+        top: 168px;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 88px;
+        line-height: 1.1;
+        letter-spacing: 1px;
+        color: #ffdf8e;
+        text-align: center;
+        text-shadow: 0 6px 40px rgba(0, 0, 0, 0.85);
+      }
+      #sub {
+        position: absolute;
+        left: 130px;
+        right: 130px;
+        top: 430px;
+        font-family: "Manrope", sans-serif;
+        font-weight: 600;
+        font-size: 44px;
+        line-height: 1.34;
+        color: #b9a98c;
+        text-align: center;
+      }
+      /* The device bleeds off the bottom edge. Showing a whole phone shrinks
+         the screen to where nothing on it is legible at listing size; cutting
+         it off keeps the pixels big and reads as "there is more below". */
+      #device {
+        position: absolute;
+        left: 50%;
+        top: 640px;
+        width: 1040px;
+        height: 2254px;
+        margin-left: -520px;
+        border-radius: 92px;
+        padding: 13px;
+        background: linear-gradient(160deg, #6b5526 0%, #2b2113 42%, #55411c 100%);
+        box-shadow:
+          0 50px 120px rgba(0, 0, 0, 0.72),
+          0 0 0 2px rgba(0, 0, 0, 0.5);
+      }
+      #shotWrap {
+        width: 100%;
+        height: 100%;
+        border-radius: 80px;
+        overflow: hidden;
+        background: #140f0a;
+      }
+      #shot {
+        width: 100%;
+        display: block;
+      }
+      /* Fades the cut edge so the device ends rather than stops. */
+      #fade {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 190px;
+        background: linear-gradient(180deg, rgba(13, 10, 6, 0) 0%, rgba(13, 10, 6, 0.92) 78%, #0d0a06 100%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="c">
+      <div id="halo"></div>
+      <div id="head"></div>
+      <div id="sub"></div>
+      <div id="device">
+        <div id="shotWrap"><img id="shot" alt="" /></div>
+      </div>
+      <div id="fade"></div>
+    </div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const LANG = q.get("lang") === "en" ? "en" : "tr";
+      const FILE = q.get("shot");
+
+      // One promise per screen: the headline is the thing a browsing player
+      // actually reads, so it carries the benefit and the sub-line carries
+      // the mechanism.
+      // One line each. The first draft ran to a full sentence and wrapped to
+      // two lines with a single word orphaned on the second — at listing size
+      // that reads as a mistake before it reads as a sentence.
+      const COPY = {
+        "01-market": {
+          tr: ["Fiyatlar her gün<br/>tırmanıyor", "Enflasyonu yönet, krizi önceden gör."],
+          en: ["Prices climb<br/>every single day", "Manage inflation. See the crisis coming."],
+        },
+        "02-trade-map": {
+          tr: ["Kervanlarını<br/>yola çıkar", "Sekiz kasaba, sekiz ayrı piyasa."],
+          en: ["Send your<br/>caravans out", "Eight towns, eight separate markets."],
+        },
+        "03-town": {
+          tr: ["Halkını<br/>memnun tut", "Vergi, mutluluk ve büyüme arasındaki denge."],
+          en: ["Keep your<br/>townsfolk happy", "The balance of tax, happiness and growth."],
+        },
+        "04-research": {
+          tr: ["Üretimini<br/>geliştir", "On altı araştırma, kalıcı verim."],
+          en: ["Upgrade your<br/>production", "Sixteen upgrades, permanent gains."],
+        },
+        "05-invest": {
+          tr: ["Altına ve petrole<br/>yatırım yap", "Servetini enflasyona karşı koru."],
+          en: ["Invest in gold<br/>and oil", "Hedge your fortune against inflation."],
+        },
+        "06-goals": {
+          tr: ["Yirmi altı<br/>başarım", "Her gün gir, seriyi büyüt."],
+          en: ["Twenty-six<br/>achievements", "Come back daily, grow the streak."],
+        },
+        "07-inventory": {
+          tr: ["Stoğunu yönet,<br/>kârını gör", "Ne zaman satacağına sen karar ver."],
+          en: ["Manage stock,<br/>track your profit", "You decide when to sell."],
+        },
+        "08-doctrine": {
+          tr: ["Kasabanın<br/>yolunu seç", "Üç doktrin, üç ayrı oyun."],
+          en: ["Choose your<br/>town's path", "Three doctrines, three different games."],
+        },
+      };
+
+      const copy = COPY[FILE][LANG];
+      document.getElementById("head").innerHTML = copy[0];
+      document.getElementById("sub").textContent = copy[1];
+      document.getElementById("shot").src = `../../store-assets/screenshots/${LANG}/${FILE}.png`;
+
+      // Headline 6 lacks room for 88px across two long lines in English.
+      // Shrink rather than wrap. A headline that spills to a third line or a
+      // sub-line that wraps breaks the set's rhythm, and the set reading as
+      // one system is most of what makes it look deliberate.
+      const head = document.getElementById("head");
+      if (head.scrollHeight > 230) head.style.fontSize = "76px";
+      const sub = document.getElementById("sub");
+      for (let size = 44; sub.scrollHeight > 62 && size > 30; size -= 2) {
+        sub.style.fontSize = `${size}px`;
+      }
+    </script>
+  </body>
+</html>
