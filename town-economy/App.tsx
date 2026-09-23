@@ -205,6 +205,16 @@ function Game() {
     );
   }
 
+  // Decisions, requests and rival offers interrupt whatever the player is
+  // doing — that is the point of them — but not while something that has to
+  // be answered first is already up. The daily wheel belongs on this list
+  // beside the tutorial and the offline summary: it opens on hydrate, and
+  // react-native-web portals modals in mount order, so an event that spawns
+  // a few seconds later lands *on top* of the wheel and buries the claim
+  // button under a villager asking for honey.
+  const holdInterruptions =
+    Boolean(state.offlineSummary) || tutorialVisible || state.dailyBonusPending !== null;
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
@@ -269,18 +279,18 @@ function Game() {
         <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
 
         <DecisionModal
-          decision={!state.offlineSummary && !tutorialVisible ? state.pendingDecision : null}
+          decision={holdInterruptions ? null : state.pendingDecision}
           onResolve={resolveDecision}
         />
 
         <VillagerRequestModal
-          request={!state.offlineSummary && !tutorialVisible ? state.pendingRequest : null}
+          request={holdInterruptions ? null : state.pendingRequest}
           holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
           onResolve={resolveRequest}
         />
 
         <RivalTraderModal
-          offer={!state.offlineSummary && !tutorialVisible ? state.pendingRivalOffer : null}
+          offer={holdInterruptions ? null : state.pendingRivalOffer}
           holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
           onResolve={resolveRivalOffer}
         />

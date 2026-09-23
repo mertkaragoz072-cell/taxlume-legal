@@ -77,6 +77,60 @@ async function tap(locator, what) {
   }
 }
 
+/** Answer whatever interrupting modal the clock has thrown up, if one is
+ * covering the pause control.
+ *
+ * A decision, a villager's request and a rival's offer can each fire from the
+ * first tick, and every one of them waits for an answer — that is the design,
+ * not a bug. A player who meets one answers it and carries on; so does this.
+ *
+ * It does not match on text. The decision modal's options are written per
+ * template, so there is no label to look for, and the three modals share no
+ * wording. Instead it takes the last button that is genuinely on top —
+ * anything behind the backdrop fails the hit test — which in all three is the
+ * option that costs the player nothing: refuse, decline, or the last branch.
+ *
+ * Returns false when the pause control is already reachable, so it can never
+ * wander off and press something on a screen with no modal over it.
+ */
+async function answerEventModal(page, pauseLabel) {
+  /* eslint-disable no-undef -- serialised into the page */
+  const found = await page.evaluate((label) => {
+    const hitTakenBy = (el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 8 || r.height < 8) return null;
+      return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    };
+
+    const pause = document.querySelector(`[aria-label="${label}"]`);
+    if (pause) {
+      const hit = hitTakenBy(pause);
+      if (hit && pause.contains(hit)) return false;
+    }
+
+    const onTop = [...document.querySelectorAll('[role="button"]')].filter((el) => {
+      const hit = hitTakenBy(el);
+      return Boolean(hit) && el.contains(hit);
+    });
+    const target = onTop[onTop.length - 1];
+    if (!target) return false;
+    target.setAttribute("data-smoke-answer", "1");
+    return true;
+  }, pauseLabel);
+  /* eslint-enable no-undef */
+
+  if (!found) return false;
+
+  const target = page.locator("[data-smoke-answer]").first();
+  await target.click({ timeout: 8000 }).catch(() => {});
+  /* eslint-disable no-undef -- serialised into the page */
+  await page.evaluate(() =>
+    document.querySelectorAll("[data-smoke-answer]").forEach((el) => el.removeAttribute("data-smoke-answer"))
+  );
+  /* eslint-enable no-undef */
+  return true;
+}
+
 (async () => {
   const browser = await chromium.launch({ executablePath: CHROMIUM, args: ["--no-sandbox"] });
   const problems = [];
@@ -165,11 +219,19 @@ async function tap(locator, what) {
         continue;
       }
 
+      // Clear the way to the pause control first. Three passes, because
+      // answering one modal can reveal the next; each returns false the
+      // moment nothing is covering it.
+      for (let pass = 0; pass < 3; pass++) {
+        if (!(await answerEventModal(page, PAUSE[lang]))) break;
+        await page.waitForTimeout(900);
+      }
+
       try {
         await tap(page.locator(`[aria-label="${PAUSE[lang]}"]`), "pause");
         await page.waitForTimeout(600);
-      } catch {
-        problems.push(`${label}: the pause control was not reachable`);
+      } catch (e) {
+        problems.push(`${label}: the pause control was not reachable — ${e.message.split("\n")[0]}`);
       }
 
       for (const tab of TABS[lang]) {
