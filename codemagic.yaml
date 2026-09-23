@@ -5,7 +5,12 @@
 #
 # Neither workflow has a `triggering:` block: builds are started by hand from
 # the Codemagic UI. This is a game that ships when it is ready, not on every
-# push, and a mac_mini minute costs money.
+# push, and a build minute costs money.
+#
+# Both workflows run on mac_mini_m2, Android included. Not a preference —
+# linux_x2 is not on this account's plan, and the build fails before it starts
+# with "instance type is not available". The macOS images carry the Android SDK
+# and a JDK, so an AAB builds there exactly the same way.
 #
 # Before the first run, in Codemagic:
 #   Android — Teams/Personal settings → Code signing identities → Android
@@ -26,7 +31,7 @@
 workflows:
   android-release:
     name: Golden Town — Android (AAB for Play)
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     max_build_duration: 60
     working_directory: town-economy
 
