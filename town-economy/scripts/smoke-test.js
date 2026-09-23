@@ -9,9 +9,11 @@
 // reducer; this covers the part no unit test can — that a person who has
 // never opened the app before can get from the title screen to a screen.
 //
-// A fresh install always boots Turkish — that is the app's default, not a
-// bug — so the English fresh case toggles the language on the title screen
-// first rather than expecting an English button to be there.
+// A fresh install opens in the device's language: Turkish when the device
+// asks for Turkish, English otherwise. So each scenario runs in a browser
+// context with the matching locale and expects to land in that language,
+// which is the behaviour itself under test — expo-localization reads
+// navigator.languages on web, and Playwright's `locale` sets it.
 const { chromium } = require("playwright");
 const { CHROMIUM, SAVE_KEY, TUTORIAL_KEY, SAVE_VERSION, seed } = require("./lib/seed-town");
 
@@ -144,7 +146,10 @@ async function answerEventModal(page, pauseLabel) {
   for (const lang of ["tr", "en"]) {
     for (const mode of ["fresh", "saved"]) {
       const label = `${lang}/${mode}`;
-      const ctx = await browser.newContext({ viewport: { width: 430, height: 932 } });
+      const ctx = await browser.newContext({
+        viewport: { width: 430, height: 932 },
+        locale: lang === "tr" ? "tr-TR" : "en-US",
+      });
       const errors = [];
       const page = await ctx.newPage();
       page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
@@ -177,11 +182,9 @@ async function answerEventModal(page, pauseLabel) {
       // says nothing about whether the screens work. Pausing first makes the
       // walk deterministic, and exercises the pause control on the way.
       try {
-        // A fresh install is Turkish; flip it on the title screen for the en run.
-        if (mode === "fresh" && lang === "en") {
-          await tap(page.getByText("EN", { exact: true }), "language toggle");
-          await page.waitForTimeout(1200);
-        }
+        // No language toggle here any more. The context's locale decides what
+        // a fresh install opens in, and tapping the start button by its
+        // localised label is what proves it landed in the right one.
         await tap(page.getByText(START[lang], { exact: true }), "start button");
         await page.waitForTimeout(2000);
 

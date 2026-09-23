@@ -23,6 +23,7 @@ import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusMo
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
+import { deviceLanguage } from "../i18n/deviceLanguage";
 import { DEFAULT_LANGUAGE, Language, t, tPlural } from "../i18n/t";
 import {
   formatCoins as formatCoinsUtil,
@@ -1341,7 +1342,14 @@ function reducer(state: EconomyState, action: Action): EconomyState {
   );
 }
 export function useEconomy() {
-  const [state, dispatch] = useReducer(reducer, undefined, initialState);
+  // The device's language is read here rather than inside `initialState`, so
+  // the reducer stays pure and the tests keep their fixed Turkish default
+  // instead of depending on whatever locale the machine running them has.
+  // Overwritten a moment later by HYDRATE if there is a save — this only
+  // decides what a first launch looks like.
+  const [state, dispatch] = useReducer(reducer, undefined, () =>
+    initialState(DEFAULT_DIFFICULTY, deviceLanguage())
+  );
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [hydrated, setHydrated] = useState(false);
   // Whether the launch found a save to restore. Not the same question as
