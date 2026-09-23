@@ -215,6 +215,24 @@ node scripts/capture-store-screenshots.js          # both languages
 node scripts/capture-store-screenshots.js --lang en
 ```
 
+### Two sets, and which one to upload
+
+`store-assets/screenshots/<lang>/` is the raw capture — the app's screens and
+nothing else. It is the source, and the thing to re-shoot when the UI moves.
+
+`store-assets/screenshots-framed/<lang>/` is **what goes on the listing**: the
+same screens under a headline, in a device frame, on the game's background.
+Nobody browsing a store reads a screenshot; they read the line above it, and
+a bare app screen at listing size is a wall of small type.
+
+```bash
+NODE_PATH=/opt/node22/lib/node_modules node scripts/store/render-framed-screenshots.js
+```
+
+The captions live in `scripts/store/frame.html`. Keep them to one line each —
+the first draft ran to full sentences and wrapped with a single word orphaned
+underneath, which reads as a mistake before it reads as a sentence.
+
 The five hand-taken screenshots that used to sit loose in
 `store-assets/screenshots/` are gone. They showed a build with no map, demand
 seasons, crises, doctrines or trading houses, and leaving them next to the

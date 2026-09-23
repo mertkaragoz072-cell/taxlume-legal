@@ -26,6 +26,7 @@ const {
   TICK,
   TUTORIAL_KEY,
   assertAchievementsInSync,
+  defaultTownName,
   seed,
 } = require("./lib/seed-town");
 
@@ -115,6 +116,7 @@ async function main() {
     for (const shot of SHOTS) {
       const state = JSON.parse(JSON.stringify(base));
       state.language = lang;
+      state.townName = defaultTownName(lang);
       // Stamped per shot, not once for the whole run: a full two-language
       // capture takes minutes, and a save that looks minutes old trips the
       // "while you were away" summary, which then covers the tab bar.

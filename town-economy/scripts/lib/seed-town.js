@@ -295,7 +295,29 @@ function seed(base) {
   return state;
 }
 
+/** The localized default town name, read out of strings.ts rather than
+ * duplicated here.
+ *
+ * The capture boots the app to get a real initialState, and that boot is in
+ * the app's default language — so `townName` comes back "Altın Kasaba" no
+ * matter which language the shot is for. Flipping `state.language` afterwards
+ * does not rename the town, and it should not: renaming a player's own town
+ * on a language switch would be wrong. The seed has to set it explicitly, or
+ * the English store screenshots show a Turkish town name that no English
+ * player would ever see.
+ */
+function defaultTownName(lang) {
+  const source = fs.readFileSync(path.join(ROOT, "src/i18n/strings.ts"), "utf8");
+  const names = [...source.matchAll(/defaultTownName: "([^"]+)"/g)].map((m) => m[1]);
+  if (names.length !== 2) {
+    throw new Error(`expected two defaultTownName entries in strings.ts, found ${names.length}`);
+  }
+  // strings.ts holds tr first, then en — the same order check:i18n relies on.
+  return lang === "en" ? names[1] : names[0];
+}
+
 module.exports = {
+  defaultTownName,
   CHROMIUM,
   SAVE_KEY,
   TUTORIAL_KEY,
