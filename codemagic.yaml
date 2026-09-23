@@ -13,9 +13,10 @@
 #             `golden_town_upload`. If you name it anything else, change the
 #             name under environment.android_signing below to match.
 #   iOS     — Teams/Personal settings → Integrations → Developer Portal →
-#             connect the App Store Connect API key. The key's name must match
-#             `integrations.app_store_connect` below (`codemagic`), or change
-#             that line to whatever you called it.
+#             the App Store Connect API key named `taxlume-admin`, which is
+#             the name `integrations.app_store_connect` asks for below. An
+#             App Store Connect key is account-wide, not per-app, so the one
+#             already connected there covers this bundle identifier too.
 #
 # Both workflows run `expo prebuild`, which generates ios/ and android/ from
 # app.json. Those folders are gitignored on purpose — they are build output,
@@ -87,7 +88,7 @@ workflows:
     working_directory: town-economy
 
     integrations:
-      app_store_connect: codemagic
+      app_store_connect: taxlume-admin
 
     environment:
       node: 22
