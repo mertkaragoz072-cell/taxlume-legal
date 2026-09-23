@@ -215,7 +215,25 @@ node scripts/capture-store-screenshots.js          # both languages
 node scripts/capture-store-screenshots.js --lang en
 ```
 
-### Two sets, and which one to upload
+### Three sets, and which one to upload
+
+`store-assets/screenshots-poster/<lang>/` is **the one to upload**: the app
+screen inside a phone, on the game's town, under a wooden sign and a ribbon
+headline — the idiom the casual-game charts actually use. The lead image
+carries the merchant and a download button; the other seven do not, because
+repeated across eight the button reads as a banner ad, and on the App Store
+every copy is another chance for a reviewer to object to a control that is
+not part of the app.
+
+```bash
+NODE_PATH=/opt/node22/lib/node_modules node scripts/store/render-posters.js
+node scripts/store/render-posters.js --cta 0    # no download button at all
+```
+
+Pass `--cta 0` if App Review ever raises it; Apple's guidance is that a
+screenshot shows the app, and "download now" is a Google Play convention.
+
+### The other two sets
 
 `store-assets/screenshots/<lang>/` is the raw capture — the app's screens and
 nothing else. It is the source, and the thing to re-shoot when the UI moves.

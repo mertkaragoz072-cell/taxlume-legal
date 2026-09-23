@@ -102,10 +102,12 @@ export default tseslint.config(
     rules: { "no-console": "off", "@typescript-eslint/no-require-imports": "off" },
   },
 
-  // The ad's timeline runs in a browser, not in Node: it is loaded by a page
-  // the renderer opens, so it sees DOM globals and none of Node's.
+  // Scripts a renderer loads into a page rather than running under Node: the
+  // ad's timeline and the store poster's layout. They see DOM globals and
+  // none of Node's. Everything else under scripts/ is CommonJS for Node, so
+  // these are listed by name rather than caught by a loose glob.
   {
-    files: ["scripts/ad/**/*.js"],
+    files: ["scripts/ad/**/*.js", "scripts/store/poster.js"],
     languageOptions: {
       sourceType: "script",
       globals: { ...globals.browser },

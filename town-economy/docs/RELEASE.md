@@ -61,9 +61,9 @@ appears and can be declined without breaking anything.
 | Content rights    | Does not contain, show or access third-party content                                          |
 | Localizations     | English (U.S.) and Turkish                                                                    |
 
-Screenshots: `store-assets/screenshots-framed/en/` and `/tr/`, eight each,
-1290×2796 — the framed set with the headlines, not the raw captures next to
-it. Upload in filename order — the first two or three are what the listing shows
+Screenshots: `store-assets/screenshots-poster/en/` and `/tr/`, eight each,
+1290×2796 — the poster set, not the plainer framed set or the raw captures
+next to it. Upload in filename order — the first two or three are what the listing shows
 without scrolling, which is why Market and the trade map lead.
 
 App preview video is optional. `preview-<lang>-886x1920.mp4` is there if you
@@ -96,7 +96,7 @@ Graphics Play asks for that the App Store does not:
 | ----------------- | ---------------------- | ----------------------------------------------- |
 | App icon          | 512×512 PNG            | `store-assets/play-icon-512.png`                |
 | Feature graphic   | 1024×500               | `store-assets/play-feature-<lang>-1024x500.png` |
-| Phone screenshots | 1290×2796 are accepted | `store-assets/screenshots-framed/<lang>/`       |
+| Phone screenshots | 1290×2796 are accepted | `store-assets/screenshots-poster/<lang>/`       |
 
 ## 4. Submit
 
