@@ -7,7 +7,6 @@
     "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/metro-runtime": "^57.0.15",
     "@react-native-async-storage/async-storage": "^3.1.1",
-    "buffer": "^6.0.3",
     "expo": "~57.0.19",
     "expo-asset": "~57.0.16",
     "expo-audio": "^57.0.4",
@@ -23,7 +22,7 @@
     "react": "19.2.3",
     "react-dom": "^19.2.3",
     "react-native": "0.86.3",
-    "react-native-svg": "^15.11.1",
+    "react-native-svg": "^15.15.4",
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
@@ -39,6 +38,7 @@
     "jest-expo": "^57.0.5",
     "prettier": "^3.9.6",
     "react-test-renderer": "^19.2.3",
+    "semver": "^7.8.5",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.0"
   },
@@ -53,10 +53,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:i18n": "node scripts/check-i18n.js",
+    "check:native": "node scripts/check-native-versions.js",
     "test": "jest",
     "test:ci": "jest --ci --runInBand",
     "gen:sounds": "node scripts/gen-sounds.js",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:i18n && npm test",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:i18n && npm run check:native && npm test",
     "smoke": "node scripts/smoke-test.js"
   },
   "jest": {
