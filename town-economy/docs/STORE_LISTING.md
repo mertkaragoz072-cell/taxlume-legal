@@ -312,7 +312,24 @@ change both, and bump the "Last updated" date in each.
 npm run verify                                   # types, lint, format, i18n, tests
 npx expo start --web --port 8251                 # in another shell
 npm run smoke                                    # the first-run path, both languages
+
+# And before the first cloud build of a release, generate the native projects
+# locally: it validates app.json against the real templates in seconds rather
+# than failing a build minutes in. ios/ and android/ are gitignored — delete
+# them again afterwards, this project builds from the managed workflow.
+npx expo prebuild --platform android --no-install --clean
+npx expo prebuild --platform ios --no-install --clean
+rm -rf ios android && git checkout package.json   # prebuild rewrites two scripts
 ```
+
+That check has already earned itself twice. It caught `userInterfaceStyle:
+"dark"` doing nothing on Android without `expo-system-ui` installed — the
+setting was silently ignored, which for a dark game means the system UI can
+come back light. And it showed `ITSAppUsesNonExemptEncryption` missing from
+the generated Info.plist: without it App Store Connect holds every upload at
+"Missing Compliance" until the export question is answered by hand in the web
+UI. `ios.config.usesNonExemptEncryption: false` is correct here because the
+app has no networking at all.
 
 `npm run smoke` walks a brand-new install and a restored save, in Turkish and
 English, from the title screen through the tutorial and the daily wheel to
