@@ -166,21 +166,26 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-          # None of the commands above fail when they come up empty. The CLI
-          # prints "Cannot save Signing Certificates without certificate
-          # private key" and "Did not find matching provisioning profiles",
-          # exits 0, and the build carries on to fail two steps later with
-          # "requires a provisioning profile" — which says nothing about why.
-          # So check what actually landed, and stop here if it is nothing.
-          profiles="$HOME/Library/MobileDevice/Provisioning Profiles"
-          count=$(ls -1 "$profiles"/*.mobileprovision 2>/dev/null | wc -l | tr -d " ")
-          if [ "$count" -eq 0 ]; then
-            echo "No provisioning profile was installed." >&2
-            echo "Read the fetch-signing-files output above: it will name the" >&2
-            echo "reason, usually a certificate it could not use or create." >&2
+          # use-profiles can finish without matching a single profile — it
+          # says "Did not find matching provisioning profiles for code
+          # signing!", writes an empty list, and exits 0. The build then runs
+          # on and fails at the archive with "requires a provisioning
+          # profile", which names a symptom in Xcode's words and cannot
+          # explain itself.
+          #
+          # So check the export options use-profiles just wrote, because that
+          # is the file the archive actually reads. An earlier version of
+          # this counted .mobileprovision files in a directory instead and
+          # failed a build whose signing had worked perfectly — a guess about
+          # where the CLI keeps its files, where the real answer was sitting
+          # in the file it had named on the line above.
+          if ! grep -q "$BUNDLE_ID" "$HOME/export_options.plist" 2>/dev/null; then
+            echo "No provisioning profile for $BUNDLE_ID reached the export" >&2
+            echo "options. Read the fetch-signing-files output above: it will" >&2
+            echo "name the reason, usually a certificate it could not use." >&2
             exit 1
           fi
-          echo "✅ $count provisioning profile(s) installed"
+          echo "✅ signing ready for $BUNDLE_ID"
 
       # The workspace, not the project: pod install created it, and building
       # the .xcodeproj directly misses every pod dependency.
