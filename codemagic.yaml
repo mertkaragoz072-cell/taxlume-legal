@@ -203,8 +203,16 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        # TestFlight only. Promoting to the App Store is a decision made in
-        # App Store Connect with the screenshots and description in front of
-        # you, not something a green build should do on its own.
-        submit_to_testflight: true
+        # Upload only. The build lands in App Store Connect, finishes
+        # processing, and is immediately installable by internal testers —
+        # that is the whole point of a TestFlight build and it needs no
+        # review.
+        #
+        # `submit_to_testflight: true` went further and sent it to *external*
+        # beta review, which failed the post-processing step for want of a
+        # feedback email and a review contact. Nothing was wrong with the
+        # build; it had already uploaded and processed. Handing out a build
+        # to strangers is a decision to make in App Store Connect, with the
+        # forms in front of you, not a thing a green build should trigger.
+        submit_to_testflight: false
         submit_to_app_store: false
