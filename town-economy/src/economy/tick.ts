@@ -78,6 +78,7 @@ import {
   PRODUCTION_PENALTY_FACTOR,
   RIVAL_OFFER_CHANCE,
   RIVAL_TOWN_GROWTH_JITTER,
+  RIVAL_TOWN_GRACE_DAYS,
   RIVAL_TOWN_GROWTH_RATE,
   SEASONAL_EVENT_CHANCE,
   TICKS_PER_GAME_DAY,
@@ -92,6 +93,7 @@ import {
   priceFromSupply,
   pushCapped,
   supplyBounds,
+  gameDayFromTick,
 } from "./formulas";
 
 export function tick(state: EconomyState): EconomyState {
@@ -680,7 +682,11 @@ export function tick(state: EconomyState): EconomyState {
   const rivalNetWorth =
     state.rivalNetWorth * (1 + RIVAL_TOWN_GROWTH_RATE + (Math.random() - 0.5) * RIVAL_TOWN_GROWTH_JITTER);
   const rivalCurrentlyAhead = rivalNetWorth > netWorthNow;
-  if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead) {
+  // The flag tracks the truth either way — only the announcement waits, so
+  // a player past the grace period is not told about a lead change that
+  // happened while they were still finding the buy button.
+  const announceRival = !rivalCurrentlyAhead || gameDayFromTick(state.tick) > RIVAL_TOWN_GRACE_DAYS;
+  if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead && announceRival) {
     newEvents.push({
       id: nextId++,
       message: t(

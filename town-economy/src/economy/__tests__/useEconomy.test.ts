@@ -4,9 +4,6 @@ import { EconomyStats } from "../types";
 import { UPGRADES_BY_ID } from "../upgrades";
 import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../weeklyChallenges";
 import {
-  addAutoTradeRule,
-  applyAutoTradeRules,
-  applyWeeklyChallengeClaim,
   AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
   BULK_CONTRACT_BONUS_PCT,
@@ -18,20 +15,31 @@ import {
   CARAVAN_RAID_LOSS_MIN,
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
+  LEGENDARY_POINTS_PER_PRESTIGE,
+  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
   LOAN_MAX_INTEREST_RATE_PER_DAY,
   LOAN_MIN_CAP,
   LOAN_MIN_INTEREST_RATE_PER_DAY,
   LOAN_TERM_MONTHS_STEPS,
+  MYTHIC_UNLOCK_LEGENDARY_POINTS,
+  PRESTIGE_POINTS_PER_PRESTIGE,
+  PRESTIGE_UNLOCK_NET_WORTH,
+  RIVAL_TOWN_GRACE_DAYS,
   RIVAL_TOWN_GROWTH_RATE,
-  STORAGE_BASE_CAPACITY,
   SPEED_BOOST_DURATION_MS,
+  STORAGE_BASE_CAPACITY,
   TICKS_PER_GAME_DAY,
+  addAutoTradeRule,
+  applyAutoTradeRules,
+  applyMythicUnlock,
+  applyWeeklyChallengeClaim,
+  chooseDoctrine,
+  claimSpeedBoost,
   computeNetWorth,
   dailyCheckIn,
   effectiveTariffRate,
   estimateTaxIncomePerTick,
   gameDayFromTick,
-  claimSpeedBoost,
   initialState,
   isGoodUnlocked,
   loanCap,
@@ -39,16 +47,11 @@ import {
   loanInterestRatePerDay,
   loanTickRateToDayRate,
   marketSpread,
-  applyMythicUnlock,
-  LEGENDARY_POINTS_PER_PRESTIGE,
-  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
-  MYTHIC_UNLOCK_LEGENDARY_POINTS,
   openBulkContract,
   prestige,
-  PRESTIGE_POINTS_PER_PRESTIGE,
-  PRESTIGE_UNLOCK_NET_WORTH,
   removeAutoTradeRule,
   repayLoan,
+  researchCost,
   sendCaravan,
   storageCapacity,
   takeLoan,
@@ -56,8 +59,6 @@ import {
   toggleAutoTradeRule,
   totalGoodsHolding,
   trade,
-  chooseDoctrine,
-  researchCost,
 } from "../useEconomy";
 
 describe("gameDayFromTick", () => {
@@ -750,11 +751,52 @@ describe("ghost rival town", () => {
     expect(next.rivalNetWorth).toBeCloseTo(state.rivalNetWorth * (1 + RIVAL_TOWN_GROWTH_RATE), 6);
   });
 
+  // Past the opening grace period, where the rival's lead is announced at
+  // all. Every test below that expects the "you were overtaken" message has
+  // to start here; on day one the game deliberately says nothing.
+  const pastGrace = (RIVAL_TOWN_GRACE_DAYS + 1) * TICKS_PER_GAME_DAY;
+
+  it("says nothing about the rival's lead during the opening days", () => {
+    Math.random = () => 0.5;
+    const state = {
+      ...initialState(),
+      cash: 1000,
+      happiness: 50,
+      paused: false,
+      rivalNetWorth: 999,
+      rivalCurrentlyAhead: false,
+    };
+    const next = tick(state);
+
+    // The flag still tracks the truth — only the announcement waits, so the
+    // player is never later told about a change from before they started.
+    expect(next.rivalCurrentlyAhead).toBe(true);
+    expect(next.lastEvent?.message ?? "").not.toMatch(/rakip|rival/i);
+  });
+
+  it("still cheers the player for overtaking during the opening days", () => {
+    // The grace period holds back the discouraging half only.
+    Math.random = () => 0.5;
+    const state = {
+      ...initialState(),
+      cash: 100000,
+      happiness: 50,
+      paused: false,
+      rivalNetWorth: 500,
+      rivalCurrentlyAhead: true,
+    };
+    const next = tick(state);
+
+    expect(next.rivalCurrentlyAhead).toBe(false);
+    expect(next.lastEvent?.message).toMatch(/rakip|rival/i);
+  });
+
   it("fires an event when the rival overtakes the player, then stays quiet while still ahead", () => {
     Math.random = () => 0.5;
     // Rival starts just below the player's net worth, so growth pushes it ahead this tick.
     const state = {
       ...initialState(),
+      tick: pastGrace,
       cash: 1000,
       happiness: 50,
       paused: false,
@@ -774,6 +816,7 @@ describe("ghost rival town", () => {
     Math.random = () => 0.5;
     const state = {
       ...initialState(),
+      tick: pastGrace,
       cash: 100000,
       happiness: 50,
       paused: false,

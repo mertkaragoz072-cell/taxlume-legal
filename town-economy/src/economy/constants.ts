@@ -242,6 +242,13 @@ export const LOST_TREASURE_MIN_AMOUNT = 20;
 // a rough backdrop pace) so the player has something to race against
 // besides their own past runs. Purely a flavor comparison; nothing the
 // player does affects it directly.
+// How many in-game days a new town is left alone before the rival's lead is
+// ever mentioned. A town starts worth roughly what the rival does, so the
+// lead changes hands within seconds of a first launch — and the very first
+// thing the game would say to someone who has not bought anything yet is
+// that they are losing. Overtaking the rival is still announced from day
+// one; it is only the discouraging half that waits.
+export const RIVAL_TOWN_GRACE_DAYS = 3;
 export const RIVAL_TOWN_GROWTH_RATE = 0.0015;
 export const RIVAL_TOWN_GROWTH_JITTER = 0.002;
 // A generous default so this never binds during ordinary early/mid-game

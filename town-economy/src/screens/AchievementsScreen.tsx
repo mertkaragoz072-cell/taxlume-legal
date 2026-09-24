@@ -13,7 +13,7 @@ import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 import { RESEARCH_NODES } from "../economy/research";
 import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
 import { TOWNS } from "../economy/towns";
-import { isGoodUnlocked, TICK_MS } from "../economy/useEconomy";
+import { gameDayFromTick, isGoodUnlocked, RIVAL_TOWN_GRACE_DAYS, TICK_MS } from "../economy/useEconomy";
 import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../economy/weeklyChallenges";
 import {
   CARD_GRADIENT,
@@ -181,14 +181,20 @@ export function AchievementsScreen() {
           strokeWidth={3}
           interactive
         />
-        <View style={styles.rivalRow}>
-          <Text style={styles.rivalLabel}>
-            🏘️ {t("achievements.rivalTownLabel", { amount: formatCoins(state.rivalNetWorth) })}
-          </Text>
-          <Text style={[styles.rivalStatus, { color: state.rivalCurrentlyAhead ? "#c94b4b" : "#3fae5c" }]}>
-            {state.rivalCurrentlyAhead ? t("achievements.rivalAhead") : t("achievements.rivalBehind")}
-          </Text>
-        </View>
+        {/* Hidden for the first few days, like the event that announces it.
+            A town starts worth about what the rival does, so a brand new
+            player opening this tab would find a red "ahead of you" badge
+            before they had bought anything. */}
+        {gameDayFromTick(state.tick) > RIVAL_TOWN_GRACE_DAYS && (
+          <View style={styles.rivalRow}>
+            <Text style={styles.rivalLabel}>
+              🏘️ {t("achievements.rivalTownLabel", { amount: formatCoins(state.rivalNetWorth) })}
+            </Text>
+            <Text style={[styles.rivalStatus, { color: state.rivalCurrentlyAhead ? "#c94b4b" : "#3fae5c" }]}>
+              {state.rivalCurrentlyAhead ? t("achievements.rivalAhead") : t("achievements.rivalBehind")}
+            </Text>
+          </View>
+        )}
       </View>
 
       {miniQuest && miniQuestTemplate && (
