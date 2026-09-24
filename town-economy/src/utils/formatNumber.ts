@@ -46,3 +46,22 @@ export function formatCompactNumber(value: number, lang: Language, decimalsBelow
 export function formatCoins(value: number, lang: Language, decimals = 1): string {
   return `${formatCompactNumber(value, lang, decimals)} 🪙`;
 }
+
+/** A percentage, written the way each language writes one.
+ *
+ * Turkish puts the sign in front — %7 — and English puts it after: 7%. The
+ * strings file already does this, one phrasing per language, but four places
+ * built theirs in JSX with a hard-coded leading "%", so the English build
+ * showed "%7", "%35", "%10" wherever a bare number met a percent sign.
+ *
+ * The number goes through formatNumber, so the decimal separator follows the
+ * language too: 0,92 in Turkish where English writes 0.92.
+ */
+export function formatPercent(value: number, lang: Language, decimals = 0): string {
+  // The minus goes outside the percent sign in both languages — Turkish
+  // writes -%5, not %-5 — so the sign is peeled off rather than left to
+  // formatNumber, which would put it next to the digits.
+  const n = formatNumber(Math.abs(value), lang, decimals);
+  const sign = value < 0 ? "-" : "";
+  return lang === "tr" ? `${sign}%${n}` : `${sign}${n}%`;
+}

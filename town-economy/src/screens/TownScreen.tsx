@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { formatPercent } from "../utils/formatNumber";
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
@@ -212,7 +213,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
                 style={[styles.taxBtn, selected && styles.taxBtnActive]}
               >
                 <Text style={[styles.taxBtnText, selected && styles.taxBtnTextActive]}>
-                  %{Math.round(rate * 100)}
+                  {formatPercent(rate * 100, state.language)}
                 </Text>
               </ScalePressable>
             );
@@ -544,7 +545,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
               <View style={styles.buildingTrack}>
                 <View style={[styles.buildingFill, { height: `${pct * 100}%`, backgroundColor: g.color }]} />
               </View>
-              <Text style={styles.buildingRatio}>{(ratio * 100).toFixed(0)}%</Text>
+              <Text style={styles.buildingRatio}>{formatPercent(ratio * 100, state.language)}</Text>
             </View>
           );
         })}

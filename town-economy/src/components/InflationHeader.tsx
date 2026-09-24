@@ -4,7 +4,7 @@ import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
 import { COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
-import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
+import { formatCoins as formatCoinsUtil, formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
@@ -157,6 +157,10 @@ export function InflationHeader({
   }, [streakCount, flamePulse]);
   const flameScale = flamePulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] });
 
+  // Compounded out to a whole game day, which is the number the label
+  // promises — the raw rate is per tick and means nothing to a player.
+  const dailyInflationPct = (Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100;
+
   return (
     <View style={styles.wrap}>
       <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
@@ -281,12 +285,14 @@ export function InflationHeader({
                 room — on a narrow phone the closing bracket ended up alone on
                 a third line, under the sparkline. */}
             <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
-              {inflationIndex.toFixed(1)}
+              {formatNumber(inflationIndex, language, 1)}
             </Text>
             <Text style={[styles.inflationRate, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
-              ({inflationRate >= 0 ? "+" : ""}
-              {((Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100).toFixed(2)}%{t("header.perTurn")}
-              )
+              {"("}
+              {dailyInflationPct >= 0 ? "+" : ""}
+              {formatPercent(dailyInflationPct, language, 2)}
+              {t("header.perTurn")}
+              {")"}
             </Text>
           </View>
           <PriceChart

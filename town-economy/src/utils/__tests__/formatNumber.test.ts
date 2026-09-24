@@ -1,4 +1,4 @@
-import { formatCoins, formatCompactNumber, formatNumber } from "../formatNumber";
+import { formatCoins, formatCompactNumber, formatNumber, formatPercent } from "../formatNumber";
 
 describe("formatNumber", () => {
   it("groups thousands with a dot and uses a comma decimal in Turkish", () => {
@@ -65,5 +65,29 @@ describe("formatCoins", () => {
   it("compacts a large balance instead of showing every digit", () => {
     expect(formatCoins(1500000, "en")).toBe("1.5M 🪙");
     expect(formatCoins(1500000, "tr")).toBe("1,5M 🪙");
+  });
+});
+
+describe("formatPercent", () => {
+  it("puts the sign where each language puts it", () => {
+    expect(formatPercent(7, "tr")).toBe("%7");
+    expect(formatPercent(7, "en")).toBe("7%");
+  });
+
+  it("localises the decimal separator too", () => {
+    // .toFixed() never does, which is how "+0.92%" ended up in the Turkish
+    // header next to "%7" in the English inventory.
+    expect(formatPercent(0.92, "tr", 2)).toBe("%0,92");
+    expect(formatPercent(0.92, "en", 2)).toBe("0.92%");
+  });
+
+  it("keeps the minus outside the percent sign in both languages", () => {
+    expect(formatPercent(-5, "tr")).toBe("-%5");
+    expect(formatPercent(-5, "en")).toBe("-5%");
+  });
+
+  it("rounds to whole numbers by default", () => {
+    expect(formatPercent(7.6, "en")).toBe("8%");
+    expect(formatPercent(7.4, "tr")).toBe("%7");
   });
 });

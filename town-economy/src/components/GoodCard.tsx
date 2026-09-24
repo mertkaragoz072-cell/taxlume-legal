@@ -1,4 +1,5 @@
 import React from "react";
+import { formatPercent } from "../utils/formatNumber";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { usePriceFlash } from "../hooks/usePriceFlash";
@@ -39,7 +40,7 @@ function pctChange(history: number[]): number {
 }
 
 export function GoodCard({ good, state, selected, onPress, badge }: Props) {
-  const { t } = useEconomyContext();
+  const { state: economy, t } = useEconomyContext();
   const change = pctChange(state.history);
   const positive = change >= 0;
   const { opacity, flashColor } = usePriceFlash(state.price);
@@ -80,7 +81,7 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
         </Text>
         <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
           {positive ? "+" : ""}
-          {change.toFixed(1)}%
+          {formatPercent(change, economy.language, 1)}
         </Text>
       </View>
       <PriceChart

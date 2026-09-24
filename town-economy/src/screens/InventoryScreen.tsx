@@ -1,4 +1,5 @@
 import React from "react";
+import { formatPercent } from "../utils/formatNumber";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { GradientFill } from "../components/GradientFill";
 import { SectionLabel } from "../components/SectionLabel";
@@ -85,7 +86,7 @@ export function InventoryScreen() {
             </View>
             <View style={{ alignItems: "flex-end" }}>
               <Text style={styles.rowValue}>{formatCoins(value)}</Text>
-              <Text style={styles.rowShare}>%{share.toFixed(0)}</Text>
+              <Text style={styles.rowShare}>{formatPercent(share, state.language)}</Text>
             </View>
           </View>
         );

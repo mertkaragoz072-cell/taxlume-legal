@@ -35,7 +35,7 @@ import {
   WEIGHT,
   withAlpha,
 } from "../theme";
-import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
+import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -150,7 +150,7 @@ export function MarketScreen({ sounds }: Props) {
             <AnimatedNumber value={selectedState.price} formatter={formatPrice} style={styles.chartPrice} />
             <Text style={[styles.chartChange, { color: change >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {change >= 0 ? "+" : ""}
-              {change.toFixed(2)}%
+              {formatPercent(change, state.language, 2)}
             </Text>
           </View>
         </View>
@@ -269,7 +269,7 @@ export function MarketScreen({ sounds }: Props) {
               style={[styles.qtyBtn, autoPct === pct && { borderColor: selected.color, borderWidth: 2 }]}
               onPress={() => setAutoPct(pct)}
             >
-              <Text style={styles.qtyBtnText}>%{Math.round(pct * 100)}</Text>
+              <Text style={styles.qtyBtnText}>{formatPercent(pct * 100, state.language)}</Text>
             </ScalePressable>
           ))}
         </View>

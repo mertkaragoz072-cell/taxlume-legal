@@ -50,14 +50,22 @@ export function OnboardingBanner({ onGoToScreen }: Props) {
       <View style={styles.row}>
         <Text style={styles.icon}>{step.icon}</Text>
         <View style={styles.text}>
-          <Text style={styles.title}>{t(step.titleKey)}</Text>
-          <Text style={styles.description}>{t(step.descriptionKey)}</Text>
+          {/* Title and reward share a line, and the tab hint rides on the end
+              of the description. The three used to have a row each, which put
+              the banner at a third of the screen on every tab — a standing
+              instruction should not cost more room than the thing it is
+              instructing about. */}
+          <View style={styles.titleLine}>
+            <Text style={styles.title} numberOfLines={1}>
+              {t(step.titleKey)}
+            </Text>
+            <Text style={styles.reward}>+{step.reward} 🪙</Text>
+          </View>
+          <Text style={styles.description}>
+            {t(step.descriptionKey)}{" "}
+            <Text style={styles.goTo}>{t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })} ›</Text>
+          </Text>
         </View>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.goTo}>{t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })}</Text>
-        <Text style={styles.reward}>+{step.reward} 🪙</Text>
       </View>
 
       {/* A bar rather than a number, because eight steps is short enough
@@ -74,13 +82,14 @@ export function OnboardingBanner({ onGoToScreen }: Props) {
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.md,
-    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.card,
     borderWidth: 1,
     borderColor: withAlpha(COLORS.accent, 0.35),
     backgroundColor: withAlpha("#e8c777", 0.08),
-    gap: SPACING.sm,
+    gap: SPACING.xs + 2,
   },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   eyebrow: {
@@ -91,19 +100,23 @@ const styles = StyleSheet.create({
   },
   progress: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
 
-  row: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.md },
-  icon: { fontSize: 26 },
-  text: { flex: 1, gap: 2 },
-  title: { color: COLORS.textPrimary, fontFamily: FONT.bold, fontSize: TYPE.body },
+  row: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm + 2 },
+  icon: { fontSize: 22, lineHeight: 26 },
+  text: { flex: 1, gap: 1 },
+  titleLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
+  },
+  title: { color: COLORS.textPrimary, fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
   description: {
     color: COLORS.textMuted,
     fontFamily: FONT.regular,
     fontSize: TYPE.caption,
-    lineHeight: 17,
+    lineHeight: 16,
   },
-
-  footer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  goTo: { color: COLORS.accent, fontFamily: FONT.medium, fontSize: TYPE.caption },
+  goTo: { color: COLORS.accent, fontFamily: FONT.medium },
   reward: { color: COLORS.accent, fontFamily: FONT.bold, fontSize: TYPE.caption },
 
   track: {

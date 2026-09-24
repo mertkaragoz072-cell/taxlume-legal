@@ -10,7 +10,7 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
-import { formatCompactNumber as formatNumber } from "../utils/formatNumber";
+import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
 const screenWidth = Dimensions.get("window").width;
 const chartWidth = Math.min(screenWidth - 48, 420);
@@ -81,7 +81,7 @@ export function InvestScreen({ sounds }: Props) {
             <AnimatedNumber value={selectedState.price} formatter={formatPrice} style={styles.chartPrice} />
             <Text style={[styles.chartChange, { color: change >= 0 ? COLORS.positive : COLORS.negative }]}>
               {change >= 0 ? "+" : ""}
-              {change.toFixed(2)}%
+              {formatPercent(change, state.language, 2)}
             </Text>
           </View>
         </View>
