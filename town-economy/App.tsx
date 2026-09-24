@@ -24,6 +24,8 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
+import { MentorCoach } from "./src/components/MentorCoach";
+import { currentMentorStep, MENTOR_STEPS } from "./src/economy/mentor";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { DoctrineModal } from "./src/components/DoctrineModal";
 import { SpeedBoostModal } from "./src/components/SpeedBoostModal";
@@ -87,6 +89,7 @@ function Game() {
     resolveDecision,
     resolveRequest,
     resolveRivalOffer,
+    advanceMentor,
     setTownName,
     setLanguage,
     t,
@@ -166,15 +169,42 @@ function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.unlockedAchievements.length, state.prestigeLevel]);
 
+  // A first launch no longer opens the slide deck; Zeyno does the
+  // introducing (see MentorCoach). The stored flag still decides *whether*
+  // she runs, rather than mentorStep alone: that lives in the save, so a
+  // player who starts a new game on a different difficulty would otherwise
+  // be walked around their own town again.
+  const [mentorAllowed, setMentorAllowed] = useState(false);
   useEffect(() => {
     let cancelled = false;
     hasSeenTutorial().then((seen) => {
-      if (!cancelled && !seen) setTutorialVisible(true);
+      if (!cancelled && !seen) setMentorAllowed(true);
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const mentorActive = mentorAllowed && state.mentorStep < MENTOR_STEPS.length;
+  const mentorStepDef = mentorActive ? currentMentorStep(state.mentorStep) : null;
+  const mentorScreen = mentorStepDef?.screen ?? null;
+
+  // She walks the player to the tab she is describing rather than telling
+  // them to go there themselves. Keyed on the screen, not the step, so the
+  // two market beats in a row don't yank a player who has scrolled away.
+  useEffect(() => {
+    if (mentorScreen) setScreen(mentorScreen);
+  }, [mentorScreen]);
+
+  const nextMentorBeat = () => {
+    const next = state.mentorStep + 1;
+    advanceMentor(next);
+    if (next >= MENTOR_STEPS.length) markTutorialSeen();
+  };
+  const skipMentor = () => {
+    advanceMentor(MENTOR_STEPS.length);
+    markTutorialSeen();
+  };
 
   const finishTutorial = () => {
     setTutorialVisible(false);
@@ -221,7 +251,7 @@ function Game() {
   // a few seconds later lands *on top* of the wheel and buries the claim
   // button under a villager asking for honey.
   const holdInterruptions =
-    Boolean(state.offlineSummary) || tutorialVisible || state.dailyBonusPending !== null;
+    Boolean(state.offlineSummary) || tutorialVisible || mentorActive || state.dailyBonusPending !== null;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -276,7 +306,9 @@ function Game() {
         {screen === "invest" && <InvestScreen sounds={sounds} />}
         {screen === "achievements" && <AchievementsScreen />}
 
-        <TabBar active={screen} onChange={setScreen} />
+        {mentorActive && <MentorCoach onNext={nextMentorBeat} onSkip={skipMentor} />}
+
+        <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} />
 
         <DifficultyModal
           visible={difficultyModalVisible}

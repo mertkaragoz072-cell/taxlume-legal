@@ -77,6 +77,7 @@ import {
   PRODUCTION_NOISE,
   PRODUCTION_PENALTY_FACTOR,
   RIVAL_OFFER_CHANCE,
+  INTERRUPTION_COOLDOWN_TICKS,
   RIVAL_TOWN_GROWTH_JITTER,
   RIVAL_TOWN_GRACE_DAYS,
   RIVAL_TOWN_GROWTH_RATE,
@@ -238,8 +239,17 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  // One clock for all three blocking modals. Rolled independently they used
+  // to cluster, and a cluster is what the player experiences as "these keep
+  // coming" — answering one only to meet the next is worse than either on
+  // its own. Whichever fires first stamps this, and the other two stay
+  // quiet until the cooldown is up.
+  let lastInterruptionTick = state.lastInterruptionTick;
+  const interruptionReady = state.tick - lastInterruptionTick >= INTERRUPTION_COOLDOWN_TICKS;
+
   let pendingDecision: EconomyState["pendingDecision"] = state.pendingDecision;
-  if (!pendingDecision && Math.random() < DECISION_EVENT_CHANCE) {
+  if (!pendingDecision && interruptionReady && Math.random() < DECISION_EVENT_CHANCE) {
+    lastInterruptionTick = state.tick + 1;
     const template = DECISION_TEMPLATES[Math.floor(Math.random() * DECISION_TEMPLATES.length)];
     pendingDecision = { id: nextId, templateId: template.id, triggeredAtTick: state.tick + 1 };
     newEvents.push({
@@ -250,8 +260,9 @@ export function tick(state: EconomyState): EconomyState {
   }
 
   let pendingRequest: EconomyState["pendingRequest"] = state.pendingRequest;
-  if (!pendingDecision && !pendingRequest && Math.random() < VILLAGER_REQUEST_CHANCE) {
-    const { goodId, qty } = rollVillagerRequest();
+  if (!pendingDecision && !pendingRequest && interruptionReady && Math.random() < VILLAGER_REQUEST_CHANCE) {
+    lastInterruptionTick = state.tick + 1;
+    const { goodId, qty } = rollVillagerRequest(state);
     pendingRequest = { id: nextId, goodId, qty, triggeredAtTick: state.tick + 1 };
     const good = GOODS_BY_ID[goodId];
     newEvents.push({
@@ -265,18 +276,30 @@ export function tick(state: EconomyState): EconomyState {
   }
 
   let pendingRivalOffer: EconomyState["pendingRivalOffer"] = state.pendingRivalOffer;
-  if (!pendingDecision && !pendingRequest && !pendingRivalOffer && Math.random() < RIVAL_OFFER_CHANCE) {
-    const { goodId, qty, pricePerUnit } = rollRivalTraderOffer(state);
-    pendingRivalOffer = { id: nextId, goodId, qty, pricePerUnit, triggeredAtTick: state.tick + 1 };
-    const good = GOODS_BY_ID[goodId];
-    newEvents.push({
-      id: nextId++,
-      message: t(state.language, "msg.rivalOfferPending", {
-        qty,
-        good: t(state.language, good.nameKey),
-      }),
-      tone: "neutral",
-    });
+  if (
+    !pendingDecision &&
+    !pendingRequest &&
+    !pendingRivalOffer &&
+    interruptionReady &&
+    Math.random() < RIVAL_OFFER_CHANCE
+  ) {
+    // null when the warehouse has nothing a wholesaler would come for, in
+    // which case no trader calls at all — see rollRivalTraderOffer.
+    const offer = rollRivalTraderOffer(state);
+    if (offer) {
+      lastInterruptionTick = state.tick + 1;
+      const { goodId, qty, pricePerUnit } = offer;
+      pendingRivalOffer = { id: nextId, goodId, qty, pricePerUnit, triggeredAtTick: state.tick + 1 };
+      const good = GOODS_BY_ID[goodId];
+      newEvents.push({
+        id: nextId++,
+        message: t(state.language, "msg.rivalOfferPending", {
+          qty,
+          good: t(state.language, good.nameKey),
+        }),
+        tone: "neutral",
+      });
+    }
   }
 
   // Mini quests run passively alongside everything else, so they don't
@@ -732,6 +755,7 @@ export function tick(state: EconomyState): EconomyState {
     pendingDecision,
     pendingRequest,
     pendingRivalOffer,
+    lastInterruptionTick,
     activeMiniQuest,
     activeSeasonalEvent,
     demandCycle,

@@ -485,6 +485,27 @@ export const STRINGS = {
       declineBtn: "Reddet",
       declineHint: "teklifi geri çevirirsin",
     },
+    mentor: {
+      name: "Zeyno",
+      role: "Pazarcı",
+      next: "Devam",
+      done: "Hadi başlayalım",
+      skip: "Geç",
+      greet:
+        "Hoş geldin, yeni başkanımız! Ben Zeyno, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet — gel, bir tur atalım.",
+      market:
+        "İşte Piyasa. Kasabanın bütün malları burada durur ve fiyatları her gün oynar. İşin özü tek cümle: ucuzken al.",
+      prices:
+        "Her malın yanındaki çizgi fiyatın nereye gittiğini söyler. Yeşilse yükseliyor, kırmızıysa düşüyor. Düşene bakacaksın.",
+      inventory:
+        "Aldıkların Envanter'de birikir. Kaça aldığını burada görürsün; pahalıyken satarsan aradaki fark senin kârın olur.",
+      inflation:
+        "Yukarıdaki enflasyon her gün her şeyi biraz pahalılaştırır. Kasada duran para bekledikçe erir — asıl rakibin o.",
+      trade:
+        "Kasaban büyüyünce burası, Ticaret açılır. Kervanlarını başka şehirlere yollar, oradaki yüksek fiyatlardan kazanırsın.",
+      handoff:
+        "Gerisini yaparak öğrenirsin. Ekrandaki İlk Adımlar seni tek tek yönlendirecek. Hadi, ilk alışverişini yap — ben buralardayım.",
+    },
     tutorial: {
       next: "İleri",
       start: "İlk Alışverişine Başla",
@@ -1617,6 +1638,27 @@ export const STRINGS = {
       insufficientHint: "you don't have enough {good}",
       declineBtn: "Decline",
       declineHint: "turns down the offer",
+    },
+    mentor: {
+      name: "Zeyno",
+      role: "Market trader",
+      next: "Go on",
+      done: "Let's begin",
+      skip: "Skip",
+      greet:
+        "Welcome, our new mayor! I'm Zeyno, I keep a stall in the market. The town is yours from today — come, let me show you around.",
+      market:
+        "This is the Market. Every good in town sits here, and the prices move every day. The whole job in one sentence: buy while it's cheap.",
+      prices:
+        "The line beside each good tells you where its price is heading. Green is climbing, red is falling. Falling is the one you want.",
+      inventory:
+        "What you buy piles up in your Inventory. You can see what you paid here — sell it while it's dear, and the difference is yours.",
+      inflation:
+        "That inflation figure up top makes everything a little dearer each day. Money left sitting in the treasury melts away — that's your real rival.",
+      trade:
+        "Once your town grows, this opens up: Trade. You send caravans to other cities and earn on the higher prices there.",
+      handoff:
+        "The rest you'll learn by doing. First Steps on screen will walk you through it one at a time. Go on, make your first purchase — I'll be around.",
     },
     tutorial: {
       next: "Next",

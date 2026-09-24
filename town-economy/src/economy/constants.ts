@@ -208,13 +208,27 @@ export const MIN_OFFLINE_MS_TO_SHOW = 60 * 1000; // don't pop up for a quick app
 // Rarer than passive news (EVENT_TEMPLATES) so each one feels like a
 // distinct moment; freezes the tick loop until answered (see the guard
 // at the top of tick()).
-export const DECISION_EVENT_CHANCE = 0.02;
+export const DECISION_EVENT_CHANCE = 0.011;
 // A separate, simpler kind of interruption from decisions: a villager just
 // wants some of one good, not a policy choice with varied outcomes.
-export const VILLAGER_REQUEST_CHANCE = 0.018;
+export const VILLAGER_REQUEST_CHANCE = 0.01;
 // Rarer still — a rival trader's bulk-buy offer pays a premium over market
 // price, so it should feel like an occasional windfall, not a routine ask.
-export const RIVAL_OFFER_CHANCE = 0.014;
+export const RIVAL_OFFER_CHANCE = 0.007;
+/** Ticks that must pass after one blocking modal before another may fire.
+ *
+ * The three of them were rolled independently, and independence is the
+ * problem: a game day is 40 ticks of 3s, so at the old rates something
+ * froze the clock and demanded an answer roughly every 60 seconds of real
+ * play. Nothing in the town was broken — there was simply never a stretch
+ * long enough to do anything in.
+ *
+ * Halving the rates thins them out; this stops the remaining ones
+ * clustering, which is what actually reads as "constant". At 30 ticks no
+ * more than one interruption can land per ~75 seconds however the dice
+ * fall, and in practice they arrive about once a game day.
+ */
+export const INTERRUPTION_COOLDOWN_TICKS = 30;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.

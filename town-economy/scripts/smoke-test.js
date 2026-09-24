@@ -25,7 +25,11 @@ const TABS = {
   en: ["Market", "Inventory", "Trade", "Town", "Research", "Invest", "Goals"],
 };
 const START = { tr: /^(BAŞLA|DEVAM ET)$/, en: /^(START|CONTINUE)$/ };
-const SKIP = { tr: "Atla", en: "Skip" };
+// Zeyno's walk-through, which is what a first launch opens with now — the
+// slide deck only ever appears behind the ❓ button. Her name is the check
+// that she actually arrived; the skip control is how the walk gets past her.
+const MENTOR = { tr: "Zeyno", en: "Zeyno" };
+const SKIP = { tr: "Geç", en: "Skip" };
 // A fresh install opens the daily-reward wheel right behind the tutorial —
 // by design, the check-in fires on hydrate. A new player has to spin it and
 // claim before the tab bar is reachable, so the smoke test does too: if
@@ -189,13 +193,20 @@ async function answerEventModal(page, pauseLabel) {
         await tap(page.getByText(START[lang], { exact: true }), "start button");
         await page.waitForTimeout(2000);
 
-        // Fresh installs open the tutorial. Wait for it, then skip it.
-        const skip = page.getByText(SKIP[lang], { exact: true });
+        // A fresh install is met by the mentor, docked above the tab bar.
+        // She is the whole first-run explanation, so if she fails to appear
+        // a new player is dropped into the game with nothing.
+        const mentor = page.getByText(MENTOR[lang], { exact: false });
+        const skip = page.locator('[role="button"]').filter({ hasText: SKIP[lang] });
+        if (mode === "fresh" && !(await mentor.count())) {
+          problems.push(`${label}: the mentor did not appear on a fresh install`);
+        }
+        if (mode === "saved" && (await mentor.count())) {
+          problems.push(`${label}: the mentor reappeared for a returning player`);
+        }
         if (await skip.count()) {
-          await tap(skip, "tutorial skip");
+          await tap(skip, "mentor skip");
           await page.waitForTimeout(1200);
-        } else if (mode === "fresh") {
-          problems.push(`${label}: the tutorial did not open on a fresh install`);
         }
 
         // The wheel is a "you came back" reward, so a first launch must not
@@ -227,7 +238,7 @@ async function answerEventModal(page, pauseLabel) {
           }
         }
       } catch (e) {
-        problems.push(`${label}: could not get past the title/tutorial — ${e.message.split("\n")[0]}`);
+        problems.push(`${label}: could not get past the title/mentor — ${e.message.split("\n")[0]}`);
         await ctx.close();
         continue;
       }
@@ -275,7 +286,12 @@ async function answerEventModal(page, pauseLabel) {
         problems.push(`${label}: ${errors.length} console error(s): ${errors[0].slice(0, 140)}`);
       }
       if (!tabFails && !errors.length) {
-        const steps = ["title", "tutorial", wheelShown ? "wheel" : "no wheel", "pause"];
+        const steps = [
+          "title",
+          mode === "fresh" ? "mentor" : "no mentor",
+          wheelShown ? "wheel" : "no wheel",
+          "pause",
+        ];
         console.log(`✅ ${label}: ${steps.join(", ")}, all ${TABS[lang].length} screens, clean`);
       }
       await ctx.close();

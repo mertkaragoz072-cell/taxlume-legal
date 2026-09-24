@@ -310,9 +310,17 @@ export interface EconomyState {
   pendingRequest: VillagerRequest | null;
   /** a rival trader's bulk-buy offer; freezes the tick loop until accepted or declined */
   pendingRivalOffer: RivalTraderOffer | null;
+  /** tick at which the last clock-freezing modal fired — decisions, villager
+   * requests and rival offers share one cooldown off this so they cannot
+   * arrive back to back (see INTERRUPTION_COOLDOWN_TICKS) */
+  lastInterruptionTick: number;
   /** index into ONBOARDING_STEPS (see onboarding.ts); equal to its length
    * once the guided first session is finished, and never moves again */
   onboardingStep: number;
+  /** index into MENTOR_STEPS (see mentor.ts) — how far through Zeyno's
+   * walk-through the player is. Equal to its length once she has finished
+   * or been skipped, and never moves again */
+  mentorStep: number;
   dailyProgress: DailyProgress;
   dailyQuests: DailyQuest[];
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */

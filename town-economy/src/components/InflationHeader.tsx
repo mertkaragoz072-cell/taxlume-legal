@@ -181,7 +181,12 @@ export function InflationHeader({
           accessibilityRole="button"
           accessibilityLabel={t("a11y.editTownName")}
         >
-          <Text style={styles.town} numberOfLines={1}>
+          {/* Shrink to fit rather than truncate. Six 26px controls leave the
+              name about 180px, and the default town name spent it all: the
+              header read "ALTIN KASAB…", which makes the player's own town
+              look like a bug. A name too long for the line now scales down
+              to 70% instead of losing its last letters. */}
+          <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
           </Text>
         </Pressable>
@@ -367,11 +372,11 @@ const styles = StyleSheet.create({
   flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
   // gap alone. Every button also carried a marginLeft, so the row was
   // spaced twice over and the name paid for it in width.
-  controls: { flexDirection: "row", alignItems: "center", gap: SPACING.xs + 2 },
+  controls: { flexDirection: "row", alignItems: "center", gap: SPACING.xs },
   iconBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: "#2a2016",
     alignItems: "center",
     justifyContent: "center",

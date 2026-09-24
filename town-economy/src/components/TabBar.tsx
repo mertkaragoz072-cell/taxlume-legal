@@ -26,10 +26,30 @@ export const TAB_LABEL_KEYS: Record<ScreenId, string> = Object.fromEntries(
 interface Props {
   active: ScreenId;
   onChange: (screen: ScreenId) => void;
+  /** a tab to call attention to — the mentor's walk-through names one tab
+   * per beat and this is how the bar points at it. Null the rest of the
+   * time, which is every moment after the first session. */
+  spotlight?: ScreenId | null;
 }
 
-export function TabBar({ active, onChange }: Props) {
+export function TabBar({ active, onChange, spotlight = null }: Props) {
   const { t } = useEconomyContext();
+  // A slow breath rather than a blink: the tour holds on one tab for as
+  // long as the player takes to read a sentence, and anything faster turns
+  // into a flicker sitting under the text they are reading.
+  const pulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!spotlight) return;
+    pulse.setValue(0);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 900, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse, spotlight]);
   const activeIndex = TABS.findIndex((tab) => tab.id === active);
   const activeColor = TABS[activeIndex].color;
   const indicatorAnim = useRef(new Animated.Value(activeIndex)).current;
@@ -64,6 +84,7 @@ export function TabBar({ active, onChange }: Props) {
       </Animated.View>
       {TABS.map((tab) => {
         const isActive = tab.id === active;
+        const lit = tab.id === spotlight;
         return (
           <ScalePressable
             key={tab.id}
@@ -74,6 +95,21 @@ export function TabBar({ active, onChange }: Props) {
             aria-selected={isActive}
             accessibilityLabel={t(tab.labelKey)}
           >
+            {lit && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.spotlight,
+                  {
+                    borderColor: tab.color,
+                    opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.95] }),
+                    transform: [
+                      { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.04] }) },
+                    ],
+                  },
+                ]}
+              />
+            )}
             {/* The emoji is decoration for a label that is already read out;
                 left visible it makes every tab announce a stray icon name. */}
             <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
@@ -110,6 +146,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   tab: { flex: 1, alignItems: "center", paddingVertical: 4 },
+  spotlight: {
+    position: "absolute",
+    top: 0,
+    left: 4,
+    right: 4,
+    bottom: 0,
+    borderRadius: 14,
+    borderWidth: 2,
+  },
   icon: { fontSize: TYPE.heading, opacity: 0.5 },
   iconActive: { opacity: 1 },
   label: {

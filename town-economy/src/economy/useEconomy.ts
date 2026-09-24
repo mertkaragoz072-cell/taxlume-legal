@@ -6,6 +6,7 @@ import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
 import { openingDemandCycles } from "./demandCycles";
+import { MENTOR_STEPS } from "./mentor";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
@@ -80,6 +81,7 @@ import {
   SPEED_BOOST_DURATION_MS,
   TAX_RATE_MAX,
   TICKS_PER_GAME_DAY,
+  INTERRUPTION_COOLDOWN_TICKS,
   TICK_MS,
   TOWN_NAME_MAX_LENGTH,
 } from "./constants";
@@ -241,6 +243,7 @@ type Action =
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "CLAIM_SPEED_BOOST" }
+  | { type: "ADVANCE_MENTOR"; to: number }
   | { type: "DISMISS_DAILY_BONUS" };
 function makeInitialGoodState(good: Good): GoodState {
   return {
@@ -352,9 +355,13 @@ export function initialState(
     lastSavedAt: Date.now(),
     offlineSummary: null,
     onboardingStep: 0,
+    mentorStep: 0,
     pendingDecision: null,
     pendingRequest: null,
     pendingRivalOffer: null,
+    // Negative, so the first interruption of a new town is not held back by
+    // a cooldown that has notionally been running since before tick 0.
+    lastInterruptionTick: -INTERRUPTION_COOLDOWN_TICKS,
     dailyProgress: makeInitialDailyProgress(),
     dailyQuests: makeDailyQuests("init"),
     activeMiniQuest: null,
@@ -1339,6 +1346,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return resolveVillagerRequest(state, action.give);
     case "RESOLVE_RIVAL_OFFER":
       return resolveRivalOffer(state, action.accept);
+    case "ADVANCE_MENTOR":
+      // Clamped and monotonic: the tour only ever moves forward, and
+      // finishing and skipping are the same thing — both land on the end.
+      return { ...state, mentorStep: Math.max(state.mentorStep, Math.min(action.to, MENTOR_STEPS.length)) };
     case "SET_TOWN_NAME":
       return setTownName(state, action.name);
     case "SET_LANGUAGE":
@@ -1518,6 +1529,7 @@ export function useEconomy() {
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
   const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
   const setEmblemColor_ = useCallback((color: string) => dispatch({ type: "SET_EMBLEM_COLOR", color }), []);
+  const advanceMentor = useCallback((to: number) => dispatch({ type: "ADVANCE_MENTOR", to }), []);
   const setLanguage_ = useCallback((language: Language) => dispatch({ type: "SET_LANGUAGE", language }), []);
   const claimSpeedBoost_ = useCallback(() => dispatch({ type: "CLAIM_SPEED_BOOST" }), []);
   const translate = useCallback(
@@ -1571,6 +1583,7 @@ export function useEconomy() {
     resolveDecision: resolveDecision_,
     resolveRequest,
     resolveRivalOffer: resolveRivalOffer_,
+    advanceMentor,
     setTownName,
     setEmblem: setEmblem_,
     setEmblemColor: setEmblemColor_,
