@@ -159,6 +159,22 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
+          # None of the commands above fail when they come up empty. The CLI
+          # prints "Cannot save Signing Certificates without certificate
+          # private key" and "Did not find matching provisioning profiles",
+          # exits 0, and the build carries on to fail two steps later with
+          # "requires a provisioning profile" — which says nothing about why.
+          # So check what actually landed, and stop here if it is nothing.
+          profiles="$HOME/Library/MobileDevice/Provisioning Profiles"
+          count=$(ls -1 "$profiles"/*.mobileprovision 2>/dev/null | wc -l | tr -d " ")
+          if [ "$count" -eq 0 ]; then
+            echo "No provisioning profile was installed." >&2
+            echo "Read the fetch-signing-files output above: it will name the" >&2
+            echo "reason, usually a certificate it could not use or create." >&2
+            exit 1
+          fi
+          echo "✅ $count provisioning profile(s) installed"
+
       # The workspace, not the project: pod install created it, and building
       # the .xcodeproj directly misses every pod dependency.
       - name: Archive and export
