@@ -317,7 +317,7 @@ export interface EconomyState {
   /** index into ONBOARDING_STEPS (see onboarding.ts); equal to its length
    * once the guided first session is finished, and never moves again */
   onboardingStep: number;
-  /** index into MENTOR_STEPS (see mentor.ts) — how far through Zeyno's
+  /** index into MENTOR_STEPS (see mentor.ts) — how far through Defne's
    * walk-through the player is. Equal to its length once she has finished
    * or been skipped, and never moves again */
   mentorStep: number;

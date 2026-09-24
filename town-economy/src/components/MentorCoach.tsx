@@ -25,7 +25,7 @@ interface Props {
   onSkip: () => void;
 }
 
-/** Zeyno, docked above the tab bar, walking a new mayor through the town.
+/** Defne, docked above the tab bar, walking a new mayor through the town.
  *
  * She is a dock, not an overlay: the screen she is describing stays live
  * above her, scrollable and tappable, and she simply takes up the bottom of

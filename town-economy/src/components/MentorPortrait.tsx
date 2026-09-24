@@ -12,21 +12,23 @@ interface Props {
  * like she came out of one of those houses, not like a UI mascot dropped on
  * top of the game. What separates her from the crowd is silhouette, not
  * palette: a headscarf and a braid instead of the townsmen's brimmed cap. */
-const SKIN = "#e8b489";
-const SKIN_SHADE = "#cf9468";
-const SCARF = "#c05a46";
-const SCARF_LIGHT = "#dd7b5f";
-const SCARF_SHADE = "#8f3d2e";
-const DRESS = "#4a7a70";
-const DRESS_LIGHT = "#659a8d";
-const DRESS_SHADE = "#335a52";
+const SKIN = "#f0bd8f";
+const SKIN_SHADE = "#d1925f";
+const SCARF = "#cf5c42";
+const SCARF_LIGHT = "#ec8a63";
+const SCARF_SHADE = "#963c29";
+const DRESS = "#3f8578";
+const DRESS_LIGHT = "#5eae9c";
+const DRESS_SHADE = "#2b6055";
 const HAIR = "#3a2418";
 const HAIR_LIGHT = "#553522";
 const GOLD = "#e8c777";
 const GOLD_SHADE = "#c2a055";
 const INK = "#2a2016";
+const RIM = "#f2c98a";
+const MOUTH = "#8c3f30";
 
-/** Zeyno, the market woman who shows a new mayor around the town.
+/** Defne, the market woman who shows a new mayor around the town.
  *
  * A bust rather than a full figure: she appears in a coach bubble at the
  * bottom of a live screen, where a whole body would either be thumbnail-
@@ -60,6 +62,16 @@ export function MentorPortrait({ size = 96, mood = "warm" }: Props) {
 
       {/* shoulders */}
       <Path d="M50 62 Q72 63 81 78 L90 112 H10 L19 78 Q28 63 50 62 Z" fill={`url(#${id}dress)`} />
+      {/* A narrow lit edge down her shaded side. Wide, it stopped being a
+          highlight and became a second garment panel. */}
+      <Path
+        d="M74 66 Q81 73 84 89"
+        stroke={RIM}
+        strokeWidth={2.4}
+        strokeLinecap="round"
+        opacity={0.45}
+        fill="none"
+      />
       {/* embroidered band along the neckline, echoing the townsmen's collar */}
       <Path d="M36 66 Q50 80 64 66 L67 72 Q50 88 33 72 Z" fill={GOLD} />
       <Path d="M36 66 Q50 80 64 66 L65 69 Q50 84 35 69 Z" fill={GOLD_SHADE} opacity={0.5} />
@@ -85,15 +97,47 @@ export function MentorPortrait({ size = 96, mood = "warm" }: Props) {
       <Path d="M29 34 Q22 44 24 58 Q29 62 33 57 Q29 45 34 36 Z" fill={`url(#${id}scarf)`} />
       {/* a row of stitching across the crown — the detail that makes it cloth */}
       <Path d="M33 25 Q50 19 67 25" stroke={GOLD} strokeWidth={1.6} fill="none" opacity={0.75} />
+      {/* and a scattering of printed dots, because a third of her was one
+          flat field of red and read as a bath cap */}
+      <G opacity={0.55}>
+        <Circle cx={40} cy={21} r={1.5} fill={GOLD} />
+        <Circle cx={50} cy={18.5} r={1.5} fill={GOLD} />
+        <Circle cx={60} cy={21} r={1.5} fill={GOLD} />
+        <Circle cx={35} cy={30} r={1.2} fill={GOLD} />
+        <Circle cx={65} cy={30} r={1.2} fill={GOLD} />
+      </G>
+      {/* highlight along the top of the scarf, catching the key light */}
+      <Path d="M34 21 Q50 15.5 66 21 Q50 18.5 34 21 Z" fill="#ffffff" opacity={0.3} />
 
       {/* earring */}
       <Circle cx={70} cy={48} r={2.6} fill={GOLD} />
 
       <G>
-        <Circle cx={42.5} cy={45} r={2.6} fill={INK} />
-        <Circle cx={57.5} cy={45} r={2.6} fill={INK} />
-        <Circle cx={43.5} cy={44} r={0.9} fill="#fff" opacity={0.85} />
-        <Circle cx={58.5} cy={44} r={0.9} fill="#fff" opacity={0.85} />
+        <Ellipse cx={42.5} cy={45} rx={3} ry={3.2} fill="#fdf6ec" />
+        <Ellipse cx={57.5} cy={45} rx={3} ry={3.2} fill="#fdf6ec" />
+        <Circle cx={42.8} cy={45.3} r={2.4} fill={HAIR} />
+        <Circle cx={57.8} cy={45.3} r={2.4} fill={HAIR} />
+        <Circle cx={42.9} cy={45.4} r={1.5} fill={INK} />
+        <Circle cx={57.9} cy={45.4} r={1.5} fill={INK} />
+        <Circle cx={43.9} cy={43.9} r={1} fill="#fff" />
+        <Circle cx={58.9} cy={43.9} r={1} fill="#fff" />
+        <Circle cx={41.6} cy={46.6} r={0.5} fill="#fff" opacity={0.6} />
+        <Circle cx={56.6} cy={46.6} r={0.5} fill="#fff" opacity={0.6} />
+        {/* upper lid, which is what keeps the eye from reading as a bead */}
+        <Path
+          d="M39.4 43.4 Q42.5 41.2 45.6 43.4"
+          stroke={HAIR}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          fill="none"
+        />
+        <Path
+          d="M54.4 43.4 Q57.5 41.2 60.6 43.4"
+          stroke={HAIR}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          fill="none"
+        />
       </G>
 
       {/* Brows do the talking. Level and soft when she is welcoming you;
@@ -124,7 +168,8 @@ export function MentorPortrait({ size = 96, mood = "warm" }: Props) {
 
       <Ellipse cx={36} cy={51} rx={4.2} ry={2.6} fill="#e07a4a" opacity={0.32} />
       <Ellipse cx={64} cy={51} rx={4.2} ry={2.6} fill="#e07a4a" opacity={0.32} />
-      <Path d="M43 53 Q50 60 57 53" stroke={INK} strokeWidth={1.9} strokeLinecap="round" fill="none" />
+      <Path d="M43 53 Q50 60.5 57 53 Q50 57 43 53 Z" fill={MOUTH} />
+      <Path d="M43 53 Q50 60.5 57 53" stroke={MOUTH} strokeWidth={1.9} strokeLinecap="round" fill="none" />
     </Svg>
   );
 }

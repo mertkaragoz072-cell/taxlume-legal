@@ -25,10 +25,10 @@ const TABS = {
   en: ["Market", "Inventory", "Trade", "Town", "Research", "Invest", "Goals"],
 };
 const START = { tr: /^(BAŞLA|DEVAM ET)$/, en: /^(START|CONTINUE)$/ };
-// Zeyno's walk-through, which is what a first launch opens with now — the
+// Defne's walk-through, which is what a first launch opens with now — the
 // slide deck only ever appears behind the ❓ button. Her name is the check
 // that she actually arrived; the skip control is how the walk gets past her.
-const MENTOR = { tr: "Zeyno", en: "Zeyno" };
+const MENTOR = { tr: "Defne", en: "Defne" };
 const SKIP = { tr: "Geç", en: "Skip" };
 // A fresh install opens the daily-reward wheel right behind the tutorial —
 // by design, the check-in fires on hydrate. A new player has to spin it and

@@ -486,13 +486,13 @@ export const STRINGS = {
       declineHint: "teklifi geri çevirirsin",
     },
     mentor: {
-      name: "Zeyno",
+      name: "Defne",
       role: "Pazarcı",
       next: "Devam",
       done: "Hadi başlayalım",
       skip: "Geç",
       greet:
-        "Hoş geldin, yeni başkanımız! Ben Zeyno, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet — gel, bir tur atalım.",
+        "Hoş geldin, yeni başkanımız! Ben Defne, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet — gel, bir tur atalım.",
       market:
         "İşte Piyasa. Kasabanın bütün malları burada durur ve fiyatları her gün oynar. İşin özü tek cümle: ucuzken al.",
       prices:
@@ -1640,13 +1640,13 @@ export const STRINGS = {
       declineHint: "turns down the offer",
     },
     mentor: {
-      name: "Zeyno",
+      name: "Defne",
       role: "Market trader",
       next: "Go on",
       done: "Let's begin",
       skip: "Skip",
       greet:
-        "Welcome, our new mayor! I'm Zeyno, I keep a stall in the market. The town is yours from today — come, let me show you around.",
+        "Welcome, our new mayor! I'm Defne, I keep a stall in the market. The town is yours from today — come, let me show you around.",
       market:
         "This is the Market. Every good in town sits here, and the prices move every day. The whole job in one sentence: buy while it's cheap.",
       prices:
