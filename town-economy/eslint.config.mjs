@@ -92,9 +92,10 @@ export default tseslint.config(
     rules: { "no-console": "off" },
   },
 
-  // Build/tooling scripts are plain CommonJS running under Node.
+  // Build/tooling scripts are plain CommonJS running under Node — and so are
+  // the Expo config plugins, which prebuild requires() the same way.
   {
-    files: ["scripts/**/*.js"],
+    files: ["scripts/**/*.js", "plugins/**/*.js"],
     languageOptions: {
       sourceType: "commonjs",
       globals: { ...globals.node },
