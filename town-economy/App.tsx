@@ -9,7 +9,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import { Platform, SafeAreaView, StyleSheet, View } from "react-native";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ComboBanner } from "./src/components/ComboBanner";
 import { CrisisWarningBanner } from "./src/components/CrisisWarningBanner";
@@ -51,7 +51,14 @@ import { maybeRequestReview } from "./src/utils/reviewPrompt";
 // before that happens; expo-audio's web shim doesn't await that promise,
 // so the rejection surfaces here instead of at our call site — swallow
 // just that expected case rather than letting it look like a crash.
-if (typeof window !== "undefined") {
+//
+// The guard tests for the *method*, not for `window`. React Native defines
+// `window` as an alias for the global object, so `typeof window !==
+// "undefined"` is true on a phone — and then `window.addEventListener` is
+// undefined and calling it throws. This runs at module scope, so that
+// TypeError took the whole bundle down before a single frame was drawn, and
+// the app sat on its splash screen with nothing to say. It cost a day.
+if (Platform.OS === "web" && typeof window?.addEventListener === "function") {
   window.addEventListener("unhandledrejection", (event) => {
     const message = event.reason?.message ?? "";
     if (typeof message === "string" && message.includes("play() failed")) {
