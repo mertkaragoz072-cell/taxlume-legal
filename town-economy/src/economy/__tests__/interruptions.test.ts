@@ -124,7 +124,7 @@ describe("mentor script", () => {
 
   it("starts by welcoming the player before naming any screen", () => {
     expect(MENTOR_STEPS[0].screen).toBeUndefined();
-    expect(MENTOR_STEPS[0].mood).toBe("warm");
+    expect(MENTOR_STEPS[0].id).toBe("greet");
   });
 
   it("only points at tabs that exist on the tab bar", () => {

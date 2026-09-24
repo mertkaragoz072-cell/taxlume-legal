@@ -9,7 +9,6 @@ export interface MentorStep {
    * explained against a picture of the game. Left out when the beat is
    * about the header, which is on every screen anyway. */
   screen?: ScreenId;
-  mood: "warm" | "explaining";
 }
 
 /** Defne's walk-through: the first two minutes of a new town, led by a
@@ -26,13 +25,13 @@ export interface MentorStep {
  * player cannot open yet is the thing this replaced.
  */
 export const MENTOR_STEPS: MentorStep[] = [
-  { id: "greet", textKey: "mentor.greet", mood: "warm" },
-  { id: "market", textKey: "mentor.market", screen: "market", mood: "explaining" },
-  { id: "prices", textKey: "mentor.prices", screen: "market", mood: "explaining" },
-  { id: "inventory", textKey: "mentor.inventory", screen: "inventory", mood: "explaining" },
-  { id: "inflation", textKey: "mentor.inflation", mood: "explaining" },
-  { id: "trade", textKey: "mentor.trade", screen: "trade", mood: "explaining" },
-  { id: "handoff", textKey: "mentor.handoff", screen: "market", mood: "warm" },
+  { id: "greet", textKey: "mentor.greet" },
+  { id: "market", textKey: "mentor.market", screen: "market" },
+  { id: "prices", textKey: "mentor.prices", screen: "market" },
+  { id: "inventory", textKey: "mentor.inventory", screen: "inventory" },
+  { id: "inflation", textKey: "mentor.inflation" },
+  { id: "trade", textKey: "mentor.trade", screen: "trade" },
+  { id: "handoff", textKey: "mentor.handoff", screen: "market" },
 ];
 
 export const MENTOR_DONE = MENTOR_STEPS.length;

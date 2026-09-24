@@ -74,7 +74,7 @@ export function MentorCoach({ onNext, onSkip }: Props) {
 
         <View style={styles.row}>
           <View style={styles.portrait}>
-            <MentorPortrait size={76} mood={step.mood} />
+            <MentorPortrait size={84} />
           </View>
           <View style={styles.speech}>
             <Text style={styles.name}>

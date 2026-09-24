@@ -1,175 +1,39 @@
 import React from "react";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
-
-type Mood = "warm" | "explaining";
+import { Image, StyleSheet } from "react-native";
+import defneSource from "../../assets/mentor-defne.png";
 
 interface Props {
+  /** displayed width; the height follows the artwork's own proportions */
   size?: number;
-  mood?: Mood;
 }
 
-/* Same warm range as the townsfolk in VillagerIllustration — she has to look
- * like she came out of one of those houses, not like a UI mascot dropped on
- * top of the game. What separates her from the crowd is silhouette, not
- * palette: a headscarf and a braid instead of the townsmen's brimmed cap. */
-const SKIN = "#f0bd8f";
-const SKIN_SHADE = "#d1925f";
-const SCARF = "#cf5c42";
-const SCARF_LIGHT = "#ec8a63";
-const SCARF_SHADE = "#963c29";
-const DRESS = "#3f8578";
-const DRESS_LIGHT = "#5eae9c";
-const DRESS_SHADE = "#2b6055";
-const HAIR = "#3a2418";
-const HAIR_LIGHT = "#553522";
-const GOLD = "#e8c777";
-const GOLD_SHADE = "#c2a055";
-const INK = "#2a2016";
-const RIM = "#f2c98a";
-const MOUTH = "#8c3f30";
-
-/** Defne, the market woman who shows a new mayor around the town.
+/** Defne, the market trader who shows a new mayor around the town.
  *
- * A bust rather than a full figure: she appears in a coach bubble at the
- * bottom of a live screen, where a whole body would either be thumbnail-
- * sized or eat the market behind her. Cropping to head and shoulders keeps
- * the face big enough to read an expression at 96px.
+ * She was drawn as vector first, which kept her weightless in the bundle and
+ * let the expression change per beat, but it also capped how much life she
+ * could have: flat fills, a handful of gradients, and a face built from
+ * circles. This is a painted portrait instead — a real smile, lit skin, a
+ * braid with strands in it — because she is the first thing a new player
+ * meets and she was the one place in the game where "good enough" showed.
  *
- * Vector for the same reasons as the rest of the town's art — crisp at any
- * size, nothing added to the bundle, and every colour comes from the palette
- * the cards are already drawn in.
+ * The art was generated, its watermark painted out, and its paper background
+ * flood-filled to alpha from the edges inward rather than by thresholding
+ * brightness: her eye whites and teeth are as bright as the paper, and a
+ * plain threshold punched holes through them.
  */
-export function MentorPortrait({ size = 96, mood = "warm" }: Props) {
-  const id = `mentor${mood}`;
+const ASPECT = 420 / 300;
+
+export function MentorPortrait({ size = 84 }: Props) {
   return (
-    <Svg width={size} height={size * 1.12} viewBox="0 0 100 112">
-      <Defs>
-        <LinearGradient id={`${id}scarf`} x1="0" y1="0" x2="1" y2="0.5">
-          <Stop offset="0" stopColor={SCARF_LIGHT} />
-          <Stop offset="0.6" stopColor={SCARF} />
-          <Stop offset="1" stopColor={SCARF_SHADE} />
-        </LinearGradient>
-        <LinearGradient id={`${id}skin`} x1="0" y1="0" x2="1" y2="0.6">
-          <Stop offset="0" stopColor={SKIN} />
-          <Stop offset="1" stopColor={SKIN_SHADE} />
-        </LinearGradient>
-        <LinearGradient id={`${id}dress`} x1="0" y1="0" x2="1" y2="0.4">
-          <Stop offset="0" stopColor={DRESS_LIGHT} />
-          <Stop offset="0.55" stopColor={DRESS} />
-          <Stop offset="1" stopColor={DRESS_SHADE} />
-        </LinearGradient>
-      </Defs>
-
-      {/* shoulders */}
-      <Path d="M50 62 Q72 63 81 78 L90 112 H10 L19 78 Q28 63 50 62 Z" fill={`url(#${id}dress)`} />
-      {/* A narrow lit edge down her shaded side. Wide, it stopped being a
-          highlight and became a second garment panel. */}
-      <Path
-        d="M74 66 Q81 73 84 89"
-        stroke={RIM}
-        strokeWidth={2.4}
-        strokeLinecap="round"
-        opacity={0.45}
-        fill="none"
-      />
-      {/* embroidered band along the neckline, echoing the townsmen's collar */}
-      <Path d="M36 66 Q50 80 64 66 L67 72 Q50 88 33 72 Z" fill={GOLD} />
-      <Path d="M36 66 Q50 80 64 66 L65 69 Q50 84 35 69 Z" fill={GOLD_SHADE} opacity={0.5} />
-
-      {/* the braid, drawn behind the head so it reads as coming over her
-          shoulder rather than lying on top of her dress */}
-      <Path d="M68 46 Q80 60 76 86" stroke={HAIR} strokeWidth={9} strokeLinecap="round" fill="none" />
-      <Path d="M71 56 L77 60 M73 66 L79 70 M74 76 L79 79" stroke={HAIR_LIGHT} strokeWidth={1.6} />
-      <Circle cx={76} cy={88} r={3.4} fill={SCARF_SHADE} />
-
-      {/* neck */}
-      <Rect x={43} y={56} width={14} height={12} rx={4} fill={SKIN_SHADE} />
-
-      {/* face */}
-      <Circle cx={50} cy={42} r={18.5} fill={`url(#${id}skin)`} />
-
-      {/* hair at the temples, the bit a scarf leaves showing */}
-      <Path d="M31 38 Q33 22 50 22 Q67 22 69 38 Q62 30 50 30 Q38 30 31 38 Z" fill={HAIR} />
-
-      {/* headscarf: crown, then the tail knotted at her left shoulder */}
-      <Path d="M29 34 Q31 14 50 14 Q69 14 71 34 Q68 26 50 25 Q32 26 29 34 Z" fill={`url(#${id}scarf)`} />
-      <Path d="M28 33 Q30 40 33 45 Q30 34 34 28 Z" fill={SCARF_SHADE} />
-      <Path d="M29 34 Q22 44 24 58 Q29 62 33 57 Q29 45 34 36 Z" fill={`url(#${id}scarf)`} />
-      {/* a row of stitching across the crown — the detail that makes it cloth */}
-      <Path d="M33 25 Q50 19 67 25" stroke={GOLD} strokeWidth={1.6} fill="none" opacity={0.75} />
-      {/* and a scattering of printed dots, because a third of her was one
-          flat field of red and read as a bath cap */}
-      <G opacity={0.55}>
-        <Circle cx={40} cy={21} r={1.5} fill={GOLD} />
-        <Circle cx={50} cy={18.5} r={1.5} fill={GOLD} />
-        <Circle cx={60} cy={21} r={1.5} fill={GOLD} />
-        <Circle cx={35} cy={30} r={1.2} fill={GOLD} />
-        <Circle cx={65} cy={30} r={1.2} fill={GOLD} />
-      </G>
-      {/* highlight along the top of the scarf, catching the key light */}
-      <Path d="M34 21 Q50 15.5 66 21 Q50 18.5 34 21 Z" fill="#ffffff" opacity={0.3} />
-
-      {/* earring */}
-      <Circle cx={70} cy={48} r={2.6} fill={GOLD} />
-
-      <G>
-        <Ellipse cx={42.5} cy={45} rx={3} ry={3.2} fill="#fdf6ec" />
-        <Ellipse cx={57.5} cy={45} rx={3} ry={3.2} fill="#fdf6ec" />
-        <Circle cx={42.8} cy={45.3} r={2.4} fill={HAIR} />
-        <Circle cx={57.8} cy={45.3} r={2.4} fill={HAIR} />
-        <Circle cx={42.9} cy={45.4} r={1.5} fill={INK} />
-        <Circle cx={57.9} cy={45.4} r={1.5} fill={INK} />
-        <Circle cx={43.9} cy={43.9} r={1} fill="#fff" />
-        <Circle cx={58.9} cy={43.9} r={1} fill="#fff" />
-        <Circle cx={41.6} cy={46.6} r={0.5} fill="#fff" opacity={0.6} />
-        <Circle cx={56.6} cy={46.6} r={0.5} fill="#fff" opacity={0.6} />
-        {/* upper lid, which is what keeps the eye from reading as a bead */}
-        <Path
-          d="M39.4 43.4 Q42.5 41.2 45.6 43.4"
-          stroke={HAIR}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          fill="none"
-        />
-        <Path
-          d="M54.4 43.4 Q57.5 41.2 60.6 43.4"
-          stroke={HAIR}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          fill="none"
-        />
-      </G>
-
-      {/* Brows do the talking. Level and soft when she is welcoming you;
-          one lifted when she is pointing something out. */}
-      {mood === "explaining" ? (
-        <>
-          <Path d="M37 38 Q42 34 47 37" stroke={HAIR} strokeWidth={1.9} strokeLinecap="round" fill="none" />
-          <Path d="M53 38 Q58 36 63 39" stroke={HAIR} strokeWidth={1.9} strokeLinecap="round" fill="none" />
-        </>
-      ) : (
-        <>
-          <Path
-            d="M37 38 Q42 35.5 47 37.5"
-            stroke={HAIR}
-            strokeWidth={1.9}
-            strokeLinecap="round"
-            fill="none"
-          />
-          <Path
-            d="M53 37.5 Q58 35.5 63 38"
-            stroke={HAIR}
-            strokeWidth={1.9}
-            strokeLinecap="round"
-            fill="none"
-          />
-        </>
-      )}
-
-      <Ellipse cx={36} cy={51} rx={4.2} ry={2.6} fill="#e07a4a" opacity={0.32} />
-      <Ellipse cx={64} cy={51} rx={4.2} ry={2.6} fill="#e07a4a" opacity={0.32} />
-      <Path d="M43 53 Q50 60.5 57 53 Q50 57 43 53 Z" fill={MOUTH} />
-      <Path d="M43 53 Q50 60.5 57 53" stroke={MOUTH} strokeWidth={1.9} strokeLinecap="round" fill="none" />
-    </Svg>
+    <Image
+      source={defneSource}
+      style={[styles.portrait, { width: size, height: size * ASPECT }]}
+      resizeMode="contain"
+      accessibilityIgnoresInvertColors
+    />
   );
 }
+
+const styles = StyleSheet.create({
+  portrait: { alignSelf: "flex-start" },
+});
