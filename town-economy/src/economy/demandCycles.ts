@@ -96,3 +96,50 @@ export function cycleGoodIcons(cycle: DemandCycle): { hot: string[]; glut: strin
     glut: GOODS_BY_ID[cycle.gluttedGoodId].icon,
   };
 }
+
+/** The opening pair of cycles, chosen rather than rolled.
+ *
+ * A first launch used to open on whatever the dice gave it, which most of
+ * the time is nothing a new player can read: every good at its base price,
+ * a random good in surplus, another random one wanted. Nothing on screen
+ * says "do this".
+ *
+ * So the opening is set up instead. The cheapest starter good is in surplus
+ * now and wanted in the very next cycle — and the market screen already
+ * prints both halves of that, "in surplus" today and "next" beside it. The
+ * first purchase a player makes is therefore the one the game is pointing
+ * at, and it pays off within the cycle rather than depending on luck.
+ *
+ * Cheapest on purpose: with a starting purse, a cheap good buys a quantity
+ * large enough that the profit reads as a result rather than a rounding
+ * error.
+ *
+ * Everything after these two cycles is rolled as before — this shapes the
+ * first few minutes, not the game.
+ */
+export function openingDemandCycles(
+  ticksPerDay: number,
+  eligibleGoodIds: GoodId[]
+): { first: DemandCycle; next: DemandCycle } {
+  const byPrice = [...eligibleGoodIds].sort((a, b) => GOODS_BY_ID[a].basePrice - GOODS_BY_ID[b].basePrice);
+  const star = byPrice[0];
+  const others = byPrice.slice(1);
+
+  const cycleTicks = DEMAND_CYCLE_DAYS * ticksPerDay;
+  return {
+    first: {
+      startTick: 0,
+      endTick: cycleTicks,
+      // Anything but the star, which has to be the cheap one today.
+      hotGoodIds: others.slice(-DEMAND_HOT_COUNT),
+      gluttedGoodId: star,
+    },
+    next: {
+      startTick: cycleTicks,
+      endTick: cycleTicks * 2,
+      // The payoff the forecast promised.
+      hotGoodIds: [star, ...others.slice(0, DEMAND_HOT_COUNT - 1)],
+      gluttedGoodId: others[others.length - 1] ?? star,
+    },
+  };
+}

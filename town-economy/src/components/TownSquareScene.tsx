@@ -16,6 +16,18 @@ interface Props {
 const SCENE_WIDTH = Math.min(Dimensions.get("window").width - 64, 340);
 const SCENE_HEIGHT = Math.round((SCENE_WIDTH * 128) / 320);
 
+/** How to label the square: the word for this mood and the colour that goes
+ * with it. Lives here rather than in a screen because two of them caption
+ * the same scene — the Town tab, and the Market tab during the guided first
+ * session. */
+export function happinessFor(h: number): { labelKey: string; emoji: string; color: string } {
+  if (h < 20) return { labelKey: "town.happiness.revolt", emoji: "😡", color: "#c94b4b" };
+  if (h < 45) return { labelKey: "town.happiness.unrest", emoji: "😠", color: "#e0693f" };
+  if (h < 70) return { labelKey: "town.happiness.coping", emoji: "😐", color: "#e0a13f" };
+  if (h < 90) return { labelKey: "town.happiness.content", emoji: "🙂", color: "#a8c777" };
+  return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
+}
+
 function moodForHappiness(happiness: number): "happy" | "neutral" | "sad" {
   if (happiness >= 70) return "happy";
   if (happiness < 45) return "sad";

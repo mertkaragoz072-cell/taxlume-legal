@@ -5,7 +5,7 @@ import { DECISION_TEMPLATES_BY_ID } from "./decisions";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
-import { rollDemandCycle } from "./demandCycles";
+import { openingDemandCycles } from "./demandCycles";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
@@ -294,7 +294,7 @@ export function initialState(
   }
   const day1GoodIds = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
   const allTownIds = TOWNS.map((tn) => tn.id);
-  const firstCycle = rollDemandCycle(0, TICKS_PER_GAME_DAY, day1GoodIds);
+  const opening = openingDemandCycles(TICKS_PER_GAME_DAY, day1GoodIds);
   return {
     townName: t(language, "app.defaultTownName"),
     selectedEmblem: "village",
@@ -380,8 +380,8 @@ export function initialState(
     // Both cycles exist from tick 0, so a brand-new town already has a market
     // rhythm to read and a forecast to plan against. Only day-1 goods are
     // eligible; the later ones join the draw as they unlock.
-    demandCycle: firstCycle,
-    nextDemandCycle: rollDemandCycle(firstCycle.endTick, TICKS_PER_GAME_DAY, day1GoodIds),
+    demandCycle: opening.first,
+    nextDemandCycle: opening.next,
     pendingCrisis: null,
     doctrine: null,
     // Every house is already at work on day one, so the foreign markets

@@ -33,7 +33,7 @@ import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
 import { TownChatterTicker } from "../components/TownChatterTicker";
-import { TownSquareScene } from "../components/TownSquareScene";
+import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -56,14 +56,6 @@ function moodFor(rate: number): { labelKey: string; emoji: string; color: string
   if (rate > 0.005) return { labelKey: "town.mood.heating", emoji: "😰", color: "#e0a13f" };
   if (rate > -0.001) return { labelKey: "town.mood.calm", emoji: "🙂", color: COLORS.accent };
   return { labelKey: "town.mood.cooling", emoji: "😌", color: "#3fae5c" };
-}
-
-function happinessFor(h: number): { labelKey: string; emoji: string; color: string } {
-  if (h < 20) return { labelKey: "town.happiness.revolt", emoji: "😡", color: "#c94b4b" };
-  if (h < 45) return { labelKey: "town.happiness.unrest", emoji: "😠", color: "#e0693f" };
-  if (h < 70) return { labelKey: "town.happiness.coping", emoji: "😐", color: "#e0a13f" };
-  if (h < 90) return { labelKey: "town.happiness.content", emoji: "🙂", color: "#a8c777" };
-  return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
 }
 
 interface Props {

@@ -7,6 +7,7 @@ import {
   demandSupplyDelta,
   isGlutted,
   isHot,
+  openingDemandCycles,
   rollDemandCycle,
 } from "../demandCycles";
 import { GOODS, GOODS_BY_ID } from "../goods";
@@ -103,5 +104,39 @@ describe("demand effects", () => {
     expect(isHot(odd, "bread")).toBe(true);
     expect(isGlutted(odd, "bread")).toBe(false);
     expect(demandPriceMultiplier(odd, "bread")).toBe(DEMAND_HOT_PRICE_MULT);
+  });
+});
+
+describe("openingDemandCycles", () => {
+  const DAY = 40;
+  const eligible = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
+  const cheapest = [...eligible].sort((a, b) => GOODS_BY_ID[a].basePrice - GOODS_BY_ID[b].basePrice)[0];
+
+  it("puts the cheapest starter good in surplus now and in demand next", () => {
+    // The whole point of choosing the opening rather than rolling it: a new
+    // player's first purchase should be the one the screen is pointing at.
+    const { first, next } = openingDemandCycles(DAY, eligible);
+
+    expect(first.gluttedGoodId).toBe(cheapest);
+    expect(first.hotGoodIds).not.toContain(cheapest);
+    expect(next.hotGoodIds).toContain(cheapest);
+  });
+
+  it("hands over without a gap, so the promised demand actually arrives", () => {
+    const { first, next } = openingDemandCycles(DAY, eligible);
+
+    expect(first.startTick).toBe(0);
+    expect(next.startTick).toBe(first.endTick);
+    expect(next.endTick).toBeGreaterThan(next.startTick);
+  });
+
+  it("fills both cycles to the same shape a rolled one has", () => {
+    const { first, next } = openingDemandCycles(DAY, eligible);
+
+    for (const cycle of [first, next]) {
+      expect(cycle.hotGoodIds).toHaveLength(DEMAND_HOT_COUNT);
+      expect(new Set(cycle.hotGoodIds).size).toBe(cycle.hotGoodIds.length);
+      expect(cycle.hotGoodIds).not.toContain(cycle.gluttedGoodId);
+    }
   });
 });

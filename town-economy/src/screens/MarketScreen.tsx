@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
+import { ONBOARDING_STEPS } from "../economy/onboarding";
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -100,6 +102,23 @@ export function MarketScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      {/* The town square is the most characterful thing the game has, and it
+          lives on the fourth tab — a player who never gets past the market
+          never sees it. For the first session it sits here, above the
+          charts, so the opening screen is a place with people in it rather
+          than a line graph. It goes away once the guided steps are done,
+          because by then the player has found the Town tab themselves. */}
+      {state.onboardingStep < ONBOARDING_STEPS.length && (
+        <View style={styles.onboardingScene}>
+          <TownSquareScene
+            happiness={state.happiness}
+            label={t("town.squareLabel")}
+            moodLabel={t(happinessFor(state.happiness).labelKey)}
+            moodColor={happinessFor(state.happiness).color}
+          />
+        </View>
+      )}
+
       <View style={styles.sentimentRow}>
         <Text style={[styles.sentimentText, { color: sentiment.color }]}>
           {sentiment.icon} {t(`market.sentiment.${sentiment.key}`)}
@@ -371,6 +390,7 @@ export function MarketScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
+  onboardingScene: { alignItems: "center", marginBottom: SPACING.md },
   body: { padding: SPACING.lg, paddingBottom: 40 },
   sentimentRow: { alignItems: "center", marginBottom: SPACING.md },
   sentimentText: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },

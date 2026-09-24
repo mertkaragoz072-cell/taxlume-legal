@@ -8,6 +8,7 @@ import {
   COLORS,
   FONT,
   GREEN_GRADIENT,
+  glowShadow,
   RADIUS,
   RED_GRADIENT,
   SPACING,
@@ -36,6 +37,9 @@ type Qty = 1 | 5 | "ALL";
 export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Props) {
   const { t, formatCoins, state: economyState } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
+  // Only for a player who has never traded — `totalTrades` is a lifetime
+  // count, so this cannot come back later.
+  const nudge = economyState.stats.totalTrades === 0 && side === "buy";
   const [qtyOption, setQtyOption] = useState<Qty>(1);
   const [coinPopTrigger, setCoinPopTrigger] = useState(0);
 
@@ -100,7 +104,11 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
         <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
       </View>
 
-      <View style={styles.confirmBtnWrap}>
+      {/* A ring around the trade button until the player has made their
+          first one. The guided card says "buy any good in the Market"; this
+          is the part of the market it means. It costs nothing to anyone past
+          their first trade, because it is gone by then. */}
+      <View style={[styles.confirmBtnWrap, nudge && styles.confirmBtnNudge]}>
         <ScalePressable
           disabled={disabled}
           onPress={() => {
@@ -184,6 +192,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
   summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  confirmBtnNudge: {
+    borderWidth: 2,
+    borderColor: withAlpha("#5fd884", 0.9),
+    borderRadius: RADIUS.feature,
+    ...glowShadow("#5fd884"),
+  },
   confirmBtnWrap: { position: "relative" },
   confirmBtn: {
     borderRadius: RADIUS.card,

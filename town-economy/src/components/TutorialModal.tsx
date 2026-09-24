@@ -14,15 +14,23 @@ interface Slide {
   color: string;
 }
 
+/** Three slides, and only three.
+ *
+ * There were eight: the market, inflation, caravans, tax, the tabs that open
+ * later, the bank and prestige, achievements. A feature tour read before
+ * touching anything, at the exact moment a player has no idea which parts
+ * matter — and the last five were describing screens that are still locked.
+ *
+ * What is left is the premise and nothing else: whose town this is, that
+ * trades move prices, and that inflation is the thing that ends a run. The
+ * rest is taught by the guided steps (see economy/onboarding.ts), which make
+ * the player do it rather than read about it, one mechanic at a time, as the
+ * game unlocks them.
+ */
 const SLIDES: Slide[] = [
   { icon: "🏘️", titleKey: "tutorial.slide1Title", bodyKey: "tutorial.slide1Body", color: "#e8c777" },
   { icon: "📈", titleKey: "tutorial.slide2Title", bodyKey: "tutorial.slide2Body", color: "#5fd884" },
   { icon: "🔥", titleKey: "tutorial.slide3Title", bodyKey: "tutorial.slide3Body", color: "#f0776a" },
-  { icon: "🚚", titleKey: "tutorial.slide4Title", bodyKey: "tutorial.slide4Body", color: "#6fb8f2" },
-  { icon: "🏛️", titleKey: "tutorial.slide5Title", bodyKey: "tutorial.slide5Body", color: "#c58ee0" },
-  { icon: "🔬", titleKey: "tutorial.slide6Title", bodyKey: "tutorial.slide6Body", color: "#4fc3c9" },
-  { icon: "🏦", titleKey: "tutorial.slide7Title", bodyKey: "tutorial.slide7Body", color: "#e0a13f" },
-  { icon: "🏆", titleKey: "tutorial.slide8Title", bodyKey: "tutorial.slide8Body", color: "#e8c777" },
 ];
 
 interface Props {
