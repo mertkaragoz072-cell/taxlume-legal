@@ -3,7 +3,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-nativ
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
-import { COLORS, FONT, glowShadow, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCoins as formatCoinsUtil } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
@@ -165,7 +165,12 @@ export function InflationHeader({
         style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
       />
       <View style={styles.goldLine} />
-      <View style={styles.nameRow}>
+      {/* Name and controls share a line; the chips get one of their own.
+          They used to sit in a single row with the chip strip allowed to
+          wrap, and on a phone it broke into three ragged lines beside a
+          block of six circles — the town's own name being the thing that
+          lost the width. */}
+      <View style={styles.topRow}>
         <Pressable
           onPress={onEditName}
           style={styles.townNamePressable}
@@ -176,43 +181,6 @@ export function InflationHeader({
             <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
           </Text>
         </Pressable>
-      </View>
-      <View style={styles.metaRow}>
-        <View style={styles.townRow}>
-          <View
-            style={[
-              styles.streakBadge,
-              styles.streakBadgeRow,
-              { backgroundColor: withAlpha("#e8c777", 0.22) },
-            ]}
-          >
-            <Text style={styles.streakBadgeText}>
-              {rankIcon} {rankTitle}
-            </Text>
-          </View>
-          <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
-            <Text style={styles.streakBadgeText}>
-              {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
-            </Text>
-          </View>
-          <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
-            <Text style={styles.streakBadgeText}>📅 {t("header.day", { day: gameDay })}</Text>
-          </View>
-          {streakCount > 0 && (
-            <View
-              style={[
-                styles.streakBadge,
-                styles.streakBadgeRow,
-                { backgroundColor: withAlpha("#f0776a", 0.22) },
-              ]}
-            >
-              <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
-                🔥
-              </Animated.Text>
-              <Text style={styles.streakBadgeText}>{streakCount}</Text>
-            </View>
-          )}
-        </View>
         <View style={styles.controls}>
           <Pressable
             onPress={onToggleLanguage}
@@ -258,6 +226,38 @@ export function InflationHeader({
         </View>
       </View>
 
+      <View style={styles.chipRow}>
+        <View
+          style={[styles.streakBadge, styles.streakBadgeRow, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
+        >
+          <Text style={styles.streakBadgeText}>
+            {rankIcon} {rankTitle}
+          </Text>
+        </View>
+        <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
+          <Text style={styles.streakBadgeText}>
+            {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
+          </Text>
+        </View>
+        <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
+          <Text style={styles.streakBadgeText}>📅 {t("header.day", { day: gameDay })}</Text>
+        </View>
+        {streakCount > 0 && (
+          <View
+            style={[
+              styles.streakBadge,
+              styles.streakBadgeRow,
+              { backgroundColor: withAlpha("#f0776a", 0.22) },
+            ]}
+          >
+            <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
+              🔥
+            </Animated.Text>
+            <Text style={styles.streakBadgeText}>{streakCount}</Text>
+          </View>
+        )}
+      </View>
+
       <View style={styles.statsRow}>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>{t("header.cash")}</Text>
@@ -276,13 +276,17 @@ export function InflationHeader({
           )}
           <View style={styles.inflationTextCol}>
             <Text style={styles.statLabel}>{t("header.inflation")}</Text>
-            <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]}>
-              {inflationIndex.toFixed(1)}{" "}
-              <Text style={{ fontSize: 11 }}>
-                ({inflationRate >= 0 ? "+" : ""}
-                {((Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100).toFixed(2)}%
-                {t("header.perTurn")})
-              </Text>
+            {/* The daily rate is its own line rather than a small Text nested
+                inside the index. Inline, it wrapped wherever it ran out of
+                room — on a narrow phone the closing bracket ended up alone on
+                a third line, under the sparkline. */}
+            <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
+              {inflationIndex.toFixed(1)}
+            </Text>
+            <Text style={[styles.inflationRate, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
+              ({inflationRate >= 0 ? "+" : ""}
+              {((Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100).toFixed(2)}%{t("header.perTurn")}
+              )
             </Text>
           </View>
           <PriceChart
@@ -314,15 +318,23 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     opacity: 0.55,
   },
-  nameRow: { marginBottom: SPACING.xs + 2 },
-  metaRow: {
+  topRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
     marginBottom: SPACING.sm,
   },
-  townRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, flexWrap: "wrap" },
-  townNamePressable: { alignSelf: "flex-start" },
+  // One line, and it stays one line. A chip that runs out of room shrinks
+  // its own label rather than starting a second row and pushing everything
+  // below it down the screen.
+  chipRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+    marginBottom: SPACING.sm,
+  },
+  townNamePressable: { flexShrink: 1 },
   town: {
     color: "#ffd75e",
     fontFamily: FONT.display,
@@ -334,10 +346,10 @@ const styles = StyleSheet.create({
   },
   streakBadge: {
     backgroundColor: "#2a2016",
-    borderRadius: 10,
+    borderRadius: RADIUS.chip,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 3,
-    marginLeft: SPACING.sm,
+    flexShrink: 1,
   },
   streakBadgeText: {
     color: COLORS.textPrimary,
@@ -347,17 +359,18 @@ const styles = StyleSheet.create({
   },
   streakBadgeRow: { flexDirection: "row", alignItems: "center" },
   flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
-  controls: { flexDirection: "row", gap: SPACING.sm },
+  // gap alone. Every button also carried a marginLeft, so the row was
+  // spaced twice over and the name paid for it in width.
+  controls: { flexDirection: "row", alignItems: "center", gap: SPACING.xs + 2 },
   iconBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: "#2a2016",
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: SPACING.sm,
   },
-  iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.body },
+  iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.caption, lineHeight: 18 },
   langBtnText: {
     color: COLORS.accent,
     fontSize: TYPE.micro,
@@ -380,5 +393,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   inflationTextCol: { flex: 1 },
+  inflationRate: { fontSize: 11, fontFamily: FONT.medium },
   hotGlow: { backgroundColor: "#e0693f", borderRadius: 10 },
 });
