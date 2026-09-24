@@ -214,7 +214,12 @@ function seed(base) {
   state.unlockedAchievements = ACHIEVEMENT_IDS.filter(
     (id) => id !== "streak_30" && id !== "real_estate_mogul"
   );
-  state.streak = { count: 7, lastOpenedDate: state.streak.lastOpenedDate };
+  // Yesterday, so this is a returning player and not a first launch. The
+  // daily wheel only opens for someone coming back, and a fixture with no
+  // last-opened date reads as day one — which made the "saved" scenarios
+  // silently skip the wheel they exist to exercise.
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  state.streak = { count: 7, lastOpenedDate: yesterday };
   state.tradeStreak = 4;
 
   // The weekly challenge measures a stat against where it stood when the week

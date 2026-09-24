@@ -880,6 +880,29 @@ describe("applyAutoTradeRules", () => {
 });
 
 describe("dailyCheckIn / weekly challenge assignment", () => {
+  it("pays the first-launch bonus without putting the wheel in the way", () => {
+    // The wheel is a "you came back" reward and day one has no streak to
+    // celebrate. A brand new player met the tutorial, then a wheel, then a
+    // claim button, before ever seeing the market.
+    const first = dailyCheckIn(initialState(), "2026-01-05");
+
+    expect(first.dailyBonusPending).toBeNull();
+    expect(first.cash).toBeGreaterThan(initialState().cash);
+    expect(first.streak).toEqual({ count: 1, lastOpenedDate: "2026-01-05" });
+    // Still announced, just in the banner rather than over the whole screen.
+    expect(first.lastEvent?.tone).toBe("good");
+  });
+
+  it("opens the wheel from the second day on", () => {
+    const returning = dailyCheckIn(
+      { ...initialState(), streak: { count: 1, lastOpenedDate: "2026-01-05" } },
+      "2026-01-06"
+    );
+
+    expect(returning.dailyBonusPending).toBeGreaterThan(0);
+    expect(returning.streak.count).toBe(2);
+  });
+
   it("assigns a weekly challenge on the very first check-in", () => {
     const state = initialState();
     expect(state.weeklyChallenge).toBeNull();

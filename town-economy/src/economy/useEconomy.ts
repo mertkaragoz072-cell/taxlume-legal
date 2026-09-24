@@ -840,7 +840,14 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
     // The reward wheel modal spins to reveal this once the player next sees
     // the app; dismissDailyBonus clears it after they've watched it land.
-    dailyBonusPending: bonus,
+    //
+    // Except on the very first launch. The wheel is a "you came back" reward
+    // and on day one there is no streak to celebrate — a player who has not
+    // yet seen the market got the tutorial, then a wheel, then a claim
+    // button, before touching the game. The bonus is still paid and the
+    // streak still starts; the event banner says so. The wheel itself waits
+    // for the second day, when it has something to show.
+    dailyBonusPending: prevDate ? bonus : null,
     // A genuinely new day (this function only reaches here when one
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),

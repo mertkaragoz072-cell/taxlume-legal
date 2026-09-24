@@ -175,6 +175,7 @@ async function answerEventModal(page, pauseLabel) {
       await page.waitForTimeout(4500);
 
       let tabFails = 0;
+      let wheelShown;
       // The clock keeps running while the walk happens, and the game's event
       // modals — a rival trader's offer, a villager's request, a decision —
       // are *meant* to interrupt and wait for an answer. Left running, this
@@ -197,8 +198,19 @@ async function answerEventModal(page, pauseLabel) {
           problems.push(`${label}: the tutorial did not open on a fresh install`);
         }
 
+        // The wheel is a "you came back" reward, so a first launch must not
+        // show it: a brand new player would meet the tutorial, then a wheel,
+        // then a claim button, before ever seeing the market. A restored save
+        // is a return visit and does get one.
         const spin = page.getByText(SPIN[lang], { exact: true });
-        if (await spin.count()) {
+        wheelShown = (await spin.count()) > 0;
+        if (mode === "fresh" && wheelShown) {
+          problems.push(`${label}: the daily wheel opened on a first launch`);
+        }
+        if (mode === "saved" && !wheelShown) {
+          problems.push(`${label}: the daily wheel did not open for a returning player`);
+        }
+        if (wheelShown) {
           await tap(spin, "wheel spin");
           const claim = page.getByText(CLAIM[lang], { exact: true });
           // The wheel spins before it reveals, so wait for the reveal rather
@@ -213,8 +225,6 @@ async function answerEventModal(page, pauseLabel) {
             await tap(claim, "wheel claim");
             await page.waitForTimeout(1200);
           }
-        } else if (mode === "fresh") {
-          problems.push(`${label}: the daily wheel did not open on a fresh install`);
         }
       } catch (e) {
         problems.push(`${label}: could not get past the title/tutorial — ${e.message.split("\n")[0]}`);
@@ -264,8 +274,10 @@ async function answerEventModal(page, pauseLabel) {
       if (errors.length) {
         problems.push(`${label}: ${errors.length} console error(s): ${errors[0].slice(0, 140)}`);
       }
-      if (!tabFails && !errors.length)
-        console.log(`✅ ${label}: title, tutorial, wheel, pause, all ${TABS[lang].length} screens, clean`);
+      if (!tabFails && !errors.length) {
+        const steps = ["title", "tutorial", wheelShown ? "wheel" : "no wheel", "pause"];
+        console.log(`✅ ${label}: ${steps.join(", ")}, all ${TABS[lang].length} screens, clean`);
+      }
       await ctx.close();
     }
   }
