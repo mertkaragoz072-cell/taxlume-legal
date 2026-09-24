@@ -114,7 +114,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  nextBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
+  // No numeric fontWeight alongside the family. FONT.black already *is* the
+  // heavy cut, and asking iOS for a weight on top of a weighted file makes it
+  // synthesise one, which shifts the metrics — the label rendered below the
+  // button's bottom edge on a phone, half of it outside the gold. lineHeight
+  // is spelled out for the same reason: left to the font, the line box was
+  // taller than the space the button had reserved for it.
+  nextBtnText: { color: "#1a1410", fontFamily: FONT.black, fontSize: 14, lineHeight: 20 },
   skipBtn: { marginTop: 10, paddingVertical: 6 },
   skipBtnText: { color: "#a0917a", fontSize: 12, fontWeight: "600", fontFamily: FONT.medium },
 });

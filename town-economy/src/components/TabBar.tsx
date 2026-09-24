@@ -16,6 +16,13 @@ const TABS: { id: ScreenId; labelKey: string; icon: string; color: string }[] = 
   { id: "achievements", labelKey: "tabs.achievements", icon: "🏆", color: "#f0776a" },
 ];
 
+/** Tab id to its label key, so anything that needs to *name* a tab — the
+ * onboarding banner pointing a player at one — reads the same list the tab
+ * bar renders, rather than keeping a second copy that drifts. */
+export const TAB_LABEL_KEYS: Record<ScreenId, string> = Object.fromEntries(
+  TABS.map((tab) => [tab.id, tab.labelKey])
+) as Record<ScreenId, string>;
+
 interface Props {
   active: ScreenId;
   onChange: (screen: ScreenId) => void;

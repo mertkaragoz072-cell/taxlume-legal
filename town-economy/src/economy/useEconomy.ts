@@ -101,6 +101,7 @@ import {
 import {
   applyAchievements,
   applyDailyQuests,
+  applyOnboarding,
   applyLegendaryUnlock,
   applyMetropolUnlock,
   applyMiniQuest,
@@ -349,6 +350,7 @@ export function initialState(
     happiness: 100,
     lastSavedAt: Date.now(),
     offlineSummary: null,
+    onboardingStep: 0,
     pendingDecision: null,
     pendingRequest: null,
     pendingRivalOffer: null,
@@ -969,7 +971,9 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
   }
   s = applyTownRankUp(
     applyMythicUnlock(
-      applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s)))))
+      applyLegendaryUnlock(
+        applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(s)))))
+      )
     )
   );
 
@@ -1336,7 +1340,9 @@ function reducer(state: EconomyState, action: Action): EconomyState {
   return applyMiniQuest(
     applyTownRankUp(
       applyMythicUnlock(
-        applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next)))))
+        applyLegendaryUnlock(
+          applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(next)))))
+        )
       )
     )
   );

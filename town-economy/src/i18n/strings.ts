@@ -898,6 +898,44 @@ export const STRINGS = {
       speculator: { title: "Spekülatör", description: "Bir vadeli işlem sözleşmesini kârla kapat." },
       hot_hand: { title: "Sıcak El", description: "Üst üste 5 kârlı işlem yap." },
     },
+    onboarding: {
+      banner: "İLK ADIMLAR",
+      progress: "{done} / {total}",
+      goTo: "{tab} sekmesine git",
+      done: "Öğreticiyi bitirdin — kasaba artık senin.",
+      buy: {
+        title: "İlk alışverişin",
+        description: "Piyasa'dan herhangi bir mal al. Ucuzken almak her şeyin başlangıcı.",
+      },
+      profit: {
+        title: "Kârla sat",
+        description: "Aldığın bir malı, aldığından pahalıya sat. Oyunun tamamı bu farkta.",
+      },
+      tax: {
+        title: "Vergiyi ayarla",
+        description: "Kasaba sekmesinden bir vergi oranı seç. Gelir getirir ama halkı yorar.",
+      },
+      networth: {
+        title: "500 servete ulaş",
+        description: "Alıp satarak net servetini 500'e çıkar. Komşu kasabalarla ticaret böyle açılıyor.",
+      },
+      caravan: {
+        title: "İlk kervanın",
+        description: "Ticaret sekmesinden bir komşu kasabaya kervan yolla.",
+      },
+      research: {
+        title: "Bir araştırma yap",
+        description: "Araştırma sekmesinden bir geliştirme satın al — kalıcı üretim artışı.",
+      },
+      invest: {
+        title: "Bir yatırım al",
+        description: "Yatırım sekmesinden altın, petrol ya da hisse al. Ayrı bir piyasa, ayrı bir fırsat.",
+      },
+      quest: {
+        title: "Bir günlük hedefi tamamla",
+        description: "Hedefler sekmesindeki günlük görevlerden birini bitir.",
+      },
+    },
     quest: {
       daily_trade_small: { title: "Küçük Tüccar", description: "Bugün 3 alım-satım işlemi yap." },
       daily_trade_big: { title: "Aktif Piyasa", description: "Bugün 8 alım-satım işlemi yap." },
@@ -1058,6 +1096,7 @@ export const STRINGS = {
       dailyCheckInFirst: "🌅 Kasabana hoş geldin! Günlük giriş serin başladı. +{bonus} 🪙 bonus.",
       achievementUnlocked: "🏆 Başarım kazanıldı: {icon} {title} (+{reward} 🪙)",
       questCompleted: "✅ Görev tamamlandı: {icon} {title} (+{reward} 🪙)",
+      onboardingStepDone: "🎓 {icon} {title} tamam (+{reward} 🪙)",
       villagerGiveInsufficient: "🙋 İstediği kadar {good} elinde yoktu, köylüyü boş çevirdin.",
       villagerGiveSuccess: "🙋 {qty} {good} verdin, köylüler minnettar kaldı. (+{amount} mutluluk)",
       villagerRefuse: "🙋 İsteği reddettin, köylüler hayal kırıklığına uğradı. (-{amount} mutluluk)",
@@ -1985,6 +2024,44 @@ export const STRINGS = {
       speculator: { title: "Speculator", description: "Close a forward contract at a profit." },
       hot_hand: { title: "Hot Hand", description: "Land 5 profitable trades in a row." },
     },
+    onboarding: {
+      banner: "FIRST STEPS",
+      progress: "{done} / {total}",
+      goTo: "Go to {tab}",
+      done: "Tutorial complete — the town is yours now.",
+      buy: {
+        title: "Your first purchase",
+        description: "Buy any good in the Market. Buying cheap is where all of it starts.",
+      },
+      profit: {
+        title: "Sell at a profit",
+        description: "Sell a good for more than you paid. That difference is the whole game.",
+      },
+      tax: {
+        title: "Set a tax rate",
+        description: "Pick a tax rate on the Town tab. It brings income, and it wears the villagers down.",
+      },
+      networth: {
+        title: "Reach 500 net worth",
+        description: "Trade your way to 500. That is what opens up the neighbouring towns.",
+      },
+      caravan: {
+        title: "Your first caravan",
+        description: "Send a caravan to a neighbouring town from the Trade tab.",
+      },
+      research: {
+        title: "Buy some research",
+        description: "Buy an upgrade on the Research tab — a permanent boost to production.",
+      },
+      invest: {
+        title: "Make an investment",
+        description: "Buy gold, oil or a stock on the Invest tab. A separate market, a separate edge.",
+      },
+      quest: {
+        title: "Finish a daily goal",
+        description: "Complete one of the daily quests on the Goals tab.",
+      },
+    },
     quest: {
       daily_trade_small: { title: "Small-Time Trader", description: "Make 3 trades today." },
       daily_trade_big: { title: "Active Market", description: "Make 8 trades today." },
@@ -2151,6 +2228,7 @@ export const STRINGS = {
       dailyCheckInFirst: "🌅 Welcome to your town! Your login streak has begun. +{bonus} 🪙 bonus.",
       achievementUnlocked: "🏆 Achievement unlocked: {icon} {title} (+{reward} 🪙)",
       questCompleted: "✅ Quest completed: {icon} {title} (+{reward} 🪙)",
+      onboardingStepDone: "🎓 {icon} {title} done (+{reward} 🪙)",
       villagerGiveInsufficient:
         "🙋 You didn't have enough {good} to give, so the villager left empty-handed.",
       villagerGiveSuccess: "🙋 You gave {qty} {good}, and the villagers are grateful. (+{amount} happiness)",

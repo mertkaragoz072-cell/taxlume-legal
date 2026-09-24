@@ -310,6 +310,9 @@ export interface EconomyState {
   pendingRequest: VillagerRequest | null;
   /** a rival trader's bulk-buy offer; freezes the tick loop until accepted or declined */
   pendingRivalOffer: RivalTraderOffer | null;
+  /** index into ONBOARDING_STEPS (see onboarding.ts); equal to its length
+   * once the guided first session is finished, and never moves again */
+  onboardingStep: number;
   dailyProgress: DailyProgress;
   dailyQuests: DailyQuest[];
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */

@@ -8,6 +8,7 @@
 
 import { ACHIEVEMENTS } from "./achievements";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
+import { ONBOARDING_STEPS } from "./onboarding";
 import { QUEST_TEMPLATES_BY_ID } from "./quests";
 import {
   townRankBeyondCount,
@@ -172,6 +173,48 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
   };
 }
+/** Advances the guided first session (see onboarding.ts) and pays out.
+ *
+ * A loop rather than a single check, because one action can finish more than
+ * one step: the sale that first turns a profit can also be the one that
+ * carries the town past 500. Stopping after the first would leave a step
+ * showing as outstanding that the player had already done.
+ */
+export function applyOnboarding(state: EconomyState): EconomyState {
+  let step = state.onboardingStep;
+  if (step >= ONBOARDING_STEPS.length) return state;
+
+  let cash = state.cash;
+  let nextId = state.nextId;
+  const newEvents: EconomyEvent[] = [];
+
+  while (step < ONBOARDING_STEPS.length && ONBOARDING_STEPS[step].isDone(state)) {
+    const done = ONBOARDING_STEPS[step];
+    cash += done.reward;
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.onboardingStepDone", {
+        icon: done.icon,
+        title: t(state.language, done.titleKey),
+        reward: done.reward,
+      }),
+      tone: "good",
+    });
+    step++;
+  }
+
+  if (newEvents.length === 0) return state;
+
+  return {
+    ...state,
+    cash,
+    nextId,
+    onboardingStep: step,
+    lastEvent: newEvents[newEvents.length - 1],
+    eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
+  };
+}
+
 export function applyDailyQuests(state: EconomyState): EconomyState {
   const newlyCompleted = state.dailyQuests.filter((q) => {
     if (q.completed) return false;

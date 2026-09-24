@@ -22,6 +22,7 @@ import { EventBanner } from "./src/components/EventBanner";
 import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
+import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { DoctrineModal } from "./src/components/DoctrineModal";
@@ -261,6 +262,11 @@ function Game() {
         <EventBanner event={state.lastEvent} />
         <ComboBanner event={comboEvent} />
         <ConfettiBurst trigger={confettiTrigger} />
+
+        {/* Rendered outside the per-screen blocks so the guided task follows
+            the player between tabs — several of the steps are there to show
+            that a tab exists at all. */}
+        <OnboardingBanner onGoToScreen={setScreen} />
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
