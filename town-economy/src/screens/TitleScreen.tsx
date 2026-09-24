@@ -134,7 +134,11 @@ export function TitleScreen({ onStart }: Props) {
           accessibilityRole="button"
           accessibilityLabel={t("a11y.toggleLanguage")}
         >
-          <Text style={styles.langLabel}>{state.language === "tr" ? "EN" : "TR"}</Text>
+          {/* The language you are in, not the one you would switch to. The
+              header's button says the same thing; this one used to say the
+              opposite, so the identical-looking chip meant "Turkish" on one
+              screen and "switch to Turkish" on the next. */}
+          <Text style={styles.langLabel}>{state.language === "tr" ? "TR" : "EN"}</Text>
         </Pressable>
 
         <View style={styles.masthead}>
