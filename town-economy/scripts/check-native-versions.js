@@ -21,11 +21,11 @@ const pkg = require("../package.json");
 // Deliberate mismatches. Each needs a reason, because "it seemed fine" is how
 // the last one got here.
 const ACCEPTED = {
-  "@react-native-async-storage/async-storage":
-    "Ahead of Expo's 2.2.0, not behind it. The app uses getItem, setItem and " +
-    "removeItem only, whose signatures are unchanged across the major, and it " +
-    "compiles and runs on device. Revisit if an Android build ever fails " +
-    "inside async-storage's generated code.",
+  // Empty, and worth keeping that way. The one entry that lived here was
+  // async-storage, running a major ahead of what Expo ships for this SDK,
+  // excused on the grounds that it compiled and the three methods the app
+  // calls had not changed. It compiled and the app then hung on the splash
+  // screen on a real device. Compiling is not the bar.
 };
 
 function main() {

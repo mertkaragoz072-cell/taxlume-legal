@@ -328,7 +328,7 @@ function Game() {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Cinzel_700Bold,
     Manrope_500Medium,
     Manrope_600SemiBold,
@@ -336,11 +336,30 @@ export default function App() {
     Manrope_800ExtraBold,
   });
 
+  // Waiting for fonts must not be a state the app can never leave. The splash
+  // screen is only hidden once we are ready, so anything that leaves
+  // `fontsLoaded` false forever leaves the player looking at the splash with
+  // no way out — which reads as "the game doesn't open", with nothing on
+  // screen to say otherwise.
+  //
+  // Two ways out, because there are two ways to get stuck: the hook reports
+  // an error, or it reports nothing at all and simply never settles. A few
+  // seconds of patience covers a slow first launch; past that, go in. The
+  // display face falling back to the system font is a worse-looking game.
+  // Not starting is not a game.
+  const [waitedLongEnough, setWaitedLongEnough] = useState(false);
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded]);
+    const timer = setTimeout(() => setWaitedLongEnough(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (!fontsLoaded) return null;
+  const ready = fontsLoaded || fontError !== null || waitedLongEnough;
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
+  if (!ready) return null;
 
   return (
     <ErrorBoundary>
