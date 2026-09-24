@@ -880,17 +880,26 @@ describe("applyAutoTradeRules", () => {
 });
 
 describe("dailyCheckIn / weekly challenge assignment", () => {
-  it("pays the first-launch bonus without putting the wheel in the way", () => {
-    // The wheel is a "you came back" reward and day one has no streak to
-    // celebrate. A brand new player met the tutorial, then a wheel, then a
-    // claim button, before ever seeing the market.
+  it("gives a first launch nothing at all — no cash, no wheel, no banner", () => {
+    // A player opening this for the first time should be a trader with a
+    // purse and no patron. The daily reward is for coming back, and on day
+    // one there is nothing to come back to.
+    const fresh = initialState();
+    const first = dailyCheckIn(fresh, "2026-01-05");
+
+    expect(first.cash).toBe(fresh.cash);
+    expect(first.dailyBonusPending).toBeNull();
+    expect(first.lastEvent).toBe(fresh.lastEvent);
+  });
+
+  it("still starts the streak and the quest board on a first launch", () => {
+    // Silent, but not inert: without this, day two would read as day one
+    // again and the wheel would never arrive.
     const first = dailyCheckIn(initialState(), "2026-01-05");
 
-    expect(first.dailyBonusPending).toBeNull();
-    expect(first.cash).toBeGreaterThan(initialState().cash);
     expect(first.streak).toEqual({ count: 1, lastOpenedDate: "2026-01-05" });
-    // Still announced, just in the banner rather than over the whole screen.
-    expect(first.lastEvent?.tone).toBe("good");
+    expect(first.dailyQuests.length).toBeGreaterThan(0);
+    expect(first.weeklyChallenge).not.toBeNull();
   });
 
   it("opens the wheel from the second day on", () => {

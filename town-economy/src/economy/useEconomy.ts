@@ -823,12 +823,27 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     count = 1;
   }
 
+  // A first launch pays nothing and announces nothing. The streak starts,
+  // the quest board is set up, and that is all — a player opening this for
+  // the first time should be a trader with a purse and no patron, not
+  // someone handed a welcome bonus before they have bought anything. The
+  // daily reward is for coming back, and there is nothing yet to come back
+  // to; from tomorrow it pays, and the wheel shows up with it.
+  if (!prevDate) {
+    return {
+      ...state,
+      streak: { count: 1, lastOpenedDate: today },
+      dailyProgress: makeInitialDailyProgress(),
+      dailyQuests: makeDailyQuests(today),
+      activeMiniQuest: null,
+      weeklyChallenge: ensureWeeklyChallenge(state, today),
+    };
+  }
+
   const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
   const bonus =
     Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) + bankBonus;
-  const message = prevDate
-    ? t(state.language, "msg.dailyCheckInReturning", { count, bonus })
-    : t(state.language, "msg.dailyCheckInFirst", { bonus });
+  const message = t(state.language, "msg.dailyCheckInReturning", { count, bonus });
   const event: EconomyEvent = { id: state.nextId, message, tone: "good" };
 
   return {
@@ -840,14 +855,8 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
     // The reward wheel modal spins to reveal this once the player next sees
     // the app; dismissDailyBonus clears it after they've watched it land.
-    //
-    // Except on the very first launch. The wheel is a "you came back" reward
-    // and on day one there is no streak to celebrate — a player who has not
-    // yet seen the market got the tutorial, then a wheel, then a claim
-    // button, before touching the game. The bonus is still paid and the
-    // streak still starts; the event banner says so. The wheel itself waits
-    // for the second day, when it has something to show.
-    dailyBonusPending: prevDate ? bonus : null,
+    // Only ever reached on a return visit — see the early return above.
+    dailyBonusPending: bonus,
     // A genuinely new day (this function only reaches here when one
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),
