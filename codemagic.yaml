@@ -74,13 +74,20 @@ workflows:
       - name: Point release signing at the upload keystore
         script: node scripts/ci/patch-android-signing.js
 
-      - name: Build the app bundle
+      # bundleRelease makes the .aab Play wants. assembleRelease makes an
+      # .apk, which Play has no use for and a phone does: an .aab cannot be
+      # installed directly, so testing a build otherwise means a round trip
+      # through Play Console. Both come out of the same compile and the same
+      # signing config, so the extra minute buys a build you can put on a
+      # device by copying a file to it.
+      - name: Build the app bundle and a sideloadable APK
         script: |
           chmod +x android/gradlew
-          cd android && ./gradlew bundleRelease
+          cd android && ./gradlew bundleRelease assembleRelease
 
     artifacts:
       - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/*.aab
+      - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/*.apk
       - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/mapping.txt
 
     # Uploading to Play needs a Google Play service account JSON stored as a
