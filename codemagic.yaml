@@ -151,6 +151,13 @@ workflows:
       # rather than adding a fourth.
       - name: Set up code signing
         script: |
+          # Without this the step limps on after a failed command and reports
+          # success: fetch-signing-files rejected its own arguments once
+          # ("Environment variable CERTIFICATE_PRIVATE_KEY is not defined")
+          # and the build still spent two more minutes before failing
+          # somewhere that could not explain itself.
+          set -e
+
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
