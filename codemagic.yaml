@@ -17,6 +17,14 @@
 #             keystores → upload the upload keystore with reference name
 #             `golden_town_upload`. If you name it anything else, change the
 #             name under environment.android_signing below to match.
+#           — Environment variables → group `ios_signing`, one secure
+#             variable `CERTIFICATE_PRIVATE_KEY` holding an RSA private key
+#             in PEM form. The signing step below hands it to Apple, which
+#             issues the distribution certificate against it; every later
+#             build reuses the same pair. Without it the CLI can download an
+#             existing certificate but not its private key, and then reports
+#             "Cannot save Signing Certificates without certificate private
+#             key" and leaves the build with nothing to sign with.
 #   iOS     — Teams/Personal settings → Integrations → Developer Portal →
 #             the App Store Connect API key named `taxlume-admin`, which is
 #             the name `integrations.app_store_connect` asks for below. An
@@ -96,6 +104,8 @@ workflows:
       app_store_connect: taxlume-admin
 
     environment:
+      groups:
+        - ios_signing # supplies CERTIFICATE_PRIVATE_KEY
       node: 22
       xcode: latest
       cocoapods: default
@@ -128,15 +138,23 @@ workflows:
       # Xcode can find them. `--create` is the whole point: without it this
       # fails on a bundle identifier that has never been signed before.
       #
-      # It reuses an existing certificate when Codemagic holds its private
-      # key, and issues a new one otherwise. Apple allows three distribution
-      # certificates per account, so if that limit is ever hit, revoke an
-      # unused one in the Developer Portal rather than adding a fourth.
+      # --certificate-key is what makes this work unattended. Apple hands
+      # out the public half of a certificate and keeps no copy of the private
+      # half, so a certificate created on someone else's Mac is useless here:
+      # the CLI downloads it, finds no private key, and says so before
+      # carrying on to produce an unsigned, profile-less build. Supplying our
+      # own key means the certificate is issued against a key we hold, and
+      # every later build reuses the same pair.
+      #
+      # Apple allows three distribution certificates per account. If that
+      # limit is ever hit, revoke an unused one in the Developer Portal
+      # rather than adding a fourth.
       - name: Set up code signing
         script: |
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
             --create
           keychain add-certificates
           xcode-project use-profiles
