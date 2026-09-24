@@ -99,9 +99,11 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.goldentown.app
+      # No `ios_signing:` block here on purpose. That one only *fetches*
+      # profiles that already exist, and fails with "No matching profiles
+      # found" when the bundle identifier has never been signed for App Store
+      # distribution — which is every first release. The signing step below
+      # creates what is missing instead.
       vars:
         BUNDLE_ID: com.goldentown.app
         XCODE_SCHEME: GoldenTown
@@ -121,11 +123,23 @@ workflows:
       - name: Install pods
         script: cd ios && pod install
 
-      # Pulls the provisioning profiles Codemagic fetched from App Store
-      # Connect into the Xcode project. Without this the archive step fails
-      # with a signing error that says nothing useful.
-      - name: Apply provisioning profiles
-        script: xcode-project use-profiles
+      # Creates the distribution certificate and the App Store provisioning
+      # profile if the account does not have them yet, then installs both so
+      # Xcode can find them. `--create` is the whole point: without it this
+      # fails on a bundle identifier that has never been signed before.
+      #
+      # It reuses an existing certificate when Codemagic holds its private
+      # key, and issues a new one otherwise. Apple allows three distribution
+      # certificates per account, so if that limit is ever hit, revoke an
+      # unused one in the Developer Portal rather than adding a fourth.
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
 
       # The workspace, not the project: pod install created it, and building
       # the .xcodeproj directly misses every pod dependency.
