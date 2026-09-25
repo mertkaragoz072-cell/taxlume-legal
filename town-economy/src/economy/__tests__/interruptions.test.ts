@@ -135,12 +135,21 @@ describe("news events", () => {
   it("does not fill the banner", () => {
     // Six or seven headlines a game day, out of a list of eleven, meant the
     // same drought came round every couple of days and the banner was never
-    // empty. A game day is two real minutes; a handful a day is plenty.
+    // empty. A game day is two real minutes, so about one a day is the most
+    // that can read as news — and the lower bound is here because a town
+    // with nothing ever happening in it is the opposite failure.
     for (const id of Object.keys(DIFFICULTIES) as (keyof typeof DIFFICULTIES)[]) {
       const perDay = DIFFICULTIES[id].eventChance * TICKS_PER_GAME_DAY;
-      expect(perDay).toBeLessThanOrEqual(3);
-      expect(perDay).toBeGreaterThan(0.8); // but the town is not silent either
+      expect(perDay).toBeLessThanOrEqual(1.2);
+      expect(perDay).toBeGreaterThan(0.3);
     }
+  });
+
+  it("keeps the harder difficulties busier than the easier ones", () => {
+    // Thinning them out must not flatten the difficulties into each other.
+    expect(DIFFICULTIES.easy.eventChance).toBeLessThan(DIFFICULTIES.normal.eventChance);
+    expect(DIFFICULTIES.normal.eventChance).toBeLessThan(DIFFICULTIES.hard.eventChance);
+    expect(DIFFICULTIES.easy.eventSeverity).toBeLessThan(DIFFICULTIES.hard.eventSeverity);
   });
 });
 

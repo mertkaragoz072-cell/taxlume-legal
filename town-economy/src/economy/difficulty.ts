@@ -6,8 +6,14 @@ export type DifficultyId = "easy" | "normal" | "hard";
  * meant six or seven headlines a day on Normal — a new one every twenty
  * seconds of real play, out of a list of eleven, so the same drought kept
  * coming round. The banner was never empty and nothing in it felt like
- * news. They are roughly a third of that now, and the severity is up a
- * little to compensate: rarer, and worth reading when it arrives.
+ * news.
+ *
+ * They are now about a seventh of that: roughly one headline every game
+ * day on Hard, every day and a half on Normal, every other day on Easy. A
+ * game day is two real minutes, so that is a headline every three or four
+ * minutes of play — often enough that the town feels alive, rare enough
+ * that each one is an event rather than wallpaper. The severity climbs to
+ * match, because something that arrives this seldom can afford to land.
  */
 export interface DifficultyConfig {
   id: DifficultyId;
@@ -35,8 +41,8 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyConfig> = {
     baseInflationDrift: 0.0008,
     inflationMin: -0.004,
     inflationMax: 0.014,
-    eventChance: 0.035,
-    eventSeverity: 0.85,
+    eventChance: 0.012,
+    eventSeverity: 0.9,
     hyperinflationIndex: 420,
   },
   normal: {
@@ -48,8 +54,8 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyConfig> = {
     baseInflationDrift: 0.0015,
     inflationMin: -0.004,
     inflationMax: 0.02,
-    eventChance: 0.05,
-    eventSeverity: 1.2,
+    eventChance: 0.018,
+    eventSeverity: 1.3,
     hyperinflationIndex: 320,
   },
   hard: {
@@ -61,8 +67,8 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyConfig> = {
     baseInflationDrift: 0.0026,
     inflationMin: -0.003,
     inflationMax: 0.03,
-    eventChance: 0.07,
-    eventSeverity: 1.6,
+    eventChance: 0.026,
+    eventSeverity: 1.7,
     hyperinflationIndex: 240,
   },
 };
