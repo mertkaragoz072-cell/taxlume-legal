@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { DIFFICULTIES } from "../economy/difficulty";
+import { effectiveDifficultyConfig } from "../economy/ngPlusModifiers";
 import { currentMentorStep, MENTOR_STEPS } from "../economy/mentor";
 import {
   CARD_GRADIENT,
@@ -40,6 +42,12 @@ interface Props {
 export function MentorCoach({ onNext, onSkip }: Props) {
   const { state, t } = useEconomyContext();
   const step = currentMentorStep(state.mentorStep);
+  // The number that ends a run differs per difficulty, and New Game+ can
+  // move it again, so the beat about losing reads the live one rather than
+  // repeating a figure from the design doc.
+  const hyperinflationIndex = Math.round(
+    effectiveDifficultyConfig(DIFFICULTIES[state.difficulty], state.activeNgPlusModifiers).hyperinflationIndex
+  );
   const enter = useRef(new Animated.Value(0)).current;
   const index = state.mentorStep;
 
@@ -58,6 +66,11 @@ export function MentorCoach({ onNext, onSkip }: Props) {
 
   if (!step) return null;
   const isLast = index === MENTOR_STEPS.length - 1;
+  // A beat with something to do withholds its Continue button: the way past
+  // it is to do the thing. Skip stays, so nobody can be stranded by a step
+  // they cannot complete.
+  const waitingOnPlayer = Boolean(step.isDone) && !step.isDone!(state);
+  const say = (key: string) => t(key, { limit: hyperinflationIndex });
 
   return (
     <Animated.View
@@ -92,8 +105,8 @@ export function MentorCoach({ onNext, onSkip }: Props) {
             {/* Subject first. A player who already knows what a market is can
                 see this beat is about the market and press on without
                 reading the sentence. */}
-            <Text style={styles.title}>{t(step.titleKey)}</Text>
-            <Text style={styles.text}>{t(step.textKey)}</Text>
+            <Text style={styles.title}>{say(step.titleKey)}</Text>
+            <Text style={styles.text}>{say(step.textKey)}</Text>
 
             {/* And the one thing to actually do, lifted out of the prose.
                 Every beat used to end with its instruction buried in the
@@ -101,7 +114,7 @@ export function MentorCoach({ onNext, onSkip }: Props) {
             {step.tipKey && (
               <View style={styles.tipRow}>
                 <Text style={styles.tipMark}>▸</Text>
-                <Text style={styles.tip}>{t(step.tipKey)}</Text>
+                <Text style={styles.tip}>{say(step.tipKey)}</Text>
               </View>
             )}
           </View>
@@ -113,10 +126,16 @@ export function MentorCoach({ onNext, onSkip }: Props) {
               <Text style={styles.skipText}>{t("mentor.skip")}</Text>
             </ScalePressable>
           )}
-          <ScalePressable onPress={onNext} style={styles.nextBtn} scaleTo={0.96}>
-            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-            <Text style={styles.nextText}>{isLast ? t("mentor.done") : t("mentor.next")}</Text>
-          </ScalePressable>
+          {waitingOnPlayer ? (
+            <View style={styles.waitingBadge}>
+              <Text style={styles.waitingText}>{t("mentor.waiting")}</Text>
+            </View>
+          ) : (
+            <ScalePressable onPress={onNext} style={styles.nextBtn} scaleTo={0.96}>
+              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+              <Text style={styles.nextText}>{isLast ? t("mentor.done") : t("mentor.next")}</Text>
+            </ScalePressable>
+          )}
         </View>
       </View>
     </Animated.View>
@@ -124,7 +143,7 @@ export function MentorCoach({ onNext, onSkip }: Props) {
 }
 
 const styles = StyleSheet.create({
-  dock: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm },
+  dock: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm, zIndex: 30 },
   card: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
@@ -179,4 +198,19 @@ const styles = StyleSheet.create({
   // push the label off its own button. lineHeight spelled out for the same
   // reason.
   nextText: { color: "#1a1410", fontFamily: FONT.black, fontSize: TYPE.label, lineHeight: 18 },
+  waitingBadge: {
+    borderRadius: RADIUS.chip,
+    paddingVertical: 9,
+    paddingHorizontal: SPACING.lg,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.positive, 0.6),
+    backgroundColor: withAlpha(COLORS.positive, 0.14),
+  },
+  waitingText: {
+    color: COLORS.positive,
+    fontFamily: FONT.bold,
+    fontWeight: WEIGHT.bold,
+    fontSize: TYPE.label,
+    lineHeight: 18,
+  },
 });

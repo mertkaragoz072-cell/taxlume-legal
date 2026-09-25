@@ -25,6 +25,7 @@ import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { MentorCoach } from "./src/components/MentorCoach";
+import { SpotlightOverlay, SpotlightProvider } from "./src/components/Spotlight";
 import { currentMentorStep, MENTOR_STEPS } from "./src/economy/mentor";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { DoctrineModal } from "./src/components/DoctrineModal";
@@ -188,6 +189,7 @@ function Game() {
   const mentorActive = mentorAllowed && state.mentorStep < MENTOR_STEPS.length;
   const mentorStepDef = mentorActive ? currentMentorStep(state.mentorStep) : null;
   const mentorScreen = mentorStepDef?.screen ?? null;
+  const mentorSpotlight = mentorStepDef?.spotlight ?? null;
 
   // She walks the player to the tab she is describing rather than telling
   // them to go there themselves. Keyed on the screen, not the step, so the
@@ -195,6 +197,20 @@ function Game() {
   useEffect(() => {
     if (mentorScreen) setScreen(mentorScreen);
   }, [mentorScreen]);
+
+  // A beat that asks for an action moves on by itself the moment the action
+  // lands, so the player is never left having done the thing and still
+  // looking for a button to press about it.
+  const mentorDone = mentorStepDef?.isDone?.(state) ?? false;
+  useEffect(() => {
+    if (!mentorActive || !mentorDone) return;
+    const timer = setTimeout(() => {
+      advanceMentor(state.mentorStep + 1);
+      if (state.mentorStep + 1 >= MENTOR_STEPS.length) markTutorialSeen();
+    }, 700);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mentorActive, mentorDone, state.mentorStep]);
 
   const nextMentorBeat = () => {
     const next = state.mentorStep + 1;
@@ -257,7 +273,7 @@ function Game() {
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
-      <View style={styles.content}>
+      <SpotlightProvider style={styles.content}>
         <InflationHeader
           townName={state.townName}
           emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
@@ -306,9 +322,18 @@ function Game() {
         {screen === "invest" && <InvestScreen sounds={sounds} />}
         {screen === "achievements" && <AchievementsScreen />}
 
+        {/* She sits above the tab bar in the layout but paints above the dim
+            as well, which is what the zIndex on her dock is for — source
+            order alone cannot give her both. */}
         {mentorActive && <MentorCoach onNext={nextMentorBeat} onSkip={skipMentor} />}
 
         <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} />
+
+        {/* Over everything the tour is not pointing at, including the tab
+            bar. The lit area is a gap in the dim rather than a hole punched
+            through it, so the control inside it is the real one, still
+            live, with nothing forwarding touches on its behalf. */}
+        {mentorActive && <SpotlightOverlay target={mentorSpotlight} />}
 
         <DifficultyModal
           visible={difficultyModalVisible}
@@ -367,7 +392,7 @@ function Game() {
           onRevealed={() => setConfettiTrigger((n) => n + 1)}
           sounds={sounds}
         />
-      </View>
+      </SpotlightProvider>
     </SafeAreaView>
   );
 }

@@ -19,6 +19,7 @@ import {
 import { CoinPop } from "./CoinPop";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
+import { SpotlightTarget } from "./Spotlight";
 
 // Loosened to the fields this panel actually needs (rather than the full
 // Good/GoodState shape) so it can double as an asset buy/sell panel in
@@ -108,7 +109,7 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
           first one. The guided card says "buy any good in the Market"; this
           is the part of the market it means. It costs nothing to anyone past
           their first trade, because it is gone by then. */}
-      <View style={[styles.confirmBtnWrap, nudge && styles.confirmBtnNudge]}>
+      <SpotlightTarget id="buy" style={[styles.confirmBtnWrap, nudge && styles.confirmBtnNudge]}>
         <ScalePressable
           disabled={disabled}
           onPress={() => {
@@ -124,7 +125,7 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
           </Text>
         </ScalePressable>
         <CoinPop trigger={coinPopTrigger} />
-      </View>
+      </SpotlightTarget>
     </View>
   );
 }

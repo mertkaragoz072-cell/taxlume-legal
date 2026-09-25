@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
 import { ONBOARDING_STEPS } from "../economy/onboarding";
+import { currentMentorStep } from "../economy/mentor";
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -48,6 +49,8 @@ interface Props {
 }
 
 export function MarketScreen({ sounds }: Props) {
+  const scroller = useRef<ScrollView>(null);
+  const panelY = useRef(0);
   const {
     state,
     selectGood,
@@ -100,8 +103,21 @@ export function MarketScreen({ sounds }: Props) {
     return { key: "neutral", icon: "😐", color: COLORS.textMuted };
   })();
 
+  // The buy button lives below the fold. When the guided tour reaches the
+  // beat that asks the player to press it, dimming the screen around a
+  // control they cannot see would be a puzzle, not a lesson — so the list
+  // brings it into view first.
+  useEffect(() => {
+    if (currentMentorStep(state.mentorStep)?.spotlight !== "buy") return;
+    const timer = setTimeout(
+      () => scroller.current?.scrollTo({ y: Math.max(0, panelY.current - 120), animated: true }),
+      350
+    );
+    return () => clearTimeout(timer);
+  }, [state.mentorStep]);
+
   return (
-    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+    <ScrollView ref={scroller} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       {/* The town square is the most characterful thing the game has, and it
           lives on the fourth tab — a player who never gets past the market
           never sees it. For the first session it sits here, above the
@@ -241,17 +257,19 @@ export function MarketScreen({ sounds }: Props) {
         </>
       )}
 
-      <BuySellPanel
-        good={selected}
-        state={selectedState}
-        cash={state.cash}
-        spreadPct={marketSpreadPct}
-        onTrade={(side, qty) => {
-          trade(selected.id, side, qty);
-          if (side === "buy") sounds.playBuy();
-          else sounds.playSell();
-        }}
-      />
+      <View onLayout={(e) => (panelY.current = e.nativeEvent.layout.y)}>
+        <BuySellPanel
+          good={selected}
+          state={selectedState}
+          cash={state.cash}
+          spreadPct={marketSpreadPct}
+          onTrade={(side, qty) => {
+            trade(selected.id, side, qty);
+            if (side === "buy") sounds.playBuy();
+            else sounds.playSell();
+          }}
+        />
+      </View>
 
       <SectionLabel text={t("market.autoTrade.sectionLabel")} color={selected.color} />
       <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>

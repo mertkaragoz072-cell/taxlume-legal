@@ -143,6 +143,36 @@ describe("mentor script", () => {
     for (const step of MENTOR_STEPS.slice(1)) expect(step.tipKey).toBeDefined();
   });
 
+  it("only spotlights controls that exist", () => {
+    // The id is what a SpotlightTarget in the UI registers itself under, so
+    // a typo here is a step that dims the whole screen and lights nothing.
+    const known = ["buy", "inflation"];
+    for (const step of MENTOR_STEPS) {
+      if (step.spotlight) expect(known).toContain(step.spotlight);
+    }
+  });
+
+  it("asks the player to make the first trade themselves", () => {
+    const buy = MENTOR_STEPS.find((s) => s.id === "buy")!;
+    expect(buy.isDone).toBeDefined();
+    expect(buy.spotlight).toBe("buy");
+    // Unmet on a new town, met once a trade has happened — otherwise the
+    // beat either blocks forever or waves the player past without acting.
+    const fresh = initialState();
+    expect(buy.isDone!(fresh)).toBe(false);
+    expect(buy.isDone!({ ...fresh, stats: { ...fresh.stats, totalTrades: 1 } })).toBe(true);
+  });
+
+  it("says how a run ends, with the number that ends it", () => {
+    const lose = MENTOR_STEPS.find((s) => s.id === "lose")!;
+    for (const lang of LANGS) {
+      // The threshold is per difficulty, so the line has to take it as a
+      // parameter rather than name a figure that only holds on Normal.
+      expect(t(lang, lose.textKey)).toContain("{limit}");
+      expect(t(lang, lose.textKey, { limit: 320 })).toContain("320");
+    }
+  });
+
   it("starts by welcoming the player before naming any screen", () => {
     expect(MENTOR_STEPS[0].screen).toBeUndefined();
     expect(MENTOR_STEPS[0].id).toBe("greet");

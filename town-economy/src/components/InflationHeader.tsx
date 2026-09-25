@@ -7,6 +7,7 @@ import { COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } fr
 import { formatCoins as formatCoinsUtil, formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
+import { SpotlightTarget } from "./Spotlight";
 import { PriceChart } from "./PriceChart";
 import { SpeedBoostButton } from "./SpeedBoostButton";
 
@@ -276,7 +277,10 @@ export function InflationHeader({
           <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
           <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
         </View>
-        <View style={[styles.stat, styles.inflationStat, hot && glowShadow("#e0693f")]}>
+        <SpotlightTarget
+          id="inflation"
+          style={[styles.stat, styles.inflationStat, hot && glowShadow("#e0693f")]}
+        >
           {hot && (
             <Animated.View
               pointerEvents="none"
@@ -307,7 +311,7 @@ export function InflationHeader({
             height={30}
             strokeWidth={1.5}
           />
-        </View>
+        </SpotlightTarget>
       </View>
     </View>
   );
