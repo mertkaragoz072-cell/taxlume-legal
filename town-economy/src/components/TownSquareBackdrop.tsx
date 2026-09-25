@@ -2,8 +2,8 @@ import React from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
 interface Props {
-  width: number;
-  height: number;
+  width: number | string;
+  height: number | string;
   /** 0 = a town that has stopped caring, 1 = a town doing well. Drains the
    * colour out of the square rather than only darkening it, so an unhappy
    * town looks tired instead of merely unlit. */

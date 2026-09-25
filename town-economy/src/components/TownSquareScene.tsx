@@ -1,21 +1,20 @@
 import React from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
-import kasabaMeydaniImage from "../../assets/kasaba-meydani.webp";
+import { StyleSheet, Text, View } from "react-native";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
+import { TownSquareBackdrop } from "./TownSquareBackdrop";
 
 interface Props {
+  happiness: number;
   label: string;
   moodLabel: string;
   moodColor: string;
 }
 
-// The asset's own ratio (1170×739 px) rather than a guessed box: a mismatch
-// here is what "contain" turns into empty bars down both sides — which was
-// the actual bug, not the card's padding. Sized as a percentage of the card
-// (not a Dimensions.get() snapshot) so it fills the card correctly at any
-// screen width and on rotation, with no manual re-measure.
-const IMAGE_RATIO = 1170 / 739;
+// TownSquareBackdrop's own canvas ratio (see BASE_W/BASE_H there) — the
+// scene box follows it so the drawing fills the card edge to edge instead
+// of being fit into a guessed box.
+const SCENE_RATIO = 320 / 128;
 
 /** How to label the square: the word for this mood and the colour that goes
  * with it. Lives here rather than in a screen because two of them caption
@@ -29,15 +28,17 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
   return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
 }
 
-/** Kasaba meydanı görseli — sadece görsel, mekanik efekti yok. */
-export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
+/** Kasaba meydanı — çizilmiş bir sahne, kimse yok: evler, tezgahlar, çeşme,
+ * bayraklar. Renkleri kasabanın mutluluğuna göre canlı/soluk arasında
+ * kayar (bkz. TownSquareBackdrop'taki warmth). */
+export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Props) {
   return (
     <View style={styles.card}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
       <Text style={styles.label}>{label}</Text>
 
       <View style={styles.scene}>
-        <Image source={kasabaMeydaniImage} style={styles.image} resizeMode="cover" />
+        <TownSquareBackdrop width="100%" height="100%" warmth={happiness / 100} />
       </View>
 
       <Text style={[styles.moodCaption, { color: moodColor }]}>{moodLabel}</Text>
@@ -48,8 +49,6 @@ export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: RADIUS.feature,
-    // A thin frame, not a mat: the picture is the point of this card, so
-    // padding is just enough to keep the label and caption off its edge.
     paddingHorizontal: SPACING.sm,
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
@@ -69,11 +68,10 @@ const styles = StyleSheet.create({
   },
   scene: {
     width: "100%",
-    aspectRatio: IMAGE_RATIO,
+    aspectRatio: SCENE_RATIO,
     borderRadius: RADIUS.card,
     overflow: "hidden",
   },
-  image: { width: "100%", height: "100%" },
   moodCaption: {
     alignSelf: "center",
     marginTop: SPACING.md,

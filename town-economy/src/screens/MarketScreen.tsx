@@ -130,6 +130,7 @@ export function MarketScreen({ sounds }: Props) {
       {state.onboardingStep < ONBOARDING_STEPS.length && (
         <View style={styles.onboardingScene}>
           <TownSquareScene
+            happiness={state.happiness}
             label={t("town.squareLabel")}
             moodLabel={t(happinessFor(state.happiness).labelKey)}
             moodColor={happinessFor(state.happiness).color}

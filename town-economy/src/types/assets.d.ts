@@ -10,10 +10,3 @@ declare module "*.png" {
   const source: ImageRequireSource;
   export default source;
 }
-
-declare module "*.webp" {
-  import type { ImageRequireSource } from "react-native";
-
-  const source: ImageRequireSource;
-  export default source;
-}
