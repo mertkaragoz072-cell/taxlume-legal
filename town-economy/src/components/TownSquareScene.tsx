@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, Text, View, Image, LayoutChangeEvent } from "react-native";
 import kasabaMeydaniImage from "../../assets/kasaba-meydani.webp";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
@@ -9,10 +9,11 @@ interface Props {
   moodColor: string;
 }
 
-// The asset's own ratio (1774×887 px) — the scene box follows it so the
-// picture fills its box edge to edge with resizeMode="cover" instead of
-// being fit into a guessed box (a mismatch there is what turns "contain"
-// into empty bars down the sides).
+// The asset's own ratio (1774×887 px). Height is computed from a measured
+// width in JS rather than left to CSS `aspectRatio`: react-native-web
+// resolves that against the absolutely-positioned <Image> inside it and
+// grows the box to the picture's raw pixel size instead of the row's width,
+// which is what was turning "cover" into a tiny corner of the photo.
 const IMAGE_RATIO = 1774 / 887;
 
 // Legible over any part of the photo without a card behind it to guarantee
@@ -39,9 +40,18 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
 /** Kasaba meydanı görseli — sadece görsel, kart arka planı/çerçevesi yok:
  * resim kendi başına duruyor, etiket ve ruh hali onun üzerine yazılıyor. */
 export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
+  const [width, setWidth] = useState(0);
+  const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
+
   return (
-    <View style={styles.scene}>
-      <Image source={kasabaMeydaniImage} style={styles.image} resizeMode="cover" />
+    <View style={styles.scene} onLayout={onLayout}>
+      {width > 0 && (
+        <Image
+          source={kasabaMeydaniImage}
+          style={{ width, height: width / IMAGE_RATIO }}
+          resizeMode="cover"
+        />
+      )}
       <Text style={[styles.label, onArt]}>{label}</Text>
       <Text style={[styles.moodCaption, { color: moodColor }, onArt]}>{moodLabel}</Text>
     </View>
@@ -51,12 +61,16 @@ export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
 const styles = StyleSheet.create({
   scene: {
     width: "100%",
-    aspectRatio: IMAGE_RATIO,
+    // Callers that centre their children (MarketScreen's onboardingScene
+    // wrapper) don't stretch them across the cross-axis by default, which
+    // left `width: "100%"` resolving against nothing and the box sizing to
+    // the image's own intrinsic pixel size instead. This pins it full-width
+    // regardless of what the parent does.
+    alignSelf: "stretch",
     borderRadius: RADIUS.feature,
     overflow: "hidden",
     marginBottom: SPACING.lg,
   },
-  image: { ...StyleSheet.absoluteFill },
   label: {
     position: "absolute",
     top: SPACING.sm,

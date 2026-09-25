@@ -27,6 +27,10 @@ interface Props {
   onSkip: () => void;
 }
 
+// Bigger than the old inset portrait (112), and now free to spill over the
+// card's top edge instead of being fit inside it — see portraitFloat below.
+const PORTRAIT_SIZE = 148;
+
 /** Merve, docked above the tab bar, walking a new mayor through the town.
  *
  * She is a dock, not an overlay: the screen she is describing stays live
@@ -99,9 +103,11 @@ export function MentorCoach({ onNext, onSkip }: Props) {
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
 
         <View style={styles.row}>
-          <View style={styles.portrait}>
-            <MentorPortrait size={112} />
-          </View>
+          {/* A spacer, not the portrait itself: the real MentorPortrait
+              renders below as a sibling of the card, so it can spill over
+              the card's top edge instead of being clipped by its overflow.
+              This just reserves the row's own space for it. */}
+          <View style={styles.portraitSpacer} />
           <View style={styles.speech}>
             {/* Who is talking, and how much of this is left. The dots that
                 used to carry progress were readable as decoration and not
@@ -151,6 +157,14 @@ export function MentorCoach({ onNext, onSkip }: Props) {
           )}
         </View>
       </View>
+
+      {/* Sibling of the card, not a child of it — the card clips its own
+          content (overflow: hidden, for its rounded corners), which used to
+          crop her at its edge. Rendered after it so document order puts her
+          on top with no zIndex needed. */}
+      <View style={styles.portraitFloat} pointerEvents="none">
+        <MentorPortrait size={PORTRAIT_SIZE} />
+      </View>
     </Animated.View>
   );
 }
@@ -166,9 +180,14 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   row: { flexDirection: "row", alignItems: "flex-start" },
-  // The portrait is bottom-cropped by the card's own overflow, which reads
-  // as her leaning in over the edge rather than a sticker pasted on.
-  portrait: { marginRight: SPACING.sm, marginTop: -2 },
+  // Reserves the row's own space for the floating portrait (below); it
+  // carries no image itself.
+  portraitSpacer: { width: PORTRAIT_SIZE - 24, marginRight: SPACING.sm },
+  // Positioned against the dock, not the card, so its top-left lands at the
+  // card's own top-left corner (the dock has no padding above the card) and
+  // she can spill up and out of it instead of being clipped by its
+  // overflow. The negative top is how far above the card's edge she sits.
+  portraitFloat: { position: "absolute", left: SPACING.md, top: -SPACING.xl },
   speech: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
