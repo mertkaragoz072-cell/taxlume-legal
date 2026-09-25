@@ -114,7 +114,6 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <TownSquareScene
-        happiness={state.happiness}
         label={t("town.squareLabel")}
         moodLabel={t(happy.labelKey)}
         moodColor={happy.color}

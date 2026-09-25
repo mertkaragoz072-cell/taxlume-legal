@@ -1,20 +1,28 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
-import { GradientFill } from "./GradientFill";
-import { TownSquareBackdrop } from "./TownSquareBackdrop";
+import { StyleSheet, Text, View, Image } from "react-native";
+import kasabaMeydaniImage from "../../assets/kasaba-meydani.webp";
+import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
-  happiness: number;
   label: string;
   moodLabel: string;
   moodColor: string;
 }
 
-// TownSquareBackdrop's own canvas ratio (see BASE_W/BASE_H there) — the
-// scene box follows it so the drawing fills the card edge to edge instead
-// of being fit into a guessed box.
-const SCENE_RATIO = 320 / 128;
+// The asset's own ratio (1774×887 px) — the scene box follows it so the
+// picture fills its box edge to edge with resizeMode="cover" instead of
+// being fit into a guessed box (a mismatch there is what turns "contain"
+// into empty bars down the sides).
+const IMAGE_RATIO = 1774 / 887;
+
+// Legible over any part of the photo without a card behind it to guarantee
+// contrast — the picture is meant to fill the space on its own, not sit in
+// a card's dark mat.
+const onArt = {
+  textShadowColor: "rgba(0, 0, 0, 0.75)",
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 4,
+} as const;
 
 /** How to label the square: the word for this mood and the colour that goes
  * with it. Lives here rather than in a screen because two of them caption
@@ -28,53 +36,41 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
   return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
 }
 
-/** Kasaba meydanı — çizilmiş bir sahne, kimse yok: evler, tezgahlar, çeşme,
- * bayraklar. Renkleri kasabanın mutluluğuna göre canlı/soluk arasında
- * kayar (bkz. TownSquareBackdrop'taki warmth). */
-export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Props) {
+/** Kasaba meydanı görseli — sadece görsel, kart arka planı/çerçevesi yok:
+ * resim kendi başına duruyor, etiket ve ruh hali onun üzerine yazılıyor. */
+export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
   return (
-    <View style={styles.card}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <Text style={styles.label}>{label}</Text>
-
-      <View style={styles.scene}>
-        <TownSquareBackdrop width="100%" height="100%" warmth={happiness / 100} />
-      </View>
-
-      <Text style={[styles.moodCaption, { color: moodColor }]}>{moodLabel}</Text>
+    <View style={styles.scene}>
+      <Image source={kasabaMeydaniImage} style={styles.image} resizeMode="cover" />
+      <Text style={[styles.label, onArt]}>{label}</Text>
+      <Text style={[styles.moodCaption, { color: moodColor }, onArt]}>{moodLabel}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  scene: {
+    width: "100%",
+    aspectRatio: IMAGE_RATIO,
     borderRadius: RADIUS.feature,
-    paddingHorizontal: SPACING.sm,
-    paddingTop: SPACING.sm,
-    paddingBottom: SPACING.md,
-    marginBottom: SPACING.lg,
     overflow: "hidden",
-    alignItems: "stretch",
-    ...cardShadow,
+    marginBottom: SPACING.lg,
   },
+  image: { ...StyleSheet.absoluteFill },
   label: {
-    color: COLORS.textMuted,
+    position: "absolute",
+    top: SPACING.sm,
+    left: SPACING.sm,
+    color: COLORS.textPrimary,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     letterSpacing: 0.5,
-    marginBottom: SPACING.sm,
-    marginLeft: SPACING.xs,
-  },
-  scene: {
-    width: "100%",
-    aspectRatio: SCENE_RATIO,
-    borderRadius: RADIUS.card,
-    overflow: "hidden",
   },
   moodCaption: {
-    alignSelf: "center",
-    marginTop: SPACING.md,
+    position: "absolute",
+    bottom: SPACING.sm,
+    left: SPACING.sm,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
