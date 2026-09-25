@@ -52,7 +52,13 @@ export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Prop
 
       <View style={styles.scene}>
         <View aria-hidden style={styles.backdrop}>
-          {mood === "sad" ? (
+          {mood === "happy" ? (
+            <Image
+              source={require("../../assets/happy-marketplace.webp")}
+              style={{ width: SCENE_WIDTH, height: SCENE_HEIGHT }}
+              resizeMode="cover"
+            />
+          ) : mood === "sad" ? (
             <Image
               source={require("../../assets/angry-marketplace.webp")}
               style={{ width: SCENE_WIDTH, height: SCENE_HEIGHT }}
