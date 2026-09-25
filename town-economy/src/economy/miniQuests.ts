@@ -69,6 +69,36 @@ export const MINI_QUEST_TEMPLATES: MiniQuestTemplate[] = [
     durationTicks: 12,
     metric: (d) => d.upgradesBought,
   },
+  {
+    id: "flash_quick_profit",
+    icon: "📈",
+    titleKey: "miniQuest.flash_quick_profit.title",
+    descriptionKey: "miniQuest.flash_quick_profit.description",
+    target: 100,
+    reward: 30,
+    durationTicks: 8,
+    metric: (d) => d.profitMade,
+  },
+  {
+    id: "flash_holding_goods",
+    icon: "📦",
+    titleKey: "miniQuest.flash_holding_goods.title",
+    descriptionKey: "miniQuest.flash_holding_goods.description",
+    target: 50,
+    reward: 20,
+    durationTicks: 10,
+    metric: (d) => d.goodsHeld,
+  },
+  {
+    id: "flash_streak",
+    icon: "🔥",
+    titleKey: "miniQuest.flash_streak.title",
+    descriptionKey: "miniQuest.flash_streak.description",
+    target: 3,
+    reward: 35,
+    durationTicks: 12,
+    metric: (d) => d.tradeStreak,
+  },
 ];
 
 export const MINI_QUEST_TEMPLATES_BY_ID = Object.fromEntries(

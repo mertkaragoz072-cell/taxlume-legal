@@ -10,6 +10,8 @@ import { MENTOR_STEPS } from "./mentor";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
 import { TRADERS, TRADERS_BY_ID, getTraderReputation, reputationDelta, REPUTATION_PER_UNIT, REPUTATION_TO_PRICE_MODIFIER } from "./traders";
 import { RIVAL_TRADERS, rollRivalActivity } from "./rivals";
+import { BOUNTY_SPAWN_CHANCE, BOUNTY_MAX_ACTIVE, BOUNTY_DURATION_TICKS, BOUNTY_REWARD_BONUS, generateBountyId } from "./bounties";
+import { generateDailyQuotas } from "./productionQuotas";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { PROPERTIES_BY_ID } from "./properties";
@@ -382,6 +384,9 @@ export function initialState(
     bulkContracts: [],
     autoTradeRules: [],
     weeklyChallenge: null,
+    activeBounties: [],
+    productionQuotas: generateDailyQuotas(),
+    productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     activeNgPlusModifiers: ngPlusModifierIds,
     speedBoostExpiresAt: null,
     speedBoostClaimedDate: null,

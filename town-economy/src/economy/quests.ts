@@ -73,7 +73,7 @@ export const QUEST_TEMPLATES_BY_ID = Object.fromEntries(QUEST_TEMPLATES.map((q) 
 >;
 
 export function makeInitialDailyProgress(): DailyProgress {
-  return { trades: 0, caravansSent: 0, townsTraded: [], cashEarned: 0, upgradesBought: 0 };
+  return { trades: 0, caravansSent: 0, townsTraded: [], cashEarned: 0, upgradesBought: 0, profitMade: 0, goodsHeld: 0, tradeStreak: 0 };
 }
 
 /** Deterministically picks `count` distinct templates for a given date, so

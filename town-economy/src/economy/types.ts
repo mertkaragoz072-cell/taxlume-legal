@@ -5,6 +5,8 @@ import { DoctrineId } from "./doctrines";
 import { TradingHouseActivity } from "./tradingHouses";
 import { TraderReputation } from "./traders";
 import { RivalTraderActivity } from "./rivals";
+import { ActiveBounty } from "./bounties";
+import { ProductionQuota } from "./productionQuotas";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -240,6 +242,9 @@ export interface DailyProgress {
   townsTraded: TownId[];
   cashEarned: number;
   upgradesBought: number;
+  profitMade: number;
+  goodsHeld: number;
+  tradeStreak: number;
 }
 
 export interface DailyQuest {
@@ -376,6 +381,12 @@ export interface EconomyState {
   /** the calendar week's challenge, re-assigned deterministically whenever the
    * ISO week rolls over — see ensureWeeklyChallenge in useEconomy.ts */
   weeklyChallenge: WeeklyChallenge | null;
+  /** active rival bounty contracts (max 2); each offers bonus money for buy/sell quantity */
+  activeBounties: ActiveBounty[];
+  /** today's production quotas per good; regenerated each game day */
+  productionQuotas: ProductionQuota[];
+  /** amount each good was produced today (reset each day) */
+  productionToday: Record<GoodId, number>;
   /** optional New Game Plus difficulty modifiers chosen for this run, each
    * boosting the prestige point payout at the cost of a harsher run — see
    * effectiveDifficultyConfig/ngPlusPrestigeMultiplier in ngPlusModifiers.ts */

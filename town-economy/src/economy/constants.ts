@@ -232,7 +232,7 @@ export const INTERRUPTION_COOLDOWN_TICKS = 30;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.
-export const MINI_QUEST_CHANCE = 0.02;
+export const MINI_QUEST_CHANCE = 0.04;
 // Much rarer than a mini quest — a seasonal event runs far longer (tens of
 // ticks) so overlapping spawns would just mean "always some price boost
 // active," which defeats the "special occasion" feel (see seasonalEvents.ts).
