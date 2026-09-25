@@ -519,30 +519,6 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         );
       })}
 
-      <SectionLabel text={t("town.merchantsSectionLabel")} color="#5fd884" />
-      <View style={styles.buildingsGrid}>
-        {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
-          const gs = state.goods[g.id];
-          const ratio = gs.price / g.basePrice;
-          const pct = Math.max(0, Math.min(1, (ratio - 0.6) / (1.8 - 0.6)));
-          return (
-            <View key={g.id} style={styles.buildingCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View
-                pointerEvents="none"
-                style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(g.color, 0.12) }]}
-              />
-              <Text style={styles.buildingIcon}>{g.icon}</Text>
-              <Text style={styles.buildingName}>{t(g.producerKey)}</Text>
-              <View style={styles.buildingTrack}>
-                <View style={[styles.buildingFill, { height: `${pct * 100}%`, backgroundColor: g.color }]} />
-              </View>
-              <Text style={styles.buildingRatio}>{formatPercent(ratio * 100, state.language)}</Text>
-            </View>
-          );
-        })}
-      </View>
-
       <SectionLabel text={t("town.workersSectionLabel")} color="#e0a13f" />
       <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
       {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
