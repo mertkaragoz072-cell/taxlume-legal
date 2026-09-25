@@ -491,20 +491,28 @@ export const STRINGS = {
       next: "Devam",
       done: "Hadi başlayalım",
       skip: "Geç",
+      progress: "{current} / {total}",
+      greetTitle: "Hoş geldin!",
       greet:
-        "Hoş geldin, yeni başkanımız! Ben Defne, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet — gel, bir tur atalım.",
-      market:
-        "İşte Piyasa. Kasabanın bütün malları burada durur ve fiyatları her gün oynar. İşin özü tek cümle: ucuzken al.",
-      prices:
-        "Her malın yanındaki çizgi fiyatın nereye gittiğini söyler. Yeşilse yükseliyor, kırmızıysa düşüyor. Düşene bakacaksın.",
-      inventory:
-        "Aldıkların Envanter'de birikir. Kaça aldığını burada görürsün; pahalıyken satarsan aradaki fark senin kârın olur.",
-      inflation:
-        "Yukarıdaki enflasyon her gün her şeyi biraz pahalılaştırır. Kasada duran para bekledikçe erir — asıl rakibin o.",
-      trade:
-        "Kasaban büyüyünce burası, Ticaret açılır. Kervanlarını başka şehirlere yollar, oradaki yüksek fiyatlardan kazanırsın.",
-      handoff:
-        "Gerisini yaparak öğrenirsin. Ekrandaki İlk Adımlar seni tek tek yönlendirecek. Hadi, ilk alışverişini yap — ben buralardayım.",
+        "Ben Defne, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet. Gel, önce sana burayı göstereyim.",
+      marketTitle: "Piyasa",
+      market: "Kasabanın bütün malları burada durur ve fiyatları her gün değişir.",
+      marketTip: "Ucuzken al.",
+      pricesTitle: "Fiyatı okumak",
+      prices: "Her malın yanındaki çizgi fiyatın yönünü gösterir. Yeşil yükseliyor, kırmızı düşüyor demek.",
+      pricesTip: "Kırmızıya bak — o mal ucuzlamış demektir.",
+      inventoryTitle: "Envanter",
+      inventory: "Aldığın her şey burada birikir. Kaça aldığını da burada görürsün.",
+      inventoryTip: "Pahalıyken sat. Aradaki fark senin kârın.",
+      inflationTitle: "Enflasyon",
+      inflation: "En üstteki sayı. Her gün her şeyi biraz pahalılaştırır, kasanda duran para değer kaybeder.",
+      inflationTip: "Parayı bekletme, mala çevir.",
+      tradeTitle: "Ticaret",
+      trade: "Kasaban büyüyünce burası açılır. Kervanlarını başka şehirlere yollarsın.",
+      tradeTip: "Burada ucuza al, orada pahalıya sat.",
+      handoffTitle: "Sıra sende",
+      handoff: "Ekranın üstündeki İlk Adımlar seni tek tek yönlendirecek. Ben buralardayım.",
+      handoffTip: "Hadi, ilk alışverişini yap.",
     },
     tutorial: {
       next: "İleri",
@@ -1645,20 +1653,29 @@ export const STRINGS = {
       next: "Go on",
       done: "Let's begin",
       skip: "Skip",
+      progress: "{current} / {total}",
+      greetTitle: "Welcome!",
       greet:
-        "Welcome, our new mayor! I'm Defne, I keep a stall in the market. The town is yours from today — come, let me show you around.",
-      market:
-        "This is the Market. Every good in town sits here, and the prices move every day. The whole job in one sentence: buy while it's cheap.",
-      prices:
-        "The line beside each good tells you where its price is heading. Green is climbing, red is falling. Falling is the one you want.",
-      inventory:
-        "What you buy piles up in your Inventory. You can see what you paid here — sell it while it's dear, and the difference is yours.",
+        "I'm Defne, I keep a stall in the market. The town is yours from today. Come, let me show you around first.",
+      marketTitle: "The Market",
+      market: "Every good in town sits here, and the prices change every day.",
+      marketTip: "Buy while it's cheap.",
+      pricesTitle: "Reading a price",
+      prices: "The line beside each good shows which way its price is going. Green is up, red is down.",
+      pricesTip: "Look for red — that good just got cheaper.",
+      inventoryTitle: "Your Inventory",
+      inventory: "Everything you buy piles up here, along with what you paid for it.",
+      inventoryTip: "Sell while it's dear. The difference is your profit.",
+      inflationTitle: "Inflation",
       inflation:
-        "That inflation figure up top makes everything a little dearer each day. Money left sitting in the treasury melts away — that's your real rival.",
-      trade:
-        "Once your town grows, this opens up: Trade. You send caravans to other cities and earn on the higher prices there.",
-      handoff:
-        "The rest you'll learn by doing. First Steps on screen will walk you through it one at a time. Go on, make your first purchase — I'll be around.",
+        "The number at the very top. It makes everything a little dearer each day, and cash in your treasury loses value.",
+      inflationTip: "Don't sit on money — turn it into goods.",
+      tradeTitle: "Trade",
+      trade: "This opens as your town grows. You send caravans out to other cities.",
+      tradeTip: "Buy cheap here, sell dear there.",
+      handoffTitle: "Your turn",
+      handoff: "First Steps at the top of the screen will walk you through it one at a time. I'll be around.",
+      handoffTip: "Go on — make your first purchase.",
     },
     tutorial: {
       next: "Next",

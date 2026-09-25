@@ -74,23 +74,40 @@ export function MentorCoach({ onNext, onSkip }: Props) {
 
         <View style={styles.row}>
           <View style={styles.portrait}>
-            <MentorPortrait size={84} />
+            <MentorPortrait size={112} />
           </View>
           <View style={styles.speech}>
-            <Text style={styles.name}>
-              {t("mentor.name")} <Text style={styles.role}>· {t("mentor.role")}</Text>
-            </Text>
+            {/* Who is talking, and how much of this is left. The dots that
+                used to carry progress were readable as decoration and not
+                as "two more of these" — a count says it outright. */}
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>
+                {t("mentor.name")} <Text style={styles.role}>· {t("mentor.role")}</Text>
+              </Text>
+              <Text style={styles.progress}>
+                {t("mentor.progress", { current: index + 1, total: MENTOR_STEPS.length })}
+              </Text>
+            </View>
+
+            {/* Subject first. A player who already knows what a market is can
+                see this beat is about the market and press on without
+                reading the sentence. */}
+            <Text style={styles.title}>{t(step.titleKey)}</Text>
             <Text style={styles.text}>{t(step.textKey)}</Text>
+
+            {/* And the one thing to actually do, lifted out of the prose.
+                Every beat used to end with its instruction buried in the
+                middle of a paragraph. */}
+            {step.tipKey && (
+              <View style={styles.tipRow}>
+                <Text style={styles.tipMark}>▸</Text>
+                <Text style={styles.tip}>{t(step.tipKey)}</Text>
+              </View>
+            )}
           </View>
         </View>
 
         <View style={styles.footer}>
-          <View style={styles.dots}>
-            {MENTOR_STEPS.map((s, i) => (
-              <View key={s.id} style={[styles.dot, i === index && styles.dotActive]} />
-            ))}
-          </View>
-
           {!isLast && (
             <ScalePressable onPress={onSkip} style={styles.skipBtn} scaleTo={0.96}>
               <Text style={styles.skipText}>{t("mentor.skip")}</Text>
@@ -119,21 +136,36 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "flex-start" },
   // The portrait is bottom-cropped by the card's own overflow, which reads
   // as her leaning in over the edge rather than a sticker pasted on.
-  portrait: { marginRight: SPACING.sm + 2, marginTop: -2 },
+  portrait: { marginRight: SPACING.sm, marginTop: -2 },
   speech: { flex: 1 },
+  nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
     color: COLORS.accent,
-    fontSize: TYPE.label,
+    fontSize: TYPE.caption,
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
-    marginBottom: 3,
   },
   role: { color: COLORS.textMuted, fontWeight: WEIGHT.regular, fontFamily: FONT.medium },
-  text: { color: COLORS.textPrimary, fontSize: TYPE.body, lineHeight: 19 },
-  footer: { flexDirection: "row", alignItems: "center", marginTop: SPACING.md },
-  dots: { flexDirection: "row", alignItems: "center", gap: 5, flex: 1 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#4a4032" },
-  dotActive: { backgroundColor: COLORS.accent, width: 16 },
+  progress: { color: COLORS.textMuted, fontSize: TYPE.micro, fontFamily: FONT.medium },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.heading,
+    fontFamily: FONT.display,
+    marginTop: 4,
+    marginBottom: 3,
+  },
+  text: { color: COLORS.textMuted, fontSize: TYPE.label, lineHeight: 18 },
+  tipRow: { flexDirection: "row", alignItems: "flex-start", marginTop: 7 },
+  tipMark: { color: COLORS.positive, fontSize: TYPE.label, lineHeight: 18, marginRight: 5 },
+  tip: {
+    flex: 1,
+    color: COLORS.positive,
+    fontSize: TYPE.label,
+    lineHeight: 18,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  footer: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: SPACING.sm },
   skipBtn: { paddingVertical: 8, paddingHorizontal: SPACING.sm, marginRight: SPACING.xs },
   skipText: { color: COLORS.textMuted, fontSize: TYPE.caption, fontFamily: FONT.medium },
   nextBtn: {

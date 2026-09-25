@@ -21,9 +21,9 @@ interface Props {
  * brightness: her eye whites and teeth are as bright as the paper, and a
  * plain threshold punched holes through them.
  */
-const ASPECT = 420 / 300;
+const ASPECT = 316 / 360;
 
-export function MentorPortrait({ size = 84 }: Props) {
+export function MentorPortrait({ size = 112 }: Props) {
   return (
     <Image
       source={defneSource}

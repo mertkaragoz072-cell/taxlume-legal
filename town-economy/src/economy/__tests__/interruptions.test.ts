@@ -112,14 +112,35 @@ describe("mentor script", () => {
   it("resolves every line in both languages", () => {
     for (const lang of LANGS) {
       for (const step of MENTOR_STEPS) {
-        const line = t(lang, step.textKey);
-        expect(line).not.toBe(step.textKey);
-        expect(line.length).toBeGreaterThan(20);
+        for (const key of [step.titleKey, step.textKey, step.tipKey]) {
+          if (!key) continue;
+          const line = t(lang, key);
+          expect(line).not.toBe(key);
+          expect(line.length).toBeGreaterThan(3);
+        }
       }
       for (const key of ["mentor.name", "mentor.role", "mentor.next", "mentor.done", "mentor.skip"]) {
         expect(t(lang, key)).not.toBe(key);
       }
+      expect(t(lang, "mentor.progress", { current: 2, total: 7 })).toContain("2");
     }
+  });
+
+  it("keeps every beat short enough to read at a glance", () => {
+    // The point of the rewrite: a title, two sentences and one instruction.
+    // A body that creeps back over this is a paragraph again.
+    for (const lang of LANGS) {
+      for (const step of MENTOR_STEPS) {
+        expect(t(lang, step.titleKey).length).toBeLessThanOrEqual(24);
+        expect(t(lang, step.textKey).length).toBeLessThanOrEqual(150);
+        if (step.tipKey) expect(t(lang, step.tipKey).length).toBeLessThanOrEqual(60);
+      }
+    }
+  });
+
+  it("gives every beat after the welcome something to do", () => {
+    expect(MENTOR_STEPS[0].tipKey).toBeUndefined();
+    for (const step of MENTOR_STEPS.slice(1)) expect(step.tipKey).toBeDefined();
   });
 
   it("starts by welcoming the player before naming any screen", () => {
