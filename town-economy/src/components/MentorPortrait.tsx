@@ -1,13 +1,13 @@
 import React from "react";
 import { Image, StyleSheet } from "react-native";
-import defneSource from "../../assets/mentor-defne.png";
+import merveSource from "../../assets/mentor-merve.png";
 
 interface Props {
   /** displayed width; the height follows the artwork's own proportions */
   size?: number;
 }
 
-/** Defne, the market trader who shows a new mayor around the town.
+/** Merve, the market trader who shows a new mayor around the town.
  *
  * She was drawn as vector first, which kept her weightless in the bundle and
  * let the expression change per beat, but it also capped how much life she
@@ -26,7 +26,7 @@ const ASPECT = 316 / 360;
 export function MentorPortrait({ size = 112 }: Props) {
   return (
     <Image
-      source={defneSource}
+      source={merveSource}
       style={[styles.portrait, { width: size, height: size * ASPECT }]}
       resizeMode="contain"
       accessibilityIgnoresInvertColors

@@ -17,7 +17,7 @@ export interface MentorStep {
   screen?: ScreenId;
 }
 
-/** Defne's walk-through: the first two minutes of a new town, led by a
+/** Merve's walk-through: the first two minutes of a new town, led by a
  * person instead of a slide deck.
  *
  * The rule each line is written to: say where a thing is and what the

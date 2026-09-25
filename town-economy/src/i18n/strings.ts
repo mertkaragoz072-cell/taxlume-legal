@@ -486,7 +486,7 @@ export const STRINGS = {
       declineHint: "teklifi geri çevirirsin",
     },
     mentor: {
-      name: "Defne",
+      name: "Merve",
       role: "Pazarcı",
       next: "Devam",
       done: "Hadi başlayalım",
@@ -494,7 +494,7 @@ export const STRINGS = {
       progress: "{current} / {total}",
       greetTitle: "Hoş geldin!",
       greet:
-        "Ben Defne, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet. Gel, önce sana burayı göstereyim.",
+        "Ben Merve, şu pazarın esnafıyım. Kasaba bugünden sonra sana emanet. Gel, önce sana burayı göstereyim.",
       marketTitle: "Piyasa",
       market: "Kasabanın bütün malları burada durur ve fiyatları her gün değişir.",
       marketTip: "Ucuzken al.",
@@ -1648,7 +1648,7 @@ export const STRINGS = {
       declineHint: "turns down the offer",
     },
     mentor: {
-      name: "Defne",
+      name: "Merve",
       role: "Market trader",
       next: "Go on",
       done: "Let's begin",
@@ -1656,7 +1656,7 @@ export const STRINGS = {
       progress: "{current} / {total}",
       greetTitle: "Welcome!",
       greet:
-        "I'm Defne, I keep a stall in the market. The town is yours from today. Come, let me show you around first.",
+        "I'm Merve, I keep a stall in the market. The town is yours from today. Come, let me show you around first.",
       marketTitle: "The Market",
       market: "Every good in town sits here, and the prices change every day.",
       marketTip: "Buy while it's cheap.",

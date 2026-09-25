@@ -169,7 +169,7 @@ function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.unlockedAchievements.length, state.prestigeLevel]);
 
-  // A first launch no longer opens the slide deck; Defne does the
+  // A first launch no longer opens the slide deck; Merve does the
   // introducing (see MentorCoach). The stored flag still decides *whether*
   // she runs, rather than mentorStep alone: that lives in the save, so a
   // player who starts a new game on a different difficulty would otherwise
