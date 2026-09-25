@@ -196,6 +196,13 @@ export const STRINGS = {
       firstMet: "Yeni tanışlık",
       wellKnown: "Tanıdık tüccar",
     },
+    rival: {
+      eagleEye: { name: "Kartal Gözü" },
+      silverTongue: { name: "Gümüş Dil" },
+      hardNose: { name: "Katı Başlı" },
+      buying: "{name} {good} satın alıyor — fiyatlar zıplıyor",
+      selling: "{name} piyasayı {good} ile doldurdu",
+    },
     inventory: {
       portfolioValue: "Envanter Değeri",
       sectionLabel: "SAHİP OLDUKLARIN",
@@ -1407,6 +1414,13 @@ export const STRINGS = {
       neutral: "Neutral",
       firstMet: "New acquaintance",
       wellKnown: "Known trader",
+    },
+    rival: {
+      eagleEye: { name: "Eagle Eye" },
+      silverTongue: { name: "Silver Tongue" },
+      hardNose: { name: "Hard Nose" },
+      buying: "{name} is buying {good} — prices spike",
+      selling: "{name} is flooding the market with {good}",
     },
     inventory: {
       portfolioValue: "Inventory Value",

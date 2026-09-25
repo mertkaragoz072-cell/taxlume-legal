@@ -12,6 +12,7 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./demandCycles";
 import { doctrineModifiers } from "./doctrines";
 import { houseSupplyDelta, rollActivity } from "./tradingHouses";
+import { RIVAL_TRADERS_BY_ID, rivalSupplyDelta, rollRivalActivity } from "./rivals";
 import {
   CRISIS_CHANCE,
   CRISIS_TEMPLATES_BY_ID,
@@ -495,7 +496,11 @@ export function tick(state: EconomyState): EconomyState {
         (id) => state.goods[id].supply,
         (id) => GOODS_BY_ID[id].baseSupply
       );
-    let supply = gs.supply + (production - good.baseProduction) + demandSupplyDelta(demandCycle, good);
+    let supply =
+      gs.supply +
+      (production - good.baseProduction) +
+      demandSupplyDelta(demandCycle, good) +
+      rivalSupplyDelta(state.rivalActivities, good.id, good.baseProduction, RIVAL_TRADERS_BY_ID);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
     supply = clamp(supply, minSupply, maxSupply);
@@ -532,6 +537,12 @@ export function tick(state: EconomyState): EconomyState {
     state.tick + 1 >= a.untilTick
       ? rollActivity(a.houseId, state.tick + 1, TICKS_PER_GAME_DAY, allTownIds, eligibleGoodIds)
       : a
+  );
+
+  // Rivals also work on rotating goods, but they're on your home market
+  // instead of foreign markets. When they move on, roll new activities.
+  const rivalActivities = state.rivalActivities.map((a) =>
+    state.tick + 1 >= a.untilTick ? rollRivalActivity(a.rivalId, state.tick + 1, TICKS_PER_GAME_DAY, eligibleGoodIds) : a
   );
 
   const foreignTowns = { ...state.foreignTowns };
@@ -784,6 +795,7 @@ export function tick(state: EconomyState): EconomyState {
     pendingCrisis,
     doctrine: state.doctrine,
     tradingHouses,
+    rivalActivities,
     loan,
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),

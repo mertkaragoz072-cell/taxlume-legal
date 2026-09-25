@@ -4,6 +4,7 @@ import { ScheduledCrisis } from "./crises";
 import { DoctrineId } from "./doctrines";
 import { TradingHouseActivity } from "./tradingHouses";
 import { TraderReputation } from "./traders";
+import { RivalTraderActivity } from "./rivals";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -417,6 +418,10 @@ export interface EconomyState {
    * trader remembers past trades and offers price adjustments based on
    * relationship. Maps trader id to reputation state. */
   traderReputations: Record<string, TraderReputation>;
+  /** rival traders currently active on your home market — see rivals.ts.
+   * Unlike trading houses (foreign markets), rivals compete on your turf,
+   * creating price volatility and opportunities. */
+  rivalActivities: RivalTraderActivity[];
 }
 
 export interface WeeklyChallenge {

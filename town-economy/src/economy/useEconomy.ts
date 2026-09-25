@@ -9,6 +9,7 @@ import { openingDemandCycles } from "./demandCycles";
 import { MENTOR_STEPS } from "./mentor";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
 import { TRADERS, TRADERS_BY_ID, getTraderReputation, reputationDelta, REPUTATION_PER_UNIT, REPUTATION_TO_PRICE_MODIFIER } from "./traders";
+import { RIVAL_TRADERS, rollRivalActivity } from "./rivals";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { PROPERTIES_BY_ID } from "./properties";
@@ -400,6 +401,11 @@ export function initialState(
     // Known traders start at neutral reputation (0); they will become known
     // to the player through repeated trades, see traders.ts.
     traderReputations: {},
+    // Rival traders start with activity on day 1, so the home market is contested
+    // from the beginning rather than only later, see rivals.ts.
+    rivalActivities: RIVAL_TRADERS.map((r) =>
+      rollRivalActivity(r.id, 0, TICKS_PER_GAME_DAY, day1GoodIds)
+    ),
   };
 }
 export function todayString(): string {
