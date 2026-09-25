@@ -149,7 +149,7 @@ export const FOREIGN_NOISE = 0.28;
 // fading — long enough to feel like your trade mattered, short enough that
 // the market always finds its own level again.
 export const DEMAND_PRESSURE_DECAY = 0.94; // per tick (TICK_MS=3000ms) => ~165-tick / ~500s half-life (slower decay for longer-lasting price swings)
-export const DEMAND_PRESSURE_SENSITIVITY = 0.55; // price swing per "one baseSupply's worth" traded, before market depth
+export const DEMAND_PRESSURE_SENSITIVITY = 0.42; // price swing per "one baseSupply's worth" traded, before market depth
 export const DEMAND_PRESSURE_MAX = 0.12; // clamp so no single order can send price to an absurd multiple
 // --- Bid/ask spread ---------------------------------------------------------
 // Real markets charge a toll on every round trip — without one, buying and
