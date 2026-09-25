@@ -25,7 +25,7 @@ import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { MentorCoach } from "./src/components/MentorCoach";
-import { SpotlightOverlay, SpotlightProvider } from "./src/components/Spotlight";
+import { SpotlightOverlay, SpotlightProvider, SpotlightTarget } from "./src/components/Spotlight";
 import { currentMentorStep, MENTOR_STEPS } from "./src/economy/mentor";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { DoctrineModal } from "./src/components/DoctrineModal";
@@ -274,33 +274,35 @@ function Game() {
       <StatusBar style="light" />
       <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
       <SpotlightProvider style={styles.content}>
-        <InflationHeader
-          townName={state.townName}
-          emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
-          emblemColor={state.selectedEmblemColor}
-          rankIcon={townRankIcon(state.townRankIndex)}
-          rankTitle={rankTitle}
-          cash={state.cash}
-          netWorth={netWorth}
-          inflationIndex={state.inflationIndex}
-          inflationRate={state.inflationRate}
-          inflationHistory={state.inflationHistory}
-          paused={state.paused}
-          muted={sounds.muted}
-          streakCount={state.streak.count}
-          gameDay={gameDayFromTick(state.tick)}
-          tick={state.tick}
-          difficulty={state.difficulty}
-          language={state.language}
-          t={t}
-          onTogglePause={togglePause}
-          onToggleMuted={sounds.toggleMuted}
-          onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
-          onReset={() => setDifficultyModalVisible(true)}
-          onHelp={() => setTutorialVisible(true)}
-          onEditName={() => setNameModalVisible(true)}
-          onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
-        />
+        <SpotlightTarget id="inflation">
+          <InflationHeader
+            townName={state.townName}
+            emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
+            emblemColor={state.selectedEmblemColor}
+            rankIcon={townRankIcon(state.townRankIndex)}
+            rankTitle={rankTitle}
+            cash={state.cash}
+            netWorth={netWorth}
+            inflationIndex={state.inflationIndex}
+            inflationRate={state.inflationRate}
+            inflationHistory={state.inflationHistory}
+            paused={state.paused}
+            muted={sounds.muted}
+            streakCount={state.streak.count}
+            gameDay={gameDayFromTick(state.tick)}
+            tick={state.tick}
+            difficulty={state.difficulty}
+            language={state.language}
+            t={t}
+            onTogglePause={togglePause}
+            onToggleMuted={sounds.toggleMuted}
+            onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
+            onReset={() => setDifficultyModalVisible(true)}
+            onHelp={() => setTutorialVisible(true)}
+            onEditName={() => setNameModalVisible(true)}
+            onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
+          />
+        </SpotlightTarget>
         {/* Above the screens rather than inside one: a crisis lands on the
             whole town, so the countdown has to follow the player wherever
             they are preparing — market, trade or town hall. */}

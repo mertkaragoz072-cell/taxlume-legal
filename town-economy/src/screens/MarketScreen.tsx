@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
 import { ONBOARDING_STEPS } from "../economy/onboarding";
 import { currentMentorStep } from "../economy/mentor";
+import { SpotlightTarget } from "../components/Spotlight";
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -271,19 +272,21 @@ export function MarketScreen({ sounds }: Props) {
         </>
       )}
 
-      <View onLayout={(e) => (panelY.current = e.nativeEvent.layout.y)}>
-        <BuySellPanel
-          good={selected}
-          state={selectedState}
-          cash={state.cash}
-          spreadPct={marketSpreadPct}
-          onTrade={(side, qty) => {
-            trade(selected.id, side, qty);
-            if (side === "buy") sounds.playBuy();
-            else sounds.playSell();
-          }}
-        />
-      </View>
+      <SpotlightTarget id="buy">
+        <View onLayout={(e) => (panelY.current = e.nativeEvent.layout.y)}>
+          <BuySellPanel
+            good={selected}
+            state={selectedState}
+            cash={state.cash}
+            spreadPct={marketSpreadPct}
+            onTrade={(side, qty) => {
+              trade(selected.id, side, qty);
+              if (side === "buy") sounds.playBuy();
+              else sounds.playSell();
+            }}
+          />
+        </View>
+      </SpotlightTarget>
 
       <SectionLabel text={t("market.autoTrade.sectionLabel")} color={selected.color} />
       <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>

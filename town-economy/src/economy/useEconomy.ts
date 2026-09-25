@@ -1452,14 +1452,15 @@ export function useEconomy() {
   const start = useCallback(() => setStarted(true), []);
 
   const isSpeedBoosted = state.speedBoostExpiresAt !== null;
+  const isMentorActive = state.mentorStep < MENTOR_STEPS.length;
   useEffect(() => {
-    if (!hydrated || !started) return;
+    if (!hydrated || !started || isMentorActive) return;
     const intervalMs = isSpeedBoosted ? BOOSTED_TICK_MS : TICK_MS;
     intervalRef.current = setInterval(() => dispatch({ type: "TICK" }), intervalMs);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isSpeedBoosted, hydrated, started]);
+  }, [isSpeedBoosted, hydrated, started, isMentorActive]);
 
   // Load any previous save once on mount, fast-forward the town through
   // however long the app was closed, then start persisting future changes.
