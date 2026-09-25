@@ -24,17 +24,22 @@ export function CaravanTutorialModal({ visible, language, onDismiss }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
       <View style={styles.container}>
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-          {/* Caravan Guide Character */}
-          <View style={styles.characterSection}>
-            <Image
-              source={{ uri: "https://static.nim.video/output/wf-output/4e5d0af5-55bd-48ee-a4e6-04086a6fa89b_00001.jpg" }}
-              style={styles.characterImage}
-            />
+        {/* Caravan Guide Character - Prominent Position */}
+        <View style={styles.characterBanner}>
+          <Image
+            source={require("../../assets/caravan-merchant-guide.png")}
+            style={styles.characterImageLarge}
+            resizeMode="contain"
+          />
+          <View style={styles.characterInfo}>
             <Text style={styles.characterName}>
               {t(language, "caravanTutorial.guideTitle")}
             </Text>
+            <Text style={styles.characterTagline}>🐪 Kervan Ustası</Text>
           </View>
+        </View>
+
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
 
           {/* Welcome Message */}
           <View style={styles.messageBox}>
@@ -137,27 +142,41 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f0e8",
   },
+  characterBanner: {
+    backgroundColor: "linear-gradient(135deg, #d4a574 0%, #c89050 100%)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 3,
+    borderBottomColor: "#8b6a3f",
+  },
+  characterImageLarge: {
+    width: 100,
+    height: 130,
+    marginRight: 12,
+  },
+  characterInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  characterName: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#2c1810",
+    marginBottom: 4,
+  },
+  characterTagline: {
+    fontSize: 14,
+    color: "#4a3728",
+    fontWeight: "500",
+  },
   scroll: {
     flex: 1,
   },
   content: {
     padding: 16,
     paddingBottom: 24,
-  },
-  characterSection: {
-    alignItems: "center",
-    marginVertical: 24,
-  },
-  characterImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  characterName: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#2c1810",
   },
   messageBox: {
     backgroundColor: "rgba(227, 179, 86, 0.15)",
@@ -177,27 +196,33 @@ const styles = StyleSheet.create({
   },
   step: {
     flexDirection: "row",
-    marginBottom: 16,
+    marginBottom: 18,
     alignItems: "flex-start",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    padding: 14,
+    borderRadius: 10,
+    borderLeftWidth: 5,
+    borderLeftColor: "#d4a574",
   },
   stepIcon: {
-    fontSize: 32,
-    marginRight: 12,
-    marginTop: 4,
+    fontSize: 36,
+    marginRight: 14,
+    marginTop: 2,
   },
   stepContent: {
     flex: 1,
   },
   stepTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#2c1810",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   stepText: {
-    fontSize: 14,
-    color: "#4a3728",
-    lineHeight: 20,
+    fontSize: 15,
+    color: "#3a2818",
+    lineHeight: 22,
+    fontWeight: "500",
   },
   footer: {
     borderTopWidth: 1,
