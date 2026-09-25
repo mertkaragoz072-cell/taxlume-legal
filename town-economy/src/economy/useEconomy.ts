@@ -411,6 +411,7 @@ export function initialState(
     rivalActivities: RIVAL_TRADERS.map((r) =>
       rollRivalActivity(r.id, 0, TICKS_PER_GAME_DAY, day1GoodIds)
     ),
+    firstCaravanSent: false,
   };
 }
 export function todayString(): string {
@@ -701,6 +702,7 @@ export function sendCaravan(
         caravansSent: state.dailyProgress.caravansSent + 1,
         townsTraded: townsTradedToday,
       },
+      firstCaravanSent: true,
     };
   }
 
@@ -748,6 +750,7 @@ export function sendCaravan(
       caravansSent: state.dailyProgress.caravansSent + 1,
       townsTraded: townsTradedToday,
     },
+    firstCaravanSent: true,
   };
 }
 function openContract(

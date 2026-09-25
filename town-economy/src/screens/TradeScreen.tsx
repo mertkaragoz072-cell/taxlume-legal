@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { BargainingModal } from "../components/BargainingModal";
+import { CaravanTutorialModal } from "../components/CaravanTutorialModal";
 import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
@@ -111,6 +112,7 @@ export function TradeScreen({ sounds }: Props) {
     qty: number;
     insured: boolean;
   } | null>(null);
+  const [showCaravanTutorial, setShowCaravanTutorial] = useState(!state.firstCaravanSent);
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
@@ -821,10 +823,16 @@ export function TradeScreen({ sounds }: Props) {
             );
             if (pendingCaravan.direction === "export") sounds.playSell();
             else sounds.playBuy();
+            setShowCaravanTutorial(false);
           }
           setBargainVisible(false);
           setPendingCaravan(null);
         }}
+      />
+      <CaravanTutorialModal
+        visible={showCaravanTutorial}
+        language={state.language}
+        onDismiss={() => setShowCaravanTutorial(false)}
       />
     </>
   );

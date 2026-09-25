@@ -433,6 +433,8 @@ export interface EconomyState {
    * Unlike trading houses (foreign markets), rivals compete on your turf,
    * creating price volatility and opportunities. */
   rivalActivities: RivalTraderActivity[];
+  /** whether the player has sent their first caravan; triggers tutorial on initial send */
+  firstCaravanSent: boolean;
 }
 
 export interface WeeklyChallenge {
