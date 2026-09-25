@@ -8,9 +8,8 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { openingDemandCycles } from "./demandCycles";
 import { MENTOR_STEPS } from "./mentor";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
-import { TRADERS, TRADERS_BY_ID, getTraderReputation, reputationDelta, REPUTATION_PER_UNIT, REPUTATION_TO_PRICE_MODIFIER } from "./traders";
+import { TRADERS, TRADERS_BY_ID, reputationDelta, REPUTATION_TO_PRICE_MODIFIER } from "./traders";
 import { RIVAL_TRADERS, rollRivalActivity } from "./rivals";
-import { BOUNTY_SPAWN_CHANCE, BOUNTY_MAX_ACTIVE, BOUNTY_DURATION_TICKS, BOUNTY_REWARD_BONUS, generateBountyId } from "./bounties";
 import { generateDailyQuotas } from "./productionQuotas";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
@@ -408,9 +407,7 @@ export function initialState(
     traderReputations: {},
     // Rival traders start with activity on day 1, so the home market is contested
     // from the beginning rather than only later, see rivals.ts.
-    rivalActivities: RIVAL_TRADERS.map((r) =>
-      rollRivalActivity(r.id, 0, TICKS_PER_GAME_DAY, day1GoodIds)
-    ),
+    rivalActivities: RIVAL_TRADERS.map((r) => rollRivalActivity(r.id, 0, TICKS_PER_GAME_DAY, day1GoodIds)),
     firstCaravanSent: false,
   };
 }
@@ -428,7 +425,12 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
 
   // A random trader appears for each transaction, bringing their reputation into the price.
   const traderId = TRADERS[Math.floor(Math.random() * TRADERS.length)].id;
-  const traderRep = state.traderReputations[traderId] ?? { traderId, reputation: 0, tradeCount: 0, metAtTick: state.tick };
+  const traderRep = state.traderReputations[traderId] ?? {
+    traderId,
+    reputation: 0,
+    tradeCount: 0,
+    metAtTick: state.tick,
+  };
   const priceModifier = REPUTATION_TO_PRICE_MODIFIER(traderRep.reputation);
   midPrice = midPrice * (1 + priceModifier);
 

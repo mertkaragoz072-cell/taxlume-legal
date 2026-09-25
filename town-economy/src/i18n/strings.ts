@@ -21,20 +21,29 @@ export const STRINGS = {
       cancel: "Vazgeç",
       close: "Kapat",
       all: "TÜMÜ",
+      skip: "Geç",
+      next: "İleri",
     },
     caravanTutorial: {
       guideTitle: "Kervan Rehberi",
-      welcome: "Hoş geldin, tüccar! İlk kervanını hazırladığını gördüm. Kervan ticaretinin sırlarını öğrenmen için buradayım!",
+      guideRole: "🐪 Kervan Ustası",
+      welcome:
+        "Hoş geldin, tüccar! İlk kervanını hazırladığını gördüm. Kervan ticaretinin sırlarını öğrenmen için buradayım!",
       step1Title: "Kervan Nedir?",
-      step1Text: "Kervan, senin mallarını başka kasabalara gönderiyor. Orada pahalıya satıp kâr etmek için. Gücü, her kasabanın farklı ihtiyaçları ve enflasyon oranları olmasında yatıyor.",
+      step1Text:
+        "Kervan, senin mallarını başka kasabalara gönderiyor. Orada pahalıya satıp kâr etmek için. Gücü, her kasabanın farklı ihtiyaçları ve enflasyon oranları olmasında yatıyor.",
       step2Title: "Nereye Ticaret Yapabilirsin?",
-      step2Text: "Harita kilitli kasabaları gösteriyor. Başında net serveti {threshold} 🪙 geçtiğinde komşu kasabalarla ticaret açılır. Daha ileri gidince metropoller keşfedebilirsin!",
+      step2Text:
+        "Harita kilitli kasabaları gösteriyor. Başında net serveti {threshold} 🪙 geçtiğinde komşu kasabalarla ticaret açılır. Daha ileri gidince metropoller keşfedebilirsin!",
       step3Title: "Export vs Import",
-      step3Text: "Export: Senin malını başka yere satıyorsun, nakit kazanıyorsun. Import: Başka yerden mal alıp eve getiriyorsun, envanterinde birikiyor.",
+      step3Text:
+        "Export: Senin malını başka yere satıyorsun, nakit kazanıyorsun. Import: Başka yerden mal alıp eve getiriyorsun, envanterinde birikiyor.",
       step4Title: "Seyahat Süresi",
-      step4Text: "Kervan gidiş-geliş süresi kasabaların uzaklığına bağlı. Haritada mesafeleri görebilirsin. Tüccar loncası seçerse kervanlar %25 daha hızlı gider!",
+      step4Text:
+        "Kervan gidiş-geliş süresi kasabaların uzaklığına bağlı. Haritada mesafeleri görebilirsin. Tüccar loncası seçerse kervanlar %25 daha hızlı gider!",
       step5Title: "Kâr Nasıl Elde Edersin?",
-      step5Text: "İki yolla: ① Export'da fiyat farkından kâr et (başka yerde daha pahalı). ② Import'da ucuz alan malı evde pahalıya sat. Riski hesapla, ama ödülü büyük!",
+      step5Text:
+        "İki yolla: ① Export'da fiyat farkından kâr et (başka yerde daha pahalı). ② Import'da ucuz alan malı evde pahalıya sat. Riski hesapla, ama ödülü büyük!",
       closing: "Şimdi git, kervan gönder ve kâr et! Deneyim en iyi öğretmen olacak. İyi ticaretler! 🐪",
     },
     title: {
@@ -1235,7 +1244,8 @@ export const STRINGS = {
       goodSoldLoss: "📉 {qty} {good} sattın, -{amount} 🪙 zarar ettin.",
       goodSoldProfitStreak:
         "🔥 {streak} seri! {qty} {good} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
-      bountyAppeared: "🎯 {rivalName} {side} için {qty} {good} aradığını bildirdi. Tamamlamaya +{reward} 🪙 kazanç!",
+      bountyAppeared:
+        "🎯 {rivalName} {side} için {qty} {good} aradığını bildirdi. Tamamlamaya +{reward} 🪙 kazanç!",
       quotaMet: "🎖️ Günlük görev: {good} üretim hedefine ulaştın! +{bonus} 🪙 bonus!",
     },
     bounty: {
@@ -1265,20 +1275,29 @@ export const STRINGS = {
       cancel: "Cancel",
       close: "Close",
       all: "ALL",
+      skip: "Skip",
+      next: "Next",
     },
     caravanTutorial: {
       guideTitle: "Caravan Guide",
-      welcome: "Welcome, trader! I see you've sent your first caravan. I'm here to teach you the secrets of caravan trade!",
+      guideRole: "🐪 Caravan Master",
+      welcome:
+        "Welcome, trader! I see you've sent your first caravan. I'm here to teach you the secrets of caravan trade!",
       step1Title: "What is a Caravan?",
-      step1Text: "A caravan sends your goods to other towns to sell them for profit. The power lies in the fact that each town has different needs and inflation rates.",
+      step1Text:
+        "A caravan sends your goods to other towns to sell them for profit. The power lies in the fact that each town has different needs and inflation rates.",
       step2Title: "Where Can You Trade?",
-      step2Text: "The map shows locked towns. When your net worth exceeds {threshold} 🪙, trade with neighboring towns unlocks. Go further and discover metropolises!",
+      step2Text:
+        "The map shows locked towns. When your net worth exceeds {threshold} 🪙, trade with neighboring towns unlocks. Go further and discover metropolises!",
       step3Title: "Export vs Import",
-      step3Text: "Export: You sell your goods elsewhere for cash profit. Import: You buy goods from other towns and bring them home to sell.",
+      step3Text:
+        "Export: You sell your goods elsewhere for cash profit. Import: You buy goods from other towns and bring them home to sell.",
       step4Title: "Travel Time",
-      step4Text: "Caravan travel time depends on town distance shown on the map. If you choose the Merchant Doctrine, caravans travel 25% faster!",
+      step4Text:
+        "Caravan travel time depends on town distance shown on the map. If you choose the Merchant Doctrine, caravans travel 25% faster!",
       step5Title: "How Do You Profit?",
-      step5Text: "Two ways: ① On export, profit from price differences (sell where it's expensive). ② On import, buy cheap and sell expensive at home. Calculate the risk, but the reward is big!",
+      step5Text:
+        "Two ways: ① On export, profit from price differences (sell where it's expensive). ② On import, buy cheap and sell expensive at home. Calculate the risk, but the reward is big!",
       closing: "Now go, send caravans and make profits! Experience is the best teacher. Good trading! 🐪",
     },
     title: {

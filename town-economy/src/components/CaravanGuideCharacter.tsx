@@ -8,8 +8,6 @@ interface Props {
 /** Kervan rehberi karakteri - kemerli bir tüccar
  * Karavanlara rehberlik eden deneyimli bir ticari tüccar */
 export function CaravanGuideCharacter({ size = 120 }: Props) {
-  const scaleFactor = size / 120;
-
   return (
     <Svg width={size} height={size * 1.3} viewBox="0 0 120 156">
       <Defs>

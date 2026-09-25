@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { BargainingModal } from "../components/BargainingModal";
-import { CaravanTutorialModal } from "../components/CaravanTutorialModal";
 import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
+import { SpotlightTarget } from "../components/Spotlight";
 import { TownMapView } from "../components/TownMapView";
 import { TradingHousesCard } from "../components/TradingHousesCard";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -112,7 +112,6 @@ export function TradeScreen({ sounds }: Props) {
     qty: number;
     insured: boolean;
   } | null>(null);
-  const [showCaravanTutorial, setShowCaravanTutorial] = useState(!state.firstCaravanSent);
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
@@ -192,19 +191,21 @@ export function TradeScreen({ sounds }: Props) {
         <TradingHousesCard activities={state.tradingHouses} />
 
         <SectionLabel text={t("trade.mapSectionLabel")} color="#5fd884" />
-        <TownMapView
-          townName={state.townName}
-          selectedEmblem={state.selectedEmblem}
-          towns={ALL_TOWNS}
-          selectedTownId={townId}
-          onSelectTown={setTownId}
-          metropolUnlocked={state.metropolUnlocked}
-          legendaryUnlocked={state.legendaryUnlocked}
-          mythicUnlocked={state.mythicUnlocked}
-          caravans={state.caravans}
-          tick={state.tick}
-          t={t}
-        />
+        <SpotlightTarget id="caravanMap">
+          <TownMapView
+            townName={state.townName}
+            selectedEmblem={state.selectedEmblem}
+            towns={ALL_TOWNS}
+            selectedTownId={townId}
+            onSelectTown={setTownId}
+            metropolUnlocked={state.metropolUnlocked}
+            legendaryUnlocked={state.legendaryUnlocked}
+            mythicUnlocked={state.mythicUnlocked}
+            caravans={state.caravans}
+            tick={state.tick}
+            t={t}
+          />
+        </SpotlightTarget>
 
         <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
@@ -450,24 +451,26 @@ export function TradeScreen({ sounds }: Props) {
 
         <View style={styles.panel}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={styles.sideToggle}>
-            <ScalePressable
-              style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
-              onPress={() => setDirection("export")}
-            >
-              <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
-                {t("trade.export")}
-              </Text>
-            </ScalePressable>
-            <ScalePressable
-              style={[styles.sideBtn, direction === "import" && styles.sideBtnActiveImport]}
-              onPress={() => setDirection("import")}
-            >
-              <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
-                {t("trade.import")}
-              </Text>
-            </ScalePressable>
-          </View>
+          <SpotlightTarget id="caravanDirection">
+            <View style={styles.sideToggle}>
+              <ScalePressable
+                style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
+                onPress={() => setDirection("export")}
+              >
+                <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
+                  {t("trade.export")}
+                </Text>
+              </ScalePressable>
+              <ScalePressable
+                style={[styles.sideBtn, direction === "import" && styles.sideBtnActiveImport]}
+                onPress={() => setDirection("import")}
+              >
+                <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
+                  {t("trade.import")}
+                </Text>
+              </ScalePressable>
+            </View>
+          </SpotlightTarget>
 
           <View style={styles.qtyRow}>
             {([1, 5, "ALL"] as QtyOption[]).map((q) => (
@@ -515,30 +518,32 @@ export function TradeScreen({ sounds }: Props) {
             </Text>
           </ScalePressable>
 
-          <ScalePressable
-            disabled={disabled}
-            onPress={() => {
-              if (Math.random() < BARGAIN_CHANCE) {
-                setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
-                setBargainVisible(true);
-                return;
-              }
-              sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
-              if (direction === "export") sounds.playSell();
-              else sounds.playBuy();
-            }}
-            style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-            scaleTo={0.97}
-          >
-            <GradientFill
-              colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="1"
-            />
-            <Text style={styles.confirmBtnText}>{t("trade.sendCaravanBtn", { icon: good.icon })}</Text>
-          </ScalePressable>
+          <SpotlightTarget id="caravanSend">
+            <ScalePressable
+              disabled={disabled}
+              onPress={() => {
+                if (Math.random() < BARGAIN_CHANCE) {
+                  setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
+                  setBargainVisible(true);
+                  return;
+                }
+                sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
+                if (direction === "export") sounds.playSell();
+                else sounds.playBuy();
+              }}
+              style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
+              scaleTo={0.97}
+            >
+              <GradientFill
+                colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              />
+              <Text style={styles.confirmBtnText}>{t("trade.sendCaravanBtn", { icon: good.icon })}</Text>
+            </ScalePressable>
+          </SpotlightTarget>
         </View>
 
         <SectionLabel text={t("trade.activeCaravansSectionLabel")} color="#5fd884" />
@@ -823,16 +828,10 @@ export function TradeScreen({ sounds }: Props) {
             );
             if (pendingCaravan.direction === "export") sounds.playSell();
             else sounds.playBuy();
-            setShowCaravanTutorial(false);
           }
           setBargainVisible(false);
           setPendingCaravan(null);
         }}
-      />
-      <CaravanTutorialModal
-        visible={showCaravanTutorial}
-        language={state.language}
-        onDismiss={() => setShowCaravanTutorial(false)}
       />
     </>
   );

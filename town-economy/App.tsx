@@ -24,6 +24,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
+import { CARAVAN_STEPS, CaravanTutorialModal } from "./src/components/CaravanTutorialModal";
 import { MentorCoach } from "./src/components/MentorCoach";
 import { SpotlightOverlay, SpotlightProvider, SpotlightTarget } from "./src/components/Spotlight";
 import { currentMentorStep, MENTOR_STEPS } from "./src/economy/mentor";
@@ -227,6 +228,26 @@ function Game() {
     markTutorialSeen();
   };
 
+  // The kervan guide, docked the same way Merve is: the trade screen stays
+  // live behind him and SpotlightOverlay cuts a hole over the control he is
+  // talking about. Gated on firstCaravanSent (economy state, so a real send
+  // — bargained or not — dismisses it on its own) rather than a one-shot
+  // flag, plus a session-only skip so declining it doesn't bring it back
+  // every time the player revisits the Trade tab.
+  const [caravanTutorialStep, setCaravanTutorialStep] = useState(0);
+  const [caravanTutorialSkipped, setCaravanTutorialSkipped] = useState(false);
+  const caravanTutorialActive =
+    screen === "trade" && !state.firstCaravanSent && !caravanTutorialSkipped && !mentorActive;
+  const caravanStepDef = caravanTutorialActive ? CARAVAN_STEPS[caravanTutorialStep] : null;
+  const caravanSpotlight = caravanStepDef?.spotlight ?? null;
+
+  const nextCaravanStep = () => {
+    const next = caravanTutorialStep + 1;
+    if (next >= CARAVAN_STEPS.length) setCaravanTutorialSkipped(true);
+    else setCaravanTutorialStep(next);
+  };
+  const skipCaravanTutorial = () => setCaravanTutorialSkipped(true);
+
   useEffect(() => {
     if (state.lastEvent && state.lastEvent.id !== lastEventId.current) {
       lastEventId.current = state.lastEvent.id;
@@ -267,7 +288,11 @@ function Game() {
   // a few seconds later lands *on top* of the wheel and buries the claim
   // button under a villager asking for honey.
   const holdInterruptions =
-    Boolean(state.offlineSummary) || tutorialVisible || mentorActive || state.dailyBonusPending !== null;
+    Boolean(state.offlineSummary) ||
+    tutorialVisible ||
+    mentorActive ||
+    caravanTutorialActive ||
+    state.dailyBonusPending !== null;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -328,6 +353,15 @@ function Game() {
             as well, which is what the zIndex on her dock is for — source
             order alone cannot give her both. */}
         {mentorActive && <MentorCoach onNext={nextMentorBeat} onSkip={skipMentor} />}
+        {caravanTutorialActive && (
+          <CaravanTutorialModal
+            visible
+            stepIndex={caravanTutorialStep}
+            language={state.language}
+            onNext={nextCaravanStep}
+            onSkip={skipCaravanTutorial}
+          />
+        )}
 
         <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} />
 
@@ -336,6 +370,7 @@ function Game() {
             through it, so the control inside it is the real one, still
             live, with nothing forwarding touches on its behalf. */}
         {mentorActive && <SpotlightOverlay target={mentorSpotlight} />}
+        {caravanTutorialActive && <SpotlightOverlay target={caravanSpotlight} />}
 
         <DifficultyModal
           visible={difficultyModalVisible}

@@ -6,7 +6,7 @@ import { COLORS, RADIUS, withAlpha } from "../theme";
 /** Things the guided tour can point at. Adding one means wrapping the real
  * control in a <SpotlightTarget> with the same id — there is no registry of
  * selectors to keep in step with the UI. */
-export type SpotlightId = "buy" | "inflation";
+export type SpotlightId = "buy" | "inflation" | "caravanMap" | "caravanDirection" | "caravanSend";
 
 interface Rect {
   x: number;

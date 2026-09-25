@@ -1,40 +1,59 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  Modal,
-  StyleSheet,
-  Image,
-  Animated,
-  Easing,
-} from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Image, Animated, Easing } from "react-native";
+import caravanGuideImage from "../../assets/caravan-merchant-guide.png";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
+import { SpotlightId } from "./Spotlight";
 
 interface CaravanStep {
   titleKey: string;
   textKey: string;
+  /** Which control this beat is about — SpotlightOverlay lights it up and
+   * dims the rest of the trade screen, same as the Merve tour. Left unset
+   * for the opening beat, which isn't about any one control yet. */
+  spotlight?: SpotlightId;
 }
 
-const CARAVAN_STEPS: CaravanStep[] = [
+export const CARAVAN_STEPS: CaravanStep[] = [
   { titleKey: "caravanTutorial.step1Title", textKey: "caravanTutorial.step1Text" },
-  { titleKey: "caravanTutorial.step2Title", textKey: "caravanTutorial.step2Text" },
-  { titleKey: "caravanTutorial.step3Title", textKey: "caravanTutorial.step3Text" },
-  { titleKey: "caravanTutorial.step4Title", textKey: "caravanTutorial.step4Text" },
-  { titleKey: "caravanTutorial.step5Title", textKey: "caravanTutorial.step5Text" },
+  { titleKey: "caravanTutorial.step2Title", textKey: "caravanTutorial.step2Text", spotlight: "caravanMap" },
+  {
+    titleKey: "caravanTutorial.step3Title",
+    textKey: "caravanTutorial.step3Text",
+    spotlight: "caravanDirection",
+  },
+  { titleKey: "caravanTutorial.step4Title", textKey: "caravanTutorial.step4Text", spotlight: "caravanMap" },
+  { titleKey: "caravanTutorial.step5Title", textKey: "caravanTutorial.step5Text", spotlight: "caravanSend" },
 ];
 
 interface Props {
   visible: boolean;
+  stepIndex: number;
   language: Language;
-  onDismiss: () => void;
+  onNext: () => void;
+  onSkip: () => void;
 }
 
-export function CaravanTutorialModal({ visible, language, onDismiss }: Props) {
-  const [stepIndex, setStepIndex] = useState(0);
+/** Kervan rehberinin öğretici karotu — Merve'nin ders panosuyla aynı kalıp:
+ * ekranın geri kalanı canlı kalır, o sadece altını kaplar, ve anlattığı
+ * kontrol SpotlightOverlay tarafından aydınlatılırken diğer her şey
+ * bulanıklaşır. Tam ekran bir modal artık değil — arkasındaki Trade
+ * ekranının kendisi ders malzemesi. */
+export function CaravanTutorialModal({ visible, stepIndex, language, onNext, onSkip }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -49,94 +68,65 @@ export function CaravanTutorialModal({ visible, language, onDismiss }: Props) {
   }, [enter, visible, stepIndex]);
 
   if (!visible) return null;
-
   const step = CARAVAN_STEPS[stepIndex];
+  if (!step) return null;
   const isLast = stepIndex === CARAVAN_STEPS.length - 1;
 
-  const handleNext = () => {
-    if (isLast) {
-      setStepIndex(0);
-      onDismiss();
-    } else {
-      setStepIndex(stepIndex + 1);
-    }
-  };
-
-  const handleSkip = () => {
-    setStepIndex(0);
-    onDismiss();
-  };
-
   return (
-    <Modal visible={visible} animationType="fade" transparent>
-      <View style={styles.backdrop}>
-        <Animated.View
-          style={[
-            styles.card,
-            {
-              opacity: enter,
-              transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
-            },
-          ]}
-        >
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+    <Animated.View
+      style={[
+        styles.dock,
+        {
+          opacity: enter,
+          transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+        },
+      ]}
+    >
+      <View style={styles.card}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
 
-          <View style={styles.row}>
-            {/* Character Portrait */}
-            <View style={styles.portrait}>
-              <Image
-                source={require("../../assets/caravan-merchant-guide.png")}
-                style={styles.characterImage}
-                resizeMode="contain"
-              />
-            </View>
+        <View style={styles.row}>
+          <View style={styles.portrait}>
+            <Image source={caravanGuideImage} style={styles.characterImage} resizeMode="contain" />
+          </View>
 
-            {/* Speech Content */}
-            <View style={styles.speech}>
-              <View style={styles.nameRow}>
-                <Text style={styles.name}>
-                  {t(language, "caravanTutorial.guideTitle")}
-                  <Text style={styles.role}> · 🐪 Kervan Ustası</Text>
-                </Text>
-              </View>
-
+          <View style={styles.speech}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>
+                {t(language, "caravanTutorial.guideTitle")}
+                <Text style={styles.role}> · {t(language, "caravanTutorial.guideRole")}</Text>
+              </Text>
               <Text style={styles.progress}>
                 {stepIndex + 1} / {CARAVAN_STEPS.length}
               </Text>
-
-              <Text style={styles.title}>{t(language, step.titleKey)}</Text>
-              <Text style={styles.text}>{t(language, step.textKey)}</Text>
             </View>
-          </View>
 
-          {/* Footer Buttons */}
-          <View style={styles.footer}>
-            {!isLast && (
-              <ScalePressable onPress={handleSkip} style={styles.skipBtn} scaleTo={0.96}>
-                <Text style={styles.skipText}>{t(language, "common.skip")}</Text>
-              </ScalePressable>
-            )}
-            <ScalePressable onPress={handleNext} style={styles.nextBtn} scaleTo={0.96}>
-              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={styles.nextText}>{isLast ? t(language, "common.close") : t(language, "common.next")}</Text>
-            </ScalePressable>
+            <Text style={styles.title}>{t(language, step.titleKey)}</Text>
+            <Text style={styles.text}>{t(language, step.textKey)}</Text>
           </View>
-        </Animated.View>
+        </View>
+
+        <View style={styles.footer}>
+          {!isLast && (
+            <ScalePressable onPress={onSkip} style={styles.skipBtn} scaleTo={0.96}>
+              <Text style={styles.skipText}>{t(language, "common.skip")}</Text>
+            </ScalePressable>
+          )}
+          <ScalePressable onPress={onNext} style={styles.nextBtn} scaleTo={0.96}>
+            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+            <Text style={styles.nextText}>
+              {isLast ? t(language, "common.close") : t(language, "common.next")}
+            </Text>
+          </ScalePressable>
+        </View>
       </View>
-    </Modal>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: withAlpha("#000000", 0.5),
-  },
+  dock: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm, zIndex: 30 },
   card: {
-    width: "90%",
-    maxWidth: 400,
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
     overflow: "hidden",
@@ -144,43 +134,19 @@ const styles = StyleSheet.create({
     borderColor: withAlpha(COLORS.accent, 0.45),
     ...cardShadow,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  portrait: {
-    marginRight: SPACING.sm,
-    marginTop: -2,
-  },
-  characterImage: {
-    width: 100,
-    height: 130,
-  },
-  speech: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-  },
+  row: { flexDirection: "row", alignItems: "flex-start" },
+  portrait: { marginRight: SPACING.sm, marginTop: -2 },
+  characterImage: { width: 84, height: 110 },
+  speech: { flex: 1 },
+  nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
     color: COLORS.accent,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
   },
-  role: {
-    color: COLORS.textMuted,
-    fontWeight: WEIGHT.regular,
-    fontFamily: FONT.medium,
-  },
-  progress: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    fontFamily: FONT.medium,
-    marginBottom: 4,
-  },
+  role: { color: COLORS.textMuted, fontWeight: WEIGHT.regular, fontFamily: FONT.medium },
+  progress: { color: COLORS.textMuted, fontSize: TYPE.micro, fontFamily: FONT.medium },
   title: {
     color: COLORS.textPrimary,
     fontSize: TYPE.heading,
@@ -188,37 +154,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 3,
   },
-  text: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.label,
-    lineHeight: 18,
-  },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    marginTop: SPACING.sm,
-  },
-  skipBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: SPACING.sm,
-    marginRight: SPACING.xs,
-  },
-  skipText: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    fontFamily: FONT.medium,
-  },
+  text: { color: COLORS.textMuted, fontSize: TYPE.label, lineHeight: 18 },
+  footer: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: SPACING.sm },
+  skipBtn: { paddingVertical: 8, paddingHorizontal: SPACING.sm, marginRight: SPACING.xs },
+  skipText: { color: COLORS.textMuted, fontSize: TYPE.caption, fontFamily: FONT.medium },
   nextBtn: {
     borderRadius: RADIUS.chip,
     paddingVertical: 9,
     paddingHorizontal: SPACING.lg,
     overflow: "hidden",
   },
-  nextText: {
-    color: "#1a1410",
-    fontFamily: FONT.black,
-    fontSize: TYPE.label,
-    lineHeight: 18,
-  },
+  nextText: { color: "#1a1410", fontFamily: FONT.black, fontSize: TYPE.label, lineHeight: 18 },
 });

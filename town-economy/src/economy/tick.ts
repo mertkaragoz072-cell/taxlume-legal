@@ -13,7 +13,13 @@ import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./dem
 import { doctrineModifiers } from "./doctrines";
 import { houseSupplyDelta, rollActivity } from "./tradingHouses";
 import { RIVAL_TRADERS_BY_ID, rivalSupplyDelta, rollRivalActivity } from "./rivals";
-import { BOUNTY_SPAWN_CHANCE, BOUNTY_MAX_ACTIVE, BOUNTY_DURATION_TICKS, BOUNTY_REWARD_BONUS, generateBountyId } from "./bounties";
+import {
+  BOUNTY_SPAWN_CHANCE,
+  BOUNTY_MAX_ACTIVE,
+  BOUNTY_DURATION_TICKS,
+  BOUNTY_REWARD_BONUS,
+  generateBountyId,
+} from "./bounties";
 import { generateDailyQuotas } from "./productionQuotas";
 import {
   CRISIS_CHANCE,
@@ -546,7 +552,9 @@ export function tick(state: EconomyState): EconomyState {
   // Rivals also work on rotating goods, but they're on your home market
   // instead of foreign markets. When they move on, roll new activities.
   const rivalActivities = state.rivalActivities.map((a) =>
-    state.tick + 1 >= a.untilTick ? rollRivalActivity(a.rivalId, state.tick + 1, TICKS_PER_GAME_DAY, eligibleGoodIds) : a
+    state.tick + 1 >= a.untilTick
+      ? rollRivalActivity(a.rivalId, state.tick + 1, TICKS_PER_GAME_DAY, eligibleGoodIds)
+      : a
   );
 
   const foreignTowns = { ...state.foreignTowns };
@@ -760,10 +768,13 @@ export function tick(state: EconomyState): EconomyState {
   }
 
   // Bounty system: filter expired, spawn new ones
-  let activeBounties = state.activeBounties.filter((b) => b.expiresAt > nextTick);
+  const activeBounties = state.activeBounties.filter((b) => b.expiresAt > nextTick);
   if (activeBounties.length < BOUNTY_MAX_ACTIVE && Math.random() < BOUNTY_SPAWN_CHANCE) {
-    const rivalId = Object.keys(RIVAL_TRADERS_BY_ID)[Math.floor(Math.random() * Object.keys(RIVAL_TRADERS_BY_ID).length)];
-    const goodId = GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id)[Math.floor(Math.random() * GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id).length)];
+    const rivalId =
+      Object.keys(RIVAL_TRADERS_BY_ID)[Math.floor(Math.random() * Object.keys(RIVAL_TRADERS_BY_ID).length)];
+    const goodId = GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id)[
+      Math.floor(Math.random() * GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id).length)
+    ];
     const good = GOODS_BY_ID[goodId];
     const side = Math.random() < 0.5 ? "buying" : "selling";
     const quantity = Math.round(good.baseProduction * (2 + Math.random() * 2));

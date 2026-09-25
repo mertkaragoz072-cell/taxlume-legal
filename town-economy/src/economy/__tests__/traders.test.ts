@@ -45,7 +45,7 @@ describe("known traders", () => {
   });
 
   test("reputation bounds are -100 to +100", () => {
-    let rep = 50;
+    const rep = 50;
     const modifier = REPUTATION_TO_PRICE_MODIFIER(rep);
     expect(modifier).toBeGreaterThanOrEqual(-0.06);
     expect(modifier).toBeLessThanOrEqual(0.06);

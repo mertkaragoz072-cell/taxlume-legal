@@ -1,10 +1,10 @@
 import React from "react";
 import { Dimensions, StyleSheet, Text, View, Image } from "react-native";
+import kasabaMeydaniImage from "../../assets/kasaba-meydani.webp";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
 
 interface Props {
-  happiness: number;
   label: string;
   moodLabel: string;
   moodColor: string;
@@ -26,7 +26,7 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
 }
 
 /** Kasaba meydanı görseli — sadece görsel, mekanik efekti yok. */
-export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Props) {
+export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
   return (
     <View style={styles.card}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -34,7 +34,7 @@ export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Prop
 
       <View style={styles.scene}>
         <Image
-          source={require("../../assets/kasaba-meydani.webp")}
+          source={kasabaMeydaniImage}
           style={{ width: SCENE_WIDTH, height: SCENE_HEIGHT }}
           resizeMode="contain"
         />
