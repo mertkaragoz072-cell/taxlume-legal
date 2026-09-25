@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image } from "react-native";
 import kasabaMeydaniImage from "../../assets/kasaba-meydani.webp";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
@@ -10,8 +10,12 @@ interface Props {
   moodColor: string;
 }
 
-const SCENE_WIDTH = Math.min(Dimensions.get("window").width - 64, 400);
-const SCENE_HEIGHT = Math.round((SCENE_WIDTH * 180) / 400);
+// The asset's own ratio (1170×739 px) rather than a guessed box: a mismatch
+// here is what "contain" turns into empty bars down both sides — which was
+// the actual bug, not the card's padding. Sized as a percentage of the card
+// (not a Dimensions.get() snapshot) so it fills the card correctly at any
+// screen width and on rotation, with no manual re-measure.
+const IMAGE_RATIO = 1170 / 739;
 
 /** How to label the square: the word for this mood and the colour that goes
  * with it. Lives here rather than in a screen because two of them caption
@@ -33,11 +37,7 @@ export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
       <Text style={styles.label}>{label}</Text>
 
       <View style={styles.scene}>
-        <Image
-          source={kasabaMeydaniImage}
-          style={{ width: SCENE_WIDTH, height: SCENE_HEIGHT }}
-          resizeMode="contain"
-        />
+        <Image source={kasabaMeydaniImage} style={styles.image} resizeMode="cover" />
       </View>
 
       <Text style={[styles.moodCaption, { color: moodColor }]}>{moodLabel}</Text>
@@ -48,30 +48,34 @@ export function TownSquareScene({ label, moodLabel, moodColor }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
+    // A thin frame, not a mat: the picture is the point of this card, so
+    // padding is just enough to keep the label and caption off its edge.
+    paddingHorizontal: SPACING.sm,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.md,
     marginBottom: SPACING.lg,
     overflow: "hidden",
-    alignItems: "center",
+    alignItems: "stretch",
     ...cardShadow,
   },
   label: {
-    alignSelf: "flex-start",
     color: COLORS.textMuted,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     letterSpacing: 0.5,
     marginBottom: SPACING.sm,
+    marginLeft: SPACING.xs,
   },
   scene: {
-    width: SCENE_WIDTH,
-    height: SCENE_HEIGHT,
+    width: "100%",
+    aspectRatio: IMAGE_RATIO,
     borderRadius: RADIUS.card,
     overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
   },
+  image: { width: "100%", height: "100%" },
   moodCaption: {
+    alignSelf: "center",
     marginTop: SPACING.md,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
