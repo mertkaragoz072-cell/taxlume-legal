@@ -13,6 +13,8 @@ import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./dem
 import { doctrineModifiers } from "./doctrines";
 import { houseSupplyDelta, rollActivity } from "./tradingHouses";
 import { RIVAL_TRADERS_BY_ID, rivalSupplyDelta, rollRivalActivity } from "./rivals";
+import { BOUNTY_SPAWN_CHANCE, BOUNTY_MAX_ACTIVE, BOUNTY_DURATION_TICKS, BOUNTY_REWARD_BONUS, generateBountyId } from "./bounties";
+import { generateDailyQuotas } from "./productionQuotas";
 import {
   CRISIS_CHANCE,
   CRISIS_TEMPLATES_BY_ID,
@@ -459,6 +461,7 @@ export function tick(state: EconomyState): EconomyState {
   }
 
   const goods = { ...state.goods };
+  let productionToday = { ...state.productionToday };
   for (const good of GOODS) {
     const gs = goods[good.id];
     const { min: minSupply, max: maxSupply } = supplyBounds(good);
@@ -496,6 +499,7 @@ export function tick(state: EconomyState): EconomyState {
         (id) => state.goods[id].supply,
         (id) => GOODS_BY_ID[id].baseSupply
       );
+    productionToday[good.id] = (productionToday[good.id] ?? 0) + production;
     let supply =
       gs.supply +
       (production - good.baseProduction) +
@@ -755,6 +759,66 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  // Bounty system: filter expired, spawn new ones
+  let activeBounties = state.activeBounties.filter((b) => b.expiresAt > nextTick);
+  if (activeBounties.length < BOUNTY_MAX_ACTIVE && Math.random() < BOUNTY_SPAWN_CHANCE) {
+    const rivalId = Object.keys(RIVAL_TRADERS_BY_ID)[Math.floor(Math.random() * Object.keys(RIVAL_TRADERS_BY_ID).length)];
+    const goodId = GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id)[Math.floor(Math.random() * GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id).length)];
+    const good = GOODS_BY_ID[goodId];
+    const side = Math.random() < 0.5 ? "buying" : "selling";
+    const quantity = Math.round(good.baseProduction * (2 + Math.random() * 2));
+    const priceMultiplier = 1 + (side === "buying" ? -0.2 : 0.2);
+    const reward = Math.round(quantity * good.basePrice * priceMultiplier * BOUNTY_REWARD_BONUS);
+    activeBounties.push({
+      id: generateBountyId(),
+      rivalId,
+      goodId,
+      side,
+      quantity,
+      priceMultiplier,
+      reward,
+      expiresAt: nextTick + BOUNTY_DURATION_TICKS,
+      fulfilled: 0,
+    });
+    newEvents.push({
+      id: nextId++,
+      message: t(state.language, "msg.bountyAppeared", {
+        rivalName: t(state.language, RIVAL_TRADERS_BY_ID[rivalId]?.nameKey || "rival.unknown"),
+        good: t(state.language, good.nameKey),
+        side: t(state.language, side === "buying" ? "bounty.buying" : "bounty.selling"),
+        qty: quantity,
+        reward: formatNumberUtil(reward, state.language),
+      }),
+      tone: "good",
+    });
+  }
+
+  // Production quota system: check if day just changed
+  const currentDay = gameDayFromTick(nextTick);
+  const previousDay = gameDayFromTick(state.tick);
+  let productionQuotas = state.productionQuotas;
+  if (currentDay > previousDay) {
+    productionQuotas = generateDailyQuotas();
+    productionToday = Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>;
+  }
+
+  // Award bonuses for completed quotas
+  let quotaBonusCash = 0;
+  for (const quota of state.productionQuotas) {
+    const produced = productionToday[quota.goodId] ?? 0;
+    if (produced >= quota.target && state.productionToday[quota.goodId] < quota.target) {
+      quotaBonusCash += quota.bonus;
+      newEvents.push({
+        id: nextId++,
+        message: t(state.language, "msg.quotaMet", {
+          good: t(state.language, GOODS_BY_ID[quota.goodId].nameKey),
+          bonus: formatNumberUtil(quota.bonus, state.language),
+        }),
+        tone: "good",
+      });
+    }
+  }
+
   const lastEvent = newEvents.length > 0 ? newEvents[newEvents.length - 1] : state.lastEvent;
   const eventLog =
     newEvents.length > 0
@@ -773,7 +837,10 @@ export function tick(state: EconomyState): EconomyState {
     caravans: stillTraveling,
     contracts: stillOpenContracts,
     bulkContracts: stillOpenBulkContracts,
-    cash,
+    cash: cash + quotaBonusCash,
+    activeBounties,
+    productionQuotas,
+    productionToday,
     // A crisis knocks the villagers' mood down on the tick it lands, on top
     // of the supply damage; it eases back up from there at the usual rate.
     happiness: clamp(happiness - crisisHappinessLoss, 0, 100),

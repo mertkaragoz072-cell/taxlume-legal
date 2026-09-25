@@ -889,6 +889,8 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
       dailyProgress: makeInitialDailyProgress(),
       dailyQuests: makeDailyQuests(today),
       activeMiniQuest: null,
+      productionQuotas: generateDailyQuotas(),
+      productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
       weeklyChallenge: ensureWeeklyChallenge(state, today),
     };
   }
@@ -918,6 +920,8 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     // via a baseline snapshot — resetting those out from under it would
     // make it unwinnable, so just drop it; a new one spawns again soon.
     activeMiniQuest: null,
+    productionQuotas: generateDailyQuotas(),
+    productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     weeklyChallenge: ensureWeeklyChallenge(state, today),
   };
 }

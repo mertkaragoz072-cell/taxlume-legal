@@ -1019,6 +1019,9 @@ export const STRINGS = {
       flash_earnings: { title: "Hızlı Kazanç", description: "Hızla 40 🪙 kazan!" },
       flash_caravan: { title: "Aceleci Kervan", description: "Hemen bir kervan yola çıkar!" },
       flash_upgrade: { title: "Ani Yatırım", description: "Hemen bir kasaba geliştirmesi satın al!" },
+      flash_quick_profit: { title: "Fırsat Çıktı", description: "100 🪙 hızla kazan!" },
+      flash_holding_goods: { title: "Depo Dolu", description: "50 ürün elinde tut!" },
+      flash_streak: { title: "Seri Zafer", description: "Art arda 3 kârlı ticaret yap!" },
     },
     weeklyChallenge: {
       weekly_trader: { title: "Haftanın Tüccarı", description: "Bu hafta {target} alım-satım yap." },
@@ -1217,6 +1220,12 @@ export const STRINGS = {
       goodSoldLoss: "📉 {qty} {good} sattın, -{amount} 🪙 zarar ettin.",
       goodSoldProfitStreak:
         "🔥 {streak} seri! {qty} {good} sattın, +{amount} 🪙 kâr (+%{bonusPct} bonus dahil)!",
+      bountyAppeared: "🎯 {rivalName} {side} için {qty} {good} aradığını bildirdi. Tamamlamaya +{reward} 🪙 kazanç!",
+      quotaMet: "🎖️ Günlük görev: {good} üretim hedefine ulaştın! +{bonus} 🪙 bonus!",
+    },
+    bounty: {
+      buying: "satın alıyor",
+      selling: "satıyor",
     },
   },
   en: {
@@ -2213,6 +2222,9 @@ export const STRINGS = {
       flash_earnings: { title: "Quick Cash", description: "Earn 40 🪙 fast!" },
       flash_caravan: { title: "Rush Caravan", description: "Send a caravan right now!" },
       flash_upgrade: { title: "Sudden Investment", description: "Buy a town upgrade right now!" },
+      flash_quick_profit: { title: "Quick Profit", description: "Earn 100 🪙 fast!" },
+      flash_holding_goods: { title: "Full Warehouse", description: "Hold 50 goods in inventory!" },
+      flash_streak: { title: "Win Streak", description: "Make 3 profitable trades in a row!" },
     },
     weeklyChallenge: {
       weekly_trader: { title: "Trader of the Week", description: "Make {target} trades this week." },
@@ -2418,6 +2430,12 @@ export const STRINGS = {
       goodSoldLoss: "📉 Sold {qty} {good}, -{amount} 🪙 loss.",
       goodSoldProfitStreak:
         "🔥 {streak}-win streak! Sold {qty} {good}, +{amount} 🪙 profit (includes +{bonusPct}% bonus)!",
+      bountyAppeared: "🎯 {rivalName} is {side} {qty} {good}. Completion reward: +{reward} 🪙!",
+      quotaMet: "🎖️ Daily quota met: {good} production target reached! +{bonus} 🪙 bonus!",
+    },
+    bounty: {
+      buying: "buying",
+      selling: "selling",
     },
   },
 } as const;
