@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
@@ -427,54 +427,56 @@ export function AchievementsScreen() {
       </View>
 
       <SectionLabel text={t("backup.sectionLabel")} color="#a0917a" />
-      <View style={styles.backupCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <Text style={styles.description}>{t("backup.description")}</Text>
-        <ScalePressable onPress={handleCopyCode} style={styles.backupBtn} scaleTo={0.97}>
-          <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-          <Text style={styles.backupBtnText}>{t("backup.copyBtn")}</Text>
-        </ScalePressable>
-        {copyFeedback && <Text style={styles.backupFeedbackSuccess}>{t("backup.copied")}</Text>}
-
-        <Text style={[styles.description, styles.backupImportDesc]}>{t("backup.importDescription")}</Text>
-        <TextInput
-          value={importText}
-          onChangeText={(text) => {
-            setImportText(text);
-            setImportArmed(false);
-            setImportFeedback(null);
-          }}
-          placeholder={t("backup.importPlaceholder")}
-          placeholderTextColor="#6b5f4d"
-          style={styles.backupInput}
-          multiline
-          numberOfLines={3}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <ScalePressable
-          disabled={importText.trim().length === 0}
-          onPress={handleImport}
-          style={[styles.backupBtn, importText.trim().length === 0 && styles.backupBtnDisabled]}
-          scaleTo={0.97}
-        >
-          {importText.trim().length > 0 && (
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <View style={styles.backupCard}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <Text style={styles.description}>{t("backup.description")}</Text>
+          <ScalePressable onPress={handleCopyCode} style={styles.backupBtn} scaleTo={0.97}>
             <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-          )}
-          <Text style={styles.backupBtnText}>
-            {importArmed ? t("backup.confirmImportBtn") : t("backup.importBtn")}
-          </Text>
-        </ScalePressable>
-        {importFeedback && (
-          <Text
-            style={
-              importFeedback.type === "success" ? styles.backupFeedbackSuccess : styles.backupFeedbackError
-            }
+            <Text style={styles.backupBtnText}>{t("backup.copyBtn")}</Text>
+          </ScalePressable>
+          {copyFeedback && <Text style={styles.backupFeedbackSuccess}>{t("backup.copied")}</Text>}
+
+          <Text style={[styles.description, styles.backupImportDesc]}>{t("backup.importDescription")}</Text>
+          <TextInput
+            value={importText}
+            onChangeText={(text) => {
+              setImportText(text);
+              setImportArmed(false);
+              setImportFeedback(null);
+            }}
+            placeholder={t("backup.importPlaceholder")}
+            placeholderTextColor="#6b5f4d"
+            style={styles.backupInput}
+            multiline
+            numberOfLines={3}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <ScalePressable
+            disabled={importText.trim().length === 0}
+            onPress={handleImport}
+            style={[styles.backupBtn, importText.trim().length === 0 && styles.backupBtnDisabled]}
+            scaleTo={0.97}
           >
-            {importFeedback.text}
-          </Text>
-        )}
-      </View>
+            {importText.trim().length > 0 && (
+              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+            )}
+            <Text style={styles.backupBtnText}>
+              {importArmed ? t("backup.confirmImportBtn") : t("backup.importBtn")}
+            </Text>
+          </ScalePressable>
+          {importFeedback && (
+            <Text
+              style={
+                importFeedback.type === "success" ? styles.backupFeedbackSuccess : styles.backupFeedbackError
+              }
+            >
+              {importFeedback.text}
+            </Text>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </ScrollView>
   );
 }
