@@ -3,6 +3,7 @@ import { DemandCycle } from "./demandCycles";
 import { ScheduledCrisis } from "./crises";
 import { DoctrineId } from "./doctrines";
 import { TradingHouseActivity } from "./tradingHouses";
+import { TraderReputation } from "./traders";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -412,6 +413,10 @@ export interface EconomyState {
    * tradingHouses.ts. They move the same foreign markets the player does,
    * which is what stops a good route from staying good forever. */
   tradingHouses: TradingHouseActivity[];
+  /** the player's reputation with each known trader — see traders.ts. Each
+   * trader remembers past trades and offers price adjustments based on
+   * relationship. Maps trader id to reputation state. */
+  traderReputations: Record<string, TraderReputation>;
 }
 
 export interface WeeklyChallenge {

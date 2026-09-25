@@ -8,6 +8,7 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { openingDemandCycles } from "./demandCycles";
 import { MENTOR_STEPS } from "./mentor";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
+import { TRADERS, TRADERS_BY_ID, getTraderReputation, reputationDelta, REPUTATION_PER_UNIT, REPUTATION_TO_PRICE_MODIFIER } from "./traders";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
 import { PROPERTIES_BY_ID } from "./properties";
@@ -396,6 +397,9 @@ export function initialState(
     tradingHouses: TRADING_HOUSES.map((h) =>
       rollActivity(h.id, 0, TICKS_PER_GAME_DAY, allTownIds, day1GoodIds)
     ),
+    // Known traders start at neutral reputation (0); they will become known
+    // to the player through repeated trades, see traders.ts.
+    traderReputations: {},
   };
 }
 export function todayString(): string {
@@ -405,10 +409,16 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   if (state.gameOver) return state;
   const good = GOODS_BY_ID[goodId];
   const gs = state.goods[goodId];
-  const midPrice = gs.price;
+  let midPrice = gs.price;
   const marketDepth = marketDepthFactor(state);
   const spread = MARKET_SPREAD / marketDepth;
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
+
+  // A random trader appears for each transaction, bringing their reputation into the price.
+  const traderId = TRADERS[Math.floor(Math.random() * TRADERS.length)].id;
+  const traderRep = state.traderReputations[traderId] ?? { traderId, reputation: 0, tradeCount: 0, metAtTick: state.tick };
+  const priceModifier = REPUTATION_TO_PRICE_MODIFIER(traderRep.reputation);
+  midPrice = midPrice * (1 + priceModifier);
 
   if (side === "buy") {
     const price = midPrice * (1 + spread / 2);
@@ -424,6 +434,14 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
       -DEMAND_PRESSURE_MAX,
       DEMAND_PRESSURE_MAX
     );
+    // Update trader reputation
+    const trader = TRADERS_BY_ID[traderId];
+    const repDelta = reputationDelta(goodId, "buy", amount, trader);
+    const updatedTraderRep: typeof traderRep = {
+      ...traderRep,
+      reputation: Math.max(-100, Math.min(100, traderRep.reputation + repDelta)),
+      tradeCount: traderRep.tradeCount + 1,
+    };
     return {
       ...state,
       cash: state.cash - cost,
@@ -436,6 +454,10 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
           demandPressure,
           supply: clamp(gs.supply - amount / marketDepth, minSupply, maxSupply),
         },
+      },
+      traderReputations: {
+        ...state.traderReputations,
+        [traderId]: updatedTraderRep,
       },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
       dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
@@ -474,6 +496,14 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
           amount: formatNumberUtil(Math.abs(pnl), state.language),
         });
   const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
+  // Update trader reputation
+  const trader = TRADERS_BY_ID[traderId];
+  const repDelta = reputationDelta(goodId, "sell", amount, trader);
+  const updatedTraderRep: typeof traderRep = {
+    ...traderRep,
+    reputation: Math.max(-100, Math.min(100, traderRep.reputation + repDelta)),
+    tradeCount: traderRep.tradeCount + 1,
+  };
   return {
     ...state,
     cash: state.cash + proceeds + bonus,
@@ -486,6 +516,10 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
         demandPressure,
         supply: clamp(gs.supply + amount / marketDepth, minSupply, maxSupply),
       },
+    },
+    traderReputations: {
+      ...state.traderReputations,
+      [traderId]: updatedTraderRep,
     },
     nextId: state.nextId + 1,
     lastEvent: event,
