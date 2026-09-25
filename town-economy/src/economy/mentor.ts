@@ -116,6 +116,20 @@ export const MENTOR_STEPS: MentorStep[] = [
 
 export const MENTOR_DONE = MENTOR_STEPS.length;
 
+/** Whether this beat is still waiting on the player to do something.
+ *
+ * `escaped` is the coach's timeout having fired. A beat that asks for an
+ * action hides its Continue button, so without that escape the only way
+ * past it is to complete the action — and the action can be out of reach:
+ * too little cash for the trade, a full storage yard, or a highlight that
+ * failed to measure and so never appeared. A tutorial may insist for a
+ * moment; it may not trap.
+ */
+export function isWaitingOnPlayer(step: MentorStep, state: EconomyState, escaped: boolean): boolean {
+  if (!step.isDone || escaped) return false;
+  return !step.isDone(state);
+}
+
 export function currentMentorStep(step: number): MentorStep | null {
   return step >= 0 && step < MENTOR_STEPS.length ? MENTOR_STEPS[step] : null;
 }

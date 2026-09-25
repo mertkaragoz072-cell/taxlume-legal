@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES } from "../economy/difficulty";
 import { effectiveDifficultyConfig } from "../economy/ngPlusModifiers";
-import { currentMentorStep, MENTOR_STEPS } from "../economy/mentor";
+import { currentMentorStep, isWaitingOnPlayer, MENTOR_STEPS } from "../economy/mentor";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -51,6 +51,19 @@ export function MentorCoach({ onNext, onSkip }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const index = state.mentorStep;
 
+  // Second way out of a beat that asks for an action, because the first one
+  // — doing it — can be out of reach: too little cash for the trade, a
+  // storage yard already full, a control the overlay failed to measure. A
+  // tutorial is allowed to insist, briefly; it is not allowed to trap. After
+  // a quarter of a minute the Continue button comes back.
+  const [escaped, setEscaped] = useState(false);
+  useEffect(() => {
+    setEscaped(false);
+    if (!MENTOR_STEPS[index]?.isDone) return;
+    const timer = setTimeout(() => setEscaped(true), 15000);
+    return () => clearTimeout(timer);
+  }, [index]);
+
   // Re-run per beat: she lifts back in each time she says something new,
   // which is what stops seven paragraphs in the same box reading as one
   // long wall of text.
@@ -69,7 +82,7 @@ export function MentorCoach({ onNext, onSkip }: Props) {
   // A beat with something to do withholds its Continue button: the way past
   // it is to do the thing. Skip stays, so nobody can be stranded by a step
   // they cannot complete.
-  const waitingOnPlayer = Boolean(step.isDone) && !step.isDone!(state);
+  const waitingOnPlayer = isWaitingOnPlayer(step, state, escaped);
   const say = (key: string) => t(key, { limit: hyperinflationIndex });
 
   return (

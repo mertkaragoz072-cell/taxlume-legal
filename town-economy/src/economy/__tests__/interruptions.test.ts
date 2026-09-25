@@ -3,7 +3,8 @@ import { t } from "../../i18n/t";
 import { INTERRUPTION_COOLDOWN_TICKS, TICKS_PER_GAME_DAY } from "../constants";
 import { isGoodUnlocked } from "../formulas";
 import { GOODS, GOODS_BY_ID } from "../goods";
-import { MENTOR_STEPS } from "../mentor";
+import { isWaitingOnPlayer, MENTOR_STEPS } from "../mentor";
+import { shouldRenderOverlay } from "../../components/Spotlight";
 import { rollRivalTraderOffer } from "../rivalTrader";
 import { tick } from "../tick";
 import { EconomyState, GoodId } from "../types";
@@ -161,6 +162,27 @@ describe("mentor script", () => {
     const fresh = initialState();
     expect(buy.isDone!(fresh)).toBe(false);
     expect(buy.isDone!({ ...fresh, stats: { ...fresh.stats, totalTrades: 1 } })).toBe(true);
+  });
+
+  it("never leaves a beat with nothing on screen to press", () => {
+    // What actually went wrong on a device: a beat that waits on an action
+    // hides its Continue button, and the overlay dimmed the whole screen
+    // while it waited for a measurement it never got. Between them there
+    // was a state with no hole to press and no button to press, and the
+    // tour simply stopped. Both halves are guarded here.
+    expect(shouldRenderOverlay("buy", null)).toBe(false);
+    expect(shouldRenderOverlay("buy", { width: 0 })).toBe(false);
+    expect(shouldRenderOverlay("buy", { width: 120 })).toBe(true);
+    expect(shouldRenderOverlay(null, { width: 120 })).toBe(false);
+
+    const buy = MENTOR_STEPS.find((s) => s.id === "buy")!;
+    const fresh = initialState();
+    expect(isWaitingOnPlayer(buy, fresh, false)).toBe(true);
+    expect(isWaitingOnPlayer(buy, fresh, true)).toBe(false); // the timeout
+    const traded = { ...fresh, stats: { ...fresh.stats, totalTrades: 1 } };
+    expect(isWaitingOnPlayer(buy, traded, false)).toBe(false);
+    // A beat with nothing to do never waits, escape or not.
+    expect(isWaitingOnPlayer(MENTOR_STEPS[0], fresh, false)).toBe(false);
   });
 
   it("says how a run ends, with the number that ends it", () => {

@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { BlurView } from "expo-blur";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { COLORS, RADIUS, withAlpha } from "../theme";
 
@@ -102,6 +103,17 @@ export function SpotlightTarget({
 
 const HOLE_PAD = 8;
 
+/** Whether to put anything over the game at all.
+ *
+ * Fail open, never closed: without a measured rect there is no hole, and an
+ * overlay with no hole on a beat that waits for the player to press
+ * something is a dead end — which is exactly what it was. Losing the
+ * highlight is a cosmetic failure; losing the only pressable control is not.
+ */
+export function shouldRenderOverlay(target: SpotlightId | null, rect: { width: number } | null) {
+  return Boolean(target) && rect !== null && rect.width > 0;
+}
+
 /** Dims the whole screen except one control, which stays live.
  *
  * Four panels around the hole rather than a mask: the hole is simply a
@@ -142,12 +154,18 @@ export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
     };
   }, [ctx, target]);
 
-  if (!target) return null;
+  if (!rect || !shouldRenderOverlay(target, rect)) return null;
 
-  // Until the target has been measured, dim everything: better a beat of
-  // full dim than a hole in the wrong place with a live control under it.
-  if (!rect)
-    return <Pressable style={[StyleSheet.absoluteFill, styles.dim, styles.panel]} onPress={() => {}} />;
+  // No measurement, no overlay — fail open, never closed.
+  // (see shouldRenderOverlay)
+  //
+  // This used to dim the whole screen while it waited, on the reasoning
+  // that a full dim beats a hole in the wrong place. That was exactly
+  // backwards on the one beat that matters: the step asking for a trade
+  // withholds its Continue button, so a dim with no hole left nothing on
+  // screen to press and the tour simply stopped. A target that fails to
+  // measure now costs the highlight and nothing else — the step still
+  // reads, and the button under it still works.
 
   const left = rect.x - HOLE_PAD;
   const top = rect.y - HOLE_PAD;
@@ -156,22 +174,10 @@ export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
 
   return (
     <>
-      <Pressable
-        style={[styles.panel, styles.dim, { left: 0, right: 0, top: 0, height: Math.max(0, top) }]}
-        onPress={() => {}}
-      />
-      <Pressable
-        style={[styles.panel, styles.dim, { left: 0, right: 0, top: bottom, bottom: 0 }]}
-        onPress={() => {}}
-      />
-      <Pressable
-        style={[styles.panel, styles.dim, { left: 0, top, height: bottom - top, width: Math.max(0, left) }]}
-        onPress={() => {}}
-      />
-      <Pressable
-        style={[styles.panel, styles.dim, { left: right, right: 0, top, height: bottom - top }]}
-        onPress={() => {}}
-      />
+      <Panel style={{ left: 0, right: 0, top: 0, height: Math.max(0, top) }} />
+      <Panel style={{ left: 0, right: 0, top: bottom, bottom: 0 }} />
+      <Panel style={{ left: 0, top, height: bottom - top, width: Math.max(0, left) }} />
+      <Panel style={{ left: right, right: 0, top, height: bottom - top }} />
       <View
         pointerEvents="none"
         style={[styles.ring, { left, top, width: right - left, height: bottom - top }]}
@@ -180,9 +186,29 @@ export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
   );
 }
 
+/** One quarter of the frame around the lit control.
+ *
+ * A real blur rather than a flat scrim: the game stays legible behind it,
+ * so the player can still see the market they are being taught about
+ * instead of a black sheet. The dark wash over the blur is what makes the
+ * lit button obviously the bright thing on screen, and it is also the whole
+ * effect on a runtime where BlurView does nothing (some browsers).
+ *
+ * A Pressable with an empty handler on purpose: everything outside the hole
+ * is meant to be visibly, deliberately inert.
+ */
+function Panel({ style }: { style: ViewStyle }) {
+  return (
+    <Pressable style={[styles.panel, style]} onPress={() => {}}>
+      <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.wash]} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   panel: { position: "absolute", zIndex: 20 },
-  dim: { backgroundColor: "rgba(8, 5, 3, 0.82)" },
+  wash: { backgroundColor: "rgba(8, 5, 3, 0.62)" },
   ring: {
     position: "absolute",
     zIndex: 20,
