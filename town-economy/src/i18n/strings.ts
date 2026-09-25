@@ -141,6 +141,10 @@ export const STRINGS = {
         hint: "Aranan malı satmak kârlı; bollaşacak malı önceden elden çıkarın.",
       },
       sectionLabel: "KASABA PİYASASI",
+      madeFrom: "Girdi",
+      inputShort: "Bundan yapılır: {inputs}",
+      inputScarce: "kıt",
+      inputAmple: "bol",
       sentiment: {
         bullish: "Boğa Piyasası",
         bearish: "Ayı Piyasası",
@@ -659,6 +663,9 @@ export const STRINGS = {
       cheese: { name: "Peynir", producer: "Mandıra" },
       paper: { name: "Kağıt", producer: "Kağıt Atölyesi" },
       glass: { name: "Cam Eşya", producer: "Camcı" },
+      grain: { name: "Buğday", producer: "Çiftçi" },
+      wool: { name: "Yün", producer: "Çoban" },
+      sand: { name: "Kum", producer: "Kumcu" },
     },
     asset: {
       gold: { name: "Altın", description: "Güvenli liman — yavaş ama istikrarlı değer kazanır." },
@@ -1334,6 +1341,10 @@ export const STRINGS = {
         hint: "Sell into demand, and clear stock before a good floods the market.",
       },
       sectionLabel: "TOWN MARKET",
+      madeFrom: "Made from",
+      inputShort: "Made from {inputs}",
+      inputScarce: "scarce",
+      inputAmple: "ample",
       sentiment: {
         bullish: "Bull Market",
         bearish: "Bear Market",
@@ -1850,6 +1861,9 @@ export const STRINGS = {
       cheese: { name: "Cheese", producer: "Creamery" },
       paper: { name: "Paper", producer: "Paper Mill" },
       glass: { name: "Glassware", producer: "Glassworks" },
+      grain: { name: "Grain", producer: "Farmer" },
+      wool: { name: "Wool", producer: "Shepherd" },
+      sand: { name: "Sand", producer: "Sand pit" },
     },
     asset: {
       gold: { name: "Gold", description: "A safe haven — slow but steady value growth." },

@@ -16,7 +16,7 @@ import {
 import { ForeignTown } from "./towns";
 import { doctrineModifiers } from "./doctrines";
 import { UPGRADES_BY_ID } from "./upgrades";
-import { EconomyState, Good } from "./types";
+import { EconomyState, Good, GoodId } from "./types";
 import {
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
@@ -185,4 +185,40 @@ export function effectiveMetropolUnlockNetWorth(state: EconomyState): number {
  * quotes the price, so the two can never disagree. */
 export function researchCost(state: EconomyState, node: { cost: number }): number {
   return Math.round(node.cost * doctrineModifiers(state.doctrine).researchCostMult);
+}
+
+/** How much of its normal output a good can manage, given what it is made
+ * from.
+ *
+ * Six goods are now downstream of another: bread of grain, cloth of wool,
+ * cheese of milk, paper and glass of wood, jewellery of iron. When an input
+ * runs short its output follows, which is the whole point — a drought hits
+ * grain on the day, and bread two days later, and a player who saw the
+ * first coming can be holding bread before the second arrives. Fifteen
+ * independent random walks become a market with a shape to read.
+ *
+ * It throttles rather than consumes. Consumption is the more realistic
+ * model and also the one that can run away: a chain that eats its input
+ * faster than the input is produced collapses permanently and the good
+ * never comes back, which is a bug report, not a mechanic. Scarcity slows
+ * the workshop; it does not close it — hence the floor. The ceiling is
+ * small on purpose, so a glut of wool is a modest tailwind for cloth and
+ * not a way to print it.
+ */
+export const INPUT_FACTOR_MIN = 0.3;
+export const INPUT_FACTOR_MAX = 1.1;
+
+export function productionInputFactor(
+  good: Good,
+  supplyOf: (id: GoodId) => number,
+  baseSupplyOf: (id: GoodId) => number
+): number {
+  if (!good.inputs || good.inputs.length === 0) return 1;
+  let factor = INPUT_FACTOR_MAX;
+  for (const input of good.inputs) {
+    const base = baseSupplyOf(input);
+    const ratio = base > 0 ? supplyOf(input) / base : 1;
+    factor = Math.min(factor, clamp(ratio, INPUT_FACTOR_MIN, INPUT_FACTOR_MAX));
+  }
+  return factor;
 }

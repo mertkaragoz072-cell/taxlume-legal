@@ -7,6 +7,39 @@ import { Good, GoodId } from "./types";
 // commodity prices behave relative to finished/staple goods.
 export const GOODS: Good[] = [
   {
+    id: "grain",
+    nameKey: "good.grain.name",
+    producerKey: "good.grain.producer",
+    icon: "🌾",
+    color: "#d8b45e",
+    basePrice: 2.6,
+    baseSupply: 320,
+    baseProduction: 34,
+    elasticity: 0.5,
+  },
+  {
+    id: "wool",
+    nameKey: "good.wool.name",
+    producerKey: "good.wool.producer",
+    icon: "🐑",
+    color: "#cfc4b0",
+    basePrice: 4.8,
+    baseSupply: 240,
+    baseProduction: 22,
+    elasticity: 0.55,
+  },
+  {
+    id: "sand",
+    nameKey: "good.sand.name",
+    producerKey: "good.sand.producer",
+    icon: "🏖️",
+    color: "#c8ab7a",
+    basePrice: 2.1,
+    baseSupply: 300,
+    baseProduction: 30,
+    elasticity: 0.4,
+  },
+  {
     id: "bread",
     nameKey: "good.bread.name",
     producerKey: "good.bread.producer",
@@ -16,6 +49,7 @@ export const GOODS: Good[] = [
     baseSupply: 220,
     baseProduction: 22,
     elasticity: 0.45,
+    inputs: ["grain"],
   },
   {
     id: "milk",
@@ -60,6 +94,7 @@ export const GOODS: Good[] = [
     baseSupply: 170,
     baseProduction: 14,
     elasticity: 0.55,
+    inputs: ["wool"],
   },
   {
     id: "fish",
@@ -129,6 +164,7 @@ export const GOODS: Good[] = [
     baseSupply: 60,
     baseProduction: 4,
     elasticity: 0.95,
+    inputs: ["iron"],
   },
   // Unlock over time (see gameDayFromTick/isGoodUnlocked in useEconomy.ts)
   // rather than by net worth — a steady drip of new products to keep
@@ -156,6 +192,7 @@ export const GOODS: Good[] = [
     baseProduction: 10,
     elasticity: 0.55,
     unlockDay: 4,
+    inputs: ["milk"],
   },
   {
     id: "paper",
@@ -168,6 +205,7 @@ export const GOODS: Good[] = [
     baseProduction: 14,
     elasticity: 0.5,
     unlockDay: 7,
+    inputs: ["wood"],
   },
   {
     id: "glass",
@@ -180,6 +218,7 @@ export const GOODS: Good[] = [
     baseProduction: 8,
     elasticity: 0.7,
     unlockDay: 10,
+    inputs: ["sand", "wood"],
   },
 ];
 
@@ -192,8 +231,8 @@ export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Re
  * kept in two places (crises.ts had its own FOOD and CRAFTED). One copy,
  * here, next to the goods themselves.
  */
-export const FOOD_GOODS: GoodId[] = ["bread", "milk", "fish", "cheese", "honey", "wine"];
-export const RAW_GOODS: GoodId[] = ["wood", "iron"];
+export const FOOD_GOODS: GoodId[] = ["bread", "milk", "fish", "cheese", "honey", "wine", "grain"];
+export const RAW_GOODS: GoodId[] = ["wood", "iron", "wool", "sand"];
 export const CRAFTED_GOODS: GoodId[] = ["cloth", "leather", "paper", "glass"];
 export const LUXURY_GOODS: GoodId[] = ["spice", "silk", "jewelry"];
 

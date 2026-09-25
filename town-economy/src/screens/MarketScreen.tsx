@@ -22,6 +22,7 @@ import { SeasonStrip } from "../components/SeasonStrip";
 import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
+import { ProductionChainLine } from "../components/ProductionChainLine";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
 import { usePriceFlash } from "../hooks/usePriceFlash";
@@ -190,6 +191,12 @@ export function MarketScreen({ sounds }: Props) {
             </Text>
           </View>
         </View>
+
+        {/* Under the good's own name, because that is where a player is
+            standing when they decide whether to buy it: a scarce input here
+            means this good's price is about to climb. */}
+        <ProductionChainLine good={selected} />
+
         <PriceChart
           history={selectedState.history}
           color={selected.color}

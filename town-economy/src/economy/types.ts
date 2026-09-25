@@ -22,7 +22,10 @@ export type GoodId =
   | "honey"
   | "cheese"
   | "paper"
-  | "glass";
+  | "glass"
+  | "grain"
+  | "wool"
+  | "sand";
 
 export type UpgradeId =
   "market" | "caravanserai" | "townhall" | "bank" | "guardTower" | "earthquakeFund" | "storageYard";
@@ -45,6 +48,9 @@ export interface Good {
   /** in-game day (see gameDayFromTick in useEconomy.ts) this good first
    * becomes tradeable; omitted/undefined means available from day 1 */
   unlockDay?: number;
+  /** goods this one is made from. Their supply throttles this one's
+   * production — see productionInputFactor in formulas.ts. */
+  inputs?: GoodId[];
 }
 
 export interface GoodState {

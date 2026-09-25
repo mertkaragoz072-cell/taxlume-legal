@@ -42,6 +42,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.25,
       paper: 0.85,
       glass: 0.75,
+      grain: 1.35,
+      wool: 1.2,
+      sand: 0.9,
     },
   },
   {
@@ -67,6 +70,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 0.9,
       paper: 1.1,
       glass: 1.15,
+      grain: 1.2,
+      wool: 1.3,
+      sand: 0.95,
     },
   },
   {
@@ -92,6 +98,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 0.9,
       paper: 1.2,
       glass: 1.05,
+      grain: 0.95,
+      wool: 1.0,
+      sand: 1.25,
     },
   },
   // Metropolises — reached only once metropolUnlocked (a higher net-worth
@@ -121,6 +130,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.1,
       paper: 1.0,
       glass: 1.6,
+      grain: 0.9,
+      wool: 0.95,
+      sand: 1.3,
     },
   },
   {
@@ -146,6 +158,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.0,
       paper: 0.9,
       glass: 1.8,
+      grain: 0.85,
+      wool: 0.9,
+      sand: 1.1,
     },
   },
   // A single legendary trading partner reached only through prestigeLevel
@@ -177,6 +192,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.35,
       paper: 1.3,
       glass: 1.5,
+      grain: 0.8,
+      wool: 0.85,
+      sand: 1.05,
     },
   },
   // The single mythic trading partner — gated behind legendaryPoints (see
@@ -207,6 +225,9 @@ export const TOWNS: ForeignTown[] = [
       cheese: 1.55,
       paper: 1.5,
       glass: 1.7,
+      grain: 0.75,
+      wool: 0.8,
+      sand: 1.0,
     },
   },
 ];

@@ -91,11 +91,12 @@ import {
   clamp,
   computeNetWorth,
   estimateTaxIncomePerTick,
+  gameDayFromTick,
   isGoodUnlocked,
   priceFromSupply,
+  productionInputFactor,
   pushCapped,
   supplyBounds,
-  gameDayFromTick,
 } from "./formulas";
 
 export function tick(state: EconomyState): EconomyState {
@@ -483,7 +484,17 @@ export function tick(state: EconomyState): EconomyState {
       workerProductionMult *
       propertyProductionMult *
       doctrineProductionMult *
-      seasonProductionMultiplier(season, good.id);
+      seasonProductionMultiplier(season, good.id) *
+      // What it is made from, if anything: a workshop short of its raw
+      // material cannot make its quota however happy the town is. Read off
+      // last tick's shelves, which is what gives the chain its lag — the
+      // shortage upstream shows up downstream a day or two later, and that
+      // gap is the whole trade.
+      productionInputFactor(
+        good,
+        (id) => state.goods[id].supply,
+        (id) => GOODS_BY_ID[id].baseSupply
+      );
     let supply = gs.supply + (production - good.baseProduction) + demandSupplyDelta(demandCycle, good);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
