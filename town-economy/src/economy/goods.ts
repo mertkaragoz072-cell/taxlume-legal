@@ -1,4 +1,4 @@
-import { Good } from "./types";
+import { Good, GoodId } from "./types";
 
 // price = basePrice * (townPriceIndex / 100) * scarcity, where scarcity comes
 // from how far current supply sits from baseSupply (see useEconomy's tick()).
@@ -184,3 +184,28 @@ export const GOODS: Good[] = [
 ];
 
 export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Record<string, Good>;
+
+/** What a good *is*, for every rule that treats a whole class of them alike.
+ *
+ * Seasons, crises and the production chains all want to say "food" or
+ * "crafted" rather than list ids again, and those lists were already being
+ * kept in two places (crises.ts had its own FOOD and CRAFTED). One copy,
+ * here, next to the goods themselves.
+ */
+export const FOOD_GOODS: GoodId[] = ["bread", "milk", "fish", "cheese", "honey", "wine"];
+export const RAW_GOODS: GoodId[] = ["wood", "iron"];
+export const CRAFTED_GOODS: GoodId[] = ["cloth", "leather", "paper", "glass"];
+export const LUXURY_GOODS: GoodId[] = ["spice", "silk", "jewelry"];
+
+export type GoodGroup = "food" | "raw" | "crafted" | "luxury";
+
+const GROUP_OF: Record<GoodId, GoodGroup> = Object.fromEntries([
+  ...FOOD_GOODS.map((id) => [id, "food"]),
+  ...RAW_GOODS.map((id) => [id, "raw"]),
+  ...CRAFTED_GOODS.map((id) => [id, "crafted"]),
+  ...LUXURY_GOODS.map((id) => [id, "luxury"]),
+]) as Record<GoodId, GoodGroup>;
+
+export function goodGroup(id: GoodId): GoodGroup {
+  return GROUP_OF[id];
+}

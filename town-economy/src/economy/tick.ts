@@ -31,6 +31,7 @@ import { perkProductionBonus, perkTaxHappinessRelief } from "./prestigePerks";
 import { researchMultiplier } from "./research";
 import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
+import { seasonFromTick, seasonProductionMultiplier } from "./seasons";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
@@ -168,6 +169,11 @@ export function tick(state: EconomyState): EconomyState {
   // Read once: the doctrine is fixed for the run, and half a dozen places
   // below need a number from it.
   const doctrineMods = doctrineModifiers(state.doctrine);
+
+  // The season is a function of the clock, not a stored field — see
+  // seasons.ts. Read once here so every good is produced in the same season
+  // even on a tick that happens to straddle the turn of one.
+  const season = seasonFromTick(state.tick);
 
   let nextId = state.nextId;
   const newEvents: EconomyEvent[] = [];
@@ -476,7 +482,8 @@ export function tick(state: EconomyState): EconomyState {
       prestigeProductionMult *
       workerProductionMult *
       propertyProductionMult *
-      doctrineProductionMult;
+      doctrineProductionMult *
+      seasonProductionMultiplier(season, good.id);
     let supply = gs.supply + (production - good.baseProduction) + demandSupplyDelta(demandCycle, good);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;

@@ -1,5 +1,18 @@
 export const STRINGS = {
   tr: {
+    season: {
+      spring: "İlkbahar",
+      summer: "Yaz",
+      autumn: "Sonbahar",
+      winter: "Kış",
+      nextIn: "{days} gün sonra {season}",
+      nextTomorrow: "Yarın {season}",
+      label: "MEVSİM",
+      groupFood: "Gıda",
+      groupRaw: "Hammadde",
+      groupCrafted: "El işi",
+      groupLuxury: "Lüks",
+    },
     app: {
       defaultTownName: "Altın Kasaba",
     },
@@ -1181,6 +1194,19 @@ export const STRINGS = {
     },
   },
   en: {
+    season: {
+      spring: "Spring",
+      summer: "Summer",
+      autumn: "Autumn",
+      winter: "Winter",
+      nextIn: "{season} in {days} days",
+      nextTomorrow: "{season} tomorrow",
+      label: "SEASON",
+      groupFood: "Food",
+      groupRaw: "Raw",
+      groupCrafted: "Crafted",
+      groupLuxury: "Luxury",
+    },
     app: {
       defaultTownName: "Golden Town",
     },

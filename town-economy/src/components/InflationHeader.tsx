@@ -7,6 +7,7 @@ import { COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } fr
 import { formatCoins as formatCoinsUtil, formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
+import { seasonFromTick } from "../economy/seasons";
 import { SpotlightTarget } from "./Spotlight";
 import { PriceChart } from "./PriceChart";
 import { SpeedBoostButton } from "./SpeedBoostButton";
@@ -250,7 +251,9 @@ export function InflationHeader({
           </Text>
         </View>
         <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
-          <Text style={styles.streakBadgeText}>📅 {t("header.day", { day: gameDay })}</Text>
+          <Text style={styles.streakBadgeText}>
+            {seasonFromTick(tick).icon} {t("header.day", { day: gameDay })}
+          </Text>
         </View>
         {streakCount > 0 && (
           <View

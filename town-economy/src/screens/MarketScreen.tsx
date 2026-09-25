@@ -18,6 +18,7 @@ import {
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { DemandForecastCard } from "../components/DemandForecastCard";
+import { SeasonStrip } from "../components/SeasonStrip";
 import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
@@ -213,6 +214,12 @@ export function MarketScreen({ sounds }: Props) {
           </View>
         )}
       </View>
+
+      {/* The year above the week: the season sets the backdrop the demand
+          cycle plays out against, and reading them together is what turns a
+          reaction into a plan. Outside the conditional below because the
+          season is always running, cycle or no cycle. */}
+      <SeasonStrip />
 
       {state.demandCycle && (
         <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
