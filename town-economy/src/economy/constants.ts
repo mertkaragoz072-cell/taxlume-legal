@@ -196,14 +196,23 @@ export const CONTENT_CASH_BONUS = 15;
 // either freeze the UI simulating tens of thousands of ticks or hand out
 // unbounded free progress; a modest, always-fast catch-up is the goal.
 export const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000; // 8 hours
+// The town keeps working while the app is shut, just slower than a live
+// session — 1 real minute away only costs 6 simulated seconds. A flat
+// per-absence cap (the old design) meant every gap past ~12 minutes
+// produced the exact same catch-up regardless of whether the player was
+// gone for 20 minutes or 8 hours, which read as production silently
+// stopping. Scaling by this rate keeps "away longer" meaning "more
+// caught up" throughout the whole cap.
+export const OFFLINE_RATE = 0.1;
 // Kept deliberately modest: baseInflationDrift compounds every tick, so
 // thousands of simulated ticks would compound even the mild live-session
 // drift into hyperinflation almost every time — turning "welcome back"
-// into "sorry, it's all gone" regardless of policy. This cap keeps the
+// into "sorry, it's all gone" regardless of policy. This cap (derived from
+// MAX_OFFLINE_MS and OFFLINE_RATE, so the two stay consistent) keeps the
 // catch-up meaningful (tax income, a caravan or two, a little price
 // drift) without exposing an absence to a crash a live player wouldn't
 // have hit in the same stretch either.
-export const MAX_OFFLINE_TICKS = 240;
+export const MAX_OFFLINE_TICKS = Math.floor((MAX_OFFLINE_MS / TICK_MS) * OFFLINE_RATE);
 export const MIN_OFFLINE_MS_TO_SHOW = 60 * 1000; // don't pop up for a quick app switch
 // Rarer than passive news (EVENT_TEMPLATES) so each one feels like a
 // distinct moment; freezes the tick loop until answered (see the guard

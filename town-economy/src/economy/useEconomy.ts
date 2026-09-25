@@ -78,6 +78,7 @@ import {
   MAX_OFFLINE_TICKS,
   MIN_OFFLINE_MS_TO_SHOW,
   MS_PER_DAY,
+  OFFLINE_RATE,
   PRESTIGE_CASH_BONUS_PER_LEVEL,
   PRESTIGE_POINTS_PER_PRESTIGE,
   PRESTIGE_UNLOCK_NET_WORTH,
@@ -1475,7 +1476,11 @@ export function useEconomy() {
         dispatch({ type: "HYDRATE", state: saved });
         const lastSavedAt = saved.lastSavedAt ?? Date.now();
         const elapsedMs = clamp(Date.now() - lastSavedAt, 0, MAX_OFFLINE_MS);
-        const ticks = Math.min(Math.floor(elapsedMs / TICK_MS), MAX_OFFLINE_TICKS);
+        // Slower than a live session (OFFLINE_RATE), not paused: a short
+        // absence still nets a little progress instead of rounding down to
+        // nothing, and a long one keeps accruing instead of flatlining at
+        // the same catch-up as a 12-minute gap.
+        const ticks = Math.min(Math.floor((elapsedMs * OFFLINE_RATE) / TICK_MS), MAX_OFFLINE_TICKS);
         if (ticks > 0 && elapsedMs >= MIN_OFFLINE_MS_TO_SHOW) {
           dispatch({ type: "OFFLINE_ADVANCE", ticks, elapsedMs });
         }
