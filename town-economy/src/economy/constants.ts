@@ -132,13 +132,13 @@ export const SCARCITY_MIN = 0.5;
 export const SCARCITY_MAX = 2.2;
 export const SUPPLY_MIN_FACTOR = 0.15;
 export const SUPPLY_MAX_FACTOR = 3;
-export const PRODUCTION_NOISE = 0.2; // ± fraction of baseProduction, random per tick
+export const PRODUCTION_NOISE = 0.35; // ± fraction of baseProduction, random per tick
 export const PRODUCTION_PENALTY_FACTOR = 0.7; // unhappy villagers produce down to 30% of normal
 export const PRODUCTION_BONUS_FACTOR = 0.15; // content villagers produce up to 15% more
 export const EFFICIENCY_MIN = 0.3;
 export const EFFICIENCY_MAX = 1.15;
 export const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
-export const FOREIGN_NOISE = 0.15;
+export const FOREIGN_NOISE = 0.28;
 // --- Demand pressure ------------------------------------------------------
 // Supply alone drifts back toward (and past) baseSupply within a tick or two
 // once villagers are happy and producing above baseline — too fast for a
@@ -148,9 +148,9 @@ export const FOREIGN_NOISE = 0.15;
 // the price and that bend lingers for a couple minutes of real play before
 // fading — long enough to feel like your trade mattered, short enough that
 // the market always finds its own level again.
-export const DEMAND_PRESSURE_DECAY = 0.98; // per tick (TICK_MS=3000ms) => ~50-tick / ~150s half-life
-export const DEMAND_PRESSURE_SENSITIVITY = 0.35; // price swing per "one baseSupply's worth" traded, before market depth
-export const DEMAND_PRESSURE_MAX = 0.08; // clamp so no single order can send price to an absurd multiple
+export const DEMAND_PRESSURE_DECAY = 0.94; // per tick (TICK_MS=3000ms) => ~165-tick / ~500s half-life (slower decay for longer-lasting price swings)
+export const DEMAND_PRESSURE_SENSITIVITY = 0.55; // price swing per "one baseSupply's worth" traded, before market depth
+export const DEMAND_PRESSURE_MAX = 0.12; // clamp so no single order can send price to an absurd multiple
 // --- Bid/ask spread ---------------------------------------------------------
 // Real markets charge a toll on every round trip — without one, buying and
 // immediately selling back is free, so profit is pure luck rather than a
