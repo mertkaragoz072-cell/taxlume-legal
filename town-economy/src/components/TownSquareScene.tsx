@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View, Image } from "react-native";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { Bobbing } from "./Bobbing";
 import { GradientFill } from "./GradientFill";
@@ -52,7 +52,15 @@ export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Prop
 
       <View style={styles.scene}>
         <View aria-hidden style={styles.backdrop}>
-          <TownSquareBackdrop width={SCENE_WIDTH} height={SCENE_HEIGHT} warmth={warmth} />
+          {mood === "sad" ? (
+            <Image
+              source={require("../../assets/angry-marketplace.webp")}
+              style={{ width: SCENE_WIDTH, height: SCENE_HEIGHT }}
+              resizeMode="cover"
+            />
+          ) : (
+            <TownSquareBackdrop width={SCENE_WIDTH} height={SCENE_HEIGHT} warmth={warmth} />
+          )}
         </View>
         <View style={styles.crowd}>
           <Bobbing delay={0}>

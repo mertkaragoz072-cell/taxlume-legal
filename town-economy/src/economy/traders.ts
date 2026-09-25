@@ -54,7 +54,7 @@ export const TRADERS: Trader[] = [
     nameKey: "trader.raj.name",
     icon: "👨‍💼",
     buyPreferences: ["milk", "fish"],
-    sellPreferences: ["sand", "salt"],
+    sellPreferences: ["sand", "honey"],
   },
 ];
 
