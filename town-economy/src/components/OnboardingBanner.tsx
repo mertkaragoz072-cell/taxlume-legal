@@ -9,6 +9,9 @@ import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
 
 interface Props {
   onGoToScreen: (screen: ScreenId) => void;
+  /** the tab the player is looking at, so the banner does not send them
+   * somewhere they already are */
+  activeScreen: ScreenId;
 }
 
 /** One task at a time, across the top of every screen, until the guided
@@ -23,18 +26,24 @@ interface Props {
  * Nothing here blocks play. A player who wants to ignore it and trade can,
  * and the steps will tick off behind them.
  */
-export function OnboardingBanner({ onGoToScreen }: Props) {
+export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   const { state, t } = useEconomyContext();
   const step = currentOnboardingStep(state);
   if (!step) return null;
 
-  const onThisScreen = (screen: ScreenId) => onGoToScreen(screen);
+  // "Go to the Market tab", read while standing on the Market tab, and a
+  // press that lands you exactly where you were. It works, which is worse
+  // than if it did not: the player presses it, nothing on screen changes,
+  // and they conclude the button is broken. On the screen the task is
+  // about, the banner is a standing instruction and nothing more.
+  const alreadyHere = step.screen === activeScreen;
 
   return (
     <ScalePressable
       style={styles.card}
-      onPress={() => onThisScreen(step.screen)}
-      scaleTo={0.985}
+      onPress={() => onGoToScreen(step.screen)}
+      disabled={alreadyHere}
+      scaleTo={alreadyHere ? 1 : 0.985}
       accessibilityLabel={t(step.titleKey)}
     >
       <View style={styles.head}>
@@ -62,8 +71,13 @@ export function OnboardingBanner({ onGoToScreen }: Props) {
             <Text style={styles.reward}>+{step.reward} 🪙</Text>
           </View>
           <Text style={styles.description}>
-            {t(step.descriptionKey)}{" "}
-            <Text style={styles.goTo}>{t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })} ›</Text>
+            {t(step.descriptionKey)}
+            {!alreadyHere && (
+              <Text style={styles.goTo}>
+                {" "}
+                {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })} ›
+              </Text>
+            )}
           </Text>
         </View>
       </View>

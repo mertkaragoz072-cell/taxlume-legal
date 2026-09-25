@@ -312,7 +312,7 @@ function Game() {
         {/* Rendered outside the per-screen blocks so the guided task follows
             the player between tabs — several of the steps are there to show
             that a tab exists at all. */}
-        <OnboardingBanner onGoToScreen={setScreen} />
+        <OnboardingBanner onGoToScreen={setScreen} activeScreen={screen} />
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
