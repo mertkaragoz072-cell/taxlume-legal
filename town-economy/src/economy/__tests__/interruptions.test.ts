@@ -185,6 +185,25 @@ describe("mentor script", () => {
     expect(isWaitingOnPlayer(MENTOR_STEPS[0], fresh, false)).toBe(false);
   });
 
+  it("keeps her talking about the town, not about the interface", () => {
+    // She is a market trader, not the game narrating itself. A line like
+    // "I've blurred the rest of the screen" makes her an effects operator
+    // and breaks the one thing a guide character is for. What she may do is
+    // name things in the world — a price, a number, a line on a chart — and
+    // the instruction lines may name the button to press, because that is
+    // an instruction and not her describing her own powers.
+    const forbidden: Record<string, RegExp> = {
+      tr: /bulanık|karart|ekran|buton|tıkla|menü/i,
+      en: /blur|dimmed|the screen|button|click|menu/i,
+    };
+    for (const lang of LANGS) {
+      for (const step of MENTOR_STEPS) {
+        const body = t(lang, step.textKey);
+        expect(body).not.toMatch(forbidden[lang]);
+      }
+    }
+  });
+
   it("says how a run ends, with the number that ends it", () => {
     const lose = MENTOR_STEPS.find((s) => s.id === "lose")!;
     for (const lang of LANGS) {
