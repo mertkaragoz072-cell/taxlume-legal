@@ -1,18 +1,31 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   Modal,
   StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
   Image,
+  Animated,
+  Easing,
 } from "react-native";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { GradientFill } from "./GradientFill";
+import { ScalePressable } from "./ScalePressable";
 
-const { width } = Dimensions.get("window");
+interface CaravanStep {
+  titleKey: string;
+  textKey: string;
+}
+
+const CARAVAN_STEPS: CaravanStep[] = [
+  { titleKey: "caravanTutorial.step1Title", textKey: "caravanTutorial.step1Text" },
+  { titleKey: "caravanTutorial.step2Title", textKey: "caravanTutorial.step2Text" },
+  { titleKey: "caravanTutorial.step3Title", textKey: "caravanTutorial.step3Text" },
+  { titleKey: "caravanTutorial.step4Title", textKey: "caravanTutorial.step4Text" },
+  { titleKey: "caravanTutorial.step5Title", textKey: "caravanTutorial.step5Text" },
+];
 
 interface Props {
   visible: boolean;
@@ -21,225 +34,191 @@ interface Props {
 }
 
 export function CaravanTutorialModal({ visible, language, onDismiss }: Props) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const enter = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!visible) return;
+    enter.setValue(0);
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enter, visible, stepIndex]);
+
+  if (!visible) return null;
+
+  const step = CARAVAN_STEPS[stepIndex];
+  const isLast = stepIndex === CARAVAN_STEPS.length - 1;
+
+  const handleNext = () => {
+    if (isLast) {
+      setStepIndex(0);
+      onDismiss();
+    } else {
+      setStepIndex(stepIndex + 1);
+    }
+  };
+
+  const handleSkip = () => {
+    setStepIndex(0);
+    onDismiss();
+  };
+
   return (
-    <Modal visible={visible} animationType="slide" transparent={false}>
-      <View style={styles.container}>
-        {/* Caravan Guide Character - Prominent Position */}
-        <View style={styles.characterBanner}>
-          <Image
-            source={require("../../assets/caravan-merchant-guide.png")}
-            style={styles.characterImageLarge}
-            resizeMode="contain"
-          />
-          <View style={styles.characterInfo}>
-            <Text style={styles.characterName}>
-              {t(language, "caravanTutorial.guideTitle")}
-            </Text>
-            <Text style={styles.characterTagline}>🐪 Kervan Ustası</Text>
-          </View>
-        </View>
+    <Modal visible={visible} animationType="fade" transparent>
+      <View style={styles.backdrop}>
+        <Animated.View
+          style={[
+            styles.card,
+            {
+              opacity: enter,
+              transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+            },
+          ]}
+        >
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
 
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-
-          {/* Welcome Message */}
-          <View style={styles.messageBox}>
-            <Text style={styles.messageText}>
-              {t(language, "caravanTutorial.welcome")}
-            </Text>
-          </View>
-
-          {/* Tutorial Steps */}
-          <View style={styles.stepsContainer}>
-            {/* Step 1: What is a Caravan */}
-            <View style={styles.step}>
-              <Text style={styles.stepIcon}>1️⃣</Text>
-              <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>
-                  {t(language, "caravanTutorial.step1Title")}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t(language, "caravanTutorial.step1Text")}
-                </Text>
-              </View>
+          <View style={styles.row}>
+            {/* Character Portrait */}
+            <View style={styles.portrait}>
+              <Image
+                source={require("../../assets/caravan-merchant-guide.png")}
+                style={styles.characterImage}
+                resizeMode="contain"
+              />
             </View>
 
-            {/* Step 2: Where to Trade */}
-            <View style={styles.step}>
-              <Text style={styles.stepIcon}>2️⃣</Text>
-              <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>
-                  {t(language, "caravanTutorial.step2Title")}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t(language, "caravanTutorial.step2Text")}
+            {/* Speech Content */}
+            <View style={styles.speech}>
+              <View style={styles.nameRow}>
+                <Text style={styles.name}>
+                  {t(language, "caravanTutorial.guideTitle")}
+                  <Text style={styles.role}> · 🐪 Kervan Ustası</Text>
                 </Text>
               </View>
-            </View>
 
-            {/* Step 3: Export vs Import */}
-            <View style={styles.step}>
-              <Text style={styles.stepIcon}>3️⃣</Text>
-              <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>
-                  {t(language, "caravanTutorial.step3Title")}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t(language, "caravanTutorial.step3Text")}
-                </Text>
-              </View>
-            </View>
+              <Text style={styles.progress}>
+                {stepIndex + 1} / {CARAVAN_STEPS.length}
+              </Text>
 
-            {/* Step 4: Travel Time */}
-            <View style={styles.step}>
-              <Text style={styles.stepIcon}>4️⃣</Text>
-              <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>
-                  {t(language, "caravanTutorial.step4Title")}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t(language, "caravanTutorial.step4Text")}
-                </Text>
-              </View>
-            </View>
-
-            {/* Step 5: The Reward */}
-            <View style={styles.step}>
-              <Text style={styles.stepIcon}>5️⃣</Text>
-              <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>
-                  {t(language, "caravanTutorial.step5Title")}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t(language, "caravanTutorial.step5Text")}
-                </Text>
-              </View>
+              <Text style={styles.title}>{t(language, step.titleKey)}</Text>
+              <Text style={styles.text}>{t(language, step.textKey)}</Text>
             </View>
           </View>
 
-          {/* Closing Message */}
-          <View style={styles.messageBox}>
-            <Text style={styles.messageText}>
-              {t(language, "caravanTutorial.closing")}
-            </Text>
+          {/* Footer Buttons */}
+          <View style={styles.footer}>
+            {!isLast && (
+              <ScalePressable onPress={handleSkip} style={styles.skipBtn} scaleTo={0.96}>
+                <Text style={styles.skipText}>{t(language, "common.skip")}</Text>
+              </ScalePressable>
+            )}
+            <ScalePressable onPress={handleNext} style={styles.nextBtn} scaleTo={0.96}>
+              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+              <Text style={styles.nextText}>{isLast ? t(language, "common.close") : t(language, "common.next")}</Text>
+            </ScalePressable>
           </View>
-        </ScrollView>
-
-        {/* Close Button */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
-            <Text style={styles.closeButtonText}>
-              {t(language, "common.close")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f0e8",
-  },
-  characterBanner: {
-    backgroundColor: "linear-gradient(135deg, #d4a574 0%, #c89050 100%)",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 3,
-    borderBottomColor: "#8b6a3f",
-  },
-  characterImageLarge: {
-    width: 100,
-    height: 130,
-    marginRight: 12,
-  },
-  characterInfo: {
+  backdrop: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: withAlpha("#000000", 0.5),
   },
-  characterName: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#2c1810",
+  card: {
+    width: "90%",
+    maxWidth: 400,
+    borderRadius: RADIUS.feature,
+    padding: SPACING.md,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.45),
+    ...cardShadow,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  portrait: {
+    marginRight: SPACING.sm,
+    marginTop: -2,
+  },
+  characterImage: {
+    width: 100,
+    height: 130,
+  },
+  speech: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+  },
+  name: {
+    color: COLORS.accent,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+  },
+  role: {
+    color: COLORS.textMuted,
+    fontWeight: WEIGHT.regular,
+    fontFamily: FONT.medium,
+  },
+  progress: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontFamily: FONT.medium,
     marginBottom: 4,
   },
-  characterTagline: {
-    fontSize: 14,
-    color: "#4a3728",
-    fontWeight: "500",
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.heading,
+    fontFamily: FONT.display,
+    marginTop: 4,
+    marginBottom: 3,
   },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  messageBox: {
-    backgroundColor: "rgba(227, 179, 86, 0.15)",
-    borderLeftWidth: 4,
-    borderLeftColor: "#e3b356",
-    padding: 12,
-    marginVertical: 16,
-    borderRadius: 4,
-  },
-  messageText: {
-    fontSize: 16,
-    color: "#2c1810",
-    lineHeight: 24,
-  },
-  stepsContainer: {
-    marginVertical: 20,
-  },
-  step: {
-    flexDirection: "row",
-    marginBottom: 18,
-    alignItems: "flex-start",
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    padding: 14,
-    borderRadius: 10,
-    borderLeftWidth: 5,
-    borderLeftColor: "#d4a574",
-  },
-  stepIcon: {
-    fontSize: 36,
-    marginRight: 14,
-    marginTop: 2,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2c1810",
-    marginBottom: 8,
-  },
-  stepText: {
-    fontSize: 15,
-    color: "#3a2818",
-    lineHeight: 22,
-    fontWeight: "500",
+  text: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.label,
+    lineHeight: 18,
   },
   footer: {
-    borderTopWidth: 1,
-    borderTopColor: "#e0d5c8",
-    padding: 16,
-    backgroundColor: "#f5f0e8",
-  },
-  closeButton: {
-    backgroundColor: "#e3b356",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 6,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: SPACING.sm,
   },
-  closeButtonText: {
-    color: "#2c1810",
-    fontSize: 16,
-    fontWeight: "600",
+  skipBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: SPACING.sm,
+    marginRight: SPACING.xs,
+  },
+  skipText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    fontFamily: FONT.medium,
+  },
+  nextBtn: {
+    borderRadius: RADIUS.chip,
+    paddingVertical: 9,
+    paddingHorizontal: SPACING.lg,
+    overflow: "hidden",
+  },
+  nextText: {
+    color: "#1a1410",
+    fontFamily: FONT.black,
+    fontSize: TYPE.label,
+    lineHeight: 18,
   },
 });
