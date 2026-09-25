@@ -1,4 +1,6 @@
+import { CRISIS_TEMPLATES, CRISIS_TEMPLATES_BY_ID } from "../crises";
 import { GOODS_BY_ID } from "../goods";
+import { t } from "../../i18n/t";
 import { TOWNS } from "../towns";
 import { EconomyStats } from "../types";
 import { UPGRADES_BY_ID } from "../upgrades";
@@ -661,15 +663,36 @@ describe("telegraphed crises", () => {
     expect(next.pendingCrisis).not.toBeNull();
     expect(next.pendingCrisis!.strikesAtTick).toBeGreaterThan(next.tick);
     // The warning is the whole feature: the damage must not land with it.
-    expect(next.eventLog.some((e) => /geliyor|strikes in/i.test(e.message))).toBe(true);
-    expect(next.eventLog.some((e) => /vurdu|hit!/i.test(e.message))).toBe(false);
+    // Both checks are built from the same strings the game renders, rather
+    // than from a phrase copied out of them — the last rewording of the
+    // warning broke this test while the behaviour was perfectly fine.
+    const struckHere = (state: { eventLog: { message: string }[] }) =>
+      state.eventLog.some((e) =>
+        CRISIS_TEMPLATES.some(
+          (c) =>
+            e.message ===
+            t("tr", "msg.crisisStruck", {
+              icon: c.icon,
+              title: t("tr", c.titleKey),
+              pct: Number(e.message.match(/%(\d+)/)?.[1] ?? -1),
+            })
+        )
+      );
+    const warnedHere = next.eventLog.some((e) =>
+      CRISIS_TEMPLATES.some((c) => e.message.includes(t("tr", c.warningTitleKey)))
+    );
+    expect(warnedHere).toBe(true);
+    expect(struckHere(next)).toBe(false);
   });
 
   it("strikes once the scheduled tick arrives, then clears itself", () => {
     Math.random = () => 0.999999;
     const base = { ...initialState(), happiness: 50, paused: false };
     const next = tick({ ...base, pendingCrisis: scheduled("earthquake") });
-    expect(next.eventLog.some((e) => /vurdu|hit!/i.test(e.message))).toBe(true);
+    const quake = CRISIS_TEMPLATES_BY_ID.earthquake;
+    expect(
+      next.eventLog.some((e) => e.message.includes(t("tr", quake.titleKey)) && /%\d+/.test(e.message))
+    ).toBe(true);
     expect(next.pendingCrisis).toBeNull();
     expect(next.goods.bread.supply).toBeLessThan(base.goods.bread.supply);
   });

@@ -232,7 +232,10 @@ export function tick(state: EconomyState): EconomyState {
       id: nextId++,
       message: tPlural(state.language, "msg.crisisWarned", CRISIS_WARNING_DAYS, {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        // The sign the town can actually see, and separately the thing it
+        // portends — a fire cannot be scheduled, but dry winds can be felt.
+        warning: t(state.language, template.warningTitleKey),
+        event: t(state.language, template.titleKey),
         days: CRISIS_WARNING_DAYS,
       }),
       tone: "bad",

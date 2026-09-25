@@ -1,6 +1,8 @@
 import { STRINGS } from "../../i18n/strings";
 import { t } from "../../i18n/t";
 import { INTERRUPTION_COOLDOWN_TICKS, TICKS_PER_GAME_DAY } from "../constants";
+import { CRISIS_CHANCE, CRISIS_TEMPLATES, CRISIS_WARNING_DAYS } from "../crises";
+import { DIFFICULTIES } from "../difficulty";
 import { isGoodUnlocked } from "../formulas";
 import { GOODS, GOODS_BY_ID } from "../goods";
 import { isWaitingOnPlayer, MENTOR_STEPS } from "../mentor";
@@ -101,6 +103,43 @@ describe("interruption cooldown", () => {
     expect(firedAt.length).toBeGreaterThan(0);
     for (let i = 1; i < firedAt.length; i++) {
       expect(firedAt[i] - firedAt[i - 1]).toBeGreaterThanOrEqual(INTERRUPTION_COOLDOWN_TICKS);
+    }
+  });
+});
+
+describe("crises the town can see coming", () => {
+  it("warns about a sign, not about the disaster itself", () => {
+    // The complaint that started this: "a fire will break out in two days"
+    // is not a forecast anyone could make. Every crisis now announces the
+    // thing a town would actually notice — a foreshock, a dry wind, a
+    // crowd gathering — and names the disaster only when it lands.
+    for (const lang of LANGS) {
+      for (const c of CRISIS_TEMPLATES) {
+        const sign = t(lang, c.warningTitleKey);
+        const disaster = t(lang, c.titleKey);
+        expect(sign).not.toBe(c.warningTitleKey);
+        expect(disaster).not.toBe(c.titleKey);
+        expect(sign).not.toBe(disaster);
+      }
+    }
+  });
+
+  it("gives enough warning to act on, and stays rare", () => {
+    expect(CRISIS_WARNING_DAYS).toBeGreaterThanOrEqual(2);
+    // At 40 ticks to a game day, one crisis every few days at most.
+    expect(CRISIS_CHANCE * TICKS_PER_GAME_DAY).toBeLessThan(0.34);
+  });
+});
+
+describe("news events", () => {
+  it("does not fill the banner", () => {
+    // Six or seven headlines a game day, out of a list of eleven, meant the
+    // same drought came round every couple of days and the banner was never
+    // empty. A game day is two real minutes; a handful a day is plenty.
+    for (const id of Object.keys(DIFFICULTIES) as (keyof typeof DIFFICULTIES)[]) {
+      const perDay = DIFFICULTIES[id].eventChance * TICKS_PER_GAME_DAY;
+      expect(perDay).toBeLessThanOrEqual(3);
+      expect(perDay).toBeGreaterThan(0.8); // but the town is not silent either
     }
   });
 });

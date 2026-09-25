@@ -62,7 +62,7 @@ export function CrisisWarningBanner({ crisis, tick }: Props) {
       </Text>
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={1}>
-          {t("crisis.warningPrefix")} {t(template.titleKey)}
+          {t("crisis.warningPrefix")} {t(template.warningTitleKey)}
         </Text>
         <Text style={styles.advice} numberOfLines={2}>
           {t(template.adviceKey)}

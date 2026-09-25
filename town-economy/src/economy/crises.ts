@@ -16,7 +16,16 @@ import { GoodId } from "./types";
 export interface CrisisTemplate {
   id: string;
   icon: string;
+  /** the disaster itself, used when it lands */
   titleKey: string;
+  /** the sign that precedes it, used while it is still coming.
+   *
+   * A town cannot be told that an earthquake will happen in two days, and
+   * it certainly cannot be told that a workshop will catch fire — that was
+   * the nonsense here. What a town can notice is a foreshock, or a week of
+   * dry wind, or the sound of a crowd in the square. The warning names the
+   * sign; the strike names the disaster. */
+  warningTitleKey: string;
   /** shown on the warning banner: what to do with the days you have */
   adviceKey: string;
   /** goods whose home supply the strike destroys; empty means every good */
@@ -39,6 +48,7 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "earthquake",
     icon: "🌋",
     titleKey: "crisis.earthquake.title",
+    warningTitleKey: "crisis.earthquake.warningTitle",
     adviceKey: "crisis.earthquake.advice",
     affectedGoods: [],
     supplyLossMin: 0.1,
@@ -50,6 +60,7 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "drought",
     icon: "🌵",
     titleKey: "crisis.drought.title",
+    warningTitleKey: "crisis.drought.warningTitle",
     adviceKey: "crisis.drought.advice",
     affectedGoods: FOOD,
     supplyLossMin: 0.25,
@@ -61,6 +72,7 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "fire",
     icon: "🔥",
     titleKey: "crisis.fire.title",
+    warningTitleKey: "crisis.fire.warningTitle",
     adviceKey: "crisis.fire.advice",
     affectedGoods: CRAFTED,
     supplyLossMin: 0.3,
@@ -72,6 +84,7 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "unrest",
     icon: "🪧",
     titleKey: "crisis.unrest.title",
+    warningTitleKey: "crisis.unrest.warningTitle",
     adviceKey: "crisis.unrest.advice",
     affectedGoods: [],
     supplyLossMin: 0.05,
