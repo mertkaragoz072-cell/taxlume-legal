@@ -150,7 +150,7 @@ export const FOREIGN_NOISE = 0.15;
 // the market always finds its own level again.
 export const DEMAND_PRESSURE_DECAY = 0.98; // per tick (TICK_MS=3000ms) => ~50-tick / ~150s half-life
 export const DEMAND_PRESSURE_SENSITIVITY = 0.35; // price swing per "one baseSupply's worth" traded, before market depth
-export const DEMAND_PRESSURE_MAX = 0.2; // clamp so no single order can send price to an absurd multiple
+export const DEMAND_PRESSURE_MAX = 0.08; // clamp so no single order can send price to an absurd multiple
 // --- Bid/ask spread ---------------------------------------------------------
 // Real markets charge a toll on every round trip — without one, buying and
 // immediately selling back is free, so profit is pure luck rather than a
