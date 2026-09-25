@@ -974,6 +974,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginBottom: SPACING.sm + 2,
     overflow: "hidden",
+    minHeight: 80,
   },
   upgradeIcon: { fontSize: 24, marginRight: SPACING.md },
   upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
