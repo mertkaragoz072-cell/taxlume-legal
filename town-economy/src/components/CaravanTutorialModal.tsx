@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
+import { CaravanGuideCharacter } from "./CaravanGuideCharacter";
 
 const { width } = Dimensions.get("window");
 
@@ -27,7 +28,7 @@ export function CaravanTutorialModal({ visible, language, onDismiss }: Props) {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
           {/* Caravan Guide Character */}
           <View style={styles.characterSection}>
-            <Text style={styles.characterEmoji}>🐪</Text>
+            <CaravanGuideCharacter size={100} />
             <Text style={styles.characterName}>
               {t(language, "caravanTutorial.guideTitle")}
             </Text>
@@ -144,10 +145,6 @@ const styles = StyleSheet.create({
   characterSection: {
     alignItems: "center",
     marginVertical: 24,
-  },
-  characterEmoji: {
-    fontSize: 80,
-    marginBottom: 12,
   },
   characterName: {
     fontSize: 24,
