@@ -96,6 +96,10 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: SPACING.lg,
+    // EventBanner/ComboBanner above it carry no bottom margin of their own,
+    // so without this the two sit flush against each other with no seam —
+    // exactly the crowded look this was reported for.
+    marginTop: SPACING.md,
     marginBottom: SPACING.sm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm + 2,
