@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BlurView } from "expo-blur";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { COLORS, RADIUS, withAlpha } from "../theme";
@@ -61,8 +61,18 @@ export function SpotlightProvider({
     });
   }, []);
 
+  // Without this the provider hands out a fresh object on every render of
+  // whatever contains it — which in this app is most of the screen, since
+  // ticks, price animations, and chatter all live above it. SpotlightOverlay
+  // keys a measurement effect off this value's identity, so a value that
+  // changes every render tears that effect down before its in-flight
+  // measureInWindow callback (itself async) ever resolves — the overlay
+  // then never picks up a newly-selected target and keeps showing whatever
+  // it last managed to measure.
+  const ctxValue = useMemo<Ctx>(() => ({ register, measureOf, originRef }), [register, measureOf]);
+
   return (
-    <SpotlightContext.Provider value={{ register, measureOf, originRef }}>
+    <SpotlightContext.Provider value={ctxValue}>
       <View ref={frame} style={style} onLayout={onLayout} collapsable={false}>
         {children}
       </View>

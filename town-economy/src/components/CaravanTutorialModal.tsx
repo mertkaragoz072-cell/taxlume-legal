@@ -44,6 +44,9 @@ interface Props {
   visible: boolean;
   stepIndex: number;
   language: Language;
+  /** Net worth the map's "where can you trade" beat quotes as the unlock
+   * bar — the string carries a `{threshold}` placeholder for it. */
+  tradeUnlockThreshold: number;
   onNext: () => void;
   onSkip: () => void;
 }
@@ -53,7 +56,14 @@ interface Props {
  * kontrol SpotlightOverlay tarafından aydınlatılırken diğer her şey
  * bulanıklaşır. Tam ekran bir modal artık değil — arkasındaki Trade
  * ekranının kendisi ders malzemesi. */
-export function CaravanTutorialModal({ visible, stepIndex, language, onNext, onSkip }: Props) {
+export function CaravanTutorialModal({
+  visible,
+  stepIndex,
+  language,
+  tradeUnlockThreshold,
+  onNext,
+  onSkip,
+}: Props) {
   const enter = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -102,7 +112,7 @@ export function CaravanTutorialModal({ visible, stepIndex, language, onNext, onS
             </View>
 
             <Text style={styles.title}>{t(language, step.titleKey)}</Text>
-            <Text style={styles.text}>{t(language, step.textKey)}</Text>
+            <Text style={styles.text}>{t(language, step.textKey, { threshold: tradeUnlockThreshold })}</Text>
           </View>
         </View>
 

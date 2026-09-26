@@ -37,6 +37,7 @@ import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { TOWN_EMBLEMS_BY_ID } from "./src/economy/emblems";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
+import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
 import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
 import { seasonalBackgroundGradient } from "./src/theme";
@@ -237,7 +238,11 @@ function Game() {
   const [caravanTutorialStep, setCaravanTutorialStep] = useState(0);
   const [caravanTutorialSkipped, setCaravanTutorialSkipped] = useState(false);
   const caravanTutorialActive =
-    screen === "trade" && !state.firstCaravanSent && !caravanTutorialSkipped && !mentorActive;
+    screen === "trade" &&
+    state.tradeUnlocked &&
+    !state.firstCaravanSent &&
+    !caravanTutorialSkipped &&
+    !mentorActive;
   const caravanStepDef = caravanTutorialActive ? CARAVAN_STEPS[caravanTutorialStep] : null;
   const caravanSpotlight = caravanStepDef?.spotlight ?? null;
 
@@ -358,6 +363,7 @@ function Game() {
             visible
             stepIndex={caravanTutorialStep}
             language={state.language}
+            tradeUnlockThreshold={Math.round(effectiveTradeUnlockNetWorth(state))}
             onNext={nextCaravanStep}
             onSkip={skipCaravanTutorial}
           />
