@@ -167,8 +167,14 @@ const styles = StyleSheet.create({
   // Positioned against the dock, not the card, and pulled past its left
   // edge with a negative offset — past the card's own padding rather than
   // flush with it — so he reads as breaking out of the speech bubble like
-  // a comic panel, not just floating a little above it.
-  portraitFloat: { position: "absolute", left: -SPACING.md, top: -SPACING.xl - 4 },
+  // a comic panel, not just floating a little above it. Anchored to the
+  // dock's bottom rather than a fixed distance from the top: a short beat
+  // makes a short card, and top-anchoring left empty space below him once
+  // the card's own bottom edge no longer reached as far down as he did.
+  // Bottom-anchoring means he always meets the card's edge, however tall
+  // that step's text makes it, and simply rides higher above the top on
+  // the short beats instead.
+  portraitFloat: { position: "absolute", left: -SPACING.md, bottom: 0 },
   // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
   // the box instead of letterboxing against the old portrait-shaped one.
   characterImage: { width: 230, height: 180 },
