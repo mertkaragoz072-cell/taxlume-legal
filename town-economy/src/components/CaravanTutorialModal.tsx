@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Image, Animated, Easing } from "react-native";
-import caravanGuideImage from "../../assets/mentor-merve.png";
+import caravanGuideImage from "../../assets/caravan-merchant-guide.png";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
 import {
@@ -146,7 +146,9 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", alignItems: "flex-start" },
   portrait: { marginRight: SPACING.sm, marginTop: -2 },
-  characterImage: { width: 84, height: 110 },
+  // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
+  // the box instead of letterboxing against the old portrait-shaped one.
+  characterImage: { width: 112, height: 88 },
   speech: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
