@@ -132,13 +132,13 @@ export const SCARCITY_MIN = 0.5;
 export const SCARCITY_MAX = 2.2;
 export const SUPPLY_MIN_FACTOR = 0.15;
 export const SUPPLY_MAX_FACTOR = 3;
-export const PRODUCTION_NOISE = 0.35; // ± fraction of baseProduction, random per tick
+export const PRODUCTION_NOISE = 0.5; // ± fraction of baseProduction, random per tick
 export const PRODUCTION_PENALTY_FACTOR = 0.7; // unhappy villagers produce down to 30% of normal
 export const PRODUCTION_BONUS_FACTOR = 0.15; // content villagers produce up to 15% more
 export const EFFICIENCY_MIN = 0.3;
 export const EFFICIENCY_MAX = 1.15;
 export const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
-export const FOREIGN_NOISE = 0.28;
+export const FOREIGN_NOISE = 0.42;
 // --- Demand pressure ------------------------------------------------------
 // Supply alone drifts back toward (and past) baseSupply within a tick or two
 // once villagers are happy and producing above baseline — too fast for a
