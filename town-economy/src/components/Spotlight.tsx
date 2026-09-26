@@ -17,9 +17,18 @@ interface Rect {
 
 type Measure = (cb: (rect: Rect) => void) => void;
 
+interface TargetEntry {
+  measure: Measure;
+  /** Brings the real control into view before the overlay starts pointing
+   * at it. Only does anything on the web build (see SpotlightTarget) —
+   * elsewhere it's a no-op, same as if the target just stayed wherever it
+   * already was. */
+  scrollIntoView: () => void;
+}
+
 interface Ctx {
-  register: (id: SpotlightId, measure: Measure | null) => void;
-  measureOf: (id: SpotlightId) => Measure | undefined;
+  register: (id: SpotlightId, entry: TargetEntry | null) => void;
+  entryOf: (id: SpotlightId) => TargetEntry | undefined;
   originRef: React.MutableRefObject<{ x: number; y: number }>;
 }
 
@@ -42,18 +51,18 @@ export function SpotlightProvider({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const targets = useRef(new Map<SpotlightId, Measure>()).current;
+  const targets = useRef(new Map<SpotlightId, TargetEntry>()).current;
   const originRef = useRef({ x: 0, y: 0 });
   const frame = useRef<View>(null);
 
   const register = useCallback(
-    (id: SpotlightId, measure: Measure | null) => {
-      if (measure) targets.set(id, measure);
+    (id: SpotlightId, entry: TargetEntry | null) => {
+      if (entry) targets.set(id, entry);
       else targets.delete(id);
     },
     [targets]
   );
-  const measureOf = useCallback((id: SpotlightId) => targets.get(id), [targets]);
+  const entryOf = useCallback((id: SpotlightId) => targets.get(id), [targets]);
 
   const onLayout = useCallback(() => {
     frame.current?.measureInWindow((x, y) => {
@@ -69,7 +78,7 @@ export function SpotlightProvider({
   // measureInWindow callback (itself async) ever resolves — the overlay
   // then never picks up a newly-selected target and keeps showing whatever
   // it last managed to measure.
-  const ctxValue = useMemo<Ctx>(() => ({ register, measureOf, originRef }), [register, measureOf]);
+  const ctxValue = useMemo<Ctx>(() => ({ register, entryOf, originRef }), [register, entryOf]);
 
   return (
     <SpotlightContext.Provider value={ctxValue}>
@@ -96,10 +105,22 @@ export function SpotlightTarget({
 
   useEffect(() => {
     if (!ctx) return;
-    ctx.register(id, (cb) => {
-      ref.current?.measureInWindow((x, y, width, height) => {
-        if (width > 0 && height > 0) cb({ x, y, width, height });
-      });
+    ctx.register(id, {
+      measure: (cb) => {
+        ref.current?.measureInWindow((x, y, width, height) => {
+          if (width > 0 && height > 0) cb({ x, y, width, height });
+        });
+      },
+      // react-native-web forwards a View's ref to its underlying DOM node,
+      // which is the one place this can lean on the browser's own
+      // scrollIntoView instead of hand-rolling scroll-offset math against
+      // an unknown ancestor ScrollView. On native, refs are host component
+      // instances with no such method, so this silently does nothing —
+      // same as a target the player already has on screen.
+      scrollIntoView: () => {
+        (ref.current as unknown as { scrollIntoView?: (opts?: ScrollIntoViewOptions) => void } | null)
+          ?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+      },
     });
     return () => ctx.register(id, null);
   }, [ctx, id]);
@@ -147,10 +168,19 @@ export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
       return;
     }
     let cancelled = false;
+    // Once, when the tour points at a new target: the map, the direction
+    // toggle and the send button sit far apart on a scrolling screen, and
+    // without this the ones below the fold never enter the viewport on
+    // their own. The overlay would then dim the entire screen with no hole
+    // anywhere in it — indistinguishable from a plain text card over a
+    // blank screen, which is what this was reported as. Left out of the
+    // polling tick below on purpose: re-scrolling ten times a second would
+    // fight the player's own scrolling.
+    ctx.entryOf(target)?.scrollIntoView();
     const tick = () => {
-      const measure = ctx.measureOf(target);
-      if (!measure) return;
-      measure((r) => {
+      const entry = ctx.entryOf(target);
+      if (!entry) return;
+      entry.measure((r) => {
         if (cancelled) return;
         const o = ctx.originRef.current;
         setRect({ x: r.x - o.x, y: r.y - o.y, width: r.width, height: r.height });
