@@ -162,8 +162,10 @@ const styles = StyleSheet.create({
   // Reserves the row's own space for the floating portrait (below); it
   // carries no image itself. Narrower than the portrait's own width for
   // the same reason as MentorCoach's: he starts further left, past the
-  // card's padding, than this spacer needs to reach.
-  portraitSpacer: { width: 180, marginRight: SPACING.sm },
+  // card's padding, than this spacer needs to reach — and narrower still
+  // than before, so the speech column gets more breathing room and the
+  // name/progress line stops wrapping.
+  portraitSpacer: { width: 150, marginRight: SPACING.sm },
   // Positioned against the dock, not the card, and pulled past its left
   // edge with a negative offset — past the card's own padding rather than
   // flush with it — so he reads as breaking out of the speech bubble like
@@ -173,11 +175,13 @@ const styles = StyleSheet.create({
   // the card's own bottom edge no longer reached as far down as he did.
   // Bottom-anchoring means he always meets the card's edge, however tall
   // that step's text makes it, and simply rides higher above the top on
-  // the short beats instead.
-  portraitFloat: { position: "absolute", left: -SPACING.md, bottom: 0 },
+  // the short beats instead. The bottom offset matches the dock's own
+  // paddingBottom — plain `bottom: 0` sits against the dock's outer edge,
+  // past the padding, which let him overshoot below the card's own border.
+  portraitFloat: { position: "absolute", left: -SPACING.md, bottom: SPACING.sm },
   // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
   // the box instead of letterboxing against the old portrait-shaped one.
-  characterImage: { width: 230, height: 180 },
+  characterImage: { width: 200, height: 157 },
   speech: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
