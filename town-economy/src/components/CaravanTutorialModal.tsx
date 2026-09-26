@@ -163,14 +163,15 @@ const styles = StyleSheet.create({
   // carries no image itself. Narrower than the portrait's own width for
   // the same reason as MentorCoach's: he starts further left, past the
   // card's padding, than this spacer needs to reach.
-  portraitSpacer: { width: 190 - 24, marginRight: SPACING.sm },
-  // Positioned against the dock, not the card, so his left edge can land
-  // to the left of the card's own padding and he can spill up and out of
-  // it instead of being clipped by its overflow.
-  portraitFloat: { position: "absolute", left: SPACING.md, top: -SPACING.xl },
+  portraitSpacer: { width: 180, marginRight: SPACING.sm },
+  // Positioned against the dock, not the card, and pulled past its left
+  // edge with a negative offset — past the card's own padding rather than
+  // flush with it — so he reads as breaking out of the speech bubble like
+  // a comic panel, not just floating a little above it.
+  portraitFloat: { position: "absolute", left: -SPACING.md, top: -SPACING.xl - 4 },
   // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
   // the box instead of letterboxing against the old portrait-shaped one.
-  characterImage: { width: 190, height: 149 },
+  characterImage: { width: 230, height: 180 },
   speech: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
