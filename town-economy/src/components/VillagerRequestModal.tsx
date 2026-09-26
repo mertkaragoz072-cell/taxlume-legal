@@ -3,7 +3,7 @@ import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, FONT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, WEIGHT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
@@ -114,7 +114,9 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     paddingVertical: 20,
     paddingRight: 20,
     paddingLeft: 30,
@@ -123,9 +125,15 @@ const styles = StyleSheet.create({
     zIndex: 1,
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 17, fontFamily: FONT.display, marginBottom: 8, textAlign: "center" },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: 17,
+    fontFamily: FONT.display,
+    marginBottom: 8,
+    textAlign: "center",
+  },
   description: {
-    color: "#a0917a",
+    color: COLORS.textMuted,
     fontSize: 13,
     textAlign: "center",
     marginBottom: 18,
@@ -133,8 +141,8 @@ const styles = StyleSheet.create({
   },
   option: {
     width: "100%",
-    backgroundColor: "#1a1410",
-    borderRadius: 14,
+    backgroundColor: COLORS.onLight,
+    borderRadius: RADIUS.card,
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginBottom: 10,
@@ -142,6 +150,12 @@ const styles = StyleSheet.create({
     borderColor: "#3a2d1e",
   },
   optionDisabled: { opacity: 0.5 },
-  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontFamily: FONT.bold, fontSize: 14, marginBottom: 3 },
-  optionHint: { color: "#a0917a", fontSize: 11 },
+  optionLabel: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: 14,
+    marginBottom: 3,
+  },
+  optionHint: { color: COLORS.textMuted, fontSize: 11 },
 });

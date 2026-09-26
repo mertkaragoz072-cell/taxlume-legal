@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, FONT, GOLD_GRADIENT } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, TYPE, WEIGHT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { IconBadge } from "./IconBadge";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -98,14 +98,22 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 360,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 22,
     alignItems: "center",
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 18, fontFamily: FONT.display, marginBottom: 10, textAlign: "center" },
-  body: { color: "#a0917a", fontSize: 13, textAlign: "center", lineHeight: 19, marginBottom: 18 },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.heading,
+    fontFamily: FONT.display,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  body: { color: COLORS.textMuted, fontSize: TYPE.body, textAlign: "center", lineHeight: 19, marginBottom: 18 },
   dots: { flexDirection: "row", gap: 6, marginBottom: 18 },
   dot: {
     width: 7,
@@ -114,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4a4032",
     marginRight: 6,
   },
-  dotActive: { backgroundColor: "#e8c777", width: 18 },
+  dotActive: { backgroundColor: COLORS.accent, width: 18 },
   nextBtn: {
     width: "100%",
     borderRadius: 12,
@@ -128,7 +136,7 @@ const styles = StyleSheet.create({
   // button's bottom edge on a phone, half of it outside the gold. lineHeight
   // is spelled out for the same reason: left to the font, the line box was
   // taller than the space the button had reserved for it.
-  nextBtnText: { color: "#1a1410", fontFamily: FONT.black, fontSize: 14, lineHeight: 20 },
+  nextBtnText: { color: COLORS.onLight, fontFamily: FONT.black, fontSize: 14, lineHeight: 20 },
   skipBtn: { marginTop: 10, paddingVertical: 6 },
-  skipBtnText: { color: "#a0917a", fontSize: 12, fontWeight: "600", fontFamily: FONT.medium },
+  skipBtnText: { color: COLORS.textMuted, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
 });

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { FONT, TYPE, WEIGHT } from "../theme";
+import { COLORS, FONT, TYPE, WEIGHT } from "../theme";
 
 interface ComboEvent {
   id: number;
@@ -81,9 +81,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
-  text: { color: "#1a1410", fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  text: { color: COLORS.onLight, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   subtext: {
-    color: "#1a1410",
+    color: COLORS.onLight,
     fontSize: TYPE.micro,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,

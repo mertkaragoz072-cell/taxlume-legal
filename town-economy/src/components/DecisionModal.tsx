@@ -3,7 +3,7 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DECISION_TEMPLATES_BY_ID } from "../economy/decisions";
 import { PendingDecision } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, FONT } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 const DECISION_ACCENT = "#c58ee0";
 import { GradientFill } from "./GradientFill";
@@ -52,30 +52,44 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 360,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 20,
     alignItems: "center",
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 17, fontFamily: FONT.display, marginBottom: 8, textAlign: "center" },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: 17,
+    fontFamily: FONT.display,
+    marginBottom: SPACING.sm,
+    textAlign: "center",
+  },
   description: {
-    color: "#a0917a",
-    fontSize: 13,
+    color: COLORS.textMuted,
+    fontSize: TYPE.body,
     textAlign: "center",
     marginBottom: 18,
     lineHeight: 18,
   },
   option: {
     width: "100%",
-    backgroundColor: "#1a1410",
-    borderRadius: 14,
-    paddingVertical: 12,
+    backgroundColor: COLORS.onLight,
+    borderRadius: RADIUS.card,
+    paddingVertical: SPACING.md,
     paddingHorizontal: 14,
-    marginBottom: 10,
+    marginBottom: SPACING.sm + 2,
     borderWidth: 2,
     borderColor: "#3a2d1e",
   },
-  optionLabel: { color: "#f0e3c8", fontWeight: "700", fontFamily: FONT.bold, fontSize: 14, marginBottom: 3 },
-  optionHint: { color: "#a0917a", fontSize: 11 },
+  optionLabel: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: 14,
+    marginBottom: 3,
+  },
+  optionHint: { color: COLORS.textMuted, fontSize: TYPE.caption },
 });

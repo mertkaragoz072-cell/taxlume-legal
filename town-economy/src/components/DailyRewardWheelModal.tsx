@@ -213,14 +213,16 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 340,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 20,
     alignItems: "center",
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg, textAlign: "center" },
+  title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
+  subtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
   wheelWrap: {
     width: WHEEL_RADIUS * 2,
     height: WHEEL_RADIUS * 2,
@@ -296,5 +298,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  spinBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
+  spinBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 14 },
 });

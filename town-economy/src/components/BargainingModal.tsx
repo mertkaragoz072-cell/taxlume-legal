@@ -11,6 +11,7 @@ import {
   SPACING,
   TYPE,
   WEIGHT,
+  withAlpha,
 } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -131,7 +132,7 @@ export function BargainingModal({ visible, onResolve }: Props) {
                       result.tier === "perfect"
                         ? COLORS.positive
                         : result.tier === "good"
-                          ? "#e0a13f"
+                          ? COLORS.warning
                           : COLORS.textMuted,
                   },
                 ]}
@@ -168,19 +169,27 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 340,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 20,
     alignItems: "center",
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4, textAlign: "center" },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg, textAlign: "center" },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.title,
+    fontFamily: FONT.display,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  subtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
   barTrack: {
     width: BAR_WIDTH,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#1a1410",
+    backgroundColor: COLORS.onLight,
     borderWidth: 2,
     borderColor: "#3a2d1e",
     justifyContent: "center",
@@ -242,9 +251,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: SPACING.sm,
   },
-  stopBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 16 },
+  stopBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 16 },
   skipBtn: { alignItems: "center", paddingVertical: 8 },
-  skipBtnText: { color: "#a0917a", fontSize: 12, fontWeight: "600", fontFamily: FONT.medium },
+  skipBtnText: { color: COLORS.textMuted, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
   continueBtn: {
     width: "100%",
     borderRadius: RADIUS.card,
@@ -252,5 +261,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  continueBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
+  continueBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 14 },
 });

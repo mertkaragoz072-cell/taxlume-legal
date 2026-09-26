@@ -3,13 +3,13 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, RivalTraderOffer } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, WEIGHT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { IconBadge } from "./IconBadge";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
-const RIVAL_ACCENT = "#e0a13f";
+const RIVAL_ACCENT = COLORS.warning;
 
 interface Props {
   offer: RivalTraderOffer | null;
@@ -72,7 +72,9 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 360,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 20,
     alignItems: "center",
     overflow: "hidden",
@@ -94,8 +96,8 @@ const styles = StyleSheet.create({
   },
   option: {
     width: "100%",
-    backgroundColor: "#1a1410",
-    borderRadius: 14,
+    backgroundColor: COLORS.onLight,
+    borderRadius: RADIUS.card,
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginBottom: 10,
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
   optionDisabled: { opacity: 0.5 },
   optionLabel: {
     color: COLORS.textPrimary,
-    fontWeight: "700",
+    fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     fontSize: 14,
     marginBottom: 3,
