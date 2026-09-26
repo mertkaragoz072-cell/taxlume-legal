@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   portrait: { marginRight: SPACING.sm, marginTop: -2 },
   // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
   // the box instead of letterboxing against the old portrait-shaped one.
-  characterImage: { width: 150, height: 118 },
+  characterImage: { width: 190, height: 149 },
   speech: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   name: {
