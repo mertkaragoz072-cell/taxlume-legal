@@ -109,7 +109,7 @@ describe("demand effects", () => {
 
 describe("openingDemandCycles", () => {
   const DAY = 40;
-  const eligible = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
+  const eligible = GOODS.filter((g) => !g.unlockRank).map((g) => g.id);
   const cheapest = [...eligible].sort((a, b) => GOODS_BY_ID[a].basePrice - GOODS_BY_ID[b].basePrice)[0];
 
   it("puts the cheapest starter good in surplus now and in demand next", () => {

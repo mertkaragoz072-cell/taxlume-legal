@@ -166,9 +166,11 @@ export const GOODS: Good[] = [
     elasticity: 0.95,
     inputs: ["iron"],
   },
-  // Unlock over time (see gameDayFromTick/isGoodUnlocked in useEconomy.ts)
-  // rather than by net worth — a steady drip of new products to keep
-  // reopening the market screen worthwhile as a run goes on.
+  // Unlock as the town's rank climbs (see townRankIndex/isGoodUnlocked)
+  // rather than after a fixed number of days — a steady drip of new
+  // products tied to real progress instead of the clock, so a player who
+  // sets the game down for a while doesn't just find everything unlocked
+  // when they come back.
   {
     id: "honey",
     nameKey: "good.honey.name",
@@ -179,7 +181,7 @@ export const GOODS: Good[] = [
     baseSupply: 160,
     baseProduction: 10,
     elasticity: 0.6,
-    unlockDay: 2,
+    unlockRank: 1, // Town
   },
   {
     id: "cheese",
@@ -191,7 +193,7 @@ export const GOODS: Good[] = [
     baseSupply: 150,
     baseProduction: 10,
     elasticity: 0.55,
-    unlockDay: 4,
+    unlockRank: 2, // City
     inputs: ["milk"],
   },
   {
@@ -204,7 +206,7 @@ export const GOODS: Good[] = [
     baseSupply: 190,
     baseProduction: 14,
     elasticity: 0.5,
-    unlockDay: 7,
+    unlockRank: 3, // Metropolis
     inputs: ["wood"],
   },
   {
@@ -217,7 +219,7 @@ export const GOODS: Good[] = [
     baseSupply: 120,
     baseProduction: 8,
     elasticity: 0.7,
-    unlockDay: 10,
+    unlockRank: 4, // Trade Hub
     inputs: ["sand", "wood"],
   },
 ];

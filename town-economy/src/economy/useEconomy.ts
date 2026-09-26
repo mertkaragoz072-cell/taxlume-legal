@@ -300,7 +300,7 @@ export function initialState(
   for (const a of ASSETS) {
     assets[a.id] = makeInitialAssetState(a);
   }
-  const day1GoodIds = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
+  const day1GoodIds = GOODS.filter((g) => !g.unlockRank).map((g) => g.id);
   const allTownIds = TOWNS.map((tn) => tn.id);
   const opening = openingDemandCycles(TICKS_PER_GAME_DAY, day1GoodIds);
   return {

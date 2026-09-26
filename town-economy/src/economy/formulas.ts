@@ -51,12 +51,13 @@ import {
 export function gameDayFromTick(tick: number): number {
   return Math.floor(tick / TICKS_PER_GAME_DAY) + 1;
 }
-/** A good with no unlockDay is available from the start; one with an
- * unlockDay only becomes tradeable once the town has been running that
- * many in-game days — it still simulates quietly in the background before
- * that, so it isn't starting from scratch once revealed. */
+/** A good with no unlockRank is available from the start; one with an
+ * unlockRank only becomes tradeable once the town has reached that rank —
+ * real progress, not the clock, so leaving the game idle for days doesn't
+ * unlock anything by itself. It still simulates quietly in the background
+ * before that, so it isn't starting from scratch once revealed. */
 export function isGoodUnlocked(good: Good, state: EconomyState): boolean {
-  return !good.unlockDay || gameDayFromTick(state.tick) >= good.unlockDay;
+  return !good.unlockRank || state.townRankIndex >= good.unlockRank;
 }
 /** Given a just-realized pnl, returns the next streak count and the bonus
  * cash (on top of pnl) that streak earns — shared by trade() and

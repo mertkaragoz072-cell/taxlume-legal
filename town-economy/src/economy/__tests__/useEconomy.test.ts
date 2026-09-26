@@ -73,18 +73,18 @@ describe("gameDayFromTick", () => {
 });
 
 describe("isGoodUnlocked", () => {
-  it("treats a good with no unlockDay as always available", () => {
+  it("treats a good with no unlockRank as always available", () => {
     const state = initialState();
     expect(isGoodUnlocked(GOODS_BY_ID.bread, state)).toBe(true);
   });
 
-  it("gates a time-locked good until its unlock day is reached", () => {
+  it("gates a rank-locked good until the town reaches that rank", () => {
     const honey = GOODS_BY_ID.honey;
-    expect(honey.unlockDay).toBe(2);
-    const day1 = { ...initialState(), tick: 0 };
-    const day2 = { ...initialState(), tick: TICKS_PER_GAME_DAY };
-    expect(isGoodUnlocked(honey, day1)).toBe(false);
-    expect(isGoodUnlocked(honey, day2)).toBe(true);
+    expect(honey.unlockRank).toBe(1);
+    const village = { ...initialState(), townRankIndex: 0 };
+    const town = { ...initialState(), townRankIndex: 1 };
+    expect(isGoodUnlocked(honey, village)).toBe(false);
+    expect(isGoodUnlocked(honey, town)).toBe(true);
   });
 });
 

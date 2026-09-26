@@ -12,10 +12,10 @@ import { SEASONAL_EVENT_TEMPLATES_BY_ID } from "../economy/seasonalEvents";
 import {
   AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
-  gameDayFromTick,
   isGoodUnlocked,
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
+import { townRankNameKey } from "../economy/townRanks";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { DemandForecastCard } from "../components/DemandForecastCard";
@@ -257,17 +257,16 @@ export function MarketScreen({ sounds }: Props) {
         <>
           <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
-            {lockedGoods.map((g) => {
-              const daysLeft = Math.max(1, (g.unlockDay ?? 1) - gameDayFromTick(state.tick));
-              return (
-                <View key={g.id} style={styles.lockedCard}>
-                  <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                  <Text style={styles.lockedIcon}>🔒 {g.icon}</Text>
-                  <Text style={styles.lockedName}>{t(g.nameKey)}</Text>
-                  <Text style={styles.lockedDay}>{t("market.unlocksInDays", { days: daysLeft })}</Text>
-                </View>
-              );
-            })}
+            {lockedGoods.map((g) => (
+              <View key={g.id} style={styles.lockedCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.lockedIcon}>🔒 {g.icon}</Text>
+                <Text style={styles.lockedName}>{t(g.nameKey)}</Text>
+                <Text style={styles.lockedDay}>
+                  {t("market.unlocksAtRank", { rank: t(townRankNameKey(g.unlockRank ?? 0)) })}
+                </Text>
+              </View>
+            ))}
           </ScrollView>
         </>
       )}

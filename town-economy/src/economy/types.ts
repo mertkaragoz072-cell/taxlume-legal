@@ -49,9 +49,10 @@ export interface Good {
   baseProduction: number;
   /** how strongly a supply shortfall/surplus moves price: price ∝ (baseSupply/supply)^elasticity */
   elasticity: number;
-  /** in-game day (see gameDayFromTick in useEconomy.ts) this good first
-   * becomes tradeable; omitted/undefined means available from day 1 */
-  unlockDay?: number;
+  /** town rank index (see townRankIndex in types.ts / townRanks.ts) the
+   * town must have reached for this good to become tradeable; omitted/
+   * undefined means available from the start. */
+  unlockRank?: number;
   /** goods this one is made from. Their supply throttles this one's
    * production — see productionInputFactor in formulas.ts. */
   inputs?: GoodId[];
