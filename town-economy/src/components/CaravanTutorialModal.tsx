@@ -96,10 +96,13 @@ export function CaravanTutorialModal({
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
 
         <View style={styles.row}>
-          <View style={styles.portrait}>
-            <Image source={caravanGuideImage} style={styles.characterImage} resizeMode="contain" />
-          </View>
-
+          {/* A spacer, not the portrait itself — see portraitFloat below,
+              same split MentorCoach uses for Merve. Squeezing the image and
+              the text into one row was what made this read as cluttered:
+              the speech column had barely half the card's width to work
+              with, so the name/role line and the title were both wrapping
+              onto extra lines they didn't need. */}
+          <View style={styles.portraitSpacer} />
           <View style={styles.speech}>
             <View style={styles.nameRow}>
               <Text style={styles.name}>
@@ -130,6 +133,17 @@ export function CaravanTutorialModal({
           </ScalePressable>
         </View>
       </View>
+
+      {/* Sibling of the card, not a child of it — the card clips its own
+          content (overflow: hidden, for its rounded corners), which would
+          crop him at its edge. Rendered after it so document order puts
+          him on top with no zIndex needed. Positioned against the dock
+          rather than the card so his left edge can sit further out than
+          the card's own padding, past the speech bubble instead of tucked
+          inside it. */}
+      <View style={styles.portraitFloat} pointerEvents="none">
+        <Image source={caravanGuideImage} style={styles.characterImage} resizeMode="contain" />
+      </View>
     </Animated.View>
   );
 }
@@ -145,7 +159,15 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   row: { flexDirection: "row", alignItems: "flex-start" },
-  portrait: { marginRight: SPACING.sm, marginTop: -2 },
+  // Reserves the row's own space for the floating portrait (below); it
+  // carries no image itself. Narrower than the portrait's own width for
+  // the same reason as MentorCoach's: he starts further left, past the
+  // card's padding, than this spacer needs to reach.
+  portraitSpacer: { width: 190 - 24, marginRight: SPACING.sm },
+  // Positioned against the dock, not the card, so his left edge can land
+  // to the left of the card's own padding and he can spill up and out of
+  // it instead of being clipped by its overflow.
+  portraitFloat: { position: "absolute", left: SPACING.md, top: -SPACING.xl },
   // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
   // the box instead of letterboxing against the old portrait-shaped one.
   characterImage: { width: 190, height: 149 },
