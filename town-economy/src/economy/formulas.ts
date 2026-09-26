@@ -6,11 +6,14 @@
  * never disagree about a figure. */
 
 import { ASSETS } from "./assets";
+import { DIFFICULTIES } from "./difficulty";
 import { GOODS } from "./goods";
+import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { propertyCaravanTariffDiscount, propertyLoanRateDiscountPerDay } from "./properties";
 import {
   perkCaravanTariffDiscount,
   perkLoanRateDiscountPerDay,
+  perkTaxHappinessRelief,
   perkUnlockThresholdMult,
 } from "./prestigePerks";
 import { ForeignTown } from "./towns";
@@ -18,6 +21,9 @@ import { doctrineModifiers } from "./doctrines";
 import { UPGRADES_BY_ID } from "./upgrades";
 import { EconomyState, Good, GoodId } from "./types";
 import {
+  CONTENT_BONUS_FACTOR,
+  DEBT_HAPPINESS_DRAG,
+  HAPPINESS_TARGET_SLOPE,
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
   LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY,
@@ -31,6 +37,7 @@ import {
   LOAN_TERM_RATE_PER_MONTH_PER_DAY,
   MARKET_SPREAD,
   METROPOL_UNLOCK_NET_WORTH,
+  PRODUCTION_INFLATION_FACTOR,
   SCARCITY_MAX,
   SCARCITY_MIN,
   STORAGE_BASE_CAPACITY,
@@ -118,6 +125,53 @@ export function computeNetWorth(state: EconomyState): number {
     ASSETS.reduce((sum, a) => sum + state.assets[a.id].holding * state.assets[a.id].price, 0) -
     (state.loan ? state.loan.remainingBalance : 0)
   );
+}
+export interface InflationPressure {
+  /** the difficulty's own baseline drift — present even with 0% tax and no debt */
+  baseline: number;
+  /** how many happiness points the current tax rate is costing, before debt */
+  taxHappinessDrag: number;
+  /** how many happiness points an outstanding loan is costing, on top of tax */
+  debtHappinessDrag: number;
+  /** the daily inflation rate today's unhappiness is adding, if it holds */
+  unhappinessDrag: number;
+  /** the daily inflation rate today's contentment is easing, if it holds */
+  contentRelief: number;
+  /** baseline + unhappinessDrag - contentRelief, clamped to the difficulty's band */
+  target: number;
+}
+/** What is currently pushing tomorrow's inflation rate up or down, broken
+ * into the pieces tick()'s own inflationTarget math folds together — so the
+ * Town screen can show the player *why*, not just the number. Reads
+ * state.happiness (this tick's already-settled value) rather than
+ * re-deriving the target happiness tick() computes internally, since a
+ * one-tick lag between "what's shown" and "what happens next" is the same
+ * lag the player already sees between raising taxes and villagers reacting. */
+export function inflationPressureBreakdown(state: EconomyState): InflationPressure {
+  const config = effectiveDifficultyConfig(DIFFICULTIES[state.difficulty], state.activeNgPlusModifiers);
+  const debtBurden = state.loan
+    ? clamp(state.loan.remainingBalance / Math.max(computeNetWorth(state), 1), 0, 1)
+    : 0;
+  const taxHappinessDrag =
+    state.taxRate * HAPPINESS_TARGET_SLOPE * (1 - perkTaxHappinessRelief(state.prestigePerks));
+  const debtHappinessDrag = debtBurden * DEBT_HAPPINESS_DRAG;
+  const productionPenalty = clamp((50 - state.happiness) / 50, 0, 1);
+  const contentBonus = clamp((state.happiness - 70) / 30, 0, 1);
+  const unhappinessDrag = productionPenalty * PRODUCTION_INFLATION_FACTOR;
+  const contentRelief = contentBonus * CONTENT_BONUS_FACTOR;
+  const target = clamp(
+    config.baseInflationDrift + unhappinessDrag - contentRelief,
+    config.inflationMin,
+    config.inflationMax
+  );
+  return {
+    baseline: config.baseInflationDrift,
+    taxHappinessDrag,
+    debtHappinessDrag,
+    unhappinessDrag,
+    contentRelief,
+    target,
+  };
 }
 export function totalGoodsHolding(state: EconomyState): number {
   return GOODS.reduce((sum, g) => sum + state.goods[g.id].holding, 0);

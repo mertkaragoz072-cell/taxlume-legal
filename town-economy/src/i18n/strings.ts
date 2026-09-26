@@ -324,6 +324,15 @@ export const STRINGS = {
       happinessLabel: "Halk Memnuniyeti",
       outOf100: "/ 100",
       squareLabel: "KASABA MEYDANI",
+      inflationFactors: {
+        title: "ENFLASYON FAKTÖRLERİ",
+        baseline: "Zorluk tabanı",
+        unhappiness: "Mutsuzluk etkisi",
+        content: "Memnuniyet rahatlığı",
+        tax: "Vergi baskısı",
+        debt: "Borç baskısı",
+        happinessSuffix: "mutluluk puanı",
+      },
       mood: {
         crisis: "Ekonomik kriz",
         heating: "Isınıyor",
@@ -1577,6 +1586,15 @@ export const STRINGS = {
       happinessLabel: "Public Happiness",
       outOf100: "/ 100",
       squareLabel: "TOWN SQUARE",
+      inflationFactors: {
+        title: "INFLATION FACTORS",
+        baseline: "Difficulty baseline",
+        unhappiness: "Unhappiness effect",
+        content: "Contentment relief",
+        tax: "Tax pressure",
+        debt: "Debt pressure",
+        happinessSuffix: "happiness pts",
+      },
       mood: {
         crisis: "Economic crisis",
         heating: "Heating up",

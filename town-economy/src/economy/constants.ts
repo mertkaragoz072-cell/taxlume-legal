@@ -97,7 +97,7 @@ export const LOAN_TERM_RATE_PER_MONTH_PER_DAY = 0.0015;
 export const LOAN_TERM_DAYS_PER_MONTH = 20;
 // How much an all-consuming debt (balance ≈ net worth) drags down the
 // villagers' target happiness, on top of whatever the tax rate is already doing.
-export const DEBT_HAPPINESS_DRAG = 20;
+export const DEBT_HAPPINESS_DRAG = 28;
 // --- Forward contracts ---------------------------------------------------
 // A cash-settled bet on a good's home price at signing vs. its price at
 // maturity — "long" pays off if it rose, "short" if it fell. Margin is
@@ -191,7 +191,7 @@ export const TAX_OUTPUT_FACTOR = 0.008;
 export const INFLATION_REVERSION_RATE = 0.035; // pull toward the difficulty's baseline drift, per tick
 export const HAPPINESS_TARGET_SLOPE = 220;
 export const HAPPINESS_EASE = 0.04;
-export const PRODUCTION_INFLATION_FACTOR = 0.003;
+export const PRODUCTION_INFLATION_FACTOR = 0.005; // unhappy, under-producing villagers push inflation harder
 export const CONTENT_BONUS_FACTOR = 0.005; // mutlu halk enflasyonu azaltabiliyor
 export const ANGRY_THRESHOLD = 20;
 export const ANGRY_EVENT_CHANCE = 0.1;

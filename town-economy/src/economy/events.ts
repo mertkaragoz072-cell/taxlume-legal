@@ -9,23 +9,22 @@ export interface EventTemplate {
   supplyShockPct?: number;
 }
 
-// inflationDelta values are deliberately small and roughly balanced
-// (the list sums to ~0) — they're meant to read as one-off news that
-// nudges the rate and fades via reversion, not as a structural bias
-// that would drag a long, passive session toward hyperinflation on its
-// own. "Merkez hazine para bastı" is intentionally the single largest
-// shock (money-printing is the canonical worst case), everything else
-// is modest by comparison.
+// inflationDelta values are one-off news that nudges the rate and fades via
+// reversion, not a structural bias on their own — but the bad-tone entries
+// were deliberately weighted up so the player has real inflation risk to
+// watch for (see the TownScreen breakdown), not just cosmetic news. The list
+// no longer sums to ~0 on purpose. "Merkez hazine para bastı" stays the
+// single largest shock (money-printing is the canonical worst case).
 export const EVENT_TEMPLATES: EventTemplate[] = [
   {
     messageKey: "event.taxHike",
     tone: "bad",
-    inflationDelta: 0.003,
+    inflationDelta: 0.005,
   },
   {
     messageKey: "event.drought",
     tone: "bad",
-    inflationDelta: 0.0005,
+    inflationDelta: 0.001,
     good: "bread",
     supplyShockPct: -0.32,
   },
@@ -58,12 +57,12 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
   {
     messageKey: "event.festival",
     tone: "bad",
-    inflationDelta: 0.002,
+    inflationDelta: 0.0035,
   },
   {
     messageKey: "event.moneyPrinting",
     tone: "bad",
-    inflationDelta: 0.004,
+    inflationDelta: 0.006,
   },
   {
     messageKey: "event.austerity",

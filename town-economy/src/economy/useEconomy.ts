@@ -182,6 +182,7 @@ export {
   effectiveTradeUnlockNetWorth,
   estimateTaxIncomePerTick,
   gameDayFromTick,
+  inflationPressureBreakdown,
   isGoodUnlocked,
   loanCap,
   loanDayRateToTickRate,

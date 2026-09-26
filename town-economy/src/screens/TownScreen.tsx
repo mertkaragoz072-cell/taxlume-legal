@@ -5,6 +5,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import {
   estimateTaxIncomePerTick,
+  inflationPressureBreakdown,
   isGoodUnlocked,
   loanCap,
   loanInterestRatePerDay,
@@ -82,6 +83,11 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
+  const inflationPressure = inflationPressureBreakdown(state);
+  // Per-tick rates compounded out to a whole game day, same conversion the
+  // header's own inflation line uses — a per-tick number like 0.005 means
+  // nothing to a player, "+2.1%/day" does.
+  const dailyPct = (rate: number) => (Math.pow(1 + rate, TICKS_PER_GAME_DAY) - 1) * 100;
   const rankTitle = townRankTitle(state.townRankIndex, t);
   const rankNextThreshold = townRankThreshold(state.townRankIndex + 1);
   const rankPct = Math.max(0, Math.min(1, netWorth / rankNextThreshold));
@@ -113,11 +119,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <TownSquareScene
-        label={t("town.squareLabel")}
-        moodLabel={t(happy.labelKey)}
-        moodColor={happy.color}
-      />
+      <TownSquareScene label={t("town.squareLabel")} moodLabel={t(happy.labelKey)} moodColor={happy.color} />
       <TownChatterTicker state={state} t={t} />
 
       <View style={styles.moodCard}>
@@ -159,6 +161,54 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           <Text style={styles.moodIndex}>{state.inflationIndex.toFixed(1)}</Text>
           <Text style={styles.moodIndexLabel}>{t("town.priceIndexLabel")}</Text>
         </View>
+      </View>
+
+      {/* What is actually pushing tomorrow's rate, broken out of the single
+          number above — so raising taxes or taking a loan reads as "this is
+          why inflation just moved" instead of a mystery. Rows that are
+          currently doing nothing (e.g. content relief while unhappy) don't
+          print, so a calm town shows just its baseline. */}
+      <View style={styles.factorsCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <Text style={styles.factorsTitle}>{t("town.inflationFactors.title")}</Text>
+        <View style={styles.factorRow}>
+          <Text style={styles.factorLabel}>{t("town.inflationFactors.baseline")}</Text>
+          <Text style={[styles.factorValue, { color: COLORS.textMuted }]}>
+            +{formatPercent(dailyPct(inflationPressure.baseline), state.language, 2)}
+          </Text>
+        </View>
+        {inflationPressure.unhappinessDrag > 0 && (
+          <View style={styles.factorRow}>
+            <Text style={styles.factorLabel}>{t("town.inflationFactors.unhappiness")}</Text>
+            <Text style={[styles.factorValue, { color: "#f0776a" }]}>
+              +{formatPercent(dailyPct(inflationPressure.unhappinessDrag), state.language, 2)}
+            </Text>
+          </View>
+        )}
+        {inflationPressure.contentRelief > 0 && (
+          <View style={styles.factorRow}>
+            <Text style={styles.factorLabel}>{t("town.inflationFactors.content")}</Text>
+            <Text style={[styles.factorValue, { color: "#5fd884" }]}>
+              -{formatPercent(dailyPct(inflationPressure.contentRelief), state.language, 2)}
+            </Text>
+          </View>
+        )}
+        {inflationPressure.taxHappinessDrag > 0.5 && (
+          <View style={styles.factorRow}>
+            <Text style={styles.factorLabel}>{t("town.inflationFactors.tax")}</Text>
+            <Text style={[styles.factorValue, { color: "#f0776a" }]}>
+              -{Math.round(inflationPressure.taxHappinessDrag)} {t("town.inflationFactors.happinessSuffix")}
+            </Text>
+          </View>
+        )}
+        {inflationPressure.debtHappinessDrag > 0.5 && (
+          <View style={styles.factorRow}>
+            <Text style={styles.factorLabel}>{t("town.inflationFactors.debt")}</Text>
+            <Text style={[styles.factorValue, { color: "#f0776a" }]}>
+              -{Math.round(inflationPressure.debtHappinessDrag)} {t("town.inflationFactors.happinessSuffix")}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.moodCard}>
@@ -673,6 +723,29 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   happinessFill: { height: "100%", borderRadius: 3 },
+  factorsCard: {
+    borderRadius: RADIUS.feature,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  factorsTitle: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.5,
+    marginBottom: SPACING.sm,
+  },
+  factorRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  factorLabel: { color: COLORS.textPrimary, fontSize: TYPE.label, flex: 1, marginRight: SPACING.sm },
+  factorValue: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   taxCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
