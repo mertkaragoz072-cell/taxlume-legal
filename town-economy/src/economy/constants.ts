@@ -139,6 +139,14 @@ export const EFFICIENCY_MIN = 0.3;
 export const EFFICIENCY_MAX = 1.15;
 export const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
 export const FOREIGN_NOISE = 0.42;
+// Caps how far a good's price can move in a single tick, regardless of how
+// hard the supply-driven scarcity curve and demand pressure want to swing
+// it. Without this, a high-noise tick landing while supply already sits far
+// from baseSupply gets exponentiated by scarcityFactor's power curve into a
+// jarring one-tick jump — a spike that reads as a bug, not a market. This
+// keeps every step small enough to feel like normal jitter while still
+// letting the noise above keep the price in near-constant motion.
+export const MAX_PRICE_STEP_PCT = 0.08;
 // --- Demand pressure ------------------------------------------------------
 // Supply alone drifts back toward (and past) baseSupply within a tick or two
 // once villagers are happy and producing above baseline — too fast for a

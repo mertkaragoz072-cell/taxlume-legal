@@ -80,6 +80,7 @@ import {
   LOST_TREASURE_CHANCE,
   LOST_TREASURE_MIN_AMOUNT,
   LOST_TREASURE_PCT_OF_CASH,
+  MAX_PRICE_STEP_PCT,
   MINI_QUEST_CHANCE,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRODUCTION_BONUS_FACTOR,
@@ -519,7 +520,7 @@ export function tick(state: EconomyState): EconomyState {
       -DEMAND_PRESSURE_MAX,
       DEMAND_PRESSURE_MAX
     );
-    const price =
+    const rawPrice =
       priceFromSupply(
         good.basePrice * researchedValueMult * seasonalMult * demandMult,
         good.baseSupply,
@@ -528,6 +529,12 @@ export function tick(state: EconomyState): EconomyState {
         inflationIndex
       ) *
       (1 + demandPressure);
+    // scarcityFactor is a power curve, so a noisy tick landing while supply
+    // already sits far from baseSupply gets exponentiated into a jarring
+    // one-tick jump. Stepping toward rawPrice instead of jumping to it keeps
+    // the market constantly moving (the noise above still pushes every
+    // tick) without any single tick reading as a spike or a bug.
+    const price = clamp(rawPrice, gs.price * (1 - MAX_PRICE_STEP_PCT), gs.price * (1 + MAX_PRICE_STEP_PCT));
 
     goods[good.id] = {
       ...gs,
