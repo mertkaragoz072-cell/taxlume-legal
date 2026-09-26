@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Image, Animated, Easing } from "react-native";
-import caravanGuideImage from "../../assets/caravan-merchant-guide.png";
+import caravanGuideImage from "../../assets/mentor-merve.png";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
 import {
