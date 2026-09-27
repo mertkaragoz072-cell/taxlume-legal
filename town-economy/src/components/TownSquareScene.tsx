@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent } from "react-native";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
@@ -217,17 +218,35 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
   const tier = moodTierFor(happiness);
   const season = seasonFromTick(tick).id;
   const image = SEASON_SCENE_IMAGES[season]?.[tier] ?? SCENE_IMAGES[tier];
+  const height = width / IMAGE_RATIO;
 
   return (
     <View style={styles.scene} onLayout={onLayout}>
       {width > 0 && (
         <>
-          <Image source={image} style={{ width, height: width / IMAGE_RATIO }} resizeMode="cover" />
+          <Image source={image} style={{ width, height }} resizeMode="cover" />
+          {/* A soft scrim in the two corners the captions sit in, not a flat
+           * tint over the whole photo — the text needs a dark patch behind it
+           * to stay legible over any part of the scene, but the painted art
+           * is the point, so the scrim fades out well short of the middle. */}
+          <Svg pointerEvents="none" width={width} height={height} style={StyleSheet.absoluteFill}>
+            <Defs>
+              <LinearGradient id="sceneTopScrim" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#0c0704" stopOpacity={0.5} />
+                <Stop offset="1" stopColor="#0c0704" stopOpacity={0} />
+              </LinearGradient>
+              <LinearGradient id="sceneBottomScrim" x1="0" y1="1" x2="0" y2="0">
+                <Stop offset="0" stopColor="#0c0704" stopOpacity={0.58} />
+                <Stop offset="1" stopColor="#0c0704" stopOpacity={0} />
+              </LinearGradient>
+            </Defs>
+            <Rect x={0} y={0} width={width} height={height * 0.32} fill="url(#sceneTopScrim)" />
+            <Rect x={0} y={height * 0.68} width={width} height={height * 0.32} fill="url(#sceneBottomScrim)" />
+          </Svg>
           {MOTES.map((m, i) => (
             <Mote key={i} {...m} />
           ))}
-          {season === "winter" &&
-            SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={width / IMAGE_RATIO} />)}
+          {season === "winter" && SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={height} />)}
         </>
       )}
       <Text style={[styles.label, onArt]}>{label}</Text>
