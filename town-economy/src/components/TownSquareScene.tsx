@@ -3,17 +3,18 @@ import { StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent }
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
+import summerHappyMarketplaceImage from "../../assets/summer-happy-marketplace.webp";
 import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
 import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
 import winterMixedMarketplaceImage from "../../assets/winter-mixed-marketplace.webp";
-import { seasonFromTick } from "../economy/seasons";
+import { seasonFromTick, SeasonId } from "../economy/seasons";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
   happiness: number;
-  /** picks the winter-specific scene below (see WINTER_SCENE_IMAGES) for
-   * this happiness tier when the calendar's in winter; every other season
-   * uses the three plain scenes instead. */
+  /** picks a season-specific scene below (see SEASON_SCENE_IMAGES) for this
+   * happiness tier when the current season has one; every other season/tier
+   * combination falls back to the three plain scenes. */
   tick: number;
   label: string;
   moodLabel: string;
@@ -45,10 +46,18 @@ const SCENE_IMAGES: Record<MoodTier, ImageSourcePropType> = {
   happy: happyMarketplaceImage,
 };
 
-const WINTER_SCENE_IMAGES: Record<MoodTier, ImageSourcePropType> = {
-  angry: winterAngryMarketplaceImage,
-  mixed: winterMixedMarketplaceImage,
-  happy: winterHappyMarketplaceImage,
+// Every mood tier has its own winter scene; summer so far only has one for
+// happy. A season/tier combination missing here just falls back to
+// SCENE_IMAGES above.
+const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, ImageSourcePropType>>>> = {
+  winter: {
+    angry: winterAngryMarketplaceImage,
+    mixed: winterMixedMarketplaceImage,
+    happy: winterHappyMarketplaceImage,
+  },
+  summer: {
+    happy: summerHappyMarketplaceImage,
+  },
 };
 
 // Legible over any part of the photo without a card behind it to guarantee
@@ -80,8 +89,8 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
   const [width, setWidth] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const tier = moodTierFor(happiness);
-  const isWinter = seasonFromTick(tick).id === "winter";
-  const image = isWinter ? WINTER_SCENE_IMAGES[tier] : SCENE_IMAGES[tier];
+  const season = seasonFromTick(tick).id;
+  const image = SEASON_SCENE_IMAGES[season]?.[tier] ?? SCENE_IMAGES[tier];
 
   return (
     <View style={styles.scene} onLayout={onLayout}>
