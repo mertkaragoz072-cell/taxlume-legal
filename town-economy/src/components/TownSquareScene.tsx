@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent }
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
+import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
 import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
 import winterMixedMarketplaceImage from "../../assets/winter-mixed-marketplace.webp";
 import { seasonFromTick } from "../economy/seasons";
@@ -10,9 +11,9 @@ import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
   happiness: number;
-  /** picks a winter-specific scene below (see WINTER_SCENE_IMAGES) when the
-   * calendar's in winter and this tier has one; every other season/mood
-   * combination shares the three plain scenes. */
+  /** picks the winter-specific scene below (see WINTER_SCENE_IMAGES) for
+   * this happiness tier when the calendar's in winter; every other season
+   * uses the three plain scenes instead. */
   tick: number;
   label: string;
   moodLabel: string;
@@ -44,9 +45,8 @@ const SCENE_IMAGES: Record<MoodTier, ImageSourcePropType> = {
   happy: happyMarketplaceImage,
 };
 
-// Only the tiers with a snowy variant appear here — angry has none yet, so
-// an unhappy winter town still falls back to SCENE_IMAGES.angry above.
-const WINTER_SCENE_IMAGES: Partial<Record<MoodTier, ImageSourcePropType>> = {
+const WINTER_SCENE_IMAGES: Record<MoodTier, ImageSourcePropType> = {
+  angry: winterAngryMarketplaceImage,
   mixed: winterMixedMarketplaceImage,
   happy: winterHappyMarketplaceImage,
 };
@@ -81,7 +81,7 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const tier = moodTierFor(happiness);
   const isWinter = seasonFromTick(tick).id === "winter";
-  const image = (isWinter && WINTER_SCENE_IMAGES[tier]) || SCENE_IMAGES[tier];
+  const image = isWinter ? WINTER_SCENE_IMAGES[tier] : SCENE_IMAGES[tier];
 
   return (
     <View style={styles.scene} onLayout={onLayout}>
