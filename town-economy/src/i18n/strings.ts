@@ -538,6 +538,12 @@ export const STRINGS = {
       eventsSectionLabel: "SON OLAYLAR",
       confirmBtn: "Kasabaya Dön",
     },
+    merveRankUp: {
+      eyebrow: "MERVE",
+      title: "Tebrikler Başkan!",
+      body: "{icon} Artık {title} olduk! Bunu senin liderliğinle başardık — kasaba büyümeye devam ediyor.",
+      confirmBtn: "Teşekkürler Merve!",
+    },
     villagerRequest: {
       title: "Köylü Ricası",
       description:
@@ -1798,6 +1804,12 @@ export const STRINGS = {
       achievementsSectionLabel: "ACHIEVEMENTS EARNED",
       eventsSectionLabel: "RECENT EVENTS",
       confirmBtn: "Back to Town",
+    },
+    merveRankUp: {
+      eyebrow: "MERVE",
+      title: "Congratulations, Mayor!",
+      body: "{icon} We're a {title} now! We got here under your lead — the town keeps growing.",
+      confirmBtn: "Thanks, Merve!",
     },
     villagerRequest: {
       title: "Villager Request",

@@ -305,6 +305,11 @@ export interface EconomyState {
   mythicUnlocked: boolean;
   /** highest town-rank tier (see townRanks.ts) this town's net worth has ever reached; sticky, never re-locks */
   townRankIndex: number;
+  /** set right after townRankIndex climbs, so Merve can step in and
+   * congratulate the player on the new title; null once dismissed. Carries
+   * the already-resolved icon/title rather than a rank index so the modal
+   * doesn't need to re-derive "beyond the named ladder" text itself. */
+  merveRankUp: { icon: string; title: string } | null;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
   researched: string[];
   /** speculative assets (gold, oil, stocks) — separate random-walk market, see assets.ts */

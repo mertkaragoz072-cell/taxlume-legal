@@ -240,6 +240,7 @@ type Action =
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
+  | { type: "DISMISS_MERVE_RANK_UP" }
   | { type: "RESOLVE_DECISION"; optionId: string }
   | { type: "RESOLVE_REQUEST"; give: boolean }
   | { type: "RESOLVE_RIVAL_OFFER"; accept: boolean }
@@ -344,6 +345,7 @@ export function initialState(
     legendaryUnlocked: false,
     mythicUnlocked: false,
     townRankIndex: 0,
+    merveRankUp: null,
     researched: [],
     assets,
     upgrades: {
@@ -1086,6 +1088,9 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
 function dismissOfflineSummary(state: EconomyState): EconomyState {
   return { ...state, offlineSummary: null };
 }
+function dismissMerveRankUp(state: EconomyState): EconomyState {
+  return { ...state, merveRankUp: null };
+}
 function resolveDecision(state: EconomyState, optionId: string): EconomyState {
   if (!state.pendingDecision) return state;
   const template = DECISION_TEMPLATES_BY_ID[state.pendingDecision.templateId];
@@ -1394,6 +1399,8 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return offlineAdvance(state, action.ticks, action.elapsedMs);
     case "DISMISS_OFFLINE_SUMMARY":
       return dismissOfflineSummary(state);
+    case "DISMISS_MERVE_RANK_UP":
+      return dismissMerveRankUp(state);
     case "DISMISS_DAILY_BONUS":
       return state.dailyBonusPending === null ? state : { ...state, dailyBonusPending: null };
     case "RESOLVE_DECISION":
@@ -1577,6 +1584,7 @@ export function useEconomy() {
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
+  const dismissMerveRankUp = useCallback(() => dispatch({ type: "DISMISS_MERVE_RANK_UP" }), []);
   const dismissDailyBonus = useCallback(() => dispatch({ type: "DISMISS_DAILY_BONUS" }), []);
   const resolveDecision_ = useCallback(
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
@@ -1640,6 +1648,7 @@ export function useEconomy() {
     tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
+    dismissMerveRankUp,
     dismissDailyBonus,
     resolveDecision: resolveDecision_,
     resolveRequest,

@@ -142,6 +142,7 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
   let nextId = state.nextId;
   let cash = state.cash;
   const newEvents: EconomyEvent[] = [];
+  let finalTitle = "";
   for (let index = state.townRankIndex + 1; index <= targetIndex; index++) {
     const reward = townRankReward(index);
     cash += reward;
@@ -153,6 +154,7 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
             n: beyond + 1,
           })
         : t(state.language, townRankNameKey(index));
+    if (index === targetIndex) finalTitle = title;
     newEvents.push({
       id: nextId++,
       message: t(state.language, "msg.townRankUp", {
@@ -169,6 +171,10 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     cash,
     nextId,
     townRankIndex: targetIndex,
+    // Merve steps in for this one specifically — a personal congratulation
+    // on the highest tier reached, on top of (not instead of) the event
+    // log entries above, which still record every tier a big jump skipped.
+    merveRankUp: { icon: townRankIcon(targetIndex), title: finalTitle },
     lastEvent: newEvents[newEvents.length - 1],
     eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
   };

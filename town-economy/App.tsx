@@ -21,6 +21,7 @@ import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { EventBanner } from "./src/components/EventBanner";
 import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
+import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
@@ -88,6 +89,7 @@ function Game() {
     togglePause,
     reset,
     dismissOfflineSummary,
+    dismissMerveRankUp,
     dismissDailyBonus,
     resolveDecision,
     resolveRequest,
@@ -298,6 +300,11 @@ function Game() {
     mentorActive ||
     caravanTutorialActive ||
     state.dailyBonusPending !== null;
+  // Merve's rank-up congratulations is itself an interruption, so it waits
+  // behind the others above, but it also shouldn't get buried under a
+  // villager request the instant it's clear to show — same reasoning as
+  // the comment above, just one layer further in.
+  const holdForOtherInterruptions = holdInterruptions || Boolean(state.merveRankUp);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -391,19 +398,24 @@ function Game() {
 
         <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
 
+        <MerveRankUpModal
+          rankUp={holdInterruptions ? null : state.merveRankUp}
+          onDismiss={dismissMerveRankUp}
+        />
+
         <DecisionModal
-          decision={holdInterruptions ? null : state.pendingDecision}
+          decision={holdForOtherInterruptions ? null : state.pendingDecision}
           onResolve={resolveDecision}
         />
 
         <VillagerRequestModal
-          request={holdInterruptions ? null : state.pendingRequest}
+          request={holdForOtherInterruptions ? null : state.pendingRequest}
           holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
           onResolve={resolveRequest}
         />
 
         <RivalTraderModal
-          offer={holdInterruptions ? null : state.pendingRivalOffer}
+          offer={holdForOtherInterruptions ? null : state.pendingRivalOffer}
           holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
           onResolve={resolveRivalOffer}
         />
@@ -428,7 +440,9 @@ function Game() {
         />
 
         <DailyRewardWheelModal
-          visible={!state.offlineSummary && !tutorialVisible && state.dailyBonusPending !== null}
+          visible={
+            !state.offlineSummary && !state.merveRankUp && !tutorialVisible && state.dailyBonusPending !== null
+          }
           amount={state.dailyBonusPending ?? 0}
           streakCount={state.streak.count}
           onDismiss={dismissDailyBonus}
