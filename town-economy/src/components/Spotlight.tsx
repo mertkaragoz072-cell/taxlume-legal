@@ -163,13 +163,28 @@ export function SpotlightTarget({
       // relative number shifts as the player scrolls, so it's added to the
       // ScrollView's own last-known offset (see useSpotlightScroll) to get
       // an absolute position scrollTo can use.
+      //
+      // measureLayout's first argument has to be an actual host node, not
+      // the ScrollView component instance itself — on the web build
+      // react-native-web's ScrollView ref already *is* the underlying DOM
+      // node (with measureLayout patched onto it), so passing the instance
+      // straight through happened to work there and passed every web check
+      // this went through. On a real device the ScrollView ref is the
+      // composite class instance, which the native side can't resolve into
+      // a node to measure against, so it silently failed there instead
+      // (onFail below is a no-op) — the exact "still broken on the phone"
+      // report this native/web split was already responsible for once
+      // before, just for the other two nested targets. getNativeScrollRef()
+      // is the ScrollView's own accessor for the real node underneath it.
       scrollIntoView: () => {
         const node = ref.current;
         const scrollView = ctx.scrollViewRef.current;
         if (!node || !scrollView) return;
+        const relativeTo =
+          (scrollView as unknown as { getNativeScrollRef?: () => unknown }).getNativeScrollRef?.() ?? scrollView;
         (node as unknown as { measureLayout?: (relativeToNode: unknown, onSuccess: (x: number, y: number) => void, onFail?: () => void) => void })
           .measureLayout?.(
-            scrollView,
+            relativeTo,
             (_x, relativeY) => {
               const target = Math.max(0, ctx.scrollOffsetRef.current + relativeY - 16);
               scrollView.scrollTo({ y: target, animated: true });
