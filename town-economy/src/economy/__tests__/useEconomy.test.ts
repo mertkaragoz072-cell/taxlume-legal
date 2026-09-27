@@ -614,17 +614,21 @@ describe("lost treasure", () => {
   // Happiness sits strictly between ANGRY_THRESHOLD and CONTENT_THRESHOLD so
   // neither of those happiness-driven cash events (which fire on their own,
   // much larger, chance) can stack with the treasure roll and throw off the
-  // exact-cash assertions below.
+  // exact-cash assertions below. productionQuotas is cleared for the same
+  // reason: initialState() generates it with Math.random already mocked to a
+  // fixed value, and a big enough PRODUCTION_NOISE swing at that fixed value
+  // can push a good's output over its quota target within this one tick,
+  // awarding its own cash bonus alongside (or instead of) the treasure roll.
   it("does not add anything when the roll misses", () => {
     Math.random = () => 0.999999;
-    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false };
+    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(1000, 6);
   });
 
   it("adds a cash windfall sized off current cash when the rare roll hits", () => {
     Math.random = () => 0; // clears every chance check in tick(), including LOST_TREASURE_CHANCE
-    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false };
+    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(1000 + 1000 * 0.05, 6);
     expect(next.lastEvent?.message).toMatch(/hazine|treasure/i);
@@ -632,7 +636,7 @@ describe("lost treasure", () => {
 
   it("floors the windfall so it's still meaningful with little cash", () => {
     Math.random = () => 0;
-    const state = { ...initialState(), cash: 10, happiness: 50, paused: false };
+    const state = { ...initialState(), cash: 10, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(10 + 20, 6);
   });
