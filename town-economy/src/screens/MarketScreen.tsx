@@ -131,6 +131,7 @@ export function MarketScreen({ sounds }: Props) {
         <View style={styles.onboardingScene}>
           <TownSquareScene
             happiness={state.happiness}
+            tick={state.tick}
             label={t("town.squareLabel")}
             moodLabel={t(happinessFor(state.happiness).labelKey)}
             moodColor={happinessFor(state.happiness).color}

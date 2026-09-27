@@ -3,10 +3,16 @@ import { StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent }
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
+import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
+import { seasonFromTick } from "../economy/seasons";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
   happiness: number;
+  /** picks the winter-specific angry scene below when the calendar's in
+   * winter and the town's unhappy enough for the angry tier; every other
+   * season/mood combination still shares the three plain scenes. */
+  tick: number;
   label: string;
   moodLabel: string;
   moodColor: string;
@@ -62,19 +68,17 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
  * (happiness) göre değişir: mutlu, karışık, sinirli. Kart arka planı/
  * çerçevesi yok: resim kendi başına duruyor, etiket ve ruh hali onun
  * üzerine yazılıyor. */
-export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Props) {
+export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }: Props) {
   const [width, setWidth] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const tier = moodTierFor(happiness);
+  const isWinter = seasonFromTick(tick).id === "winter";
+  const image = tier === "angry" && isWinter ? winterAngryMarketplaceImage : SCENE_IMAGES[tier];
 
   return (
     <View style={styles.scene} onLayout={onLayout}>
       {width > 0 && (
-        <Image
-          source={SCENE_IMAGES[tier]}
-          style={{ width, height: width / IMAGE_RATIO }}
-          resizeMode="cover"
-        />
+        <Image source={image} style={{ width, height: width / IMAGE_RATIO }} resizeMode="cover" />
       )}
       <Text style={[styles.label, onArt]}>{label}</Text>
       <Text style={[styles.moodCaption, { color: moodColor }, onArt]}>{moodLabel}</Text>
