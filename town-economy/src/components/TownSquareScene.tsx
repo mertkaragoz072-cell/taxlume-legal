@@ -3,14 +3,14 @@ import { StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent }
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
-import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
+import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
 import { seasonFromTick } from "../economy/seasons";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
   happiness: number;
-  /** picks the winter-specific angry scene below when the calendar's in
-   * winter and the town's unhappy enough for the angry tier; every other
+  /** picks the winter-specific happy scene below when the calendar's in
+   * winter and the town's content enough for the happy tier; every other
    * season/mood combination still shares the three plain scenes. */
   tick: number;
   label: string;
@@ -73,7 +73,7 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const tier = moodTierFor(happiness);
   const isWinter = seasonFromTick(tick).id === "winter";
-  const image = tier === "angry" && isWinter ? winterAngryMarketplaceImage : SCENE_IMAGES[tier];
+  const image = tier === "happy" && isWinter ? winterHappyMarketplaceImage : SCENE_IMAGES[tier];
 
   return (
     <View style={styles.scene} onLayout={onLayout}>
