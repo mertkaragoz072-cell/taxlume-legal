@@ -3,7 +3,7 @@ import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
 import { ONBOARDING_STEPS } from "../economy/onboarding";
 import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
-import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
@@ -43,8 +43,6 @@ import {
 } from "../theme";
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
-const screenWidth = Dimensions.get("window").width;
-const chartWidth = Math.min(screenWidth - 48, 420);
 const formatPrice = (v: number) => `${v.toFixed(2)} 🪙`;
 
 interface Props {
@@ -65,6 +63,13 @@ export function MarketScreen({ sounds }: Props) {
     tPlural,
     marketSpreadPct,
   } = useEconomyContext();
+  // A hook, not Dimensions.get() read once at module scope — on native,
+  // that snapshot can be taken before the bridge has reported the real
+  // window size, and being a module-level const it then never corrects
+  // itself, leaving the chart permanently sized off a wrong (sometimes
+  // zero) width. useWindowDimensions re-renders once the real size lands.
+  const { width: screenWidth } = useWindowDimensions();
+  const chartWidth = Math.min(screenWidth - 48, 420);
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);

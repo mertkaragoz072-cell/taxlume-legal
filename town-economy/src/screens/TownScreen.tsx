@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { formatPercent } from "../utils/formatNumber";
-import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import {
@@ -49,9 +49,6 @@ import {
   withAlpha,
 } from "../theme";
 
-const screenWidth = Dimensions.get("window").width;
-const chartWidth = Math.min(screenWidth - 48, 420);
-
 function moodFor(rate: number): { labelKey: string; emoji: string; color: string } {
   if (rate > 0.01) return { labelKey: "town.mood.crisis", emoji: "🔥", color: "#e0693f" };
   if (rate > 0.005) return { labelKey: "town.mood.heating", emoji: "😰", color: "#e0a13f" };
@@ -80,6 +77,11 @@ export function TownScreen({ onOpenDoctrine }: Props) {
     t,
     formatCoins,
   } = useEconomyContext();
+  // See MarketScreen's identical comment: a hook instead of a module-level
+  // Dimensions.get() snapshot, which on native can be taken before the
+  // bridge reports the real window size and then never self-corrects.
+  const { width: screenWidth } = useWindowDimensions();
+  const chartWidth = Math.min(screenWidth - 48, 420);
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);

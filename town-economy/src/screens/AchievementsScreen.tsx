@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
@@ -29,13 +38,15 @@ import {
   withAlpha,
 } from "../theme";
 
-const screenWidth = Dimensions.get("window").width;
-const netWorthChartWidth = Math.min(screenWidth - 48, 420);
-
 type ImportFeedback = { type: "success" | "error"; text: string };
 
 export function AchievementsScreen() {
   const { state, netWorth, t, hydrate, formatCoins } = useEconomyContext();
+  // See MarketScreen's identical comment: a hook instead of a module-level
+  // Dimensions.get() snapshot, which on native can be taken before the
+  // bridge reports the real window size and then never self-corrects.
+  const { width: screenWidth } = useWindowDimensions();
+  const netWorthChartWidth = Math.min(screenWidth - 48, 420);
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
   const miniQuest = state.activeMiniQuest;

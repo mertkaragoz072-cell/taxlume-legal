@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Svg, {
   Circle,
   Defs,
@@ -35,23 +35,16 @@ interface Props {
 
 // Everything is laid out in this fixed drawing space and then scaled to the
 // available width, so the terrain, roads and pins can never drift apart on
-// a narrower phone — the SVG scales via viewBox, the pins via SCALE.
+// a narrower phone — the SVG scales via viewBox, the pins via `scale`
+// (computed in the component from useWindowDimensions).
 const BASE_W = 340;
 const BASE_H = 280;
 const HOME_X = 170;
 const HOME_Y = 230;
 const MAX_RADIUS = 200;
 
-const MAP_WIDTH = Math.min(Dimensions.get("window").width - 56, BASE_W);
-const SCALE = MAP_WIDTH / BASE_W;
-const MAP_HEIGHT = BASE_H * SCALE;
-
 const PIN_SIZE = 32;
 const HOME_PIN_SIZE = 40;
-// Place names sit on little parchment cartouches. The width tracks SCALE so
-// the plaques compress with the map instead of colliding on a narrow phone.
-const LABEL_WIDTH = Math.round(108 * SCALE);
-const HOME_LABEL_WIDTH = Math.round(152 * SCALE);
 
 // Parchment cartography palette — an aged map object sitting inside the
 // app's dark wood UI, rather than another dark panel.
@@ -199,12 +192,25 @@ export function TownMapView({
   t,
 }: Props) {
   const homeIcon = TOWN_EMBLEMS_BY_ID[selectedEmblem]?.icon ?? "🏘️";
+  // A hook, not Dimensions.get() read once at module scope — on native that
+  // snapshot can be taken before the bridge reports the real window size,
+  // and being a module-level const it then never corrects itself, leaving
+  // the whole map permanently laid out off a wrong (sometimes zero) width.
+  const { width: windowWidth } = useWindowDimensions();
+  const mapWidth = Math.min(windowWidth - 56, BASE_W);
+  const scale = mapWidth / BASE_W;
+  const mapHeight = BASE_H * scale;
+  // Place names sit on little parchment cartouches. The width tracks scale
+  // so the plaques compress with the map instead of colliding on a narrow
+  // phone.
+  const labelWidth = Math.round(108 * scale);
+  const homeLabelWidth = Math.round(152 * scale);
 
   return (
     <View style={styles.card}>
       <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <View style={styles.mapWrap}>
-        <Svg width={MAP_WIDTH} height={MAP_HEIGHT} viewBox={`0 0 ${BASE_W} ${BASE_H}`} aria-hidden>
+      <View style={{ width: mapWidth, height: mapHeight }}>
+        <Svg width={mapWidth} height={mapHeight} viewBox={`0 0 ${BASE_W} ${BASE_H}`} aria-hidden>
           <Defs>
             <LinearGradient id="mapSea" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={SEA_TOP} />
@@ -384,7 +390,7 @@ export function TownMapView({
                 aria-disabled={!unlocked}
                 style={[
                   styles.pin,
-                  { left: pos.x * SCALE - PIN_SIZE / 2, top: pos.y * SCALE - PIN_SIZE / 2 },
+                  { left: pos.x * scale - PIN_SIZE / 2, top: pos.y * scale - PIN_SIZE / 2 },
                   selected && styles.pinSelected,
                   !unlocked && styles.pinLocked,
                 ]}
@@ -399,8 +405,9 @@ export function TownMapView({
                 style={[
                   styles.labelWrap,
                   {
-                    left: pos.x * SCALE - LABEL_WIDTH / 2,
-                    top: pos.y * SCALE + PIN_SIZE / 2 + 2,
+                    width: labelWidth,
+                    left: pos.x * scale - labelWidth / 2,
+                    top: pos.y * scale + PIN_SIZE / 2 + 2,
                   },
                 ]}
               >
@@ -440,7 +447,7 @@ export function TownMapView({
             <Text
               key={c.id}
               aria-hidden
-              style={[styles.caravanIcon, { left: pt.x * SCALE - 9, top: pt.y * SCALE - 9 }]}
+              style={[styles.caravanIcon, { left: pt.x * scale - 9, top: pt.y * scale - 9 }]}
             >
               🐫
             </Text>
@@ -453,7 +460,7 @@ export function TownMapView({
           style={[
             styles.pin,
             styles.homePin,
-            { left: HOME_X * SCALE - HOME_PIN_SIZE / 2, top: HOME_Y * SCALE - HOME_PIN_SIZE / 2 },
+            { left: HOME_X * scale - HOME_PIN_SIZE / 2, top: HOME_Y * scale - HOME_PIN_SIZE / 2 },
           ]}
         >
           <Text aria-hidden style={styles.homeIcon}>
@@ -465,9 +472,9 @@ export function TownMapView({
           style={[
             styles.labelWrap,
             {
-              width: HOME_LABEL_WIDTH,
-              left: HOME_X * SCALE - HOME_LABEL_WIDTH / 2,
-              top: HOME_Y * SCALE + HOME_PIN_SIZE / 2 + 2,
+              width: homeLabelWidth,
+              left: HOME_X * scale - homeLabelWidth / 2,
+              top: HOME_Y * scale + HOME_PIN_SIZE / 2 + 2,
             },
           ]}
         >
@@ -493,7 +500,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...cardShadow,
   },
-  mapWrap: { width: MAP_WIDTH, height: MAP_HEIGHT },
   pin: {
     position: "absolute",
     width: PIN_SIZE,
@@ -520,7 +526,7 @@ const styles = StyleSheet.create({
   // A place name is a little parchment cartouche pinned to the map, not bare
   // text floating over terrain: the plaque keeps it legible over sea, forest
   // and mountain alike, and the hairline under it reads as engraved.
-  labelWrap: { position: "absolute", width: LABEL_WIDTH, alignItems: "center" },
+  labelWrap: { position: "absolute", alignItems: "center" },
   plaque: {
     maxWidth: "100%",
     paddingHorizontal: 5,

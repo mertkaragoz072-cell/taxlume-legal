@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ASSETS, AssetId } from "../economy/assets";
@@ -12,15 +12,17 @@ import { usePriceFlash } from "../hooks/usePriceFlash";
 import { cardShadow, CARD_GRADIENT, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
-const screenWidth = Dimensions.get("window").width;
-const chartWidth = Math.min(screenWidth - 48, 420);
-
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
 }
 
 export function InvestScreen({ sounds }: Props) {
   const { state, tradeAsset, assetsValue, t, formatCoins } = useEconomyContext();
+  // See MarketScreen's identical comment: a hook instead of a module-level
+  // Dimensions.get() snapshot, which on native can be taken before the
+  // bridge reports the real window size and then never self-corrects.
+  const { width: screenWidth } = useWindowDimensions();
+  const chartWidth = Math.min(screenWidth - 48, 420);
   const formatPrice = (v: number) => formatCoins(v, 2);
   const [selectedId, setSelectedId] = useState<AssetId>(ASSETS[0].id);
   const selected = ASSETS.find((a) => a.id === selectedId)!;
