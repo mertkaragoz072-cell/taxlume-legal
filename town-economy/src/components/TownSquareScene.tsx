@@ -129,6 +129,63 @@ function Mote({ leftPct, topPct, size, delay, duration, drift }: MoteSpec) {
   );
 }
 
+// A few flakes falling straight through the frame, winter only — the motes
+// above work for any season, but winter's own scenes are snowy enough that
+// having nothing at all falling through them read flatter than the other
+// two seasons did. Unlike a mote's drift-and-fade, a snowflake just falls
+// top to bottom and loops; the scene's own overflow:hidden clips it at both
+// ends, so the loop seam never shows. Kept to five and modest in size —
+// falling snow that actually fills the frame reads as a blizzard, not
+// "barely there."
+interface SnowflakeSpec {
+  leftPct: number;
+  size: number;
+  delay: number;
+  duration: number;
+  drift: number;
+}
+const SNOWFLAKES: SnowflakeSpec[] = [
+  { leftPct: 8, size: 3, delay: 0, duration: 6200, drift: 10 },
+  { leftPct: 26, size: 2.5, delay: 1400, duration: 7400, drift: -8 },
+  { leftPct: 48, size: 3.5, delay: 2600, duration: 5800, drift: 9 },
+  { leftPct: 68, size: 2, delay: 700, duration: 7000, drift: -6 },
+  { leftPct: 88, size: 3, delay: 2000, duration: 6600, drift: 8 },
+];
+
+function Snowflake({ leftPct, size, delay, duration, drift, height }: SnowflakeSpec & { height: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(anim, { toValue: 1, duration, delay, easing: Easing.linear, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim, delay, duration]);
+
+  // Starts a little above the frame and falls a little past its bottom, so
+  // it's never abruptly visible or invisible right at the clipped edge.
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [-16, height + 16] });
+  const translateX = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, drift, 0] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: `${leftPct}%`,
+        top: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: "#ffffff",
+        opacity: 0.8,
+        transform: [{ translateY }, { translateX }],
+      }}
+    />
+  );
+}
+
 // Legible over any part of the photo without a card behind it to guarantee
 // contrast — the picture is meant to fill the space on its own, not sit in
 // a card's dark mat.
@@ -169,6 +226,8 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
           {MOTES.map((m, i) => (
             <Mote key={i} {...m} />
           ))}
+          {season === "winter" &&
+            SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={width / IMAGE_RATIO} />)}
         </>
       )}
       <Text style={[styles.label, onArt]}>{label}</Text>
