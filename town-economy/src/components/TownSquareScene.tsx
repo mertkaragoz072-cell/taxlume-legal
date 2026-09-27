@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent } from "react-native";
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
@@ -64,6 +64,71 @@ const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, Ima
   },
 };
 
+// A handful of warm specks drifting slowly up through the scene — dust and
+// pollen by day, embers and lantern-light by night. It's the one bit of
+// motion a flat painted photo can carry on its own: the villagers in it are
+// baked into the picture and can't be animated individually, but a few
+// motes rising past them is enough for the square to read as a place things
+// are still happening in, not a still life. Kept few, small and slow on
+// purpose — the brief was "barely there," not a snow globe.
+interface MoteSpec {
+  leftPct: number;
+  topPct: number;
+  size: number;
+  delay: number;
+  duration: number;
+  drift: number;
+}
+const MOTES: MoteSpec[] = [
+  { leftPct: 14, topPct: 72, size: 6, delay: 0, duration: 7400, drift: 9 },
+  { leftPct: 37, topPct: 58, size: 5, delay: 1800, duration: 8600, drift: -8 },
+  { leftPct: 61, topPct: 68, size: 6.5, delay: 3400, duration: 6800, drift: 10 },
+  { leftPct: 82, topPct: 54, size: 4.5, delay: 900, duration: 9200, drift: -7 },
+];
+
+function Mote({ leftPct, topPct, size, delay, duration, drift }: MoteSpec) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(anim, { toValue: 1, duration, delay, easing: Easing.linear, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim, delay, duration]);
+
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -40] });
+  const translateX = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, drift, 0] });
+  // Fades in and out at each loop's ends rather than popping in place, so a
+  // mote never appears to blink into existence mid-frame.
+  const opacity = anim.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 0.85, 0.85, 0] });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: `${leftPct}%`,
+        top: `${topPct}%`,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: "#fff3d6",
+        // A dark ring, not just a bright fill — the painted scenes are warm
+        // and busy enough that a plain gold dot vanished into them; the
+        // ring is what actually keeps it readable against light and dark
+        // backgrounds alike. A plain border rather than a shadow, since
+        // shadow needs `elevation` on Android to show at all and that
+        // draws its own grey box around a shape this small.
+        borderWidth: 1,
+        borderColor: "rgba(20, 15, 10, 0.4)",
+        opacity,
+        transform: [{ translateY }, { translateX }],
+      }}
+    />
+  );
+}
+
 // Legible over any part of the photo without a card behind it to guarantee
 // contrast — the picture is meant to fill the space on its own, not sit in
 // a card's dark mat.
@@ -99,7 +164,12 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
   return (
     <View style={styles.scene} onLayout={onLayout}>
       {width > 0 && (
-        <Image source={image} style={{ width, height: width / IMAGE_RATIO }} resizeMode="cover" />
+        <>
+          <Image source={image} style={{ width, height: width / IMAGE_RATIO }} resizeMode="cover" />
+          {MOTES.map((m, i) => (
+            <Mote key={i} {...m} />
+          ))}
+        </>
       )}
       <Text style={[styles.label, onArt]}>{label}</Text>
       <Text style={[styles.moodCaption, { color: moodColor }, onArt]}>{moodLabel}</Text>
