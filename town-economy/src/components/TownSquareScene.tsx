@@ -4,6 +4,7 @@ import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
 import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
 import summerHappyMarketplaceImage from "../../assets/summer-happy-marketplace.webp";
+import summerMixedMarketplaceImage from "../../assets/summer-mixed-marketplace.webp";
 import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
 import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
 import winterMixedMarketplaceImage from "../../assets/winter-mixed-marketplace.webp";
@@ -46,9 +47,9 @@ const SCENE_IMAGES: Record<MoodTier, ImageSourcePropType> = {
   happy: happyMarketplaceImage,
 };
 
-// Every mood tier has its own winter scene; summer so far only has one for
-// happy. A season/tier combination missing here just falls back to
-// SCENE_IMAGES above.
+// Every mood tier has its own winter scene; summer has happy and mixed so
+// far, angry not yet. A season/tier combination missing here just falls
+// back to SCENE_IMAGES above.
 const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, ImageSourcePropType>>>> = {
   winter: {
     angry: winterAngryMarketplaceImage,
@@ -56,6 +57,7 @@ const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, Ima
     happy: winterHappyMarketplaceImage,
   },
   summer: {
+    mixed: summerMixedMarketplaceImage,
     happy: summerHappyMarketplaceImage,
   },
 };
