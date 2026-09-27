@@ -6,7 +6,7 @@ import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
-import { SpotlightTarget } from "../components/Spotlight";
+import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
 import { TownMapView } from "../components/TownMapView";
 import { TradingHousesCard } from "../components/TradingHousesCard";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -112,6 +112,7 @@ export function TradeScreen({ sounds }: Props) {
     qty: number;
     insured: boolean;
   } | null>(null);
+  const spotlightScroll = useSpotlightScroll();
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
@@ -160,7 +161,13 @@ export function TradeScreen({ sounds }: Props) {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={spotlightScroll?.ref}
+        onScroll={spotlightScroll?.onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+      >
         {state.caravans.length > 0 && (
           <View style={styles.roadBanner}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />

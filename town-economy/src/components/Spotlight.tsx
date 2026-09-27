@@ -1,6 +1,15 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BlurView } from "expo-blur";
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
 import { COLORS, RADIUS, withAlpha } from "../theme";
 
 /** Things the guided tour can point at. Adding one means wrapping the real
@@ -30,6 +39,16 @@ interface Ctx {
   register: (id: SpotlightId, entry: TargetEntry | null) => void;
   entryOf: (id: SpotlightId) => TargetEntry | undefined;
   originRef: React.MutableRefObject<{ x: number; y: number }>;
+  /** The ScrollView a spotlighted screen scrolls itself in, if any — see
+   * useSpotlightScroll. Only one screen's targets are ever live at a time,
+   * so one shared ref pair is enough. */
+  scrollViewRef: React.MutableRefObject<ScrollView | null>;
+  /** That ScrollView's own current contentOffset.y, kept in sync via the
+   * onScroll handler useSpotlightScroll hands back. measureLayout below
+   * only ever reports a target's position relative to the *visible* top of
+   * the ScrollView, which shifts as the player scrolls — this is what
+   * turns that relative number back into an absolute one scrollTo can use. */
+  scrollOffsetRef: React.MutableRefObject<number>;
 }
 
 const SpotlightContext = createContext<Ctx | null>(null);
@@ -53,6 +72,8 @@ export function SpotlightProvider({
 }) {
   const targets = useRef(new Map<SpotlightId, TargetEntry>()).current;
   const originRef = useRef({ x: 0, y: 0 });
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const scrollOffsetRef = useRef(0);
   const frame = useRef<View>(null);
 
   const register = useCallback(
@@ -78,7 +99,10 @@ export function SpotlightProvider({
   // measureInWindow callback (itself async) ever resolves — the overlay
   // then never picks up a newly-selected target and keeps showing whatever
   // it last managed to measure.
-  const ctxValue = useMemo<Ctx>(() => ({ register, entryOf, originRef }), [register, entryOf]);
+  const ctxValue = useMemo<Ctx>(
+    () => ({ register, entryOf, originRef, scrollViewRef, scrollOffsetRef }),
+    [register, entryOf]
+  );
 
   return (
     <SpotlightContext.Provider value={ctxValue}>
@@ -87,6 +111,25 @@ export function SpotlightProvider({
       </View>
     </SpotlightContext.Provider>
   );
+}
+
+/** A screen with spotlightable targets inside a ScrollView spreads the
+ * returned `scrollProps` onto that ScrollView, so a target below the fold
+ * can be scrolled into view before the tour points at it (see
+ * SpotlightTarget's scrollIntoView and SpotlightOverlay, which calls it).
+ * Only meaningful for a screen that actually has such targets; harmless to
+ * skip otherwise. */
+export function useSpotlightScroll():
+  | { ref: React.RefObject<ScrollView | null>; onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void }
+  | undefined {
+  const ctx = useContext(SpotlightContext);
+  if (!ctx) return undefined;
+  return {
+    ref: ctx.scrollViewRef,
+    onScroll: (e) => {
+      ctx.scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+    },
+  };
 }
 
 /** Wraps a real control so the tour can cut a hole over it. Renders a plain
@@ -111,15 +154,28 @@ export function SpotlightTarget({
           if (width > 0 && height > 0) cb({ x, y, width, height });
         });
       },
-      // react-native-web forwards a View's ref to its underlying DOM node,
-      // which is the one place this can lean on the browser's own
-      // scrollIntoView instead of hand-rolling scroll-offset math against
-      // an unknown ancestor ScrollView. On native, refs are host component
-      // instances with no such method, so this silently does nothing —
-      // same as a target the player already has on screen.
+      // measureLayout reports this target's position relative to the
+      // *visible* top of the ScrollView — it walks up through however many
+      // wrapper Views sit in between on its own, unlike onLayout (which
+      // only ever reports a position relative to the immediate parent, and
+      // was wrong here for the direction toggle and send button: both sit
+      // inside their own panel View, one level below the ScrollView). That
+      // relative number shifts as the player scrolls, so it's added to the
+      // ScrollView's own last-known offset (see useSpotlightScroll) to get
+      // an absolute position scrollTo can use.
       scrollIntoView: () => {
-        (ref.current as unknown as { scrollIntoView?: (opts?: ScrollIntoViewOptions) => void } | null)
-          ?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+        const node = ref.current;
+        const scrollView = ctx.scrollViewRef.current;
+        if (!node || !scrollView) return;
+        (node as unknown as { measureLayout?: (relativeToNode: unknown, onSuccess: (x: number, y: number) => void, onFail?: () => void) => void })
+          .measureLayout?.(
+            scrollView,
+            (_x, relativeY) => {
+              const target = Math.max(0, ctx.scrollOffsetRef.current + relativeY - 16);
+              scrollView.scrollTo({ y: target, animated: true });
+            },
+            () => {}
+          );
       },
     });
     return () => ctx.register(id, null);

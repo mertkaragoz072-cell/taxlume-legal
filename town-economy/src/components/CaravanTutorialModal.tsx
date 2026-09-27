@@ -105,7 +105,7 @@ export function CaravanTutorialModal({
           <View style={styles.portraitSpacer} />
           <View style={styles.speech}>
             <View style={styles.nameRow}>
-              <Text style={styles.name}>
+              <Text style={styles.name} numberOfLines={1}>
                 {t(language, "caravanTutorial.guideTitle")}
                 <Text style={styles.role}> · {t(language, "caravanTutorial.guideRole")}</Text>
               </Text>
@@ -183,15 +183,28 @@ const styles = StyleSheet.create({
   // the box instead of letterboxing against the old portrait-shaped one.
   characterImage: { width: 200, height: 157 },
   speech: { flex: 1 },
-  nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+  nameRow: { flexDirection: "row", alignItems: "baseline" },
+  // flex: 1 (not the default) plus numberOfLines on the Text itself —
+  // without both, "Caravan Guide · Caravan Master" ran past the progress
+  // count instead of truncating, crowding the "N / 5" right up against
+  // the card's own edge on a narrower phone than this was tested on.
+  // flex:1 both fills the row so "progress" still lands on the right (the
+  // old justifyContent:"space-between" is no longer needed for that) and
+  // caps the width the text is allowed to claim before it must truncate.
   name: {
+    flex: 1,
     color: COLORS.accent,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
   },
   role: { color: COLORS.textMuted, fontWeight: WEIGHT.regular, fontFamily: FONT.medium },
-  progress: { color: COLORS.textMuted, fontSize: TYPE.micro, fontFamily: FONT.medium },
+  progress: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontFamily: FONT.medium,
+    marginLeft: SPACING.sm,
+  },
   title: {
     color: COLORS.textPrimary,
     fontSize: TYPE.heading,
