@@ -75,7 +75,7 @@ export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
               border instead of sitting tucked inside it — the same trick the
               caravan tutorial card uses for its guide. */}
           <View style={styles.portraitFloat} pointerEvents="none">
-            <MentorPortrait size={150} />
+            <MentorPortrait size={136} />
           </View>
         </Animated.View>
       </ModalBackdrop>
@@ -85,7 +85,7 @@ export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
 }
 
 const styles = StyleSheet.create({
-  dock: { width: "100%", maxWidth: 340 },
+  dock: { width: "100%", maxWidth: 360 },
   card: {
     borderRadius: RADIUS.feature,
     borderWidth: 1,
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   // Reserves the row's own horizontal space for the floating portrait below;
   // carries no image itself. Narrower than her own width — she starts
   // further left, past the card's padding, than this spacer needs to reach.
-  portraitSpacer: { width: 118, marginRight: SPACING.sm },
+  portraitSpacer: { width: 120, marginRight: SPACING.sm },
   // Pulled past the card's own left padding with a negative offset so she
   // reads as stepping out of the card like a comic panel, not just floating
   // inside it. Bottom-anchored not to the card's own bottom edge but to the
@@ -117,7 +117,10 @@ const styles = StyleSheet.create({
   },
   title: {
     color: COLORS.textPrimary,
-    fontSize: TYPE.heading,
+    // TYPE.title, not the heading size this used at full card width before —
+    // Cinzel runs wide, and the speech column here is narrower than the
+    // card itself now that her portrait shares the row with it.
+    fontSize: TYPE.title,
     fontFamily: FONT.display,
     marginTop: 4,
     marginBottom: 4,
