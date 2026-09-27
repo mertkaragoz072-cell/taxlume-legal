@@ -65,79 +65,12 @@ const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, Ima
   },
 };
 
-// A handful of warm specks drifting slowly up through the scene — dust and
-// pollen by day, embers and lantern-light by night. It's the one bit of
-// motion a flat painted photo can carry on its own: the villagers in it are
-// baked into the picture and can't be animated individually, but a few
-// motes rising past them is enough for the square to read as a place things
-// are still happening in, not a still life. Kept few, small and slow on
-// purpose — the brief was "barely there," not a snow globe.
-interface MoteSpec {
-  leftPct: number;
-  topPct: number;
-  size: number;
-  delay: number;
-  duration: number;
-  drift: number;
-}
-const MOTES: MoteSpec[] = [
-  { leftPct: 14, topPct: 72, size: 6, delay: 0, duration: 7400, drift: 9 },
-  { leftPct: 37, topPct: 58, size: 5, delay: 1800, duration: 8600, drift: -8 },
-  { leftPct: 61, topPct: 68, size: 6.5, delay: 3400, duration: 6800, drift: 10 },
-  { leftPct: 82, topPct: 54, size: 4.5, delay: 900, duration: 9200, drift: -7 },
-];
-
-function Mote({ leftPct, topPct, size, delay, duration, drift }: MoteSpec) {
-  const anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(anim, { toValue: 1, duration, delay, easing: Easing.linear, useNativeDriver: true })
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [anim, delay, duration]);
-
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -40] });
-  const translateX = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, drift, 0] });
-  // Fades in and out at each loop's ends rather than popping in place, so a
-  // mote never appears to blink into existence mid-frame.
-  const opacity = anim.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 0.85, 0.85, 0] });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        left: `${leftPct}%`,
-        top: `${topPct}%`,
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: "#fff3d6",
-        // A dark ring, not just a bright fill — the painted scenes are warm
-        // and busy enough that a plain gold dot vanished into them; the
-        // ring is what actually keeps it readable against light and dark
-        // backgrounds alike. A plain border rather than a shadow, since
-        // shadow needs `elevation` on Android to show at all and that
-        // draws its own grey box around a shape this small.
-        borderWidth: 1,
-        borderColor: "rgba(20, 15, 10, 0.4)",
-        opacity,
-        transform: [{ translateY }, { translateX }],
-      }}
-    />
-  );
-}
-
-// A few flakes falling straight through the frame, winter only — the motes
-// above work for any season, but winter's own scenes are snowy enough that
-// having nothing at all falling through them read flatter than the other
-// two seasons did. Unlike a mote's drift-and-fade, a snowflake just falls
-// top to bottom and loops; the scene's own overflow:hidden clips it at both
-// ends, so the loop seam never shows. Kept to five and modest in size —
-// falling snow that actually fills the frame reads as a blizzard, not
-// "barely there."
+// A few flakes falling straight through the frame, winter only. Unlike a
+// mote's drift-and-fade (removed — read as sparkles/glimmer over the art
+// rather than ambient motion), a snowflake just falls top to bottom and
+// loops; the scene's own overflow:hidden clips it at both ends, so the loop
+// seam never shows. Kept to five and modest in size — falling snow that
+// actually fills the frame reads as a blizzard, not "barely there."
 interface SnowflakeSpec {
   leftPct: number;
   size: number;
@@ -243,9 +176,6 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
             <Rect x={0} y={0} width={width} height={height * 0.32} fill="url(#sceneTopScrim)" />
             <Rect x={0} y={height * 0.68} width={width} height={height * 0.32} fill="url(#sceneBottomScrim)" />
           </Svg>
-          {MOTES.map((m, i) => (
-            <Mote key={i} {...m} />
-          ))}
           {season === "winter" && SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={height} />)}
         </>
       )}
