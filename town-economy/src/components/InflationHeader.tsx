@@ -252,7 +252,8 @@ export function InflationHeader({
         </View>
         <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
           <Text style={styles.streakBadgeText}>
-            {seasonFromTick(tick).icon} {t("header.day", { day: gameDay })}
+            {seasonFromTick(tick).icon} {t(seasonFromTick(tick).nameKey)} ·{" "}
+            {t("header.day", { day: gameDay })}
           </Text>
         </View>
         {streakCount > 0 && (
