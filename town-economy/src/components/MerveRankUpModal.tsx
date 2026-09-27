@@ -75,7 +75,7 @@ export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
               border instead of sitting tucked inside it — the same trick the
               caravan tutorial card uses for its guide. */}
           <View style={styles.portraitFloat} pointerEvents="none">
-            <MentorPortrait size={136} />
+            <MentorPortrait pose="cheer" size={136} />
           </View>
         </Animated.View>
       </ModalBackdrop>
