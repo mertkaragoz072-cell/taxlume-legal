@@ -132,13 +132,13 @@ export const SCARCITY_MIN = 0.5;
 export const SCARCITY_MAX = 2.2;
 export const SUPPLY_MIN_FACTOR = 0.15;
 export const SUPPLY_MAX_FACTOR = 3;
-export const PRODUCTION_NOISE = 0.8; // ± fraction of baseProduction, random per tick
+export const PRODUCTION_NOISE = 1.1; // ± fraction of baseProduction, random per tick
 export const PRODUCTION_PENALTY_FACTOR = 0.7; // unhappy villagers produce down to 30% of normal
 export const PRODUCTION_BONUS_FACTOR = 0.15; // content villagers produce up to 15% more
 export const EFFICIENCY_MIN = 0.3;
 export const EFFICIENCY_MAX = 1.15;
 export const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
-export const FOREIGN_NOISE = 0.42;
+export const FOREIGN_NOISE = 0.65;
 // Caps how far a good's price can move in a single tick, regardless of how
 // hard the supply-driven scarcity curve and demand pressure want to swing
 // it. Without this, a high-noise tick landing while supply already sits far
@@ -146,7 +146,17 @@ export const FOREIGN_NOISE = 0.42;
 // jarring one-tick jump — a spike that reads as a bug, not a market. This
 // keeps every step small enough to feel like normal jitter while still
 // letting the noise above keep the price in near-constant motion.
-export const MAX_PRICE_STEP_PCT = 0.16;
+export const MAX_PRICE_STEP_PCT = 0.26;
+// A small, un-accumulated wobble applied straight to price, on top of
+// everything above. Supply is a slow accumulator (each tick only nudges it
+// by that tick's production noise), so even a large PRODUCTION_NOISE mostly
+// shows up as a gradual multi-tick drift rather than a number that visibly
+// moves every single tick — repeated rounds of turning up the knobs above
+// never fixed "prices feel too fixed" for exactly that reason. This jitter
+// is freshly rolled every tick rather than carried forward, so it can't
+// itself drift the price anywhere; it just makes the display flicker
+// convincingly tick to tick on top of the real supply-driven trend.
+export const PRICE_JITTER_PCT = 0.05;
 // --- Demand pressure ------------------------------------------------------
 // Supply alone drifts back toward (and past) baseSupply within a tick or two
 // once villagers are happy and producing above baseline — too fast for a

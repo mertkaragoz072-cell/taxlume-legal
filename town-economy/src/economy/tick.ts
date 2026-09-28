@@ -83,6 +83,7 @@ import {
   MAX_PRICE_STEP_PCT,
   MINI_QUEST_CHANCE,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
+  PRICE_JITTER_PCT,
   PRODUCTION_BONUS_FACTOR,
   PRODUCTION_INFLATION_FACTOR,
   PRODUCTION_NOISE,
@@ -520,6 +521,7 @@ export function tick(state: EconomyState): EconomyState {
       -DEMAND_PRESSURE_MAX,
       DEMAND_PRESSURE_MAX
     );
+    const priceJitter = 1 + (Math.random() - 0.5) * 2 * PRICE_JITTER_PCT;
     const rawPrice =
       priceFromSupply(
         good.basePrice * researchedValueMult * seasonalMult * demandMult,
@@ -528,7 +530,8 @@ export function tick(state: EconomyState): EconomyState {
         supply,
         inflationIndex
       ) *
-      (1 + demandPressure);
+      (1 + demandPressure) *
+      priceJitter;
     // scarcityFactor is a power curve, so a noisy tick landing while supply
     // already sits far from baseSupply gets exponentiated into a jarring
     // one-tick jump. Stepping toward rawPrice instead of jumping to it keeps
