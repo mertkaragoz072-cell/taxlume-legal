@@ -46,56 +46,69 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
   const { opacity, flashColor } = usePriceFlash(state.price);
 
   return (
-    <ScalePressable
-      onPress={onPress}
+    // The shadow lives on this plain, never-animated View rather than on
+    // ScalePressable's own style. ScalePressable puts a native-driven scale
+    // transform on whatever node its style prop lands on for every press,
+    // and a shadow (it forces an offscreen render pass) sharing a node with
+    // that transform is the same combination that left TabBar's active tab
+    // permanently blurred on a real device even after the animation
+    // settled back to rest — cardShadow here is unconditional, so every
+    // card, not just a selected one, would have picked up that blur the
+    // first time it was tapped.
+    <View
       style={[
         styles.card,
         selected && { borderColor: good.color, borderWidth: 2 },
         selected && glowShadow(good.color),
       ]}
     >
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      {selected && (
+      <ScalePressable onPress={onPress} style={styles.cardInner}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        {selected && (
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
+          />
+        )}
         <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
+          style={[
+            styles.accentStripe,
+            { backgroundColor: selected ? good.color : withAlpha(good.color, 0.4) },
+          ]}
         />
-      )}
-      <View
-        style={[styles.accentStripe, { backgroundColor: selected ? good.color : withAlpha(good.color, 0.4) }]}
-      />
-      <Animated.View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
-      />
-      {badge && (
-        <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.9) }]}>
-          <Text style={styles.badgeText} numberOfLines={1}>
-            {badge.text}
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
+        />
+        {badge && (
+          <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.9) }]}>
+            <Text style={styles.badgeText} numberOfLines={1}>
+              {badge.text}
+            </Text>
+          </View>
+        )}
+        <View style={styles.topRow}>
+          <Text aria-hidden style={styles.icon}>
+            {good.icon}
+          </Text>
+          <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
+            {positive ? "+" : ""}
+            {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
-      )}
-      <View style={styles.topRow}>
-        <Text aria-hidden style={styles.icon}>
-          {good.icon}
-        </Text>
-        <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
-          {positive ? "+" : ""}
-          {formatPercent(change, economy.language, 1)}
-        </Text>
-      </View>
-      <PriceChart
-        history={state.history}
-        color={good.color}
-        width={92}
-        height={34}
-        strokeWidth={1.5}
-        filled={false}
-      />
-      <Text style={styles.name}>{t(good.nameKey)}</Text>
-      <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
-      {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
-    </ScalePressable>
+        <PriceChart
+          history={state.history}
+          color={good.color}
+          width={92}
+          height={34}
+          strokeWidth={1.5}
+          filled={false}
+        />
+        <Text style={styles.name}>{t(good.nameKey)}</Text>
+        <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
+        {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
+      </ScalePressable>
+    </View>
   );
 }
 
@@ -116,12 +129,15 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     borderWidth: 2,
     borderColor: "transparent",
+    marginRight: SPACING.sm + 2,
+    ...cardShadow,
+  },
+  cardInner: {
+    borderRadius: RADIUS.card,
     padding: SPACING.sm + 2,
     paddingTop: SPACING.md + 1,
-    marginRight: SPACING.sm + 2,
     alignItems: "center",
     overflow: "hidden",
-    ...cardShadow,
   },
   accentStripe: {
     position: "absolute",

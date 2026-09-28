@@ -100,8 +100,15 @@ function BlurredTown({ width, height }: { width: number; height: number }) {
 
           width/height are spelled out because react-native-svg on web falls
           back to a 300x150 box without them, which paints a grey rectangle in
-          the corner instead of covering the screen. */}
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+          the corner instead of covering the screen — and as numbers rather
+          than "100%" strings, because react-native-svg resolves a percentage
+          against whatever the enclosing layout has settled to *at that
+          moment*, a separate and sometimes earlier pass than the surrounding
+          flex box's own. The gold CTA button's gradient hit exactly that on
+          a real device (cut off partway across); width/height are already
+          known numbers here (useWindowDimensions, not a layout measurement),
+          so there's no percentage to resolve at all. */}
+      <Svg style={StyleSheet.absoluteFill} width={width} height={height} pointerEvents="none">
         <Defs>
           <LinearGradient id="titleSky" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor="#140f0a" stopOpacity="1" />
@@ -110,7 +117,7 @@ function BlurredTown({ width, height }: { width: number; height: number }) {
             <Stop offset="1" stopColor="#140f0a" stopOpacity="0.58" />
           </LinearGradient>
         </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#titleSky)" />
+        <Rect x={0} y={0} width={width} height={height} fill="url(#titleSky)" />
       </Svg>
     </View>
   );
@@ -122,7 +129,7 @@ function BlurredTown({ width, height }: { width: number; height: number }) {
  * from" without adding any shape that competes with the logo itself. */
 function LogoGlow({ width, height }: { width: number; height: number }) {
   return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+    <Svg style={StyleSheet.absoluteFill} width={width} height={height} pointerEvents="none">
       <Defs>
         <RadialGradient id="titleGlow" cx="50%" cy="38%" r="60%">
           <Stop offset="0" stopColor="#e8c777" stopOpacity="0.22" />
