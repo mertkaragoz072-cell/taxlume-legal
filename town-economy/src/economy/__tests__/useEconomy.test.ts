@@ -1198,9 +1198,17 @@ describe("doctrine effects on the economy", () => {
   });
 
   it("makes an artisan town out-produce a merchant one", () => {
+    // Each tick() call rolls its own independent noise, so without this the
+    // artisan and merchant runs get uncorrelated jitter on top of the real
+    // doctrine effect — PRODUCTION_NOISE's ±55% range can swamp the smaller,
+    // deterministic production bonus this test is actually about. 0.5 zeroes
+    // out every symmetric (rand - 0.5) jitter term identically for both.
+    const originalRandom = Math.random;
+    Math.random = () => 0.5;
     const base = { ...initialState(), paused: false, happiness: 80 };
     const artisan = tick({ ...base, doctrine: "artisans" });
     const merchant = tick({ ...base, doctrine: "merchants" });
+    Math.random = originalRandom;
     expect(artisan.goods.bread.supply).toBeGreaterThan(merchant.goods.bread.supply);
   });
 
