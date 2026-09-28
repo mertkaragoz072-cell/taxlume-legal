@@ -78,12 +78,27 @@ half-convincing character is worse than a confident object.
 Both `icon-coin*.svg` are hand-authored and are **not** produced by
 `scripts/build-logo.js` — edit them directly.
 
+`logo-illustrated-en-1000.webp` is also hand-supplied, not generated: a
+painted market-square scene with "GOLDEN TOWN" lettered directly into the
+art, background removed by hand (the source had no real alpha channel — a
+checkerboard *pattern* baked into flat RGB, not transparency — so the cutout
+was done by detecting the checker's own alternation rather than by colour
+threshold, since the art's white sail and cloud fills are close enough in
+tone to the checker's mid-grays that a plain threshold ate into them). It
+exists only because it was supplied as English-only: the art has no Turkish
+lettering and doesn't fit this family's build pipeline, so the Turkish title
+screen still uses `logo-stacked-tr-900.png` as before. If a matching TR
+illustration is ever supplied, it belongs here as
+`logo-illustrated-tr-1000.webp`, and `TitleScreen.tsx`'s `LOGOS` map should
+point at both.
+
 ## Which file to use
 
 | File                          | Use                                                          |
 | ----------------------------- | ------------------------------------------------------------ |
 | `logo-stacked-<lang>.svg`     | The main logo. Title screen, splash, store art, press.        |
 | `logo-horizontal-<lang>.svg`  | Wide spaces: headers, footers, banners. Flat baseline.        |
+| `logo-illustrated-en-1000.webp` | EN-only title screen wordmark — see note above.            |
 | `icon-art-merchant.webp`      | **The shipping app icon's source art.** Feeds build-app-icon.py. |
 | `icon.svg` / `icon-1024.png`  | Alternate: relief icon — the mark on the dark plate.           |
 | `icon-coin.svg`               | Alternate: 3D gold coin on indigo.                            |

@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
-import logoEn from "../../assets/logo/logo-stacked-en-900.png";
+import logoIllustratedEn from "../../assets/logo/logo-illustrated-en-1000.webp";
 import logoTr from "../../assets/logo/logo-stacked-tr-900.png";
 import titleBg from "../../assets/title/title-bg-900.webp";
 import { Bobbing } from "../components/Bobbing";
@@ -21,12 +21,17 @@ import { COLORS, FONT, glowShadow, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlp
 
 // The wordmark comes from assets/logo, rendered per language — the Turkish
 // and English lockups are different widths, so the aspect ratio travels with
-// the file rather than being hard-coded once for both. Plain `-900` names,
-// not `@3x`: Metro reads `@3x` as a density variant of a base file that does
-// not exist here (see the note in scripts/build-logo.js).
+// the file rather than being hard-coded once for both. Plain `-900`/`-1000`
+// names, not `@3x`: Metro reads `@3x` as a density variant of a base file
+// that does not exist here (see the note in scripts/build-logo.js).
+//
+// English only uses the painted market-square wordmark supplied for this
+// screen — it has "GOLDEN TOWN" lettered directly into the art with no
+// Turkish equivalent, so Turkish keeps the plain stacked mark instead of
+// falling back to English lettering. See assets/logo/README.md.
 const LOGOS = {
   tr: { src: logoTr, ratio: 2374 / 900 },
-  en: { src: logoEn, ratio: 2503 / 900 },
+  en: { src: logoIllustratedEn, ratio: 1000 / 667 },
 } as const;
 
 /** The market-square painting behind the wordmark, filling the screen edge
