@@ -164,51 +164,45 @@ export function SpotlightTarget({
           if (width > 0 && height > 0) cb({ x, y, width, height });
         });
       },
-      // measureLayout reports this target's position relative to the
-      // *visible* top of the ScrollView — it walks up through however many
-      // wrapper Views sit in between on its own, unlike onLayout (which
-      // only ever reports a position relative to the immediate parent, and
-      // was wrong here for the direction toggle and send button: both sit
-      // inside their own panel View, one level below the ScrollView). That
-      // relative number shifts as the player scrolls, so it's added to the
-      // ScrollView's own last-known offset (see useSpotlightScroll) to get
-      // an absolute position scrollTo can use.
+      // Two rounds of trying to get here via measureLayout(target, relativeTo
+      // ScrollView) both still failed on a real phone, reported with the
+      // exact same screenshots each time — the ring lit wherever the target
+      // happened to already be, unscrolled. Reading react-native's own
+      // ScrollView source explains why neither could have worked: the ref
+      // this app gets from <ScrollView ref={...}> already *is* the
+      // underlying native view (ScrollView.js Object.assigns its convenience
+      // methods onto that same native instance rather than wrapping it), so
+      // getNativeScrollRef() — the previous attempt's fix — was returning
+      // that identical object back, a no-op disguised as a fix. And
+      // measureLayout itself, walking a shadow-tree relationship between two
+      // arbitrary nodes, is one of the RN APIs that doesn't reliably resolve
+      // on the current (Fabric) architecture at all — this is why it kept
+      // failing silently into the no-op onFail below regardless of what got
+      // passed as "relative to."
       //
-      // measureLayout's first argument has to be an actual host node, not
-      // the ScrollView component instance itself — on the web build
-      // react-native-web's ScrollView ref already *is* the underlying DOM
-      // node (with measureLayout patched onto it), so passing the instance
-      // straight through happened to work there and passed every web check
-      // this went through. On a real device the ScrollView ref is the
-      // composite class instance, which the native side can't resolve into
-      // a node to measure against, so it silently failed there instead
-      // (onFail below is a no-op) — the exact "still broken on the phone"
-      // report this native/web split was already responsible for once
-      // before, just for the other two nested targets. getNativeScrollRef()
-      // is the ScrollView's own accessor for the real node underneath it.
+      // Sidesteps both problems: measureInWindow doesn't ask "where is A
+      // relative to B," just "where is A on screen" — the same call
+      // SpotlightOverlay already uses successfully to place the ring itself
+      // (see `measure` just above). Doing it for both the target and the
+      // ScrollView's own on-screen position and subtracting gives the same
+      // answer measureLayout was meant to, without needing Fabric to relate
+      // the two nodes to each other at all.
       scrollIntoView: () => {
         const node = ref.current;
         const scrollView = ctx.scrollViewRef.current;
         if (!node || !scrollView) return;
-        const relativeTo =
-          (scrollView as unknown as { getNativeScrollRef?: () => unknown }).getNativeScrollRef?.() ??
-          scrollView;
-        (
-          node as unknown as {
-            measureLayout?: (
-              relativeToNode: unknown,
-              onSuccess: (x: number, y: number) => void,
-              onFail?: () => void
-            ) => void;
+        const scrollViewMeasure = (
+          scrollView as unknown as {
+            measureInWindow?: (cb: (x: number, y: number, width: number, height: number) => void) => void;
           }
-        ).measureLayout?.(
-          relativeTo,
-          (_x, relativeY) => {
-            const target = Math.max(0, ctx.scrollOffsetRef.current + relativeY - 16);
+        ).measureInWindow;
+        if (!scrollViewMeasure) return;
+        node.measureInWindow((_targetX, targetY) => {
+          scrollViewMeasure.call(scrollView, (_viewportX, viewportY) => {
+            const target = Math.max(0, ctx.scrollOffsetRef.current + (targetY - viewportY) - 16);
             scrollView.scrollTo({ y: target, animated: true });
-          },
-          () => {}
-        );
+          });
+        });
       },
     });
     return () => ctx.register(id, null);
