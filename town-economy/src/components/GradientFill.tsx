@@ -1,5 +1,5 @@
-import React, { useId } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useId, useState } from "react";
+import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 interface Props {
@@ -26,20 +26,38 @@ interface Props {
  * the card's own progress bar and label ended up outside their background.
  * The wrapper has no padding of its own, which makes 100% mean the same
  * thing under either rule.
+ *
+ * The Svg itself is measured rather than given width/height="100%" for a
+ * related reason: react-native-svg resolves a percentage against whatever
+ * the enclosing layout has settled to *at that moment*, which is a separate,
+ * earlier pass than the surrounding flex box's own — nest this one flex
+ * level deeper than whatever a screen last tested it at (the gold CTA
+ * button gained a glow-shadow wrapper around it later, for instance) and it
+ * can paint the gradient only across however wide the button was on an
+ * intermediate layout pass, cut off past that on a real device, again never
+ * showing up on web. Reading the wrapper's own onLayout and handing the Svg
+ * that exact pixel size sidesteps needing the two layout passes to agree.
  */
 export function GradientFill({ colors, x1 = "0", y1 = "0", x2 = "1", y2 = "1" }: Props) {
   const gradientId = `gf${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setSize({ width: Math.round(width), height: Math.round(height) });
+  };
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Svg width="100%" height="100%" pointerEvents="none">
-        <Defs>
-          <LinearGradient id={gradientId} x1={x1} y1={y1} x2={x2} y2={y2}>
-            <Stop offset="0" stopColor={colors[0]} />
-            <Stop offset="1" stopColor={colors[1]} />
-          </LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${gradientId})`} />
-      </Svg>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={onLayout}>
+      {size.width > 0 && size.height > 0 && (
+        <Svg width={size.width} height={size.height} pointerEvents="none">
+          <Defs>
+            <LinearGradient id={gradientId} x1={x1} y1={y1} x2={x2} y2={y2}>
+              <Stop offset="0" stopColor={colors[0]} />
+              <Stop offset="1" stopColor={colors[1]} />
+            </LinearGradient>
+          </Defs>
+          <Rect x={0} y={0} width={size.width} height={size.height} fill={`url(#${gradientId})`} />
+        </Svg>
+      )}
     </View>
   );
 }
