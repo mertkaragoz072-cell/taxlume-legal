@@ -1,4 +1,3 @@
-import { BlurView } from "expo-blur";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
@@ -13,22 +12,12 @@ import {
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 import logoEn from "../../assets/logo/logo-stacked-en-900.png";
 import logoTr from "../../assets/logo/logo-stacked-tr-900.png";
+import titleBg from "../../assets/title/title-bg-900.webp";
 import { Bobbing } from "../components/Bobbing";
 import { GradientFill } from "../components/GradientFill";
-import { TownSquareBackdrop } from "../components/TownSquareBackdrop";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
-import {
-  COLORS,
-  FONT,
-  glowShadow,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  seasonalBackgroundGradient,
-  withAlpha,
-} from "../theme";
+import { COLORS, FONT, glowShadow, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
 
 // The wordmark comes from assets/logo, rendered per language — the Turkish
 // and English lockups are different widths, so the aspect ratio travels with
@@ -40,65 +29,38 @@ const LOGOS = {
   en: { src: logoEn, ratio: 2503 / 900 },
 } as const;
 
-/** The town square from the Town screen, blown up past the edges of the
- * screen and thrown out of focus behind the wordmark.
+/** The market-square painting behind the wordmark, filling the screen edge
+ * to edge.
  *
- * Softness comes from two places on purpose, because only one of them works
- * everywhere: BlurView is the real blur, and on Android it does nothing
- * unless a blurMethod is named — it defaults to `'none'`. The scale needs no
- * platform support at all, so even where the blur is a no-op the artwork is
- * too large to show detail, and the wash and sky gradient still buy the text
- * its contrast.
+ * It replaces an earlier procedural backdrop that only ever covered the
+ * screen's lower portion (that art was a fixed 2.5:1 strip, a shape no
+ * phone is), which needed an opaque gradient to hide the seam where it cut
+ * off. This painting is close to a phone's own aspect ratio and already has
+ * the soft, out-of-focus look that backdrop had to fake with a runtime
+ * BlurView, so `cover` alone fills the screen cleanly with nothing left to
+ * paper over and no blur pass needed.
  *
- * The zoom is deliberately moderate. An earlier pass scaled it to 2.3x and
- * blurred it at full strength, and what was left could not be recognised as
- * a town at all — which defeats the point of putting it there.
+ * The gradient on top is a plain contrast wash, not a horizon line: the
+ * painting is bright and busy across its whole height, and the title's text
+ * relies on a per-line shadow (see `onArt` below) plus this darkening to
+ * stay readable over it, most of all at the bottom where the gold button
+ * sits.
  */
 function BlurredTown({ width, height }: { width: number; height: number }) {
-  const artWidth = width * 2;
-  const artHeight = artWidth / 2.5;
-  const artTop = height - artHeight;
-
-  // Where the artwork's top edge falls, as a fraction of the screen. The sky
-  // gradient's stops are derived from it rather than hard-coded, because the
-  // edge moves with the screen's aspect ratio and a stop in the wrong place
-  // leaves the cut showing.
-  const edge = artTop / height;
-
   return (
     <View pointerEvents="none" aria-hidden style={StyleSheet.absoluteFill}>
-      <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
+      {/* Explicit numeric width/height, not just the position:absolute +
+          inset:0 that StyleSheet.absoluteFill gives every other layer here.
+          A bundled local image is the one thing on this screen react-native-
+          web sizes to its own intrinsic pixel dimensions (900x1945, this
+          asset's actual file size) by default rather than stretching to
+          fill an absolutely-positioned parent the way a native Image does —
+          without the override it showed only the top sliver of the picture,
+          rendered at file resolution in the corner, instead of the whole
+          thing scaled to cover the screen. */}
+      <Image source={titleBg} style={[StyleSheet.absoluteFill, { width, height }]} resizeMode="cover" />
 
-      <View
-        style={{
-          position: "absolute",
-          // Bled off both edges, so the square never shows a seam at the side.
-          left: -(artWidth - width) / 2,
-          // Bottom-aligned: the square fills the lower part of the screen and
-          // the sky above it is the room the wordmark needs.
-          top: artTop,
-          width: artWidth,
-          height: artHeight,
-        }}
-      >
-        <TownSquareBackdrop width={artWidth} height={artHeight} warmth={0.85} />
-      </View>
-
-      <BlurView
-        intensity={42}
-        tint="dark"
-        blurMethod="dimezisBlurViewSdk31Plus"
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* The artwork is 2.5:1 and a phone is not, so the square can only ever
-          cover the lower part of the screen, and its top edge is a hard
-          horizontal cut. This gradient is opaque across that cut and clears
-          just below it, which turns the cut into a horizon: sky over a town,
-          rather than a picture with its top sliced off. The last stop darkens
-          the very bottom again so the button has something solid to sit on.
-
-          width/height are spelled out because react-native-svg on web falls
+      {/* width/height are spelled out because react-native-svg on web falls
           back to a 300x150 box without them, which paints a grey rectangle in
           the corner instead of covering the screen — and as numbers rather
           than "100%" strings, because react-native-svg resolves a percentage
@@ -110,14 +72,14 @@ function BlurredTown({ width, height }: { width: number; height: number }) {
           so there's no percentage to resolve at all. */}
       <Svg style={StyleSheet.absoluteFill} width={width} height={height} pointerEvents="none">
         <Defs>
-          <LinearGradient id="titleSky" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#140f0a" stopOpacity="1" />
-            <Stop offset={(edge * 0.86).toFixed(3)} stopColor="#140f0a" stopOpacity="1" />
-            <Stop offset={Math.min(0.98, edge + 0.1).toFixed(3)} stopColor="#140f0a" stopOpacity="0.16" />
-            <Stop offset="1" stopColor="#140f0a" stopOpacity="0.58" />
+          <LinearGradient id="titleWash" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#140f0a" stopOpacity="0.35" />
+            <Stop offset="0.45" stopColor="#140f0a" stopOpacity="0.18" />
+            <Stop offset="0.75" stopColor="#140f0a" stopOpacity="0.4" />
+            <Stop offset="1" stopColor="#140f0a" stopOpacity="0.72" />
           </LinearGradient>
         </Defs>
-        <Rect x={0} y={0} width={width} height={height} fill="url(#titleSky)" />
+        <Rect x={0} y={0} width={width} height={height} fill="url(#titleWash)" />
       </Svg>
     </View>
   );
