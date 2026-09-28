@@ -157,6 +157,14 @@ export const MAX_PRICE_STEP_PCT = 0.26;
 // itself drift the price anywhere; it just makes the display flicker
 // convincingly tick to tick on top of the real supply-driven trend.
 export const PRICE_JITTER_PCT = 0.05;
+// How much of an input's own price swing carries over to the price of the
+// good made from it (bread from grain, cloth from wool, cheese from milk,
+// paper and glass from wood, jewellery from iron — see inputCostFactor in
+// formulas.ts). 0.5 means an input sitting 20% above its base price pushes
+// the output's own base upward by 10% before its usual supply/demand pricing
+// runs on top of that. Kept well under 1 (full cost pass-through) so the
+// output still has a market of its own rather than just tracking its input.
+export const INPUT_COST_PASS_THROUGH = 0.5;
 // --- Demand pressure ------------------------------------------------------
 // Supply alone drifts back toward (and past) baseSupply within a tick or two
 // once villagers are happy and producing above baseline — too fast for a

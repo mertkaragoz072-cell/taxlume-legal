@@ -77,6 +77,7 @@ import {
   HAPPINESS_TARGET_SLOPE,
   HISTORY_LEN,
   INFLATION_REVERSION_RATE,
+  INPUT_COST_PASS_THROUGH,
   LOST_TREASURE_CHANCE,
   LOST_TREASURE_MIN_AMOUNT,
   LOST_TREASURE_PCT_OF_CASH,
@@ -103,6 +104,7 @@ import {
   computeNetWorth,
   estimateTaxIncomePerTick,
   gameDayFromTick,
+  inputCostFactor,
   isGoodUnlocked,
   priceFromSupply,
   productionInputFactor,
@@ -522,9 +524,20 @@ export function tick(state: EconomyState): EconomyState {
       DEMAND_PRESSURE_MAX
     );
     const priceJitter = 1 + (Math.random() - 0.5) * 2 * PRICE_JITTER_PCT;
+    // What grain, wool, milk, wood, iron and sand cost feeds straight into
+    // what's made from them — read off last tick's prices for the same
+    // reason productionInputFactor reads off last tick's supply above: it's
+    // the one order every good in the loop can agree on regardless of where
+    // either one falls in GOODS.
+    const costFactor = inputCostFactor(
+      good,
+      (id) => state.goods[id].price,
+      (id) => GOODS_BY_ID[id].basePrice
+    );
+    const inputCostMult = 1 + INPUT_COST_PASS_THROUGH * (costFactor - 1);
     const rawPrice =
       priceFromSupply(
-        good.basePrice * researchedValueMult * seasonalMult * demandMult,
+        good.basePrice * researchedValueMult * seasonalMult * demandMult * inputCostMult,
         good.baseSupply,
         good.elasticity,
         supply,

@@ -277,3 +277,34 @@ export function productionInputFactor(
   }
   return factor;
 }
+
+/** What an input's own price is doing to the price of the good made from it —
+ * the other half of a chain, alongside productionInputFactor above. That one
+ * throttles how much a workshop can make when its input runs short; this one
+ * is the separate, more immediate fact that the input is a cost: when grain
+ * gets dearer a baker pays more for it, so bread should get dearer too on
+ * the very same tick rather than only once the shortage eventually shows up
+ * as bread's own scarcity days later. Without this a good and everything
+ * made from it were fifteen independent random walks that could easily move
+ * in opposite directions — grain up, bread down — which reads as broken
+ * rather than as a market with any shape to it.
+ *
+ * Each input's ratio to its own base price is clamped before averaging, so
+ * one input spiking hard cannot alone send the output's price into an
+ * unreasonable multiple; multiple inputs average out rather than stack. */
+export const COST_FACTOR_MIN = 0.5;
+export const COST_FACTOR_MAX = 2;
+
+export function inputCostFactor(
+  good: Good,
+  priceOf: (id: GoodId) => number,
+  basePriceOf: (id: GoodId) => number
+): number {
+  if (!good.inputs || good.inputs.length === 0) return 1;
+  const ratios = good.inputs.map((input) => {
+    const base = basePriceOf(input);
+    const ratio = base > 0 ? priceOf(input) / base : 1;
+    return clamp(ratio, COST_FACTOR_MIN, COST_FACTOR_MAX);
+  });
+  return ratios.reduce((sum, r) => sum + r, 0) / ratios.length;
+}
