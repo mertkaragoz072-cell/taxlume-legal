@@ -136,26 +136,38 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
                 row of system emoji. Genuinely tinted even at rest — the
                 first version of this only saturated on tap and read as
                 muddy the rest of the time — then goes to a fully solid
-                fill plus a glow in its own colour, with a spring "pop"
-                (badgeScale above) on the one that just became active. */}
-            <Animated.View
+                fill plus a glow in its own colour.
+                The badge itself is a plain, unanimated View on purpose: an
+                earlier version put the spring "pop" and the shadow on the
+                very same native-driven layer, and on a real phone that
+                left the active badge permanently soft/blurry — two known
+                iOS quirks compounding (a shadowed view gets its own
+                offscreen render pass, and a view that has ever been
+                natively transformed can stay promoted to a GPU layer whose
+                resolution doesn't always end up matching the screen's).
+                Keeping the shadow on a static view and moving the bounce to
+                the small inner wrapper below — which carries no shadow of
+                its own — keeps both effects without stacking them on one
+                layer. */}
+            <View
               style={[
                 styles.iconBadge,
                 {
                   backgroundColor: isActive ? tab.color : withAlpha(tab.color, 0.22),
                   borderColor: withAlpha(tab.color, isActive ? 0.9 : 0.32),
-                  transform: [{ scale: badgeScale[i] }],
                 },
                 isActive && glowShadow(tab.color),
               ]}
             >
-              {/* The emoji is decoration for a label that is already read
-                  out; left visible it makes every tab announce a stray icon
-                  name. */}
-              <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
-                {tab.icon}
-              </Text>
-            </Animated.View>
+              <Animated.View style={{ transform: [{ scale: badgeScale[i] }] }}>
+                {/* The emoji is decoration for a label that is already read
+                    out; left visible it makes every tab announce a stray
+                    icon name. */}
+                <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
+                  {tab.icon}
+                </Text>
+              </Animated.View>
+            </View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
               {t(tab.labelKey)}
             </Text>
