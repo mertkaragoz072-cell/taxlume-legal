@@ -156,17 +156,32 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
  * üzerine yazılıyor. */
 export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }: Props) {
   const [width, setWidth] = useState(0);
-  const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
+  // Rounded rather than the raw float onLayout reports — a fractional
+  // target size (e.g. 379.33px) means the native Image has to resample to a
+  // size that doesn't land on a whole device pixel, which is exactly the
+  // kind of scale that reads as soft/blurred at the fine detail in this art
+  // (awning stripes, roof tiles) even though a plain screenshot comparison
+  // on web never showed it — web's compositor resamples on every paint, a
+  // native Image view doesn't necessarily redo that work once it has a
+  // bitmap for the size it was first asked to render at.
+  const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
   const tier = moodTierFor(happiness);
   const season = seasonFromTick(tick).id;
   const image = SEASON_SCENE_IMAGES[season]?.[tier] ?? SCENE_IMAGES[tier];
-  const height = width / IMAGE_RATIO;
+  const height = Math.round(width / IMAGE_RATIO);
 
   return (
     <View style={styles.scene} onLayout={onLayout}>
       {width > 0 && (
         <>
-          <Image source={image} style={{ width, height }} resizeMode="cover" />
+          {/* key={width}: forces a fresh native Image view (and a fresh
+              decode at the current target size) if the measured width ever
+              changes after the first layout — e.g. once safe-area insets or
+              a rotation settle a frame or two later. Without it the same
+              Image instance keeps whatever bitmap it decoded for its first
+              size and just stretches it, which is a second, independent way
+              to end up with a soft image on top of the rounding above. */}
+          <Image key={width} source={image} style={{ width, height }} resizeMode="cover" />
           {/* A soft scrim in the two corners the captions sit in, not a flat
            * tint over the whole photo — the text needs a dark patch behind it
            * to stay legible over any part of the scene, but the painted art
