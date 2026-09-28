@@ -1,7 +1,7 @@
 import { BlurView } from "expo-blur";
-import React from "react";
-import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import React, { useEffect, useRef } from "react";
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 import logoEn from "../../assets/logo/logo-stacked-en-900.png";
 import logoTr from "../../assets/logo/logo-stacked-tr-900.png";
 import { Bobbing } from "../components/Bobbing";
@@ -9,7 +9,17 @@ import { GradientFill } from "../components/GradientFill";
 import { TownSquareBackdrop } from "../components/TownSquareBackdrop";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
-import { COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, seasonalBackgroundGradient } from "../theme";
+import {
+  COLORS,
+  FONT,
+  glowShadow,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  seasonalBackgroundGradient,
+  withAlpha,
+} from "../theme";
 
 // The wordmark comes from assets/logo, rendered per language — the Turkish
 // and English lockups are different widths, so the aspect ratio travels with
@@ -97,6 +107,25 @@ function BlurredTown({ width, height }: { width: number; height: number }) {
   );
 }
 
+/** A soft warm wash centred where the wordmark sits — the masthead used to
+ * float in a plain black void above the blurred town, which read as empty
+ * rather than composed. This gives the eye somewhere the light is "coming
+ * from" without adding any shape that competes with the logo itself. */
+function LogoGlow({ width, height }: { width: number; height: number }) {
+  return (
+    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+      <Defs>
+        <RadialGradient id="titleGlow" cx="50%" cy="38%" r="60%">
+          <Stop offset="0" stopColor="#e8c777" stopOpacity="0.22" />
+          <Stop offset="0.55" stopColor="#e8c777" stopOpacity="0.07" />
+          <Stop offset="1" stopColor="#e8c777" stopOpacity="0" />
+        </RadialGradient>
+      </Defs>
+      <Rect x={0} y={0} width={width} height={height} fill="url(#titleGlow)" />
+    </Svg>
+  );
+}
+
 interface Props {
   onStart: () => void;
 }
@@ -119,6 +148,25 @@ export function TitleScreen({ onStart }: Props) {
   const logo = LOGOS[state.language];
   const logoWidth = Math.min(width - SPACING.xl * 2, 320);
 
+  // A quiet rise-and-fade on first mount rather than everything simply
+  // appearing at once — the one moment a player is guaranteed to be looking
+  // at nothing but this screen, so it is the cheapest place in the whole app
+  // to spend a little polish. Runs once; there is nothing to clean up since
+  // it never repeats.
+  const enter = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 820,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enter]);
+  const enterStyle = {
+    opacity: enter,
+    transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+  };
+
   return (
     // The backdrop is a sibling of the padded column, not a child of it: an
     // absolutely positioned view resolves `inset: 0` against its parent's
@@ -126,6 +174,7 @@ export function TitleScreen({ onStart }: Props) {
     // gradient down all four edges.
     <View style={styles.root}>
       <BlurredTown width={width} height={height} />
+      <LogoGlow width={width} height={height} />
 
       <View style={styles.content}>
         <Pressable
@@ -141,7 +190,7 @@ export function TitleScreen({ onStart }: Props) {
           <Text style={styles.langLabel}>{state.language === "tr" ? "TR" : "EN"}</Text>
         </Pressable>
 
-        <View style={styles.masthead}>
+        <Animated.View style={[styles.masthead, enterStyle]}>
           <Bobbing distance={5} duration={2600}>
             <Image
               source={logo.src}
@@ -152,36 +201,40 @@ export function TitleScreen({ onStart }: Props) {
             />
           </Bobbing>
           <Text style={styles.tagline}>{t("title.tagline")}</Text>
-        </View>
+        </Animated.View>
 
-        <View style={styles.actions}>
+        <Animated.View style={[styles.actions, enterStyle]}>
           {hydrated && inProgress ? (
-            <Text style={styles.saveLine}>
-              {t("title.saveLine", {
-                town: state.townName,
-                day: String(gameDayFromTick(state.tick)),
-                worth: formatCoins(netWorth, 0),
-              })}
-            </Text>
+            <View style={styles.saveChip}>
+              <Text style={styles.saveLine}>
+                {t("title.saveLine", {
+                  town: state.townName,
+                  day: String(gameDayFromTick(state.tick)),
+                  worth: formatCoins(netWorth, 0),
+                })}
+              </Text>
+            </View>
           ) : null}
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.cta,
-              pressed && styles.ctaPressed,
-              !hydrated && styles.ctaWaiting,
-            ]}
-            onPress={onStart}
-            disabled={!hydrated}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !hydrated }}
-          >
-            <GradientFill colors={GOLD_GRADIENT} />
-            <Text style={styles.ctaLabel}>
-              {!hydrated ? t("title.loading") : inProgress ? t("title.continue") : t("title.start")}
-            </Text>
-          </Pressable>
-        </View>
+          <View style={hydrated && styles.ctaGlow}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.cta,
+                pressed && styles.ctaPressed,
+                !hydrated && styles.ctaWaiting,
+              ]}
+              onPress={onStart}
+              disabled={!hydrated}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !hydrated }}
+            >
+              <GradientFill colors={GOLD_GRADIENT} />
+              <Text style={styles.ctaLabel}>
+                {!hydrated ? t("title.loading") : inProgress ? t("title.continue") : t("title.start")}
+              </Text>
+            </Pressable>
+          </View>
+        </Animated.View>
       </View>
     </View>
   );
@@ -218,14 +271,30 @@ const styles = StyleSheet.create({
   },
 
   actions: { alignSelf: "stretch", alignItems: "center", gap: SPACING.md },
+  // A frosted pill instead of plain shadowed text on the artwork — this is
+  // the one line on the screen reporting a fact (your town, by name, is
+  // still there), and a small card reads as a status readout in a way that
+  // text floating on the photo doesn't.
+  saveChip: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.chip,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
+    backgroundColor: withAlpha("#0c0704", 0.45),
+  },
   saveLine: {
     color: COLORS.accent,
     fontFamily: FONT.medium,
     fontSize: TYPE.caption,
     letterSpacing: 0.6,
     textAlign: "center",
-    ...onArt,
   },
+  // Wraps the button rather than sitting on it: cta itself clips to its
+  // rounded corners for the gold fill, and a shadow on a clipped view can
+  // paint incorrectly on iOS. An unclipped wrapper is the one place the glow
+  // can live without touching that.
+  ctaGlow: { width: "100%", maxWidth: 360, borderRadius: RADIUS.feature, ...glowShadow(COLORS.accent) },
   cta: {
     width: "100%",
     maxWidth: 360,
