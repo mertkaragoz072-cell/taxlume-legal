@@ -64,6 +64,24 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
     }).start();
   }, [activeIndex, indicatorAnim]);
 
+  // A little jelly pop on whichever badge just became active — a static
+  // 1.06 scale (the previous version of this bar) reads as "slightly
+  // bigger," not "alive." One shared value per tab rather than driving the
+  // active tab's scale off a single value that would have to jump between
+  // positions in the array: each tab owns its own resting size, and only
+  // the one that just got tapped overshoots past it before settling.
+  const badgeScale = useRef(TABS.map(() => new Animated.Value(1))).current;
+  useEffect(() => {
+    badgeScale[activeIndex].setValue(0.6);
+    Animated.spring(badgeScale[activeIndex], {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 4.5,
+      tension: 260,
+    }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex]);
+
   const indicatorLeft = indicatorAnim.interpolate({
     inputRange: TABS.map((_, i) => i),
     outputRange: TABS.map((_, i) => `${(i / TABS.length) * 100}%`),
@@ -80,9 +98,9 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
         pointerEvents="none"
         style={[styles.indicatorSlot, { left: indicatorLeft, width: `${100 / TABS.length}%` }]}
       >
-        <View style={[styles.indicatorBar, { backgroundColor: activeColor }]} />
+        <View style={[styles.indicatorBar, { backgroundColor: activeColor }, glowShadow(activeColor)]} />
       </Animated.View>
-      {TABS.map((tab) => {
+      {TABS.map((tab, i) => {
         const isActive = tab.id === active;
         const lit = tab.id === spotlight;
         return (
@@ -115,17 +133,20 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
                 differently (and often flatly) across platforms, where a
                 colour badge we draw ourselves reads the same everywhere and
                 is what actually makes the bar feel designed rather than a
-                row of system emoji. Muted until active, then it saturates
-                and picks up a soft glow in its own colour. */}
-            <View
+                row of system emoji. Genuinely tinted even at rest — the
+                first version of this only saturated on tap and read as
+                muddy the rest of the time — then goes to a fully solid
+                fill plus a glow in its own colour, with a spring "pop"
+                (badgeScale above) on the one that just became active. */}
+            <Animated.View
               style={[
                 styles.iconBadge,
                 {
-                  backgroundColor: withAlpha(tab.color, isActive ? 0.3 : 0.13),
-                  borderColor: withAlpha(tab.color, isActive ? 0.6 : 0),
+                  backgroundColor: isActive ? tab.color : withAlpha(tab.color, 0.22),
+                  borderColor: withAlpha(tab.color, isActive ? 0.9 : 0.32),
+                  transform: [{ scale: badgeScale[i] }],
                 },
                 isActive && glowShadow(tab.color),
-                isActive && styles.iconBadgeActive,
               ]}
             >
               {/* The emoji is decoration for a label that is already read
@@ -134,7 +155,7 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
               <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
                 {tab.icon}
               </Text>
-            </View>
+            </Animated.View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
               {t(tab.labelKey)}
             </Text>
@@ -179,15 +200,14 @@ const styles = StyleSheet.create({
   // boundary, reads as an intentional choice instead of whatever an emoji
   // font happened to draw.
   iconBadge: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: 13,
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
   },
-  iconBadgeActive: { transform: [{ scale: 1.06 }] },
-  icon: { fontSize: TYPE.title, opacity: 0.55 },
+  icon: { fontSize: TYPE.title, opacity: 0.75 },
   iconActive: { opacity: 1 },
   label: {
     fontSize: TYPE.micro,
