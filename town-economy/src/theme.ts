@@ -47,24 +47,33 @@ export const SPACING = {
 
 /** corner radius scale — chip/pill, a normal row or button, and a big
  * feature card, so "how rounded" reads as three deliberate sizes instead
- * of a dozen near-identical ones. */
+ * of a dozen near-identical ones. A touch softer than the original scale
+ * (10/14/18) — the extra couple of pixels is what reads as a current app
+ * rather than one from several years ago; card content didn't need to
+ * change to feel it. */
 export const RADIUS = {
-  chip: 10,
-  card: 14,
-  feature: 18,
+  chip: 12,
+  card: 16,
+  feature: 20,
 } as const;
 
 /** the app's recurring text/semantic colors, named once instead of re-typed
  * as bare hex in every screen — see the "restraint" note on cardShadow et al.
- * below for why so few colors carry so much of the UI. */
+ * below for why so few colors carry so much of the UI.
+ *
+ * Each was pulled a little toward gray from its original, more neon-leaning
+ * version — same hue and close to the same lightness (so text contrast on
+ * the dark background is unaffected), just less saturated. A screen full of
+ * fully-saturated red/green/gold against a near-black backdrop is what was
+ * actually making this read as tiring rather than the darkness itself. */
 export const COLORS = {
   textPrimary: "#f0e3c8",
   textMuted: "#a0917a",
-  accent: "#e8c777",
+  accent: "#e1c58c",
   onLight: "#1a1410",
-  positive: "#3fae5c",
-  negative: "#c94b4b",
-  warning: "#e0a13f",
+  positive: "#4ea56a",
+  negative: "#c15c58",
+  warning: "#d1a25c",
 } as const;
 
 /** shared warm gradient stops for the app's dark-brown card background,
@@ -72,25 +81,35 @@ export const COLORS = {
 export const CARD_GRADIENT: [string, string] = ["#332619", "#211a11"];
 /** a warm, muted gold-brown wash for cards that mark something earned */
 export const UNLOCKED_CARD_GRADIENT: [string, string] = ["#4a3a1c", "#26200f"];
-export const GOLD_GRADIENT: [string, string] = ["#ffdf8e", "#e0a637"];
-export const GREEN_GRADIENT: [string, string] = ["#5fd884", "#2a9c53"];
-export const RED_GRADIENT: [string, string] = ["#f0776a", "#c73f3a"];
-export const BLUE_GRADIENT: [string, string] = ["#6fb8f2", "#3a7ecc"];
+// The four gradients below carry the same desaturation as COLORS above —
+// each was the brightest, most saturated version of its hue in the app
+// (a button fill or a "look at this" glow reads best filled edge-to-edge in
+// its own color, unlike text, so these started further from gray than
+// COLORS did) and got pulled back the furthest for it.
+export const GOLD_GRADIENT: [string, string] = ["#f0d494", "#d1a04f"];
+export const GREEN_GRADIENT: [string, string] = ["#80c495", "#448a5d"];
+export const RED_GRADIENT: [string, string] = ["#dd8b7f", "#b0554d"];
+export const BLUE_GRADIENT: [string, string] = ["#84b0d9", "#4f76a3"];
 
 /** the app's base backdrop — a subtle top-to-bottom wash instead of a flat
- * fill, so every screen has a little depth behind its cards */
-export const APP_BACKGROUND_GRADIENT: [string, string] = ["#2a2013", "#140f0a"];
+ * fill, so every screen has a little depth behind its cards. Floor lifted
+ * off near-black (#140f0a) — true black next to the saturated gradients
+ * above is the other half of the harsh-contrast combination that made the
+ * app tiring to look at for long sessions; a dark backdrop doesn't need to
+ * be *that* dark to still read as night. */
+export const APP_BACKGROUND_GRADIENT: [string, string] = ["#271f18", "#1c1710"];
 
 /** the same warm-dark backdrop, lightly retinted per real-world calendar
  * season — a quiet bit of ambient variety that costs nothing in gameplay
  * terms, purely a display-layer choice (not tied to any game state, so it
  * never needs a save-version bump). Each stays close enough to the base
- * gradient that cards and text contrast are unaffected. */
+ * gradient that cards and text contrast are unaffected. Floors lifted the
+ * same way as APP_BACKGROUND_GRADIENT above, for the same reason. */
 const SEASON_BACKGROUND_GRADIENTS: Record<"spring" | "summer" | "autumn" | "winter", [string, string]> = {
-  spring: ["#243318", "#10140b"],
-  summer: ["#332619", "#1a1409"],
+  spring: ["#253420", "#181f14"],
+  summer: ["#302518", "#211a10"],
   autumn: APP_BACKGROUND_GRADIENT,
-  winter: ["#1a2233", "#0c0f16"],
+  winter: ["#1c2531", "#171c24"],
 };
 
 export function seasonalBackgroundGradient(date: Date = new Date()): [string, string] {
@@ -101,23 +120,35 @@ export function seasonalBackgroundGradient(date: Date = new Date()): [string, st
   return SEASON_BACKGROUND_GRADIENTS.winter;
 }
 
-/** a soft lifted-card shadow; RN Web reads shadow*, native reads elevation too */
+/** a soft lifted-card shadow; RN Web reads shadow*, native reads elevation too.
+ *
+ * Wider and lower-opacity than the original (offset 4 / opacity 0.28 /
+ * radius 10) — a shadow that close and that dark reads as a hard-edged drop
+ * shadow, the one detail that most says "a few years old" about a card-heavy
+ * screen. Spreading the same shadow over a larger, softer radius at lower
+ * opacity gives the same sense that a card is lifted off the background
+ * without the dark ring around its edge. */
 export const cardShadow: ViewStyle = {
   shadowColor: "#000",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.28,
-  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.18,
+  shadowRadius: 16,
   elevation: 4,
 };
 
 /** a colored glow shadow for game-y "pop" — pass a good/action's own hue so
- * buttons and highlighted cards feel lit from within rather than flat */
+ * buttons and highlighted cards feel lit from within rather than flat.
+ * Softer than the original (opacity 0.55) for the same reason the palette
+ * above got desaturated: a fully-opaque colored glow next to the app's dark
+ * backdrop is loud on its own, and the app has several of these live on
+ * screen at once (a hot inflation stat, a selected good, a ready prestige
+ * card) — 0.55 each stacked up fast. */
 export function glowShadow(color: string): ViewStyle {
   return {
     shadowColor: color,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 10,
+    shadowOpacity: 0.38,
+    shadowRadius: 9,
     elevation: 6,
   };
 }
