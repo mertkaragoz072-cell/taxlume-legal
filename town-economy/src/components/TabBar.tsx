@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { COLORS, FONT, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 
 export type ScreenId = "market" | "inventory" | "trade" | "town" | "research" | "invest" | "achievements";
@@ -71,16 +71,16 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
 
   return (
     <View style={styles.wrap} accessibilityRole="tablist">
+      {/* A slim underline riding above the tabs rather than a pill sitting
+          behind one — each tab now carries its own colour on its icon badge
+          below, so a second full-width colour wash back there just muddied
+          it. The moving bar keeps the "where am I" continuity between taps
+          without competing with the badges for attention. */}
       <Animated.View
         pointerEvents="none"
         style={[styles.indicatorSlot, { left: indicatorLeft, width: `${100 / TABS.length}%` }]}
       >
-        <View
-          style={[
-            styles.indicatorPill,
-            { backgroundColor: withAlpha(activeColor, 0.14), borderColor: withAlpha(activeColor, 0.4) },
-          ]}
-        />
+        <View style={[styles.indicatorBar, { backgroundColor: activeColor }]} />
       </Animated.View>
       {TABS.map((tab) => {
         const isActive = tab.id === active;
@@ -110,12 +110,34 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
                 ]}
               />
             )}
-            {/* The emoji is decoration for a label that is already read out;
-                left visible it makes every tab announce a stray icon name. */}
-            <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
-              {tab.icon}
+            {/* Every tab carries its own colour on a badge behind the icon
+                now, not just the active one — a plain emoji glyph reads
+                differently (and often flatly) across platforms, where a
+                colour badge we draw ourselves reads the same everywhere and
+                is what actually makes the bar feel designed rather than a
+                row of system emoji. Muted until active, then it saturates
+                and picks up a soft glow in its own colour. */}
+            <View
+              style={[
+                styles.iconBadge,
+                {
+                  backgroundColor: withAlpha(tab.color, isActive ? 0.3 : 0.13),
+                  borderColor: withAlpha(tab.color, isActive ? 0.6 : 0),
+                },
+                isActive && glowShadow(tab.color),
+                isActive && styles.iconBadgeActive,
+              ]}
+            >
+              {/* The emoji is decoration for a label that is already read
+                  out; left visible it makes every tab announce a stray icon
+                  name. */}
+              <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
+                {tab.icon}
+              </Text>
+            </View>
+            <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
+              {t(tab.labelKey)}
             </Text>
-            <Text style={[styles.label, isActive && { color: tab.color }]}>{t(tab.labelKey)}</Text>
           </ScalePressable>
         );
       })}
@@ -130,22 +152,19 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#3a2d1e",
     paddingBottom: 6,
-    paddingTop: 6,
+    paddingTop: 8,
   },
   indicatorSlot: {
     position: "absolute",
-    top: 2,
-    bottom: 2,
+    top: 0,
     alignItems: "center",
-    paddingHorizontal: 4,
   },
-  indicatorPill: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 14,
-    borderWidth: 1,
+  indicatorBar: {
+    width: 28,
+    height: 3,
+    borderRadius: 2,
   },
-  tab: { flex: 1, alignItems: "center", paddingVertical: 4 },
+  tab: { flex: 1, alignItems: "center", paddingVertical: 4, gap: 3 },
   spotlight: {
     position: "absolute",
     top: 0,
@@ -155,12 +174,24 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
   },
-  icon: { fontSize: TYPE.heading, opacity: 0.5 },
+  // A rounded-square badge behind each icon rather than bare text — same
+  // trick a card uses to read as "designed": colour, given a shape and a
+  // boundary, reads as an intentional choice instead of whatever an emoji
+  // font happened to draw.
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconBadgeActive: { transform: [{ scale: 1.06 }] },
+  icon: { fontSize: TYPE.title, opacity: 0.55 },
   iconActive: { opacity: 1 },
   label: {
     fontSize: TYPE.micro,
     color: COLORS.textMuted,
-    marginTop: 2,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
   },
