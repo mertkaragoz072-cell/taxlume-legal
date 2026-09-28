@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 import logoIllustratedEn from "../../assets/logo/logo-illustrated-en-1000.webp";
-import logoTr from "../../assets/logo/logo-stacked-tr-900.png";
+import logoIllustratedTr from "../../assets/logo/logo-illustrated-tr-1000.webp";
 import titleBg from "../../assets/title/title-bg-900.webp";
 import { Bobbing } from "../components/Bobbing";
 import { GradientFill } from "../components/GradientFill";
@@ -19,18 +19,16 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
 import { COLORS, FONT, glowShadow, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
 
-// The wordmark comes from assets/logo, rendered per language — the Turkish
-// and English lockups are different widths, so the aspect ratio travels with
-// the file rather than being hard-coded once for both. Plain `-900`/`-1000`
-// names, not `@3x`: Metro reads `@3x` as a density variant of a base file
-// that does not exist here (see the note in scripts/build-logo.js).
-//
-// English only uses the painted market-square wordmark supplied for this
-// screen — it has "GOLDEN TOWN" lettered directly into the art with no
-// Turkish equivalent, so Turkish keeps the plain stacked mark instead of
-// falling back to English lettering. See assets/logo/README.md.
+// The wordmark comes from assets/logo, rendered per language — the two
+// painted market-square banners are cropped independently (their lettering
+// takes different amounts of width), so the aspect ratio travels with the
+// file rather than being hard-coded once for both. Plain `-1000` names, not
+// `@3x`: Metro reads `@3x` as a density variant of a base file that does not
+// exist here (see the note in scripts/build-logo.js). See
+// assets/logo/README.md for how these two were cut out from their source
+// art.
 const LOGOS = {
-  tr: { src: logoTr, ratio: 2374 / 900 },
+  tr: { src: logoIllustratedTr, ratio: 1000 / 667 },
   en: { src: logoIllustratedEn, ratio: 1000 / 667 },
 } as const;
 
