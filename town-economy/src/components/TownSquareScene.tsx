@@ -1,5 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, StyleSheet, Text, View, Image, ImageSourcePropType, LayoutChangeEvent } from "react-native";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ImageSourcePropType,
+  LayoutChangeEvent,
+} from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
@@ -174,7 +183,13 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
               </LinearGradient>
             </Defs>
             <Rect x={0} y={0} width={width} height={height * 0.32} fill="url(#sceneTopScrim)" />
-            <Rect x={0} y={height * 0.68} width={width} height={height * 0.32} fill="url(#sceneBottomScrim)" />
+            <Rect
+              x={0}
+              y={height * 0.68}
+              width={width}
+              height={height * 0.32}
+              fill="url(#sceneBottomScrim)"
+            />
           </Svg>
           {season === "winter" && SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={height} />)}
         </>

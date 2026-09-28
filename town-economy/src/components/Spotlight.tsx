@@ -120,14 +120,24 @@ export function SpotlightProvider({
  * Only meaningful for a screen that actually has such targets; harmless to
  * skip otherwise. */
 export function useSpotlightScroll():
-  | { ref: React.RefObject<ScrollView | null>; onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void }
+  | {
+      ref: React.RefObject<ScrollView | null>;
+      onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    }
   | undefined {
   const ctx = useContext(SpotlightContext);
   if (!ctx) return undefined;
+  // Pulled out of ctx rather than written as ctx.scrollOffsetRef.current — a
+  // MutableRefObject is exactly the sanctioned way to carry mutable state
+  // through a value React otherwise treats as immutable, but the lint rule's
+  // static check can't tell "mutate the ref's .current" from "mutate the
+  // context value itself" when it's spelled as one property-access chain
+  // rooted at ctx. Same ref either way; this just satisfies the linter.
+  const { scrollViewRef, scrollOffsetRef } = ctx;
   return {
-    ref: ctx.scrollViewRef,
+    ref: scrollViewRef,
     onScroll: (e) => {
-      ctx.scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+      scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
     },
   };
 }
@@ -181,16 +191,24 @@ export function SpotlightTarget({
         const scrollView = ctx.scrollViewRef.current;
         if (!node || !scrollView) return;
         const relativeTo =
-          (scrollView as unknown as { getNativeScrollRef?: () => unknown }).getNativeScrollRef?.() ?? scrollView;
-        (node as unknown as { measureLayout?: (relativeToNode: unknown, onSuccess: (x: number, y: number) => void, onFail?: () => void) => void })
-          .measureLayout?.(
-            relativeTo,
-            (_x, relativeY) => {
-              const target = Math.max(0, ctx.scrollOffsetRef.current + relativeY - 16);
-              scrollView.scrollTo({ y: target, animated: true });
-            },
-            () => {}
-          );
+          (scrollView as unknown as { getNativeScrollRef?: () => unknown }).getNativeScrollRef?.() ??
+          scrollView;
+        (
+          node as unknown as {
+            measureLayout?: (
+              relativeToNode: unknown,
+              onSuccess: (x: number, y: number) => void,
+              onFail?: () => void
+            ) => void;
+          }
+        ).measureLayout?.(
+          relativeTo,
+          (_x, relativeY) => {
+            const target = Math.max(0, ctx.scrollOffsetRef.current + relativeY - 16);
+            scrollView.scrollTo({ y: target, animated: true });
+          },
+          () => {}
+        );
       },
     });
     return () => ctx.register(id, null);

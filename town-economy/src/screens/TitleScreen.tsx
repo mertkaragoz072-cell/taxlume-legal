@@ -1,6 +1,15 @@
 import { BlurView } from "expo-blur";
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 import logoEn from "../../assets/logo/logo-stacked-en-900.png";
 import logoTr from "../../assets/logo/logo-stacked-tr-900.png";
