@@ -85,13 +85,12 @@ sharing one master file the way the SVG family does. They don't fit this
 family's build pipeline and were supplied as separate finished pieces, not
 a base file plus a translation pass.
 
-The two are currently different compositions, not just different text on
-the same picture: `tr` is the original wide market-square panorama (houses,
-a bridge, sailboats); `en` was replaced with a tighter castle-on-a-hill
-crest once that was supplied as a better fit for the title screen. If a
-matching `tr` crest is ever supplied, it belongs here as a same-named
-replacement — same cutout process below applies. Until then the two
-intentionally look different across languages.
+Both are now the same "castle on a hill" crest composition — `en` was
+replaced first, and `tr` followed once a matching crest was supplied,
+retiring the original wide market-square panorama both languages used to
+share. Keep replacing them as a pair: a future art pass that changes one
+composition without the other silently splits the two languages' title
+screens again the way this one briefly did.
 
 Both needed their background cut out by hand — the source had no real alpha
 channel, only a checkerboard *pattern* baked into flat RGB (the visual

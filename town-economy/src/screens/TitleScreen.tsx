@@ -28,7 +28,7 @@ import { COLORS, FONT, glowShadow, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlp
 // assets/logo/README.md for how these two were cut out from their source
 // art.
 const LOGOS = {
-  tr: { src: logoIllustratedTr, ratio: 1000 / 667 },
+  tr: { src: logoIllustratedTr, ratio: 1000 / 475 },
   en: { src: logoIllustratedEn, ratio: 1000 / 491 },
 } as const;
 
