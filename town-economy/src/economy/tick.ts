@@ -46,7 +46,7 @@ import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
 import { UPGRADES_BY_ID } from "./upgrades";
 import { rollVillagerRequest } from "./villagerRequests";
-import { eventFields, t } from "../i18n/t";
+import { eventFields } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { BulkContract, Caravan, EconomyEvent, EconomyState, ForwardContract, GoodId } from "./types";
 import {
@@ -232,7 +232,7 @@ export function tick(state: EconomyState): EconomyState {
         id: nextId++,
         ...eventFields(state.language, "msg.crisisStruck", {
           icon: template.icon,
-          title: t(state.language, template.titleKey),
+          title: { key: template.titleKey },
           pct: Math.round(lossPct * 100),
         }),
         tone: "bad",
@@ -265,8 +265,8 @@ export function tick(state: EconomyState): EconomyState {
           icon: template.icon,
           // The sign the town can actually see, and separately the thing it
           // portends — a fire cannot be scheduled, but dry winds can be felt.
-          warning: t(state.language, template.warningTitleKey),
-          event: t(state.language, template.titleKey),
+          warning: { key: template.warningTitleKey },
+          event: { key: template.titleKey },
           days: CRISIS_WARNING_DAYS,
         }
       ),
@@ -289,7 +289,7 @@ export function tick(state: EconomyState): EconomyState {
     pendingDecision = { id: nextId, templateId: template.id, triggeredAtTick: state.tick + 1 };
     newEvents.push({
       id: nextId++,
-      ...eventFields(state.language, "msg.decisionPending", { title: t(state.language, template.titleKey) }),
+      ...eventFields(state.language, "msg.decisionPending", { title: { key: template.titleKey } }),
       tone: "neutral",
     });
   }
@@ -304,7 +304,7 @@ export function tick(state: EconomyState): EconomyState {
       id: nextId++,
       ...eventFields(state.language, "msg.villagerRequestPending", {
         qty,
-        good: t(state.language, good.nameKey),
+        good: { key: good.nameKey },
       }),
       tone: "neutral",
     });
@@ -330,7 +330,7 @@ export function tick(state: EconomyState): EconomyState {
         id: nextId++,
         ...eventFields(state.language, "msg.rivalOfferPending", {
           qty,
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
         }),
         tone: "neutral",
       });
@@ -357,7 +357,7 @@ export function tick(state: EconomyState): EconomyState {
         id: nextId++,
         ...eventFields(state.language, "msg.miniQuestPending", {
           icon: template.icon,
-          title: t(state.language, template.titleKey),
+          title: { key: template.titleKey },
         }),
         tone: "neutral",
       });
@@ -396,7 +396,7 @@ export function tick(state: EconomyState): EconomyState {
         id: nextId++,
         ...eventFields(state.language, "msg.seasonalEventEnded", {
           icon: endedTemplate.icon,
-          title: t(state.language, endedTemplate.titleKey),
+          title: { key: endedTemplate.titleKey },
         }),
         tone: "neutral",
       });
@@ -415,7 +415,7 @@ export function tick(state: EconomyState): EconomyState {
       id: nextId++,
       ...eventFields(state.language, "msg.seasonalEventStarted", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
       }),
       tone: "good",
     });
@@ -670,10 +670,10 @@ export function tick(state: EconomyState): EconomyState {
       newEvents.push({
         id: nextId++,
         ...eventFields(state.language, wasRaided ? "msg.caravanRaidedExport" : "msg.caravanReturnedExport", {
-          town: t(state.language, town.nameKey),
+          town: { key: town.nameKey },
           amount: formatNumberUtil(deliveredAmount, state.language),
           qty: caravan.qty,
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
         }),
         tone: wasRaided ? "bad" : "good",
       });
@@ -683,9 +683,9 @@ export function tick(state: EconomyState): EconomyState {
       newEvents.push({
         id: nextId++,
         ...eventFields(state.language, wasRaided ? "msg.caravanRaidedImport" : "msg.caravanReturnedImport", {
-          town: t(state.language, town.nameKey),
+          town: { key: town.nameKey },
           qty: Math.round(deliveredAmount),
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
         }),
         tone: wasRaided ? "bad" : "good",
       });
@@ -726,7 +726,7 @@ export function tick(state: EconomyState): EconomyState {
     newEvents.push({
       id: nextId++,
       ...eventFields(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
-        good: t(state.language, contractGood.nameKey),
+        good: { key: contractGood.nameKey },
         amount: formatNumberUtil(Math.abs(payoff), state.language),
       }),
       tone: payoff >= 0 ? "good" : "bad",
@@ -747,7 +747,7 @@ export function tick(state: EconomyState): EconomyState {
       id: nextId++,
       ...eventFields(state.language, "msg.bulkContractDelivered", {
         qty: contract.qty,
-        good: t(state.language, contractGood.nameKey),
+        good: { key: contractGood.nameKey },
         amount: formatNumberUtil(payout, state.language),
       }),
       tone: "good",
@@ -829,9 +829,9 @@ export function tick(state: EconomyState): EconomyState {
     newEvents.push({
       id: nextId++,
       ...eventFields(state.language, "msg.bountyAppeared", {
-        rivalName: t(state.language, RIVAL_TRADERS_BY_ID[rivalId]?.nameKey || "rival.unknown"),
-        good: t(state.language, good.nameKey),
-        side: t(state.language, side === "buying" ? "bounty.buying" : "bounty.selling"),
+        rivalName: { key: RIVAL_TRADERS_BY_ID[rivalId]?.nameKey || "rival.unknown" },
+        good: { key: good.nameKey },
+        side: { key: side === "buying" ? "bounty.buying" : "bounty.selling" },
         qty: quantity,
         reward: formatNumberUtil(reward, state.language),
       }),
@@ -857,7 +857,7 @@ export function tick(state: EconomyState): EconomyState {
       newEvents.push({
         id: nextId++,
         ...eventFields(state.language, "msg.quotaMet", {
-          good: t(state.language, GOODS_BY_ID[quota.goodId].nameKey),
+          good: { key: GOODS_BY_ID[quota.goodId].nameKey },
           bonus: formatNumberUtil(quota.bonus, state.language),
         }),
         tone: "good",

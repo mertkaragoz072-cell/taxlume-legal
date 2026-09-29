@@ -1,4 +1,4 @@
-import { eventFields, t } from "../i18n/t";
+import { eventFields, Params } from "../i18n/t";
 import { GOODS } from "./goods";
 import { RESEARCH_NODES } from "./research";
 import { EconomyEvent, EconomyState } from "./types";
@@ -21,7 +21,7 @@ function clampSupply(supply: number, baseSupply: number): number {
 function outcome(
   state: EconomyState,
   messageKey: string,
-  params: Record<string, string | number> | undefined,
+  params: Params | undefined,
   tone: "good" | "bad" | "neutral",
   patch: Partial<EconomyState>
 ): EconomyState {
@@ -160,8 +160,7 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
           const good = randomGood();
           const gs = state.goods[good.id];
           const amount = Math.max(1, Math.round(80 / gs.price));
-          const goodName = t(state.language, good.nameKey);
-          return outcome(state, "msg.merchantHonest", { good: goodName, amount }, "good", {
+          return outcome(state, "msg.merchantHonest", { good: { key: good.nameKey }, amount }, "good", {
             cash: afterCash,
             goods: { ...state.goods, [good.id]: { ...gs, holding: gs.holding + amount } },
           });
@@ -240,8 +239,7 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
       if (Math.random() < 0.5) {
         const good = randomGood();
         const gs = state.goods[good.id];
-        const goodName = t(state.language, good.nameKey);
-        return outcome(state, "msg.workerStrike", { good: goodName }, "bad", {
+        return outcome(state, "msg.workerStrike", { good: { key: good.nameKey } }, "bad", {
           goods: { ...state.goods, [good.id]: { ...gs, supply: Math.max(1, gs.supply * 0.8) } },
         });
       }
@@ -315,16 +313,10 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
           return outcome(state, "msg.mysteryStrangerNothingLeft", undefined, "neutral", {});
         }
         const node = eligible[Math.floor(Math.random() * eligible.length)];
-        return outcome(
-          state,
-          "msg.mysteryStrangerSuccess",
-          { research: t(state.language, node.nameKey) },
-          "good",
-          {
-            cash: afterCash,
-            researched: [...state.researched, node.id],
-          }
-        );
+        return outcome(state, "msg.mysteryStrangerSuccess", { research: { key: node.nameKey } }, "good", {
+          cash: afterCash,
+          researched: [...state.researched, node.id],
+        });
       }
       return outcome(state, "msg.mysteryStrangerRefuse", undefined, "neutral", {});
     },

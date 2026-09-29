@@ -28,7 +28,7 @@ import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
 import { deviceLanguage } from "../i18n/deviceLanguage";
-import { DEFAULT_LANGUAGE, eventFields, Language, t, tPlural } from "../i18n/t";
+import { DEFAULT_LANGUAGE, eventFields, Language, NestedKey, Params, t, tPlural } from "../i18n/t";
 import {
   formatCoins as formatCoinsUtil,
   formatCompactNumber as formatNumberUtil,
@@ -495,23 +495,25 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   // above or below what was paid for it.
   const pnl = (price - gs.avgCost) * amount;
   const { streak: tradeStreak, bonus } = nextTradeStreak(state.tradeStreak, pnl);
-  const message =
-    bonus > 0
-      ? t(state.language, "msg.goodSoldProfitStreak", {
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...(bonus > 0
+      ? eventFields(state.language, "msg.goodSoldProfitStreak", {
           streak: tradeStreak,
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
           qty: amount,
           amount: formatNumberUtil(pnl + bonus, state.language),
           bonusPct: Math.round(
             clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100
           ),
         })
-      : t(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
-          good: t(state.language, good.nameKey),
+      : eventFields(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
+          good: { key: good.nameKey },
           qty: amount,
           amount: formatNumberUtil(Math.abs(pnl), state.language),
-        });
-  const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
+        })),
+    tone: pnl >= 0 ? "good" : "bad",
+  };
   // Update trader reputation
   const trader = TRADERS_BY_ID[traderId];
   const repDelta = reputationDelta(goodId, "sell", amount, trader);
@@ -585,23 +587,25 @@ function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell",
   const pnl = (price - as.avgCost) * amount;
   const asset = ASSETS_BY_ID[assetId];
   const { streak: tradeStreak, bonus } = nextTradeStreak(state.tradeStreak, pnl);
-  const message =
-    bonus > 0
-      ? t(state.language, "msg.investSoldProfitStreak", {
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...(bonus > 0
+      ? eventFields(state.language, "msg.investSoldProfitStreak", {
           streak: tradeStreak,
-          asset: t(state.language, asset.nameKey),
+          asset: { key: asset.nameKey },
           qty: amount,
           amount: formatNumberUtil(pnl + bonus, state.language),
           bonusPct: Math.round(
             clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100
           ),
         })
-      : t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
-          asset: t(state.language, asset.nameKey),
+      : eventFields(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
+          asset: { key: asset.nameKey },
           qty: amount,
           amount: formatNumberUtil(Math.abs(pnl), state.language),
-        });
-  const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
+        })),
+    tone: pnl >= 0 ? "good" : "bad",
+  };
   return {
     ...state,
     cash: state.cash + proceeds + bonus,
@@ -903,8 +907,11 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
   }
 
   const bonus = dailyBonusForStreak(state, count);
-  const message = t(state.language, "msg.dailyCheckInReturning", { count, bonus });
-  const event: EconomyEvent = { id: state.nextId, message, tone: "good" };
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...eventFields(state.language, "msg.dailyCheckInReturning", { count, bonus }),
+    tone: "good",
+  };
 
   return {
     ...state,
@@ -953,7 +960,7 @@ export function applyWeeklyChallengeClaim(state: EconomyState): EconomyState {
   const event: EconomyEvent = {
     id: state.nextId,
     ...eventFields(state.language, "msg.weeklyChallengeComplete", {
-      title: t(state.language, template.titleKey),
+      title: { key: template.titleKey },
       amount: formatNumberUtil(template.reward, state.language),
     }),
     tone: "good",
@@ -1101,7 +1108,7 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
 
   function outcome(
     messageKey: string,
-    params: Record<string, string | number> | undefined,
+    params: Params | undefined,
     tone: EconomyEvent["tone"],
     patch: Partial<EconomyState>
   ) {
@@ -1120,7 +1127,7 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
     };
   }
 
-  const goodName = t(state.language, good.nameKey);
+  const goodName: NestedKey = { key: good.nameKey };
 
   if (give) {
     if (gs.holding < request.qty) {
@@ -1146,11 +1153,11 @@ function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
   if (!offer) return state;
   const good = GOODS_BY_ID[offer.goodId];
   const gs = state.goods[offer.goodId];
-  const goodName = t(state.language, good.nameKey);
+  const goodName: NestedKey = { key: good.nameKey };
 
   function outcome(
     messageKey: string,
-    params: Record<string, string | number> | undefined,
+    params: Params | undefined,
     tone: EconomyEvent["tone"],
     patch: Partial<EconomyState>
   ) {
@@ -1250,7 +1257,7 @@ export function chooseDoctrine(state: EconomyState, doctrineId: string): Economy
     id: state.nextId,
     ...eventFields(state.language, "msg.doctrineChosen", {
       icon: DOCTRINES_BY_ID[doctrineId].icon,
-      name: t(state.language, DOCTRINES_BY_ID[doctrineId].nameKey),
+      name: { key: DOCTRINES_BY_ID[doctrineId].nameKey },
     }),
     tone: "good",
   };

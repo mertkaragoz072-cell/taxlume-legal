@@ -17,7 +17,7 @@ import {
   townRankNameKey,
   townRankReward,
 } from "./townRanks";
-import { eventFields, t } from "../i18n/t";
+import { eventFields, NestedKey, t } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { EconomyEvent, EconomyState } from "./types";
 import { EVENT_LOG_CAP, LEGENDARY_UNLOCK_PRESTIGE_LEVEL, MYTHIC_UNLOCK_LEGENDARY_POINTS } from "./constants";
@@ -39,7 +39,7 @@ export function applyAchievements(state: EconomyState): EconomyState {
       id: nextId++,
       ...eventFields(state.language, "msg.achievementUnlocked", {
         icon: a.icon,
-        title: t(state.language, a.titleKey),
+        title: { key: a.titleKey },
         reward: a.reward,
       }),
       tone: "good",
@@ -147,19 +147,23 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     const reward = townRankReward(index);
     cash += reward;
     const beyond = townRankBeyondCount(index);
-    const title =
+    // NestedKey recurses: "Beyond X (n)" nests the rank's own name-key
+    // inside the count-suffixed template, so both re-resolve live rather
+    // than only the outer one.
+    const titleParam: NestedKey =
       beyond > 0
-        ? t(state.language, "townRank.beyondTitle", {
-            base: t(state.language, townRankNameKey(index)),
-            n: beyond + 1,
-          })
-        : t(state.language, townRankNameKey(index));
-    if (index === targetIndex) finalTitle = title;
+        ? { key: "townRank.beyondTitle", params: { base: { key: townRankNameKey(index) }, n: beyond + 1 } }
+        : { key: townRankNameKey(index) };
+    // merveRankUp (below) stores an already-resolved plain string, not a
+    // NestedKey — Merve's congratulations shows once, immediately, in
+    // whatever language is active right then, and is dismissed by the
+    // player before a later language switch could make it stale.
+    if (index === targetIndex) finalTitle = t(state.language, titleParam.key, titleParam.params);
     newEvents.push({
       id: nextId++,
       ...eventFields(state.language, "msg.townRankUp", {
         icon: townRankIcon(index),
-        title,
+        title: titleParam,
         reward: formatNumberUtil(reward, state.language),
       }),
       tone: "good",
@@ -201,7 +205,7 @@ export function applyOnboarding(state: EconomyState): EconomyState {
       id: nextId++,
       ...eventFields(state.language, "msg.onboardingStepDone", {
         icon: done.icon,
-        title: t(state.language, done.titleKey),
+        title: { key: done.titleKey },
         reward: done.reward,
       }),
       tone: "good",
@@ -240,7 +244,7 @@ export function applyDailyQuests(state: EconomyState): EconomyState {
       id: nextId++,
       ...eventFields(state.language, "msg.questCompleted", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
         reward: q.reward,
       }),
       tone: "good",
@@ -272,7 +276,7 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
       id: state.nextId,
       ...eventFields(state.language, "msg.miniQuestCompleted", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
         reward: mq.reward,
       }),
       tone: "good",
@@ -292,7 +296,7 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
       id: state.nextId,
       ...eventFields(state.language, "msg.miniQuestExpired", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
       }),
       tone: "neutral",
     };
