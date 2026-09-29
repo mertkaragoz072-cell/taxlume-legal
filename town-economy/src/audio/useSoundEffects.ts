@@ -6,7 +6,14 @@ const buySource = require("../../assets/sounds/buy.wav");
 const sellSource = require("../../assets/sounds/sell.wav");
 const eventSource = require("../../assets/sounds/event.wav");
 const crashSource = require("../../assets/sounds/crash.wav");
-const ambientSource = require("../../assets/sounds/ambient.wav");
+// Two different loops (see scripts/gen-music.js) — one is picked at random
+// per session in startMusic() rather than loading both, so a replay doesn't
+// always open on the identical tune, without doubling the audio the app
+// has to fetch on startup.
+const ambientSources = [
+  require("../../assets/sounds/ambient-a.wav"),
+  require("../../assets/sounds/ambient-b.wav"),
+];
 
 function playOrIgnore(player: ReturnType<typeof useAudioPlayer>) {
   try {
@@ -24,16 +31,20 @@ export function useSoundEffects() {
   const sellPlayer = useAudioPlayer(sellSource);
   const eventPlayer = useAudioPlayer(eventSource);
   const crashPlayer = useAudioPlayer(crashSource);
-  const musicPlayer = useAudioPlayer(ambientSource);
+  // No initial source: which of the two tracks plays is chosen (and loaded
+  // via .replace()) inside startMusic(), not here, so only the one actually
+  // used gets fetched.
+  const musicPlayer = useAudioPlayer();
   // Imperative setup belongs in an effect, not inline during render. The
   // react-hooks/immutability rule flags this as "modifying a hook's return
   // value," but expo-audio's AudioPlayer is a SharedObject explicitly
   // designed for exactly this (its own docs set `.volume` the same way) —
-  // not React state the rule's memoization assumptions apply to.
+  // not React state the rule's memoization assumptions apply to. These
+  // survive a later .replace() call, which only swaps the source.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability
     musicPlayer.loop = true;
-    musicPlayer.volume = 0.35;
+    musicPlayer.volume = 0.28;
   }, [musicPlayer]);
   // Whether startMusic() has ever been called — the mute effect below
   // should never start music on its own, only resume it once the player
@@ -87,10 +98,13 @@ export function useSoundEffects() {
   // The player itself is created eagerly (useAudioPlayer mounts it right
   // away), but actually calling play() before any user gesture is what
   // browsers' autoplay policy blocks — this is meant to be invoked from the
-  // title screen's Start/Continue button, which is that gesture.
+  // title screen's Start/Continue button, which is that gesture. Which of
+  // the two tracks plays is also decided here, once per session.
   const startMusic = useCallback(() => {
     if (musicStarted.current) return;
     musicStarted.current = true;
+    const chosen = ambientSources[Math.floor(Math.random() * ambientSources.length)];
+    musicPlayer.replace(chosen);
     if (mutedRef.current) return;
     playOrIgnore(musicPlayer);
   }, [musicPlayer]);
