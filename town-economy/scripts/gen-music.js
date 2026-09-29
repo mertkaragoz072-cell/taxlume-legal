@@ -2,47 +2,53 @@
 // tracks (no external assets/network needed — see gen-sounds.js for the same
 // convention applied to the short SFX). Run with: node scripts/gen-music.js
 //
-// Two tracks, not one: the first version of this shipped a single 24s/4-chord
-// loop, and a loop that short repeats often enough in a long idle-game
-// session to become the thing a player mutes. This version doubles the loop
-// length to 48s across an 8-chord progression (more harmonic movement before
-// the ear notices the seam), adds a soft bass pulse under the pad for a
-// little rhythmic life instead of a static wash, and renders a second track
-// in a different key/mood — the app picks one at random per session, so
-// repeat play sessions don't always hear the identical tune either.
+// Three passes so far. The first shipped a single 24s/4-chord mono loop —
+// too short, repeated too often on a long idle session. The second doubled
+// the loop to 48s/8 chords and added a bass pulse for rhythmic life, but
+// kept the underlying tone plain detuned sines with nowhere for the sound
+// to breathe — reported back as "hasn't really changed, still doesn't sound
+// modern." This pass keeps the same chord progressions and loop-seam
+// technique but rebuilds the actual production: real stereo (not a mono
+// signal duplicated to two channels), a soft-saturated warmer pad tone
+// instead of bare sines, a proper algorithmic reverb (Freeverb-style
+// parallel combs + series allpasses) so the pad has room to sit in, and a
+// ping-pong stereo delay on the melody instead of a dry mono pluck. Those
+// four are what a listener actually hears as "produced" vs. "synthesized."
 //
 // Loop technique (unchanged): render `LOOP_LEN + CROSSFADE` seconds of
 // continuously evolving audio, then blend the crossfade-length "extra" tail
 // back into the head with an equal-power fade. That makes the *join*
 // seamless regardless of whether the underlying waveform is itself
 // periodic, so the chord progression doesn't need a period that evenly
-// divides the loop length.
+// divides the loop length. Now applied per channel.
 const fs = require("fs");
 const path = require("path");
 
-const SAMPLE_RATE = 22050; // matches gen-sounds.js; plenty above our ~2.4kHz top partial
+const SAMPLE_RATE = 22050; // plenty above our ~3kHz top partial + reverb tail
 const SEG = 6.0; // seconds per chord
 const CROSSFADE = 3.0; // seconds, blended at the loop seam
 
-function writeWav(filePath, samples) {
-  const numSamples = samples.length;
-  const buffer = Buffer.alloc(44 + numSamples * 2);
+function writeWavStereo(filePath, left, right) {
+  const numSamples = left.length;
+  const buffer = Buffer.alloc(44 + numSamples * 4);
   buffer.write("RIFF", 0);
-  buffer.writeUInt32LE(36 + numSamples * 2, 4);
+  buffer.writeUInt32LE(36 + numSamples * 4, 4);
   buffer.write("WAVE", 8);
   buffer.write("fmt ", 12);
   buffer.writeUInt32LE(16, 16);
   buffer.writeUInt16LE(1, 20); // PCM
-  buffer.writeUInt16LE(1, 22); // mono
+  buffer.writeUInt16LE(2, 22); // stereo
   buffer.writeUInt32LE(SAMPLE_RATE, 24);
-  buffer.writeUInt32LE(SAMPLE_RATE * 2, 28);
-  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt32LE(SAMPLE_RATE * 4, 28); // byte rate = rate * blockAlign
+  buffer.writeUInt16LE(4, 32); // block align: 2 channels * 16 bits
   buffer.writeUInt16LE(16, 34);
   buffer.write("data", 36);
-  buffer.writeUInt32LE(numSamples * 2, 40);
+  buffer.writeUInt32LE(numSamples * 4, 40);
   for (let i = 0; i < numSamples; i++) {
-    const clamped = Math.max(-1, Math.min(1, samples[i]));
-    buffer.writeInt16LE(Math.round(clamped * 32767), 44 + i * 2);
+    const l = Math.max(-1, Math.min(1, left[i]));
+    const r = Math.max(-1, Math.min(1, right[i]));
+    buffer.writeInt16LE(Math.round(l * 32767), 44 + i * 4);
+    buffer.writeInt16LE(Math.round(r * 32767), 44 + i * 4 + 2);
   }
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, buffer);
@@ -94,17 +100,28 @@ const PENTATONIC = {
   Am: [220.0, 246.94, 261.63, 329.63, 392.0, 440.0],
 };
 
-// Detuned-sine pad for one chord: a few slightly-detuned partials per note
-// give it body without needing a filter.
-function chordSample(freqs, tLocal) {
+// Slightly different detune sets per ear — not a mono pad panned to both
+// channels, but two independently-detuned renders of the same chord, which
+// is what actually gives width (identical L/R content collapses back to
+// mono the moment headphones are off).
+const DETUNE_L = [-0.6, 0, 0.6];
+const DETUNE_R = [-0.9, 0.3, 0.9];
+
+// Fundamental plus a soft second harmonic (rounder than a bare sine, short
+// of a full saw) run through gentle tanh saturation — the saturation is
+// what keeps a stack of near-unison oscillators from just summing into a
+// louder sine; it glues them into one warmer tone instead.
+function chordSample(freqs, tLocal, detunes) {
   let out = 0;
   for (const f of freqs) {
-    for (const detuneCents of [-0.4, 0, 0.4]) {
-      const fh = f * Math.pow(2, detuneCents / 1200);
-      out += Math.sin(2 * Math.PI * fh * tLocal) / (3 * freqs.length);
+    for (const c of detunes) {
+      const fh = f * Math.pow(2, c / 1200);
+      out +=
+        (Math.sin(2 * Math.PI * fh * tLocal) + 0.16 * Math.sin(4 * Math.PI * fh * tLocal)) / detunes.length;
     }
   }
-  return out;
+  out /= freqs.length;
+  return Math.tanh(out * 1.6) * 0.82;
 }
 
 // A few inharmonic decaying partials read as a small bell/kalimba rather
@@ -135,6 +152,83 @@ function pluck(buf, n, f, t0, dur, amp, partials) {
   }
 }
 
+// --- Reverb: Freeverb-style parallel comb filters into series allpasses.
+// Comb delay/allpass-delay lengths are the classic Freeverb tuning values
+// (specified at 44.1kHz), scaled down to our sample rate. Two calls with
+// different `spread` offsets on the same dry send produce decorrelated L/R
+// tails — the thing that actually reads as "a room" instead of a mono echo
+// panned down the middle.
+const COMB_TUNINGS_44K = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116];
+const ALLPASS_TUNINGS_44K = [556, 441, 341, 225];
+
+function combFilter(input, delaySamples, feedback, damp) {
+  const n = input.length;
+  const out = new Float64Array(n);
+  const buf = new Float64Array(delaySamples);
+  let idx = 0;
+  let lp = 0;
+  for (let i = 0; i < n; i++) {
+    const delayed = buf[idx];
+    lp = delayed * (1 - damp) + lp * damp;
+    buf[idx] = input[i] + feedback * lp;
+    out[i] = delayed;
+    idx = idx + 1 === delaySamples ? 0 : idx + 1;
+  }
+  return out;
+}
+
+function allpassFilter(input, delaySamples, gain) {
+  const n = input.length;
+  const out = new Float64Array(n);
+  const buf = new Float64Array(delaySamples);
+  let idx = 0;
+  for (let i = 0; i < n; i++) {
+    const bufOut = buf[idx];
+    const x = input[i];
+    const y = bufOut - gain * x;
+    buf[idx] = x + gain * y;
+    out[i] = y;
+    idx = idx + 1 === delaySamples ? 0 : idx + 1;
+  }
+  return out;
+}
+
+function reverb(input, spreadSamples) {
+  const scale = SAMPLE_RATE / 44100;
+  let sum = new Float64Array(input.length);
+  for (const t of COMB_TUNINGS_44K) {
+    const d = Math.max(2, Math.round(t * scale) + spreadSamples);
+    const combed = combFilter(input, d, 0.82, 0.22);
+    for (let i = 0; i < sum.length; i++) sum[i] += combed[i] / COMB_TUNINGS_44K.length;
+  }
+  let out = sum;
+  for (const t of ALLPASS_TUNINGS_44K) {
+    const d = Math.max(2, Math.round(t * scale) + spreadSamples);
+    out = allpassFilter(out, d, 0.5);
+  }
+  return out;
+}
+
+// Ping-pong delay: each successive echo lands on the opposite channel from
+// the last — the melody's plucks were dry and centered before, which reads
+// as "synthesized." A few bouncing, decaying repeats read as a mixed track.
+function pingPongEcho(mono, delayMs, feedback, taps) {
+  const n = mono.length;
+  const delaySamples = Math.round((SAMPLE_RATE * delayMs) / 1000);
+  const L = new Float64Array(n);
+  const R = new Float64Array(n);
+  let gain = 1;
+  let onLeft = true;
+  for (let t = 0; t < taps; t++) {
+    gain *= feedback;
+    const shift = delaySamples * (t + 1);
+    const target = onLeft ? L : R;
+    for (let i = 0; i + shift < n; i++) target[i + shift] += mono[i] * gain;
+    onLeft = !onLeft;
+  }
+  return { L, R };
+}
+
 function renderTrack({ name, seed, sequence, outFile }) {
   const rng = mulberry32(seed);
   const choice = (arr) => arr[Math.floor(rng() * arr.length)];
@@ -147,8 +241,10 @@ function renderTrack({ name, seed, sequence, outFile }) {
   // (what actually plays right after the loop point, before trimming).
   const fullSequence = [...sequence, sequence[0]];
 
-  // --- Pad: sum chord waves, crossfaded at each chord boundary ---
-  const pad = new Float64Array(n);
+  // --- Pad: sum chord waves, crossfaded at each chord boundary, rendered
+  // twice with independent detune sets for real stereo width.
+  const padL = new Float64Array(n);
+  const padR = new Float64Array(n);
   const xf = 1.2; // seconds of crossfade between adjacent chords
   for (let i = 0; i < fullSequence.length; i++) {
     const freqs = CHORDS[fullSequence[i]];
@@ -163,7 +259,8 @@ function renderTrack({ name, seed, sequence, outFile }) {
       let env = 1;
       if (i > 0 && t < segStart + xf / 2) env = smoothstep((t - lo) / xf);
       if (i < fullSequence.length - 1 && t >= segEnd - xf / 2) env = smoothstep((hi - t) / xf);
-      pad[s] += chordSample(freqs, t) * env;
+      padL[s] += chordSample(freqs, t, DETUNE_L) * env;
+      padR[s] += chordSample(freqs, t, DETUNE_R) * env;
     }
   }
   // Slow tremolo (LFO) so the sustained pad feels alive rather than static.
@@ -172,12 +269,13 @@ function renderTrack({ name, seed, sequence, outFile }) {
   for (let s = 0; s < n; s++) {
     const t = s / SAMPLE_RATE;
     const lfo = 0.85 + 0.15 * Math.sin((2 * Math.PI * t) / 4.0);
-    pad[s] *= lfo * 0.42; // headroom under melody + bass
+    padL[s] *= lfo * 0.42; // headroom under melody + bass
+    padR[s] *= lfo * 0.42;
   }
 
   // --- Bass: a soft pulse on the chord's root, twice per chord (a gentle
-  // "duh... duh" instead of a static pad) — the main new source of rhythmic
-  // motion, aimed at not feeling like a static loop on a long play session.
+  // "duh... duh" instead of a static pad), kept centered and mono like most
+  // mixed tracks keep their low end — width down there just reads as flabby.
   const bass = new Float64Array(n);
   for (let i = 0; i < fullSequence.length; i++) {
     const root = BASS_ROOT[fullSequence[i]];
@@ -185,62 +283,96 @@ function renderTrack({ name, seed, sequence, outFile }) {
     pluck(bass, n, root, segStart, 3.2, 0.55, BASS_PARTIALS);
     pluck(bass, n, root, segStart + SEG / 2, 3.2, 0.4, BASS_PARTIALS);
   }
+  for (let s = 0; s < n; s++) bass[s] = Math.tanh(bass[s] * 1.4) * 0.75;
 
-  // --- Melody: sparse bell/kalimba plucks on the chord's own pentatonic ---
-  const melody = new Float64Array(n);
+  // --- Melody: sparse bell/kalimba plucks, dry mono source, then split
+  // into a centered dry signal plus a ping-pong stereo echo.
+  const melodyDry = new Float64Array(n);
   for (let noteTime = 0.8; noteTime < genLen - 1.0;) {
     const segI = Math.min(Math.floor(noteTime / SEG), fullSequence.length - 1);
     const scale = PENTATONIC[fullSequence[segI]];
-    pluck(melody, n, choice(scale), noteTime, 2.4, uniform(0.5, 0.9), BELL_PARTIALS);
+    pluck(melodyDry, n, choice(scale), noteTime, 2.4, uniform(0.5, 0.9), BELL_PARTIALS);
     noteTime += uniform(1.5, 2.8);
   }
-  for (let s = 0; s < n; s++) melody[s] *= 0.15; // sit well under the pad
+  for (let s = 0; s < n; s++) melodyDry[s] *= 0.15; // sit well under the pad
+  const echo = pingPongEcho(melodyDry, 340, 0.42, 4);
 
-  // --- Very soft filtered-noise air, barely-there outdoor texture ---
-  let noise = new Float64Array(n);
-  for (let s = 0; s < n; s++) noise[s] = rng() * 2 - 1;
-  // Cheap low-pass: repeated moving-average smoothing (no FFT/filter lib
-  // needed) — six passes of a 40-sample box average.
-  const KERNEL = 40;
-  for (let pass = 0; pass < 6; pass++) {
-    const smoothed = new Float64Array(n);
-    let sum = 0;
-    for (let s = 0; s < n; s++) {
-      sum += noise[s];
-      if (s >= KERNEL) sum -= noise[s - KERNEL];
-      smoothed[s] = sum / Math.min(s + 1, KERNEL);
+  // --- Very soft filtered-noise air, barely-there outdoor texture — two
+  // independently-seeded channels (the rng stream naturally decorrelates
+  // consecutive draws) for the same "real stereo, not duplicated mono" rule
+  // as the pad above.
+  function airChannel() {
+    let noise = new Float64Array(n);
+    for (let s = 0; s < n; s++) noise[s] = rng() * 2 - 1;
+    const KERNEL = 40;
+    for (let pass = 0; pass < 6; pass++) {
+      const smoothed = new Float64Array(n);
+      let sum = 0;
+      for (let s = 0; s < n; s++) {
+        sum += noise[s];
+        if (s >= KERNEL) sum -= noise[s - KERNEL];
+        smoothed[s] = sum / Math.min(s + 1, KERNEL);
+      }
+      noise = smoothed;
     }
-    noise = smoothed;
+    let peak = 0;
+    for (let s = 0; s < n; s++) peak = Math.max(peak, Math.abs(noise[s]));
+    for (let s = 0; s < n; s++) noise[s] = (noise[s] / (peak + 1e-9)) * 0.018;
+    return noise;
   }
-  let noisePeak = 0;
-  for (let s = 0; s < n; s++) noisePeak = Math.max(noisePeak, Math.abs(noise[s]));
-  for (let s = 0; s < n; s++) noise[s] = (noise[s] / (noisePeak + 1e-9)) * 0.018;
+  const noiseL = airChannel();
+  const noiseR = airChannel();
 
-  const full = new Float64Array(n);
-  for (let s = 0; s < n; s++) full[s] = pad[s] + bass[s] + melody[s] + noise[s];
+  // --- Reverb send: pad (both channels averaged) plus melody, glued
+  // together and run through two decorrelated reverb tails — this is what
+  // gives the mix a sense of physical space instead of dry synth voices
+  // stacked on top of each other.
+  const sendMono = new Float64Array(n);
+  for (let s = 0; s < n; s++) sendMono[s] = (padL[s] + padR[s]) * 0.5 * 0.9 + melodyDry[s] * 0.7;
+  const wetL = reverb(sendMono, 0);
+  const wetR = reverb(sendMono, 37);
+  const WET_MIX = 0.32;
 
-  // --- Loop-seam crossfade: blend the "extra" tail back into the head ---
+  const fullL = new Float64Array(n);
+  const fullR = new Float64Array(n);
+  for (let s = 0; s < n; s++) {
+    fullL[s] = padL[s] + bass[s] + melodyDry[s] * 0.6 + echo.L[s] + noiseL[s] + wetL[s] * WET_MIX;
+    fullR[s] = padR[s] + bass[s] + melodyDry[s] * 0.6 + echo.R[s] + noiseR[s] + wetR[s] * WET_MIX;
+  }
+
+  // --- Loop-seam crossfade: blend the "extra" tail back into the head,
+  // applied independently per channel.
   const headLen = Math.floor(SAMPLE_RATE * loopLen);
   const xfN = n - headLen; // CROSSFADE seconds long
-  const looped = new Float64Array(headLen);
-  for (let s = 0; s < xfN; s++) {
-    const fadeIn = Math.sin((smoothstep(s / xfN) * Math.PI) / 2); // equal-power
-    const fadeOut = Math.cos((smoothstep(s / xfN) * Math.PI) / 2);
-    looped[s] = full[headLen + s] * fadeOut + full[s] * fadeIn;
+  function loopChannel(full) {
+    const looped = new Float64Array(headLen);
+    for (let s = 0; s < xfN; s++) {
+      const fadeIn = Math.sin((smoothstep(s / xfN) * Math.PI) / 2); // equal-power
+      const fadeOut = Math.cos((smoothstep(s / xfN) * Math.PI) / 2);
+      looped[s] = full[headLen + s] * fadeOut + full[s] * fadeIn;
+    }
+    for (let s = xfN; s < headLen; s++) looped[s] = full[s];
+    return looped;
   }
-  for (let s = xfN; s < headLen; s++) looped[s] = full[s];
+  const loopedL = loopChannel(fullL);
+  const loopedR = loopChannel(fullR);
 
-  // Normalize to a modest headroom — a touch quieter than the first version
-  // (0.5 vs 0.55), since a track meant to sit under an entire play session
-  // should read as background, not compete for attention.
+  // Normalize both channels by the same factor (preserves stereo balance)
+  // to a modest headroom — background music shouldn't compete for
+  // attention with the rest of the mix.
   let peak = 0;
-  for (let s = 0; s < headLen; s++) peak = Math.max(peak, Math.abs(looped[s]));
-  for (let s = 0; s < headLen; s++) looped[s] = (looped[s] / peak) * 0.5;
+  for (let s = 0; s < headLen; s++) {
+    peak = Math.max(peak, Math.abs(loopedL[s]), Math.abs(loopedR[s]));
+  }
+  for (let s = 0; s < headLen; s++) {
+    loopedL[s] = (loopedL[s] / peak) * 0.5;
+    loopedR[s] = (loopedR[s] / peak) * 0.5;
+  }
 
   const outPath = path.join(__dirname, "..", "assets", "sounds", outFile);
-  writeWav(outPath, looped);
+  writeWavStereo(outPath, loopedL, loopedR);
   console.log(
-    `Wrote "${name}" to ${outPath} (${(headLen / SAMPLE_RATE).toFixed(1)}s, peak was ${peak.toFixed(3)})`
+    `Wrote "${name}" to ${outPath} (${(headLen / SAMPLE_RATE).toFixed(1)}s stereo, peak was ${peak.toFixed(3)})`
   );
 }
 
