@@ -58,6 +58,7 @@
     "test": "jest",
     "test:ci": "jest --ci --runInBand",
     "gen:sounds": "node scripts/gen-sounds.js",
+    "gen:music": "node scripts/gen-music.js",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:i18n && npm run check:native && npm test",
     "smoke": "node scripts/smoke-test.js"
   },

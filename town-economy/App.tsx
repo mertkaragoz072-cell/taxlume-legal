@@ -294,6 +294,7 @@ function Game() {
           <TitleScreen
             onStart={() => {
               start();
+              sounds.startMusic();
               setTitleVisible(false);
             }}
           />
