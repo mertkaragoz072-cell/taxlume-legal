@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -30,9 +31,14 @@ interface Props {
    * per beat and this is how the bar points at it. Null the rest of the
    * time, which is every moment after the first session. */
   spotlight?: ScreenId | null;
+  /** follows the app's one sound/haptic mute switch (see useSoundEffects) —
+   * a tab switch has no sound of its own to mute, but the tap still ought
+   * to go quiet with everything else rather than becoming the one thing
+   * "quiet mode" doesn't quiet. */
+  muted?: boolean;
 }
 
-export function TabBar({ active, onChange, spotlight = null }: Props) {
+export function TabBar({ active, onChange, spotlight = null, muted = false }: Props) {
   const { t } = useEconomyContext();
   // A slow breath rather than a blink: the tour holds on one tab for as
   // long as the player takes to read a sentence, and anything faster turns
@@ -106,7 +112,10 @@ export function TabBar({ active, onChange, spotlight = null }: Props) {
         return (
           <ScalePressable
             key={tab.id}
-            onPress={() => onChange(tab.id)}
+            onPress={() => {
+              if (!muted) Haptics.selectionAsync().catch(() => {});
+              onChange(tab.id);
+            }}
             style={styles.tab}
             scaleTo={0.9}
             accessibilityRole="tab"

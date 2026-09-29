@@ -3,11 +3,13 @@ import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-native-svg";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { dailyBonusForStreak } from "../economy/formulas";
 import {
   CARD_GRADIENT,
   cardShadow,
   COLORS,
   FONT,
+  glowShadow,
   GOLD_GRADIENT,
   RADIUS,
   SPACING,
@@ -55,6 +57,54 @@ function iconPosition(index: number) {
   const midAngle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
   const pos = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.62, midAngle);
   return { left: pos.x - ICON_SIZE / 2, top: pos.y - ICON_SIZE / 2 };
+}
+
+/** A 7-pip strip showing where today sits in the current week of the
+ * streak, rather than the raw (and eventually large) streak count — a
+ * player on day 23 still just sees "day 2 of this week," which reads the
+ * same every week instead of needing ever-bigger numbers to feel legible.
+ * The streak itself never resets on a 7-day cycle (see dailyCheckIn), only
+ * this display does; day 8 is streak-day 8 same as day 1 was streak-day 1,
+ * just drawn as week 2's first pip.
+ *
+ * Each pip's amount comes from dailyBonusForStreak — the same formula that
+ * actually pays it — so a "future" pip previews the real number, not a
+ * placeholder that could drift from what the player gets on that day. */
+function StreakCalendar({ streakCount }: { streakCount: number }) {
+  const { t, state, formatCoins } = useEconomyContext();
+  const posInWeek = (streakCount - 1) % 7;
+  const weekStartCount = streakCount - posInWeek;
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const dayCount = weekStartCount + i;
+    const kind: "past" | "today" | "future" = i < posInWeek ? "past" : i === posInWeek ? "today" : "future";
+    return { dayCount, kind, amount: dailyBonusForStreak(state, dayCount) };
+  });
+
+  return (
+    <View style={styles.calendarWrap}>
+      <Text style={styles.calendarTitle}>{t("dailyWheel.streakCalendarTitle")}</Text>
+      <View style={styles.calendarRow}>
+        {days.map((d, i) => (
+          <View
+            key={i}
+            style={[
+              styles.calendarPip,
+              d.kind === "today" && styles.calendarPipToday,
+              d.kind === "future" && styles.calendarPipFuture,
+            ]}
+          >
+            <Text style={[styles.calendarPipDay, d.kind === "today" && styles.calendarPipDayToday]}>
+              {i + 1}
+            </Text>
+            <Text style={styles.calendarPipIcon}>{d.kind === "future" ? "🔒" : "🪙"}</Text>
+            <Text style={[styles.calendarPipAmount, d.kind === "future" && styles.calendarPipAmountFuture]}>
+              {formatCoins(d.amount, 0)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 /** A once-a-day spin-to-reveal wheel over the daily check-in bonus. The
@@ -189,6 +239,7 @@ export function DailyRewardWheelModal({
             <>
               <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
               <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
+              <StreakCalendar streakCount={streakCount} />
               <ScalePressable onPress={onDismiss} style={styles.spinBtn} scaleTo={0.96}>
                 <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
                 <Text style={styles.spinBtnText}>{t("dailyWheel.claimBtn")}</Text>
@@ -291,6 +342,45 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: SPACING.lg,
   },
+  calendarWrap: { width: "100%", alignItems: "center", marginBottom: SPACING.lg },
+  calendarTitle: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+    marginBottom: SPACING.xs + 2,
+  },
+  calendarRow: { flexDirection: "row", gap: 4 },
+  calendarPip: {
+    width: 38,
+    alignItems: "center",
+    paddingVertical: 6,
+    borderRadius: RADIUS.chip,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.25),
+    backgroundColor: withAlpha("#0c0704", 0.35),
+  },
+  calendarPipToday: {
+    borderColor: COLORS.accent,
+    backgroundColor: withAlpha(COLORS.accent, 0.2),
+    ...glowShadow(COLORS.accent),
+  },
+  calendarPipFuture: { opacity: 0.55 },
+  calendarPipDay: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  calendarPipDayToday: { color: COLORS.accent },
+  calendarPipIcon: { fontSize: 14, marginVertical: 2 },
+  calendarPipAmount: {
+    color: COLORS.textPrimary,
+    fontSize: 9,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  calendarPipAmountFuture: { color: COLORS.textMuted },
   spinBtn: {
     width: "100%",
     borderRadius: RADIUS.card,

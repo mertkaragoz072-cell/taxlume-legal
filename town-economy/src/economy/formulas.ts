@@ -22,6 +22,9 @@ import { UPGRADES_BY_ID } from "./upgrades";
 import { EconomyState, Good, GoodId } from "./types";
 import {
   CONTENT_BONUS_FACTOR,
+  DAILY_BONUS_BASE,
+  DAILY_BONUS_CAP,
+  DAILY_BONUS_PER_STREAK_DAY,
   DEBT_HAPPINESS_DRAG,
   HAPPINESS_TARGET_SLOPE,
   HOT_STREAK_BONUS_PER_TRADE,
@@ -70,6 +73,15 @@ export function nextTradeStreak(currentStreak: number, pnl: number): { streak: n
 }
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+/** The cash a check-in on the given streak day pays, bank upgrade included —
+ * shared by dailyCheckIn (which pays it) and the reward-wheel modal's streak
+ * calendar (which previews it for days not reached yet), so a projected
+ * number never drifts from what the player actually gets when they get
+ * there. `count` is the streak length that day would represent, 1-based. */
+export function dailyBonusForStreak(state: EconomyState, count: number): number {
+  const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
+  return Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) + bankBonus;
 }
 export function scarcityFactor(supply: number, baseSupply: number, elasticity: number): number {
   const ratio = baseSupply / Math.max(supply, 1);

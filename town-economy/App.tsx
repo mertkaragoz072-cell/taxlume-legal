@@ -131,8 +131,14 @@ function Game() {
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+  // Set alongside confettiTrigger, read by ConfettiBurst at the same trigger
+  // — see the effect below and the "big is read at the moment" note on
+  // ConfettiBurst itself for why this isn't just another piece of state the
+  // burst watches on its own.
+  const [confettiBig, setConfettiBig] = useState(false);
   const prevAchievementCount = useRef(state.unlockedAchievements.length);
   const prevPrestigeLevel = useRef(state.prestigeLevel);
+  const prevRecordBroken = useRef(state.recordBrokenThisRun);
 
   // A trade streak crossing a milestone earns a brief, self-dismissing
   // combo banner — purely a celebratory flourish over the existing
@@ -153,14 +159,23 @@ function Game() {
 
   useLocalNotifications(state);
 
-  // A "big win" — a new achievement or a fresh prestige — earns a
-  // celebratory confetti pop on top of whatever screen the player is on.
+  // A "big win" — a new achievement, a fresh prestige, or beating this
+  // run's own best net worth — earns a celebratory confetti pop on top of
+  // whatever screen the player is on. A prestige gets the bigger version
+  // (see ConfettiBurst's `big` prop): it is the rarer, more deliberate
+  // moment of the three — an achievement can pop from routine play, a
+  // record can fall several times early in a run just from playing
+  // normally, but a prestige is a player choosing to reset for a permanent
+  // bonus, and it should read as a bigger deal on screen than those.
   useEffect(() => {
     const grewAchievements = state.unlockedAchievements.length > prevAchievementCount.current;
     const prestiged = state.prestigeLevel > prevPrestigeLevel.current;
+    const recordBroken = state.recordBrokenThisRun && !prevRecordBroken.current;
     prevAchievementCount.current = state.unlockedAchievements.length;
     prevPrestigeLevel.current = state.prestigeLevel;
-    if (grewAchievements || prestiged) {
+    prevRecordBroken.current = state.recordBrokenThisRun;
+    if (grewAchievements || prestiged || recordBroken) {
+      setConfettiBig(prestiged);
       setConfettiTrigger((n) => n + 1);
       sounds.playSuccess();
     }
@@ -172,7 +187,7 @@ function Game() {
       maybeRequestReview();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.unlockedAchievements.length, state.prestigeLevel]);
+  }, [state.unlockedAchievements.length, state.prestigeLevel, state.recordBrokenThisRun]);
 
   // A first launch no longer opens the slide deck; Merve does the
   // introducing (see MentorCoach). The stored flag still decides *whether*
@@ -346,7 +361,7 @@ function Game() {
         <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
         <EventBanner event={state.lastEvent} />
         <ComboBanner event={comboEvent} />
-        <ConfettiBurst trigger={confettiTrigger} />
+        <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
 
         {/* Rendered outside the per-screen blocks so the guided task follows
             the player between tabs — several of the steps are there to show
@@ -376,7 +391,7 @@ function Game() {
           />
         )}
 
-        <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} />
+        <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} muted={sounds.muted} />
 
         {/* Over everything the tour is not pointing at, including the tab
             bar. The lit area is a gap in the dim rather than a hole punched
@@ -401,6 +416,7 @@ function Game() {
         <MerveRankUpModal
           rankUp={holdInterruptions ? null : state.merveRankUp}
           onDismiss={dismissMerveRankUp}
+          sounds={sounds}
         />
 
         <DecisionModal
@@ -441,7 +457,10 @@ function Game() {
 
         <DailyRewardWheelModal
           visible={
-            !state.offlineSummary && !state.merveRankUp && !tutorialVisible && state.dailyBonusPending !== null
+            !state.offlineSummary &&
+            !state.merveRankUp &&
+            !tutorialVisible &&
+            state.dailyBonusPending !== null
           }
           amount={state.dailyBonusPending ?? 0}
           streakCount={state.streak.count}

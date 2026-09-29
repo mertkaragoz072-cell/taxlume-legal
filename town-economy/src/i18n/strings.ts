@@ -662,6 +662,7 @@ export const STRINGS = {
       wonTitle: "🎉 Kazandın!",
       wonAmount: "+{amount} 🪙",
       claimBtn: "Harika!",
+      streakCalendarTitle: "Bu haftaki serin",
     },
     combo: {
       milestone: "{count}x KOMBO!",
@@ -1928,6 +1929,7 @@ export const STRINGS = {
       wonTitle: "🎉 You Won!",
       wonAmount: "+{amount} 🪙",
       claimBtn: "Awesome!",
+      streakCalendarTitle: "Your streak this week",
     },
     combo: {
       milestone: "{count}x COMBO!",

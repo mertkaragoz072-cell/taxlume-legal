@@ -1,7 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Modal, StyleSheet, Text, View } from "react-native";
+import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
 import { GradientFill } from "./GradientFill";
 import { MentorPortrait } from "./MentorPortrait";
@@ -11,6 +23,7 @@ import { ScalePressable } from "./ScalePressable";
 interface Props {
   rankUp: { icon: string; title: string } | null;
   onDismiss: () => void;
+  sounds: ReturnType<typeof useSoundEffects>;
 }
 
 /** Merve, stepping out of her usual guide role to congratulate the player in
@@ -18,7 +31,7 @@ interface Props {
  * city, and every tier after. The rank-up event still lands in the log
  * (see applyTownRankUp) for the player who wants the full record; this is
  * the one that actually stops them and makes the milestone feel earned. */
-export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
+export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   const { t } = useEconomyContext();
   const enter = useRef(new Animated.Value(0)).current;
   const [confettiTrigger, setConfettiTrigger] = useState(0);
@@ -26,8 +39,10 @@ export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
   useEffect(() => {
     if (!rankUp) return;
     setConfettiTrigger((n) => n + 1);
+    sounds.playSuccess();
     enter.setValue(0);
     Animated.spring(enter, { toValue: 1, useNativeDriver: true, friction: 7, tension: 55 }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rankUp, enter]);
 
   if (!rankUp) return null;
@@ -79,7 +94,7 @@ export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
           </View>
         </Animated.View>
       </ModalBackdrop>
-      <ConfettiBurst trigger={confettiTrigger} />
+      <ConfettiBurst trigger={confettiTrigger} big />
     </Modal>
   );
 }
@@ -137,5 +152,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  confirmBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
+  confirmBtnText: {
+    color: COLORS.onLight,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
+    fontSize: TYPE.body,
+  },
 });

@@ -60,9 +60,6 @@ import {
   CONTRACT_MARGIN_PCT,
   CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
-  DAILY_BONUS_BASE,
-  DAILY_BONUS_CAP,
-  DAILY_BONUS_PER_STREAK_DAY,
   DAILY_QUEST_COUNT,
   DEFAULT_DIFFICULTY,
   DOCTRINE_UNLOCK_NET_WORTH,
@@ -92,6 +89,7 @@ import {
 import {
   clamp,
   computeNetWorth,
+  dailyBonusForStreak,
   effectiveTariffRate,
   isGoodUnlocked,
   loanCap,
@@ -904,9 +902,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     };
   }
 
-  const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
-  const bonus =
-    Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) + bankBonus;
+  const bonus = dailyBonusForStreak(state, count);
   const message = t(state.language, "msg.dailyCheckInReturning", { count, bonus });
   const event: EconomyEvent = { id: state.nextId, message, tone: "good" };
 

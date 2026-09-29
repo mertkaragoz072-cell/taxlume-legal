@@ -12,6 +12,12 @@ const RIBBON_RATIO = 0.6;
 interface Props {
   /** bump this to replay the burst (e.g. state.unlockedAchievements.length) */
   trigger: number;
+  /** a rarer, more significant moment (a prestige, a town rank-up) than the
+   * everyday achievement or streak pop this defaults to — wider spread,
+   * bigger flash, particles that hang a little longer, so the handful of
+   * moments a run actually turns on read as bigger than the rest rather
+   * than every "big win" this component covers looking the same size. */
+  big?: boolean;
 }
 
 function makeParticle() {
@@ -43,7 +49,7 @@ function makeParticle() {
  * flat strip of paper flashing edge-on) while dots just spin, both arcing
  * up and falling back down; a quick expanding ring flashes at the origin
  * underneath for extra pop. */
-export function ConfettiBurst({ trigger }: Props) {
+export function ConfettiBurst({ trigger, big = false }: Props) {
   const particles = useRef(Array.from({ length: PARTICLE_COUNT }, makeParticle)).current;
   const flash = useRef(new Animated.Value(0)).current;
 
@@ -53,7 +59,7 @@ export function ConfettiBurst({ trigger }: Props) {
     flash.setValue(0);
     Animated.timing(flash, {
       toValue: 1,
-      duration: 500,
+      duration: big ? 650 : 500,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start();
@@ -63,33 +69,44 @@ export function ConfettiBurst({ trigger }: Props) {
           Animated.delay(p.delay),
           Animated.timing(p.progress, {
             toValue: 1,
-            duration: p.duration,
+            duration: big ? p.duration * 1.15 : p.duration,
             easing: Easing.out(Easing.quad),
             useNativeDriver: true,
           }),
         ])
       )
     ).start();
+    // big is read at the moment this trigger fires (see the App.tsx call
+    // site, which sets both in the same state update) rather than being a
+    // dependency of its own — listing it would replay the animation a
+    // second time if a caller flipped it back between bursts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger]);
 
-  const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.3, 2.1] });
-  const flashOpacity = flash.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 0.5, 0] });
+  const geometryScale = big ? 1.5 : 1;
+  const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.3, big ? 2.9 : 2.1] });
+  const flashOpacity = flash.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, big ? 0.65 : 0.5, 0] });
 
   return (
     <View style={styles.wrap} pointerEvents="none">
       <Animated.View style={[styles.flash, { opacity: flashOpacity, transform: [{ scale: flashScale }] }]} />
       {particles.map((p, i) => {
-        const translateX = p.progress.interpolate({ inputRange: [0, 1], outputRange: [0, p.xEnd] });
+        const translateX = p.progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, p.xEnd * geometryScale],
+        });
         const translateY = p.progress.interpolate({
           inputRange: [0, 0.35, 1],
-          outputRange: [0, -p.peak, p.fall],
+          outputRange: [0, -p.peak * geometryScale, p.fall * geometryScale],
         });
         const opacity = p.progress.interpolate({
           inputRange: [0, 0.08, 0.8, 1],
           outputRange: [0, 1, 1, 0],
         });
-        const scale = p.progress.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0.4, 1, 0.85] });
+        const scale = p.progress.interpolate({
+          inputRange: [0, 0.2, 1],
+          outputRange: [0.4, big ? 1.25 : 1, big ? 1.05 : 0.85],
+        });
         const rotate = p.progress.interpolate({
           inputRange: [0, 1],
           outputRange: ["0deg", `${p.rotateTurns * 360}deg`],
