@@ -1,30 +1,38 @@
-// One-off script that synthesizes the town's two looping ambient background
+// One-off script that synthesizes the town's two looping background music
 // tracks (no external assets/network needed — see gen-sounds.js for the same
 // convention applied to the short SFX). Run with: node scripts/gen-music.js
 //
-// Three passes so far. The first shipped a single 24s/4-chord mono loop —
-// too short, repeated too often on a long idle session. The second doubled
-// the loop to 48s/8 chords and added a bass pulse for rhythmic life, but
-// kept the underlying tone plain detuned sines with nowhere for the sound
-// to breathe — reported back as "hasn't really changed, still doesn't sound
-// modern." This pass keeps the same chord progressions and loop-seam
-// technique but rebuilds the actual production: real stereo (not a mono
-// signal duplicated to two channels), a soft-saturated warmer pad tone
-// instead of bare sines, a proper algorithmic reverb (Freeverb-style
-// parallel combs + series allpasses) so the pad has room to sit in, and a
-// ping-pong stereo delay on the melody instead of a dry mono pluck. Those
-// four are what a listener actually hears as "produced" vs. "synthesized."
+// Four passes so far, and worth recording why each one changed. (1) shipped
+// a single 24s/4-chord mono loop — too short, repeated too often on a long
+// idle session. (2) doubled the loop to 48s/8 chords and added a bass pulse,
+// but kept the underlying tone plain detuned sines with nowhere to breathe —
+// reported back as still not sounding modern. (3) chased "modern" by adding
+// real stereo, warmer saturated tone, and a proper algorithmic reverb on a
+// *sustained* pad — and that combination (long detuned unison notes slowly
+// beating against each other, under a long cavernous reverb tail, plus
+// deliberately inharmonic bell partials) is, it turns out, close to the
+// standard horror-ambience recipe. Reported back as flatly "eerie."
+//
+// This pass keeps what (3) got right (real stereo, warm saturated tone, a
+// touch of reverb, a stereo delay) but throws out the part that was actually
+// causing the problem: the long sustained drone. In its place, a rhythmic
+// plucked-chord comping pattern (like a ukulele/guitar strum) plus a soft
+// shaker on the off-beat — the chords now decay every strum instead of
+// hanging in the air, which is what turns "atmospheric" into "unsettling."
+// The melody's partials are also now exactly harmonic (2x/3x, not 2.01x/
+// 3.03x) — a small mistuning is what makes a bell read as a detuned wind
+// chime instead of a music box. This is meant to land as a cheerful little
+// village/market tune, not ambience.
 //
 // Loop technique (unchanged): render `LOOP_LEN + CROSSFADE` seconds of
 // continuously evolving audio, then blend the crossfade-length "extra" tail
 // back into the head with an equal-power fade. That makes the *join*
 // seamless regardless of whether the underlying waveform is itself
-// periodic, so the chord progression doesn't need a period that evenly
-// divides the loop length. Now applied per channel.
+// periodic, applied independently per channel.
 const fs = require("fs");
 const path = require("path");
 
-const SAMPLE_RATE = 22050; // plenty above our ~3kHz top partial + reverb tail
+const SAMPLE_RATE = 22050;
 const SEG = 6.0; // seconds per chord
 const CROSSFADE = 3.0; // seconds, blended at the loop seam
 
@@ -55,7 +63,7 @@ function writeWavStereo(filePath, left, right) {
 }
 
 // Deterministic PRNG (mulberry32) — Math.random() isn't seedable, and each
-// track's melody should regenerate identically every run.
+// track's melody/shaker pattern should regenerate identically every run.
 function mulberry32(seed) {
   let a = seed;
   return function () {
@@ -81,8 +89,8 @@ const CHORDS = {
   G: [98.0, 123.47, 146.83, 196.0], // G2 B2 D3 G3
   Am: [110.0, 130.81, 164.81, 220.0], // A2 C3 E3 A3
 };
-// A chord's bass pulse plays its root one octave below the pad's own lowest
-// note — grounds the harmony without muddying it.
+// A chord's bass pulse plays its root one octave below the comping chord's
+// own lowest note — grounds the harmony without muddying it.
 const BASS_ROOT = {
   C: 65.41,
   Dm: 73.42,
@@ -100,45 +108,6 @@ const PENTATONIC = {
   Am: [220.0, 246.94, 261.63, 329.63, 392.0, 440.0],
 };
 
-// Slightly different detune sets per ear — not a mono pad panned to both
-// channels, but two independently-detuned renders of the same chord, which
-// is what actually gives width (identical L/R content collapses back to
-// mono the moment headphones are off).
-const DETUNE_L = [-0.6, 0, 0.6];
-const DETUNE_R = [-0.9, 0.3, 0.9];
-
-// Fundamental plus a soft second harmonic (rounder than a bare sine, short
-// of a full saw) run through gentle tanh saturation — the saturation is
-// what keeps a stack of near-unison oscillators from just summing into a
-// louder sine; it glues them into one warmer tone instead.
-function chordSample(freqs, tLocal, detunes) {
-  let out = 0;
-  for (const f of freqs) {
-    for (const c of detunes) {
-      const fh = f * Math.pow(2, c / 1200);
-      out +=
-        (Math.sin(2 * Math.PI * fh * tLocal) + 0.16 * Math.sin(4 * Math.PI * fh * tLocal)) / detunes.length;
-    }
-  }
-  out /= freqs.length;
-  return Math.tanh(out * 1.6) * 0.82;
-}
-
-// A few inharmonic decaying partials read as a small bell/kalimba rather
-// than a plain decaying sine.
-const BELL_PARTIALS = [
-  { mult: 1.0, decay: 2.2, weight: 1.0 },
-  { mult: 2.01, decay: 3.4, weight: 0.35 },
-  { mult: 3.03, decay: 5.0, weight: 0.15 },
-];
-// Rounder, softer than the bell — fundamental plus a whisper of 2nd
-// harmonic — so the rhythmic pulse reads as a soft upright-bass note, not
-// another melodic voice competing with the bell.
-const BASS_PARTIALS = [
-  { mult: 1.0, decay: 2.0, weight: 1.0 },
-  { mult: 2.0, decay: 1.2, weight: 0.12 },
-];
-
 function pluck(buf, n, f, t0, dur, amp, partials) {
   const iStart = Math.max(0, Math.floor(t0 * SAMPLE_RATE));
   const iEnd = Math.min(n, Math.floor((t0 + dur) * SAMPLE_RATE));
@@ -152,12 +121,66 @@ function pluck(buf, n, f, t0, dur, amp, partials) {
   }
 }
 
-// --- Reverb: Freeverb-style parallel comb filters into series allpasses.
-// Comb delay/allpass-delay lengths are the classic Freeverb tuning values
-// (specified at 44.1kHz), scaled down to our sample rate. Two calls with
-// different `spread` offsets on the same dry send produce decorrelated L/R
-// tails — the thing that actually reads as "a room" instead of a mono echo
-// panned down the middle.
+// Ukulele/guitar-like comping tone: purely harmonic partials (unlike the
+// bell below, no deliberate mistuning here either — a comping chord reads
+// as "plucked string" precisely because its overtones line up cleanly) with
+// a fairly quick decay, since this plays every strum rather than sustaining.
+const STRUM_PARTIALS = [
+  { mult: 1.0, decay: 1.15, weight: 1.0 },
+  { mult: 2.0, decay: 0.75, weight: 0.32 },
+  { mult: 3.0, decay: 0.5, weight: 0.14 },
+];
+// A music-box/kalimba read needs partials at *exact* integer multiples —
+// the previous pass used 2.01x/3.03x for "character," but that fractional
+// mistuning is exactly what makes a bell read as a detuned wind chime
+// rather than a toy piano. Exact multiples, same taper, reads warm instead.
+const BELL_PARTIALS = [
+  { mult: 1.0, decay: 1.8, weight: 1.0 },
+  { mult: 2.0, decay: 1.3, weight: 0.3 },
+  { mult: 3.0, decay: 0.9, weight: 0.12 },
+];
+// Rounder, softer than the bell — fundamental plus a whisper of 2nd
+// harmonic — so the rhythmic pulse reads as a soft upright-bass note, not
+// another melodic voice competing with the bell.
+const BASS_PARTIALS = [
+  { mult: 1.0, decay: 2.0, weight: 1.0 },
+  { mult: 2.0, decay: 1.2, weight: 0.12 },
+];
+
+// Strums a full chord as a quick, gently staggered pluck of each note (like
+// a real hand not hitting every string in perfect unison) instead of a
+// sustained wash — this is the main thing separating "cheerful village
+// tune" from "ambient drone."
+function strumChord(buf, n, freqs, t0, amp, staggerMs) {
+  freqs.forEach((f, i) => {
+    pluck(buf, n, f, t0 + i * (staggerMs / 1000), 1.6, amp / Math.sqrt(freqs.length), STRUM_PARTIALS);
+  });
+}
+
+// A short, bright, high-passed noise burst — a soft shaker/tambourine tick
+// rather than the low filtered "outdoor air" texture this used to be the
+// only noise source for. A simple one-pole difference filter is enough to
+// push a white-noise burst's energy up into "shaker" territory without a
+// real FFT/filter-design dependency.
+function shaker(buf, n, t0, amp, rng) {
+  const dur = 0.07;
+  const iStart = Math.max(0, Math.floor(t0 * SAMPLE_RATE));
+  const iEnd = Math.min(n, Math.floor((t0 + dur) * SAMPLE_RATE));
+  let prev = 0;
+  for (let s = iStart; s < iEnd; s++) {
+    const tl = (s - iStart) / SAMPLE_RATE;
+    const white = rng() * 2 - 1;
+    const bright = white - prev; // one-pole high-pass: emphasizes the hiss, cuts the rumble
+    prev = white;
+    const env = Math.exp(-tl / 0.018);
+    buf[s] += bright * env * amp;
+  }
+}
+
+// --- Reverb: Freeverb-style parallel comb filters into series allpasses,
+// tuned this pass for a small, quick room (short feedback, heavy damping,
+// low wet mix) rather than a concert hall — just enough to glue the
+// comping/melody/shaker together, not enough to hang in the air.
 const COMB_TUNINGS_44K = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116];
 const ALLPASS_TUNINGS_44K = [556, 441, 341, 225];
 
@@ -198,7 +221,7 @@ function reverb(input, spreadSamples) {
   let sum = new Float64Array(input.length);
   for (const t of COMB_TUNINGS_44K) {
     const d = Math.max(2, Math.round(t * scale) + spreadSamples);
-    const combed = combFilter(input, d, 0.82, 0.22);
+    const combed = combFilter(input, d, 0.55, 0.4);
     for (let i = 0; i < sum.length; i++) sum[i] += combed[i] / COMB_TUNINGS_44K.length;
   }
   let out = sum;
@@ -210,8 +233,7 @@ function reverb(input, spreadSamples) {
 }
 
 // Ping-pong delay: each successive echo lands on the opposite channel from
-// the last — the melody's plucks were dry and centered before, which reads
-// as "synthesized." A few bouncing, decaying repeats read as a mixed track.
+// the last, so the melody's plucks aren't dry and dead-centered.
 function pingPongEcho(mono, delayMs, feedback, taps) {
   const n = mono.length;
   const delaySamples = Math.round((SAMPLE_RATE * delayMs) / 1000);
@@ -241,103 +263,84 @@ function renderTrack({ name, seed, sequence, outFile }) {
   // (what actually plays right after the loop point, before trimming).
   const fullSequence = [...sequence, sequence[0]];
 
-  // --- Pad: sum chord waves, crossfaded at each chord boundary, rendered
-  // twice with independent detune sets for real stereo width.
-  const padL = new Float64Array(n);
-  const padR = new Float64Array(n);
-  const xf = 1.2; // seconds of crossfade between adjacent chords
+  // --- Comping: four strums per 6s chord (a "down-down-up-up" feel), each
+  // strum's notes gently staggered. Two independent, lightly-detuned mono
+  // renders (not the same signal duplicated) give real stereo width without
+  // the slow beating a *sustained* detuned unison produces — each strum
+  // decays well before the detune would be audible as its own pulse.
+  const strumL = new Float64Array(n);
+  const strumR = new Float64Array(n);
+  const STRUM_OFFSETS = [0, 1.5, 3.0, 4.5];
   for (let i = 0; i < fullSequence.length; i++) {
     const freqs = CHORDS[fullSequence[i]];
     const segStart = i * SEG;
-    const segEnd = segStart + SEG;
-    const lo = Math.max(0, segStart - xf / 2);
-    const hi = Math.min(genLen, segEnd + xf / 2);
-    const iStart = Math.ceil(lo * SAMPLE_RATE);
-    const iEnd = Math.min(n, Math.floor(hi * SAMPLE_RATE));
-    for (let s = iStart; s < iEnd; s++) {
-      const t = s / SAMPLE_RATE;
-      let env = 1;
-      if (i > 0 && t < segStart + xf / 2) env = smoothstep((t - lo) / xf);
-      if (i < fullSequence.length - 1 && t >= segEnd - xf / 2) env = smoothstep((hi - t) / xf);
-      padL[s] += chordSample(freqs, t, DETUNE_L) * env;
-      padR[s] += chordSample(freqs, t, DETUNE_R) * env;
+    for (const off of STRUM_OFFSETS) {
+      const t0 = segStart + off;
+      if (t0 >= genLen) continue;
+      strumChord(strumL, n, freqs, t0, 0.34, 14);
+      strumChord(strumR, n, freqs, t0, 0.34, 22);
     }
   }
-  // Slow tremolo (LFO) so the sustained pad feels alive rather than static.
-  // 4s period (a whole number of cycles over any SEG-multiple loop) keeps
-  // the tremolo itself loop-seamless even before the crossfade trim.
   for (let s = 0; s < n; s++) {
-    const t = s / SAMPLE_RATE;
-    const lfo = 0.85 + 0.15 * Math.sin((2 * Math.PI * t) / 4.0);
-    padL[s] *= lfo * 0.42; // headroom under melody + bass
-    padR[s] *= lfo * 0.42;
+    strumL[s] = Math.tanh(strumL[s] * 1.3) * 0.8;
+    strumR[s] = Math.tanh(strumR[s] * 1.3) * 0.8;
   }
 
   // --- Bass: a soft pulse on the chord's root, twice per chord (a gentle
-  // "duh... duh" instead of a static pad), kept centered and mono like most
-  // mixed tracks keep their low end — width down there just reads as flabby.
+  // "duh... duh" walking feel), kept centered and mono like most mixed
+  // tracks keep their low end.
   const bass = new Float64Array(n);
   for (let i = 0; i < fullSequence.length; i++) {
     const root = BASS_ROOT[fullSequence[i]];
     const segStart = i * SEG;
-    pluck(bass, n, root, segStart, 3.2, 0.55, BASS_PARTIALS);
-    pluck(bass, n, root, segStart + SEG / 2, 3.2, 0.4, BASS_PARTIALS);
+    pluck(bass, n, root, segStart, 3.2, 0.5, BASS_PARTIALS);
+    pluck(bass, n, root, segStart + SEG / 2, 3.2, 0.36, BASS_PARTIALS);
   }
-  for (let s = 0; s < n; s++) bass[s] = Math.tanh(bass[s] * 1.4) * 0.75;
+  for (let s = 0; s < n; s++) bass[s] = Math.tanh(bass[s] * 1.4) * 0.72;
 
-  // --- Melody: sparse bell/kalimba plucks, dry mono source, then split
-  // into a centered dry signal plus a ping-pong stereo echo.
+  // --- Melody: sparse pentatonic plucks, dry mono source, then split into
+  // a centered dry signal plus a ping-pong stereo echo.
   const melodyDry = new Float64Array(n);
   for (let noteTime = 0.8; noteTime < genLen - 1.0;) {
     const segI = Math.min(Math.floor(noteTime / SEG), fullSequence.length - 1);
     const scale = PENTATONIC[fullSequence[segI]];
-    pluck(melodyDry, n, choice(scale), noteTime, 2.4, uniform(0.5, 0.9), BELL_PARTIALS);
-    noteTime += uniform(1.5, 2.8);
+    pluck(melodyDry, n, choice(scale), noteTime, 1.8, uniform(0.5, 0.85), BELL_PARTIALS);
+    noteTime += uniform(1.1, 2.0);
   }
-  for (let s = 0; s < n; s++) melodyDry[s] *= 0.15; // sit well under the pad
-  const echo = pingPongEcho(melodyDry, 340, 0.42, 4);
+  for (let s = 0; s < n; s++) melodyDry[s] *= 0.24;
+  const echo = pingPongEcho(melodyDry, 300, 0.38, 3);
 
-  // --- Very soft filtered-noise air, barely-there outdoor texture — two
-  // independently-seeded channels (the rng stream naturally decorrelates
-  // consecutive draws) for the same "real stereo, not duplicated mono" rule
-  // as the pad above.
-  function airChannel() {
-    let noise = new Float64Array(n);
-    for (let s = 0; s < n; s++) noise[s] = rng() * 2 - 1;
-    const KERNEL = 40;
-    for (let pass = 0; pass < 6; pass++) {
-      const smoothed = new Float64Array(n);
-      let sum = 0;
-      for (let s = 0; s < n; s++) {
-        sum += noise[s];
-        if (s >= KERNEL) sum -= noise[s - KERNEL];
-        smoothed[s] = sum / Math.min(s + 1, KERNEL);
-      }
-      noise = smoothed;
+  // --- Shaker: one tick on each strum's offbeat (the "and" between two
+  // strums), alternating which channel leads — the main source of forward
+  // rhythmic motion, and a texture that reads unambiguously as "instrument
+  // being played," not "atmosphere."
+  const shakerL = new Float64Array(n);
+  const shakerR = new Float64Array(n);
+  for (let i = 0; i < fullSequence.length; i++) {
+    const segStart = i * SEG;
+    for (let k = 0; k < STRUM_OFFSETS.length; k++) {
+      const t0 = segStart + STRUM_OFFSETS[k] + 0.75;
+      if (t0 >= genLen) continue;
+      const leadLeft = k % 2 === 0;
+      shaker(leadLeft ? shakerL : shakerR, n, t0, 0.16, rng);
+      shaker(leadLeft ? shakerR : shakerL, n, t0, 0.07, rng);
     }
-    let peak = 0;
-    for (let s = 0; s < n; s++) peak = Math.max(peak, Math.abs(noise[s]));
-    for (let s = 0; s < n; s++) noise[s] = (noise[s] / (peak + 1e-9)) * 0.018;
-    return noise;
   }
-  const noiseL = airChannel();
-  const noiseR = airChannel();
 
-  // --- Reverb send: pad (both channels averaged) plus melody, glued
-  // together and run through two decorrelated reverb tails — this is what
-  // gives the mix a sense of physical space instead of dry synth voices
-  // stacked on top of each other.
+  // --- Reverb send: comping + melody, glued together and run through two
+  // decorrelated short-room reverb tails — just enough to feel like a real
+  // room, tuned this pass to decay fast rather than hang.
   const sendMono = new Float64Array(n);
-  for (let s = 0; s < n; s++) sendMono[s] = (padL[s] + padR[s]) * 0.5 * 0.9 + melodyDry[s] * 0.7;
+  for (let s = 0; s < n; s++) sendMono[s] = (strumL[s] + strumR[s]) * 0.5 * 0.8 + melodyDry[s] * 0.6;
   const wetL = reverb(sendMono, 0);
   const wetR = reverb(sendMono, 37);
-  const WET_MIX = 0.32;
+  const WET_MIX = 0.16;
 
   const fullL = new Float64Array(n);
   const fullR = new Float64Array(n);
   for (let s = 0; s < n; s++) {
-    fullL[s] = padL[s] + bass[s] + melodyDry[s] * 0.6 + echo.L[s] + noiseL[s] + wetL[s] * WET_MIX;
-    fullR[s] = padR[s] + bass[s] + melodyDry[s] * 0.6 + echo.R[s] + noiseR[s] + wetR[s] * WET_MIX;
+    fullL[s] = strumL[s] + bass[s] + melodyDry[s] * 0.6 + echo.L[s] + shakerL[s] + wetL[s] * WET_MIX;
+    fullR[s] = strumR[s] + bass[s] + melodyDry[s] * 0.6 + echo.R[s] + shakerR[s] + wetR[s] * WET_MIX;
   }
 
   // --- Loop-seam crossfade: blend the "extra" tail back into the head,
@@ -365,8 +368,8 @@ function renderTrack({ name, seed, sequence, outFile }) {
     peak = Math.max(peak, Math.abs(loopedL[s]), Math.abs(loopedR[s]));
   }
   for (let s = 0; s < headLen; s++) {
-    loopedL[s] = (loopedL[s] / peak) * 0.5;
-    loopedR[s] = (loopedR[s] / peak) * 0.5;
+    loopedL[s] = (loopedL[s] / peak) * 0.52;
+    loopedR[s] = (loopedR[s] / peak) * 0.52;
   }
 
   const outPath = path.join(__dirname, "..", "assets", "sounds", outFile);
@@ -386,7 +389,9 @@ renderTrack({
 });
 
 // Track B: A-minor, a little more wistful, different enough from A that
-// hearing it on a later session doesn't feel like "the same loop again."
+// hearing it on a later session doesn't feel like "the same loop again" —
+// still a plucked, rhythmic comping arrangement, not a drone, so the minor
+// key reads as folk/wistful rather than ominous.
 renderTrack({
   name: "golden-dusk",
   seed: 137,
