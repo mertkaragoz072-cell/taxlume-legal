@@ -79,11 +79,19 @@ Both `icon-coin*.svg` are hand-authored and are **not** produced by
 `scripts/build-logo.js` — edit them directly.
 
 `logo-illustrated-<lang>-1000.webp` (`en`: "GOLDEN TOWN", `tr`: "ALTIN
-KASABA") are also hand-supplied, not generated: two painted market-square
-scenes, lettered directly into the art, each cropped independently rather
-than sharing one master file the way the SVG family does. They don't fit
-this family's build pipeline and were supplied as two separate finished
-pieces, not a base file plus a translation pass.
+KASABA") are also hand-supplied, not generated: painted artwork lettered
+directly into the image, each language cropped independently rather than
+sharing one master file the way the SVG family does. They don't fit this
+family's build pipeline and were supplied as separate finished pieces, not
+a base file plus a translation pass.
+
+The two are currently different compositions, not just different text on
+the same picture: `tr` is the original wide market-square panorama (houses,
+a bridge, sailboats); `en` was replaced with a tighter castle-on-a-hill
+crest once that was supplied as a better fit for the title screen. If a
+matching `tr` crest is ever supplied, it belongs here as a same-named
+replacement — same cutout process below applies. Until then the two
+intentionally look different across languages.
 
 Both needed their background cut out by hand — the source had no real alpha
 channel, only a checkerboard *pattern* baked into flat RGB (the visual

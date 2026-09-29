@@ -29,7 +29,7 @@ import { COLORS, FONT, glowShadow, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlp
 // art.
 const LOGOS = {
   tr: { src: logoIllustratedTr, ratio: 1000 / 667 },
-  en: { src: logoIllustratedEn, ratio: 1000 / 667 },
+  en: { src: logoIllustratedEn, ratio: 1000 / 491 },
 } as const;
 
 /** The market-square painting behind the wordmark, filling the screen edge
