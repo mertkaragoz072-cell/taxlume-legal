@@ -1,4 +1,4 @@
-import { t } from "../i18n/t";
+import { eventFields, t } from "../i18n/t";
 import { GOODS } from "./goods";
 import { RESEARCH_NODES } from "./research";
 import { EconomyEvent, EconomyState } from "./types";
@@ -25,7 +25,7 @@ function outcome(
   tone: "good" | "bad" | "neutral",
   patch: Partial<EconomyState>
 ): EconomyState {
-  const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+  const event: EconomyEvent = { id: state.nextId, ...eventFields(state.language, messageKey, params), tone };
   return {
     ...state,
     ...patch,

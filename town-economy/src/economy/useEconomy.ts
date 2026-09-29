@@ -28,7 +28,7 @@ import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
 import { deviceLanguage } from "../i18n/deviceLanguage";
-import { DEFAULT_LANGUAGE, Language, t, tPlural } from "../i18n/t";
+import { DEFAULT_LANGUAGE, eventFields, Language, t, tPlural } from "../i18n/t";
 import {
   formatCoins as formatCoinsUtil,
   formatCompactNumber as formatNumberUtil,
@@ -952,7 +952,7 @@ export function applyWeeklyChallengeClaim(state: EconomyState): EconomyState {
   if (progress < template.target) return state;
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.weeklyChallengeComplete", {
+    ...eventFields(state.language, "msg.weeklyChallengeComplete", {
       title: t(state.language, template.titleKey),
       amount: formatNumberUtil(template.reward, state.language),
     }),
@@ -1105,7 +1105,11 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
     tone: EconomyEvent["tone"],
     patch: Partial<EconomyState>
   ) {
-    const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+    const event: EconomyEvent = {
+      id: state.nextId,
+      ...eventFields(state.language, messageKey, params),
+      tone,
+    };
     return {
       ...state,
       ...patch,
@@ -1150,7 +1154,11 @@ function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
     tone: EconomyEvent["tone"],
     patch: Partial<EconomyState>
   ) {
-    const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+    const event: EconomyEvent = {
+      id: state.nextId,
+      ...eventFields(state.language, messageKey, params),
+      tone,
+    };
     return {
       ...state,
       ...patch,
@@ -1187,7 +1195,7 @@ export function prestige(state: EconomyState): EconomyState {
   const bestNetWorthEver = Math.max(state.bestNetWorthEver, netWorthNow);
   const event: EconomyEvent = {
     id: base.nextId,
-    message: t(state.language, "msg.prestiged", { level: nextLevel }),
+    ...eventFields(state.language, "msg.prestiged", { level: nextLevel }),
     tone: "good",
   };
   return {
@@ -1240,7 +1248,7 @@ export function chooseDoctrine(state: EconomyState, doctrineId: string): Economy
   if (computeNetWorth(state) < DOCTRINE_UNLOCK_NET_WORTH) return state;
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.doctrineChosen", {
+    ...eventFields(state.language, "msg.doctrineChosen", {
       icon: DOCTRINES_BY_ID[doctrineId].icon,
       name: t(state.language, DOCTRINES_BY_ID[doctrineId].nameKey),
     }),

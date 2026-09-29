@@ -1,3 +1,4 @@
+import { Params } from "../i18n/t";
 import { AssetId } from "./assets";
 import { DemandCycle } from "./demandCycles";
 import { ScheduledCrisis } from "./crises";
@@ -81,7 +82,18 @@ export interface AssetState {
 
 export interface EconomyEvent {
   id: number;
+  /** Resolved in whatever language was active when this event fired —
+   * what a local push notification needs (scheduled immediately, may show
+   * later with the app backgrounded) and the fallback for an event loaded
+   * from a save written before `key`/`params` existed. */
   message: string;
+  /** The translation key (and its params, if any) `message` was built
+   * from — present on every event created after this field was added, so
+   * a still-open screen can re-resolve it in the *current* language rather
+   * than showing whatever language was active when it first fired. Absent
+   * on an event loaded from an older save, which falls back to `message`. */
+  key?: string;
+  params?: Params;
   tone: "good" | "bad" | "neutral";
 }
 

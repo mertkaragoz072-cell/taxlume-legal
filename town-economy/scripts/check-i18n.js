@@ -61,6 +61,9 @@ const missingInA = diff(keysB, keysA);
 const T_CALL = /\bt\(\s*(?:[A-Za-z_$][\w.$]*,\s*)?"([A-Za-z0-9_.]+)"/g;
 // tPlural picks between "key" and "keyOne" at runtime, so both have to exist.
 const T_PLURAL_CALL = /\btPlural\(\s*(?:[A-Za-z_$][\w.$]*,\s*)?"([A-Za-z0-9_.]+)"/g;
+// eventFields(lang, "key", params) is t()'s reducer-side sibling for
+// building an EconomyEvent — same shape, so the same key has to resolve.
+const EVENT_FIELDS_CALL = /\beventFields\(\s*(?:[A-Za-z_$][\w.$]*,\s*)?"([A-Za-z0-9_.]+)"/g;
 
 function sourceFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -89,6 +92,7 @@ function collectUsedKeys() {
       note(match[1]);
       note(`${match[1]}One`);
     }
+    for (const match of source.matchAll(EVENT_FIELDS_CALL)) note(match[1]);
   }
   return used;
 }

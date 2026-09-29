@@ -360,7 +360,7 @@ function Game() {
             whole town, so the countdown has to follow the player wherever
             they are preparing — market, trade or town hall. */}
         <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
-        <EventBanner event={state.lastEvent} />
+        <EventBanner event={state.lastEvent} language={state.language} />
         <ComboBanner event={comboEvent} />
         <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
 

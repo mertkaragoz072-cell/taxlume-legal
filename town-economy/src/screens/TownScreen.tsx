@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { formatPercent } from "../utils/formatNumber";
 import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { resolveEventMessage } from "../i18n/t";
 import { GOODS } from "../economy/goods";
 import {
   estimateTaxIncomePerTick,
@@ -655,7 +656,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           ]}
         >
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.eventText}>{event.message}</Text>
+          <Text style={styles.eventText}>{resolveEventMessage(state.language, event)}</Text>
         </View>
       ))}
       {state.eventLog.length > 5 && (

@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { OfflineSummary } from "../economy/types";
+import { resolveEventMessage } from "../i18n/t";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -70,7 +71,7 @@ function ListRow({ text }: { text: string }) {
 }
 
 export function OfflineSummaryModal({ summary, onDismiss }: Props) {
-  const { t, formatCoins } = useEconomyContext();
+  const { state, t, formatCoins } = useEconomyContext();
   if (!summary) return null;
 
   return (
@@ -135,7 +136,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               <View style={styles.section}>
                 <SectionLabel text={t("offline.eventsSectionLabel")} />
                 {summary.recentEvents.map((event) => (
-                  <ListRow key={event.id} text={event.message} />
+                  <ListRow key={event.id} text={resolveEventMessage(state.language, event)} />
                 ))}
               </View>
             )}

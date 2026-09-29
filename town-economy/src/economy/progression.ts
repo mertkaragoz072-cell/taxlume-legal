@@ -17,7 +17,7 @@ import {
   townRankNameKey,
   townRankReward,
 } from "./townRanks";
-import { t } from "../i18n/t";
+import { eventFields, t } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { EconomyEvent, EconomyState } from "./types";
 import { EVENT_LOG_CAP, LEGENDARY_UNLOCK_PRESTIGE_LEVEL, MYTHIC_UNLOCK_LEGENDARY_POINTS } from "./constants";
@@ -37,7 +37,7 @@ export function applyAchievements(state: EconomyState): EconomyState {
     cash += a.reward;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.achievementUnlocked", {
+      ...eventFields(state.language, "msg.achievementUnlocked", {
         icon: a.icon,
         title: t(state.language, a.titleKey),
         reward: a.reward,
@@ -61,7 +61,7 @@ export function applyTradeUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.tradeUnlocked"),
+    ...eventFields(state.language, "msg.tradeUnlocked"),
     tone: "good",
   };
   return {
@@ -78,7 +78,7 @@ export function applyMetropolUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.metropolUnlocked"),
+    ...eventFields(state.language, "msg.metropolUnlocked"),
     tone: "good",
   };
   return {
@@ -99,7 +99,7 @@ export function applyLegendaryUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.legendaryUnlocked"),
+    ...eventFields(state.language, "msg.legendaryUnlocked"),
     tone: "good",
   };
   return {
@@ -119,7 +119,7 @@ export function applyMythicUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.mythicUnlocked"),
+    ...eventFields(state.language, "msg.mythicUnlocked"),
     tone: "good",
   };
   return {
@@ -157,7 +157,7 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     if (index === targetIndex) finalTitle = title;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.townRankUp", {
+      ...eventFields(state.language, "msg.townRankUp", {
         icon: townRankIcon(index),
         title,
         reward: formatNumberUtil(reward, state.language),
@@ -199,7 +199,7 @@ export function applyOnboarding(state: EconomyState): EconomyState {
     cash += done.reward;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.onboardingStepDone", {
+      ...eventFields(state.language, "msg.onboardingStepDone", {
         icon: done.icon,
         title: t(state.language, done.titleKey),
         reward: done.reward,
@@ -238,7 +238,7 @@ export function applyDailyQuests(state: EconomyState): EconomyState {
     cash += q.reward;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.questCompleted", {
+      ...eventFields(state.language, "msg.questCompleted", {
         icon: template.icon,
         title: t(state.language, template.titleKey),
         reward: q.reward,
@@ -270,7 +270,7 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
   if (progress >= mq.target) {
     const event: EconomyEvent = {
       id: state.nextId,
-      message: t(state.language, "msg.miniQuestCompleted", {
+      ...eventFields(state.language, "msg.miniQuestCompleted", {
         icon: template.icon,
         title: t(state.language, template.titleKey),
         reward: mq.reward,
@@ -290,7 +290,7 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
   if (state.tick >= mq.expiresAtTick) {
     const event: EconomyEvent = {
       id: state.nextId,
-      message: t(state.language, "msg.miniQuestExpired", {
+      ...eventFields(state.language, "msg.miniQuestExpired", {
         icon: template.icon,
         title: t(state.language, template.titleKey),
       }),

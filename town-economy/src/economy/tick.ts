@@ -46,7 +46,7 @@ import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
 import { UPGRADES_BY_ID } from "./upgrades";
 import { rollVillagerRequest } from "./villagerRequests";
-import { t, tPlural } from "../i18n/t";
+import { eventFields, t } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { BulkContract, Caravan, EconomyEvent, EconomyState, ForwardContract, GoodId } from "./types";
 import {
@@ -208,7 +208,7 @@ export function tick(state: EconomyState): EconomyState {
     }
     newEvents.push({
       id: nextId++,
-      message: t(state.language, template.messageKey),
+      ...eventFields(state.language, template.messageKey),
       tone: template.tone,
     });
   }
@@ -230,7 +230,7 @@ export function tick(state: EconomyState): EconomyState {
       crisisHappinessLoss = template.happinessLoss;
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.crisisStruck", {
+        ...eventFields(state.language, "msg.crisisStruck", {
           icon: template.icon,
           title: t(state.language, template.titleKey),
           pct: Math.round(lossPct * 100),
@@ -250,14 +250,26 @@ export function tick(state: EconomyState): EconomyState {
     };
     newEvents.push({
       id: nextId++,
-      message: tPlural(state.language, "msg.crisisWarned", CRISIS_WARNING_DAYS, {
-        icon: template.icon,
-        // The sign the town can actually see, and separately the thing it
-        // portends — a fire cannot be scheduled, but dry winds can be felt.
-        warning: t(state.language, template.warningTitleKey),
-        event: t(state.language, template.titleKey),
-        days: CRISIS_WARNING_DAYS,
-      }),
+      // tPlural just picks between a key and its `One` sibling before
+      // resolving — replicated here so the *resolved* key (already the
+      // right one for this count) is what gets saved for later
+      // re-resolution, rather than needing eventFields to know about
+      // pluralization too. Widened to `number` first: CRISIS_WARNING_DAYS
+      // is a fixed constant (currently 2), so comparing its literal type to
+      // 1 directly is a always-false comparison TS rightly flags — this
+      // stays correct if that constant is ever changed to 1.
+      ...eventFields(
+        state.language,
+        (CRISIS_WARNING_DAYS as number) === 1 ? "msg.crisisWarnedOne" : "msg.crisisWarned",
+        {
+          icon: template.icon,
+          // The sign the town can actually see, and separately the thing it
+          // portends — a fire cannot be scheduled, but dry winds can be felt.
+          warning: t(state.language, template.warningTitleKey),
+          event: t(state.language, template.titleKey),
+          days: CRISIS_WARNING_DAYS,
+        }
+      ),
       tone: "bad",
     });
   }
@@ -277,7 +289,7 @@ export function tick(state: EconomyState): EconomyState {
     pendingDecision = { id: nextId, templateId: template.id, triggeredAtTick: state.tick + 1 };
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.decisionPending", { title: t(state.language, template.titleKey) }),
+      ...eventFields(state.language, "msg.decisionPending", { title: t(state.language, template.titleKey) }),
       tone: "neutral",
     });
   }
@@ -290,7 +302,7 @@ export function tick(state: EconomyState): EconomyState {
     const good = GOODS_BY_ID[goodId];
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.villagerRequestPending", {
+      ...eventFields(state.language, "msg.villagerRequestPending", {
         qty,
         good: t(state.language, good.nameKey),
       }),
@@ -316,7 +328,7 @@ export function tick(state: EconomyState): EconomyState {
       const good = GOODS_BY_ID[goodId];
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.rivalOfferPending", {
+        ...eventFields(state.language, "msg.rivalOfferPending", {
           qty,
           good: t(state.language, good.nameKey),
         }),
@@ -343,7 +355,7 @@ export function tick(state: EconomyState): EconomyState {
       };
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.miniQuestPending", {
+        ...eventFields(state.language, "msg.miniQuestPending", {
           icon: template.icon,
           title: t(state.language, template.titleKey),
         }),
@@ -365,7 +377,7 @@ export function tick(state: EconomyState): EconomyState {
     nextDemandCycle = rollDemandCycle(demandCycle.endTick, TICKS_PER_GAME_DAY, eligible);
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.demandCycleStarted", {
+      ...eventFields(state.language, "msg.demandCycleStarted", {
         hot: demandCycle.hotGoodIds.map((id) => GOODS_BY_ID[id].icon).join(" "),
         glut: GOODS_BY_ID[demandCycle.gluttedGoodId].icon,
       }),
@@ -382,7 +394,7 @@ export function tick(state: EconomyState): EconomyState {
     if (endedTemplate) {
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.seasonalEventEnded", {
+        ...eventFields(state.language, "msg.seasonalEventEnded", {
           icon: endedTemplate.icon,
           title: t(state.language, endedTemplate.titleKey),
         }),
@@ -401,7 +413,7 @@ export function tick(state: EconomyState): EconomyState {
     };
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.seasonalEventStarted", {
+      ...eventFields(state.language, "msg.seasonalEventStarted", {
         icon: template.icon,
         title: t(state.language, template.titleKey),
       }),
@@ -415,7 +427,7 @@ export function tick(state: EconomyState): EconomyState {
     taxCashDelta -= penalty;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.angryUprising", {
+      ...eventFields(state.language, "msg.angryUprising", {
         amount: formatNumberUtil(penalty, state.language),
       }),
       tone: "bad",
@@ -424,7 +436,7 @@ export function tick(state: EconomyState): EconomyState {
     taxCashDelta += CONTENT_CASH_BONUS;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.contentDonation", { amount: CONTENT_CASH_BONUS }),
+      ...eventFields(state.language, "msg.contentDonation", { amount: CONTENT_CASH_BONUS }),
       tone: "good",
     });
   }
@@ -465,7 +477,7 @@ export function tick(state: EconomyState): EconomyState {
   if (laidOff > 0) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.workersLaidOff", { count: laidOff }),
+      ...eventFields(state.language, "msg.workersLaidOff", { count: laidOff }),
       tone: "bad",
     });
   }
@@ -657,7 +669,7 @@ export function tick(state: EconomyState): EconomyState {
       dailyCashEarned += deliveredAmount;
       newEvents.push({
         id: nextId++,
-        message: t(state.language, wasRaided ? "msg.caravanRaidedExport" : "msg.caravanReturnedExport", {
+        ...eventFields(state.language, wasRaided ? "msg.caravanRaidedExport" : "msg.caravanReturnedExport", {
           town: t(state.language, town.nameKey),
           amount: formatNumberUtil(deliveredAmount, state.language),
           qty: caravan.qty,
@@ -670,7 +682,7 @@ export function tick(state: EconomyState): EconomyState {
       goods[caravan.goodId] = { ...gs, holding: gs.holding + deliveredAmount };
       newEvents.push({
         id: nextId++,
-        message: t(state.language, wasRaided ? "msg.caravanRaidedImport" : "msg.caravanReturnedImport", {
+        ...eventFields(state.language, wasRaided ? "msg.caravanRaidedImport" : "msg.caravanReturnedImport", {
           town: t(state.language, town.nameKey),
           qty: Math.round(deliveredAmount),
           good: t(state.language, good.nameKey),
@@ -686,7 +698,7 @@ export function tick(state: EconomyState): EconomyState {
     dailyCashEarned += treasureAmount;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.lostTreasureFound", {
+      ...eventFields(state.language, "msg.lostTreasureFound", {
         amount: formatNumberUtil(treasureAmount, state.language),
       }),
       tone: "good",
@@ -713,7 +725,7 @@ export function tick(state: EconomyState): EconomyState {
     const contractGood = GOODS_BY_ID[contract.goodId];
     newEvents.push({
       id: nextId++,
-      message: t(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
+      ...eventFields(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
         good: t(state.language, contractGood.nameKey),
         amount: formatNumberUtil(Math.abs(payoff), state.language),
       }),
@@ -733,7 +745,7 @@ export function tick(state: EconomyState): EconomyState {
     const contractGood = GOODS_BY_ID[contract.goodId];
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.bulkContractDelivered", {
+      ...eventFields(state.language, "msg.bulkContractDelivered", {
         qty: contract.qty,
         good: t(state.language, contractGood.nameKey),
         amount: formatNumberUtil(payout, state.language),
@@ -746,7 +758,7 @@ export function tick(state: EconomyState): EconomyState {
   if (gameOver && !state.gameOver) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.hyperinflationGameOver"),
+      ...eventFields(state.language, "msg.hyperinflationGameOver"),
       tone: "bad",
     });
   }
@@ -762,7 +774,7 @@ export function tick(state: EconomyState): EconomyState {
   if (beatPersonalRecord) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.newNetWorthRecord", {
+      ...eventFields(state.language, "msg.newNetWorthRecord", {
         amount: formatNumberUtil(netWorthNow, state.language),
       }),
       tone: "good",
@@ -779,7 +791,7 @@ export function tick(state: EconomyState): EconomyState {
   if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead && announceRival) {
     newEvents.push({
       id: nextId++,
-      message: t(
+      ...eventFields(
         state.language,
         rivalCurrentlyAhead ? "msg.rivalTownOvertookYou" : "msg.rivalTownOvertaken",
         {
@@ -816,7 +828,7 @@ export function tick(state: EconomyState): EconomyState {
     });
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.bountyAppeared", {
+      ...eventFields(state.language, "msg.bountyAppeared", {
         rivalName: t(state.language, RIVAL_TRADERS_BY_ID[rivalId]?.nameKey || "rival.unknown"),
         good: t(state.language, good.nameKey),
         side: t(state.language, side === "buying" ? "bounty.buying" : "bounty.selling"),
@@ -844,7 +856,7 @@ export function tick(state: EconomyState): EconomyState {
       quotaBonusCash += quota.bonus;
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.quotaMet", {
+        ...eventFields(state.language, "msg.quotaMet", {
           good: t(state.language, GOODS_BY_ID[quota.goodId].nameKey),
           bonus: formatNumberUtil(quota.bonus, state.language),
         }),

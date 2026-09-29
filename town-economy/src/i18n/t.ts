@@ -3,7 +3,7 @@ import { STRINGS } from "./strings";
 export type Language = "tr" | "en";
 export const DEFAULT_LANGUAGE: Language = "tr";
 
-type Params = Record<string, string | number>;
+export type Params = Record<string, string | number>;
 
 function getByPath(obj: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, key) => {
@@ -40,4 +40,32 @@ export function t(lang: Language, key: string, params?: Params): string {
  * "0 day left", so a `< 2` test would be wrong. */
 export function tPlural(lang: Language, key: string, count: number, params?: Params): string {
   return t(lang, count === 1 ? `${key}One` : key, params);
+}
+
+/** Builds the shared fields of an EconomyEvent: a `message` resolved in
+ * whatever language is active right now (what a local push notification
+ * needs — it's scheduled immediately and may fire later with the app
+ * backgrounded, so it has to carry a fixed string, not a lazy lookup) plus
+ * the raw `key`/`params` that made it, so a still-open screen can re-resolve
+ * the same event in whatever language is active *then* instead of a stale
+ * banner sitting in the language it first fired in after a language switch. */
+export function eventFields(
+  lang: Language,
+  key: string,
+  params?: Params
+): { key: string; params?: Params; message: string } {
+  return { key, params, message: t(lang, key, params) };
+}
+
+/** The other half of eventFields: re-resolves an already-built event in
+ * whatever language is active *now*. Falls back to the event's own baked
+ * `message` when there's no `key` to resolve from — an event loaded from a
+ * save written before this existed. Takes a duck-typed shape rather than
+ * the concrete EconomyEvent type to avoid economy/types.ts <-> this file
+ * becoming a circular import. */
+export function resolveEventMessage(
+  lang: Language,
+  event: { key?: string; params?: Params; message: string }
+): string {
+  return event.key ? t(lang, event.key, event.params) : event.message;
 }
