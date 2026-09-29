@@ -4,17 +4,18 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
+import { TabIcon } from "./TabIcons";
 
 export type ScreenId = "market" | "inventory" | "trade" | "town" | "research" | "invest" | "achievements";
 
-const TABS: { id: ScreenId; labelKey: string; icon: string; color: string }[] = [
-  { id: "market", labelKey: "tabs.market", icon: "📈", color: "#e8c777" },
-  { id: "inventory", labelKey: "tabs.inventory", icon: "🎒", color: "#5fd884" },
-  { id: "trade", labelKey: "tabs.trade", icon: "🚚", color: "#6fb8f2" },
-  { id: "town", labelKey: "tabs.town", icon: "🏘️", color: "#c58ee0" },
-  { id: "research", labelKey: "tabs.research", icon: "🔬", color: "#4fc3c9" },
-  { id: "invest", labelKey: "tabs.invest", icon: "💹", color: "#e0a13f" },
-  { id: "achievements", labelKey: "tabs.achievements", icon: "🏆", color: "#f0776a" },
+const TABS: { id: ScreenId; labelKey: string; color: string }[] = [
+  { id: "market", labelKey: "tabs.market", color: "#e8c777" },
+  { id: "inventory", labelKey: "tabs.inventory", color: "#5fd884" },
+  { id: "trade", labelKey: "tabs.trade", color: "#6fb8f2" },
+  { id: "town", labelKey: "tabs.town", color: "#c58ee0" },
+  { id: "research", labelKey: "tabs.research", color: "#4fc3c9" },
+  { id: "invest", labelKey: "tabs.invest", color: "#e0a13f" },
+  { id: "achievements", labelKey: "tabs.achievements", color: "#f0776a" },
 ];
 
 /** Tab id to its label key, so anything that needs to *name* a tab — the
@@ -168,13 +169,14 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
                 isActive && glowShadow(tab.color),
               ]}
             >
-              <Animated.View style={{ transform: [{ scale: badgeScale[i] }] }}>
-                {/* The emoji is decoration for a label that is already read
-                    out; left visible it makes every tab announce a stray
-                    icon name. */}
-                <Text aria-hidden style={[styles.icon, isActive && styles.iconActive]}>
-                  {tab.icon}
-                </Text>
+              <Animated.View style={{ transform: [{ scale: badgeScale[i] }], opacity: isActive ? 1 : 0.75 }}>
+                {/* Decoration for a label that is already read out — see
+                    TabIcon's own comment for why this isn't the emoji it
+                    used to be. Dark on an active tab's solid fill, the
+                    app's own light text tone on an inactive one's faint
+                    tint, the same contrast rule the badge's border below
+                    already follows. */}
+                <TabIcon id={tab.id} color={isActive ? COLORS.onLight : COLORS.textPrimary} size={19} />
               </Animated.View>
             </View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
@@ -228,8 +230,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  icon: { fontSize: TYPE.title, opacity: 0.75 },
-  iconActive: { opacity: 1 },
   label: {
     fontSize: TYPE.micro,
     color: COLORS.textMuted,
