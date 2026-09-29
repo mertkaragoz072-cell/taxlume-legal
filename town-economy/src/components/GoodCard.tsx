@@ -15,6 +15,7 @@ import {
   WEIGHT,
   withAlpha,
 } from "../theme";
+import { GoodIcon } from "./GoodIcon";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { ScalePressable } from "./ScalePressable";
@@ -22,7 +23,11 @@ import { ScalePressable } from "./ScalePressable";
 // Loosened to the fields this card actually renders (rather than the full
 // Good/GoodState shape) so it can double as an asset card in InvestScreen.
 interface Props {
-  good: { nameKey: string; icon: string; color: string };
+  // id is optional because InvestScreen passes assets (gold, oil, tech
+  // stock...) through this same card, and those aren't a GoodId — GoodIcon
+  // just won't find art for them and falls back to their emoji, same as
+  // ever.
+  good: { id?: string; nameKey: string; icon: string; color: string };
   state: { price: number; history: number[]; holding: number };
   selected: boolean;
   onPress: () => void;
@@ -88,9 +93,7 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
           </View>
         )}
         <View style={styles.topRow}>
-          <Text aria-hidden style={styles.icon}>
-            {good.icon}
-          </Text>
+          <GoodIcon id={good.id ?? ""} fallback={good.icon} size={TYPE.heading} />
           <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
             {positive ? "+" : ""}
             {formatPercent(change, economy.language, 1)}
@@ -155,7 +158,6 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 2,
   },
-  icon: { fontSize: TYPE.heading },
   change: { fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   name: {
     color: COLORS.textPrimary,

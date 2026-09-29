@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import { AchievementIcon } from "../components/AchievementIcon";
+import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
@@ -119,7 +121,12 @@ export function AchievementsScreen() {
                 return (
                   <View key={id} style={styles.hallOfFameChip}>
                     <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                    <Text style={styles.hallOfFameIcon}>{a.icon}</Text>
+                    <AchievementIcon
+                      id={a.id}
+                      fallback={a.icon}
+                      size={TYPE.heading}
+                      style={{ marginBottom: 4 }}
+                    />
                     <Text style={styles.hallOfFameTitle} numberOfLines={2}>
                       {t(a.titleKey)}
                     </Text>
@@ -362,7 +369,13 @@ export function AchievementsScreen() {
               x2="1"
               y2="1"
             />
-            <Text style={[styles.icon, !unlocked && styles.iconLocked]}>{unlocked ? a.icon : "🔒"}</Text>
+            <AchievementIcon
+              id={a.id}
+              fallback={unlocked ? a.icon : "🔒"}
+              size={26}
+              locked={!unlocked}
+              style={{ marginRight: 12, opacity: unlocked ? 1 : 0.5 }}
+            />
             <View style={{ flex: 1 }}>
               <View style={styles.titleRow}>
                 <Text style={[styles.title, unlocked && styles.titleUnlocked]}>{t(a.titleKey)}</Text>
@@ -398,7 +411,12 @@ export function AchievementsScreen() {
             const unlocked = isGoodUnlocked(g, state);
             return (
               <View key={g.id} style={[styles.compendiumChip, !unlocked && styles.compendiumChipLocked]}>
-                <Text style={styles.compendiumIcon}>{unlocked ? g.icon : "🔒"}</Text>
+                <GoodIcon
+                  id={g.id}
+                  fallback={unlocked ? g.icon : "🔒"}
+                  size={TYPE.title}
+                  locked={!unlocked}
+                />
               </View>
             );
           })}
@@ -537,7 +555,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  hallOfFameIcon: { fontSize: TYPE.heading, marginBottom: 4 },
   hallOfFameTitle: {
     color: COLORS.textPrimary,
     fontSize: TYPE.micro,

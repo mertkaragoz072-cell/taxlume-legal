@@ -1,6 +1,7 @@
 import React from "react";
 import { formatPercent } from "../utils/formatNumber";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -74,7 +75,7 @@ export function InventoryScreen() {
               style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.1) }]}
             />
             <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
-            <Text style={styles.rowIcon}>{good.icon}</Text>
+            <GoodIcon id={good.id} fallback={good.icon} size={26} style={{ marginRight: SPACING.md }} />
             <View style={styles.rowMain}>
               <Text style={styles.rowName}>{t(good.nameKey)}</Text>
               <Text style={styles.rowSub}>
@@ -162,7 +163,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
-  rowIcon: { fontSize: 26, marginRight: SPACING.md },
   rowMain: { flex: 1, marginRight: SPACING.sm + 2 },
   rowName: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
   rowSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1, marginBottom: SPACING.sm - 2 },
