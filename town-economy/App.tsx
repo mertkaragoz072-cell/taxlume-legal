@@ -371,7 +371,12 @@ function Game() {
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
-        {screen === "trade" && <TradeScreen sounds={sounds} />}
+        {screen === "trade" && (
+          <TradeScreen
+            sounds={sounds}
+            compactMap={caravanTutorialActive && caravanSpotlight === "caravanMap"}
+          />
+        )}
         {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
         {screen === "research" && <ResearchScreen />}
         {screen === "invest" && <InvestScreen sounds={sounds} />}

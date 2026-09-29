@@ -45,6 +45,11 @@ import {
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
+  /** True only while the caravan tutorial is on its "where can you trade"
+   * beat, which docks a card right under this map — see TownMapView's own
+   * `maxHeight` prop for why that needs the map to shrink instead of just
+   * getting silently cropped by a shrunk scroll viewport. */
+  compactMap?: boolean;
 }
 
 type QtyOption = 1 | 5 | "ALL";
@@ -91,7 +96,7 @@ function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
   );
 }
 
-export function TradeScreen({ sounds }: Props) {
+export function TradeScreen({ sounds, compactMap }: Props) {
   const { state, sendCaravan, openContract, openBulkContract, t, tPlural, netWorth, formatCoins } =
     useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
@@ -211,6 +216,7 @@ export function TradeScreen({ sounds }: Props) {
             caravans={state.caravans}
             tick={state.tick}
             t={t}
+            maxHeight={compactMap ? 210 : undefined}
           />
         </SpotlightTarget>
 

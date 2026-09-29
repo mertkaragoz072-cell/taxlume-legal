@@ -31,6 +31,17 @@ interface Props {
   caravans: Caravan[];
   tick: number;
   t: (key: string, params?: Record<string, string | number>) => string;
+  /** Caps the map's rendered height as well as its width. Normally only
+   * width drives size (see mapWidth below) because the map always has the
+   * whole screen's height to scroll into — but the caravan tutorial docks a
+   * card right under this map on the Trade screen, which can leave very
+   * little vertical room on a real phone (its own safe-area insets aren't
+   * present in a desktop preview, so this under-counts there too). Without
+   * a cap the map stays full-size and simply gets cropped by the shrunk
+   * scroll viewport — reported back as looking broken (a compass and two
+   * stray wave lines, nothing else). Passing a budget here shrinks the
+   * whole map to fit instead, so it's smaller but never cut off. */
+  maxHeight?: number;
 }
 
 // Everything is laid out in this fixed drawing space and then scaled to the
@@ -190,6 +201,7 @@ export function TownMapView({
   caravans,
   tick,
   t,
+  maxHeight,
 }: Props) {
   const homeIcon = TOWN_EMBLEMS_BY_ID[selectedEmblem]?.icon ?? "🏘️";
   // A hook, not Dimensions.get() read once at module scope — on native that
@@ -197,8 +209,10 @@ export function TownMapView({
   // and being a module-level const it then never corrects itself, leaving
   // the whole map permanently laid out off a wrong (sometimes zero) width.
   const { width: windowWidth } = useWindowDimensions();
-  const mapWidth = Math.min(windowWidth - 56, BASE_W);
-  const scale = mapWidth / BASE_W;
+  const widthScale = Math.min(windowWidth - 56, BASE_W) / BASE_W;
+  const heightScale = maxHeight != null ? Math.min(maxHeight, BASE_H) / BASE_H : widthScale;
+  const scale = Math.min(widthScale, heightScale);
+  const mapWidth = BASE_W * scale;
   const mapHeight = BASE_H * scale;
   // Place names sit on little parchment cartouches. The width tracks scale
   // so the plaques compress with the map instead of colliding on a narrow

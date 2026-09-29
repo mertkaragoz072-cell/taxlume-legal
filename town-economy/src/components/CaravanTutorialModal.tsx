@@ -107,12 +107,19 @@ export function CaravanTutorialModal({
             <View style={styles.nameRow}>
               <Text style={styles.name} numberOfLines={1}>
                 {t(language, "caravanTutorial.guideTitle")}
-                <Text style={styles.role}> · {t(language, "caravanTutorial.guideRole")}</Text>
               </Text>
               <Text style={styles.progress}>
                 {stepIndex + 1} / {CARAVAN_STEPS.length}
               </Text>
             </View>
+            {/* Its own line rather than squeezed onto the name row: "Caravan
+                Guide · 🐪 Caravan Master" plus the "N / 5" count together ran
+                past the available width and truncated mid-word ("Caravan…"),
+                losing "Master" outright — reported back as looking broken.
+                A dedicated line only has to fit itself, never the counter. */}
+            <Text style={styles.role} numberOfLines={1}>
+              {t(language, "caravanTutorial.guideRole")}
+            </Text>
 
             <Text style={styles.title}>{t(language, step.titleKey)}</Text>
             <Text style={styles.text}>{t(language, step.textKey, { threshold: tradeUnlockThreshold })}</Text>
@@ -184,13 +191,14 @@ const styles = StyleSheet.create({
   characterImage: { width: 200, height: 157 },
   speech: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline" },
-  // flex: 1 (not the default) plus numberOfLines on the Text itself —
-  // without both, "Caravan Guide · Caravan Master" ran past the progress
-  // count instead of truncating, crowding the "N / 5" right up against
-  // the card's own edge on a narrower phone than this was tested on.
-  // flex:1 both fills the row so "progress" still lands on the right (the
-  // old justifyContent:"space-between" is no longer needed for that) and
-  // caps the width the text is allowed to claim before it must truncate.
+  // flex: 1 (not the default) plus numberOfLines on the Text itself caps
+  // the width "name" is allowed to claim before truncating, so "progress"
+  // still lands on the right instead of getting pushed off past the card's
+  // own edge (the old justifyContent:"space-between" is no longer needed
+  // for that). The role used to be nested inside this same Text — "Caravan
+  // Guide · 🐪 Caravan Master" plus the counter together didn't fit even a
+  // single line on a real phone width and truncated mid-word — it's now
+  // its own line below instead (see `role` and its render site).
   name: {
     flex: 1,
     color: COLORS.accent,
@@ -198,7 +206,13 @@ const styles = StyleSheet.create({
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
   },
-  role: { color: COLORS.textMuted, fontWeight: WEIGHT.regular, fontFamily: FONT.medium },
+  role: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.regular,
+    fontFamily: FONT.medium,
+    marginTop: 1,
+  },
   progress: {
     color: COLORS.textMuted,
     fontSize: TYPE.micro,
