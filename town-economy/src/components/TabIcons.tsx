@@ -82,20 +82,21 @@ const ICONS: Record<ScreenId, (color: string, bg: string) => React.ReactNode> = 
       <Path d="M9 9 C9 6.5 10.3 5 12 5 C13.7 5 15 6.5 15 9" fill="none" stroke={color} strokeWidth={2} />
     </>
   ),
-  // A covered wagon: an arched canopy over a bed on two wheels, each wheel
-  // given a punched hub — the canopy (a real curve, not a flat rectangle
-  // roof) and the hubs are what separate this from a generic delivery
-  // truck and tie it to the caravans this screen actually sends between
-  // towns.
-  trade: (color, bg) => (
+  // Two opposing arrows, a standard exchange/swap glyph — tried as a
+  // covered wagon through two earlier passes (an arched canopy over a bed
+  // on two wheels, each wheel given a punched hub), which looked fine
+  // enlarged but collapsed at the real ~19px badge size into a dark blob
+  // with two dot "eyes": a bug or a tiny car, not a wagon. No amount of
+  // detail rescues a silhouette that's wrong at the size it's actually
+  // seen at, so this drops the wagon rather than iterating on it again —
+  // built only from bars and triangles (the same vocabulary as Invest's
+  // bars), with no circles left to be misread as a face.
+  trade: (color) => (
     <>
-      <Path d="M0.5 12.5 L3 12.5 L3 15 L0.5 15 Z" fill={color} />
-      <Rect x={3} y={11} width={16} height={6} rx={1.2} fill={color} />
-      <Path d="M3 11 Q11 2.5 19 11 Z" fill={color} />
-      <Circle cx={7.5} cy={19} r={3.3} fill={color} />
-      <Circle cx={7.5} cy={19} r={1.3} fill={bg} />
-      <Circle cx={16.5} cy={19} r={3.3} fill={color} />
-      <Circle cx={16.5} cy={19} r={1.3} fill={bg} />
+      <Rect x={2} y={5.5} width={14} height={3.4} rx={0.8} fill={color} />
+      <Path d="M16 3.7 L22.5 7.2 L16 10.7 Z" fill={color} />
+      <Rect x={8} y={14.6} width={14} height={3.4} rx={0.8} fill={color} />
+      <Path d="M8 12.8 L1.5 16.3 L8 19.8 Z" fill={color} />
     </>
   ),
   // Three buildings of rising height with pitched roofs — the brand mark's
