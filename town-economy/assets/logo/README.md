@@ -119,6 +119,26 @@ and its ghost-swirl variant never exceed roughly saturation 40–45 in either
 source image, so anything more saturated than that is real paint and stays
 opaque regardless of what the closing pass decided.
 
+That first pass still left checker behind in both files, shipped for a
+while before anyone noticed: a thin fringe tracing the cloud/hillside
+silhouette in `tr`, and a whole strip of it in the gap between "N" and "T"
+in `en`'s wordmark — both fully opaque (alpha 255), not the soft
+antialiased kind, so a plain lightness/alpha threshold can't tell them
+apart from real content by looking at one pixel alone. What does: they're
+solid multi-pixel blobs of near-zero saturation (`max(r,g,b) - min(r,g,b)
+<= 25`) sitting at full opacity, where genuine antialiasing between a
+saturated fill and the transparent background is at most a pixel wide and
+partially transparent. Filtering to only connected components of that
+description four pixels or larger (real antialiasing edges never form one
+that big), then growing a few pixels outward through neighbouring
+low-saturation territory to catch each blob's own soft fringe, cleared
+both files without touching a single already-opaque, already-colourful
+pixel anywhere in either wordmark — verified by diffing before and after:
+zero visible pixels changed colour, only already-broken ones went
+transparent. If a future re-export of either file (or a new language)
+shows the same jagged checker halo, that's what to run again — the
+original hand-rolled cutout above is a good first pass, not a guarantee.
+
 ## Which file to use
 
 | File                          | Use                                                          |
