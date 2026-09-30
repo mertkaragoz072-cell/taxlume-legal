@@ -94,7 +94,7 @@ export function ResearchScreen() {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <Text style={styles.sectionNote}>{t("research.sectionNote")}</Text>
-      {GOODS.map((good) => {
+      {GOODS.filter((good) => RESEARCH_NODES.some((n) => n.goodId === good.id)).map((good) => {
         const nodes = RESEARCH_NODES.filter((n) => n.goodId === good.id);
         return (
           <View key={good.id} style={styles.goodGroup}>
