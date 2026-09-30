@@ -109,6 +109,8 @@ import {
   priceFromSupply,
   productionInputFactor,
   pushCapped,
+  scaledGoalReward,
+  scaledGoalTarget,
   supplyBounds,
 } from "./formulas";
 
@@ -347,8 +349,8 @@ export function tick(state: EconomyState): EconomyState {
       activeMiniQuest = {
         id: nextId,
         templateId: template.id,
-        target: template.target,
-        reward: template.reward,
+        target: scaledGoalTarget(template.target, state.townRankIndex),
+        reward: scaledGoalReward(template.reward, state.townRankIndex),
         triggeredAtTick: state.tick + 1,
         expiresAtTick: state.tick + 1 + template.durationTicks,
         baseline: template.metric(state.dailyProgress),
@@ -814,7 +816,10 @@ export function tick(state: EconomyState): EconomyState {
     const side = Math.random() < 0.5 ? "buying" : "selling";
     const quantity = Math.round(good.baseProduction * (2 + Math.random() * 2));
     const priceMultiplier = 1 + (side === "buying" ? -0.2 : 0.2);
-    const reward = Math.round(quantity * good.basePrice * priceMultiplier * BOUNTY_REWARD_BONUS);
+    const reward = scaledGoalReward(
+      Math.round(quantity * good.basePrice * priceMultiplier * BOUNTY_REWARD_BONUS),
+      state.townRankIndex
+    );
     activeBounties.push({
       id: generateBountyId(),
       rivalId,

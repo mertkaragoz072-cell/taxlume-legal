@@ -98,6 +98,8 @@ import {
   marketSpread,
   nextTradeStreak,
   researchCost,
+  scaledGoalReward,
+  scaledGoalTarget,
   storageCapacity,
   supplyBounds,
   totalGoodsHolding,
@@ -279,12 +281,12 @@ function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   }
   return { prices, supply };
 }
-function makeDailyQuests(dateSeed: string): EconomyState["dailyQuests"] {
+function makeDailyQuests(townRankIndex: number, dateSeed: string): EconomyState["dailyQuests"] {
   return pickDailyQuestTemplates(dateSeed, DAILY_QUEST_COUNT).map((template) => ({
     id: `${dateSeed}-${template.id}`,
     templateId: template.id,
-    target: template.target,
-    reward: template.reward,
+    target: scaledGoalTarget(template.target, townRankIndex),
+    reward: scaledGoalReward(template.reward, townRankIndex),
     completed: false,
   }));
 }
@@ -376,7 +378,7 @@ export function initialState(
     // a cooldown that has notionally been running since before tick 0.
     lastInterruptionTick: -INTERRUPTION_COOLDOWN_TICKS,
     dailyProgress: makeInitialDailyProgress(),
-    dailyQuests: makeDailyQuests("init"),
+    dailyQuests: makeDailyQuests(0, "init"),
     activeMiniQuest: null,
     prestigeLevel: 0,
     prestigePoints: 0,
@@ -906,7 +908,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
       ...state,
       streak: { count: 1, lastOpenedDate: today },
       dailyProgress: makeInitialDailyProgress(),
-      dailyQuests: makeDailyQuests(today),
+      dailyQuests: makeDailyQuests(state.townRankIndex, today),
       activeMiniQuest: null,
       productionQuotas: generateDailyQuotas(),
       productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
@@ -935,7 +937,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     // A genuinely new day (this function only reaches here when one
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),
-    dailyQuests: makeDailyQuests(today),
+    dailyQuests: makeDailyQuests(state.townRankIndex, today),
     // A mini quest's progress is measured against the daily counters above
     // via a baseline snapshot — resetting those out from under it would
     // make it unwinnable, so just drop it; a new one spawns again soon.
@@ -953,7 +955,14 @@ function ensureWeeklyChallenge(state: EconomyState, today: string): WeeklyChalle
   const weekKey = isoWeekKey(today);
   if (state.weeklyChallenge && state.weeklyChallenge.weekKey === weekKey) return state.weeklyChallenge;
   const template = weeklyChallengeTemplateForWeek(weekKey);
-  return { weekKey, templateId: template.id, startValue: template.metric(state.stats), claimed: false };
+  return {
+    weekKey,
+    templateId: template.id,
+    startValue: template.metric(state.stats),
+    claimed: false,
+    target: scaledGoalTarget(template.target, state.townRankIndex),
+    reward: scaledGoalReward(template.reward, state.townRankIndex),
+  };
 }
 // Runs once per tick, right after tick() — auto-claims the moment progress
 // reaches the target, the same "no separate claim button" choice as bulk
@@ -964,18 +973,18 @@ export function applyWeeklyChallengeClaim(state: EconomyState): EconomyState {
   const template = WEEKLY_CHALLENGE_TEMPLATES_BY_ID[wc.templateId];
   if (!template) return state;
   const progress = template.metric(state.stats) - wc.startValue;
-  if (progress < template.target) return state;
+  if (progress < wc.target) return state;
   const event: EconomyEvent = {
     id: state.nextId,
     ...eventFields(state.language, "msg.weeklyChallengeComplete", {
       title: { key: template.titleKey },
-      amount: formatNumberUtil(template.reward, state.language),
+      amount: formatNumberUtil(wc.reward, state.language),
     }),
     tone: "good",
   };
   return {
     ...state,
-    cash: state.cash + template.reward,
+    cash: state.cash + wc.reward,
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),

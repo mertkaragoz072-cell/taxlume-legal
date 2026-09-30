@@ -48,6 +48,8 @@ import {
   MARKET_SPREAD,
   METROPOL_UNLOCK_NET_WORTH,
   PRODUCTION_INFLATION_FACTOR,
+  RANK_GOAL_REWARD_SCALE_PER_RANK,
+  RANK_GOAL_TARGET_SCALE_PER_RANK,
   SCARCITY_MAX,
   SCARCITY_MIN,
   STORAGE_BASE_CAPACITY,
@@ -226,6 +228,24 @@ export function effectiveContractMaxActive(state: EconomyState): number {
 /** BULK_CONTRACT_MAX_ACTIVE, one more slot every BULK_CONTRACT_SLOTS_PER_RANK ranks. */
 export function effectiveBulkContractMaxActive(state: EconomyState): number {
   return BULK_CONTRACT_MAX_ACTIVE + Math.floor(state.townRankIndex / BULK_CONTRACT_SLOTS_PER_RANK);
+}
+/** A time-limited goal's target scaled up by rank, so it stays a real ask
+ * instead of trivial busywork once production and automation have grown —
+ * see RANK_GOAL_TARGET_SCALE_PER_RANK. A target of 1 (send a caravan, buy
+ * an upgrade) is left alone: it's a single action, not a count to inflate,
+ * and inflating it would make the quest text read wrong.
+ *
+ * Takes the rank index itself rather than EconomyState — initialState()
+ * needs this to build the very first day's quest board before a full
+ * state object exists to read townRankIndex off of. */
+export function scaledGoalTarget(target: number, townRankIndex: number): number {
+  if (target <= 1) return target;
+  return Math.max(target, Math.round(target * (1 + townRankIndex * RANK_GOAL_TARGET_SCALE_PER_RANK)));
+}
+/** The matching reward-side scale-up — every rank-gated goal's payout grows
+ * too, including the target=1 ones scaledGoalTarget leaves untouched. */
+export function scaledGoalReward(reward: number, townRankIndex: number): number {
+  return Math.round(reward * (1 + townRankIndex * RANK_GOAL_REWARD_SCALE_PER_RANK));
 }
 /** WORKER_MAX_PER_GOOD, one more slot (per good) every WORKER_SLOTS_PER_RANK ranks. */
 export function effectiveWorkerMaxPerGood(state: EconomyState): number {

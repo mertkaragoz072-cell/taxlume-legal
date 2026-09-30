@@ -464,6 +464,11 @@ export interface WeeklyChallenge {
    * the current value of that same metric minus this baseline */
   startValue: number;
   claimed: boolean;
+  /** the template's target/reward, scaled by rank at assignment time (see
+   * scaledGoalTarget/scaledGoalReward) and snapshotted here — like a daily
+   * quest's own target/reward, so a mid-week rank-up can't move the goal. */
+  target: number;
+  reward: number;
 }
 
 /** a standing order that re-fires trade() every tick its condition holds — see

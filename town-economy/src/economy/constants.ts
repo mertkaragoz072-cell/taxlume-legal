@@ -123,6 +123,14 @@ export const WORKER_SLOTS_PER_RANK = 3;
 // tier3(). Reaching "Kingdom", the rank right after workers (Capital)
 // open up, continuing the same one-new-thing-per-rank cadence.
 export const RESEARCH_TIER3_UNLOCK_RANK = 6;
+// Time-limited goals (daily/mini quests, the weekly challenge, rival
+// bounties) used to hand out the exact same target and reward regardless
+// of rank — "make 3 trades today" never got harder or more lucrative no
+// matter how far a run went, so late-game these stopped being goals and
+// became something to tap through. Both grow with townRankIndex now; see
+// scaledGoalTarget/scaledGoalReward in formulas.ts.
+export const RANK_GOAL_TARGET_SCALE_PER_RANK = 0.08;
+export const RANK_GOAL_REWARD_SCALE_PER_RANK = 0.14;
 // --- Banking / loans -------------------------------------------------------
 // A loan is cash now against interest that compounds every tick until
 // repaid — real leverage, real risk. At most one outstanding at a time.

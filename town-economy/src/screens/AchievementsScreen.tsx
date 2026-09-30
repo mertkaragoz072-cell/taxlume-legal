@@ -236,7 +236,9 @@ export function AchievementsScreen() {
                     <Text style={[styles.title, styles.titleUnlocked]}>{t(miniQuestTemplate.titleKey)}</Text>
                     <Text style={styles.reward}>+{miniQuest.reward} 🪙</Text>
                   </View>
-                  <Text style={styles.description}>{t(miniQuestTemplate.descriptionKey)}</Text>
+                  <Text style={styles.description}>
+                    {t(miniQuestTemplate.descriptionKey, { target: miniQuest.target })}
+                  </Text>
                   <View style={styles.progressTrack}>
                     <View
                       style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
@@ -263,12 +265,9 @@ export function AchievementsScreen() {
           {(() => {
             const current = Math.max(
               0,
-              Math.min(
-                weeklyChallengeTemplate.metric(state.stats) - weeklyChallenge.startValue,
-                weeklyChallengeTemplate.target
-              )
+              Math.min(weeklyChallengeTemplate.metric(state.stats) - weeklyChallenge.startValue, weeklyChallenge.target)
             );
-            const pct = weeklyChallengeTemplate.target > 0 ? current / weeklyChallengeTemplate.target : 0;
+            const pct = weeklyChallenge.target > 0 ? current / weeklyChallenge.target : 0;
             return (
               <View style={styles.miniQuestCard}>
                 <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -279,11 +278,11 @@ export function AchievementsScreen() {
                       {t(weeklyChallengeTemplate.titleKey)}
                     </Text>
                     <Text style={styles.reward}>
-                      {t("achievements.weeklyChallengeReward", { amount: weeklyChallengeTemplate.reward })}
+                      {t("achievements.weeklyChallengeReward", { amount: weeklyChallenge.reward })}
                     </Text>
                   </View>
                   <Text style={styles.description}>
-                    {t(weeklyChallengeTemplate.descriptionKey, { target: weeklyChallengeTemplate.target })}
+                    {t(weeklyChallengeTemplate.descriptionKey, { target: weeklyChallenge.target })}
                   </Text>
                   <View style={styles.progressTrack}>
                     <View
@@ -295,7 +294,7 @@ export function AchievementsScreen() {
                       ? t("achievements.weeklyChallengeClaimed")
                       : t("achievements.weeklyChallengeProgress", {
                           current: Math.floor(current),
-                          target: weeklyChallengeTemplate.target,
+                          target: weeklyChallenge.target,
                         })}
                   </Text>
                 </View>
@@ -339,7 +338,7 @@ export function AchievementsScreen() {
                 </Text>
                 <Text style={styles.reward}>+{q.reward} 🪙</Text>
               </View>
-              <Text style={styles.description}>{t(template.descriptionKey)}</Text>
+              <Text style={styles.description}>{t(template.descriptionKey, { target: q.target })}</Text>
               {!q.completed && (
                 <>
                   <View style={styles.progressTrack}>
