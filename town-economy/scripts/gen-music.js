@@ -24,6 +24,18 @@
 // chime instead of a music box. This is meant to land as a cheerful little
 // village/market tune, not ambience.
 //
+// (5) reported back as still a little sleepy — (4)'s comping strummed once
+// every 1.5s (40 strums/min) with a slow, even melody. Livelier here means
+// doubling the strum rate to once every 1.0s with a real down-up accent
+// (the "up" strums sit back in the mix instead of matching the downbeats),
+// a shaker tick on every one of those offbeats instead of half as often, a
+// bouncier three-hit "oom-pah-pah" bass instead of two flat pulses, a
+// tighter melody (notes roughly twice as often), a touch more top end on
+// the comping pluck itself, and less reverb wash so the whole thing sits
+// forward instead of receding into the room. The chord progression and its
+// 6s-per-chord pace are untouched — the harmony still breathes at the same
+// rate, only what's playing against it moves faster.
+//
 // Loop technique (unchanged): render `LOOP_LEN + CROSSFADE` seconds of
 // continuously evolving audio, then blend the crossfade-length "extra" tail
 // back into the head with an equal-power fade. That makes the *join*
@@ -127,8 +139,8 @@ function pluck(buf, n, f, t0, dur, amp, partials) {
 // a fairly quick decay, since this plays every strum rather than sustaining.
 const STRUM_PARTIALS = [
   { mult: 1.0, decay: 1.15, weight: 1.0 },
-  { mult: 2.0, decay: 0.75, weight: 0.32 },
-  { mult: 3.0, decay: 0.5, weight: 0.14 },
+  { mult: 2.0, decay: 0.75, weight: 0.4 },
+  { mult: 3.0, decay: 0.5, weight: 0.2 },
 ];
 // A music-box/kalimba read needs partials at *exact* integer multiples —
 // the previous pass used 2.01x/3.03x for "character," but that fractional
@@ -270,15 +282,20 @@ function renderTrack({ name, seed, sequence, outFile }) {
   // decays well before the detune would be audible as its own pulse.
   const strumL = new Float64Array(n);
   const strumR = new Float64Array(n);
-  const STRUM_OFFSETS = [0, 1.5, 3.0, 4.5];
+  // Once a second instead of every 1.5s (40 -> 60 strums/min), with the
+  // "up" strums (odd indices) pulled back so the pattern still reads as a
+  // hand alternating down-up-down-up rather than six identical hits.
+  const STRUM_OFFSETS = [0, 1.0, 2.0, 3.0, 4.0, 5.0];
+  const STRUM_ACCENTS = [1.0, 0.72, 0.95, 0.72, 0.98, 0.72];
   for (let i = 0; i < fullSequence.length; i++) {
     const freqs = CHORDS[fullSequence[i]];
     const segStart = i * SEG;
-    for (const off of STRUM_OFFSETS) {
-      const t0 = segStart + off;
+    for (let k = 0; k < STRUM_OFFSETS.length; k++) {
+      const t0 = segStart + STRUM_OFFSETS[k];
       if (t0 >= genLen) continue;
-      strumChord(strumL, n, freqs, t0, 0.34, 14);
-      strumChord(strumR, n, freqs, t0, 0.34, 22);
+      const amp = 0.34 * STRUM_ACCENTS[k];
+      strumChord(strumL, n, freqs, t0, amp, 14);
+      strumChord(strumR, n, freqs, t0, amp, 22);
     }
   }
   for (let s = 0; s < n; s++) {
@@ -286,15 +303,16 @@ function renderTrack({ name, seed, sequence, outFile }) {
     strumR[s] = Math.tanh(strumR[s] * 1.3) * 0.8;
   }
 
-  // --- Bass: a soft pulse on the chord's root, twice per chord (a gentle
-  // "duh... duh" walking feel), kept centered and mono like most mixed
-  // tracks keep their low end.
+  // --- Bass: a three-hit "oom-pah-pah" on the chord's root instead of two
+  // flat pulses — the extra middle hit is what turns a plain walking bass
+  // into something with a bounce to it, closer to a folk/polka feel.
   const bass = new Float64Array(n);
   for (let i = 0; i < fullSequence.length; i++) {
     const root = BASS_ROOT[fullSequence[i]];
     const segStart = i * SEG;
     pluck(bass, n, root, segStart, 3.2, 0.5, BASS_PARTIALS);
-    pluck(bass, n, root, segStart + SEG / 2, 3.2, 0.36, BASS_PARTIALS);
+    pluck(bass, n, root, segStart + SEG / 3, 2.2, 0.3, BASS_PARTIALS);
+    pluck(bass, n, root, segStart + (2 * SEG) / 3, 2.2, 0.3, BASS_PARTIALS);
   }
   for (let s = 0; s < n; s++) bass[s] = Math.tanh(bass[s] * 1.4) * 0.72;
 
@@ -305,7 +323,10 @@ function renderTrack({ name, seed, sequence, outFile }) {
     const segI = Math.min(Math.floor(noteTime / SEG), fullSequence.length - 1);
     const scale = PENTATONIC[fullSequence[segI]];
     pluck(melodyDry, n, choice(scale), noteTime, 1.8, uniform(0.5, 0.85), BELL_PARTIALS);
-    noteTime += uniform(1.1, 2.0);
+    // Roughly twice as often as before (was 1.1-2.0s apart) — the comping
+    // and bass alone got livelier above, but a melody still ambling in at
+    // its old, slower pace read as dragging behind the rest of the mix.
+    noteTime += uniform(0.65, 1.25);
   }
   for (let s = 0; s < n; s++) melodyDry[s] *= 0.24;
   const echo = pingPongEcho(melodyDry, 300, 0.38, 3);
@@ -319,7 +340,11 @@ function renderTrack({ name, seed, sequence, outFile }) {
   for (let i = 0; i < fullSequence.length; i++) {
     const segStart = i * SEG;
     for (let k = 0; k < STRUM_OFFSETS.length; k++) {
-      const t0 = segStart + STRUM_OFFSETS[k] + 0.75;
+      // Halfway to the *next* strum (0.5s on the new once-a-second grid,
+      // was 0.75s on the old 1.5s one) — one tick per strum instead of one
+      // every other strum, which is most of what turns "strum with an
+      // occasional shaker accent" into an actual rhythm section.
+      const t0 = segStart + STRUM_OFFSETS[k] + 0.5;
       if (t0 >= genLen) continue;
       const leadLeft = k % 2 === 0;
       shaker(leadLeft ? shakerL : shakerR, n, t0, 0.16, rng);
@@ -334,7 +359,10 @@ function renderTrack({ name, seed, sequence, outFile }) {
   for (let s = 0; s < n; s++) sendMono[s] = (strumL[s] + strumR[s]) * 0.5 * 0.8 + melodyDry[s] * 0.6;
   const wetL = reverb(sendMono, 0);
   const wetR = reverb(sendMono, 37);
-  const WET_MIX = 0.16;
+  // A little drier than before (was 0.16) — less reverb wash keeps the
+  // now-faster comping and shaker feeling immediate instead of receding
+  // into the room, which read as sleepy even once the notes sped up.
+  const WET_MIX = 0.12;
 
   const fullL = new Float64Array(n);
   const fullR = new Float64Array(n);
@@ -368,8 +396,8 @@ function renderTrack({ name, seed, sequence, outFile }) {
     peak = Math.max(peak, Math.abs(loopedL[s]), Math.abs(loopedR[s]));
   }
   for (let s = 0; s < headLen; s++) {
-    loopedL[s] = (loopedL[s] / peak) * 0.52;
-    loopedR[s] = (loopedR[s] / peak) * 0.52;
+    loopedL[s] = (loopedL[s] / peak) * 0.56;
+    loopedR[s] = (loopedR[s] / peak) * 0.56;
   }
 
   const outPath = path.join(__dirname, "..", "assets", "sounds", outFile);
