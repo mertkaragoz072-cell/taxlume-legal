@@ -275,6 +275,18 @@ export const HAPPINESS_TARGET_SLOPE = 220;
 export const HAPPINESS_EASE = 0.04;
 export const PRODUCTION_INFLATION_FACTOR = 0.005; // unhappy, under-producing villagers push inflation harder
 export const CONTENT_BONUS_FACTOR = 0.005; // mutlu halk enflasyonu azaltabiliyor
+// inflationRate is itself bounded (config.inflationMin/Max) and mean-reverting,
+// so it can never "run away" tick to tick — but a sustained-happy town sits at
+// a negative inflationTarget indefinitely, and inflationIndex is that rate's
+// running PRODUCT (index *= 1 + rate), which has no equivalent reversion: even
+// a mild, perfectly stable -0.35%/tick target compounds toward zero over a
+// long enough session, dragging every good's price down with it (through the
+// inflationIndex/100 term in priceFromSupply) with no way back, since the
+// same happiness that caused it also keeps the target negative. There's
+// already an upper collapse bound (difficulty.hyperinflationIndex); this is
+// its missing lower counterpart — not a loss condition, just a floor under
+// how much a content town's prices can ease.
+export const INFLATION_INDEX_FLOOR = 40;
 export const ANGRY_THRESHOLD = 20;
 export const ANGRY_EVENT_CHANCE = 0.1;
 export const ANGRY_CASH_PENALTY = 25;

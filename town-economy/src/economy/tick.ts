@@ -76,6 +76,7 @@ import {
   HAPPINESS_EASE,
   HAPPINESS_TARGET_SLOPE,
   HISTORY_LEN,
+  INFLATION_INDEX_FLOOR,
   INFLATION_REVERSION_RATE,
   INPUT_COST_PASS_THROUGH,
   LOST_TREASURE_CHANCE,
@@ -443,7 +444,14 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
-  const inflationIndex = state.inflationIndex * (1 + inflationRate);
+  // inflationRate is bounded and mean-reverting (see the comment where
+  // inflationTarget is computed above), but the index is that rate's
+  // running PRODUCT — a sustained-happy town sits at a negative target
+  // indefinitely, and compounding even a mild, stable negative rate for
+  // long enough decays the index toward zero with no way back, dragging
+  // every good's price down through priceFromSupply's inflationIndex/100
+  // term. See INFLATION_INDEX_FLOOR.
+  const inflationIndex = Math.max(INFLATION_INDEX_FLOOR, state.inflationIndex * (1 + inflationRate));
   const inflationHistory = pushCapped(state.inflationHistory, inflationIndex, HISTORY_LEN);
 
   // Permanent, run-independent bonus from past prestiges (see PRESTIGE).
