@@ -395,6 +395,7 @@ export const STRINGS = {
       workersSectionLabel: "İŞÇİLER",
       workersNote:
         "Ürünlere kalıcı ücretli işçi tut, üretimlerini artır. Ücret kasadan düzenli olarak düşer.",
+      workersLockedNote: "{amount} 🪙 net servette açılır",
       workerWage: "{amount} 🪙/gün ücret",
       workerBonus: "+%{pct} üretim",
       eventsSectionLabel: "SON OLAYLAR",
@@ -1243,6 +1244,7 @@ export const STRINGS = {
       rivalOfferDeclined: "💼 Rakibin toplu alım teklifini reddettin.",
       tradeUnlocked: "🎉 Şehirler arası ticaret açıldı! Artık kervan gönderebilirsin.",
       metropolUnlocked: "🏙️ Metropollerle ticaret açıldı! Baharat, ipek ve mücevher artık çok daha kârlı.",
+      workersUnlocked: "👷 İşçi çalıştırma açıldı! Ürünlere kalıcı işçi tutup üretimini artırabilirsin.",
       legendaryUnlocked:
         "🐉 Efsanevi Tüccar açıldı! Artık bu ortağın kapısı her yeni kasabada da açık kalacak.",
       mythicUnlocked:
@@ -1664,6 +1666,7 @@ export const STRINGS = {
       workersSectionLabel: "WORKERS",
       workersNote:
         "Hire permanent, waged staff to boost a good's production. Wages come out of the treasury on an ongoing basis.",
+      workersLockedNote: "Unlocks at {amount} 🪙 net worth",
       workerWage: "{amount} 🪙/day wage",
       workerBonus: "+{pct}% production",
       eventsSectionLabel: "RECENT EVENTS",
@@ -2494,6 +2497,7 @@ export const STRINGS = {
       tradeUnlocked: "🎉 Trade with neighboring towns unlocked! You can now send caravans.",
       metropolUnlocked:
         "🏙️ Trade with metropolises unlocked! Spice, silk, and jewelry are now far more profitable.",
+      workersUnlocked: "👷 Hiring workers unlocked! Staff a good permanently to boost its production.",
       legendaryUnlocked:
         "🐉 Legendary Trader unlocked! This partner's door stays open in every future town too.",
       mythicUnlocked:

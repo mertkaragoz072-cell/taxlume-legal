@@ -19,6 +19,7 @@ import {
   PRESTIGE_UNLOCK_NET_WORTH,
   TAX_RATE_STEPS,
   TICKS_PER_GAME_DAY,
+  WORKERS_UNLOCK_NET_WORTH,
 } from "../economy/useEconomy";
 import { DOCTRINES_BY_ID } from "../economy/doctrines";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
@@ -578,52 +579,70 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       })}
 
       <SectionLabel text={t("town.workersSectionLabel")} color="#e0a13f" />
-      <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
-      {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
-        const count = state.workers[g.id];
-        return (
-          <View key={g.id} style={styles.workerCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <View style={[styles.workerAccent, { backgroundColor: g.color }]} />
-            <Text style={styles.workerIcon}>{g.icon}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.workerName}>{t(g.nameKey)}</Text>
-              {count > 0 && (
-                <Text style={styles.workerInfo}>
-                  {t("town.workerWage", {
-                    amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1),
-                  })}
-                  {" · "}
-                  {t("town.workerBonus", {
-                    pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
-                  })}
-                </Text>
-              )}
-              <View style={styles.workerPipRow}>
-                {Array.from({ length: WORKER_MAX_PER_GOOD }).map((_, i) => (
-                  <View key={i} style={[styles.workerPip, i < count && styles.workerPipFilled]} />
-                ))}
+      {!state.workersUnlocked ? (
+        <View style={styles.workersLockedCard}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          <Text style={styles.doctrineLocked}>
+            🔒 {t("town.workersLockedNote", { amount: WORKERS_UNLOCK_NET_WORTH })}
+          </Text>
+          <View style={styles.lockedTrack}>
+            <View
+              style={[
+                styles.lockedFill,
+                { width: `${Math.max(0, Math.min(1, netWorth / WORKERS_UNLOCK_NET_WORTH)) * 100}%` },
+              ]}
+            />
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
+      )}
+      {state.workersUnlocked &&
+        GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
+          const count = state.workers[g.id];
+          return (
+            <View key={g.id} style={styles.workerCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <View style={[styles.workerAccent, { backgroundColor: g.color }]} />
+              <Text style={styles.workerIcon}>{g.icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.workerName}>{t(g.nameKey)}</Text>
+                {count > 0 && (
+                  <Text style={styles.workerInfo}>
+                    {t("town.workerWage", {
+                      amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1),
+                    })}
+                    {" · "}
+                    {t("town.workerBonus", {
+                      pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
+                    })}
+                  </Text>
+                )}
+                <View style={styles.workerPipRow}>
+                  {Array.from({ length: WORKER_MAX_PER_GOOD }).map((_, i) => (
+                    <View key={i} style={[styles.workerPip, i < count && styles.workerPipFilled]} />
+                  ))}
+                </View>
+              </View>
+              <View style={styles.workerBtnCol}>
+                <ScalePressable
+                  disabled={count >= WORKER_MAX_PER_GOOD}
+                  onPress={() => hireWorker(g.id)}
+                  style={[styles.workerBtn, count >= WORKER_MAX_PER_GOOD && styles.workerBtnDisabled]}
+                >
+                  <Text style={styles.workerBtnText}>+</Text>
+                </ScalePressable>
+                <ScalePressable
+                  disabled={count <= 0}
+                  onPress={() => fireWorker(g.id)}
+                  style={[styles.workerBtn, count <= 0 && styles.workerBtnDisabled]}
+                >
+                  <Text style={styles.workerBtnText}>−</Text>
+                </ScalePressable>
               </View>
             </View>
-            <View style={styles.workerBtnCol}>
-              <ScalePressable
-                disabled={count >= WORKER_MAX_PER_GOOD}
-                onPress={() => hireWorker(g.id)}
-                style={[styles.workerBtn, count >= WORKER_MAX_PER_GOOD && styles.workerBtnDisabled]}
-              >
-                <Text style={styles.workerBtnText}>+</Text>
-              </ScalePressable>
-              <ScalePressable
-                disabled={count <= 0}
-                onPress={() => fireWorker(g.id)}
-                style={[styles.workerBtn, count <= 0 && styles.workerBtnDisabled]}
-              >
-                <Text style={styles.workerBtnText}>−</Text>
-              </ScalePressable>
-            </View>
-          </View>
-        );
-      })}
+          );
+        })}
 
       <SectionLabel text={t("town.eventsSectionLabel")} color="#a0917a" />
       {state.eventLog.length === 0 && <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>}
@@ -916,6 +935,13 @@ const styles = StyleSheet.create({
     fontSize: TYPE.caption,
   },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
+  workersLockedCard: {
+    borderRadius: RADIUS.feature,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    overflow: "hidden",
+    ...cardShadow,
+  },
   workerCard: {
     flexDirection: "row",
     alignItems: "center",

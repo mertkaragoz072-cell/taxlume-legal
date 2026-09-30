@@ -311,6 +311,8 @@ export interface EconomyState {
   tradeUnlocked: boolean;
   /** set once the town's net worth first crosses METROPOL_UNLOCK_NET_WORTH; sticky, never re-locks */
   metropolUnlocked: boolean;
+  /** set once the town's net worth first crosses WORKERS_UNLOCK_NET_WORTH; sticky, never re-locks */
+  workersUnlocked: boolean;
   /** set once prestigeLevel first reaches LEGENDARY_UNLOCK_PRESTIGE_LEVEL; sticky, never re-locks */
   legendaryUnlocked: boolean;
   /** set once legendaryPoints first reaches MYTHIC_UNLOCK_LEGENDARY_POINTS; sticky, never re-locks */

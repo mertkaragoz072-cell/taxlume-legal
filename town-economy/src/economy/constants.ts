@@ -5,6 +5,7 @@
  * here has behaviour; changing a value here changes the game's balance. */
 
 import { DifficultyId } from "./difficulty";
+import { townRankThreshold } from "./townRanks";
 
 export const HISTORY_LEN = 40;
 export const TICK_MS = 3000;
@@ -19,21 +20,49 @@ export const BOOSTED_TICK_MS = Math.round(TICK_MS / SPEED_BOOST_MULTIPLIER);
 export const EVENT_LOG_CAP = 30;
 export const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const TOWN_NAME_MAX_LENGTH = 24;
+// --- Rank-gated feature unlocks ---------------------------------------------
+// A new town starts with just the market, inventory and basic town-hall
+// upgrades — everything else used to have its own bespoke net-worth number,
+// clustered so tightly (500 to 10,000) that a normal run unlocked the whole
+// game within its first few minutes and then had nothing new to reveal for
+// every order of magnitude after that. These now read straight off the town
+// rank ladder (see townRanks.ts) instead: each one fires at a *named* rank's
+// own threshold, so reaching that rank and gaining the feature are the same
+// moment — a rank-up event and (where one exists) this system's own unlock
+// event fire together, instead of a silent number crossing separately from
+// the title changing.
+//
+// Deliberately left off this ladder: Research and Invest stay available
+// from tick one (the guided "First Steps" onboarding — see onboarding.ts —
+// walks a brand-new player through both within their first session, so
+// gating them behind a rank would strand that tutorial), and Loans stay
+// available from tick one too (a doctrine choice changes future loan rates —
+// see doctrines.ts' loanRateMult — so the player should be able to have
+// already felt how credit behaves before locking that choice in, not after).
+//
 // A new town starts local-market-only; once its net worth proves the
 // player can run an economy, inter-city trade (and the caravan/foreign-
 // town system) opens up. Sticky once crossed — see applyTradeUnlock.
-export const TRADE_UNLOCK_NET_WORTH = 500;
+// Reaching "Town", the first named rank past the start.
+export const TRADE_UNLOCK_NET_WORTH = townRankThreshold(1);
 // A further milestone past ordinary inter-city trade: once the town has
 // grown enough, the far-off metropolises (see towns.ts' "metropol" tier —
 // pricier caravans, but far better payoff for the luxury goods) open up.
-// Sticky once crossed — see applyMetropolUnlock.
-export const METROPOL_UNLOCK_NET_WORTH = 3000;
+// Sticky once crossed — see applyMetropolUnlock. Reaching "Trade Hub" — the
+// rank's own name is what earned it this slot on the ladder.
+export const METROPOL_UNLOCK_NET_WORTH = townRankThreshold(4);
+// Staffing a good's production for a recurring wage (see workers.ts) — the
+// one system here that had no gate at all before this pass, available from
+// tick one same as research/invest/loans above, which buried it in the pile
+// of things a new town could already do. Sticky once crossed — see
+// applyWorkersUnlock. Reaching "Capital".
+export const WORKERS_UNLOCK_NET_WORTH = townRankThreshold(5);
 // --- Town doctrine ---------------------------------------------------------
 // The run's one irreversible choice (see doctrines.ts), offered between the
 // trade and metropol milestones: late enough that the player has felt how
 // tariffs, production and credit actually behave, early enough that the
-// choice still shapes most of the run.
-export const DOCTRINE_UNLOCK_NET_WORTH = 2000;
+// choice still shapes most of the run. Reaching "City".
+export const DOCTRINE_UNLOCK_NET_WORTH = townRankThreshold(2);
 // The one content gate tied to prestigeLevel rather than the current run's
 // net worth — see towns.ts' "legendary" tier and applyLegendaryUnlock.
 export const LEGENDARY_UNLOCK_PRESTIGE_LEVEL = 3;
@@ -53,8 +82,11 @@ export const TICKS_PER_GAME_DAY = 40;
 // --- Prestige ------------------------------------------------------------
 // The "end of a run" milestone: cash in a well-grown town for a permanent,
 // stacking bonus that survives every future reset (see PRESTIGE below and
-// the RESET case, which both carry prestigeLevel forward).
-export const PRESTIGE_UNLOCK_NET_WORTH = 10000;
+// the RESET case, which both carry prestigeLevel forward). Reaching
+// "Metropolis" — also rank-tied now (was a standalone 10,000), but kept
+// close to its old value: prestige is meant to be loopable early and often
+// across repeat runs, not a single late-game finish line.
+export const PRESTIGE_UNLOCK_NET_WORTH = townRankThreshold(3);
 export const PRESTIGE_PRODUCTION_BONUS_PER_LEVEL = 0.08;
 export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
 // Points earned each prestige, spent on prestigePerks.ts — a player-chosen

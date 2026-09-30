@@ -20,7 +20,12 @@ import {
 import { eventFields, NestedKey, t } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { EconomyEvent, EconomyState } from "./types";
-import { EVENT_LOG_CAP, LEGENDARY_UNLOCK_PRESTIGE_LEVEL, MYTHIC_UNLOCK_LEGENDARY_POINTS } from "./constants";
+import {
+  EVENT_LOG_CAP,
+  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+  MYTHIC_UNLOCK_LEGENDARY_POINTS,
+  WORKERS_UNLOCK_NET_WORTH,
+} from "./constants";
 import { computeNetWorth, effectiveMetropolUnlockNetWorth, effectiveTradeUnlockNetWorth } from "./formulas";
 
 export function applyAchievements(state: EconomyState): EconomyState {
@@ -84,6 +89,23 @@ export function applyMetropolUnlock(state: EconomyState): EconomyState {
   return {
     ...state,
     metropolUnlocked: true,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+export function applyWorkersUnlock(state: EconomyState): EconomyState {
+  if (state.workersUnlocked) return state;
+  if (computeNetWorth(state) < WORKERS_UNLOCK_NET_WORTH) return state;
+
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...eventFields(state.language, "msg.workersUnlocked"),
+    tone: "good",
+  };
+  return {
+    ...state,
+    workersUnlocked: true,
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),

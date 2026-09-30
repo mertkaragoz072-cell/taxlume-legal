@@ -112,6 +112,7 @@ import {
   applyMythicUnlock,
   applyTownRankUp,
   applyTradeUnlock,
+  applyWorkersUnlock,
 } from "./progression";
 import { tick } from "./tick";
 
@@ -172,6 +173,7 @@ export {
   TOWN_NAME_MAX_LENGTH,
   TOWN_RANK_PRODUCTION_BONUS_PER_RANK,
   TRADE_UNLOCK_NET_WORTH,
+  WORKERS_UNLOCK_NET_WORTH,
 } from "./constants";
 export {
   computeNetWorth,
@@ -340,6 +342,7 @@ export function initialState(
     unlockedAchievements: [],
     tradeUnlocked: false,
     metropolUnlocked: false,
+    workersUnlocked: false,
     legendaryUnlocked: false,
     mythicUnlocked: false,
     townRankIndex: 0,
@@ -1057,7 +1060,9 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
   s = applyTownRankUp(
     applyMythicUnlock(
       applyLegendaryUnlock(
-        applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(s)))))
+        applyWorkersUnlock(
+          applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(s)))))
+        )
       )
     )
   );
@@ -1314,7 +1319,7 @@ export function repayLoan(state: EconomyState, amount: number): EconomyState {
   };
 }
 function hireWorker(state: EconomyState, goodId: GoodId): EconomyState {
-  if (state.gameOver) return state;
+  if (state.gameOver || !state.workersUnlocked) return state;
   const count = state.workers[goodId];
   if (count >= WORKER_MAX_PER_GOOD) return state;
   return { ...state, workers: { ...state.workers, [goodId]: count + 1 } };
@@ -1443,7 +1448,9 @@ function reducer(state: EconomyState, action: Action): EconomyState {
     applyTownRankUp(
       applyMythicUnlock(
         applyLegendaryUnlock(
-          applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(next)))))
+          applyWorkersUnlock(
+            applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(next)))))
+          )
         )
       )
     )
