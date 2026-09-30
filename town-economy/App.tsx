@@ -24,6 +24,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
+import { ProposalModal } from "./src/components/ProposalModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { CARAVAN_STEPS, CaravanTutorialModal } from "./src/components/CaravanTutorialModal";
 import { MentorCoach } from "./src/components/MentorCoach";
@@ -108,6 +109,9 @@ function Game() {
   // is already mounted and hydrating behind it — by the time the button is
   // pressed the save has usually loaded, and "Continue" is the true label.
   const [titleVisible, setTitleVisible] = useState(true);
+  // Shown every time "Başla" is pressed, before the title hands off to the
+  // game — see ProposalModal.
+  const [proposalVisible, setProposalVisible] = useState(false);
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
@@ -291,8 +295,11 @@ function Game() {
       <SafeAreaView style={styles.safe}>
         <StatusBar style="light" />
         <View style={styles.content}>
-          <TitleScreen
-            onStart={() => {
+          <TitleScreen onStart={() => setProposalVisible(true)} />
+          <ProposalModal
+            visible={proposalVisible}
+            onAccept={() => {
+              setProposalVisible(false);
               start();
               sounds.startMusic();
               setTitleVisible(false);
