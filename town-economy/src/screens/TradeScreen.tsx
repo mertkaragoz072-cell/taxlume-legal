@@ -15,12 +15,12 @@ import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, ContractDirection, EconomyState, GoodId } from "../economy/types";
 import {
   BULK_CONTRACT_BONUS_PCT,
-  BULK_CONTRACT_MAX_ACTIVE,
   BULK_CONTRACT_TERM_DAY_STEPS,
   CARAVAN_INSURANCE_COST_PCT,
   CONTRACT_MARGIN_PCT,
-  CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
+  effectiveBulkContractMaxActive,
+  effectiveContractMaxActive,
   effectiveMetropolUnlockNetWorth,
   effectiveTariffRate,
   effectiveTradeUnlockNetWorth,
@@ -649,17 +649,16 @@ export function TradeScreen({ sounds, compactMap }: Props) {
           {(() => {
             const strikePreview = state.goods[goodId].price;
             const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
+            const maxContracts = effectiveContractMaxActive(state);
             const contractDisabled =
-              state.contracts.length >= CONTRACT_MAX_ACTIVE ||
-              state.cash < margin ||
-              !isGoodUnlocked(good, state);
+              state.contracts.length >= maxContracts || state.cash < margin || !isGoodUnlocked(good, state);
             return (
               <>
                 <Text style={styles.summaryLabel}>
                   {t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
                 </Text>
                 <Text style={styles.contractMaxNote}>
-                  {t("trade.contract.maxActiveNote", { max: CONTRACT_MAX_ACTIVE })}
+                  {t("trade.contract.maxActiveNote", { max: maxContracts })}
                 </Text>
                 <ScalePressable
                   disabled={contractDisabled}
@@ -755,10 +754,9 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
             const payout = lockedPrice * bulkQty;
             const hasEnough = state.goods[goodId].holding >= bulkQty;
+            const maxBulkContracts = effectiveBulkContractMaxActive(state);
             const bulkDisabled =
-              state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE ||
-              !hasEnough ||
-              !isGoodUnlocked(good, state);
+              state.bulkContracts.length >= maxBulkContracts || !hasEnough || !isGoodUnlocked(good, state);
             return (
               <>
                 <Text style={styles.summaryLabel}>
@@ -770,7 +768,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                   </Text>
                 )}
                 <Text style={styles.contractMaxNote}>
-                  {t("trade.bulkContract.maxActiveNote", { max: BULK_CONTRACT_MAX_ACTIVE })}
+                  {t("trade.bulkContract.maxActiveNote", { max: maxBulkContracts })}
                 </Text>
                 <ScalePressable
                   disabled={bulkDisabled}

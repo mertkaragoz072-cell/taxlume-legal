@@ -869,6 +869,7 @@ export const STRINGS = {
       sectionNote: "Ürünlere yatırım yaparak üretim hızını ve değerini kalıcı olarak artır.",
       researchedBadge: "✅ Araştırıldı",
       lockedRequires: "Önce {name} gerekli",
+      lockedRank: "{rank} olunca açılır",
       effectProduction: "+%{pct} üretim",
       effectValue: "+%{pct} değer",
       researchBtn: "Araştır ({cost} 🪙)",
@@ -878,12 +879,20 @@ export const STRINGS = {
           name: "Fırın Ustalığı",
           description: "Usta fırıncılık ekmeğin hem üretimini hem değerini yükseltir.",
         },
+        t3: {
+          name: "Ekmek Şöhreti",
+          description: "Ekmeğin ünü komşu kasabalara yayılır, üretimini ve değerini artırır.",
+        },
       },
       milk: {
         t1: { name: "Süt Verimliliği", description: "Daha sağlıklı sürülerle süt üretimini artır." },
         t2: {
           name: "Mandıra Ustalığı",
           description: "Gelişmiş mandıracılık sütün değerini ve üretimini artırır.",
+        },
+        t3: {
+          name: "Mandıra Şöhreti",
+          description: "Sütün ve süt ürünlerinin ünü yayılır, üretimini ve değerini artırır.",
         },
       },
       wood: {
@@ -895,12 +904,20 @@ export const STRINGS = {
           name: "Kereste Ustalığı",
           description: "Usta marangozluk kerestenin değerini ve üretimini artırır.",
         },
+        t3: {
+          name: "Kereste Şöhreti",
+          description: "Ustaca işlenmiş kerestenin ünü yayılır, üretimini ve değerini artırır.",
+        },
       },
       iron: {
         t1: { name: "Demir Verimliliği", description: "Daha derin galerilerle demir üretimini artır." },
         t2: {
           name: "Dökümcü Ustalığı",
           description: "Usta dökümcülük demirin değerini ve üretimini artırır.",
+        },
+        t3: {
+          name: "Demirci Şöhreti",
+          description: "Dökümcünün ustalığı dillere düşer, demirin üretimini ve değerini artırır.",
         },
       },
       cloth: {
@@ -909,6 +926,10 @@ export const STRINGS = {
           name: "Dokuma Ustalığı",
           description: "Usta dokumacılık kumaşın değerini ve üretimini artırır.",
         },
+        t3: {
+          name: "Dokuma Şöhreti",
+          description: "İnce dokumaların ünü yayılır, kumaşın üretimini ve değerini artırır.",
+        },
       },
       fish: {
         t1: {
@@ -916,6 +937,10 @@ export const STRINGS = {
           description: "Daha iyi ağlar ve teknelerle balık avını artır.",
         },
         t2: { name: "Balık İşleme Ustalığı", description: "Usta işleme balığın değerini ve avını artırır." },
+        t3: {
+          name: "Balıkçı Şöhreti",
+          description: "Taze balığın ünü çevre kasabalara yayılır, avı ve değerini artırır.",
+        },
       },
       wine: {
         t1: { name: "Bağcılık Verimliliği", description: "Daha verimli bağlarla üzüm hasadını artır." },
@@ -923,12 +948,20 @@ export const STRINGS = {
           name: "Şarapçılık Ustalığı",
           description: "Usta şarapçılık şarabın değerini ve üretimini artırır.",
         },
+        t3: {
+          name: "Şarap Şöhreti",
+          description: "Şarabın ünü uzak diyarlara ulaşır, üretimini ve değerini artırır.",
+        },
       },
       leather: {
         t1: { name: "Deri Verimliliği", description: "Daha sağlıklı sürülerle deri üretimini artır." },
         t2: {
           name: "Tabaklama Ustalığı",
           description: "Usta tabaklama derinin değerini ve üretimini artırır.",
+        },
+        t3: {
+          name: "Tabakhane Şöhreti",
+          description: "İşlenmiş derinin ünü yayılır, üretimini ve değerini artırır.",
         },
       },
       spice: {
@@ -940,6 +973,10 @@ export const STRINGS = {
           name: "Baharat Ustalığı",
           description: "Usta baharatçılık baharatın değerini ve üretimini artırır.",
         },
+        t3: {
+          name: "Baharat Şöhreti",
+          description: "Nadide baharatların ünü kervan yollarına yayılır, üretimini ve değerini artırır.",
+        },
       },
       silk: {
         t1: {
@@ -950,12 +987,21 @@ export const STRINGS = {
           name: "İpek Dokuma Ustalığı",
           description: "Usta ipek dokumacılığı ipeğin değerini ve üretimini artırır.",
         },
+        t3: {
+          name: "İpek Şöhreti",
+          description: "Zarif ipeğin ünü saraylara kadar ulaşır, üretimini ve değerini artırır.",
+        },
       },
       jewelry: {
         t1: { name: "Kuyumculuk Verimliliği", description: "Daha iyi aletlerle mücevher üretimini artırır." },
         t2: {
           name: "Kuyumcu Ustalığı",
           description: "Usta kuyumculuk mücevherin değerini ve üretimini artırır.",
+        },
+        t3: {
+          name: "Kuyumcu Şöhreti",
+          description:
+            "Ustaca işlenmiş mücevherlerin ünü krallıklara yayılır, üretimini ve değerini artırır.",
         },
       },
     },
@@ -2136,16 +2182,25 @@ export const STRINGS = {
       sectionNote: "Invest in goods to permanently boost their production speed and value.",
       researchedBadge: "✅ Researched",
       lockedRequires: "Requires {name} first",
+      lockedRank: "Unlocks at {rank}",
       effectProduction: "+{pct}% production",
       effectValue: "+{pct}% value",
       researchBtn: "Research ({cost} 🪙)",
       bread: {
         t1: { name: "Bread Efficiency", description: "Better baking techniques boost bread production." },
         t2: { name: "Baking Mastery", description: "Master bakers raise both bread's value and production." },
+        t3: {
+          name: "Bread Renown",
+          description: "Bread's fame spreads to neighboring towns, raising its production and value.",
+        },
       },
       milk: {
         t1: { name: "Milk Efficiency", description: "Healthier herds boost milk production." },
         t2: { name: "Dairy Mastery", description: "Advanced dairying raises milk's value and production." },
+        t3: {
+          name: "Dairy Renown",
+          description: "The dairy's fame spreads, raising milk's production and value.",
+        },
       },
       wood: {
         t1: { name: "Wood Efficiency", description: "Sharper axes and saws boost wood production." },
@@ -2153,20 +2208,36 @@ export const STRINGS = {
           name: "Lumber Mastery",
           description: "Skilled carpentry raises lumber's value and production.",
         },
+        t3: {
+          name: "Lumber Renown",
+          description: "Masterfully worked lumber earns renown, raising its production and value.",
+        },
       },
       iron: {
         t1: { name: "Iron Efficiency", description: "Deeper shafts boost iron production." },
         t2: { name: "Smelting Mastery", description: "Master smelting raises iron's value and production." },
+        t3: {
+          name: "Smithing Renown",
+          description: "The smith's skill becomes legend, raising iron's production and value.",
+        },
       },
       cloth: {
         t1: { name: "Cloth Efficiency", description: "Faster looms boost cloth production." },
         t2: { name: "Weaving Mastery", description: "Master weaving raises cloth's value and production." },
+        t3: {
+          name: "Weaving Renown",
+          description: "Fine weaves earn renown, raising cloth's production and value.",
+        },
       },
       fish: {
         t1: { name: "Fishing Efficiency", description: "Better nets and boats boost your catch." },
         t2: {
           name: "Fish Processing Mastery",
           description: "Skilled processing raises fish's value and catch.",
+        },
+        t3: {
+          name: "Fishing Renown",
+          description: "Fresh catch earns renown across nearby towns, raising the catch and its value.",
         },
       },
       wine: {
@@ -2178,16 +2249,28 @@ export const STRINGS = {
           name: "Winemaking Mastery",
           description: "Master winemaking raises wine's value and production.",
         },
+        t3: {
+          name: "Winemaking Renown",
+          description: "The wine's fame reaches distant lands, raising its production and value.",
+        },
       },
       leather: {
         t1: { name: "Leatherworking Efficiency", description: "Healthier herds boost leather production." },
         t2: { name: "Tanning Mastery", description: "Master tanning raises leather's value and production." },
+        t3: {
+          name: "Tannery Renown",
+          description: "Fine leatherwork earns renown, raising its production and value.",
+        },
       },
       spice: {
         t1: { name: "Spice Efficiency", description: "Better harvesting techniques boost spice production." },
         t2: {
           name: "Spice Mastery",
           description: "Master spice trading raises spice's value and production.",
+        },
+        t3: {
+          name: "Spice Renown",
+          description: "Rare spices earn renown along the caravan roads, raising production and value.",
         },
       },
       silk: {
@@ -2196,12 +2279,21 @@ export const STRINGS = {
           name: "Silk Weaving Mastery",
           description: "Master silk weaving raises silk's value and production.",
         },
+        t3: {
+          name: "Silk Renown",
+          description: "Fine silk earns renown as far as royal courts, raising production and value.",
+        },
       },
       jewelry: {
         t1: { name: "Jewelry Efficiency", description: "Better tools boost jewelry production." },
         t2: {
           name: "Master Jewelers",
           description: "Master jewelry-crafting raises jewelry's value and production.",
+        },
+        t3: {
+          name: "Jeweler's Renown",
+          description:
+            "Masterfully crafted jewelry earns renown across kingdoms, raising production and value.",
         },
       },
     },

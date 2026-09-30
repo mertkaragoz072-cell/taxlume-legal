@@ -10,8 +10,8 @@ import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { isGlutted, isHot } from "../economy/demandCycles";
 import { SEASONAL_EVENT_TEMPLATES_BY_ID } from "../economy/seasonalEvents";
 import {
-  AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
+  effectiveAutoTradeMaxRules,
   isGoodUnlocked,
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
@@ -349,15 +349,15 @@ export function MarketScreen({ sounds }: Props) {
         {(() => {
           const triggerPrice =
             autoSide === "buy" ? selectedState.price * (1 - autoPct) : selectedState.price * (1 + autoPct);
-          const disabled =
-            state.autoTradeRules.length >= AUTO_TRADE_MAX_RULES || !isGoodUnlocked(selected, state);
+          const maxRules = effectiveAutoTradeMaxRules(state);
+          const disabled = state.autoTradeRules.length >= maxRules || !isGoodUnlocked(selected, state);
           return (
             <>
               <Text style={styles.autoTradePreview}>
                 {t("market.autoTrade.preview", { qty: autoQty, price: triggerPrice.toFixed(2) })}
               </Text>
               <Text style={styles.autoTradeMaxNote}>
-                {t("market.autoTrade.maxActiveNote", { max: AUTO_TRADE_MAX_RULES })}
+                {t("market.autoTrade.maxActiveNote", { max: maxRules })}
               </Text>
               <ScalePressable
                 disabled={disabled}

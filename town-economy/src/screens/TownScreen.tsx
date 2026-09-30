@@ -5,6 +5,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { resolveEventMessage } from "../i18n/t";
 import { GOODS } from "../economy/goods";
 import {
+  effectiveWorkerMaxPerGood,
   estimateTaxIncomePerTick,
   inflationPressureBreakdown,
   isGoodUnlocked,
@@ -26,11 +27,7 @@ import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
-import {
-  WORKER_MAX_PER_GOOD,
-  WORKER_PRODUCTION_BONUS_PER_WORKER,
-  WORKER_WAGE_PER_TICK,
-} from "../economy/workers";
+import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "../economy/workers";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
@@ -100,6 +97,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
   const prestigePct = Math.max(0, Math.min(1, netWorth / PRESTIGE_UNLOCK_NET_WORTH));
   const cap = loanCap(state);
+  const maxWorkersPerGood = effectiveWorkerMaxPerGood(state);
   const [selectedTermMonths, setSelectedTermMonths] = useState(LOAN_TERM_MONTHS_STEPS[0]);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const previewDayRate = loanInterestRatePerDay(state, selectedTermMonths);
@@ -619,16 +617,16 @@ export function TownScreen({ onOpenDoctrine }: Props) {
                   </Text>
                 )}
                 <View style={styles.workerPipRow}>
-                  {Array.from({ length: WORKER_MAX_PER_GOOD }).map((_, i) => (
+                  {Array.from({ length: maxWorkersPerGood }).map((_, i) => (
                     <View key={i} style={[styles.workerPip, i < count && styles.workerPipFilled]} />
                   ))}
                 </View>
               </View>
               <View style={styles.workerBtnCol}>
                 <ScalePressable
-                  disabled={count >= WORKER_MAX_PER_GOOD}
+                  disabled={count >= maxWorkersPerGood}
                   onPress={() => hireWorker(g.id)}
-                  style={[styles.workerBtn, count >= WORKER_MAX_PER_GOOD && styles.workerBtnDisabled]}
+                  style={[styles.workerBtn, count >= maxWorkersPerGood && styles.workerBtnDisabled]}
                 >
                   <Text style={styles.workerBtnText}>+</Text>
                 </ScalePressable>

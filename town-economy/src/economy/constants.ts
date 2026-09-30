@@ -99,6 +99,30 @@ export const PRESTIGE_POINTS_PER_PRESTIGE = 1;
 // is always a next rank worth chasing within a single run, not just across
 // resets like prestige.
 export const TOWN_RANK_PRODUCTION_BONUS_PER_RANK = 0.004;
+// The same "always a next rank worth chasing" idea applied to capacity
+// rather than output — a bigger warehouse and a bank that trusts a
+// well-ranked town with more credit, both earned passively just by
+// growing, on top of (not instead of) the Ambar upgrade and the loan's own
+// net-worth-scaled cap. See storageCapacity/loanCap in formulas.ts.
+export const TOWN_RANK_STORAGE_BONUS_PER_RANK = 40;
+export const TOWN_RANK_LOAN_CAP_BONUS_PER_RANK = 0.015;
+// How many ranks it takes to earn one more slot on each of these — every
+// one of them was a flat cap regardless of how far the town had come, so a
+// rank-1 town and a rank-12 one were juggling the exact same three auto-
+// trade rules, three contracts, three workers per good. Small, capped-
+// feeling caps stay small forever; these now grow (slowly — this isn't
+// meant to be the headline reward for ranking up, just one more thing
+// that quietly gets easier) alongside everything else rank already
+// touches. See the matching effective*() functions in formulas.ts.
+export const AUTO_TRADE_RULES_PER_RANK = 2;
+export const CONTRACT_SLOTS_PER_RANK = 2;
+export const BULK_CONTRACT_SLOTS_PER_RANK = 2;
+export const WORKER_SLOTS_PER_RANK = 3;
+// The rank a research node's third tier requires on top of its own
+// prerequisite chain (tier 1 -> tier 2 -> tier 3) — see research.ts'
+// tier3(). Reaching "Kingdom", the rank right after workers (Capital)
+// open up, continuing the same one-new-thing-per-rank cadence.
+export const RESEARCH_TIER3_UNLOCK_RANK = 6;
 // --- Banking / loans -------------------------------------------------------
 // A loan is cash now against interest that compounds every tick until
 // repaid — real leverage, real risk. At most one outstanding at a time.

@@ -17,7 +17,6 @@ import { PROPERTIES_BY_ID } from "./properties";
 import { perkHeadStartBonus, PRESTIGE_PERKS_BY_ID } from "./prestigePerks";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
 import { RESEARCH_NODES_BY_ID } from "./research";
-import { WORKER_MAX_PER_GOOD } from "./workers";
 import {
   isoWeekKey,
   WEEKLY_CHALLENGE_TEMPLATES_BY_ID,
@@ -50,15 +49,12 @@ import {
   WeeklyChallenge,
 } from "./types";
 import {
-  AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
   BOOSTED_TICK_MS,
   BULK_CONTRACT_BONUS_PCT,
-  BULK_CONTRACT_MAX_ACTIVE,
   BULK_CONTRACT_TERM_DAY_STEPS,
   CARAVAN_INSURANCE_COST_PCT,
   CONTRACT_MARGIN_PCT,
-  CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
   DAILY_QUEST_COUNT,
   DEFAULT_DIFFICULTY,
@@ -90,7 +86,11 @@ import {
   clamp,
   computeNetWorth,
   dailyBonusForStreak,
+  effectiveAutoTradeMaxRules,
+  effectiveBulkContractMaxActive,
+  effectiveContractMaxActive,
   effectiveTariffRate,
+  effectiveWorkerMaxPerGood,
   isGoodUnlocked,
   loanCap,
   loanInterestRatePerTick,
@@ -177,9 +177,14 @@ export {
 } from "./constants";
 export {
   computeNetWorth,
+  effectiveAutoTradeMaxRules,
+  effectiveBulkContractMaxActive,
+  effectiveContractMaxActive,
+  effectiveLoanMaxNetWorthPct,
   effectiveMetropolUnlockNetWorth,
   effectiveTariffRate,
   effectiveTradeUnlockNetWorth,
+  effectiveWorkerMaxPerGood,
   estimateTaxIncomePerTick,
   gameDayFromTick,
   inflationPressureBreakdown,
@@ -772,7 +777,7 @@ function openContract(
   termDays: number
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
-  if (state.contracts.length >= CONTRACT_MAX_ACTIVE) return state;
+  if (state.contracts.length >= effectiveContractMaxActive(state)) return state;
   if (!CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
   const good = GOODS_BY_ID[goodId];
   if (!good || !isGoodUnlocked(good, state)) return state;
@@ -804,7 +809,7 @@ export function openBulkContract(
   termDays: number
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
-  if (state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE) return state;
+  if (state.bulkContracts.length >= effectiveBulkContractMaxActive(state)) return state;
   if (!BULK_CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
   const good = GOODS_BY_ID[goodId];
   if (!good || !isGoodUnlocked(good, state)) return state;
@@ -834,7 +839,7 @@ export function addAutoTradeRule(
   qty: number
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
-  if (state.autoTradeRules.length >= AUTO_TRADE_MAX_RULES) return state;
+  if (state.autoTradeRules.length >= effectiveAutoTradeMaxRules(state)) return state;
   if (!AUTO_TRADE_TRIGGER_PCT_STEPS.includes(triggerPct)) return state;
   const good = GOODS_BY_ID[goodId];
   if (!good || !isGoodUnlocked(good, state)) return state;
@@ -1012,6 +1017,7 @@ function research(state: EconomyState, nodeId: string): EconomyState {
   const node = RESEARCH_NODES_BY_ID[nodeId];
   if (!node) return state;
   if (node.requires && !state.researched.includes(node.requires)) return state;
+  if (node.requiresRank !== undefined && state.townRankIndex < node.requiresRank) return state;
   const cost = researchCost(state, node);
   if (state.cash < cost) return state;
   return {
@@ -1321,7 +1327,7 @@ export function repayLoan(state: EconomyState, amount: number): EconomyState {
 function hireWorker(state: EconomyState, goodId: GoodId): EconomyState {
   if (state.gameOver || !state.workersUnlocked) return state;
   const count = state.workers[goodId];
-  if (count >= WORKER_MAX_PER_GOOD) return state;
+  if (count >= effectiveWorkerMaxPerGood(state)) return state;
   return { ...state, workers: { ...state.workers, [goodId]: count + 1 } };
 }
 function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {

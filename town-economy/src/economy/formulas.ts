@@ -19,9 +19,16 @@ import {
 import { ForeignTown } from "./towns";
 import { doctrineModifiers } from "./doctrines";
 import { UPGRADES_BY_ID } from "./upgrades";
+import { WORKER_MAX_PER_GOOD } from "./workers";
 import { EconomyState, Good, GoodId } from "./types";
 import {
+  AUTO_TRADE_MAX_RULES,
+  AUTO_TRADE_RULES_PER_RANK,
+  BULK_CONTRACT_MAX_ACTIVE,
+  BULK_CONTRACT_SLOTS_PER_RANK,
   CONTENT_BONUS_FACTOR,
+  CONTRACT_MAX_ACTIVE,
+  CONTRACT_SLOTS_PER_RANK,
   DAILY_BONUS_BASE,
   DAILY_BONUS_CAP,
   DAILY_BONUS_PER_STREAK_DAY,
@@ -48,7 +55,10 @@ import {
   SUPPLY_MIN_FACTOR,
   TAX_OUTPUT_FACTOR,
   TICKS_PER_GAME_DAY,
+  TOWN_RANK_LOAN_CAP_BONUS_PER_RANK,
+  TOWN_RANK_STORAGE_BONUS_PER_RANK,
   TRADE_UNLOCK_NET_WORTH,
+  WORKER_SLOTS_PER_RANK,
 } from "./constants";
 
 export function gameDayFromTick(tick: number): number {
@@ -190,10 +200,36 @@ export function totalGoodsHolding(state: EconomyState): number {
   return GOODS.reduce((sum, g) => sum + state.goods[g.id].holding, 0);
 }
 export function storageCapacity(state: EconomyState): number {
-  return STORAGE_BASE_CAPACITY + state.upgrades.storageYard * UPGRADES_BY_ID.storageYard.effectPerLevel;
+  return (
+    STORAGE_BASE_CAPACITY +
+    state.upgrades.storageYard * UPGRADES_BY_ID.storageYard.effectPerLevel +
+    state.townRankIndex * TOWN_RANK_STORAGE_BONUS_PER_RANK
+  );
+}
+/** LOAN_MAX_NET_WORTH_PCT, a little more generous every rank — a well-ranked
+ * town's credit is worth more than its net worth alone already buys it
+ * through loanCap's own multiplication. */
+export function effectiveLoanMaxNetWorthPct(state: EconomyState): number {
+  return LOAN_MAX_NET_WORTH_PCT + state.townRankIndex * TOWN_RANK_LOAN_CAP_BONUS_PER_RANK;
 }
 export function loanCap(state: EconomyState): number {
-  return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * LOAN_MAX_NET_WORTH_PCT));
+  return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * effectiveLoanMaxNetWorthPct(state)));
+}
+/** AUTO_TRADE_MAX_RULES, one more slot every AUTO_TRADE_RULES_PER_RANK ranks. */
+export function effectiveAutoTradeMaxRules(state: EconomyState): number {
+  return AUTO_TRADE_MAX_RULES + Math.floor(state.townRankIndex / AUTO_TRADE_RULES_PER_RANK);
+}
+/** CONTRACT_MAX_ACTIVE, one more slot every CONTRACT_SLOTS_PER_RANK ranks. */
+export function effectiveContractMaxActive(state: EconomyState): number {
+  return CONTRACT_MAX_ACTIVE + Math.floor(state.townRankIndex / CONTRACT_SLOTS_PER_RANK);
+}
+/** BULK_CONTRACT_MAX_ACTIVE, one more slot every BULK_CONTRACT_SLOTS_PER_RANK ranks. */
+export function effectiveBulkContractMaxActive(state: EconomyState): number {
+  return BULK_CONTRACT_MAX_ACTIVE + Math.floor(state.townRankIndex / BULK_CONTRACT_SLOTS_PER_RANK);
+}
+/** WORKER_MAX_PER_GOOD, one more slot (per good) every WORKER_SLOTS_PER_RANK ranks. */
+export function effectiveWorkerMaxPerGood(state: EconomyState): number {
+  return WORKER_MAX_PER_GOOD + Math.floor(state.townRankIndex / WORKER_SLOTS_PER_RANK);
 }
 /** The per-DAY rate a loan of the given term would carry if signed right
  * now: the base rate, discounted by the Banka upgrade level, plus a

@@ -4,6 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { RESEARCH_NODES, RESEARCH_NODES_BY_ID, ResearchNode } from "../economy/research";
 import { researchCost } from "../economy/formulas";
+import { townRankNameKey } from "../economy/townRanks";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import {
@@ -22,7 +23,13 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
   const { state, research, t } = useEconomyContext();
   const researched = state.researched.includes(node.id);
   const prereq = node.requires ? RESEARCH_NODES_BY_ID[node.requires] : null;
-  const locked = !researched && !!prereq && !state.researched.includes(prereq.id);
+  const prereqLocked = !researched && !!prereq && !state.researched.includes(prereq.id);
+  // Checked independently of the prereq above, and shown in its place once
+  // the prereq is already clear — a tier-3 node otherwise ready to research
+  // the moment its tier-2 sibling is done would sit there with no
+  // explanation for why the button still won't work.
+  const rankLocked = !researched && !!node.requiresRank && state.townRankIndex < node.requiresRank;
+  const locked = prereqLocked || rankLocked;
   const cost = researchCost(state, node);
   const affordable = state.cash >= cost;
   const disabled = researched || locked || !affordable;
@@ -53,8 +60,13 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
             </Text>
           )}
         </View>
-        {locked && prereq && (
+        {prereqLocked && prereq && (
           <Text style={styles.lockedText}>{t("research.lockedRequires", { name: t(prereq.nameKey) })}</Text>
+        )}
+        {!prereqLocked && rankLocked && node.requiresRank !== undefined && (
+          <Text style={styles.lockedText}>
+            {t("research.lockedRank", { rank: t(townRankNameKey(node.requiresRank)) })}
+          </Text>
         )}
       </View>
       {researched ? (
