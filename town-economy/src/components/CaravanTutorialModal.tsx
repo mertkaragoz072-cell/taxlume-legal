@@ -156,7 +156,27 @@ export function CaravanTutorialModal({
 }
 
 const styles = StyleSheet.create({
-  dock: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm, zIndex: 30 },
+  // Absolutely positioned rather than a normal flow sibling of the Trade
+  // screen's ScrollView — a plain in-flow view here steals real height from
+  // that ScrollView (React Native gives ScrollView flex-fill-remaining-space
+  // behavior by default), squeezing its viewport down to whatever's left
+  // under this card. TownMapView's own maxHeight budget assumed a generous
+  // leftover and still lost the fight: the map rendered taller than what
+  // was actually left, so its bottom rows (and once, a whole tier of towns)
+  // ended up hidden under this card instead of above it — reported back
+  // as the guide's own explanation staying behind the text. Floating over
+  // the screen instead of pushing it up is also what the comments on this
+  // component already claimed ("the trade screen stays live behind him") —
+  // this was the one property that wasn't actually true yet.
+  dock: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.sm,
+    zIndex: 30,
+  },
   card: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,

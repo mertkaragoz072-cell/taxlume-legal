@@ -170,7 +170,20 @@ export function MentorCoach({ onNext, onSkip }: Props) {
 }
 
 const styles = StyleSheet.create({
-  dock: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm, zIndex: 30 },
+  // Absolutely positioned for the same reason as CaravanTutorialModal's
+  // identically-named dock (see its comment): left in normal flow, this
+  // view steals height from whichever screen's ScrollView is mounted
+  // behind it (Market's "buy" spotlight beat included), squeezing its
+  // viewport and risking the same target-hidden-under-the-card bug there.
+  dock: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.sm,
+    zIndex: 30,
+  },
   card: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
