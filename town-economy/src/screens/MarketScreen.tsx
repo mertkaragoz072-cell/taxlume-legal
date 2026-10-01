@@ -173,6 +173,59 @@ export function MarketScreen({ sounds }: Props) {
         </View>
       )}
 
+      {/* The year above the week: the season sets the backdrop the demand
+          cycle plays out against, and reading them together is what turns a
+          reaction into a plan. Outside the conditional below because the
+          season is always running, cycle or no cycle. */}
+      <SeasonStrip />
+
+      {state.demandCycle && (
+        <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
+      )}
+
+      <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+        {unlockedGoods.map((g) => (
+          <GoodCard
+            key={g.id}
+            good={g}
+            state={state.goods[g.id]}
+            selected={g.id === state.selectedGood}
+            onPress={() => selectGood(g.id)}
+            badge={
+              isHot(state.demandCycle, g.id)
+                ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
+                : isGlutted(state.demandCycle, g.id)
+                  ? { text: t("market.demand.glutBadge"), color: "#6fb8f2" }
+                  : undefined
+            }
+          />
+        ))}
+      </ScrollView>
+
+      {lockedGoods.length > 0 && (
+        <>
+          <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+            {lockedGoods.map((g) => (
+              <View key={g.id} style={styles.lockedCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.lockedIcon}>🔒 {g.icon}</Text>
+                <Text style={styles.lockedName}>{t(g.nameKey)}</Text>
+                <Text style={styles.lockedDay}>
+                  {t("market.unlocksAtRank", { rank: t(townRankNameKey(g.unlockRank ?? 0)) })}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
+
+      {/* The selected good's own detail chart, right below the market grid
+          it was picked from — it used to sit above the season/demand cards,
+          right under the onboarding banner, where the two collided on a
+          fresh game. Here it reads as "you picked this one, here's its
+          story" immediately before the buy/sell panel for it. */}
       <View style={[styles.chartCard, { borderColor: withAlpha(selected.color, 0.4) }]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View
@@ -228,54 +281,6 @@ export function MarketScreen({ sounds }: Props) {
           </View>
         )}
       </View>
-
-      {/* The year above the week: the season sets the backdrop the demand
-          cycle plays out against, and reading them together is what turns a
-          reaction into a plan. Outside the conditional below because the
-          season is always running, cycle or no cycle. */}
-      <SeasonStrip />
-
-      {state.demandCycle && (
-        <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
-      )}
-
-      <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
-        {unlockedGoods.map((g) => (
-          <GoodCard
-            key={g.id}
-            good={g}
-            state={state.goods[g.id]}
-            selected={g.id === state.selectedGood}
-            onPress={() => selectGood(g.id)}
-            badge={
-              isHot(state.demandCycle, g.id)
-                ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
-                : isGlutted(state.demandCycle, g.id)
-                  ? { text: t("market.demand.glutBadge"), color: "#6fb8f2" }
-                  : undefined
-            }
-          />
-        ))}
-      </ScrollView>
-
-      {lockedGoods.length > 0 && (
-        <>
-          <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
-            {lockedGoods.map((g) => (
-              <View key={g.id} style={styles.lockedCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.lockedIcon}>🔒 {g.icon}</Text>
-                <Text style={styles.lockedName}>{t(g.nameKey)}</Text>
-                <Text style={styles.lockedDay}>
-                  {t("market.unlocksAtRank", { rank: t(townRankNameKey(g.unlockRank ?? 0)) })}
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
-        </>
-      )}
 
       <SpotlightTarget id="buy">
         <View onLayout={(e) => (panelY.current = e.nativeEvent.layout.y)}>
