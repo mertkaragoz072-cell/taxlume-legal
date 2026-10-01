@@ -30,6 +30,37 @@ export const TOWN_EMBLEMS: TownEmblemDef[] = [
   { id: "trident", icon: "🔱", hintKey: "emblem.trident.hint", unlockedBy: (s) => s.townRankIndex >= 12 },
   { id: "flame", icon: "🔥", hintKey: "emblem.flame.hint", unlockedBy: (s) => s.stats.bestTradeStreak >= 10 },
   { id: "star", icon: "⭐", hintKey: "emblem.star.hint", unlockedBy: (s) => s.streak.count >= 30 },
+  { id: "anvil", icon: "⚒️", hintKey: "emblem.anvil.hint", unlockedBy: (s) => s.researched.length >= 15 },
+  {
+    id: "caravan",
+    icon: "🐪",
+    hintKey: "emblem.caravan.hint",
+    unlockedBy: (s) => s.stats.totalCaravansCompleted >= 25,
+  },
+  {
+    id: "compass",
+    icon: "🧭",
+    hintKey: "emblem.compass.hint",
+    unlockedBy: (s) => s.metropolUnlocked && s.stats.townsTradedWith.length >= 3,
+  },
+  {
+    id: "shield",
+    icon: "🛡️",
+    hintKey: "emblem.shield.hint",
+    unlockedBy: (s) => s.unlockedAchievements.length >= 25,
+  },
+  // 1000 ticks is 25 in-game days (TICKS_PER_GAME_DAY=40 in useEconomy.ts) —
+  // hardcoded rather than imported, same reasoning as achievements.ts'
+  // survive_100/survive_1000 (avoids a circular import with useEconomy.ts).
+  { id: "owl", icon: "🦉", hintKey: "emblem.owl.hint", unlockedBy: (s) => s.tick >= 1000 },
+  { id: "moneybag", icon: "💰", hintKey: "emblem.moneybag.hint", unlockedBy: (s) => s.townRankIndex >= 6 },
+  {
+    id: "key",
+    icon: "🔑",
+    hintKey: "emblem.key.hint",
+    unlockedBy: (s) => s.workersUnlocked && Object.values(s.workers).reduce((sum, n) => sum + n, 0) >= 10,
+  },
+  { id: "hourglass", icon: "⏳", hintKey: "emblem.hourglass.hint", unlockedBy: (s) => s.prestigeLevel >= 3 },
 ];
 
 export const TOWN_EMBLEMS_BY_ID: Record<string, TownEmblemDef> = Object.fromEntries(

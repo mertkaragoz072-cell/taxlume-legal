@@ -152,6 +152,13 @@ export const STRINGS = {
         advice: "Kalabalık toplanmaya başladı. Üretim düşecek; vergiyi şimdi indirmek işe yarar.",
       },
     },
+    flashDeal: {
+      crashTitle: "⚡ {good} %{pct} ucuzladı!",
+      crashAdvice: "Fırsat kısa sürecek — hemen alım yap.",
+      spikeTitle: "⚡ {good} %{pct} pahalandı!",
+      spikeAdvice: "Fırsat kısa sürecek — hemen satış yap.",
+      secondsUnit: "sn",
+    },
     market: {
       demand: {
         sectionLabel: "TALEP MEVSİMİ",
@@ -690,6 +697,14 @@ export const STRINGS = {
       trident: { hint: "Ölümsüz Efsane unvanına ulaş" },
       flame: { hint: "10 kazanma serisi yap" },
       star: { hint: "30 gün üst üste giriş yap" },
+      anvil: { hint: "15 araştırma tamamla" },
+      caravan: { hint: "25 kervan seferini tamamla" },
+      compass: { hint: "Metropolü aç ve 3 kasabanın hepsiyle ticaret yap" },
+      shield: { hint: "25 başarım aç" },
+      owl: { hint: "Çökmeden 25 gün hayatta kal" },
+      moneybag: { hint: "Krallık rütbesine ulaş" },
+      key: { hint: "Aynı anda toplam 10 işçi çalıştır" },
+      hourglass: { hint: "3 kez prestij yap" },
     },
     notif: {
       channelName: "Kasaba Bildirimleri",
@@ -746,19 +761,58 @@ export const STRINGS = {
       mythicspire: { name: "Mitik Kule" },
     },
     townRank: {
-      village: { name: "Köy" },
-      town: { name: "Kasaba" },
-      city: { name: "Şehir" },
-      metropolis: { name: "Büyükşehir" },
-      tradeHub: { name: "Ticaret Merkezi" },
-      capital: { name: "Başkent" },
-      kingdom: { name: "Krallık" },
-      empire: { name: "İmparatorluk" },
-      goldenAge: { name: "Altın Çağ" },
-      legendaryMarket: { name: "Efsanevi Pazar" },
-      worldPower: { name: "Dünya Gücü" },
-      tradeDynasty: { name: "Ticaret Hanedanı" },
-      immortalLegend: { name: "Ölümsüz Efsane" },
+      village: {
+        name: "Köy",
+        lore: "Bir avuç çiftçi ve tek bir pazar tezgahı — ama her imparatorluk buradan başlar.",
+      },
+      town: {
+        name: "Kasaba",
+        lore: "Sokaklar artık isimli, kapılar artık kilitli: kasaba, köyden çok daha fazlasına dönüşüyor.",
+      },
+      city: {
+        name: "Şehir",
+        lore: "Taş duvarlar yükseliyor, tüccarlar şehrin adını komşu topraklarda anmaya başlıyor.",
+      },
+      metropolis: {
+        name: "Büyükşehir",
+        lore: "Meydanlar kalabalık, kuleler gökyüzünü deliyor — artık bir büyükşehrin kalbindesin.",
+      },
+      tradeHub: {
+        name: "Ticaret Merkezi",
+        lore: "Kervan yolları buraya çıkıyor; her tüccar er ya da geç senin pazarına uğruyor.",
+      },
+      capital: {
+        name: "Başkent",
+        lore: "Taç artık senin — bölgenin kaderi bu başkentin terazisinde tartılıyor.",
+      },
+      kingdom: {
+        name: "Krallık",
+        lore: "Sınırların ötesinde bile adın geçiyor: bir krallık, bir hanedanın ilk taşı.",
+      },
+      empire: {
+        name: "İmparatorluk",
+        lore: "Haritalar yeniden çiziliyor; imparatorluğunun gölgesi ufukları aşıyor.",
+      },
+      goldenAge: {
+        name: "Altın Çağ",
+        lore: "Şiirler yazılıyor, şarkılar söyleniyor — bu, tarihe altın harflerle geçecek bir çağ.",
+      },
+      legendaryMarket: {
+        name: "Efsanevi Pazar",
+        lore: "Tüccarlar dünyanın öbür ucundan sırf pazarını görmek için yola çıkıyor.",
+      },
+      worldPower: {
+        name: "Dünya Gücü",
+        lore: "Artık kimse senin onayın olmadan büyük bir anlaşma imzalamıyor.",
+      },
+      tradeDynasty: {
+        name: "Ticaret Hanedanı",
+        lore: "Nesiller boyu sürecek bir miras kuruldu — adın artık bir hanedan.",
+      },
+      immortalLegend: {
+        name: "Ölümsüz Efsane",
+        lore: "Zaman bile seni unutamıyor: sen artık bir efsanesin, bir kasaba değil.",
+      },
       beyondTitle: "{base} {n}",
     },
     upgrade: {
@@ -1256,6 +1310,9 @@ export const STRINGS = {
       miniQuestExpired: "⌛ Anlık görev süresi doldu: {icon} {title}",
       prestiged: "🌟 Prestij yapıldı! Seviye {level}. Kasaba sıfırlandı, kalıcı bonusun aktif.",
       seasonalEventStarted: "🎉 {icon} {title} başladı! Fiyatlar yükseldi.",
+      flashDealStartedCrash: "⚡ Flaş fırsat! {icon} {good} fiyatı %{pct} düştü — hemen alım yap!",
+      flashDealStartedSpike: "⚡ Flaş fırsat! {icon} {good} fiyatı %{pct} arttı — hemen sat!",
+      flashDealEnded: "⌛ {good} için flaş fırsat sona erdi.",
       demandCycleStarted: "📣 Talep değişti: {hot} aranıyor, {glut} bollukta.",
       crisisWarned: "⚠️ {icon} {warning} — {days} gün içinde {event} bekleniyor. Hazırlan!",
       crisisWarnedOne: "⚠️ {icon} {warning} — {days} gün içinde {event} bekleniyor. Hazırlan!",
@@ -1493,6 +1550,13 @@ export const STRINGS = {
         warningTitle: "A Crowd In The Square",
         advice: "People are starting to gather. Production will drop — cutting tax now helps.",
       },
+    },
+    flashDeal: {
+      crashTitle: "⚡ {good} is {pct}% cheaper!",
+      crashAdvice: "Won't last long — buy now.",
+      spikeTitle: "⚡ {good} is {pct}% more expensive!",
+      spikeAdvice: "Won't last long — sell now.",
+      secondsUnit: "s",
     },
     market: {
       demand: {
@@ -2030,6 +2094,14 @@ export const STRINGS = {
       trident: { hint: "Reach the Immortal Legend rank" },
       flame: { hint: "Land a 10-win streak" },
       star: { hint: "Log in 30 days in a row" },
+      anvil: { hint: "Complete 15 research upgrades" },
+      caravan: { hint: "Complete 25 caravan trips" },
+      compass: { hint: "Unlock the Metropol and trade with all 3 towns" },
+      shield: { hint: "Unlock 25 achievements" },
+      owl: { hint: "Survive 25 days without collapsing" },
+      moneybag: { hint: "Reach the Kingdom rank" },
+      key: { hint: "Employ 10 workers at once" },
+      hourglass: { hint: "Prestige 3 times" },
     },
     notif: {
       channelName: "Town Notifications",
@@ -2083,19 +2155,58 @@ export const STRINGS = {
       mythicspire: { name: "Mythic Spire" },
     },
     townRank: {
-      village: { name: "Village" },
-      town: { name: "Town" },
-      city: { name: "City" },
-      metropolis: { name: "Metropolis" },
-      tradeHub: { name: "Trade Hub" },
-      capital: { name: "Capital" },
-      kingdom: { name: "Kingdom" },
-      empire: { name: "Empire" },
-      goldenAge: { name: "Golden Age" },
-      legendaryMarket: { name: "Legendary Market" },
-      worldPower: { name: "World Power" },
-      tradeDynasty: { name: "Trade Dynasty" },
-      immortalLegend: { name: "Immortal Legend" },
+      village: {
+        name: "Village",
+        lore: "A handful of farmers and a single market stall — but every empire starts here.",
+      },
+      town: {
+        name: "Town",
+        lore: "The streets have names now, the doors have locks: it's becoming something more than a village.",
+      },
+      city: {
+        name: "City",
+        lore: "Stone walls rise, and traders start speaking your name in neighboring lands.",
+      },
+      metropolis: {
+        name: "Metropolis",
+        lore: "The squares are crowded, towers pierce the sky — you're in the heart of a true metropolis now.",
+      },
+      tradeHub: {
+        name: "Trade Hub",
+        lore: "Every caravan road leads here now; sooner or later, every trader passes through your market.",
+      },
+      capital: {
+        name: "Capital",
+        lore: "The crown is yours — the region's fate is weighed on this capital's scales.",
+      },
+      kingdom: {
+        name: "Kingdom",
+        lore: "Your name reaches beyond your borders now: a kingdom, the first stone of a dynasty.",
+      },
+      empire: {
+        name: "Empire",
+        lore: "Maps are being redrawn; your empire's shadow now stretches past the horizon.",
+      },
+      goldenAge: {
+        name: "Golden Age",
+        lore: "Poems are written, songs are sung — this is an age that will be remembered in gold.",
+      },
+      legendaryMarket: {
+        name: "Legendary Market",
+        lore: "Traders cross the world just to lay eyes on your market.",
+      },
+      worldPower: {
+        name: "World Power",
+        lore: "No one signs a major deal anymore without your blessing.",
+      },
+      tradeDynasty: {
+        name: "Trade Dynasty",
+        lore: "A legacy built to last generations — your name is now a dynasty.",
+      },
+      immortalLegend: {
+        name: "Immortal Legend",
+        lore: "Even time cannot forget you: you're a legend now, not a town.",
+      },
       beyondTitle: "{base} {n}",
     },
     upgrade: {
@@ -2579,6 +2690,9 @@ export const STRINGS = {
       miniQuestExpired: "⌛ Flash quest expired: {icon} {title}",
       prestiged: "🌟 Prestige reached! Level {level}. The town reset, and your permanent bonus is active.",
       seasonalEventStarted: "🎉 {icon} {title} has begun! Prices are up.",
+      flashDealStartedCrash: "⚡ Flash deal! {icon} {good} price dropped {pct}% — buy now!",
+      flashDealStartedSpike: "⚡ Flash deal! {icon} {good} price spiked {pct}% — sell now!",
+      flashDealEnded: "⌛ The flash deal on {good} has ended.",
       demandCycleStarted: "📣 Demand has shifted: {hot} sought after, {glut} in surplus.",
       crisisWarned: "⚠️ {icon} {warning} — {event} likely within {days} days. Get ready!",
       crisisWarnedOne: "⚠️ {icon} {warning} — {event} likely within {days} day. Get ready!",

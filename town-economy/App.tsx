@@ -19,6 +19,7 @@ import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { EventBanner } from "./src/components/EventBanner";
+import { FlashDealBanner } from "./src/components/FlashDealBanner";
 import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
@@ -367,6 +368,7 @@ function Game() {
             whole town, so the countdown has to follow the player wherever
             they are preparing — market, trade or town hall. */}
         <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
+        <FlashDealBanner deal={state.activeFlashDeal} tick={state.tick} />
         <EventBanner event={state.lastEvent} language={state.language} />
         <ComboBanner event={comboEvent} />
         <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />

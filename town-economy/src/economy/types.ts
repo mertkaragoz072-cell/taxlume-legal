@@ -7,6 +7,7 @@ import { TradingHouseActivity } from "./tradingHouses";
 import { TraderReputation } from "./traders";
 import { RivalTraderActivity } from "./rivals";
 import { ActiveBounty } from "./bounties";
+import { FlashDealInstance } from "./flashDeals";
 import { ProductionQuota } from "./productionQuotas";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
@@ -323,7 +324,7 @@ export interface EconomyState {
    * congratulate the player on the new title; null once dismissed. Carries
    * the already-resolved icon/title rather than a rank index so the modal
    * doesn't need to re-derive "beyond the named ladder" text itself. */
-  merveRankUp: { icon: string; title: string } | null;
+  merveRankUp: { icon: string; title: string; lore: string } | null;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
   researched: string[];
   /** speculative assets (gold, oil, stocks) — separate random-walk market, see assets.ts */
@@ -384,6 +385,7 @@ export interface EconomyState {
   recordBrokenThisRun: boolean;
   /** a temporary town-wide price event; see seasonalEvents.ts */
   activeSeasonalEvent: SeasonalEventInstance | null;
+  activeFlashDeal: FlashDealInstance | null;
   /** at most one outstanding town loan at a time */
   loan: Loan | null;
   /** hired staff per good (0-WORKER_MAX_PER_GOOD); each costs a per-tick wage

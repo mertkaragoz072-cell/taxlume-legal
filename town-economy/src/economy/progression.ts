@@ -14,6 +14,7 @@ import {
   townRankBeyondCount,
   townRankIcon,
   townRankIndexForNetWorth,
+  townRankLoreKey,
   townRankNameKey,
   townRankReward,
 } from "./townRanks";
@@ -165,6 +166,7 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
   let cash = state.cash;
   const newEvents: EconomyEvent[] = [];
   let finalTitle = "";
+  let finalLore = "";
   for (let index = state.townRankIndex + 1; index <= targetIndex; index++) {
     const reward = townRankReward(index);
     cash += reward;
@@ -180,7 +182,10 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     // NestedKey — Merve's congratulations shows once, immediately, in
     // whatever language is active right then, and is dismissed by the
     // player before a later language switch could make it stale.
-    if (index === targetIndex) finalTitle = t(state.language, titleParam.key, titleParam.params);
+    if (index === targetIndex) {
+      finalTitle = t(state.language, titleParam.key, titleParam.params);
+      finalLore = t(state.language, townRankLoreKey(index));
+    }
     newEvents.push({
       id: nextId++,
       ...eventFields(state.language, "msg.townRankUp", {
@@ -200,7 +205,7 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     // Merve steps in for this one specifically — a personal congratulation
     // on the highest tier reached, on top of (not instead of) the event
     // log entries above, which still record every tier a big jump skipped.
-    merveRankUp: { icon: townRankIcon(targetIndex), title: finalTitle },
+    merveRankUp: { icon: townRankIcon(targetIndex), title: finalTitle, lore: finalLore },
     lastEvent: newEvents[newEvents.length - 1],
     eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
   };

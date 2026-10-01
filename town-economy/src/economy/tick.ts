@@ -40,6 +40,12 @@ import { perkProductionBonus, perkTaxHappinessRelief } from "./prestigePerks";
 import { researchMultiplier } from "./research";
 import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
+import {
+  FLASH_DEAL_CHANCE,
+  FLASH_DEAL_DURATION_TICKS,
+  FlashDealDirection,
+  flashDealMultiplier,
+} from "./flashDeals";
 import { seasonFromTick, seasonProductionMultiplier } from "./seasons";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { effectiveDifficultyConfig } from "./ngPlusModifiers";
@@ -424,6 +430,45 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  // Flash deals run purely on ticks, same reasoning as seasonal events above
+  // — no player action starts, extends, or interrupts one.
+  let activeFlashDeal: EconomyState["activeFlashDeal"] = state.activeFlashDeal;
+  if (activeFlashDeal && state.tick + 1 >= activeFlashDeal.expiresAtTick) {
+    const endedGood = GOODS_BY_ID[activeFlashDeal.goodId];
+    newEvents.push({
+      id: nextId++,
+      ...eventFields(state.language, "msg.flashDealEnded", {
+        good: { key: endedGood.nameKey },
+      }),
+      tone: "neutral",
+    });
+    activeFlashDeal = null;
+  }
+  if (!activeFlashDeal && Math.random() < FLASH_DEAL_CHANCE) {
+    const eligible = GOODS.filter((g) => isGoodUnlocked(g, state));
+    if (eligible.length > 0) {
+      const good = eligible[Math.floor(Math.random() * eligible.length)];
+      const direction: FlashDealDirection = Math.random() < 0.5 ? "crash" : "spike";
+      activeFlashDeal = {
+        id: nextId,
+        goodId: good.id,
+        direction,
+        triggeredAtTick: state.tick + 1,
+        expiresAtTick: state.tick + 1 + FLASH_DEAL_DURATION_TICKS,
+      };
+      const pct = Math.round(Math.abs(1 - flashDealMultiplier(direction)) * 100);
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(
+          state.language,
+          direction === "crash" ? "msg.flashDealStartedCrash" : "msg.flashDealStartedSpike",
+          { icon: good.icon, good: { key: good.nameKey }, pct }
+        ),
+        tone: "good",
+      });
+    }
+  }
+
   let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness }) * doctrineMods.taxIncomeMult;
   if (happiness <= ANGRY_THRESHOLD && Math.random() < ANGRY_EVENT_CHANCE) {
     const penalty = Math.min(state.cash + taxCashDelta, ANGRY_CASH_PENALTY);
@@ -504,6 +549,8 @@ export function tick(state: EconomyState): EconomyState {
       seasonalTemplate && seasonalTemplate.affectedGoods.includes(good.id)
         ? seasonalTemplate.priceMultiplier
         : 1;
+    const flashMult =
+      activeFlashDeal && activeFlashDeal.goodId === good.id ? flashDealMultiplier(activeFlashDeal.direction) : 1;
     // A demand cycle bites twice: once directly on the price, and once through
     // supply below, which the scarcity curve then prices in again. Neither half
     // alone reads as a real shortage.
@@ -559,7 +606,7 @@ export function tick(state: EconomyState): EconomyState {
     const inputCostMult = 1 + INPUT_COST_PASS_THROUGH * (costFactor - 1);
     const rawPrice =
       priceFromSupply(
-        good.basePrice * researchedValueMult * seasonalMult * demandMult * inputCostMult,
+        good.basePrice * researchedValueMult * seasonalMult * flashMult * demandMult * inputCostMult,
         good.baseSupply,
         good.elasticity,
         supply,
@@ -916,6 +963,7 @@ export function tick(state: EconomyState): EconomyState {
     lastInterruptionTick,
     activeMiniQuest,
     activeSeasonalEvent,
+    activeFlashDeal,
     demandCycle,
     nextDemandCycle,
     pendingCrisis,

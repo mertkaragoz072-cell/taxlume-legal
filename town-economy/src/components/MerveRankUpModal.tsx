@@ -21,7 +21,7 @@ import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
-  rankUp: { icon: string; title: string } | null;
+  rankUp: { icon: string; title: string; lore: string } | null;
   onDismiss: () => void;
   sounds: ReturnType<typeof useSoundEffects>;
 }
@@ -74,6 +74,7 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
                 <Text style={styles.body}>
                   {t("merveRankUp.body", { icon: rankUp.icon, title: rankUp.title })}
                 </Text>
+                <Text style={styles.lore}>{rankUp.lore}</Text>
               </View>
             </View>
 
@@ -144,6 +145,13 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontSize: TYPE.body,
     lineHeight: 19,
+  },
+  lore: {
+    color: COLORS.accent,
+    fontSize: TYPE.caption,
+    fontStyle: "italic",
+    lineHeight: 17,
+    marginTop: SPACING.sm,
   },
   confirmBtn: {
     width: "100%",

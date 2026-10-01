@@ -388,6 +388,7 @@ export function initialState(
     priorBestNetWorth: 0,
     recordBrokenThisRun: false,
     activeSeasonalEvent: null,
+    activeFlashDeal: null,
     loan: null,
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     ownedProperties: [],
