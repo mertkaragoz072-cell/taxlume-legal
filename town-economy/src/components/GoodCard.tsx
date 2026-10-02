@@ -27,7 +27,7 @@ interface Props {
   // stock...) through this same card, and those aren't a GoodId — GoodIcon
   // just won't find art for them and falls back to their emoji, same as
   // ever.
-  good: { id?: string; nameKey: string; icon: string; color: string };
+  good: { id?: string; nameKey: string; icon: string; color: string; producerKey?: string };
   state: { price: number; history: number[]; holding: number };
   selected: boolean;
   onPress: () => void;
@@ -95,19 +95,23 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
         <View style={styles.topRow}>
           <GoodIcon id={good.id ?? ""} fallback={good.icon} size={TYPE.heading} />
           <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
-            {positive ? "+" : ""}
+            {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
             {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
-        <PriceChart
-          history={state.history}
-          color={good.color}
-          width={92}
-          height={34}
-          strokeWidth={1.5}
-          filled={false}
-        />
-        <Text style={styles.name}>{t(good.nameKey)}</Text>
+        <PriceChart history={state.history} color={good.color} width={92} height={34} strokeWidth={1.5} />
+        <Text style={styles.name} numberOfLines={1}>
+          {t(good.nameKey)}
+        </Text>
+        {/* Who makes it, in the same breath as the price — a card is no
+            longer just a number with a squiggle under it, it says something
+            about the good before you even tap into it. Assets (gold, oil...)
+            have no producer, so this quietly disappears for them. */}
+        {good.producerKey && (
+          <Text style={styles.producer} numberOfLines={1}>
+            {t(good.producerKey)}
+          </Text>
+        )}
         <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
         {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
       </ScalePressable>
@@ -166,6 +170,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     marginTop: SPACING.xs,
   },
+  producer: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 1 },
   price: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   holding: {
     marginTop: 2,

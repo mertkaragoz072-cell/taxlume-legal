@@ -15,7 +15,7 @@ import {
   isGoodUnlocked,
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
-import { townRankNameKey } from "../economy/townRanks";
+import { townRankIcon, townRankNameKey } from "../economy/townRanks";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { DemandForecastCard } from "../components/DemandForecastCard";
@@ -259,13 +259,25 @@ export function MarketScreen({ sounds }: Props) {
           <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
             {lockedGoods.map((g) => (
-              <View key={g.id} style={styles.lockedCard}>
+              <View key={g.id} style={[styles.lockedCard, { borderColor: withAlpha(g.color, 0.3) }]}>
                 <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.lockedIcon}>🔒 {g.icon}</Text>
-                <Text style={styles.lockedName}>{t(g.nameKey)}</Text>
-                <Text style={styles.lockedDay}>
-                  {t("market.unlocksAtRank", { rank: t(townRankNameKey(g.unlockRank ?? 0)) })}
+                <View style={[styles.lockedAccentStripe, { backgroundColor: withAlpha(g.color, 0.5) }]} />
+                <View style={styles.lockedBadge}>
+                  <Text style={styles.lockedBadgeText}>🔒</Text>
+                </View>
+                {/* The good's own icon, full size and in its own color
+                    rather than greyed out — this is a preview of a reward,
+                    not a dead slot, so it should look like one. */}
+                <Text style={styles.lockedIcon}>{g.icon}</Text>
+                <Text style={styles.lockedName} numberOfLines={1}>
+                  {t(g.nameKey)}
                 </Text>
+                <View style={[styles.lockedRankChip, { borderColor: withAlpha(g.color, 0.4) }]}>
+                  <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
+                  <Text style={styles.lockedRankText} numberOfLines={1}>
+                    {t(townRankNameKey(g.unlockRank ?? 0))}
+                  </Text>
+                </View>
               </View>
             ))}
           </ScrollView>
@@ -511,15 +523,26 @@ const styles = StyleSheet.create({
   lockedCard: {
     width: 108,
     borderRadius: RADIUS.card,
+    borderWidth: 1,
     padding: SPACING.sm + 2,
     paddingTop: SPACING.md + 1,
     marginRight: SPACING.sm + 2,
     alignItems: "center",
     overflow: "hidden",
-    opacity: 0.6,
     ...cardShadow,
   },
-  lockedIcon: { fontSize: TYPE.heading },
+  lockedAccentStripe: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
+  lockedBadge: {
+    position: "absolute",
+    top: SPACING.xs,
+    right: SPACING.xs,
+    opacity: 0.75,
+  },
+  lockedBadgeText: { fontSize: TYPE.caption },
+  // Full size and full color — this is a preview of a reward waiting at a
+  // rank, not a greyed-out dead slot, so only the icon gets a touch of
+  // dimming rather than the whole card.
+  lockedIcon: { fontSize: TYPE.heading, opacity: 0.75 },
   lockedName: {
     color: COLORS.textPrimary,
     fontSize: TYPE.label,
@@ -527,7 +550,20 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     marginTop: 6,
   },
-  lockedDay: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs, textAlign: "center" },
+  lockedRankChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: SPACING.xs + 2,
+    paddingHorizontal: SPACING.xs + 2,
+    paddingVertical: 2,
+    borderRadius: RADIUS.chip,
+    borderWidth: 1,
+    backgroundColor: withAlpha("#000000", 0.25),
+    maxWidth: "100%",
+  },
+  lockedRankIcon: { fontSize: TYPE.micro },
+  lockedRankText: { color: COLORS.textMuted, fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   gameOverBox: {
     marginTop: SPACING.lg + 2,
     backgroundColor: "#3a1f1a",
