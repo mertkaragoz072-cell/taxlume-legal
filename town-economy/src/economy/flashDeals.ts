@@ -19,11 +19,11 @@ export interface FlashDealInstance {
 
 export const FLASH_DEAL_CHANCE = 0.012; // per tick
 export const FLASH_DEAL_DURATION_TICKS = 24; // ~72s of real time at the normal 3000ms tick
-// Steeper than any seasonal event on purpose — a seasonal boost rewards
-// whoever happens to be holding stock; a flash deal is meant to be worth
-// dropping what you're doing for.
-export const FLASH_DEAL_CRASH_MULT = 0.55; // -45%, a buying opportunity
-export const FLASH_DEAL_SPIKE_MULT = 1.8; // +80%, a selling opportunity
+// Noticeably sharper than a seasonal event (which tops out around +60%)
+// but kept to a believable single-item swing rather than a cartoonish
+// 80% jump — still worth dropping what you're doing for, not absurd.
+export const FLASH_DEAL_CRASH_MULT = 0.75; // -25%, a buying opportunity
+export const FLASH_DEAL_SPIKE_MULT = 1.3; // +30%, a selling opportunity
 
 export function flashDealMultiplier(direction: FlashDealDirection): number {
   return direction === "crash" ? FLASH_DEAL_CRASH_MULT : FLASH_DEAL_SPIKE_MULT;
