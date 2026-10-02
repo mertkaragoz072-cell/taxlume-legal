@@ -99,7 +99,7 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
             {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
-        <PriceChart history={state.history} color={good.color} width={92} height={34} strokeWidth={1.5} />
+        <PriceChart history={state.history} color={good.color} width={76} height={34} strokeWidth={1.5} />
         <Text style={styles.name} numberOfLines={1}>
           {t(good.nameKey)}
         </Text>
@@ -131,18 +131,22 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  // Narrower than it used to be (108 → 92) so a horizontal row shows
+  // roughly 3.5–4 cards at once instead of ~3 — most of the row reads at
+  // a glance without scrolling, and the next card still peeks in at the
+  // edge as a scroll hint.
   card: {
-    width: 108,
+    width: 92,
     borderRadius: RADIUS.card,
     borderWidth: 2,
     borderColor: "transparent",
-    marginRight: SPACING.sm + 2,
+    marginRight: SPACING.sm,
     ...cardShadow,
   },
   cardInner: {
     borderRadius: RADIUS.card,
-    padding: SPACING.sm + 2,
-    paddingTop: SPACING.md + 1,
+    padding: SPACING.sm,
+    paddingTop: SPACING.sm + 2,
     alignItems: "center",
     overflow: "hidden",
   },
