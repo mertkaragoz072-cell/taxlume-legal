@@ -17,7 +17,7 @@ function eyes(ctx, x, y, dir, big) {
 function drawPlayerSprite(ctx) {
   const p = state.player, meta = ANIMS.hero, anim = meta?.animations[p.anim];
   if (!anim) return false;
-  if (meta.procedural) return drawProceduralHero(ctx, meta, anim);
+  if (meta.static) return drawHeroine(ctx, meta, anim);       // kadın savaşçı: kare tabanlı VEYA prosedürel (animasyon başına)
   const n = anim.frames.length;
   const i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
   const img = Assets.get(HERO.id + '_' + anim.frames[i]);
@@ -48,6 +48,40 @@ function drawPlayerSprite(ctx) {
 
 // Tek görselli kahraman (kadın savaşçı): hareketler prosedürel — nefes/koşu sekmesi, saldırıda ileri atılma + küçük hilal,
 // hasarda geri savrulma + kırmızı parlama, ölümde arkaya devrilme. Gerçek animasyon assetleri gelince ayrı kare setiyle değişir.
+function drawHeroine(ctx, meta, anim) {
+  return anim.procedural ? drawProceduralHero(ctx, meta, anim) : drawHeroFrames(ctx, meta, anim);
+}
+
+// Kare tabanlı kahraman (assets/characters/female/<anim>/<anim>_NN.png): ölçek ve pivot TÜM animasyonlarda sabit → boyut değişmez,
+// ayaklar pivotta (zemin). Dönüş/ezilme yok; sadece kare seçimi. Run karesi geçen zamana değil kat edilen mesafeye bağlı (ayak kaymaz).
+function drawHeroFrames(ctx, meta, anim) {
+  const p = state.player, F = meta.framed, name = p.anim, n = anim.frames.length;
+  let i;
+  if (name === 'run' && anim.strideUnits) i = Math.floor(p.stride / anim.strideUnits) % n;
+  else i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
+  const key = anim.frames[i], img = Assets.get(key);
+  if (!img || !F) return false;
+  const sc = F.scale, w = img.width * sc, h = img.height * sc, px = F.pivot[0] * sc, py = F.pivot[1] * sc, hurtK = Math.max(0, p.hitFlash) / 0.2;
+  let alpha = 1;
+  if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) alpha = 0.6;
+  onLane(ctx, p.a, 0, p.lean * 0.3, () => {
+    groundShadow(ctx, 56 * (name === 'death' ? 1.5 : 1), 0.34);
+    ctx.scale(p.dir, 1);
+    ctx.globalAlpha = alpha; ctx.drawImage(img, -px, -py, w, h);
+    if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.45 * hurtK; ctx.drawImage(whiteSilhouette(img, key, '#ff5a4a'), -px, -py, w, h); }
+    if (name === 'attack' && anim.fx === 'overlay') {                    // oyunun mavi hilali kılıç ucuna (kareye özel uç noktası varsa o)
+      const tip = anim.swordTipFrames?.[key.replace('heroine_', '')] || anim.swordTip, u = Math.min(1, p.animT * anim.fps / n);
+      const fx = Assets.get('fx_attack_1_slash');
+      if (fx && tip && u > 0.3 && u < 0.85) {
+        const k = CONFIG.player.slashFxScale * 0.55, a = 1 - (u - 0.3) / 0.55, tx = tip[0] * sc - px, ty = tip[1] * sc - py;
+        ctx.globalAlpha = alpha * 0.9 * a; ctx.drawImage(fx, tx - fx.width * k * 0.75, ty - fx.height * k * 0.5, fx.width * k, fx.height * k);
+      }
+    }
+    ctx.globalAlpha = 1;
+  });
+  return true;
+}
+
 function drawProceduralHero(ctx, meta, anim) {
   const p = state.player, img = Assets.get(meta.image);
   if (!img) return false;

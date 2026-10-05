@@ -1,6 +1,66 @@
 {
-  "_comment": "Tek g\u00f6rselli kahraman: prosed\u00fcrel animasyon (src/render/characters.js \u2192 drawProceduralHero). 'frames' say\u0131s\u0131 \u00d7 fps = s\u00fcre; kare ad\u0131 hepsi ayn\u0131 g\u00f6rsel.",
-  "procedural": true,
+  "_comment": "tools/build_female_animations.py \u00fcretir. procedural:true olan animasyon klas\u00f6r\u00fc bo\u015f \u2192 tek g\u00f6rselle kodla oynat\u0131l\u0131r.",
+  "static": {
+    "image": "heroine_main",
+    "size": [
+      638,
+      455
+    ],
+    "pivot": [
+      278,
+      452
+    ],
+    "scale": 0.1982,
+    "swordTip": [
+      634,
+      252
+    ]
+  },
+  "framed": null,
+  "facing": "right",
+  "animations": {
+    "idle": {
+      "frames": [
+        "main"
+      ],
+      "fps": 1,
+      "loop": true,
+      "procedural": true
+    },
+    "run": {
+      "frames": [
+        "main"
+      ],
+      "fps": 1,
+      "loop": true,
+      "procedural": true
+    },
+    "attack": {
+      "frames": [
+        "main"
+      ],
+      "fps": 2.2,
+      "loop": false,
+      "procedural": true,
+      "impact": 0.35
+    },
+    "hurt": {
+      "frames": [
+        "main"
+      ],
+      "fps": 3.6,
+      "loop": false,
+      "procedural": true
+    },
+    "death": {
+      "frames": [
+        "main"
+      ],
+      "fps": 1.25,
+      "loop": false,
+      "procedural": true
+    }
+  },
   "image": "heroine_main",
   "size": [
     638,
@@ -11,51 +71,8 @@
     452
   ],
   "scale": 0.1982,
-  "facing": "right",
   "swordTip": [
     634,
     252
-  ],
-  "swordHand": [
-    366,
-    337
-  ],
-  "animations": {
-    "idle": {
-      "frames": [
-        "main"
-      ],
-      "fps": 1,
-      "loop": true
-    },
-    "run": {
-      "frames": [
-        "main"
-      ],
-      "fps": 1,
-      "loop": true
-    },
-    "attack": {
-      "frames": [
-        "main"
-      ],
-      "fps": 2.2,
-      "loop": false,
-      "impact": 0.35
-    },
-    "hurt": {
-      "frames": [
-        "main"
-      ],
-      "fps": 3.6,
-      "loop": false
-    },
-    "death": {
-      "frames": [
-        "main"
-      ],
-      "fps": 1.25,
-      "loop": false
-    }
-  }
+  ]
 }

@@ -129,7 +129,7 @@ export function update(dt) {
       if (!ahead) { ax = 1; speed = C.player.autoSpeed; }
     }
     p.a += ax * speed / r * dt;
-    if (ax !== 0) { p.dir = Math.sign(ax); p.walk += dt * 10 * Math.abs(ax); }
+    if (ax !== 0) { p.dir = Math.sign(ax); p.walk += dt * 10 * Math.abs(ax); p.stride += Math.abs(ax) * speed * dt; }
     p.lean += (ax * 0.12 - p.lean) * Math.min(1, dt * 10);
   }
   p.moveAxis = ax;

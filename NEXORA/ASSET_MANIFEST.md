@@ -72,4 +72,4 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - `assets/characters/female/animations/`: idle 8, run 8, attack 5, hurt 6, death 5 (280×190, pivot 100,180; kaynak: sheet v2) + `layers/` + portre. Efektler: `assets/effects/attacks/female_fx_*.png`. Ayrıntı/sınırlar: klasör README. Seçim: `?hero=female` veya `player.character`.
 
 ## Kadın savaşçı — ana asset (MEVCUT)
-- `assets/characters/heroine/`: `heroine_main.png` (tek görsel) + `heroine_portrait.png`. Kaynak: `assets/references/nexora_heroine_source.png`. Animasyonlar kodla (prosedürel). Seçim ekranındaki "Kadın Savaşçı" bu karakterdir. Ayrıntı: klasör README.
+- `assets/characters/female/`: `heroine_main.png` (tek görsel) + `heroine_portrait.png`; kare animasyonları için boş hazır klasörler `idle/ run/ attack/ hurt/ death/` (bkz. klasör README). Kaynak: `assets/references/nexora_heroine_source.png`. Klasörler boşken animasyonlar kodla (prosedürel); kareler eklenip `tools/build_female_animations.py` çalıştırılınca kare tabanlı oynar. Seçim ekranındaki "Kadın Savaşçı" bu karakterdir. Ayrıntı: klasör README.
