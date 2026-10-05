@@ -33,9 +33,7 @@ export function GoodMomModal({ visible, onDismiss }: Props) {
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
           <Image source={goodMomSource} style={styles.image} resizeMode="cover" accessibilityIgnoresInvertColors />
           <Text style={styles.title}>ÇOK İYİ BİR ANNESİN 🥰</Text>
-          <Text style={styles.body}>
-            Onu bu kadar sevdiğin, bu kadar iyi baktığın için ne kadar şanslı olduğumuzu bir bilsen. İyi ki varsın.
-          </Text>
+          <Text style={styles.body}>Bizi bu kadar çok sevdiğin için sağ ol. Sen gerçekten çok iyi bir annesin.</Text>
           <ScalePressable onPress={handleDismiss} style={styles.btn} scaleTo={0.95}>
             <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
             <Text style={styles.btnText}>Hadi Başlayalım 💛</Text>
