@@ -20,3 +20,8 @@ Claude için proje ve asset kökü. Bu klasör, oyunun kaynak kodunu ve üretime
 - `docs/`: tasarım ve teknik notlar
 
 Eksik dosyaların listesi ve önerilen adları `ASSET_MANIFEST.md` içindedir.
+
+## Güvenlik / yerel çalışma
+- Oyun **tamamen yerel**: harici URL, iframe, `window.open`, WebView, analitik veya CDN yok; tüm dosyalar `assets/`, `data/`, `src/` altından yüklenir. `index.html` içindeki Content-Security-Policy (yalnız `'self'`) bunu tarayıcı seviyesinde zorlar.
+- Oyun hiçbir pencere/sekme açmaz. Açılışta yalnızca oyun (ve karakter seçimi) görünür.
+- Çalıştırma: proje kökünde yerel sunucu (`python3 -m http.server 8080`), sonra **Chrome/Edge/Firefox'ta elle** `http://localhost:8080` aç. `index.html`'e çift tıklamayı kullanma: Windows'ta `.html` başka bir uygulamaya (ör. bir Adobe ürünü) atanmışsa dosya orada açılabilir ve oyun zaten `file://` ile çalışmaz.
