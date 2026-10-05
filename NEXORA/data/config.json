@@ -1,0 +1,36 @@
+{
+  "planet": {
+    "radius": 300,
+    "colors": { "grass": "#6fd35a", "grassDark": "#3fa646", "grassLight": "#a4ec7c", "outline": "#1f2a44" }
+  },
+  "player": {
+    "speed": 150,
+    "maxHp": 100,
+    "attackDamage": 10,
+    "attackRange": 70,
+    "attackCooldown": 0.6,
+    "slashDuration": 0.18,
+    "invulnTime": 0.5,
+    "coinMagnetRange": 110,
+    "coinMagnetSpeed": 420
+  },
+  "leveling": {
+    "baseXpToNext": 30,
+    "xpGrowth": 1.35,
+    "damagePerLevel": 3,
+    "maxHpPerLevel": 15,
+    "healOnLevelUp": 0.5
+  },
+  "enemies": {
+    "spawnInterval": 2.2,
+    "spawnIntervalMin": 0.8,
+    "spawnIntervalDecayPerLevel": 0.12,
+    "maxAlive": 14,
+    "spawnArc": 1.0,
+    "spawnArcJitter": 0.25,
+    "hpScalePerLevel": 0.2,
+    "damageScalePerLevel": 0.1
+  },
+  "loot": { "coinPopSpeed": 160, "coinGravity": 700 },
+  "hud": { "damageNumberLife": 0.7 }
+}

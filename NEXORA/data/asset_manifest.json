@@ -1,0 +1,4 @@
+{
+  "_comment": "Çalışma zamanında yüklenen görseller. Sadece diskte GERÇEKTEN var olan PNG'ler eklenir: { \"anahtar\": \"assets/yol/dosya.png\" }. Boşken oyun Canvas placeholder çizer. Anahtar kuralı: düşman için tür adı (ör. goblin), oyuncu için player_<male|female>.",
+  "images": {}
+}

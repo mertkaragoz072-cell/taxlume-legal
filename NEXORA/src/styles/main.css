@@ -49,3 +49,6 @@ html, body {
   border-radius: 14px; padding: 10px 24px; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 4px 0 #1f2a44; cursor: pointer;
 }
 #restart-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f2a44; }
+
+#loaderror { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: #1f2a44; font-weight: 700; background: #fff6e0; }
+#loaderror.hidden { display: none; }

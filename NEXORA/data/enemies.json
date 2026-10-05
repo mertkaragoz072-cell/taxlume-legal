@@ -1,0 +1,7 @@
+{
+  "goblin": {
+    "name": "Goblin", "hp": 30, "damage": 8, "speed": 55, "xp": 12,
+    "coins": [2, 4], "coinValue": 1, "contactRange": 26, "attackCooldown": 0.9, "size": 1,
+    "colors": { "skin": "#7ed957", "skinDark": "#4fae3c", "cloth": "#a9702f" }
+  }
+}
