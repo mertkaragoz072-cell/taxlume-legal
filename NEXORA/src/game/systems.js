@@ -50,7 +50,7 @@ function spawnElite() {
   const e = CONFIG.enemies, p = state.player;
   const pool = Object.entries(ENEMY_TYPES).filter(([, t]) => t.elite && p.level >= t.minLevel);
   if (!pool.length || aliveElite().length >= e.elite.maxAlive) return false;
-  spawnEnemy(pool[Math.floor(rand(0, pool.length))][0], 0);
+  spawnEnemy(pool[Math.floor(rand(0, pool.length))][0], e.eliteSpawnExtra);
   return true;
 }
 
@@ -64,7 +64,7 @@ function damageEnemy(en, dmg) {
   en.hp -= dmg; en.flash = 0.14; en.knock = 1 - en.def.knockResist; en.stagger = 0.22;
   if (en.def.knockResist < 0.5 && en.attackT >= 0) { en.attackT = -1; en.atkTimer = 0.5; }   // hafif düşmanın saldırısı vuruşla bölünür; elite bölünmez
   addText(en.a, en.def.heightUnits + 10, '-' + Math.round(dmg), '#ff4a4a', 0.75 + en.def.heightUnits / 300);
-  if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 140, dir: -en.face });
+  if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 190, dir: -en.face });
   if (en.hp <= 0 && !en.dead) killEnemy(en);
 }
 
@@ -177,16 +177,20 @@ export function update(dt) {
       return;
     }
     if (en.stagger > 0 && en.knock > 0) { en.a -= en.face * en.knock * 40 / r * dt * 6; en.knock = Math.max(0, en.knock - dt * 6); return; }
+    const holding = en.def.hold && order.some((o) => !o.def.elite) && dist < C.enemies.eliteHoldRange + 40 && dist > C.enemies.eliteHoldRange - 40;
     if (en.knock > 0) { en.a -= en.face * en.knock * 40 / r * dt * 6; en.knock = Math.max(0, en.knock - dt * 6); }
+    else if (holding) { /* elite: normaller bitene kadar geride bekler */ }
     else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * dt, Math.max(free, 0)) / r;
     else if (free < -4) en.a -= en.face * Math.min(40 * dt, -free) / r;          // iç içe girdiyse hafifçe geri it
+    if (dist < en.def.contactRange * 0.55) en.a -= en.face * Math.min(60 * dt, en.def.contactRange * 0.55 - dist) / r;   // oyuncunun içine girmesin
     if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) { en.attackT = 0; en.hitDone = false; }
   });
   for (const en of state.enemies) if (en.dead) en.deathT += dt;
 
   // Saldırı: menzilde düşman varsa otomatik, ya da saldırı düğmesi/Space ile elle. Saldırı yönü kahramanın baktığı yön.
   const manual = Input.consumeAttack();
-  if (!state.over && p.atkTimer <= 0) {
+  const attackAnimBusy = p.anim.startsWith('attack_') && ANIMS.male?.animations[p.anim] && p.animT < ANIMS.male.animations[p.anim].frames.length / ANIMS.male.animations[p.anim].fps * 0.9;
+  if (!state.over && p.atkTimer <= 0 && !attackAnimBusy) {
     let best = null, bd = C.player.attackRange;
     for (const en of live) {
       const d = surfaceDist(en.a, p.a);

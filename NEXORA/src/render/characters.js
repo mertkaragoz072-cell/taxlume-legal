@@ -30,7 +30,15 @@ function drawPlayerSprite(ctx) {
     const sy = 1 + (running ? Math.sin(p.walk * 2) * 0.025 : 0) - hurt * 0.07 + (p.anim.startsWith('attack_') ? 0.02 : 0);
     const sx = 1 / sy;
     ctx.scale(sx, sy);
-    ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+    const fxMul = CONFIG.player.slashFxScale, body = Assets.get('malebody_' + anim.frames[i]), fx = Assets.get('malefx_' + anim.frames[i]), anc = meta.fxAnchor?.[anim.frames[i]];
+    if (body && fx && anc) {
+      // gövde katmanı tam boy; mavi kılıç efekti kılıcın çıktığı noktaya (çapa) sabitlenip küçültülür
+      ctx.drawImage(body, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+      ctx.save(); ctx.globalAlpha *= CONFIG.player.slashFxAlpha;
+      ctx.translate((anc[0] - meta.pivot[0]) * sc, (anc[1] - meta.pivot[1]) * sc); ctx.scale(fxMul, fxMul);
+      ctx.drawImage(fx, -anc[0] * sc, -anc[1] * sc, img.width * sc, img.height * sc);
+      ctx.restore();
+    } else ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
     if (hurt > 0) { ctx.globalAlpha = 0.55 * hurt; ctx.drawImage(whiteSilhouette(img, 'p:' + anim.frames[i], '#ff5a4a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc); }
   });
   ctx.globalAlpha = 1;

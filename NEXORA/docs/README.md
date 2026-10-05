@@ -55,3 +55,9 @@ Tasarım ve teknik notlar.
 - **Zemin:** kontur daha ince (≈ 1.6 birim) ve yarı saydam koyu yeşil; ayak gölgeleri daha yumuşak oval.
 - **Parallax:** hafifletildi (gökyüzü bulutları 0.009, uzak adalar 0.022, orta adalar 0.052, sis 0.07, tepeler 0.13, ağaç şeridi 0.26, zemin 1.0). Ön plan dekoru karakterlerin altında kalır.
 - **HUD:** soldaki 3 menü ikonu daha görünür (opaklık .92, altın ince çerçeve). Ekranda aynı anda en fazla 8 hasar yazısı (ömür 0.55 sn) ve 4 vuruş kıvılcımı.
+
+## Combat polish
+- **Saldırı efekti:** gömülü efekt katmanı kılıç ucuna sabitlenip %50 küçültülür (`player.slashFxScale`), %90 opak; gövde/yüz/kılıç tam boy kalır. Vuruş kıvılcımı küçük ve kısa (en fazla 4).
+- **Saldırı üst üste binmez:** önceki saldırı animasyonu %90 bitmeden yenisi başlamaz (cooldown 0.62 sn).
+- **Elite:** HP 240 (normal goblin 42); normal ekranın 260 birim daha dışından doğar ve normal düşman hayattayken oyuncudan ≈ 190 birim uzakta bekler, sonra ilerler.
+- **Mesafe:** düşmanlar oyuncunun içine girmez (temas menzilinin %55'inden yakına girerse geri itilir); ölçülen en yakın mesafe 31 birim. Normal düşman en fazla 3.

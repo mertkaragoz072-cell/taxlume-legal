@@ -46,7 +46,7 @@
     "maxHp": 120,
     "attackDamage": 10,
     "attackRange": 115,
-    "attackCooldown": 0.6,
+    "attackCooldown": 0.62,
     "slashDuration": 0.18,
     "invulnTime": 0.5,
     "coinMagnetRange": 150,
@@ -54,7 +54,9 @@
     "autoRun": true,
     "autoSpeed": 105,
     "engageRange": 100,
-    "hitDelay": 0.16
+    "hitDelay": 0.16,
+    "slashFxScale": 0.5,
+    "slashFxAlpha": 0.9
   },
   "leveling": {
     "baseXpToNext": 30,
@@ -86,7 +88,9 @@
       "maxAlive": 1,
       "normalWhileElite": 1
     },
-    "speedJitter": 0.16
+    "speedJitter": 0.16,
+    "eliteSpawnExtra": 260,
+    "eliteHoldRange": 190
   },
   "loot": {
     "coinPopSpeed": 160,

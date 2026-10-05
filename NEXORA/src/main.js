@@ -1,4 +1,4 @@
-import { loadData } from './core/config.js';
+import { loadData, CONFIG } from './core/config.js';
 import { Assets } from './core/assets.js';
 import { Input } from './core/input.js';
 import { View } from './core/view.js';
@@ -53,6 +53,6 @@ async function boot() {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__game = { state, spawnEnemy }; // hata ayıklama
+  window.__game = { state, spawnEnemy, CONFIG }; // hata ayıklama
 }
 boot();

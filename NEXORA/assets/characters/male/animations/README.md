@@ -30,3 +30,7 @@ Sheet satırları: IDLE→`idle`, RUN→`run`, ATTACK 1/2/3→`attack_1/2/3`, JU
 - `attack_3` sheet'te 4 karakter karesi + 4 saf patlama (`assets/effects/attacks/attack_3_burst_01…04.png`); `attack_3_04` yer patlamasıyla birlikte.
 - `jump_07…09` kareleri toz bulutunu içerir (karakterin arkasında, karenin parçası).
 - Kaynak düşük çözünürlüklü (karakter ≈ 85 px); büyütmeyin.
+
+## Katmanlar (`layers/`) — saldırı efektini küçültmek için
+Orijinal kareler **değişmedi**. `tools/split_attack_fx.py`, attack karelerindeki gömülü mavi/beyaz kılıç efektini renk eşiğiyle ayırıp türetilmiş `layers/attack_N_MM_body.png` (gövde) ve `layers/attack_N_MM_fx.png` (efekt) dosyalarını üretir; `data/male_animations.json → fxAnchor` her karede efektin gövdeye en yakın noktasını (kılıcın çıktığı yer) tutar. Oyun efekti bu noktaya sabitleyip `player.slashFxScale` (0.5) ile küçültür.
+Sınır: ayrım renk tabanlıdır; birkaç karede (attack_2_04…08) kılıç/kol üzerindeki mavi parlama gövdede kalmış ya da küçük kıvılcım kırıntıları efekte geçmiş olabilir.

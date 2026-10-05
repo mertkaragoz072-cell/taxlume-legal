@@ -44,7 +44,7 @@
     "heightUnits": 112,
     "width": 80,
     "barWidth": 62,
-    "hp": 130,
+    "hp": 240,
     "damage": 16,
     "speed": 40,
     "xp": 45,
@@ -58,6 +58,7 @@
     "minLevel": 3,
     "weight": 0,
     "knockResist": 0.8,
-    "elite": true
+    "elite": true,
+    "hold": true
   }
 }
