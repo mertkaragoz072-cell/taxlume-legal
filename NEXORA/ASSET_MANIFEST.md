@@ -69,4 +69,4 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Eksik: skeleton ve diğer düşman türleri, saldırı/ölüm için ek kareler, boss'a özel yetenek efektleri.
 
 ## Kadın karakter (MEVCUT — `tools/extract_female_sheet.py`)
-- `assets/characters/female/animations/`: idle 9, run 9, attack 5, hurt 5, death 5 (340×240, pivot 130,230) + `layers/` + portre. Efektler: `assets/effects/attacks/female_fx_*.png`. Ayrıntı/sınırlar: klasör README. Seçim: `?hero=female` veya `player.character`.
+- `assets/characters/female/animations/`: idle 8, run 8, attack 5, hurt 6, death 5 (280×190, pivot 100,180; kaynak: sheet v2) + `layers/` + portre. Efektler: `assets/effects/attacks/female_fx_*.png`. Ayrıntı/sınırlar: klasör README. Seçim: `?hero=female` veya `player.character`.

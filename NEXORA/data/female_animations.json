@@ -1,14 +1,14 @@
 {
   "canvas": [
-    340,
-    240
+    280,
+    190
   ],
   "pivot": [
-    130,
-    230
+    100,
+    180
   ],
   "facing": "right",
-  "scale": 0.58,
+  "scale": 0.86,
   "animations": {
     "idle": {
       "frames": [
@@ -19,8 +19,7 @@
         "idle_05",
         "idle_06",
         "idle_07",
-        "idle_08",
-        "idle_09"
+        "idle_08"
       ],
       "fps": 8,
       "loop": true
@@ -34,8 +33,7 @@
         "run_05",
         "run_06",
         "run_07",
-        "run_08",
-        "run_09"
+        "run_08"
       ],
       "fps": 14,
       "loop": true
@@ -58,7 +56,8 @@
         "hurt_02",
         "hurt_03",
         "hurt_04",
-        "hurt_05"
+        "hurt_05",
+        "hurt_06"
       ],
       "fps": 9,
       "loop": false
@@ -76,17 +75,21 @@
     }
   },
   "fxAnchor": {
+    "attack_02": [
+      142,
+      147
+    ],
     "attack_03": [
-      231,
-      141
+      213,
+      90
     ],
     "attack_04": [
-      233,
-      112
+      199,
+      88
     ],
     "attack_05": [
-      176,
-      114
+      188,
+      94
     ]
   }
 }
