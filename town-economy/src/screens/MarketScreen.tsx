@@ -31,6 +31,7 @@ import {
   cardShadow,
   CARD_GRADIENT,
   COLORS,
+  CONTENT_MAX_WIDTH,
   FONT,
   GOLD_GRADIENT,
   GREEN_GRADIENT,
@@ -68,8 +69,13 @@ export function MarketScreen({ sounds }: Props) {
   // window size, and being a module-level const it then never corrects
   // itself, leaving the chart permanently sized off a wrong (sometimes
   // zero) width. useWindowDimensions re-renders once the real size lands.
+  // Clamped against CONTENT_MAX_WIDTH (not a raw screenWidth cap) so the
+  // chart fills its card up to however wide the content column actually
+  // gets — on a phone that's just screenWidth, same as before; on an iPad
+  // it used to cap at a phone-sized 420 and leave the rest of a much wider
+  // card blank.
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth - 48, 420);
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);

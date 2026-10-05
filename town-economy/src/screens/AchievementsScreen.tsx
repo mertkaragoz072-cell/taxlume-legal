@@ -30,6 +30,7 @@ import {
   CARD_GRADIENT,
   cardShadow,
   COLORS,
+  CONTENT_MAX_WIDTH,
   FONT,
   GOLD_GRADIENT,
   RADIUS,
@@ -47,8 +48,10 @@ export function AchievementsScreen() {
   // See MarketScreen's identical comment: a hook instead of a module-level
   // Dimensions.get() snapshot, which on native can be taken before the
   // bridge reports the real window size and then never self-corrects.
+  // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
+  // MarketScreen for why.
   const { width: screenWidth } = useWindowDimensions();
-  const netWorthChartWidth = Math.min(screenWidth - 48, 420);
+  const netWorthChartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
   const miniQuest = state.activeMiniQuest;

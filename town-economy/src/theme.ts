@@ -1,5 +1,15 @@
 import { ViewStyle } from "react-native";
 
+// The whole app's content column was capped at a phone-sized 480 so a wide
+// phone (or a browser window) wouldn't stretch cards into absurd single-row
+// layouts. On an iPad that same cap left most of the screen as bare gradient
+// on both sides — "bordered" edges and, with every chart's own width formula
+// keyed off the *raw* screen width, charts that stopped partway across their
+// card instead of filling it. 680 comfortably fills an iPad in portrait
+// without the per-screen layouts (built for a phone-width column) stretching
+// thin, and is a no-op on every phone, which is already narrower than this.
+export const CONTENT_MAX_WIDTH = 680;
+
 // --- Design tokens ---------------------------------------------------------
 // A single small scale for text size/weight and spacing so every screen
 // draws from the same ruler instead of each one picking its own numbers —

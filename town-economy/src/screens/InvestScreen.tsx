@@ -9,7 +9,18 @@ import { GoodCard } from "../components/GoodCard";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import { cardShadow, CARD_GRADIENT, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  cardShadow,
+  CARD_GRADIENT,
+  COLORS,
+  CONTENT_MAX_WIDTH,
+  FONT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
 interface Props {
@@ -21,8 +32,10 @@ export function InvestScreen({ sounds }: Props) {
   // See MarketScreen's identical comment: a hook instead of a module-level
   // Dimensions.get() snapshot, which on native can be taken before the
   // bridge reports the real window size and then never self-corrects.
+  // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
+  // MarketScreen for why.
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth - 48, 420);
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
   const formatPrice = (v: number) => formatCoins(v, 2);
   const [selectedId, setSelectedId] = useState<AssetId>(ASSETS[0].id);
   const selected = ASSETS.find((a) => a.id === selectedId)!;

@@ -43,7 +43,7 @@ import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
 import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
-import { seasonalBackgroundGradient } from "./src/theme";
+import { CONTENT_MAX_WIDTH, seasonalBackgroundGradient } from "./src/theme";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { InvestScreen } from "./src/screens/InvestScreen";
@@ -536,5 +536,5 @@ const styles = StyleSheet.create({
   // The UI was designed for a phone-width column; on a wide screen (iPad,
   // web desktop) let it grow to a comfortable max width and center it
   // instead of stretching cards edge-to-edge.
-  content: { flex: 1, width: "100%", maxWidth: 480, alignSelf: "center" },
+  content: { flex: 1, width: "100%", maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
 });

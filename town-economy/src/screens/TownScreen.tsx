@@ -38,6 +38,7 @@ import {
   CARD_GRADIENT,
   cardShadow,
   COLORS,
+  CONTENT_MAX_WIDTH,
   FONT,
   glowShadow,
   GOLD_GRADIENT,
@@ -79,8 +80,11 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   // See MarketScreen's identical comment: a hook instead of a module-level
   // Dimensions.get() snapshot, which on native can be taken before the
   // bridge reports the real window size and then never self-corrects.
+  // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
+  // MarketScreen for why (iPad: charts used to stop partway across a much
+  // wider card instead of filling it).
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth - 48, 420);
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
