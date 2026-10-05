@@ -1,7 +1,6 @@
 {
   "goblin_scout": {
-    "name": "Goblin Gözcü",
-    "sprite": "enemy_goblin_scout",
+    "name": "Goblin Gözcü (kılıç+kalkan)",
     "heightUnits": 68,
     "width": 44,
     "barWidth": 34,
@@ -21,8 +20,7 @@
     "knockResist": 0.0
   },
   "goblin_warrior": {
-    "name": "Goblin Savaşçı",
-    "sprite": "enemy_goblin_warrior",
+    "name": "Goblin Savaşçı (gürz)",
     "heightUnits": 80,
     "width": 50,
     "barWidth": 42,
@@ -41,11 +39,10 @@
     "weight": 3,
     "knockResist": 0.3
   },
-  "ogre_brute": {
-    "name": "Elite Ogre",
-    "sprite": "enemy_ogre_brute",
-    "heightUnits": 152,
-    "width": 96,
+  "goblin_brute": {
+    "name": "Elite Goblin Brute",
+    "heightUnits": 132,
+    "width": 92,
     "barWidth": 70,
     "hp": 130,
     "damage": 16,

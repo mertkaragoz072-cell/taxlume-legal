@@ -1,0 +1,155 @@
+{
+  "goblin_warrior": {
+    "canvas": [
+      172,
+      146
+    ],
+    "pivot": [
+      86,
+      138
+    ],
+    "scale": 0.842,
+    "facing": "right",
+    "idleHeightPx": 95,
+    "targetHeight": 80,
+    "anims": {
+      "walk": {
+        "frames": [
+          "enemy_goblin_warrior_walk_01",
+          "enemy_goblin_warrior_walk_02",
+          "enemy_goblin_warrior_walk_03",
+          "enemy_goblin_warrior_walk_04",
+          "enemy_goblin_warrior_walk_05"
+        ],
+        "fps": 8,
+        "loop": true
+      },
+      "attack": {
+        "frames": [
+          "enemy_goblin_warrior_attack_01",
+          "enemy_goblin_warrior_attack_02",
+          "enemy_goblin_warrior_attack_03"
+        ],
+        "fps": 9,
+        "loop": false,
+        "impact": 0.5
+      },
+      "hurt": {
+        "frames": [
+          "enemy_goblin_warrior_hurt_01",
+          "enemy_goblin_warrior_hurt_02"
+        ],
+        "fps": 8,
+        "loop": false
+      },
+      "death": {
+        "frames": [
+          "enemy_goblin_warrior_death_01"
+        ],
+        "fps": 6,
+        "loop": false
+      }
+    }
+  },
+  "goblin_scout": {
+    "canvas": [
+      196,
+      134
+    ],
+    "pivot": [
+      98,
+      126
+    ],
+    "scale": 0.756,
+    "facing": "right",
+    "idleHeightPx": 90,
+    "targetHeight": 68,
+    "anims": {
+      "walk": {
+        "frames": [
+          "enemy_goblin_scout_walk_01",
+          "enemy_goblin_scout_walk_02",
+          "enemy_goblin_scout_walk_03",
+          "enemy_goblin_scout_walk_04"
+        ],
+        "fps": 8,
+        "loop": true
+      },
+      "attack": {
+        "frames": [
+          "enemy_goblin_scout_attack_01",
+          "enemy_goblin_scout_attack_02",
+          "enemy_goblin_scout_attack_03",
+          "enemy_goblin_scout_attack_04"
+        ],
+        "fps": 10,
+        "loop": false,
+        "impact": 0.5
+      },
+      "hurt": {
+        "frames": [
+          "enemy_goblin_scout_hurt_01"
+        ],
+        "fps": 8,
+        "loop": false
+      },
+      "death": {
+        "frames": [
+          "enemy_goblin_scout_death_01"
+        ],
+        "fps": 6,
+        "loop": false
+      }
+    }
+  },
+  "goblin_brute": {
+    "canvas": [
+      228,
+      220
+    ],
+    "pivot": [
+      114,
+      212
+    ],
+    "scale": 1.143,
+    "facing": "right",
+    "idleHeightPx": 112,
+    "targetHeight": 128,
+    "anims": {
+      "walk": {
+        "frames": [
+          "enemy_goblin_brute_walk_01",
+          "enemy_goblin_brute_walk_02",
+          "enemy_goblin_brute_walk_03"
+        ],
+        "fps": 6,
+        "loop": true
+      },
+      "attack": {
+        "frames": [
+          "enemy_goblin_brute_attack_01",
+          "enemy_goblin_brute_attack_02",
+          "enemy_goblin_brute_attack_03",
+          "enemy_goblin_brute_attack_04"
+        ],
+        "fps": 8,
+        "loop": false,
+        "impact": 0.62
+      },
+      "hurt": {
+        "frames": [
+          "enemy_goblin_brute_hurt_01"
+        ],
+        "fps": 8,
+        "loop": false
+      },
+      "death": {
+        "frames": [
+          "enemy_goblin_brute_death_01"
+        ],
+        "fps": 6,
+        "loop": false
+      }
+    }
+  }
+}

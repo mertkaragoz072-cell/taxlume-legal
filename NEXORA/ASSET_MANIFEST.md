@@ -64,6 +64,6 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Toprak lekeleri: `dirt_patch_01…05.png` (decal, zemine serpilir).
 - Eksik: kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.
 
-## Düşmanlar (MEVCUT — `tools/extract_enemies.py`)
-- `assets/enemies/`: 3 düşman, her biri tek statik poz (küçük goblin, orta goblin, ogre). Kaynak: referans moodboard'un boy oranı paneli. Ayrıntı ve sınırlar: klasör README.
-- Eksik: animasyon kareleri (yürü/saldır/hasar/ölüm), boss'lar, iskelet ve diğer düşmanlar.
+## Düşmanlar (MEVCUT — `tools/extract_goblins.py`)
+- `assets/enemies/<goblin_scout|goblin_warrior|goblin_brute>/`: animasyonlu (walk/attack/hurt/death) + portre. Kaynak: `assets/references/nexora_goblin_sheet_source.png`. Veri: `data/enemy_animations.json`. Ayrıntı: klasör README.
+- Eksik: skeleton ve diğer düşman türleri, saldırı/ölüm için ek kareler, boss'a özel yetenek efektleri.

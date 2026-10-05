@@ -42,3 +42,9 @@ Tasarım ve teknik notlar.
 - **Elite/boss:** `data/enemies.json → elite: true` (ogre). Seviye 3+'tan itibaren ilk 22 sn sonra, sonra her ≈ 30 sn'de **bir tane** doğar; elite varken normal düşman üst sınırı 4 → 2. Normal düşman en fazla 4 (gruplar 2–3'lü), sağ ekran kenarının 130 birim dışından girer (aniden belirmez).
 - **Gerçek vuruş:** saldırı başlayınca savurma etki anına (`player.hitDelay` 0.16 sn) kadar bekler, hasar o andaki güncel konumlara göre kahramanın baktığı yöndeki vuruş kutusunda (menzil + düşman yarı genişliği) uygulanır. Vurulan düşman geriye yaslanır/ezilir, ölürken yan yatıp solar.
 - **Önde dekor:** ön plan kaya/çalıları küçültülüp zeminde ayakların altına (derinlik 66–118) taşındı; hiçbir karakteri örtmez. Ağaç/çit/tabela karakterlerin arkasında kalır.
+
+## Goblin animasyonları (en son)
+- Düşmanlar artık statik değil: `data/enemy_animations.json`'daki gerçek kareleri oynatır (walk döngüsü, attack, hurt, death). Durum makinesi `src/game/systems.js` (düşman döngüsü), çizim `src/render/characters.js → drawEnemy`.
+- **Saldırı:** temas menzilinde düşman durur, saldırı animasyonunu oynar, hasarı animasyonun etki anında (`impact`) — oyuncu hâlâ menzildeyse — uygular. Hafif düşmanın (knockResist < 0.5) saldırısı vuruşla bölünür; elite bölünmez.
+- **Vuruş/ölüm:** vurulunca hurt karesi + beyaz parlama + geri itme; ölünce death karesi, sonra solar.
+- **Tür adları:** `goblin_scout` (küçük), `goblin_warrior` (normal), `goblin_brute` (**elite**, eski `ogre_brute`).

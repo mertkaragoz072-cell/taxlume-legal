@@ -11,12 +11,13 @@ export async function loadData(base = 'data/') {
     if (!res.ok) throw new Error(`${base + f} yüklenemedi (${res.status})`);
     return res.json();
   };
-  const [config, enemies, manifest, male, world] = await Promise.all([
-    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'), get('world_props.json'),
+  const [config, enemies, manifest, male, world, enemyAnims] = await Promise.all([
+    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'), get('world_props.json'), get('enemy_animations.json'),
   ]);
   Object.assign(CONFIG, config);
   Object.assign(ENEMY_TYPES, enemies);
   ANIMS.male = male;
+  ANIMS.enemies = enemyAnims;      // tür → { tuval, pivot, ölçek, anims: walk/attack/hurt/death }
   Object.assign(WORLD, world);
   return manifest;
 }

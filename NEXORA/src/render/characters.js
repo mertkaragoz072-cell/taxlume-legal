@@ -1,7 +1,7 @@
 import { CONFIG, ANIMS } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { Input } from '../core/input.js';
-import { TAU } from '../core/util.js';
+import { TAU, clamp } from '../core/util.js';
 import { state } from '../game/state.js';
 import { onSurface, onLane, groundShadow, outlined, outline } from './draw.js';
 
@@ -77,31 +77,37 @@ function whiteSilhouette(img, key) {
   whiteCache.set(key, cv); return cv;
 }
 
+// Düşman animasyonu: durum → kare. death > hurt > attack > walk. Kareler data/enemy_animations.json'dan (goblin sheet'i).
+function enemyFrame(en, meta) {
+  const A = meta.anims;
+  let an, t;
+  if (en.dead) { an = 'death'; t = en.deathT; }
+  else if (en.stagger > 0 && A.hurt) { an = 'hurt'; t = 0.22 - en.stagger; }
+  else if (en.attackT >= 0 && A.attack) { an = 'attack'; t = en.attackT; }
+  else { an = 'walk'; t = en.bob / 8; }
+  const L = A[an], n = L.frames.length;
+  const idx = L.loop ? Math.floor(t * L.fps) % n : Math.min(n - 1, Math.floor(t * L.fps));
+  return L.frames[idx];
+}
+
 export function drawEnemy(ctx, en) {
-  const def = en.def, img = Assets.get(def.sprite);
-  if (!img) return;                                   // sprite yüklenmediyse çizme (placeholder düşman yok)
-  const k = def.heightUnits / img.height, w = img.width * k, h = def.heightUnits;
-  const t = en.bob;
-  const hop = en.dead ? 0 : Math.abs(Math.sin(t)) * (1 + h * 0.008);   // ayaklar yerden az kalkar
-  const hit = en.dead ? 0 : Math.max(0, en.stagger || 0) / 0.18;           // vuruş tepkisi: geriye yaslanma + ezilme
-  const squash = en.dead ? 1 : 1 + Math.sin(t * 2) * 0.02 - hit * 0.06;
-  const sway = en.dead ? 0 : Math.sin(t) * 0.025 + hit * 0.22;
-  const dp = en.dead ? Math.min(1, en.deathT / 0.4) : 0;
+  const def = en.def, meta = ANIMS.enemies?.[en.type];
+  if (!meta) return;
+  const key = enemyFrame(en, meta), img = Assets.get(key);
+  if (!img) return;
+  const sc = meta.scale, w = img.width * sc, h = img.height * sc;
+  const dp = en.dead ? clamp((en.deathT - 0.5) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
   onLane(ctx, en.a, 0, 0, () => {
     ctx.globalAlpha = 1 - dp;
-    groundShadow(ctx, w * 0.8, 0.34);                  // ayakların hemen altında, küçük ve yumuşak
+    groundShadow(ctx, def.width * (en.dead ? 1.2 : 0.85), 0.36);      // ayakların hemen altında
     ctx.save();
-    // kaynak sprite'lar SOLA bakar; oyuncu solda ise (face=-1) çevirme yok
-    ctx.scale(-en.face, 1);
-    ctx.translate(0, -hop);
-    ctx.rotate(sway + dp * 1.2);
-    ctx.scale(1 / squash, squash);
-    ctx.drawImage(img, -w / 2, -h, w, h);
-    if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.12) * 0.85; ctx.drawImage(whiteSilhouette(img, def.sprite), -w / 2, -h, w, h); }
+    ctx.scale(meta.facing === 'right' ? en.face : -en.face, 1);       // kareler sağa bakar; oyuncuya dönük çizilir
+    ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
+    if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.8; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
     ctx.restore();
     ctx.globalAlpha = 1;
     if (!en.dead) {                                   // temiz küçük HP bar
-      const bw = def.barWidth, bh = 6, y = -h - 12, f = Math.max(0, en.hp / en.maxHp);
+      const bw = def.barWidth, bh = 6, y = -def.heightUnits - 14, f = Math.max(0, en.hp / en.maxHp);
       ctx.beginPath(); ctx.roundRect(-bw / 2 - 2, y - 2, bw + 4, bh + 4, 5); ctx.fillStyle = 'rgba(20,24,44,.85)'; ctx.fill();
       if (def.elite) { ctx.strokeStyle = '#f1c24b'; ctx.lineWidth = 1.5; ctx.stroke(); }
       ctx.beginPath(); ctx.roundRect(-bw / 2, y, bw * f, bh, 3);
