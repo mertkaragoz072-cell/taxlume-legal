@@ -7,7 +7,7 @@ Aşağıdaki dosyalar PNG olarak ayrıca üretilip ilgili klasörlere eklenmeli.
 ## Marka
 - ✅ `assets/logo/nexora_logo.png` — **MEVCUT**. Şeffaf arka planlı ana logo, 1467×737 px, RGBA. Kaynak: `assets/references/nexora_logo_source.png` (1536×1024, siyah arka planlı orijinal). Siyah arka plan çıkarıldı, dış outline korundu. Manifest anahtarı: `nexora_logo`.
 - ⏳ `nexora_logo_horizontal.png`, `nexora_logo_mark.png` — henüz yok
-- `assets/app_icon/app_icon_1024.png` — kare uygulama ikonu; platform boyutları sonradan türetilebilir
+- ✅ `assets/app_icon/app_icon_1024.png` — **MEVCUT**. 1024×1024 RGBA. Kaynak: `assets/references/nexora_app_icon_source.png`. Mağaza için opak/adaptive varyantlar henüz yok (bkz. klasör README).
 
 ## Oyuncu karakterleri
 Hem `assets/characters/male/animations/` hem `assets/characters/female/animations/` için ayrı kareler:
