@@ -8,7 +8,7 @@
     164
   ],
   "facing": "right",
-  "scale": 1.15,
+  "scale": 0.95,
   "animations": {
     "idle": {
       "frames": [

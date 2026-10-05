@@ -2,7 +2,7 @@
   "goblin_scout": {
     "name": "Goblin Gözcü",
     "sprite": "enemy_goblin_scout",
-    "heightUnits": 70,
+    "heightUnits": 68,
     "width": 44,
     "barWidth": 34,
     "hp": 22,
@@ -23,8 +23,8 @@
   "goblin_warrior": {
     "name": "Goblin Savaşçı",
     "sprite": "enemy_goblin_warrior",
-    "heightUnits": 100,
-    "width": 58,
+    "heightUnits": 80,
+    "width": 50,
     "barWidth": 42,
     "hp": 42,
     "damage": 10,
@@ -35,20 +35,20 @@
       4
     ],
     "coinValue": 1,
-    "contactRange": 46,
+    "contactRange": 42,
     "attackCooldown": 0.9,
     "minLevel": 1,
     "weight": 3,
     "knockResist": 0.3
   },
   "ogre_brute": {
-    "name": "Ogre",
+    "name": "Elite Ogre",
     "sprite": "enemy_ogre_brute",
-    "heightUnits": 168,
-    "width": 104,
-    "barWidth": 66,
+    "heightUnits": 152,
+    "width": 96,
+    "barWidth": 70,
     "hp": 130,
-    "damage": 22,
+    "damage": 16,
     "speed": 40,
     "xp": 45,
     "coins": [
@@ -56,10 +56,11 @@
       10
     ],
     "coinValue": 1,
-    "contactRange": 70,
-    "attackCooldown": 1.2,
+    "contactRange": 64,
+    "attackCooldown": 1.4,
     "minLevel": 3,
-    "weight": 1,
-    "knockResist": 0.8
+    "weight": 0,
+    "knockResist": 0.8,
+    "elite": true
   }
 }

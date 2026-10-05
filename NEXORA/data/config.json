@@ -53,7 +53,8 @@
     "coinMagnetSpeed": 520,
     "autoRun": true,
     "autoSpeed": 105,
-    "engageRange": 100
+    "engageRange": 100,
+    "hitDelay": 0.16
   },
   "leveling": {
     "baseXpToNext": 30,
@@ -63,21 +64,28 @@
     "healOnLevelUp": 0.5
   },
   "enemies": {
-    "maxAlive": 5,
+    "maxAlive": 4,
     "waveMin": 2,
-    "waveMax": 4,
+    "waveMax": 3,
     "waveGapUnits": [
       85,
       140
     ],
-    "waveInterval": 5.0,
+    "waveInterval": 5.5,
     "waveIntervalMin": 2.8,
     "waveIntervalDecayPerLevel": 0.25,
     "refillWhenAtMost": 1,
-    "spawnOffscreen": 90,
+    "spawnOffscreen": 130,
     "hpScalePerLevel": 0.2,
     "damageScalePerLevel": 0.1,
-    "separation": 0.95
+    "separation": 0.95,
+    "elite": {
+      "firstAfter": 22,
+      "interval": 30,
+      "intervalMin": 20,
+      "maxAlive": 1,
+      "normalWhileElite": 2
+    }
   },
   "loot": {
     "coinPopSpeed": 160,
@@ -101,7 +109,7 @@
     "visibleHeightUnits": 500,
     "heroScreenX": 0.36,
     "groundScreenY": 0.62,
-    "laneDepth": 22
+    "laneDepth": 14
   },
   "parallax": [
     {

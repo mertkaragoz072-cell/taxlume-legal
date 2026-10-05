@@ -32,9 +32,21 @@ export function drawText(ctx, t) {
   onLane(ctx, t.a, t.h, 0, () => {
     ctx.globalAlpha = clamp(t.life / t.max * 1.5, 0, 1);
     const big = t.text === 'LEVEL UP!';
-    ctx.font = `900 ${big ? 28 : 26}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
+    ctx.font = `900 ${Math.round((big ? 28 : 24) * (t.scale || 1))}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
     ctx.lineWidth = 4; ctx.strokeStyle = outline(); ctx.lineJoin = 'round';
     ctx.strokeText(t.text, t.ox, 0); ctx.fillStyle = t.color; ctx.fillText(t.text, t.ox, 0);
+    ctx.globalAlpha = 1;
+  });
+}
+
+// Vuruş kıvılcımı: düşmanın gövdesinde, düşmanın boyutuna göre ölçeklenir (sprite varsa mavi yıldız patlaması)
+export function drawHitFx(ctx, f) {
+  const t = 1 - f.life / f.max, img = Assets.get('fx_effect_weapon_starburst');
+  onLane(ctx, f.a, f.h, 0, () => {
+    ctx.globalAlpha = 1 - t * t;
+    const k = f.k * (0.55 + t * 0.5);
+    if (img) ctx.drawImage(img, -img.width * k / 2, -img.height * k / 2, img.width * k, img.height * k);
+    else { ctx.beginPath(); ctx.arc(0, 0, 14 * k, 0, TAU); ctx.fillStyle = '#9fe0ff'; ctx.fill(); }
     ctx.globalAlpha = 1;
   });
 }

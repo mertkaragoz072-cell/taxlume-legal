@@ -82,13 +82,14 @@ export function drawEnemy(ctx, en) {
   if (!img) return;                                   // sprite yüklenmediyse çizme (placeholder düşman yok)
   const k = def.heightUnits / img.height, w = img.width * k, h = def.heightUnits;
   const t = en.bob;
-  const hop = en.dead ? 0 : Math.abs(Math.sin(t)) * (2 + h * 0.02);
-  const squash = en.dead ? 1 : 1 + Math.sin(t * 2) * 0.025;
-  const sway = en.dead ? 0 : Math.sin(t) * 0.035;
+  const hop = en.dead ? 0 : Math.abs(Math.sin(t)) * (1 + h * 0.008);   // ayaklar yerden az kalkar
+  const hit = en.dead ? 0 : Math.max(0, en.stagger || 0) / 0.18;           // vuruş tepkisi: geriye yaslanma + ezilme
+  const squash = en.dead ? 1 : 1 + Math.sin(t * 2) * 0.02 - hit * 0.06;
+  const sway = en.dead ? 0 : Math.sin(t) * 0.025 + hit * 0.22;
   const dp = en.dead ? Math.min(1, en.deathT / 0.4) : 0;
   onLane(ctx, en.a, 0, 0, () => {
     ctx.globalAlpha = 1 - dp;
-    groundShadow(ctx, w * 0.95);
+    groundShadow(ctx, w * 0.8, 0.34);                  // ayakların hemen altında, küçük ve yumuşak
     ctx.save();
     // kaynak sprite'lar SOLA bakar; oyuncu solda ise (face=-1) çevirme yok
     ctx.scale(-en.face, 1);
@@ -102,6 +103,7 @@ export function drawEnemy(ctx, en) {
     if (!en.dead) {                                   // temiz küçük HP bar
       const bw = def.barWidth, bh = 6, y = -h - 12, f = Math.max(0, en.hp / en.maxHp);
       ctx.beginPath(); ctx.roundRect(-bw / 2 - 2, y - 2, bw + 4, bh + 4, 5); ctx.fillStyle = 'rgba(20,24,44,.85)'; ctx.fill();
+      if (def.elite) { ctx.strokeStyle = '#f1c24b'; ctx.lineWidth = 1.5; ctx.stroke(); }
       ctx.beginPath(); ctx.roundRect(-bw / 2, y, bw * f, bh, 3);
       const g = ctx.createLinearGradient(0, y, 0, y + bh); g.addColorStop(0, '#ff6b6b'); g.addColorStop(1, '#d92f3f');
       ctx.fillStyle = g; ctx.fill();

@@ -79,7 +79,7 @@ world['decor'] = [
     {'keys': ['bush_01', 'bush_02', 'bush_03', 'bush_04', 'bush_large_front'], 'every': 240, 'scale': [0.8, 1.25], 'depth': [0, 12], 'layer': 'back'},
     {'keys': ['grass_tuft_01', 'grass_tuft_02', 'flower_pink', 'flower_white'], 'every': 70, 'scale': [0.9, 1.4], 'depth': [-2, 18], 'layer': 'back'},
     {'keys': ['rock_small_01', 'rock_small_02', 'rock_medium_01', 'rock_medium_02'], 'every': 420, 'scale': [0.9, 1.3], 'depth': [10, 28], 'layer': 'back'},
-    {'keys': ['rock_large_01', 'rock_large_02', 'bush_large_front', 'bush_01'], 'every': 560, 'scale': [1.0, 1.3], 'depth': [48, 80], 'layer': 'front'},
+    {'keys': ['rock_small_01', 'rock_small_02', 'rock_medium_01', 'bush_01', 'bush_03'], 'every': 520, 'scale': [0.8, 1.1], 'depth': [66, 118], 'layer': 'front'},   # karakter ayaklarının altında kalır, hiçbir karakteri örtmez
 ]
 # [anahtar, x oranı (periyot içinde), y oranı (ufuktan yukarı, 0=ufuk 1=üst), yükseklik birim]
 world['islandLayers'] = [

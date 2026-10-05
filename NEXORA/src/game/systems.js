@@ -22,15 +22,20 @@ export function spawnEnemy(typeKey, offsetUnits = 0) {
   });
 }
 
-// Düşman grubu: 2-4 düşman, aralarında boşluk bırakarak sağdan gelir; ekranda en fazla maxAlive düşman.
+// Normal düşman grubu: 2-3 düşman, aralarında boşluk bırakarak sağ ekran kenarının DIŞINDAN gelir (aniden belirmez).
+// Aynı anda en fazla maxAlive normal düşman; elite varken normalWhileElite'a düşer.
+const aliveNormal = () => state.enemies.filter((x) => !x.dead && !x.def.elite);
+const aliveElite = () => state.enemies.filter((x) => !x.dead && x.def.elite);
+
 function spawnWave() {
   const e = CONFIG.enemies, p = state.player;
-  const room = e.maxAlive - state.enemies.filter((x) => !x.dead).length;
+  const cap = aliveElite().length ? e.elite.normalWhileElite : e.maxAlive;
+  const room = cap - aliveNormal().length;
   const n = Math.min(room, Math.floor(rand(e.waveMin, e.waveMax + 1)));
   if (n <= 0) return false;
-  const pool = Object.entries(ENEMY_TYPES).filter(([, t]) => p.level >= t.minLevel);
+  const pool = Object.entries(ENEMY_TYPES).filter(([, t]) => !t.elite && p.level >= t.minLevel);
   const total = pool.reduce((s, [, t]) => s + t.weight, 0);
-  let offset = 0;
+  let offset = aliveNormal().length ? 60 : 0;
   for (let i = 0; i < n; i++) {
     let r = rand(0, total), pick = pool[0][0];
     for (const [k, t] of pool) { if ((r -= t.weight) <= 0) { pick = k; break; } }
@@ -40,14 +45,24 @@ function spawnWave() {
   return true;
 }
 
-function addText(a, h, text, color) {
+// Elite/boss: seyrek (en erken firstAfter sn sonra, sonra interval aralıkla), tek tek, seviye 3+. Yanında en fazla 1–2 küçük düşman.
+function spawnElite() {
+  const e = CONFIG.enemies, p = state.player;
+  const pool = Object.entries(ENEMY_TYPES).filter(([, t]) => t.elite && p.level >= t.minLevel);
+  if (!pool.length || aliveElite().length >= e.elite.maxAlive) return false;
+  spawnEnemy(pool[Math.floor(rand(0, pool.length))][0], 0);
+  return true;
+}
+
+function addText(a, h, text, color, scale = 1) {
   const life = CONFIG.hud.damageNumberLife;
-  state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8) });
+  state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8), scale });
 }
 
 function damageEnemy(en, dmg) {
-  en.hp -= dmg; en.flash = 0.12; en.knock = 1 - en.def.knockResist;
-  addText(en.a, en.def.heightUnits + 14, '-' + Math.round(dmg), '#ff4a4a');
+  en.hp -= dmg; en.flash = 0.14; en.knock = 1 - en.def.knockResist; en.stagger = 0.18;
+  addText(en.a, en.def.heightUnits + 10, '-' + Math.round(dmg), '#ff4a4a', 0.75 + en.def.heightUnits / 300);
+  state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.22, max: 0.22, k: en.def.heightUnits / 100, dir: -en.face });
   if (en.hp <= 0 && !en.dead) killEnemy(en);
 }
 
@@ -122,18 +137,22 @@ export function update(dt) {
   updatePlayerAnim(p, dt);
 
   if (!state.over) {
-    state.spawnTimer -= dt;
-    const alive = live.length;
-    if ((state.spawnTimer <= 0 && alive < C.enemies.maxAlive) || (alive <= C.enemies.refillWhenAtMost && state.spawnTimer <= C.enemies.waveInterval - 1.2)) {
+    state.spawnTimer -= dt; state.eliteTimer -= dt;
+    const alive = aliveNormal().length, cap = aliveElite().length ? C.enemies.elite.normalWhileElite : C.enemies.maxAlive;
+    if (alive < cap && (state.spawnTimer <= 0 || (alive <= C.enemies.refillWhenAtMost && state.spawnTimer <= C.enemies.waveInterval - 1.2))) {
       if (spawnWave()) state.spawnTimer = Math.max(C.enemies.waveIntervalMin, C.enemies.waveInterval - C.enemies.waveIntervalDecayPerLevel * (p.level - 1));
       else state.spawnTimer = 1;
+    }
+    if (state.eliteTimer <= 0 && p.level >= 3) {
+      if (spawnElite()) state.eliteTimer = Math.max(C.enemies.elite.intervalMin, C.enemies.elite.interval - 1.5 * (p.level - 3));
+      else state.eliteTimer = 3;
     }
   }
 
   // Düşmanlar: oyuncuya yürür, birbirinin içine girmez (önlerindeki düşmanla en az sep mesafe), temasta hasar verir
   const order = live.slice().sort((x, y) => Math.abs(wrapAngle(x.a - p.a)) - Math.abs(wrapAngle(y.a - p.a)));
   order.forEach((en, i) => {
-    en.bob += dt * (5 + en.def.speed * 0.05); en.flash = Math.max(0, en.flash - dt);
+    en.bob += dt * (5 + en.def.speed * 0.05); en.flash = Math.max(0, en.flash - dt); en.stagger = Math.max(0, (en.stagger || 0) - dt);
     en.atkTimer = Math.max(0, en.atkTimer - dt);
     const diff = wrapAngle(p.a - en.a);
     en.face = diff >= 0 ? 1 : -1;
@@ -165,9 +184,17 @@ export function update(dt) {
       p.atkTimer = C.player.attackCooldown;
       p.anim = `attack_${p.combo + 1}`; p.animT = 0; p.combo = (p.combo + 1) % 3;
       state.slashes.push({ life: C.player.slashDuration, max: C.player.slashDuration, dir: p.dir, a: p.a });
-      for (const en of live) {
-        const diff = wrapAngle(en.a - p.a);
-        if (Math.abs(diff) * r <= C.player.attackRange + en.def.width * 0.3 && Math.sign(diff) === p.dir) damageEnemy(en, p.damage);
+      p.hitT = C.player.hitDelay; p.hitDir = p.dir;           // hasar savurmanın etki anında, güncel konumlara göre uygulanır
+    }
+  }
+  if (p.hitT > 0 && !state.over) {
+    p.hitT -= dt;
+    if (p.hitT <= 0) {
+      for (const en of state.enemies) {
+        if (en.dead) continue;
+        const diff = wrapAngle(en.a - p.a), d = Math.abs(diff) * r;
+        // vuruş kutusu: kahramanın baktığı yönde, menzil + düşmanın yarım genişliği
+        if (Math.sign(diff) === p.hitDir && d <= C.player.attackRange + en.def.width * 0.35) damageEnemy(en, p.damage);
       }
     }
   }
@@ -191,6 +218,8 @@ export function update(dt) {
   state.coins = state.coins.filter((c) => !c.collected);
 
   for (const s of state.slashes) s.life -= dt;
+  for (const f of state.hitFx) f.life -= dt;
+  state.hitFx = state.hitFx.filter((f) => f.life > 0);
   state.slashes = state.slashes.filter((s) => s.life > 0);
   for (const t of state.texts) { t.life -= dt; t.h += 50 * dt; }
   state.texts = state.texts.filter((t) => t.life > 0);

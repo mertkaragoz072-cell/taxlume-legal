@@ -42,7 +42,9 @@ export function drawPlanet(ctx) {
   ctx.beginPath(); ctx.arc(cx, cy, R - 120 * sc, 0, TAU);
   ctx.lineWidth = 60 * sc; ctx.strokeStyle = 'rgba(30,90,40,.18)'; ctx.stroke();
   ctx.restore();
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); outlined(ctx, 5 * sc + 1);
+  // ince, yumuşak kontur: koyu yeşil (siyah değil), hafif dış gölge + iç parlak çim kenarı
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.lineWidth = 7 * sc; ctx.strokeStyle = 'rgba(28,78,40,.16)'; ctx.stroke();
+  ctx.lineWidth = 2.2 * sc + 0.4; ctx.strokeStyle = 'rgba(28,78,40,.8)'; ctx.stroke();
 
   drawDecals(ctx);
   drawDecor(ctx, 'back');
