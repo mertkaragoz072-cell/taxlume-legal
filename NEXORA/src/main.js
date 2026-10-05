@@ -1,4 +1,4 @@
-import { loadData, CONFIG } from './core/config.js';
+import { loadData, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
 import { Assets } from './core/assets.js';
 import { Input } from './core/input.js';
 import { View } from './core/view.js';
@@ -11,6 +11,26 @@ function restart() {
   resetState();
   hideGameOver();
   updateHud();
+}
+
+// Karakter seçim ekranı: kartlara dokununca o kahraman seçilir, oyun başlar. Seçim bir sonraki açılış için hatırlanır (vurgulanır).
+const PORTRAITS = { male: () => ({ img: 'male_idle_01', crop: CONFIG.hud.avatar.crop }), heroine: () => ({ img: 'heroine_portrait', crop: null }) };
+function chooseHero() {
+  return new Promise((resolve) => {
+    let last = null; try { last = localStorage.getItem('nexora_hero'); } catch (_) { /* yoksay */ }
+    const box = document.getElementById('select'), cards = document.getElementById('sel-cards');
+    cards.innerHTML = '';
+    for (const h of HEROES) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sel-card' + (h.id === last ? ' last' : '');
+      const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
+      const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
+      const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
+      if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = false; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
+      b.addEventListener('click', () => { setHero(h.id); try { localStorage.setItem('nexora_hero', h.id); } catch (_) { /* yoksay */ } box.classList.add('hidden'); resolve(h.id); });
+      cards.appendChild(b);
+    }
+    box.classList.remove('hidden');
+  });
 }
 
 async function boot() {
@@ -28,6 +48,7 @@ async function boot() {
   }
   await Assets.load(manifest.images);
 
+  if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   initHud();
   drawAvatar();
   Input.init();

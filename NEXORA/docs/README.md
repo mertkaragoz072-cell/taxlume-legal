@@ -64,3 +64,7 @@ Tasarım ve teknik notlar.
 
 ## Kahraman seçimi
 `ANIMS.hero` aktif kahramanın animasyon verisidir (`core/config.js`). Varsayılan `male`; `?hero=female` veya `data/config.json → player.character`. Kadında tek `attack` animasyonu var (erkekte `attack_1-3` kombo); sistem eksik kombo adında `attack`'a düşer.
+
+## Karakter seçimi
+- Açılışta **seçim ekranı** (logo + iki kart: Erkek / Kadın Savaşçı). Seçim sonrası mevcut oyun aynen başlar; Yeniden Başla aynı karakterle devam eder. Son seçim hatırlanır (`localStorage`, kartta altın çerçeve). URL `?hero=male|heroine|female` seçim ekranını atlar (test için).
+- Kahramanlar: `male` (kare tabanlı, 3'lü kombo), `heroine` (tek görsel, prosedürel animasyon), `female` (önceki animasyonlu sheet, yalnız `?hero=female`). `ANIMS.hero` aktif kahramandır; `setHero(id)` (core/config.js). Yeni kahraman eklemek: veri dosyası + `HEROES` listesi.

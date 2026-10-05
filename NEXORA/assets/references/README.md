@@ -12,3 +12,4 @@ Sadece gerçek atlas/reference dosyaları, orijinal halleriyle. Oyunda doğrudan
 | `nexora_world_props_source.png` | Dünya/arka plan seti, 2172×724, gerçek alfa. Üst: panorama kompozisyonu (kesilmedi); alt: tekil bulut/ada/prop sprite'ları | `../environment/background/*`, `../environment/props/*` (`tools/extract_world_props.py`) |
 | `nexora_world_ground_source.png` | Tepe zemin sahnesi, 2172×724, sahte dama zeminli RGB (alfa yok) | `../environment/ground/*` (`tools/extract_world_ground.py`) |
 | `nexora_female_sheet_v2_source.png` | Kadın savaşçı sheet v2, 1500×500, gerçek alfa | `../characters/female/*`, `../effects/attacks/female_fx_*` (`tools/extract_female_sheet.py`) |
+| `nexora_heroine_source.png` | Kadın savaşçı ana görseli, 1536×1024, gerçek alfa | `../characters/heroine/*` |

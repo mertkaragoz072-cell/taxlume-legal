@@ -17,6 +17,7 @@ function eyes(ctx, x, y, dir, big) {
 function drawPlayerSprite(ctx) {
   const p = state.player, meta = ANIMS.hero, anim = meta?.animations[p.anim];
   if (!anim) return false;
+  if (meta.procedural) return drawProceduralHero(ctx, meta, anim);
   const n = anim.frames.length;
   const i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
   const img = Assets.get(HERO.id + '_' + anim.frames[i]);
@@ -42,6 +43,42 @@ function drawPlayerSprite(ctx) {
     if (hurt > 0) { ctx.globalAlpha = 0.55 * hurt; ctx.drawImage(whiteSilhouette(img, 'p:' + anim.frames[i], '#ff5a4a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc); }
   });
   ctx.globalAlpha = 1;
+  return true;
+}
+
+// Tek görselli kahraman (kadın savaşçı): hareketler prosedürel — nefes/koşu sekmesi, saldırıda ileri atılma + küçük hilal,
+// hasarda geri savrulma + kırmızı parlama, ölümde arkaya devrilme. Gerçek animasyon assetleri gelince ayrı kare setiyle değişir.
+function drawProceduralHero(ctx, meta, anim) {
+  const p = state.player, img = Assets.get(meta.image);
+  if (!img) return false;
+  const sc = meta.scale, T = p.animT, dur = anim.frames.length / anim.fps, u = Math.min(1, T / dur), name = p.anim;
+  let dx = 0, dy = 0, rot = 0, sx = 1, sy = 1, alpha = 1;
+  const hurtK = Math.max(0, p.hitFlash) / 0.2;
+  if (name === 'idle') { const b = Math.sin(state.time * 2.6); sy = 1 + b * 0.012; sx = 1 / sy; rot = Math.sin(state.time * 1.3) * 0.008; }
+  else if (name === 'run') { const w = p.walk; dy = -Math.abs(Math.sin(w)) * 4; rot = 0.07 + Math.sin(w) * 0.025; sy = 1 + Math.sin(w * 2) * 0.035; sx = 1 / sy; }
+  else if (name === 'attack') {
+    const k = u < 0.3 ? -(u / 0.3) : (u < 0.55 ? -1 + ((u - 0.3) / 0.25) * 2.4 : 1.4 - ((u - 0.55) / 0.45) * 1.4);   // toparlan → atılır → döner
+    dx = k * 7; rot = k * 0.11; sy = 1 + (u > 0.3 && u < 0.6 ? 0.025 : 0);
+  } else if (name === 'hurt') { const k = 1 - u; dx = -9 * k; rot = -0.15 * k; sy = 1 - 0.06 * k; sx = 1 / sy; dx += Math.sin(T * 60) * 1.5 * k; }
+  else if (name === 'death') { const e = 1 - Math.pow(1 - u, 2); rot = -e * 1.5; dx = -22 * e; dy = -16 * e; alpha = 1 - Math.max(0, (T - dur) / 1.2) * 0.4; }
+  if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) alpha *= 0.6;
+  const w = img.width * sc, h = img.height * sc, px = meta.pivot[0] * sc, py = meta.pivot[1] * sc;
+  onLane(ctx, p.a, 0, p.lean * 0.4, () => {
+    groundShadow(ctx, 60 * (name === 'death' ? 1.6 : 1), 0.34);
+    ctx.scale(p.dir, 1);
+    ctx.globalAlpha = alpha;
+    ctx.translate(dx, dy); ctx.rotate(rot); ctx.scale(sx, sy);           // ayaklar (pivot) orijinde: dönüş/ezilme ayaklardan
+    ctx.drawImage(img, -px, -py, w, h);
+    if (hurtK > 0) { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(img, 'heroine', '#ff5a4a'), -px, -py, w, h); }
+    if (name === 'attack' && u > 0.28 && u < 0.75) {                     // kılıç ucundan küçük mavi hilal
+      const fx = Assets.get('fx_attack_1_slash'), a = 1 - (u - 0.28) / 0.47;
+      if (fx) {
+        const k = CONFIG.player.slashFxScale * 0.55, tx = (meta.swordTip[0]) * sc - px, ty = meta.swordTip[1] * sc - py;
+        ctx.globalAlpha = alpha * 0.9 * a; ctx.drawImage(fx, tx - fx.width * k * 0.75, ty - fx.height * k * 0.5, fx.width * k, fx.height * k);
+      }
+    }
+    ctx.globalAlpha = 1;
+  });
   return true;
 }
 
