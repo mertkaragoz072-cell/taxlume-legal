@@ -25,4 +25,4 @@ ES modülleri ve JSON `file://` ile çalışmaz; proje kökünde yerel sunucu a�
 ```
 cd NEXORA && python3 -m http.server 8080   # → http://localhost:8080
 ```
-Kontrol: A/D veya ←/→; mobilde sol alttaki sabit joystick (ekranın sol %55'i). Oyun yalnızca yatay; dikeyde duraklar ve çevirme uyarısı çıkar.
+Kontrol: A/D veya ←/→; mobilde sol alttaki sabit joystick (ekranın sol %55'i). Oyun yalnızca yatay hedeflenir; dikey tutulursa duraklar ve çevirme uyarısı çıkar.
