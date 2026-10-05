@@ -15,7 +15,7 @@
         55,
         152
       ],
-      "height": 230
+      "height": 200
     },
     "rock_medium_01": {
       "file": "assets/environment/props/rock_medium_01.png",
@@ -31,7 +31,7 @@
         30,
         91
       ],
-      "height": 165
+      "height": 145
     },
     "rock_medium_02": {
       "file": "assets/environment/props/rock_medium_02.png",

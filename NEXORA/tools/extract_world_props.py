@@ -57,7 +57,7 @@ json.dump(res, open('/tmp/world_props_sizes.json', 'w'), indent=1)
 for k, v in res.items(): print(k, v['size'])
 
 # ---- data/world_props.json: oyunda çizim ölçüleri (hedef yükseklik, oyun birimi; kahraman ≈ 98) ve yerleşim kuralları
-H = {'pine_large': 230, 'pine_small': 165, 'bush_large_front': 64, 'bush_01': 52, 'bush_02': 52, 'bush_03': 48, 'bush_04': 50,
+H = {'pine_large': 200, 'pine_small': 145, 'bush_large_front': 64, 'bush_01': 52, 'bush_02': 52, 'bush_03': 48, 'bush_04': 50,
      'rock_small_01': 22, 'rock_small_02': 24, 'rock_medium_01': 40, 'rock_medium_02': 42, 'rock_large_01': 58, 'rock_large_02': 56,
      'fence_long': 58, 'fence_broken': 58, 'haystack': 66, 'chest_01': 46, 'chest_02': 44, 'signpost': 80, 'club_spiked': 100,
      'flower_pink': 18, 'flower_white': 16, 'grass_tuft_01': 26, 'grass_tuft_02': 22}

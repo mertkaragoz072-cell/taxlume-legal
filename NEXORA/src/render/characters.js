@@ -3,7 +3,7 @@ import { Assets } from '../core/assets.js';
 import { Input } from '../core/input.js';
 import { TAU } from '../core/util.js';
 import { state } from '../game/state.js';
-import { onSurface, outlined, outline } from './draw.js';
+import { onSurface, onLane, groundShadow, outlined, outline } from './draw.js';
 
 function eyes(ctx, x, y, dir, big) {
   const r = big ? 4 : 3;
@@ -22,7 +22,8 @@ function drawPlayerSprite(ctx) {
   const img = Assets.get('male_' + anim.frames[i]);
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
-  onSurface(ctx, p.a, 0, p.lean * 0.5, () => {
+  onLane(ctx, p.a, 0, p.lean * 0.5, () => {
+    groundShadow(ctx, 70);
     ctx.scale(p.dir, 1);
     const sc = meta.scale;
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
@@ -37,7 +38,7 @@ export function drawPlayer(ctx) {
   const step = Math.sin(p.walk) * (Math.abs(Input.axis) > 0 ? 1 : 0);
   const bob = Math.abs(Math.sin(p.walk)) * 2 * Math.abs(Input.axis);
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.55;
-  onSurface(ctx, p.a, 0, p.lean, () => {
+  onLane(ctx, p.a, 0, p.lean, () => {
     const d = p.dir; ctx.scale(d, 1);
     ctx.translate(0, -bob);
     // gölge
@@ -66,48 +67,44 @@ export function drawPlayer(ctx) {
   ctx.globalAlpha = 1;
 }
 
-function drawGoblin(ctx, en) {
-  const c = en.def.colors, bob = Math.abs(Math.sin(en.bob)) * 2, sz = en.def.size * CONFIG.enemies.baseScale;
-  onSurface(ctx, en.a, 0, 0, () => {
-    ctx.scale(-en.face * sz, sz);
-    ctx.translate(0, -bob);
-    ctx.beginPath(); ctx.ellipse(0, bob + 1, 14, 3.5, 0, 0, TAU); ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fill();
-    const fl = en.flash > 0;
-    for (const s of [-1, 1]) {
-      ctx.beginPath(); ctx.roundRect(s * 5 - 3.5, -10, 7, 10, 3); ctx.fillStyle = fl ? '#fff' : c.skinDark; ctx.fill(); outlined(ctx, 2.5);
-    }
-    ctx.beginPath(); ctx.roundRect(-9, -26, 18, 18, 6); ctx.fillStyle = fl ? '#fff' : c.cloth; ctx.fill(); outlined(ctx, 3);
-    // club
-    ctx.save(); ctx.translate(-14, -20); ctx.rotate(-0.4);
-    ctx.beginPath(); ctx.roundRect(-3, -18, 7, 22, 3); ctx.fillStyle = '#8a5a2b'; ctx.fill(); outlined(ctx, 2.5);
-    ctx.restore();
-    // kulaklar
-    for (const s of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(s * 12, -42); ctx.lineTo(s * 25, -48); ctx.lineTo(s * 13, -33); ctx.closePath();
-      ctx.fillStyle = fl ? '#fff' : c.skin; ctx.fill(); outlined(ctx, 2.5);
-    }
-    ctx.beginPath(); ctx.arc(0, -38, 15, 0, TAU); ctx.fillStyle = fl ? '#fff' : c.skin; ctx.fill(); outlined(ctx, 3);
-    // kaşlar + göz + diş
-    ctx.beginPath(); ctx.moveTo(-9, -46); ctx.lineTo(-2, -42); ctx.moveTo(9, -46); ctx.lineTo(2, -42); outlined(ctx, 2.5);
-    eyes(ctx, 0, -38, 1, false);
-    ctx.beginPath(); ctx.moveTo(-5, -30); ctx.lineTo(5, -30); outlined(ctx, 2.5);
-    ctx.beginPath(); ctx.moveTo(-3, -30); ctx.lineTo(-2, -26.5); ctx.lineTo(0, -30); ctx.fillStyle = '#fff'; ctx.fill();
-  });
-  // Sağlık barı (ekranda dikey kalır: yerel döndürmeyle birlikte)
-  onSurface(ctx, en.a, 0, 0, () => {
-    ctx.scale(sz, sz);
-    const w = 34, h = 6, y = -62;
-    ctx.beginPath(); ctx.roundRect(-w / 2, y, w, h, 3); ctx.fillStyle = '#3a1a22'; ctx.fill();
-    ctx.beginPath(); ctx.roundRect(-w / 2, y, Math.max(0, w * en.hp / en.maxHp), h, 3); ctx.fillStyle = '#ff3b4a'; ctx.fill();
-    ctx.beginPath(); ctx.roundRect(-w / 2, y, w, h, 3); outlined(ctx, 2);
-  });
+// Düşman sprite'ı: referans sanat setinden çıkarılmış tek statik poz. Canlandırma prosedürel:
+// yürürken sekme/ezilme/sallanma, vuruşta beyaz parlama, ölümde yan yatıp solma.
+const whiteCache = new Map();
+function whiteSilhouette(img, key) {
+  if (whiteCache.has(key)) return whiteCache.get(key);
+  const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+  const g = cv.getContext('2d'); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+  whiteCache.set(key, cv); return cv;
 }
 
 export function drawEnemy(ctx, en) {
-  const spr = Assets.get(en.type);
-  if (spr) { // gerçek sprite varsa (ileride): ayak noktası alt-orta
-    onSurface(ctx, en.a, 0, 0, () => { ctx.scale(-en.face, 1); ctx.drawImage(spr, -spr.width / 2, -spr.height); });
-    return;
-  }
-  drawGoblin(ctx, en);
+  const def = en.def, img = Assets.get(def.sprite);
+  if (!img) return;                                   // sprite yüklenmediyse çizme (placeholder düşman yok)
+  const k = def.heightUnits / img.height, w = img.width * k, h = def.heightUnits;
+  const t = en.bob;
+  const hop = en.dead ? 0 : Math.abs(Math.sin(t)) * (2 + h * 0.02);
+  const squash = en.dead ? 1 : 1 + Math.sin(t * 2) * 0.025;
+  const sway = en.dead ? 0 : Math.sin(t) * 0.035;
+  const dp = en.dead ? Math.min(1, en.deathT / 0.4) : 0;
+  onLane(ctx, en.a, 0, 0, () => {
+    ctx.globalAlpha = 1 - dp;
+    groundShadow(ctx, w * 0.95);
+    ctx.save();
+    // kaynak sprite'lar SOLA bakar; oyuncu solda ise (face=-1) çevirme yok
+    ctx.scale(-en.face, 1);
+    ctx.translate(0, -hop);
+    ctx.rotate(sway + dp * 1.2);
+    ctx.scale(1 / squash, squash);
+    ctx.drawImage(img, -w / 2, -h, w, h);
+    if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.12) * 0.85; ctx.drawImage(whiteSilhouette(img, def.sprite), -w / 2, -h, w, h); }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    if (!en.dead) {                                   // temiz küçük HP bar
+      const bw = def.barWidth, bh = 6, y = -h - 12, f = Math.max(0, en.hp / en.maxHp);
+      ctx.beginPath(); ctx.roundRect(-bw / 2 - 2, y - 2, bw + 4, bh + 4, 5); ctx.fillStyle = 'rgba(20,24,44,.85)'; ctx.fill();
+      ctx.beginPath(); ctx.roundRect(-bw / 2, y, bw * f, bh, 3);
+      const g = ctx.createLinearGradient(0, y, 0, y + bh); g.addColorStop(0, '#ff6b6b'); g.addColorStop(1, '#d92f3f');
+      ctx.fillStyle = g; ctx.fill();
+    }
+  });
 }

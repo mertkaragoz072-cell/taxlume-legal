@@ -9,10 +9,10 @@ html, body {
 
 #hud { position: absolute; inset: 0; pointer-events: none; padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 10px) 0 calc(env(safe-area-inset-left) + 10px); }
 .hud-left { position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: calc(env(safe-area-inset-left) + 10px); display: flex; align-items: center; gap: 0; width: min(40vw, 280px); }
-#avatar-ring { width: 50px; height: 50px; border-radius: 50%; border: 4px solid #2b3550; background: radial-gradient(#ffd9a8, #e7a86a); box-shadow: 0 3px 0 rgba(31,42,68,.55); overflow: hidden; flex: none; z-index: 2; }
+#avatar-ring { width: 52px; height: 52px; border-radius: 50%; border: 3px solid #f1c24b; outline: 3px solid #2b3550; background: radial-gradient(#ffd9a8, #e7a86a); box-shadow: 0 3px 0 rgba(31,42,68,.55); overflow: hidden; flex: none; z-index: 2; }
 #avatar { width: 100%; height: 100%; display: block; }
 #hud-bars { flex: 1; min-width: 0; margin-left: -10px; display: flex; flex-direction: column; gap: 3px; }
-.bar { position: relative; height: 20px; border: 3px solid #1f2a44; border-radius: 4px 12px 12px 4px; background: #2a2f45; overflow: hidden; color: #fff; font-weight: 800; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 3px 0 rgba(31,42,68,.55); padding-left: 10px; }
+.bar { position: relative; height: 20px; border: 3px solid #2b3550; box-shadow: 0 0 0 1px #f1c24b, 0 3px 0 rgba(31,42,68,.55); border-radius: 4px 12px 12px 4px; background: #2a2f45; overflow: hidden; color: #fff; font-weight: 800; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 3px 0 rgba(31,42,68,.55); padding-left: 10px; }
 .bar .fill { position: absolute; inset: 0 auto 0 0; width: 100%; transition: width .15s; }
 .bar.hp .fill { background: linear-gradient(#ff6b6b, #d92f3f); }
 .bar span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
@@ -25,20 +25,36 @@ html, body {
 .coin-icon, .gem-icon { width: 18px; height: 18px; display: inline-block; border: 2px solid #1f2a44; flex: none; }
 .coin-icon { border-radius: 50%; background: #ffd23f; }
 .gem-icon { background: #c04bff; transform: rotate(45deg) scale(.8); border-radius: 3px; }
-.hud-side { position: absolute; top: calc(env(safe-area-inset-top) + 70px); left: calc(env(safe-area-inset-left) + 10px); display: flex; flex-direction: column; gap: 6px; }
-.sidebtn { width: 36px; height: 36px; border-radius: 10px; border: 3px solid #1f2a44; background: #2f3b5e; font-size: 17px; line-height: 1; opacity: .75; pointer-events: none; }
+.hud-side { position: absolute; top: calc(env(safe-area-inset-top) + 68px); left: calc(env(safe-area-inset-left) + 12px); display: flex; flex-direction: column; gap: 5px; }
+.sidebtn { width: 30px; height: 30px; border-radius: 10px; border: 3px solid #1f2a44; background: #2f3b5e; font-size: 14px; line-height: 1; opacity: .6; pointer-events: none; }
 
-/* Sabit sanal joystick: sol alt köşe. Dokunma alanı: ekranın sol %55'i (sağ taraf yetenek düğmelerine ayrıldı). */
+/* Sabit sanal joystick: sol alt, şeffaf cam görünüm. Dokunma alanı: ekranın sol %55'i. */
 #joystick {
-  position: absolute; left: calc(env(safe-area-inset-left) + 26px); bottom: calc(env(safe-area-inset-bottom) + 16px);
-  width: 96px; height: 96px; border-radius: 50%;
-  background: rgba(255,255,255,.18); border: 3px solid rgba(31,42,68,.5); pointer-events: none;
+  position: absolute; left: calc(env(safe-area-inset-left) + 28px); bottom: calc(env(safe-area-inset-bottom) + 18px);
+  width: 98px; height: 98px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.20), rgba(255,255,255,.06) 70%);
+  border: 2px solid rgba(255,255,255,.45); box-shadow: 0 0 0 4px rgba(31,42,68,.18), inset 0 0 14px rgba(255,255,255,.12);
+  backdrop-filter: blur(2px);
 }
-#joystick.active { background: rgba(255,255,255,.3); }
+#joystick.active { background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.30), rgba(255,255,255,.10) 70%); border-color: rgba(255,255,255,.7); }
+#joystick .chev { position: absolute; top: 50%; width: 10px; height: 10px; margin-top: -5px; border: solid rgba(255,255,255,.7); border-width: 0 0 3px 3px; border-radius: 1px; }
+#joystick .chev.l { left: 9px; transform: rotate(45deg); }
+#joystick .chev.r { right: 9px; transform: rotate(-135deg); }
 #stick {
   position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
-  background: rgba(255,255,255,.85); border: 3px solid #1f2a44;
+  background: radial-gradient(circle at 35% 30%, #fff, #cfe9ff 60%, #8fc4f5); border: 2px solid rgba(31,42,68,.55);
+  box-shadow: 0 3px 8px rgba(0,0,0,.35), 0 0 10px rgba(140,200,255,.6);
 }
+
+/* Saldırı / yetenek düğmeleri: sağ alt */
+#actions { position: absolute; right: calc(env(safe-area-inset-right) + 22px); bottom: calc(env(safe-area-inset-bottom) + 16px); width: 150px; height: 110px; pointer-events: none; }
+#actions button { position: absolute; border-radius: 50%; border: 3px solid #1f2a44; color: #fff; pointer-events: auto; touch-action: manipulation; cursor: pointer; padding: 0;
+  box-shadow: 0 4px 0 rgba(31,42,68,.6), inset 0 2px 0 rgba(255,255,255,.35); }
+#actions svg { width: 56%; height: 56%; fill: #fff; stroke: #1f2a44; stroke-width: 1; paint-order: stroke; display: block; margin: auto; }
+#btn-attack { right: 0; bottom: 0; width: 78px; height: 78px; background: radial-gradient(circle at 35% 30%, #ff8a5c, #e2402c 70%); }
+#btn-attack.pressed { transform: translateY(3px); box-shadow: 0 1px 0 rgba(31,42,68,.6); filter: brightness(1.1); }
+.skillbtn { width: 44px; height: 44px; background: radial-gradient(circle at 35% 30%, #7fb8ff, #2f6fd6 70%); opacity: .8; pointer-events: none !important; }
+.skillbtn.s1 { right: 86px; bottom: 6px; } .skillbtn.s2 { right: 52px; bottom: 64px; }
 
 #gameover { position: absolute; inset: 0; background: rgba(15,20,40,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
 #gameover.hidden { display: none; }
@@ -63,8 +79,10 @@ html, body {
   .pill { height: 30px; min-width: 104px; font-size: 15px; }
   .hud-side { top: calc(env(safe-area-inset-top) + 86px); }
   .sidebtn { width: 46px; height: 46px; font-size: 21px; }
-  #joystick { width: 128px; height: 128px; }
-  #stick { width: 56px; height: 56px; margin: -28px 0 0 -28px; }
+  #joystick { width: 124px; height: 124px; }
+  #stick { width: 54px; height: 54px; margin: -27px 0 0 -27px; }
+  #actions { width: 190px; height: 140px; } #btn-attack { width: 98px; height: 98px; } .skillbtn { width: 54px; height: 54px; }
+  .skillbtn.s1 { right: 108px; } .skillbtn.s2 { right: 66px; bottom: 80px; }
 }
 
 /* Oyun yalnızca yatay: dikey tutulursa duraklar ve çevirme uyarısı gösterilir */

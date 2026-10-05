@@ -27,3 +27,11 @@ Tasarım ve teknik notlar.
 - **Joystick:** sol alta **sabit** (güvenli alan payıyla); dokunma alanı ekranın sol %55'i. Sağ taraf yetenek/saldırı düğmeleri için boş bırakıldı. Klavye (A/D, ←/→) da çalışır.
 - **HUD:** varsayılan değerler telefon yüksekliğine (≈ 360–440 px) göre sıkı; `min-height: 560px` üstü (tablet) büyütülür. Test edilen boyutlar: 640×360, 740×360, 844×390, 932×430 — taşma yok.
 - **Görüş:** `min(w/700, h/420)` ölçeği; yatayda kahraman solda (%30), zemin alt %36.
+
+## Görsel/oynanış yenilemesi (güncel durum)
+- **Kamera:** yandan 2D, zoom uzak (`visibleWidthUnits` 860 × `visibleHeightUnits` 500); kahraman ekranın %36'sında, önündeki alan geniş; zemin dev bir yay (R = 2000).
+- **Şerit (lane):** kahraman, düşman ve coin yüzey çizgisinin 22 birim önünde (çimin üzerinde) durur (`camera.laneDepth`), ayaklara yumuşak gölge çizilir → zemine basar.
+- **Otomatik koşu:** girdi yoksa kahraman sağa koşar (`player.autoRun`, `autoSpeed`), önünde düşman varsa durup savaşır; joystick/A-D elle sürer. **Elle saldırı:** sağ alttaki kılıç düğmesi / Space / J (otomatik saldırı da açık).
+- **Düşman grupları:** sağ ekran kenarının dışında 2–4'lü gruplar halinde doğar (`enemies.waveMin/Max`), ekranda en fazla 5; ağırlıklı tür seçimi (`weight`, `minLevel`: ogre seviye 3+). Düşmanlar önlerindeki düşmanın içine girmez (`enemies.separation`). Düşmanın HP barı sprite yüksekliğine göre başının üstünde.
+- **Parallax (uzaktan yakına):** gökyüzü+güneş → uzak bulutlar (0.012) → uzak adalar (0.03, %45 sis) → orta adalar/kale (0.07, %18 sis) → ufuk sis bulutları (0.10) → uzak tepe siluetleri (0.18) → yakın ağaç/çalı şeridi (0.36, %42 sis) → zemin + dekor (1.0). Sprite'lar gökyüzü rengine doğru "atmosferik sis" ile soldurulur; ufukta sis bandı zemini arka planla birleştirir. Kod: `src/render/parallax.js`.
+- **HUD:** altın çerçeveli portre, HP + `Lv.`/XP, coin + gem, küçük pasif yan düğmeler; sol altta şeffaf cam joystick, sağ altta kırmızı saldırı + iki pasif yetenek düğmesi.

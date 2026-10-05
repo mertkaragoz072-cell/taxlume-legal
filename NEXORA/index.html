@@ -35,7 +35,13 @@
     </div>
   </div>
 
-  <div id="joystick" aria-hidden="true"><div id="stick"></div></div>
+  <div id="joystick" aria-hidden="true"><i class="chev l"></i><i class="chev r"></i><div id="stick"></div></div>
+
+  <div id="actions">
+    <button type="button" class="skillbtn s2" disabled aria-label="Yetenek 2 (yakında)"><svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.3L21 9l-5 4.4L17.5 20 12 16.6 6.5 20 8 13.4 3 9l6.4-.7z"/></svg></button>
+    <button type="button" class="skillbtn s1" disabled aria-label="Yetenek 1 (yakında)"><svg viewBox="0 0 24 24"><path d="M13 2L5 13h6l-1 9 9-12h-6z"/></svg></button>
+    <button type="button" id="btn-attack" aria-label="Saldırı"><svg viewBox="0 0 24 24"><g stroke-linejoin="round"><path d="M21 3v6L11 19 5 13 15 3z"/><path d="M3 11l4 4-2 2-4-4z"/><path d="M5 17l2 2-4 4-2-2z"/></g></svg></button>
+  </div>
 
   <div id="gameover" class="hidden">
     <div class="panel">

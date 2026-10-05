@@ -63,3 +63,7 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Zemin: `assets/environment/ground/` → `hill_ground.png` (tam tepe, referans), `ground_tile_grass.png` (oyunda desen olarak döşenir). Kaynak: `assets/references/nexora_world_ground_source.png`.
 - Toprak lekeleri: `dirt_patch_01…05.png` (decal, zemine serpilir).
 - Eksik: kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.
+
+## Düşmanlar (MEVCUT — `tools/extract_enemies.py`)
+- `assets/enemies/`: 3 düşman, her biri tek statik poz (küçük goblin, orta goblin, ogre). Kaynak: referans moodboard'un boy oranı paneli. Ayrıntı ve sınırlar: klasör README.
+- Eksik: animasyon kareleri (yürü/saldır/hasar/ölüm), boss'lar, iskelet ve diğer düşmanlar.

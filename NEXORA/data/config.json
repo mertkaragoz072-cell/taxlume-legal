@@ -50,7 +50,10 @@
     "slashDuration": 0.18,
     "invulnTime": 0.5,
     "coinMagnetRange": 150,
-    "coinMagnetSpeed": 520
+    "coinMagnetSpeed": 520,
+    "autoRun": true,
+    "autoSpeed": 105,
+    "engageRange": 100
   },
   "leveling": {
     "baseXpToNext": 30,
@@ -60,15 +63,21 @@
     "healOnLevelUp": 0.5
   },
   "enemies": {
-    "spawnInterval": 2.2,
-    "spawnIntervalMin": 0.8,
-    "spawnIntervalDecayPerLevel": 0.12,
-    "maxAlive": 14,
+    "maxAlive": 5,
+    "waveMin": 2,
+    "waveMax": 4,
+    "waveGapUnits": [
+      85,
+      140
+    ],
+    "waveInterval": 5.0,
+    "waveIntervalMin": 2.8,
+    "waveIntervalDecayPerLevel": 0.25,
+    "refillWhenAtMost": 1,
+    "spawnOffscreen": 90,
     "hpScalePerLevel": 0.2,
     "damageScalePerLevel": 0.1,
-    "spawnJitter": 160,
-    "spawnOffscreen": 90,
-    "baseScale": 1.05
+    "separation": 0.95
   },
   "loot": {
     "coinPopSpeed": 160,
@@ -88,10 +97,11 @@
   },
   "camera": {
     "_comment": "Yandan kamera, hafif yukarıdan (≈15-20°): dev gezegenin yüzeyi yumuşak bir tepe gibi görünür. Referans: assets/references/nexora_camera_gameplay_reference.png",
-    "visibleWidthUnits": 700,
-    "visibleHeightUnits": 420,
-    "heroScreenX": 0.3,
-    "groundScreenY": 0.64
+    "visibleWidthUnits": 860,
+    "visibleHeightUnits": 500,
+    "heroScreenX": 0.36,
+    "groundScreenY": 0.62,
+    "laneDepth": 22
   },
   "parallax": [
     {

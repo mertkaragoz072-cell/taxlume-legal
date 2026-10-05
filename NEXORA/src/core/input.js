@@ -13,12 +13,18 @@ function tryFullscreenLandscape() {
 export const Input = {
   keys: {},
   axis: 0,
+  attackQueued: false,                       // saldırı düğmesi / Space / J
+  consumeAttack() { const q = this.attackQueued; this.attackQueued = false; return q; },
   joy: { id: null, ox: 0, oy: 0, x: 0 },
   init() {
     const map = { KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right' };
     addEventListener('keydown', (e) => { if (map[e.code]) { this.keys[map[e.code]] = true; e.preventDefault(); } });
     addEventListener('keyup', (e) => { if (map[e.code]) this.keys[map[e.code]] = false; });
+    addEventListener('keydown', (e) => { if ((e.code === 'Space' || e.code === 'KeyJ') && !e.repeat) { this.attackQueued = true; e.preventDefault(); } });
     addEventListener('blur', () => { this.keys = {}; });
+    const atk = document.getElementById('btn-attack');
+    if (atk) atk.addEventListener('pointerdown', (e) => { this.attackQueued = true; atk.classList.add('pressed'); e.preventDefault(); e.stopPropagation(); });
+    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) atk?.addEventListener(ev, () => atk.classList.remove('pressed'));
 
     const base = document.getElementById('joystick');
     const stick = document.getElementById('stick');

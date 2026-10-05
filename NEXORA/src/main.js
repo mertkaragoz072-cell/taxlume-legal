@@ -3,7 +3,7 @@ import { Assets } from './core/assets.js';
 import { Input } from './core/input.js';
 import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
-import { update, events } from './game/systems.js';
+import { update, events, spawnEnemy } from './game/systems.js';
 import { render } from './render/renderer.js';
 import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar } from './ui/hud.js';
 
@@ -53,6 +53,6 @@ async function boot() {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__game = { state }; // hata ayıklama
+  window.__game = { state, spawnEnemy }; // hata ayıklama
 }
 boot();
