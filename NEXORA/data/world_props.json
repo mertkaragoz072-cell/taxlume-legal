@@ -1,0 +1,393 @@
+{
+  "_comment": "Pivot = sprite alt orta noktası (zemine basan nokta). height = oyundaki hedef yükseklik (birim). decor: yüzeye saçılan prop grupları (every = ortalama aralık, birim; depth = yüzeyin ne kadar önünde, birim; layer back = karakterlerin arkası, front = önü). Bulut/ada: parallax.",
+  "props": {
+    "bush_large_front": {
+      "file": "assets/environment/props/bush_large_front.png",
+      "pivot": [
+        39,
+        59
+      ],
+      "height": 64
+    },
+    "pine_large": {
+      "file": "assets/environment/props/pine_large.png",
+      "pivot": [
+        55,
+        152
+      ],
+      "height": 230
+    },
+    "rock_medium_01": {
+      "file": "assets/environment/props/rock_medium_01.png",
+      "pivot": [
+        31,
+        44
+      ],
+      "height": 40
+    },
+    "pine_small": {
+      "file": "assets/environment/props/pine_small.png",
+      "pivot": [
+        30,
+        91
+      ],
+      "height": 165
+    },
+    "rock_medium_02": {
+      "file": "assets/environment/props/rock_medium_02.png",
+      "pivot": [
+        30,
+        40
+      ],
+      "height": 42
+    },
+    "rock_small_01": {
+      "file": "assets/environment/props/rock_small_01.png",
+      "pivot": [
+        16,
+        23
+      ],
+      "height": 22
+    },
+    "bush_01": {
+      "file": "assets/environment/props/bush_01.png",
+      "pivot": [
+        37,
+        54
+      ],
+      "height": 52
+    },
+    "bush_02": {
+      "file": "assets/environment/props/bush_02.png",
+      "pivot": [
+        36,
+        56
+      ],
+      "height": 52
+    },
+    "fence_long": {
+      "file": "assets/environment/props/fence_long.png",
+      "pivot": [
+        62,
+        50
+      ],
+      "height": 58
+    },
+    "bush_03": {
+      "file": "assets/environment/props/bush_03.png",
+      "pivot": [
+        32,
+        48
+      ],
+      "height": 48
+    },
+    "rock_large_01": {
+      "file": "assets/environment/props/rock_large_01.png",
+      "pivot": [
+        34,
+        48
+      ],
+      "height": 58
+    },
+    "fence_broken": {
+      "file": "assets/environment/props/fence_broken.png",
+      "pivot": [
+        34,
+        56
+      ],
+      "height": 58
+    },
+    "bush_04": {
+      "file": "assets/environment/props/bush_04.png",
+      "pivot": [
+        33,
+        54
+      ],
+      "height": 50
+    },
+    "rock_large_02": {
+      "file": "assets/environment/props/rock_large_02.png",
+      "pivot": [
+        31,
+        42
+      ],
+      "height": 56
+    },
+    "haystack": {
+      "file": "assets/environment/props/haystack.png",
+      "pivot": [
+        24,
+        66
+      ],
+      "height": 66
+    },
+    "chest_01": {
+      "file": "assets/environment/props/chest_01.png",
+      "pivot": [
+        38,
+        61
+      ],
+      "height": 46
+    },
+    "rock_small_02": {
+      "file": "assets/environment/props/rock_small_02.png",
+      "pivot": [
+        18,
+        25
+      ],
+      "height": 24
+    },
+    "flower_pink": {
+      "file": "assets/environment/props/flower_pink.png",
+      "pivot": [
+        15,
+        23
+      ],
+      "height": 18
+    },
+    "signpost": {
+      "file": "assets/environment/props/signpost.png",
+      "pivot": [
+        37,
+        71
+      ],
+      "height": 80
+    },
+    "chest_02": {
+      "file": "assets/environment/props/chest_02.png",
+      "pivot": [
+        35,
+        56
+      ],
+      "height": 44
+    },
+    "flower_white": {
+      "file": "assets/environment/props/flower_white.png",
+      "pivot": [
+        15,
+        19
+      ],
+      "height": 16
+    },
+    "club_spiked": {
+      "file": "assets/environment/props/club_spiked.png",
+      "pivot": [
+        27,
+        101
+      ],
+      "height": 100
+    },
+    "grass_tuft_02": {
+      "file": "assets/environment/props/grass_tuft_02.png",
+      "pivot": [
+        15,
+        28
+      ],
+      "height": 22
+    },
+    "grass_tuft_01": {
+      "file": "assets/environment/props/grass_tuft_01.png",
+      "pivot": [
+        21,
+        39
+      ],
+      "height": 26
+    }
+  },
+  "decor": [
+    {
+      "keys": [
+        "pine_large",
+        "pine_small"
+      ],
+      "every": 560,
+      "scale": [
+        0.85,
+        1.15
+      ],
+      "depth": [
+        0,
+        0
+      ],
+      "layer": "back"
+    },
+    {
+      "keys": [
+        "fence_long",
+        "fence_broken"
+      ],
+      "every": 900,
+      "scale": [
+        0.9,
+        1.1
+      ],
+      "depth": [
+        0,
+        8
+      ],
+      "layer": "back"
+    },
+    {
+      "keys": [
+        "chest_01",
+        "chest_02",
+        "haystack",
+        "signpost"
+      ],
+      "every": 2600,
+      "scale": [
+        0.95,
+        1.05
+      ],
+      "depth": [
+        0,
+        10
+      ],
+      "layer": "back"
+    },
+    {
+      "keys": [
+        "bush_01",
+        "bush_02",
+        "bush_03",
+        "bush_04",
+        "bush_large_front"
+      ],
+      "every": 240,
+      "scale": [
+        0.8,
+        1.25
+      ],
+      "depth": [
+        0,
+        12
+      ],
+      "layer": "back"
+    },
+    {
+      "keys": [
+        "grass_tuft_01",
+        "grass_tuft_02",
+        "flower_pink",
+        "flower_white"
+      ],
+      "every": 70,
+      "scale": [
+        0.9,
+        1.4
+      ],
+      "depth": [
+        -2,
+        18
+      ],
+      "layer": "back"
+    },
+    {
+      "keys": [
+        "rock_small_01",
+        "rock_small_02",
+        "rock_medium_01",
+        "rock_medium_02"
+      ],
+      "every": 420,
+      "scale": [
+        0.9,
+        1.3
+      ],
+      "depth": [
+        10,
+        28
+      ],
+      "layer": "back"
+    },
+    {
+      "keys": [
+        "rock_large_01",
+        "rock_large_02",
+        "bush_large_front",
+        "bush_01"
+      ],
+      "every": 560,
+      "scale": [
+        1.0,
+        1.3
+      ],
+      "depth": [
+        48,
+        80
+      ],
+      "layer": "front"
+    }
+  ],
+  "clouds": {
+    "keys": [
+      "cloud_01",
+      "cloud_02",
+      "cloud_03",
+      "cloud_04",
+      "cloud_05",
+      "cloud_06"
+    ],
+    "heightScale": 1.0
+  },
+  "islandLayers": [
+    {
+      "id": "islands_far",
+      "speed": 0.03,
+      "period": 1500,
+      "alpha": 0.85,
+      "items": [
+        [
+          "island_02",
+          0.06,
+          0.62,
+          120
+        ],
+        [
+          "island_05",
+          0.3,
+          0.82,
+          100
+        ],
+        [
+          "island_07",
+          0.52,
+          0.55,
+          110
+        ],
+        [
+          "island_04",
+          0.74,
+          0.78,
+          105
+        ],
+        [
+          "island_03",
+          0.92,
+          0.5,
+          125
+        ]
+      ]
+    },
+    {
+      "id": "islands_mid",
+      "speed": 0.07,
+      "period": 1300,
+      "alpha": 1.0,
+      "items": [
+        [
+          "island_01",
+          0.15,
+          0.55,
+          230
+        ],
+        [
+          "island_06",
+          0.62,
+          0.4,
+          175
+        ]
+      ]
+    }
+  ]
+}

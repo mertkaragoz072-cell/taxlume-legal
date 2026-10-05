@@ -55,3 +55,9 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Kaynak: `assets/references/nexora_male_sheet_v2_source.png`. Veri: `data/male_animations.json`. Manifest anahtarları: `male_<kare>` (ör. `male_idle_01`), `fx_<efekt>`, `particle_<ad>`.
 - Oyunda kullanımda: idle, run, attack_1-3 (kombo), hurt, death. `jump` ve `turn` dosyaları var ama oyun henüz çağırmıyor.
 - Eksik: kadın karakter, efektsiz (temiz) saldırı kareleri.
+
+## Dünya ve arka plan (MEVCUT — `tools/extract_world_props.py` ile üretildi)
+- `assets/environment/background/clouds/` 6 bulut, `.../islands/` 7 yüzen ada; `assets/environment/props/` 24 prop (ağaç, çalı, kaya, çit, sandık, tabela, saman balyası, çiçek/ot, dikenli sopa). Ayrıntı: klasör README'leri.
+- Kaynak: `assets/references/nexora_world_props_source.png` (gerçek alfa kanallı). Üstteki büyük panorama kompozisyonu kesilmedi.
+- Veri: `data/world_props.json` (prop yükseklikleri, dekor saçılım kuralları, ada katmanları). Manifest anahtarları: `bg_*`, `prop_*`.
+- Eksik: tepe/zemin dokusu (sprite yok, Canvas ile çiziliyor), kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.

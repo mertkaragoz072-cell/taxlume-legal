@@ -1,4 +1,5 @@
-import { CONFIG } from '../core/config.js';
+import { CONFIG, WORLD } from '../core/config.js';
+import { Assets } from '../core/assets.js';
 import { View } from '../core/view.js';
 import { state } from '../game/state.js';
 import { TAU } from '../core/util.js';
@@ -9,12 +10,15 @@ import { outlined } from './draw.js';
 // Katman tanımları data/config.json → parallax. Hepsi placeholder Canvas çizimidir.
 const LAYERS = { islands: drawIslands, castles: drawCastles, mountains: drawMountains, trees: drawTrees };
 
+const hasSprites = () => !!(WORLD.islandLayers && Assets.get('bg_island_01'));
+
 export function drawBackground(ctx) {
   drawSkyLayer(ctx);
   const travelled = state.player.a * CONFIG.planet.radius;      // dünya birimi
   const horizon = View.heroY - 18 * View.scale;
-  for (const L of CONFIG.parallax) {
-    const fn = LAYERS[L.id]; if (!fn) continue;
+  const sprites = hasSprites();
+  for (const L of sprites ? WORLD.islandLayers : CONFIG.parallax) {
+    const fn = sprites ? drawSpriteIslands : LAYERS[L.id]; if (!fn) continue;
     const period = L.period * View.scale;
     const off = ((travelled * L.speed * View.scale) % period + period) % period;
     for (let x = -period - off; x < View.w + period; x += period) {
@@ -35,9 +39,15 @@ function drawSkyLayer(ctx) {
   // bulutlar (kendi hızıyla kayar)
   const drift = state.time * 8 * View.scale + state.player.a * CONFIG.planet.radius * 0.01 * View.scale;
   const span = View.w + 260 * View.scale;
-  for (let i = 0; i < 5; i++) {
+  const useSprites = !!Assets.get('bg_cloud_01');
+  for (let i = 0; i < (useSprites ? 7 : 5); i++) {
     const x = (((i * 0.23 * span - drift * (0.6 + i * 0.12)) % span) + span) % span - 130 * View.scale;
-    cloud(ctx, x, View.heroY * (0.14 + (i % 3) * 0.13), (1.3 + (i % 2) * 0.6) * View.scale);
+    const y = View.heroY * (0.10 + (i % 4) * 0.11);
+    if (useSprites) {
+      const img = Assets.get('bg_cloud_' + String((i % 6) + 1).padStart(2, '0'));
+      const k = View.scale * 1.15;
+      ctx.drawImage(img, x - img.width * k / 2, y - img.height * k / 2, img.width * k, img.height * k);
+    } else cloud(ctx, x, y, (1.3 + (i % 2) * 0.6) * View.scale);
   }
 }
 
@@ -99,4 +109,16 @@ function drawTrees(ctx, period, hz) {
       ctx.fillStyle = k % 2 ? '#2f8a4a' : '#3a9a52'; ctx.fill();
     }
   }
+}
+
+// Sprite ada katmanı: data/world_props.json → islandLayers (anahtar, x oranı, y oranı, yükseklik birim)
+function drawSpriteIslands(ctx, period, hz, L) {
+  const s = View.scale, skyH = hz;
+  ctx.globalAlpha = L.alpha ?? 1;
+  for (const [key, fx, fy, h] of L.items) {
+    const img = Assets.get('bg_' + key); if (!img) continue;
+    const k = (h * s) / img.height, w = img.width * k;
+    ctx.drawImage(img, period * fx - w / 2, skyH * (1 - fy) - 20 * s, w, img.height * k);
+  }
+  ctx.globalAlpha = 1;
 }

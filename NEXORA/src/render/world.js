@@ -1,4 +1,5 @@
-import { CONFIG } from '../core/config.js';
+import { CONFIG, WORLD } from '../core/config.js';
+import { Assets } from '../core/assets.js';
 import { View } from '../core/view.js';
 import { TAU } from '../core/util.js';
 import { onSurface, visible, outlined } from './draw.js';
@@ -23,8 +24,26 @@ export function drawPlanet(ctx) {
   ctx.restore();
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); outlined(ctx, 5 * sc + 1);
 
-  // Dekorlar (dünya açısına sabit; ön plan parallax katmanı)
-  for (const d of getDecor()) {
+  drawDecor(ctx, 'back');
+}
+
+// Karakterlerin ÖNÜNDE kalan ön plan dekoru (büyük kaya/çalı; yüzeyin biraz altında). renderer.js karakterlerden sonra çağırır.
+export function drawForeground(ctx) { drawDecor(ctx, 'front'); }
+
+const hasSprites = () => !!(WORLD.props && Assets.get('prop_pine_large'));
+
+function drawDecor(ctx, layer) {
+  if (hasSprites()) {
+    for (const d of getSpriteDecor()) {
+      if (d.layer !== layer || !visible(d.a)) continue;
+      const img = Assets.get('prop_' + d.key); if (!img) continue;
+      const p = WORLD.props[d.key], k = (p.height * d.s) / img.height;
+      onSurface(ctx, d.a, -d.depth, 0, () => ctx.drawImage(img, -p.pivot[0] * k, -p.pivot[1] * k, img.width * k, img.height * k));
+    }
+    return;
+  }
+  if (layer !== 'back') return;
+  for (const d of getDecor()) {                 // sprite yoksa Canvas placeholder
     if (!visible(d.a)) continue;
     onSurface(ctx, d.a, 0, 0, () => {
       if (d.kind === 'grass') drawGrass(ctx, d);
@@ -33,6 +52,23 @@ export function drawPlanet(ctx) {
       else drawTree(ctx, d);
     });
   }
+}
+
+// Sprite dekor: data/world_props.json → decor kuralları, yüzey uzunluğuna göre deterministik saçılım
+let SPRITE_DECOR = null;
+function getSpriteDecor() {
+  if (SPRITE_DECOR) return SPRITE_DECOR;
+  const list = [], len = TAU * CONFIG.planet.radius; let seed = 11;
+  const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (const g of WORLD.decor) {
+    for (let i = 0, n = Math.round(len / g.every); i < n; i++) {
+      list.push({ key: g.keys[Math.floor(r() * g.keys.length)], a: r() * TAU - Math.PI, s: g.scale[0] + r() * (g.scale[1] - g.scale[0]),
+        depth: g.depth[0] + r() * (g.depth[1] - g.depth[0]), layer: g.layer });
+    }
+  }
+  // arkadan öne: yüzeyde (depth 0) olanlar önce, yüzeyin altında kalanlar sonra
+  SPRITE_DECOR = list.sort((a, b) => a.depth - b.depth);
+  return SPRITE_DECOR;
 }
 
 // Dekor yoğunluğu yüzey uzunluğuna göre (data/config.json → planet.decor)

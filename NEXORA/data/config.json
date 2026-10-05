@@ -2,9 +2,9 @@
   "planet": {
     "radius": 2000,
     "colors": {
-      "grass": "#6fd35a",
-      "grassDark": "#3fa646",
-      "grassLight": "#a4ec7c",
+      "grass": "#93c94d",
+      "grassDark": "#4a9b3d",
+      "grassLight": "#c9de5e",
       "outline": "#1f2a44"
     },
     "decor": {
