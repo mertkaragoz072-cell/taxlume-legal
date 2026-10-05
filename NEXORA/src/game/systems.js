@@ -103,12 +103,12 @@ function hurtPlayer(dmg) {
 
 // Animasyon durum makinesi: ölüm > hasar > saldırı (bitene kadar) > koşu/bekleme
 function updatePlayerAnim(p, dt) {
-  const set = ANIMS.male?.animations;
+  const set = ANIMS.hero?.animations;
   p.animT += dt;
   if (!set || p.anim === 'death') return;
   const cur = set[p.anim];
   const done = cur && !cur.loop && p.animT >= cur.frames.length / cur.fps;
-  if (p.anim === 'hurt' || p.anim.startsWith('attack_')) {
+  if (p.anim === 'hurt' || p.anim.startsWith('attack')) {
     if (!done) return;
   }
   const next = Math.abs(p.moveAxis) > 0 ? 'run' : 'idle';
@@ -189,7 +189,7 @@ export function update(dt) {
 
   // Saldırı: menzilde düşman varsa otomatik, ya da saldırı düğmesi/Space ile elle. Saldırı yönü kahramanın baktığı yön.
   const manual = Input.consumeAttack();
-  const attackAnimBusy = p.anim.startsWith('attack_') && ANIMS.male?.animations[p.anim] && p.animT < ANIMS.male.animations[p.anim].frames.length / ANIMS.male.animations[p.anim].fps * 0.9;
+  const attackAnimBusy = p.anim.startsWith('attack') && ANIMS.hero?.animations[p.anim] && p.animT < ANIMS.hero.animations[p.anim].frames.length / ANIMS.hero.animations[p.anim].fps * 0.9;
   if (!state.over && p.atkTimer <= 0 && !attackAnimBusy) {
     let best = null, bd = C.player.attackRange;
     for (const en of live) {
@@ -199,7 +199,7 @@ export function update(dt) {
     if (best || manual) {
       if (best) p.dir = wrapAngle(best.a - p.a) >= 0 ? 1 : -1;
       p.atkTimer = C.player.attackCooldown;
-      p.anim = `attack_${p.combo + 1}`; p.animT = 0; p.combo = (p.combo + 1) % 3;
+      const an = `attack_${p.combo + 1}`; p.anim = ANIMS.hero.animations[an] ? an : 'attack'; p.animT = 0; p.combo = (p.combo + 1) % 3;   // kadın karakterde tek 'attack' var
       state.slashes.push({ life: C.player.slashDuration, max: C.player.slashDuration, dir: p.dir, a: p.a });
       p.hitT = C.player.hitDelay; p.hitDir = p.dir;           // hasar savurmanın etki anında, güncel konumlara göre uygulanır
     }

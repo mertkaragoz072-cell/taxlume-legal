@@ -1,5 +1,5 @@
 import { state } from '../game/state.js';
-import { CONFIG } from '../core/config.js';
+import { CONFIG, HERO } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 
 const el = {};
@@ -30,10 +30,14 @@ export function hideGameOver() { el.gameover.classList.add('hidden'); }
 
 // Portre: erkek idle karesinin baş bölgesi (data/config.json → hud.avatar). Sprite yoksa boş kalır.
 export function drawAvatar() {
-  const cfg = CONFIG.hud.avatar, img = Assets.get(cfg.key), cv = document.getElementById('avatar');
-  if (!img || !cv) return;
-  const [sx, sy, sw, sh] = cfg.crop, ctx = cv.getContext('2d');
-  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cv = document.getElementById('avatar'); if (!cv) return;
+  const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height);
+  if (HERO.id === 'female') {                        // büyük portre: kare kırp, daire içine sığdır
+    const img = Assets.get('female_portrait'); if (!img) return;
+    const s = Math.min(img.width, img.height); ctx.drawImage(img, (img.width - s) / 2, 0, s, s, 0, 0, cv.width, cv.height); return;
+  }
+  const cfg = CONFIG.hud.avatar, img = Assets.get(cfg.key); if (!img) return;
+  const [sx, sy, sw, sh] = cfg.crop;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
 }

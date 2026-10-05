@@ -56,7 +56,8 @@
     "engageRange": 100,
     "hitDelay": 0.16,
     "slashFxScale": 0.5,
-    "slashFxAlpha": 0.9
+    "slashFxAlpha": 0.9,
+    "character": "male"
   },
   "leveling": {
     "baseXpToNext": 30,
@@ -106,6 +107,10 @@
         56,
         56
       ]
+    },
+    "avatarFemale": {
+      "key": "female_portrait",
+      "crop": null
     }
   },
   "camera": {

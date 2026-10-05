@@ -67,3 +67,6 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 ## Düşmanlar (MEVCUT — `tools/extract_goblins.py`)
 - `assets/enemies/<goblin_scout|goblin_warrior|goblin_brute>/`: animasyonlu (walk/attack/hurt/death) + portre. Kaynak: `assets/references/nexora_goblin_sheet_source.png`. Veri: `data/enemy_animations.json`. Ayrıntı: klasör README.
 - Eksik: skeleton ve diğer düşman türleri, saldırı/ölüm için ek kareler, boss'a özel yetenek efektleri.
+
+## Kadın karakter (MEVCUT — `tools/extract_female_sheet.py`)
+- `assets/characters/female/animations/`: idle 9, run 9, attack 5, hurt 5, death 5 (340×240, pivot 130,230) + `layers/` + portre. Efektler: `assets/effects/attacks/female_fx_*.png`. Ayrıntı/sınırlar: klasör README. Seçim: `?hero=female` veya `player.character`.

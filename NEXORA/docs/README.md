@@ -61,3 +61,6 @@ Tasarım ve teknik notlar.
 - **Saldırı üst üste binmez:** önceki saldırı animasyonu %90 bitmeden yenisi başlamaz (cooldown 0.62 sn).
 - **Elite:** HP 240 (normal goblin 42); normal ekranın 260 birim daha dışından doğar ve normal düşman hayattayken oyuncudan ≈ 190 birim uzakta bekler, sonra ilerler.
 - **Mesafe:** düşmanlar oyuncunun içine girmez (temas menzilinin %55'inden yakına girerse geri itilir); ölçülen en yakın mesafe 31 birim. Normal düşman en fazla 3.
+
+## Kahraman seçimi
+`ANIMS.hero` aktif kahramanın animasyon verisidir (`core/config.js`). Varsayılan `male`; `?hero=female` veya `data/config.json → player.character`. Kadında tek `attack` animasyonu var (erkekte `attack_1-3` kombo); sistem eksik kombo adında `attack`'a düşer.

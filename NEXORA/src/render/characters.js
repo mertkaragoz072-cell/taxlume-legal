@@ -1,4 +1,4 @@
-import { CONFIG, ANIMS } from '../core/config.js';
+import { CONFIG, ANIMS, HERO } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { Input } from '../core/input.js';
 import { TAU, clamp } from '../core/util.js';
@@ -15,11 +15,11 @@ function eyes(ctx, x, y, dir, big) {
 
 // Sprite varsa (data/male_animations.json + manifest) kare kare çizer; yoksa false döner.
 function drawPlayerSprite(ctx) {
-  const p = state.player, meta = ANIMS.male, anim = meta?.animations[p.anim];
+  const p = state.player, meta = ANIMS.hero, anim = meta?.animations[p.anim];
   if (!anim) return false;
   const n = anim.frames.length;
   const i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
-  const img = Assets.get('male_' + anim.frames[i]);
+  const img = Assets.get(HERO.id + '_' + anim.frames[i]);
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
   onLane(ctx, p.a, 0, p.lean * 0.5, () => {
@@ -27,10 +27,10 @@ function drawPlayerSprite(ctx) {
     ctx.scale(p.dir, 1);
     const sc = meta.scale, hurt = Math.max(0, p.hitFlash) / 0.2, running = Math.abs(p.moveAxis) > 0 && p.anim === 'run';
     // squash/stretch: koşarken adım ritmi, saldırıda hafif uzama, hasarda ezilme (ayaklar sabit kalır)
-    const sy = 1 + (running ? Math.sin(p.walk * 2) * 0.025 : 0) - hurt * 0.07 + (p.anim.startsWith('attack_') ? 0.02 : 0);
+    const sy = 1 + (running ? Math.sin(p.walk * 2) * 0.025 : 0) - hurt * 0.07 + (p.anim.startsWith('attack') ? 0.02 : 0);
     const sx = 1 / sy;
     ctx.scale(sx, sy);
-    const fxMul = CONFIG.player.slashFxScale, body = Assets.get('malebody_' + anim.frames[i]), fx = Assets.get('malefx_' + anim.frames[i]), anc = meta.fxAnchor?.[anim.frames[i]];
+    const fxMul = CONFIG.player.slashFxScale, body = Assets.get(HERO.id + 'body_' + anim.frames[i]), fx = Assets.get(HERO.id + 'fx_' + anim.frames[i]), anc = meta.fxAnchor?.[anim.frames[i]];
     if (body && fx && anc) {
       // gövde katmanı tam boy; mavi kılıç efekti kılıcın çıktığı noktaya (çapa) sabitlenip küçültülür
       ctx.drawImage(body, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);

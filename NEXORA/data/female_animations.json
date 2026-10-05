@@ -1,0 +1,92 @@
+{
+  "canvas": [
+    340,
+    240
+  ],
+  "pivot": [
+    130,
+    230
+  ],
+  "facing": "right",
+  "scale": 0.58,
+  "animations": {
+    "idle": {
+      "frames": [
+        "idle_01",
+        "idle_02",
+        "idle_03",
+        "idle_04",
+        "idle_05",
+        "idle_06",
+        "idle_07",
+        "idle_08",
+        "idle_09"
+      ],
+      "fps": 8,
+      "loop": true
+    },
+    "run": {
+      "frames": [
+        "run_01",
+        "run_02",
+        "run_03",
+        "run_04",
+        "run_05",
+        "run_06",
+        "run_07",
+        "run_08",
+        "run_09"
+      ],
+      "fps": 14,
+      "loop": true
+    },
+    "attack": {
+      "frames": [
+        "attack_01",
+        "attack_02",
+        "attack_03",
+        "attack_04",
+        "attack_05"
+      ],
+      "fps": 7,
+      "loop": false,
+      "impact": 0.6
+    },
+    "hurt": {
+      "frames": [
+        "hurt_01",
+        "hurt_02",
+        "hurt_03",
+        "hurt_04",
+        "hurt_05"
+      ],
+      "fps": 9,
+      "loop": false
+    },
+    "death": {
+      "frames": [
+        "death_01",
+        "death_02",
+        "death_03",
+        "death_04",
+        "death_05"
+      ],
+      "fps": 6,
+      "loop": false
+    }
+  },
+  "fxAnchor": {
+    "attack_03": [
+      231,
+      141
+    ],
+    "attack_04": [
+      233,
+      112
+    ],
+    "attack_05": [
+      176,
+      114
+    ]
+  }
+}

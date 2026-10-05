@@ -1,4 +1,4 @@
-import { CONFIG, ANIMS } from '../core/config.js';
+import { CONFIG, ANIMS, HERO } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { clamp } from '../core/util.js';
 import { TAU } from '../core/util.js';
@@ -14,7 +14,7 @@ export function drawCoin(ctx, c) {
 }
 
 export function drawSlash(ctx, s) {
-  if (Assets.get('male_' + (ANIMS.male?.animations.attack_1?.frames[0] || ''))) return; // sprite karelerinde efekt zaten var
+  if (Assets.get(HERO.id + '_' + (ANIMS.hero?.animations.attack_1?.frames[0] || ANIMS.hero?.animations.attack?.frames[0] || ''))) return; // sprite karelerinde efekt zaten var
 
   const t = 1 - s.life / s.max;
   onLane(ctx, state.player.a, 0, state.player.lean, () => {
