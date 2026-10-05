@@ -12,13 +12,21 @@
   <canvas id="canvas"></canvas>
 
   <div id="hud">
-    <div class="hud-row">
-      <div id="level-badge">LV <span id="hud-level">1</span></div>
+    <div class="hud-left">
+      <div id="avatar-ring"><canvas id="avatar" width="112" height="112"></canvas></div>
       <div id="hud-bars">
-        <div class="bar hp"><div id="hp-fill" class="fill"></div><span id="hp-text">100/100</span></div>
-        <div class="bar xp"><div id="xp-fill" class="fill"></div><span id="xp-text">XP</span></div>
+        <div class="bar hp"><div id="hp-fill" class="fill"></div><span id="hp-text">120 / 120</span></div>
+        <div class="lvbar"><div id="xp-fill" class="xpfill"></div><span>Lv. <b id="hud-level">1</b></span></div>
       </div>
-      <div id="coin-box"><i class="coin-icon"></i><span id="hud-coins">0</span></div>
+    </div>
+    <div class="hud-right">
+      <div class="pill"><i class="coin-icon"></i><span id="hud-coins">0</span></div>
+      <div class="pill"><i class="gem-icon"></i><span id="hud-gems">0</span></div>
+    </div>
+    <div class="hud-side">
+      <button type="button" class="sidebtn" disabled title="Ayarlar (yakında)">&#9881;</button>
+      <button type="button" class="sidebtn" disabled title="Envanter (yakında)">&#127890;</button>
+      <button type="button" class="sidebtn" disabled title="Görevler (yakında)">&#128220;</button>
     </div>
   </div>
 

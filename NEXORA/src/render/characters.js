@@ -67,9 +67,9 @@ export function drawPlayer(ctx) {
 }
 
 function drawGoblin(ctx, en) {
-  const c = en.def.colors, bob = Math.abs(Math.sin(en.bob)) * 2;
+  const c = en.def.colors, bob = Math.abs(Math.sin(en.bob)) * 2, sz = en.def.size * CONFIG.enemies.baseScale;
   onSurface(ctx, en.a, 0, 0, () => {
-    ctx.scale(-en.face, 1);
+    ctx.scale(-en.face * sz, sz);
     ctx.translate(0, -bob);
     ctx.beginPath(); ctx.ellipse(0, bob + 1, 14, 3.5, 0, 0, TAU); ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fill();
     const fl = en.flash > 0;
@@ -95,6 +95,7 @@ function drawGoblin(ctx, en) {
   });
   // Sağlık barı (ekranda dikey kalır: yerel döndürmeyle birlikte)
   onSurface(ctx, en.a, 0, 0, () => {
+    ctx.scale(sz, sz);
     const w = 34, h = 6, y = -62;
     ctx.beginPath(); ctx.roundRect(-w / 2, y, w, h, 3); ctx.fillStyle = '#3a1a22'; ctx.fill();
     ctx.beginPath(); ctx.roundRect(-w / 2, y, Math.max(0, w * en.hp / en.maxHp), h, 3); ctx.fillStyle = '#ff3b4a'; ctx.fill();

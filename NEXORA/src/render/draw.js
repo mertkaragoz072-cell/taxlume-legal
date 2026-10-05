@@ -8,7 +8,7 @@ export const outline = () => CONFIG.planet.colors.outline;
 // Yüzeydeki bir noktaya (dünya açısı a, yükseklik h) yerel koordinat sistemi kurar.
 // Yerel: y yukarı = -y, ayaklar y=0.
 export function onSurface(ctx, a, h, extraRot, fn) {
-  const sa = a - state.player.a;
+  const sa = a - state.player.a + View.heroAngle;
   ctx.save();
   ctx.translate(View.cx, View.cy);
   ctx.rotate(sa);
@@ -18,6 +18,9 @@ export function onSurface(ctx, a, h, extraRot, fn) {
   fn();
   ctx.restore();
 }
-export const visible = (a) => Math.abs(wrapAngle(a - state.player.a)) < 1.5;
+export const visible = (a) => {
+  const d = wrapAngle(a - state.player.a);
+  return d > -View.spanLeft && d < View.spanRight;
+};
 
 export function outlined(ctx, lw = 3) { ctx.lineWidth = lw; ctx.strokeStyle = outline(); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke(); }

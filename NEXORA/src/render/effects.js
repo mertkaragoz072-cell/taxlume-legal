@@ -32,7 +32,7 @@ export function drawText(ctx, t) {
   onSurface(ctx, t.a, t.h, 0, () => {
     ctx.globalAlpha = clamp(t.life / t.max * 1.5, 0, 1);
     const big = t.text === 'LEVEL UP!';
-    ctx.font = `900 ${big ? 22 : 18}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
+    ctx.font = `900 ${big ? 28 : 26}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
     ctx.lineWidth = 4; ctx.strokeStyle = outline(); ctx.lineJoin = 'round';
     ctx.strokeText(t.text, t.ox, 0); ctx.fillStyle = t.color; ctx.fillText(t.text, t.ox, 0);
     ctx.globalAlpha = 1;

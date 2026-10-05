@@ -1,5 +1,6 @@
 import { CONFIG, ENEMY_TYPES, ANIMS } from '../core/config.js';
 import { Input } from '../core/input.js';
+import { View } from '../core/view.js';
 import { rand, clamp, wrapAngle, TAU } from '../core/util.js';
 import { state, xpForLevel } from './state.js';
 
@@ -15,7 +16,7 @@ export function spawnEnemy(typeKey = 'goblin') {
   const hp = t.hp * (1 + e.hpScalePerLevel * lv);
   state.enemies.push({
     type: typeKey, def: t,
-    a: p.a + e.spawnArc + rand(0, e.spawnArcJitter),
+    a: p.a + (View.visibleRightUnits + e.spawnOffscreen + rand(0, e.spawnJitter)) / CONFIG.planet.radius,   // sağ ekran kenarının hemen dışı
     hp, maxHp: hp, damage: t.damage * (1 + e.damageScalePerLevel * lv),
     atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false,
   });
@@ -28,7 +29,7 @@ function addText(a, h, text, color) {
 
 function damageEnemy(en, dmg) {
   en.hp -= dmg; en.flash = 0.12; en.knock = 1;
-  addText(en.a, 40, String(Math.round(dmg)), '#fff');
+  addText(en.a, 90, '-' + Math.round(dmg), '#ff4a4a');
   if (en.hp <= 0 && !en.dead) killEnemy(en);
 }
 
@@ -51,7 +52,7 @@ function gainXp(amount) {
     p.xp -= p.xpNext; p.level++; p.xpNext = xpForLevel(p.level);
     p.damage += L.damagePerLevel; p.maxHp += L.maxHpPerLevel;
     p.hp = Math.min(p.maxHp, p.hp + (p.maxHp - p.hp) * L.healOnLevelUp + L.maxHpPerLevel);
-    addText(p.a, 90, 'LEVEL UP!', '#ffd23f');
+    addText(p.a, 130, 'LEVEL UP!', '#ffd23f');
   }
 }
 
@@ -61,7 +62,7 @@ function hurtPlayer(dmg) {
   p.hp = Math.max(0, p.hp - dmg);
   p.invuln = CONFIG.player.invulnTime; p.hitFlash = 0.2; state.shake = 6;
   p.anim = 'hurt'; p.animT = 0;
-  addText(p.a, 70, '-' + Math.round(dmg), '#ff5a5a');
+  addText(p.a, 110, '-' + Math.round(dmg), '#ff9a3a');
   if (p.hp <= 0) { state.over = true; p.anim = 'death'; p.animT = 0; events.onGameOver?.(state); }
 }
 

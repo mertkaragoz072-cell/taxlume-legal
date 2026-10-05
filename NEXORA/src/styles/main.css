@@ -7,26 +7,26 @@ html, body {
 #game { position: fixed; inset: 0; }
 #canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-#hud {
-  position: absolute; top: 0; left: 0; right: 0; pointer-events: none;
-  padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 10px) 0 calc(env(safe-area-inset-left) + 10px);
-}
-.hud-row { display: flex; align-items: center; gap: 8px; max-width: 640px; margin: 0 auto; }
-#level-badge, #coin-box, .bar {
-  border: 3px solid #1f2a44; border-radius: 12px; color: #fff; font-weight: 800;
-  text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 3px 0 rgba(31,42,68,.55);
-}
-#level-badge { background: #ff9d2e; padding: 4px 8px; font-size: 14px; white-space: nowrap; }
-#coin-box { background: #3b4a7a; padding: 4px 8px; font-size: 14px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.coin-icon { width: 14px; height: 14px; border-radius: 50%; background: #ffd23f; border: 2px solid #1f2a44; display: inline-block; }
-#hud-bars { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.bar { position: relative; height: 20px; background: #2a2f45; overflow: hidden; }
-.bar.xp { height: 14px; }
+#hud { position: absolute; inset: 0; pointer-events: none; padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 10px) 0 calc(env(safe-area-inset-left) + 10px); }
+.hud-left { position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: calc(env(safe-area-inset-left) + 10px); display: flex; align-items: center; gap: 0; width: min(58vw, 300px); }
+#avatar-ring { width: 58px; height: 58px; border-radius: 50%; border: 4px solid #2b3550; background: radial-gradient(#ffd9a8, #e7a86a); box-shadow: 0 3px 0 rgba(31,42,68,.55); overflow: hidden; flex: none; z-index: 2; }
+#avatar { width: 100%; height: 100%; display: block; }
+#hud-bars { flex: 1; min-width: 0; margin-left: -10px; display: flex; flex-direction: column; gap: 3px; }
+.bar { position: relative; height: 22px; border: 3px solid #1f2a44; border-radius: 4px 12px 12px 4px; background: #2a2f45; overflow: hidden; color: #fff; font-weight: 800; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 3px 0 rgba(31,42,68,.55); padding-left: 10px; }
 .bar .fill { position: absolute; inset: 0 auto 0 0; width: 100%; transition: width .15s; }
 .bar.hp .fill { background: linear-gradient(#ff6b6b, #d92f3f); }
-.bar.xp .fill { background: linear-gradient(#7ee7ff, #2aa4e6); }
-.bar span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; }
-.bar.xp span { font-size: 9px; }
+.bar span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.lvbar { position: relative; height: 18px; width: 74%; border: 3px solid #1f2a44; border-radius: 4px 10px 10px 4px; background: #232a40; overflow: hidden; color: #fff; font-weight: 800; font-size: 12px; text-shadow: 0 1px 0 #1f2a44; display: flex; align-items: center; padding-left: 28px; }
+.lvbar .xpfill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(#ffb23f, #f07a14); }
+.lvbar span { position: relative; }
+.hud-right { position: absolute; top: calc(env(safe-area-inset-top) + 8px); right: calc(env(safe-area-inset-right) + 10px); display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.pill { min-width: 96px; height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 6px; border: 3px solid #1f2a44; border-radius: 16px; background: #243050; color: #fff; font-weight: 800; font-size: 14px; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 3px 0 rgba(31,42,68,.55); }
+.pill span { margin-left: auto; }
+.coin-icon, .gem-icon { width: 18px; height: 18px; display: inline-block; border: 2px solid #1f2a44; flex: none; }
+.coin-icon { border-radius: 50%; background: #ffd23f; }
+.gem-icon { background: #c04bff; transform: rotate(45deg) scale(.8); border-radius: 3px; }
+.hud-side { position: absolute; top: calc(env(safe-area-inset-top) + 82px); left: calc(env(safe-area-inset-left) + 10px); display: flex; flex-direction: column; gap: 8px; }
+.sidebtn { width: 44px; height: 44px; border-radius: 12px; border: 3px solid #1f2a44; background: #2f3b5e; font-size: 20px; line-height: 1; opacity: .75; pointer-events: none; }
 
 #joystick {
   position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;

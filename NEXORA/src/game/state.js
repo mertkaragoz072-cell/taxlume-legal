@@ -15,7 +15,7 @@ export function createPlayer() {
   return {
     a: 0, dir: 1, lean: 0, walk: 0,            // a: gezegen üzerindeki açı (radyan)
     hp: c.maxHp, maxHp: c.maxHp, damage: c.attackDamage,
-    level: 1, xp: 0, xpNext: xpForLevel(1), coins: 0,
+    level: 1, xp: 0, xpNext: xpForLevel(1), coins: 0, gems: 0,   // gems: yer tutucu (henüz kazanılmıyor)
     atkTimer: 0, invuln: 0, hitFlash: 0,
     anim: 'idle', animT: 0, combo: 0,         // animasyon: ad, geçen süre, saldırı kombosu (0..2)
   };

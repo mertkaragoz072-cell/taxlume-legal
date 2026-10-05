@@ -5,7 +5,7 @@ import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
 import { update, events } from './game/systems.js';
 import { render } from './render/renderer.js';
-import { initHud, updateHud, showGameOver, hideGameOver } from './ui/hud.js';
+import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar } from './ui/hud.js';
 
 function restart() {
   resetState();
@@ -29,6 +29,7 @@ async function boot() {
   await Assets.load(manifest.images);
 
   initHud();
+  drawAvatar();
   Input.init();
   const onResize = () => View.resize(canvas);
   addEventListener('resize', onResize);

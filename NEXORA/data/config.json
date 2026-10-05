@@ -1,18 +1,29 @@
 {
   "planet": {
-    "radius": 300,
-    "colors": { "grass": "#6fd35a", "grassDark": "#3fa646", "grassLight": "#a4ec7c", "outline": "#1f2a44" }
+    "radius": 2000,
+    "colors": {
+      "grass": "#6fd35a",
+      "grassDark": "#3fa646",
+      "grassLight": "#a4ec7c",
+      "outline": "#1f2a44"
+    },
+    "decor": {
+      "grassEvery": 90,
+      "rockEvery": 650,
+      "treeEvery": 520,
+      "fenceEvery": 900
+    }
   },
   "player": {
-    "speed": 150,
-    "maxHp": 100,
+    "speed": 190,
+    "maxHp": 120,
     "attackDamage": 10,
-    "attackRange": 70,
+    "attackRange": 115,
     "attackCooldown": 0.6,
     "slashDuration": 0.18,
     "invulnTime": 0.5,
-    "coinMagnetRange": 110,
-    "coinMagnetSpeed": 420
+    "coinMagnetRange": 150,
+    "coinMagnetSpeed": 520
   },
   "leveling": {
     "baseXpToNext": 30,
@@ -26,11 +37,55 @@
     "spawnIntervalMin": 0.8,
     "spawnIntervalDecayPerLevel": 0.12,
     "maxAlive": 14,
-    "spawnArc": 1.0,
-    "spawnArcJitter": 0.25,
     "hpScalePerLevel": 0.2,
-    "damageScalePerLevel": 0.1
+    "damageScalePerLevel": 0.1,
+    "spawnJitter": 160,
+    "spawnOffscreen": 90,
+    "baseScale": 1.5
   },
-  "loot": { "coinPopSpeed": 160, "coinGravity": 700 },
-  "hud": { "damageNumberLife": 0.7 }
+  "loot": {
+    "coinPopSpeed": 160,
+    "coinGravity": 700
+  },
+  "hud": {
+    "damageNumberLife": 0.7,
+    "avatar": {
+      "key": "male_idle_01",
+      "crop": [
+        86,
+        76,
+        56,
+        56
+      ]
+    }
+  },
+  "camera": {
+    "_comment": "Yandan kamera, hafif yukarıdan (≈15-20°): dev gezegenin yüzeyi yumuşak bir tepe gibi görünür. Referans: assets/references/nexora_camera_gameplay_reference.png",
+    "visibleWidthUnits": 700,
+    "visibleHeightUnits": 420,
+    "heroScreenX": 0.3,
+    "groundScreenY": 0.64
+  },
+  "parallax": [
+    {
+      "id": "islands",
+      "speed": 0.04,
+      "period": 900
+    },
+    {
+      "id": "castles",
+      "speed": 0.08,
+      "period": 1100
+    },
+    {
+      "id": "mountains",
+      "speed": 0.16,
+      "period": 800
+    },
+    {
+      "id": "trees",
+      "speed": 0.32,
+      "period": 700
+    }
+  ]
 }
