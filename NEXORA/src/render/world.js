@@ -2,12 +2,31 @@ import { CONFIG, WORLD } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { View } from '../core/view.js';
 import { TAU } from '../core/util.js';
+import { state } from '../game/state.js';
 import { onSurface, visible, outlined } from './draw.js';
 import { drawBackground } from './parallax.js';
 
 export function drawSky(ctx) { drawBackground(ctx); }
 
 // Yüzey: devasa gezegenin üst yayı, ekranda yumuşak bir tepe. Gradyan yüzeyden aşağı koyulaşır (cel-shading).
+// Zemin dokusu: ground_tile (dikişsiz çim) gezegenin yerel koordinatlarında döşenir; yüzeyle birlikte hareket eder.
+let groundPattern = null;
+function drawGroundTexture(ctx) {
+  const tile = Assets.get('ground_tile'); if (!tile) return;
+  const { cx, cy, R } = View, gt = CONFIG.planet.groundTexture, sc = View.scale;
+  if (!groundPattern) groundPattern = ctx.createPattern(tile, 'repeat');
+  groundPattern.setTransform(new DOMMatrix([gt.scale * sc, 0, 0, gt.scale * sc, 0, 0]));
+  ctx.save();
+  ctx.translate(cx, cy); ctx.rotate(View.heroAngle - state.player.a);   // gezegenle birlikte dön
+  ctx.globalAlpha = gt.alpha;
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fillStyle = groundPattern; ctx.fill();
+  ctx.restore();
+  // derinlik gölgesi: yüzeyden aşağı koyulaşır (doku üstüne)
+  const top = cy - R, g = ctx.createLinearGradient(0, top, 0, top + 380 * sc);
+  g.addColorStop(0, 'rgba(255,255,160,.10)'); g.addColorStop(0.25, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(10,50,20,.55)');
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fillStyle = g; ctx.fill();
+}
+
 export function drawPlanet(ctx) {
   const { cx, cy, R } = View, c = CONFIG.planet.colors, sc = View.scale;
   const top = cy - R;
@@ -15,6 +34,7 @@ export function drawPlanet(ctx) {
   const g = ctx.createLinearGradient(0, top, 0, top + 380 * sc);
   g.addColorStop(0, c.grassLight); g.addColorStop(0.18, c.grass); g.addColorStop(1, c.grassDark);
   ctx.fillStyle = g; ctx.fill();
+  drawGroundTexture(ctx);
   // üst kenarda koyu toprak/çim bandı + açık parlama
   ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
   ctx.beginPath(); ctx.arc(cx, cy, R - 9 * sc, 0, TAU);

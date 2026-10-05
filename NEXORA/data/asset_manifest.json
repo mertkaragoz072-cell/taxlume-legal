@@ -38,6 +38,8 @@
     "fx_effect_weapon_streak_05": "assets/effects/attacks/effect_weapon_streak_05.png",
     "fx_effect_weapon_streak_06": "assets/effects/attacks/effect_weapon_streak_06.png",
     "fx_effect_weapon_streak_07": "assets/effects/attacks/effect_weapon_streak_07.png",
+    "ground_hill": "assets/environment/ground/hill_ground.png",
+    "ground_tile": "assets/environment/ground/ground_tile_grass.png",
     "male_attack_1_01": "assets/characters/male/animations/attack_1_01.png",
     "male_attack_1_02": "assets/characters/male/animations/attack_1_02.png",
     "male_attack_1_03": "assets/characters/male/animations/attack_1_03.png",

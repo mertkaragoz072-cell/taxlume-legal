@@ -60,4 +60,5 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - `assets/environment/background/clouds/` 6 bulut, `.../islands/` 7 yüzen ada; `assets/environment/props/` 24 prop (ağaç, çalı, kaya, çit, sandık, tabela, saman balyası, çiçek/ot, dikenli sopa). Ayrıntı: klasör README'leri.
 - Kaynak: `assets/references/nexora_world_props_source.png` (gerçek alfa kanallı). Üstteki büyük panorama kompozisyonu kesilmedi.
 - Veri: `data/world_props.json` (prop yükseklikleri, dekor saçılım kuralları, ada katmanları). Manifest anahtarları: `bg_*`, `prop_*`.
-- Eksik: tepe/zemin dokusu (sprite yok, Canvas ile çiziliyor), kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.
+- Zemin: `assets/environment/ground/` → `hill_ground.png` (tam tepe, referans), `ground_tile_grass.png` (oyunda desen olarak döşenir). Kaynak: `assets/references/nexora_world_ground_source.png`.
+- Eksik: toprak lekesi decal'ı, kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.

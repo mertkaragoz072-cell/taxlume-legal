@@ -12,6 +12,11 @@
       "rockEvery": 650,
       "treeEvery": 520,
       "fenceEvery": 900
+    },
+    "groundTexture": {
+      "_comment": "ground_tile deseni: dünya biriminde döşeme boyutu (ölçek = scale px→birim), gölge yoğunlukları",
+      "scale": 1.1,
+      "alpha": 0.92
     }
   },
   "player": {
