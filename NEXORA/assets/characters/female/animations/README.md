@@ -1,6 +1,6 @@
 # assets / characters / female / animations
 
-Kadın savaşçı (kırmızı bandanalı, kılıçlı). Kaynak: `../../../references/nexora_female_sheet_v2_source.png` (1500×500, **gerçek alfa kanallı**, kareler birbirine yakın). İlk (siyah zeminli) sheet `nexora_female_sheet_source.png` **kullanımdan kalktı** (saç kenarları bozuktu). Betik: `tools/extract_female_sheet.py`.
+Kadın savaşçı (kırmızı bandanalı, kılıçlı). Kaynak: `../../../references/nexora_female_sheet_v2_source.png` (1500×500, **gerçek alfa kanallı**, kareler birbirine yakın). İlk (siyah zeminli) sheet kullanımdan kalktı ve repodan silindi (saç kenarları bozuktu). Betik: `tools/extract_female_sheet.py`.
 
 | Animasyon | Kare | FPS | Döngü |
 |---|---|---|---|
