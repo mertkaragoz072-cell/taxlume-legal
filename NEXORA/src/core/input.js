@@ -1,4 +1,15 @@
-// Klavye (A/D, ←/→) + sanal joystick. Çıktı: Input.axis (-1..1)
+// Klavye (A/D, ←/→) + sabit sol-alt sanal joystick. Çıktı: Input.axis (-1..1)
+// İlk dokunuşta tam ekran + yatay kilit denenir (Android Chrome; iOS desteklemez, PWA/paketlemede manifest/yerel ayar kullanılır).
+let triedFs = false;
+function tryFullscreenLandscape() {
+  if (triedFs) return; triedFs = true;
+  try {
+    const el = document.documentElement;
+    const p = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : null;
+    Promise.resolve(p).then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
+  } catch (_) { /* yoksay */ }
+}
+
 export const Input = {
   keys: {},
   axis: 0,
@@ -13,27 +24,31 @@ export const Input = {
     const stick = document.getElementById('stick');
     const gameEl = document.getElementById('game');
     const maxR = 40;
+    const ZONE = 0.55;                       // dokunma alanı: ekranın solu
     const setStick = (dx, dy) => { stick.style.transform = `translate(${dx}px, ${dy}px)`; };
-
-    gameEl.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button') || this.joy.id !== null) return;
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      this.joy.id = e.pointerId; this.joy.ox = e.clientX; this.joy.oy = e.clientY; this.joy.x = 0;
-      base.style.left = e.clientX + 'px'; base.style.top = e.clientY + 'px';
-      base.classList.add('active'); setStick(0, 0);
-      try { gameEl.setPointerCapture(e.pointerId); } catch (_) { /* yoksay */ }
-    });
-    gameEl.addEventListener('pointermove', (e) => {
-      if (e.pointerId !== this.joy.id) return;
-      let dx = e.clientX - this.joy.ox, dy = e.clientY - this.joy.oy;
+    const center = () => { const r = base.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+    const drag = (e) => {
+      const [cx, cy] = center();
+      let dx = e.clientX - cx, dy = e.clientY - cy;
       const d = Math.hypot(dx, dy);
       if (d > maxR) { dx *= maxR / d; dy *= maxR / d; }
       this.joy.x = dx / maxR;
       setStick(dx, dy);
+    };
+
+    gameEl.addEventListener('pointerdown', (e) => {
+      tryFullscreenLandscape();
+      if (e.target.closest('button') || this.joy.id !== null) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.clientX > window.innerWidth * ZONE) return;
+      this.joy.id = e.pointerId; base.classList.add('active');
+      try { gameEl.setPointerCapture(e.pointerId); } catch (_) { /* yoksay */ }
+      drag(e);
     });
+    gameEl.addEventListener('pointermove', (e) => { if (e.pointerId === this.joy.id) drag(e); });
     const end = (e) => {
       if (e.pointerId !== this.joy.id) return;
-      this.joy.id = null; this.joy.x = 0; base.classList.remove('active');
+      this.joy.id = null; this.joy.x = 0; base.classList.remove('active'); setStick(0, 0);
     };
     gameEl.addEventListener('pointerup', end);
     gameEl.addEventListener('pointercancel', end);

@@ -45,6 +45,7 @@ async function boot() {
   function frame(now) {
     const dt = Math.min((now - last) / 1000, 0.05); // sekme dönüşünde sıçramayı önle
     last = now;
+    if (window.innerHeight > window.innerWidth) { requestAnimationFrame(frame); return; }   // dikeyde duraklat (yatay uyarısı gösterilir)
     Input.update();
     update(dt);
     updateHud();

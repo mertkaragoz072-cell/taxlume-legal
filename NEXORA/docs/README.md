@@ -21,3 +21,9 @@ Tasarım ve teknik notlar.
 - **HUD (referansa göre):** sol üstte portre + kırmızı HP ("120 / 120") + `Lv.` çubuğu (turuncu = XP); sağ üstte coin ve gem; solda ayarlar/envanter/görev düğmeleri **pasif yer tutucu** (sistemleri henüz yok). Gem sayacı da yer tutucu (henüz kazanılmıyor).
 - **Hasar yazısı:** büyük kırmızı `-28`; düşman HP çubuğu kırmızı, başın üstünde.
 - Referanstaki "saldırı animasyonu" altın hilal: bizim erkek sprite'ları mavi efekt içeriyor; altın efekt yok.
+
+## Yatay (landscape) mod — oyun yalnızca yatay için tasarlandı
+- **Kilit:** `manifest.webmanifest` (`orientation: landscape`, `display: fullscreen`); ilk dokunuşta tam ekran + `screen.orientation.lock('landscape')` denenir (Android Chrome). iOS bunu desteklemez → dikey tutulursa oyun **duraklar** ve "Lütfen telefonu yatay çevirin" uyarısı çıkar. Mobil paketlemede (Capacitor vb.) yön yerel ayardan da kilitlenmeli.
+- **Joystick:** sol alta **sabit** (güvenli alan payıyla); dokunma alanı ekranın sol %55'i. Sağ taraf yetenek/saldırı düğmeleri için boş bırakıldı. Klavye (A/D, ←/→) da çalışır.
+- **HUD:** kısa ekranlarda (`max-height: 440px`) sıkılaştırılmış: küçük portre/çubuklar, 36 px yan düğmeler. Test edilen boyutlar: 640×360, 740×360, 844×390, 932×430 — taşma yok.
+- **Görüş:** `min(w/700, h/420)` ölçeği; yatayda kahraman solda (%30), zemin alt %36.
