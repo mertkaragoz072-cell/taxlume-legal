@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
-import { ONBOARDING_STEPS } from "../economy/onboarding";
 import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
 import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -100,21 +98,29 @@ export function MarketScreen({ sounds }: Props) {
 
   const unrealizedPnl = (selectedState.price - selectedState.avgCost) * selectedState.holding;
 
-  // A rough "market mood" reading — the average of every unlocked good's
-  // latest tick-over-tick move. Purely a derived display value (no new
-  // state), meant as a quick at-a-glance cue for whether it's broadly a
-  // buyer's or seller's moment, not a precise signal.
-  const sentiment = (() => {
-    const changes = unlockedGoods.map((g) => {
+  // The market's vitals at a glance — average mood plus whichever good
+  // moved the most in either direction this tick. Purely a derived display
+  // value (no new state); it replaces what used to be the town square
+  // image at the top of this screen, which told you nothing about the
+  // market itself and only ever lived here because it had nowhere else to
+  // be before the game had a dedicated Town tab.
+  const marketPulse = (() => {
+    const movers = unlockedGoods.map((g) => {
       const h = state.goods[g.id].history;
-      if (h.length < 2) return 0;
-      const prev = h[h.length - 2];
-      return prev !== 0 ? (h[h.length - 1] - prev) / prev : 0;
+      const prev = h.length > 1 ? h[h.length - 2] : 0;
+      const fraction = h.length > 1 && prev !== 0 ? (h[h.length - 1] - prev) / prev : 0;
+      return { good: g, fraction };
     });
-    const avg = changes.length > 0 ? changes.reduce((a, b) => a + b, 0) / changes.length : 0;
-    if (avg > 0.004) return { key: "bullish", icon: "🐂", color: "#3fae5c" };
-    if (avg < -0.004) return { key: "bearish", icon: "🐻", color: "#c94b4b" };
-    return { key: "neutral", icon: "😐", color: COLORS.textMuted };
+    const avg = movers.length > 0 ? movers.reduce((a, m) => a + m.fraction, 0) / movers.length : 0;
+    const sentiment =
+      avg > 0.004
+        ? { key: "bullish", icon: "🐂", color: "#3fae5c" }
+        : avg < -0.004
+          ? { key: "bearish", icon: "🐻", color: "#c94b4b" }
+          : { key: "neutral", icon: "😐", color: COLORS.textMuted };
+    const topGainer = movers.length > 0 ? movers.reduce((a, m) => (m.fraction > a.fraction ? m : a)) : null;
+    const topLoser = movers.length > 0 ? movers.reduce((a, m) => (m.fraction < a.fraction ? m : a)) : null;
+    return { sentiment, topGainer, topLoser };
   })();
 
   // The buy button lives below the fold. When the guided tour reaches the
@@ -132,28 +138,43 @@ export function MarketScreen({ sounds }: Props) {
 
   return (
     <ScrollView ref={scroller} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      {/* The town square is the most characterful thing the game has, and it
-          lives on the fourth tab — a player who never gets past the market
-          never sees it. For the first session it sits here, above the
-          charts, so the opening screen is a place with people in it rather
-          than a line graph. It goes away once the guided steps are done,
-          because by then the player has found the Town tab themselves. */}
-      {state.onboardingStep < ONBOARDING_STEPS.length && (
-        <View style={styles.onboardingScene}>
-          <TownSquareScene
-            happiness={state.happiness}
-            tick={state.tick}
-            label={t("town.squareLabel")}
-            moodLabel={t(happinessFor(state.happiness).labelKey)}
-            moodColor={happinessFor(state.happiness).color}
-          />
+      {/* Market Pulse: the town square image used to open this screen, but
+          it said nothing about the market and only lived here because the
+          game had no Town tab yet to send it to. This says something —
+          overall mood plus whoever moved the most, in either direction,
+          this tick — and it updates every tick instead of sitting still. */}
+      <View style={styles.pulseCard}>
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <View style={styles.pulseHeaderRow}>
+          <Text style={styles.pulseTitle}>{t("market.pulse.title")}</Text>
+          <Text style={[styles.pulseSentiment, { color: marketPulse.sentiment.color }]}>
+            {marketPulse.sentiment.icon} {t(`market.sentiment.${marketPulse.sentiment.key}`)}
+          </Text>
         </View>
-      )}
-
-      <View style={styles.sentimentRow}>
-        <Text style={[styles.sentimentText, { color: sentiment.color }]}>
-          {sentiment.icon} {t(`market.sentiment.${sentiment.key}`)}
-        </Text>
+        {marketPulse.topGainer && marketPulse.topLoser && (
+          <View style={styles.pulseMoversRow}>
+            <View style={styles.pulseMover}>
+              <Text style={styles.pulseMoverLabel}>{t("market.pulse.topGainer")}</Text>
+              <Text style={styles.pulseMoverGood} numberOfLines={1}>
+                {marketPulse.topGainer.good.icon} {t(marketPulse.topGainer.good.nameKey)}
+              </Text>
+              <Text style={[styles.pulseMoverPct, { color: COLORS.positive }]}>
+                {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
+                {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
+              </Text>
+            </View>
+            <View style={styles.pulseMoverDivider} />
+            <View style={styles.pulseMover}>
+              <Text style={styles.pulseMoverLabel}>{t("market.pulse.topLoser")}</Text>
+              <Text style={styles.pulseMoverGood} numberOfLines={1}>
+                {marketPulse.topLoser.good.icon} {t(marketPulse.topLoser.good.nameKey)}
+              </Text>
+              <Text style={[styles.pulseMoverPct, { color: COLORS.negative }]}>
+                {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
 
       {state.activeSeasonalEvent && seasonalTemplate && (
@@ -453,10 +474,45 @@ export function MarketScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  onboardingScene: { alignItems: "center", marginBottom: SPACING.md },
   body: { padding: SPACING.lg, paddingBottom: 40 },
-  sentimentRow: { alignItems: "center", marginBottom: SPACING.md },
-  sentimentText: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  pulseCard: {
+    borderRadius: RADIUS.feature,
+    padding: SPACING.md + 2,
+    marginBottom: SPACING.lg,
+    overflow: "hidden",
+    ...cardShadow,
+  },
+  pulseHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  pulseTitle: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.caption,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    letterSpacing: 1,
+  },
+  pulseSentiment: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  pulseMoversRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: SPACING.md,
+    paddingTop: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: "#3a2d1e",
+  },
+  pulseMover: { flex: 1 },
+  pulseMoverDivider: { width: 1, alignSelf: "stretch", backgroundColor: "#3a2d1e", marginHorizontal: SPACING.md },
+  pulseMoverLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 3 },
+  pulseMoverGood: {
+    color: COLORS.textPrimary,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
+  pulseMoverPct: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginTop: 2 },
   seasonalCard: {
     flexDirection: "row",
     alignItems: "center",

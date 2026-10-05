@@ -181,6 +181,11 @@ export const STRINGS = {
         bearish: "Ayı Piyasası",
         neutral: "Nötr Piyasa",
       },
+      pulse: {
+        title: "PİYASA NABZI",
+        topGainer: "En Çok Kazandıran",
+        topLoser: "En Çok Kaybettiren",
+      },
       gameOverTitle: "💥 Hiperenflasyon kasabayı vurdu! Ekonomi çöktü.",
       gameOverSubtitle: "Yeniden başlamak için üstteki ⟳ butonuna dokun.",
       buyShort: "AL",
@@ -1579,6 +1584,11 @@ export const STRINGS = {
         bullish: "Bull Market",
         bearish: "Bear Market",
         neutral: "Neutral Market",
+      },
+      pulse: {
+        title: "MARKET PULSE",
+        topGainer: "Top Gainer",
+        topLoser: "Top Loser",
       },
       gameOverTitle: "💥 Hyperinflation hit the town! The economy collapsed.",
       gameOverSubtitle: "Tap the ⟳ button above to start over.",
