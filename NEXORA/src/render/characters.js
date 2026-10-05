@@ -1,4 +1,4 @@
-import { CONFIG } from '../core/config.js';
+import { CONFIG, ANIMS } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { Input } from '../core/input.js';
 import { TAU } from '../core/util.js';
@@ -13,7 +13,26 @@ function eyes(ctx, x, y, dir, big) {
   }
 }
 
+// Sprite varsa (data/male_animations.json + manifest) kare kare çizer; yoksa false döner.
+function drawPlayerSprite(ctx) {
+  const p = state.player, meta = ANIMS.male, anim = meta?.animations[p.anim];
+  if (!anim) return false;
+  const n = anim.frames.length;
+  const i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
+  const img = Assets.get('male_' + anim.frames[i]);
+  if (!img) return false;
+  if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
+  onSurface(ctx, p.a, 0, p.lean * 0.5, () => {
+    ctx.scale(p.dir, 1);
+    const sc = meta.scale;
+    ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+  });
+  ctx.globalAlpha = 1;
+  return true;
+}
+
 export function drawPlayer(ctx) {
+  if (drawPlayerSprite(ctx)) return;
   const p = state.player;
   const step = Math.sin(p.walk) * (Math.abs(Input.axis) > 0 ? 1 : 0);
   const bob = Math.abs(Math.sin(p.walk)) * 2 * Math.abs(Input.axis);

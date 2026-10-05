@@ -2,6 +2,7 @@
 // Modüller canlı referansı import eder; değerler yüklenince dolar.
 export const CONFIG = {};
 export const ENEMY_TYPES = {};
+export const ANIMS = {};      // ANIMS.male = data/male_animations.json (kare listesi, fps, pivot, ölçek)
 
 export async function loadData(base = 'data/') {
   const get = async (f) => {
@@ -9,10 +10,11 @@ export async function loadData(base = 'data/') {
     if (!res.ok) throw new Error(`${base + f} yüklenemedi (${res.status})`);
     return res.json();
   };
-  const [config, enemies, manifest] = await Promise.all([
-    get('config.json'), get('enemies.json'), get('asset_manifest.json'),
+  const [config, enemies, manifest, male] = await Promise.all([
+    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'),
   ]);
   Object.assign(CONFIG, config);
   Object.assign(ENEMY_TYPES, enemies);
+  ANIMS.male = male;
   return manifest;
 }

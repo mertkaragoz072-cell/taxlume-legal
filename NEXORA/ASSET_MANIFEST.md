@@ -11,7 +11,7 @@ Aşağıdaki dosyalar PNG olarak ayrıca üretilip ilgili klasörlere eklenmeli.
 
 ## Oyuncu karakterleri
 Hem `assets/characters/male/animations/` hem `assets/characters/female/animations/` için ayrı kareler:
-- `idle_01.png`…; `run_01.png`…; `attack_1_01.png`…; `attack_2_01.png`…; `attack_3_01.png`…; `hurt.png`; `death_01.png`…
+- `idle_01.png`…; `run_01.png`…; `attack_1_01.png`…; `attack_2_01.png`…; `attack_3_01.png`…; `hurt_01.png`…; `death_01.png`…; `jump_01.png`…; `turn_01.png`… (erkek için ✅ mevcut; kadın ⏳ yok)
 - Klasördeki README'de frame sayısı, FPS, yön, pivot/zemin hizası ve karakter ölçüleri belgelenmeli.
 - `assets/characters/skins/`: her skin için ayrı alt klasör veya `character_variant.png` ve kısa metadata
 - `assets/characters/portraits/`: `male_portrait.png`, `female_portrait.png` ve açılacak her ek karakter için portre
@@ -48,3 +48,10 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Manifest'te kayıtlı tek görsel: `nexora_logo`. Diğer hiçbir dosya var gibi referanslanmadı.
 - Sprite ölçü/pivot/FPS standardı: `docs/README.md`.
 - Not: `assets/references/` içinde atlas yok; geldiğinde kırpılıp ayrı PNG'lere dönüştürülecek.
+
+## Erkek karakter (MEVCUT — `tools/extract_male_sheet.py` ile üretildi)
+- `assets/characters/male/animations/`: 9 animasyon, 60 kare PNG (224×176, pivot 112,164). Ayrıntı, FPS, kalite sınırları: klasör README.
+- `assets/effects/attacks/`: 20 saf efekt PNG. Ayrıntı: klasör README.
+- Kaynak: `assets/references/nexora_male_sheet_source.png`. Veri: `data/male_animations.json`. Manifest anahtarları: `male_<kare>` (ör. `male_idle_01`), `fx_<efekt>`.
+- Oyunda kullanımda: idle, run, attack_1-3 (kombo), hurt, death. `jump` ve `turn` dosyaları var ama oyun henüz çağırmıyor.
+- Eksik: kadın karakter, toz/kırıntı particle'ları, temiz (efektsiz) saldırı kareleri.

@@ -1,6 +1,3 @@
 # assets / effects / particles
 
-Bu klasör ilgili NEXORA dosyaları için hazırlandı. Gerçek, ayrı dosyalar eklenene kadar içerik placeholder olarak boş bırakılmıştır. 
-
-Asset atlası/reference görseli tekil oyun asseti gibi buraya kopyalanmamalıdır.
-
+Henüz dosya yok. Erkek karakter sheet'inde toz bulutu ve moloz/kırıntı efektleri var, ancak gri/bej renkleri gri-beyaz sahte dama zeminden güvenilir şekilde ayrılamadığı için **çıkarılmadı** (kareler sahte alfa üretirdi). Şeffaf kaynak veya düz renk zeminli sheet gelince eklenecek.

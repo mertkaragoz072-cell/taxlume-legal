@@ -1,4 +1,4 @@
-import { CONFIG, ENEMY_TYPES } from '../core/config.js';
+import { CONFIG, ENEMY_TYPES, ANIMS } from '../core/config.js';
 import { Input } from '../core/input.js';
 import { rand, clamp, wrapAngle, TAU } from '../core/util.js';
 import { state, xpForLevel } from './state.js';
@@ -60,8 +60,23 @@ function hurtPlayer(dmg) {
   if (p.invuln > 0 || state.over) return;
   p.hp = Math.max(0, p.hp - dmg);
   p.invuln = CONFIG.player.invulnTime; p.hitFlash = 0.2; state.shake = 6;
+  p.anim = 'hurt'; p.animT = 0;
   addText(p.a, 70, '-' + Math.round(dmg), '#ff5a5a');
-  if (p.hp <= 0) { state.over = true; events.onGameOver?.(state); }
+  if (p.hp <= 0) { state.over = true; p.anim = 'death'; p.animT = 0; events.onGameOver?.(state); }
+}
+
+// Animasyon durum makinesi: ölüm > hasar > saldırı (bitene kadar) > koşu/bekleme
+function updatePlayerAnim(p, dt) {
+  const set = ANIMS.male?.animations;
+  p.animT += dt;
+  if (!set || p.anim === 'death') return;
+  const cur = set[p.anim];
+  const done = cur && !cur.loop && p.animT >= cur.frames.length / cur.fps;
+  if (p.anim === 'hurt' || p.anim.startsWith('attack_')) {
+    if (!done) return;
+  }
+  const next = Math.abs(Input.axis) > 0 ? 'run' : 'idle';
+  if (p.anim !== next) { p.anim = next; p.animT = 0; }
 }
 
 export function update(dt) {
@@ -77,6 +92,7 @@ export function update(dt) {
   p.invuln = Math.max(0, p.invuln - dt);
   p.hitFlash = Math.max(0, p.hitFlash - dt);
   p.atkTimer = Math.max(0, p.atkTimer - dt);
+  updatePlayerAnim(p, dt);
 
   if (!state.over) {
     state.spawnTimer -= dt;
@@ -109,6 +125,7 @@ export function update(dt) {
     if (best) {
       p.dir = wrapAngle(best.a - p.a) >= 0 ? 1 : -1;
       p.atkTimer = C.player.attackCooldown;
+      p.anim = `attack_${p.combo + 1}`; p.animT = 0; p.combo = (p.combo + 1) % 3;
       state.slashes.push({ life: C.player.slashDuration, max: C.player.slashDuration, dir: p.dir, a: p.a });
       for (const en of state.enemies) {
         const diff = wrapAngle(en.a - p.a);

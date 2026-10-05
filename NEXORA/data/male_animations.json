@@ -1,0 +1,128 @@
+{
+  "canvas": [
+    224,
+    176
+  ],
+  "pivot": [
+    112,
+    164
+  ],
+  "facing": "right",
+  "scale": 0.6,
+  "animations": {
+    "idle": {
+      "frames": [
+        "idle_01",
+        "idle_02",
+        "idle_03",
+        "idle_04",
+        "idle_05",
+        "idle_06",
+        "idle_07",
+        "idle_08"
+      ],
+      "fps": 6,
+      "loop": true
+    },
+    "run": {
+      "frames": [
+        "run_01",
+        "run_02",
+        "run_03",
+        "run_04",
+        "run_05",
+        "run_06",
+        "run_07",
+        "run_08"
+      ],
+      "fps": 12,
+      "loop": true
+    },
+    "attack_1": {
+      "frames": [
+        "attack_1_01",
+        "attack_1_02",
+        "attack_1_03",
+        "attack_1_04",
+        "attack_1_05",
+        "attack_1_06"
+      ],
+      "fps": 14,
+      "loop": false
+    },
+    "attack_2": {
+      "frames": [
+        "attack_2_01",
+        "attack_2_02",
+        "attack_2_03",
+        "attack_2_04",
+        "attack_2_05",
+        "attack_2_06",
+        "attack_2_07"
+      ],
+      "fps": 14,
+      "loop": false
+    },
+    "attack_3": {
+      "frames": [
+        "attack_3_01",
+        "attack_3_02",
+        "attack_3_03",
+        "attack_3_04"
+      ],
+      "fps": 14,
+      "loop": false
+    },
+    "jump": {
+      "frames": [
+        "jump_01",
+        "jump_02",
+        "jump_03",
+        "jump_04",
+        "jump_05",
+        "jump_06",
+        "jump_07"
+      ],
+      "fps": 10,
+      "loop": false
+    },
+    "hurt": {
+      "frames": [
+        "hurt_01",
+        "hurt_02",
+        "hurt_03",
+        "hurt_04",
+        "hurt_05",
+        "hurt_06"
+      ],
+      "fps": 8,
+      "loop": false
+    },
+    "death": {
+      "frames": [
+        "death_01",
+        "death_02",
+        "death_03",
+        "death_04",
+        "death_05",
+        "death_06"
+      ],
+      "fps": 8,
+      "loop": false
+    },
+    "turn": {
+      "frames": [
+        "turn_01",
+        "turn_02",
+        "turn_03",
+        "turn_04",
+        "turn_05",
+        "turn_06",
+        "turn_07",
+        "turn_08"
+      ],
+      "fps": 8,
+      "loop": false
+    }
+  }
+}

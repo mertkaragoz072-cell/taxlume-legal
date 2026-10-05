@@ -17,6 +17,7 @@ export function createPlayer() {
     hp: c.maxHp, maxHp: c.maxHp, damage: c.attackDamage,
     level: 1, xp: 0, xpNext: xpForLevel(1), coins: 0,
     atkTimer: 0, invuln: 0, hitFlash: 0,
+    anim: 'idle', animT: 0, combo: 0,         // animasyon: ad, geçen süre, saldırı kombosu (0..2)
   };
 }
 

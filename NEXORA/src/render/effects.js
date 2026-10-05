@@ -1,4 +1,5 @@
-import { CONFIG } from '../core/config.js';
+import { CONFIG, ANIMS } from '../core/config.js';
+import { Assets } from '../core/assets.js';
 import { clamp } from '../core/util.js';
 import { TAU } from '../core/util.js';
 import { state } from '../game/state.js';
@@ -13,6 +14,8 @@ export function drawCoin(ctx, c) {
 }
 
 export function drawSlash(ctx, s) {
+  if (Assets.get('male_' + (ANIMS.male?.animations.attack_1?.frames[0] || ''))) return; // sprite karelerinde efekt zaten var
+
   const t = 1 - s.life / s.max;
   onSurface(ctx, state.player.a, 0, state.player.lean, () => {
     ctx.scale(s.dir, 1); ctx.translate(18, -30);

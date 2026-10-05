@@ -15,6 +15,7 @@ src/
 - Dünya modeli: her şey gezegen yüzeyinde **açı (radyan)** ile konumlanır; kamera oyuncunun açısını takip eder.
 - Tüm sayısal değerler `data/config.json` ve `data/enemies.json` içindedir; kodda sabit yok.
 - Yeni düşman: `data/enemies.json`'a kayıt ekle (çizim için `render/characters.js` → `drawEnemy`; sprite varsa otomatik kullanılır).
+- Oyuncu animasyonu: `data/male_animations.json` + `game/systems.js` (durum makinesi: death > hurt > attack_1-3 kombo > run/idle) + `render/characters.js` (kare seç, pivot'a çiz). Sprite yoksa placeholder.
 - Sprite: `Assets.get(anahtar)` varsa çizilir, yoksa Canvas placeholder. Anahtarlar `data/asset_manifest.json`'dan gelir.
 
 ## Çalıştırma
