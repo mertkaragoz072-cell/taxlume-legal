@@ -41,9 +41,9 @@
   },
   "goblin_brute": {
     "name": "Elite Goblin Brute",
-    "heightUnits": 132,
-    "width": 92,
-    "barWidth": 70,
+    "heightUnits": 112,
+    "width": 80,
+    "barWidth": 62,
     "hp": 130,
     "damage": 16,
     "speed": 40,
@@ -53,7 +53,7 @@
       10
     ],
     "coinValue": 1,
-    "contactRange": 64,
+    "contactRange": 58,
     "attackCooldown": 1.4,
     "minLevel": 3,
     "weight": 0,

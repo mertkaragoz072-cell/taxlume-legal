@@ -43,8 +43,8 @@ export function drawPlanet(ctx) {
   ctx.lineWidth = 60 * sc; ctx.strokeStyle = 'rgba(30,90,40,.18)'; ctx.stroke();
   ctx.restore();
   // ince, yumuşak kontur: koyu yeşil (siyah değil), hafif dış gölge + iç parlak çim kenarı
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.lineWidth = 7 * sc; ctx.strokeStyle = 'rgba(28,78,40,.16)'; ctx.stroke();
-  ctx.lineWidth = 2.2 * sc + 0.4; ctx.strokeStyle = 'rgba(28,78,40,.8)'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.lineWidth = 6 * sc; ctx.strokeStyle = 'rgba(28,78,40,.12)'; ctx.stroke();
+  ctx.lineWidth = 1.6 * sc + 0.3; ctx.strokeStyle = 'rgba(28,78,40,.62)'; ctx.stroke();
 
   drawDecals(ctx);
   drawDecor(ctx, 'back');

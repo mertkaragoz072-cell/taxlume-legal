@@ -64,35 +64,36 @@
     "healOnLevelUp": 0.5
   },
   "enemies": {
-    "maxAlive": 4,
+    "maxAlive": 3,
     "waveMin": 2,
     "waveMax": 3,
     "waveGapUnits": [
-      85,
-      140
+      110,
+      210
     ],
     "waveInterval": 5.5,
-    "waveIntervalMin": 2.8,
+    "waveIntervalMin": 3.2,
     "waveIntervalDecayPerLevel": 0.25,
     "refillWhenAtMost": 1,
     "spawnOffscreen": 130,
     "hpScalePerLevel": 0.2,
     "damageScalePerLevel": 0.1,
-    "separation": 0.95,
+    "separation": 1.25,
     "elite": {
-      "firstAfter": 22,
-      "interval": 30,
-      "intervalMin": 20,
+      "firstAfter": 40,
+      "interval": 50,
+      "intervalMin": 34,
       "maxAlive": 1,
-      "normalWhileElite": 2
-    }
+      "normalWhileElite": 1
+    },
+    "speedJitter": 0.16
   },
   "loot": {
     "coinPopSpeed": 160,
     "coinGravity": 700
   },
   "hud": {
-    "damageNumberLife": 0.7,
+    "damageNumberLife": 0.55,
     "avatar": {
       "key": "male_idle_01",
       "crop": [

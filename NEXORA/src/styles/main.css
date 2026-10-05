@@ -26,7 +26,7 @@ html, body {
 .coin-icon { border-radius: 50%; background: #ffd23f; }
 .gem-icon { background: #c04bff; transform: rotate(45deg) scale(.8); border-radius: 3px; }
 .hud-side { position: absolute; top: calc(env(safe-area-inset-top) + 68px); left: calc(env(safe-area-inset-left) + 12px); display: flex; flex-direction: column; gap: 5px; }
-.sidebtn { width: 30px; height: 30px; border-radius: 10px; border: 3px solid #1f2a44; background: #2f3b5e; font-size: 14px; line-height: 1; opacity: .6; pointer-events: none; }
+.sidebtn { width: 32px; height: 32px; border-radius: 10px; border: 3px solid #1f2a44; background: linear-gradient(#4a5b8c, #34426e); box-shadow: 0 0 0 1px rgba(241,194,75,.55), 0 3px 0 rgba(31,42,68,.55); color: #fff; font-size: 16px; line-height: 1; opacity: .92; pointer-events: none; text-shadow: 0 1px 0 #1f2a44; }
 
 /* Sabit sanal joystick: sol alt, şeffaf cam görünüm. Dokunma alanı: ekranın sol %55'i. */
 #joystick {

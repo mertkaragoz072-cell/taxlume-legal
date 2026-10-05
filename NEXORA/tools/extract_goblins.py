@@ -23,7 +23,7 @@ TYPES = {
         anims={'walk': ([0, 1, 2, 3, 4], 8, True), 'attack': ([5, 6, 7], 9, False), 'hurt': ([8, 9], 8, False), 'death': ([10], 6, False)}),
     'goblin_scout': dict(y=(350, 600), portrait=(25, 298), centers=[335, 430, 545, 660, 775, 915, 1040, 1170, 1300, 1440], target=68,
         anims={'walk': ([0, 1, 2, 3], 8, True), 'attack': ([4, 5, 6, 7], 10, False), 'hurt': ([8], 8, False), 'death': ([9], 6, False)}),
-    'goblin_brute': dict(y=(605, 950), portrait=(10, 425), excl=(0, 430, 0, 775), x_lo=300, centers=[365, 470, 590, 710, 835, 985, 1160, 1295, 1430], target=128,
+    'goblin_brute': dict(y=(605, 950), portrait=(10, 425), excl=(0, 430, 0, 775), x_lo=300, centers=[365, 470, 590, 710, 835, 985, 1160, 1295, 1430], target=109,
         anims={'walk': ([0, 1, 2], 6, True), 'attack': ([3, 4, 5, 6], 8, False), 'hurt': ([7], 8, False), 'death': ([8], 6, False)}),
 }
 IMPACT = {'goblin_warrior': 0.5, 'goblin_scout': 0.5, 'goblin_brute': 0.62}   # saldırı animasyonunun hasar anı (0-1)

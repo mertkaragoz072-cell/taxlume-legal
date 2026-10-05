@@ -23,9 +23,9 @@ export function onLane(ctx, a, h, extraRot, fn) { onSurface(ctx, a, h - CONFIG.c
 
 // Yumuşak zemin gölgesi (ayakların altında)
 export function groundShadow(ctx, w, alpha = 0.28) {
-  ctx.save(); ctx.scale(1, 0.22);
+  ctx.save(); ctx.scale(1, 0.2);
   const g = ctx.createRadialGradient(0, 0, 0, 0, 0, w / 2);
-  g.addColorStop(0, `rgba(20,40,20,${alpha})`); g.addColorStop(1, 'rgba(20,40,20,0)');
+  g.addColorStop(0, `rgba(20,40,20,${alpha})`); g.addColorStop(0.6, `rgba(20,40,20,${alpha * 0.45})`); g.addColorStop(1, 'rgba(20,40,20,0)');
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, w / 2, 0, Math.PI * 2); ctx.fill(); ctx.restore();
 }
 

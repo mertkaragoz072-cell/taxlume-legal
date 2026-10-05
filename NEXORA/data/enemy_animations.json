@@ -111,10 +111,10 @@
       114,
       212
     ],
-    "scale": 1.143,
+    "scale": 0.973,
     "facing": "right",
     "idleHeightPx": 112,
-    "targetHeight": 128,
+    "targetHeight": 109,
     "anims": {
       "walk": {
         "frames": [

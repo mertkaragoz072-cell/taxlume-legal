@@ -48,3 +48,10 @@ Tasarım ve teknik notlar.
 - **Saldırı:** temas menzilinde düşman durur, saldırı animasyonunu oynar, hasarı animasyonun etki anında (`impact`) — oyuncu hâlâ menzildeyse — uygular. Hafif düşmanın (knockResist < 0.5) saldırısı vuruşla bölünür; elite bölünmez.
 - **Vuruş/ölüm:** vurulunca hurt karesi + beyaz parlama + geri itme; ölünce death karesi, sonra solar.
 - **Tür adları:** `goblin_scout` (küçük), `goblin_warrior` (normal), `goblin_brute` (**elite**, eski `ogre_brute`).
+
+## Son polish
+- **Oyuncu:** sprite ölçeği 1.05 (≈ %10 büyük, ≈ 89 birim); ayak altında küçük oval gölge; koşarken/saldırırken hafif squash-stretch, hasarda kırmızı parlama + ezilme. Saldırı efekti sprite karelerinin parçası olduğu için oyuncuyla birlikte ölçeklenir.
+- **Düşmanlar:** küçük/normal goblin boyları aynı; elite brute %15 küçük (132 → 112 birim). Normal düşman en fazla 3 (gruplar 2–3'lü, aralarında 110–210 birim boşluk, her düşmana ±%16 rastgele hız → sıkışık sabit sıra oluşmaz, `separation` 1.25). Elite seyrek: ilk 40 sn sonra, sonra ≈ 50 sn'de bir; elite varken normal düşman üst sınırı 1.
+- **Zemin:** kontur daha ince (≈ 1.6 birim) ve yarı saydam koyu yeşil; ayak gölgeleri daha yumuşak oval.
+- **Parallax:** hafifletildi (gökyüzü bulutları 0.009, uzak adalar 0.022, orta adalar 0.052, sis 0.07, tepeler 0.13, ağaç şeridi 0.26, zemin 1.0). Ön plan dekoru karakterlerin altında kalır.
+- **HUD:** soldaki 3 menü ikonu daha görünür (opaklık .92, altın ince çerçeve). Ekranda aynı anda en fazla 8 hasar yazısı (ömür 0.55 sn) ve 4 vuruş kıvılcımı.

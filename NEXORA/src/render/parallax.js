@@ -39,7 +39,7 @@ export function drawBackground(ctx) {
   drawSky(ctx, crest);
   if (!hasSprites()) { drawLegacy(ctx, travelled, crest); return; }
 
-  strip(ctx, travelled, 0.012, 1700, (x0, P) => farClouds(ctx, x0, P, crest));
+  strip(ctx, travelled, 0.009, 1700, (x0, P) => farClouds(ctx, x0, P, crest));
   for (const L of WORLD.islandLayers) {
     const haze = L.id === 'islands_far' ? 0.45 : 0.18;
     strip(ctx, travelled, L.speed, L.period, (x0, P) => {
@@ -52,9 +52,9 @@ export function drawBackground(ctx) {
       ctx.globalAlpha = 1;
     }, 1300 * s);
   }
-  strip(ctx, travelled, 0.10, 1100, (x0, P) => fogBanks(ctx, x0, P, crest));
-  strip(ctx, travelled, 0.18, 900, (x0, P) => hills(ctx, x0, P, crest, 0.18));
-  strip(ctx, travelled, 0.36, 760, (x0, P) => nearTrees(ctx, x0, P, crest));
+  strip(ctx, travelled, 0.07, 1100, (x0, P) => fogBanks(ctx, x0, P, crest));
+  strip(ctx, travelled, 0.13, 900, (x0, P) => hills(ctx, x0, P, crest, 0.18));
+  strip(ctx, travelled, 0.26, 760, (x0, P) => nearTrees(ctx, x0, P, crest));
   // ufuk boyunca yumuşak sis: ağaç/tepe tabanını zemine bağlar
   const hg = ctx.createLinearGradient(0, crest - 90 * s, 0, crest + 40 * s);
   hg.addColorStop(0, 'rgba(214,236,255,0)'); hg.addColorStop(0.7, 'rgba(214,236,255,.35)'); hg.addColorStop(1, 'rgba(214,236,255,0)');

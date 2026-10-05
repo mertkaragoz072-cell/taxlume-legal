@@ -18,7 +18,7 @@ export function spawnEnemy(typeKey, offsetUnits = 0) {
     type: typeKey, def: t,
     a: p.a + (View.visibleRightUnits + e.spawnOffscreen + offsetUnits) / CONFIG.planet.radius,   // sağ ekran kenarının hemen dışı
     hp, maxHp: hp, damage: t.damage * (1 + e.damageScalePerLevel * lv),
-    atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, hitDone: false,
+    atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, hitDone: false, speedMul: 1 + rand(-e.speedJitter, e.speedJitter),
   });
 }
 
@@ -56,6 +56,7 @@ function spawnElite() {
 
 function addText(a, h, text, color, scale = 1) {
   const life = CONFIG.hud.damageNumberLife;
+  if (state.texts.length > 8) state.texts.shift();                 // ekranı yazıyla doldurma
   state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8), scale });
 }
 
@@ -63,7 +64,7 @@ function damageEnemy(en, dmg) {
   en.hp -= dmg; en.flash = 0.14; en.knock = 1 - en.def.knockResist; en.stagger = 0.22;
   if (en.def.knockResist < 0.5 && en.attackT >= 0) { en.attackT = -1; en.atkTimer = 0.5; }   // hafif düşmanın saldırısı vuruşla bölünür; elite bölünmez
   addText(en.a, en.def.heightUnits + 10, '-' + Math.round(dmg), '#ff4a4a', 0.75 + en.def.heightUnits / 300);
-  state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.22, max: 0.22, k: en.def.heightUnits / 100, dir: -en.face });
+  if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 140, dir: -en.face });
   if (en.hp <= 0 && !en.dead) killEnemy(en);
 }
 
@@ -177,7 +178,7 @@ export function update(dt) {
     }
     if (en.stagger > 0 && en.knock > 0) { en.a -= en.face * en.knock * 40 / r * dt * 6; en.knock = Math.max(0, en.knock - dt * 6); return; }
     if (en.knock > 0) { en.a -= en.face * en.knock * 40 / r * dt * 6; en.knock = Math.max(0, en.knock - dt * 6); }
-    else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * dt, Math.max(free, 0)) / r;
+    else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * dt, Math.max(free, 0)) / r;
     else if (free < -4) en.a -= en.face * Math.min(40 * dt, -free) / r;          // iç içe girdiyse hafifçe geri it
     if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) { en.attackT = 0; en.hitDone = false; }
   });

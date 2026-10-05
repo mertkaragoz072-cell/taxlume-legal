@@ -23,10 +23,15 @@ function drawPlayerSprite(ctx) {
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
   onLane(ctx, p.a, 0, p.lean * 0.5, () => {
-    groundShadow(ctx, 70);
+    groundShadow(ctx, 56, 0.34);                                   // ayakların altında küçük yumuşak oval
     ctx.scale(p.dir, 1);
-    const sc = meta.scale;
+    const sc = meta.scale, hurt = Math.max(0, p.hitFlash) / 0.2, running = Math.abs(p.moveAxis) > 0 && p.anim === 'run';
+    // squash/stretch: koşarken adım ritmi, saldırıda hafif uzama, hasarda ezilme (ayaklar sabit kalır)
+    const sy = 1 + (running ? Math.sin(p.walk * 2) * 0.025 : 0) - hurt * 0.07 + (p.anim.startsWith('attack_') ? 0.02 : 0);
+    const sx = 1 / sy;
+    ctx.scale(sx, sy);
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+    if (hurt > 0) { ctx.globalAlpha = 0.55 * hurt; ctx.drawImage(whiteSilhouette(img, 'p:' + anim.frames[i], '#ff5a4a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc); }
   });
   ctx.globalAlpha = 1;
   return true;
@@ -70,11 +75,12 @@ export function drawPlayer(ctx) {
 // Düşman sprite'ı: referans sanat setinden çıkarılmış tek statik poz. Canlandırma prosedürel:
 // yürürken sekme/ezilme/sallanma, vuruşta beyaz parlama, ölümde yan yatıp solma.
 const whiteCache = new Map();
-function whiteSilhouette(img, key) {
-  if (whiteCache.has(key)) return whiteCache.get(key);
+function whiteSilhouette(img, key, color = '#fff') {
+  const id = key + color;
+  if (whiteCache.has(id)) return whiteCache.get(id);
   const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
-  const g = cv.getContext('2d'); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
-  whiteCache.set(key, cv); return cv;
+  const g = cv.getContext('2d'); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, cv.width, cv.height);
+  whiteCache.set(id, cv); return cv;
 }
 
 // Düşman animasyonu: durum → kare. death > hurt > attack > walk. Kareler data/enemy_animations.json'dan (goblin sheet'i).
@@ -101,7 +107,9 @@ export function drawEnemy(ctx, en) {
     ctx.globalAlpha = 1 - dp;
     groundShadow(ctx, def.width * (en.dead ? 1.2 : 0.85), 0.36);      // ayakların hemen altında
     ctx.save();
+    const hitK = en.dead ? 0 : Math.max(0, en.stagger || 0) / 0.22, sq = en.dead ? 1 : 1 + (en.attackT >= 0 ? 0.03 : Math.sin(en.bob * 1.6) * 0.02) - hitK * 0.07;
     ctx.scale(meta.facing === 'right' ? en.face : -en.face, 1);       // kareler sağa bakar; oyuncuya dönük çizilir
+    ctx.scale(1 / sq, sq);                                            // hafif squash/stretch + vuruş ezilmesi (ayak sabit)
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
     if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.8; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
     ctx.restore();

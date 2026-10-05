@@ -334,7 +334,7 @@
   "islandLayers": [
     {
       "id": "islands_far",
-      "speed": 0.03,
+      "speed": 0.022,
       "period": 1500,
       "alpha": 0.85,
       "items": [
@@ -372,7 +372,7 @@
     },
     {
       "id": "islands_mid",
-      "speed": 0.07,
+      "speed": 0.052,
       "period": 1300,
       "alpha": 1.0,
       "items": [

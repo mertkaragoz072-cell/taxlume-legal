@@ -17,7 +17,7 @@ from scipy import ndimage as ndi
 SRC = 'assets/references/nexora_male_sheet_v2_source.png'
 CANVAS = (224, 176)          # genişlik, yükseklik
 PIVOT = (112, 164)           # ayak noktası: x orta, y alttan 12 px yukarı
-SCALE = 0.95                 # oyun içi çizim ölçeği (karakter ≈ 81 oyun birimi; küçük goblin ≈ 68, elite ogre ≈ 152)
+SCALE = 1.05                 # oyun içi çizim ölçeği (karakter ≈ 89 oyun birimi)
 ANIM_DIR = 'assets/characters/male/animations'
 FX_DIR = 'assets/effects/attacks'
 PART_DIR = 'assets/effects/particles'

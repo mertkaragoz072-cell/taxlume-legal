@@ -83,10 +83,10 @@ world['decor'] = [
 ]
 # [anahtar, x oranı (periyot içinde), y oranı (ufuktan yukarı, 0=ufuk 1=üst), yükseklik birim]
 world['islandLayers'] = [
-    {'id': 'islands_far', 'speed': 0.03, 'period': 1500, 'alpha': 0.85,
+    {'id': 'islands_far', 'speed': 0.022, 'period': 1500, 'alpha': 0.85,
      'items': [['island_02', 0.06, 0.62, 120], ['island_05', 0.30, 0.82, 100], ['island_07', 0.52, 0.55, 110],
                ['island_04', 0.74, 0.78, 105], ['island_03', 0.92, 0.50, 125]]},
-    {'id': 'islands_mid', 'speed': 0.07, 'period': 1300, 'alpha': 1.0,
+    {'id': 'islands_mid', 'speed': 0.052, 'period': 1300, 'alpha': 1.0,
      'items': [['island_01', 0.15, 0.55, 230], ['island_06', 0.62, 0.40, 175]]},
 ]
 json.dump(world, open('data/world_props.json', 'w'), indent=2, ensure_ascii=False); open('data/world_props.json', 'a').write('\n')
