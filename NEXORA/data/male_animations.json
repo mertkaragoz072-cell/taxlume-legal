@@ -19,9 +19,12 @@
         "idle_05",
         "idle_06",
         "idle_07",
-        "idle_08"
+        "idle_08",
+        "idle_09",
+        "idle_10",
+        "idle_11"
       ],
-      "fps": 6,
+      "fps": 8,
       "loop": true
     },
     "run": {
@@ -33,9 +36,12 @@
         "run_05",
         "run_06",
         "run_07",
-        "run_08"
+        "run_08",
+        "run_09",
+        "run_10",
+        "run_11"
       ],
-      "fps": 12,
+      "fps": 14,
       "loop": true
     },
     "attack_1": {
@@ -45,9 +51,12 @@
         "attack_1_03",
         "attack_1_04",
         "attack_1_05",
-        "attack_1_06"
+        "attack_1_06",
+        "attack_1_07",
+        "attack_1_08",
+        "attack_1_09"
       ],
-      "fps": 14,
+      "fps": 16,
       "loop": false
     },
     "attack_2": {
@@ -58,9 +67,11 @@
         "attack_2_04",
         "attack_2_05",
         "attack_2_06",
-        "attack_2_07"
+        "attack_2_07",
+        "attack_2_08",
+        "attack_2_09"
       ],
-      "fps": 14,
+      "fps": 16,
       "loop": false
     },
     "attack_3": {
@@ -81,7 +92,9 @@
         "jump_04",
         "jump_05",
         "jump_06",
-        "jump_07"
+        "jump_07",
+        "jump_08",
+        "jump_09"
       ],
       "fps": 10,
       "loop": false
@@ -93,9 +106,12 @@
         "hurt_03",
         "hurt_04",
         "hurt_05",
-        "hurt_06"
+        "hurt_06",
+        "hurt_07",
+        "hurt_08",
+        "hurt_09"
       ],
-      "fps": 8,
+      "fps": 10,
       "loop": false
     },
     "death": {
@@ -105,7 +121,10 @@
         "death_03",
         "death_04",
         "death_05",
-        "death_06"
+        "death_06",
+        "death_07",
+        "death_08",
+        "death_09"
       ],
       "fps": 8,
       "loop": false
@@ -119,9 +138,14 @@
         "turn_05",
         "turn_06",
         "turn_07",
-        "turn_08"
+        "turn_08",
+        "turn_09",
+        "turn_10",
+        "turn_11",
+        "turn_12",
+        "turn_13"
       ],
-      "fps": 8,
+      "fps": 10,
       "loop": false
     }
   }

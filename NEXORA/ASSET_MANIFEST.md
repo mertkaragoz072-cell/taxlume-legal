@@ -50,8 +50,8 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Not: `assets/references/` içinde atlas yok; geldiğinde kırpılıp ayrı PNG'lere dönüştürülecek.
 
 ## Erkek karakter (MEVCUT — `tools/extract_male_sheet.py` ile üretildi)
-- `assets/characters/male/animations/`: 9 animasyon, 60 kare PNG (224×176, pivot 112,164). Ayrıntı, FPS, kalite sınırları: klasör README.
-- `assets/effects/attacks/`: 20 saf efekt PNG. Ayrıntı: klasör README.
-- Kaynak: `assets/references/nexora_male_sheet_source.png`. Veri: `data/male_animations.json`. Manifest anahtarları: `male_<kare>` (ör. `male_idle_01`), `fx_<efekt>`.
+- `assets/characters/male/animations/`: 9 animasyon, 84 kare PNG (224×176, pivot 112,164). Ayrıntı: klasör README.
+- `assets/effects/attacks/`: 19 saf efekt PNG. `assets/effects/particles/`: 9 toz/kırıntı PNG. Ayrıntı: klasör README'leri.
+- Kaynak: `assets/references/nexora_male_sheet_v2_source.png`. Veri: `data/male_animations.json`. Manifest anahtarları: `male_<kare>` (ör. `male_idle_01`), `fx_<efekt>`, `particle_<ad>`.
 - Oyunda kullanımda: idle, run, attack_1-3 (kombo), hurt, death. `jump` ve `turn` dosyaları var ama oyun henüz çağırmıyor.
-- Eksik: kadın karakter, toz/kırıntı particle'ları, temiz (efektsiz) saldırı kareleri.
+- Eksik: kadın karakter, efektsiz (temiz) saldırı kareleri.
