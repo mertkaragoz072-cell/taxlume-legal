@@ -25,6 +25,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
+import { GoodMomModal } from "./src/components/GoodMomModal";
 import { ProposalModal } from "./src/components/ProposalModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { CARAVAN_STEPS, CaravanTutorialModal } from "./src/components/CaravanTutorialModal";
@@ -113,6 +114,9 @@ function Game() {
   // Shown every time "Başla" is pressed, before the title hands off to the
   // game — see ProposalModal.
   const [proposalVisible, setProposalVisible] = useState(false);
+  // Follows straight on from accepting the proposal, before the game opens
+  // — see GoodMomModal.
+  const [goodMomModalVisible, setGoodMomModalVisible] = useState(false);
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
@@ -301,6 +305,13 @@ function Game() {
             visible={proposalVisible}
             onAccept={() => {
               setProposalVisible(false);
+              setGoodMomModalVisible(true);
+            }}
+          />
+          <GoodMomModal
+            visible={goodMomModalVisible}
+            onDismiss={() => {
+              setGoodMomModalVisible(false);
               start();
               sounds.startMusic();
               setTitleVisible(false);
