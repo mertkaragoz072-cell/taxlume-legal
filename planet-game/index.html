@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#5ec4ff">
+<title>Planet Warrior</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game">
+  <canvas id="canvas"></canvas>
+
+  <div id="hud">
+    <div class="hud-row">
+      <div id="level-badge">LV <span id="hud-level">1</span></div>
+      <div id="hud-bars">
+        <div class="bar hp"><div id="hp-fill" class="fill"></div><span id="hp-text">100/100</span></div>
+        <div class="bar xp"><div id="xp-fill" class="fill"></div><span id="xp-text">XP</span></div>
+      </div>
+      <div id="coin-box"><i class="coin-icon"></i><span id="hud-coins">0</span></div>
+    </div>
+  </div>
+
+  <div id="joystick" aria-hidden="true"><div id="stick"></div></div>
+
+  <div id="gameover" class="hidden">
+    <div class="panel">
+      <h1>Game Over</h1>
+      <p>Seviye <b id="go-level">1</b> &middot; Öldürülen <b id="go-kills">0</b> &middot; Coin <b id="go-coins">0</b></p>
+      <button id="restart-btn" type="button">Yeniden Başla</button>
+    </div>
+  </div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
