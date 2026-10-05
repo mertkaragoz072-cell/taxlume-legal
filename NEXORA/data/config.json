@@ -17,6 +17,28 @@
       "_comment": "ground_tile deseni: dünya biriminde döşeme boyutu (ölçek = scale px→birim), gölge yoğunlukları",
       "scale": 1.1,
       "alpha": 0.92
+    },
+    "decals": {
+      "_comment": "Toprak lekeleri: yüzeye serpilen yassı decal'lar (ground_dirt_NN). every=ortalama aralık (birim), depth=yüzeyin ne kadar altında (birim), width=hedef genişlik (birim)",
+      "keys": [
+        "ground_dirt_01",
+        "ground_dirt_02",
+        "ground_dirt_03",
+        "ground_dirt_04",
+        "ground_dirt_05"
+      ],
+      "every": 380,
+      "scale": [
+        0.7,
+        1.4
+      ],
+      "depth": [
+        6,
+        80
+      ],
+      "width": 230,
+      "squash": 1.0,
+      "alpha": 0.75
     }
   },
   "player": {

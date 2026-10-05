@@ -9,4 +9,7 @@ Dünya zemini görselleri. Kaynak: `../../references/nexora_world_ground_source.
 
 - Oyunda: `ground_tile` gezegenin yerel koordinatlarında `repeat` desen olarak döşenir, gezegenle birlikte döner (zemin yürüdükçe kayar). Ölçek ve opaklık: `data/config.json → planet.groundTexture`. Üstüne derinlik gölgesi (yüzeyden aşağı koyulaşır) ve parlama bandı çizilir.
 - Manifest anahtarları: `ground_hill`, `ground_tile`.
-- Sınırlar: doku düz çim; kaynaktaki turuncu toprak lekeleri dokuya **alınmadı** (ayna döşemede zikzak şekil oluşturuyordu). İstenirse toprak lekeleri ayrı decal sprite olarak çıkarılabilir.
+| `dirt_patch_01…05.png` | Tepeden ayrılmış turuncu/kahve **toprak lekesi decal'ları** (yumuşak kenarlı, şeffaf; 122–365 px geniş). Eğimli olanlar yatay hizalandı. |
+
+- Toprak lekeleri dokuya gömülmedi (ayna döşemede zikzak oluşturuyordu); bunun yerine yüzeye rastgele **serpilir** (`data/config.json → planet.decals`: aralık, ölçek, derinlik, genişlik, opaklık). Manifest anahtarları: `ground_dirt_01…05`.
+- Sınırlar: lekeler tepeden renk eşiğiyle ayrıldığı için kenarlarında hafif sarı-yeşil halo olabilir; `dirt_patch_03` altında ince koyu bir çizgi kırıntısı var.

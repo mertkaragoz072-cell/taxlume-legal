@@ -61,4 +61,5 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 - Kaynak: `assets/references/nexora_world_props_source.png` (gerçek alfa kanallı). Üstteki büyük panorama kompozisyonu kesilmedi.
 - Veri: `data/world_props.json` (prop yükseklikleri, dekor saçılım kuralları, ada katmanları). Manifest anahtarları: `bg_*`, `prop_*`.
 - Zemin: `assets/environment/ground/` → `hill_ground.png` (tam tepe, referans), `ground_tile_grass.png` (oyunda desen olarak döşenir). Kaynak: `assets/references/nexora_world_ground_source.png`.
-- Eksik: toprak lekesi decal'ı, kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.
+- Toprak lekeleri: `dirt_patch_01…05.png` (decal, zemine serpilir).
+- Eksik: kar/çöl/volkan bölge setleri, yakın parallax ağaç/dağ katmanları.

@@ -45,9 +45,42 @@ tile = np.concatenate([top, top[::-1]], axis=0)
 Image.fromarray(tile, 'RGB').save('assets/environment/ground/ground_tile_grass.png', optimize=True)
 print('tile', tile.shape[1], tile.shape[0], 'kutu', BOX)
 
+# ---- toprak lekeleri: turuncu bölgeler yumuşak kenarlı decal olarak ayrılır (zemine saçılır)
+import glob, os
+for f in glob.glob('assets/environment/ground/dirt_patch_*.png'): os.remove(f)
+Hh = np.asarray(Image.fromarray(hill, 'RGBA')).astype(int)
+r_, g_, b_, a_ = [Hh[..., i] for i in range(4)]
+dirt = (a_ > 250) & (r_ > 150) & (r_ > g_ + 12) & (b_ < 120) & (r_ - b_ > 70)       # turuncu/kahve (sarı parlamayı alma)
+dirt &= ndi.binary_erosion(a_ > 250, iterations=14)                                     # tepe kenarındaki outline/çalı kırıntıları dışarıda
+dirt = ndi.binary_opening(dirt, iterations=2)
+lb, nb = ndi.label(ndi.binary_dilation(dirt, iterations=4))
+keep = [sl for sl in ndi.find_objects(lb) if dirt[sl].sum() > 1400 and (sl[1].stop - sl[1].start) < 500]
+keep.sort(key=lambda sl: sl[1].start)
+dirt_keys = []
+for i, sl in enumerate(keep, 1):
+    pad = 10
+    y0_, y1_ = max(0, sl[0].start - pad), min(Hh.shape[0], sl[0].stop + pad)
+    x0_, x1_ = max(0, sl[1].start - pad), min(Hh.shape[1], sl[1].stop + pad)
+    m = np.zeros(Hh.shape[:2], bool); m[sl] = dirt[sl]
+    soft = ndi.gaussian_filter(ndi.binary_dilation(m, iterations=3).astype(float), 4)[y0_:y1_, x0_:x1_]
+    patch = np.dstack([Hh[y0_:y1_, x0_:x1_, :3].astype(np.uint8), (np.clip(soft * 1.4, 0, 1) * 255).astype(np.uint8)])
+    name = f'dirt_patch_{i:02d}'
+    # eğimli yamaları yatay hizala (tepe eğimi kaynakta baked; oyunda yüzeye teğet çizilecek)
+    pim = Image.fromarray(patch, 'RGBA')
+    ys_, xs_ = np.where(patch[..., 3] > 128)
+    ang = 0.5 * np.arctan2(2 * np.cov(xs_, ys_)[0, 1], np.var(xs_) - np.var(ys_))
+    pim = pim.rotate(np.degrees(ang), resample=Image.BICUBIC, expand=True)
+    bb = pim.getbbox(); pim = pim.crop(bb)
+    patch = np.asarray(pim)
+    pim.save(f'assets/environment/ground/{name}.png', optimize=True)
+    dirt_keys.append(name); print(name, patch.shape[1], patch.shape[0])
+
 mp = 'data/asset_manifest.json'
 man = json.load(open(mp))
 man['images']['ground_hill'] = 'assets/environment/ground/hill_ground.png'
 man['images']['ground_tile'] = 'assets/environment/ground/ground_tile_grass.png'
+for k in list(man['images']):
+    if k.startswith('ground_dirt_'): del man['images'][k]
+for k in dirt_keys: man['images']['ground_' + k.replace('_patch', '')] = f'assets/environment/ground/{k}.png'
 man['images'] = dict(sorted(man['images'].items()))
 json.dump(man, open(mp, 'w'), indent=2, ensure_ascii=False); open(mp, 'a').write('\n')

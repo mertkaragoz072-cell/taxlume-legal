@@ -44,7 +44,30 @@ export function drawPlanet(ctx) {
   ctx.restore();
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); outlined(ctx, 5 * sc + 1);
 
+  drawDecals(ctx);
   drawDecor(ctx, 'back');
+}
+
+// Toprak lekeleri: zeminde yassı decal'lar (yüzeyin altında, ayakların bastığı çim alanı)
+let DECALS = null;
+function drawDecals(ctx) {
+  const cfg = CONFIG.planet.decals; if (!cfg || !Assets.get(cfg.keys[0])) return;
+  if (!DECALS) {
+    DECALS = []; let seed = 23;
+    const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    for (let i = 0, n = Math.round(TAU * CONFIG.planet.radius / cfg.every); i < n; i++) {
+      DECALS.push({ key: cfg.keys[Math.floor(r() * cfg.keys.length)], a: r() * TAU - Math.PI, s: cfg.scale[0] + r() * (cfg.scale[1] - cfg.scale[0]), depth: cfg.depth[0] + r() * (cfg.depth[1] - cfg.depth[0]) });
+    }
+    DECALS.sort((p, q) => p.depth - q.depth);
+  }
+  ctx.globalAlpha = cfg.alpha ?? 1;
+  for (const d of DECALS) {
+    if (!visible(d.a)) continue;
+    const img = Assets.get(d.key); if (!img) continue;
+    const k = (cfg.width * d.s) / img.width;
+    onSurface(ctx, d.a, -d.depth, 0, () => ctx.drawImage(img, -img.width * k / 2, -img.height * k * cfg.squash / 2, img.width * k, img.height * k * cfg.squash));
+  }
+  ctx.globalAlpha = 1;
 }
 
 // Karakterlerin ÖNÜNDE kalan ön plan dekoru (büyük kaya/çalı; yüzeyin biraz altında). renderer.js karakterlerden sonra çağırır.
