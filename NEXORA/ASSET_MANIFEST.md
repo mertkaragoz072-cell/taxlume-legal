@@ -5,7 +5,8 @@ Durum: **klasör yapısı hazır; ayrı kaynak asset görseli yok. Oyun şu an t
 Aşağıdaki dosyalar PNG olarak ayrıca üretilip ilgili klasörlere eklenmeli. Animasyon kareleri bağımsız PNG olarak önerilir; sprite sheet tercih edilirse `sheet.png` ve `sheet.json` (frame adları, sıra, FPS, pivot) birlikte eklenmelidir.
 
 ## Marka
-- `assets/logo/nexora_logo.png` — şeffaf arka planlı ana logo; gerekirse `nexora_logo_horizontal.png`, `nexora_logo_mark.png`
+- ✅ `assets/logo/nexora_logo.png` — **MEVCUT**. Şeffaf arka planlı ana logo, 1467×737 px, RGBA. Kaynak: `assets/references/nexora_logo_source.png` (1536×1024, siyah arka planlı orijinal). Siyah arka plan çıkarıldı, dış outline korundu. Manifest anahtarı: `nexora_logo`.
+- ⏳ `nexora_logo_horizontal.png`, `nexora_logo_mark.png` — henüz yok
 - `assets/app_icon/app_icon_1024.png` — kare uygulama ikonu; platform boyutları sonradan türetilebilir
 
 ## Oyuncu karakterleri
@@ -44,6 +45,6 @@ Ses ve font klasörleri de hazır. Sesler `audio/music/` ve `audio/sfx/` altınd
 
 ## Kod ↔ asset bağlantısı
 - Oyun görselleri `data/asset_manifest.json` içindeki `images` tablosundan yüklenir. Bir PNG diske eklenince buraya anahtarıyla kaydedilir; kayıt yoksa placeholder çizilir. Düşman anahtarı = `data/enemies.json` tür adı (ör. `goblin`).
-- Şu an manifest'te **hiç görsel kayıtlı değil**; hiçbir dosya var gibi referanslanmadı.
+- Manifest'te kayıtlı tek görsel: `nexora_logo`. Diğer hiçbir dosya var gibi referanslanmadı.
 - Sprite ölçü/pivot/FPS standardı: `docs/README.md`.
 - Not: `assets/references/` içinde atlas yok; geldiğinde kırpılıp ayrı PNG'lere dönüştürülecek.

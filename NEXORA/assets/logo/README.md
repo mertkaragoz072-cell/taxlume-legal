@@ -1,6 +1,9 @@
 # assets / logo
 
-Bu klasör ilgili NEXORA dosyaları için hazırlandı. Gerçek, ayrı dosyalar eklenene kadar içerik placeholder olarak boş bırakılmıştır. 
+| Dosya | Açıklama |
+|---|---|
+| `nexora_logo.png` | Ana logo. 1467×737 px, şeffaf PNG (RGBA). Altın "NEXORA" yazısı, mavi kristal, taş kemer, yapraklar, ortada gezegen. |
 
-Asset atlası/reference görseli tekil oyun asseti gibi buraya kopyalanmamalıdır.
-
+- Kaynak: `../references/nexora_logo_source.png` (1536×1024, siyah arka planlı). `nexora_logo.png` bundan arka plan çıkarılarak türetildi; kalın siyah outline korundu, kenarlar yumuşatıldı.
+- Koyu zeminde en iyi görünür; açık zeminde siyah outline sayesinde de okunur.
+- Henüz yok: `nexora_logo_horizontal.png`, `nexora_logo_mark.png` (bkz. `ASSET_MANIFEST.md`).
