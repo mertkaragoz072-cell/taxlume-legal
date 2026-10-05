@@ -41,7 +41,7 @@
     "damageScalePerLevel": 0.1,
     "spawnJitter": 160,
     "spawnOffscreen": 90,
-    "baseScale": 1.5
+    "baseScale": 1.05
   },
   "loot": {
     "coinPopSpeed": 160,

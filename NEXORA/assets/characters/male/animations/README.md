@@ -6,7 +6,7 @@ Erkek karakter (kızıl atkılı kılıç savaşçısı) animasyon kareleri: **8
 - Üreten betik: `tools/extract_male_sheet.py` (yeniden çalıştırılabilir; çıktıyı baştan üretir ve manifest'i günceller).
 - **Tuval:** 224×176 px, RGBA. **Pivot:** `(112, 164)` = ayakların orta noktası (alttan 12 px yukarı). Tüm kareler bu noktaya göre hizalı; çizerken pivotu yüzeydeki konuma koy.
 - **Yön:** sağa bakar. Sola dönüş kodda yatay yansıtılarak yapılır.
-- **Oyun içi ölçek:** `1.0` (`data/male_animations.json` → `scale`).
+- **Oyun içi ölçek:** `1.15` (`data/male_animations.json` → `scale`).
 - Kare sırası: dosya numarası = oynatım sırası (`_01` ilk). Kare süresi = 1/FPS.
 
 | Animasyon | Kare | FPS | Döngü | Dosyalar |

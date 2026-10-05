@@ -10,7 +10,7 @@
       4
     ],
     "coinValue": 1,
-    "contactRange": 42,
+    "contactRange": 34,
     "attackCooldown": 0.9,
     "size": 1.0,
     "colors": {
