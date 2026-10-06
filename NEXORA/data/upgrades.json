@@ -57,8 +57,9 @@
       "bonus": "+{v}%",
       "max": 10,
       "weight": 10,
-      "title": "KILIÇ USTALIĞI",
-      "desc": "Saldırı Hasarı"
+      "title": "SALDIRI GÜCÜ",
+      "desc": "Saldırı Gücü",
+      "art": "assets/ui/cards/card_attack_damage.png"
     },
     {
       "id": "attackSpeed",

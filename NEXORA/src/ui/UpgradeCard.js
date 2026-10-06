@@ -17,7 +17,10 @@ export function showUpgrade(cards, epic, onPick) {
     const RR = UPGRADES.rarities[c.rarity] || {};
     const b = document.createElement('button'); b.type = 'button'; b.className = `up-card r-${c.rarity}`;
     b.style.setProperty('--cat', UPGRADES.categories[c.category]?.color || '#888'); b.style.setProperty('--rar', RR.color || '#888');
-    b.innerHTML = `<div class="rib">${RR.name || ''}</div><div class="ic"><span>${c.icon}</span></div><div class="nm">${c.title || c.name}</div><div class="ds">${c.desc || c.name}</div><div class="tx">${c.bonus}</div>${c.level ? `<div class="tt">Toplam ${c.total}</div>` : ''}<div class="lv">${c.levelText}</div><i class="shine"></i>`;
+    if (c.art) {                                           // hazır kart görseli: başlık/ikon görselde, bonus ve seviye üstüne yazılır
+      b.classList.add('art'); b.style.backgroundImage = `url(${c.art})`;
+      b.innerHTML = `<div class="tx">${c.bonus}</div><div class="lv">${c.levelText}</div>`;
+    } else b.innerHTML = `<div class="rib">${RR.name || ''}</div><div class="ic"><span>${c.icon}</span></div><div class="nm">${c.title || c.name}</div><div class="ds">${c.desc || c.name}</div><div class="tx">${c.bonus}</div>${c.level ? `<div class="tt">Toplam ${c.total}</div>` : ''}<div class="lv">${c.levelText}</div><i class="shine"></i>`;
     b.addEventListener('click', () => pick(i)); list.appendChild(b);
   });
   const key = (e) => { const n = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code); if (n >= 0 && n < cards.length) pick(n); };

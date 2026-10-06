@@ -50,7 +50,7 @@ export function rollCards(n = 3, boss = false) {
     const u = pool.splice(i, 1)[0], lv = p.upgrades[u.id] || 0;
     const rarity = rollRarity(boss, u.max - lv), gain = UPGRADES.rarities[rarity].gain;
     cards.push({
-      id: u.id, icon: u.icon, name: u.name, title: u.title, desc: u.desc, category: u.category, rarity, level: lv, next: lv + gain, gain,
+      id: u.id, icon: u.icon, name: u.name, title: u.title, desc: u.desc, art: u.art, category: u.category, rarity, level: lv, next: lv + gain, gain,
       bonus: bonusText(u, gain), total: bonusText(u, lv + gain),
       levelText: lv ? `SEVİYE ${lv} → ${lv + gain}` : `YENİ · SEVİYE ${gain}`,
     });

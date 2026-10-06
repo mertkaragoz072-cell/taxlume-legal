@@ -196,3 +196,14 @@ html, body {
 .up-card.r-legendary { box-shadow: 0 6px 0 rgba(20,30,60,.7), 0 0 22px rgba(255,178,31,.95), inset 0 0 0 3px rgba(255,255,255,.55); }
 .up-card.picked .shine { animation: cardshine .5s ease-out; }
 .up-card.picked { box-shadow: 0 0 0 4px #ffd23f, 0 0 34px rgba(255,210,60,1); }
+
+/* --- Hazır kart görseli (assets/ui/cards/*.png, 1145×1374 oranı): metin alanları temizlenmiş, bonus + seviye üstüne yazılır --- */
+.up-card.art { container-type: inline-size; position: relative; display: block; width: auto; height: clamp(170px, 62vh, 340px); aspect-ratio: 1145 / 1374; padding: 0; border: 0; border-radius: 0; overflow: visible;
+  background: transparent center / 100% 100% no-repeat; box-shadow: none; filter: drop-shadow(0 6px 0 rgba(20,30,60,.55)); }
+.up-card.art.r-rare { filter: drop-shadow(0 0 10px rgba(58,139,255,.9)) drop-shadow(0 6px 0 rgba(20,30,60,.55)); }
+.up-card.art.r-epic { filter: drop-shadow(0 0 12px rgba(176,75,255,.95)) drop-shadow(0 6px 0 rgba(20,30,60,.55)); }
+.up-card.art.r-legendary { filter: drop-shadow(0 0 14px rgba(255,178,31,1)) drop-shadow(0 6px 0 rgba(20,30,60,.55)); }
+.up-card.art .tx { position: absolute; left: 0; right: 0; top: 69%; font-size: 17cqw; line-height: 1; color: #ffd23f; -webkit-text-stroke: 3px #7a2a00; paint-order: stroke fill; text-shadow: 0 .06em 0 #7a2a00; }
+.up-card.art .lv { position: absolute; left: 24%; right: 24%; top: 85.2%; height: 5.6%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; background: none; border-radius: 0; font-size: 5cqw; color: #fff3d6; text-shadow: 0 1px 0 #3a0000; white-space: nowrap; }
+.up-card.art:hover, .up-card.art:focus-visible { transform: translateY(-5px) scale(1.04); }
+.up-card.art.picked { box-shadow: none; filter: drop-shadow(0 0 22px #ffd23f) drop-shadow(0 0 8px #fff); }
