@@ -170,3 +170,6 @@ Dalga ölçeği (`stage.waveScale`): HP ×1/1.15/1.30/1.45/1.65, hasar, hız ve 
 
 ## Faz 17 — Combat polish & denge
 Maks can her karede formülden doğrulanır (120 + 15/seviye, × can güçlendirmesi; hatalı değer düzeltilir). Tek vuruş maks canın %35'ini geçmez (`player.maxHitFrac`). Hit-stop 0.05 (kritik 0.08). Düşmanlar oyuncunun içine girmez/arkasına geçmez (`en.side` + `minGap = genişlik/2 + 26`, boss +30). Boss: hasar 22, hammer ×1.4 / charge ×1.2 / smash ×1.6, hitbox'lar dünya birimi yarıçaplarıyla sprite'tan bağımsız. Boss ölümü: slow motion (~1 sn), XP/coin patlaması, ödüller bir kez (gem/coin doğrudan eklenir, yerdekiler görsel).
+
+## Faz 18 — Çarpışma, boss mesafesi ve ödül akışı
+Düşmanlar birbirinin içine girmez (oyuncuya sıralı, genişlik payıyla), oyuncunun içine girmez/arkasına geçmez. Boss savaş mesafesi: boss kendi `contactRange/engage/hitRange/hitPad/minGap` ile oyuncudan ~185 birim uzakta durur (ekranda oyuncu %37, boss ~%55); hammer/smash/charge menzilleri buna göre. Boss ölünce sahnedeki diğer düşmanlar ödülsüz temizlenir, HP barı kaybolur; banner "+250 COIN · +300 XP"; boss savaşı sırasında seviye atlandıysa (`waves.json → bossUpgrade: 'ifLevelUp'`) önce kart ekranı, sonra bölüm tamamlama. Hasar yazıları üst üste binmez; çoklu seviye atlama tek "LEVEL UP! ×n" yazısı. Boss giriş overlay'i 1.8 sn.

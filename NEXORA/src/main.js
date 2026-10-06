@@ -109,7 +109,7 @@ async function boot() {
     Audio.play('levelup');
     showChapterClear({ name: chapterInfo(cleared).name, rewards: { coins: R.coins, gems: R.gems, xp }, next: chapterInfo(cleared + 1).name }, () => { continueChapter(); saveNowRef?.(); });
   };
-  events.onBoss = (k, amount) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
+  events.onBoss = (k, amount, xp) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN · +${xp} XP`); Audio.play('levelup'); } };
   events.onUpgrade = (cards, boss) => {
     Audio.play('gem');
     showUpgrade(cards, boss, (card) => {

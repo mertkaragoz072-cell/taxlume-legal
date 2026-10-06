@@ -87,12 +87,16 @@
       5,
       6
     ],
-    "contactRange": 120,
+    "contactRange": 230,
     "attackCooldown": 2.0,
     "minLevel": 1,
     "weight": 0,
     "knockResist": 0.95,
     "boss": true,
-    "elite": true
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150
   }
 }

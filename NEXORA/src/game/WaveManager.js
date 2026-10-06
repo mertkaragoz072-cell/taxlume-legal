@@ -18,7 +18,8 @@ export const wavesPerStage = () => WAVES.wavesPerStage;
 export function startWave(stage = state.wave.stage, n = state.wave.n, boss = state.wave.boss) {
   const w = state.wave;
   w.stage = Math.max(1, stage); w.n = Math.min(WAVES.wavesPerStage, Math.max(1, n)); w.boss = !!boss;
-  w.phase = 'intro'; w.t = w.boss ? WAVES.bossIntroSec : WAVES.introSec; w.queue = buildQueue(w.stage, w.n, w.boss); w.total = w.queue.length; w.spawnT = 0.4;
+  w.phase = 'intro'; w.t = w.boss ? WAVES.bossIntroSec : WAVES.introSec;
+  if (w.boss) w.levelAtBoss = state.player.level; w.queue = buildQueue(w.stage, w.n, w.boss); w.total = w.queue.length; w.spawnT = 0.4;
   events.onWaveStart?.(w.n, { boss: w.boss, stage: w.stage });
 }
 
@@ -67,7 +68,8 @@ export function updateWaves(dt) {
   if (w.phase === 'complete') {
     w.t -= dt;
     if (w.t <= 0) {
-      if (w.boss && !WAVES.bossUpgrade) chapterClear();                 // boss ödülü sonrası bölüm tamamlama ekranı (waves.json → bossUpgrade: true ile önce kart ekranı)
+      const lvUp = state.player.level > (w.levelAtBoss ?? 99999);
+      if (w.boss && (WAVES.bossUpgrade === false || (WAVES.bossUpgrade === 'ifLevelUp' && !lvUp))) chapterClear();                 // boss ödülü sonrası bölüm tamamlama ekranı (waves.json → bossUpgrade: true ile önce kart ekranı)
       else if (w.boss || w.n >= WAVES.wavesPerStage) {                 // 5. dalga (ve isteğe bağlı boss) sonrası: oyun durur, 3 kart
         w.phase = 'upgrade'; state.paused = true;
         w.epicNext = false;

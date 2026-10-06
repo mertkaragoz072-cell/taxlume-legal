@@ -51,7 +51,7 @@ function impact(en, atk) {
     sp.phase = 'recover'; sp.dur = H.recover;
   } else if (atk === 'smash') {
     const S = B.smash;
-    state.rings.push({ a: en.a, t: 0, life: 0.75, color: '#ff5a4a' }); state.rings.push({ a: en.a, t: 0, life: 0.5, color: '#ffd0a0' });
+    state.rings.push({ a: en.a, t: 0, life: 0.75, color: '#ff5a4a', r: S.radius }); state.rings.push({ a: en.a, t: 0, life: 0.5, color: '#ffd0a0' });
     groundDust(en.a, 28, 280); state.shake = Math.max(state.shake, 12); hitStop(0.08); events.onBoss?.('slam');
     if (dist(p.a, en.a) <= S.radius) hurtPlayer(en.damage * S.damageMul);
     sp.phase = 'recover'; sp.dur = S.recover;

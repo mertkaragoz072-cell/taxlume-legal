@@ -37,29 +37,29 @@
     },
     "hammer": {
       "windup": 0.55,
-      "reach": 60,
-      "radius": 70,
+      "reach": 120,
+      "radius": 80,
       "damageMul": 1.4,
       "recover": 0.55,
-      "maxDist": 170
+      "maxDist": 260
     },
     "charge": {
       "pullback": 0.5,
       "speed": 560,
       "radius": 55,
-      "hitRadius": 92,
+      "hitRadius": 160,
       "damageMul": 1.2,
       "recover": 0.8,
-      "minDist": 190,
+      "minDist": 160,
       "maxDist": 520,
       "pullSpeed": 70
     },
     "smash": {
       "windup": 0.65,
-      "radius": 150,
+      "radius": 215,
       "damageMul": 1.6,
       "recover": 0.6,
-      "maxDist": 230
+      "maxDist": 300
     },
     "minGapExtra": 30
   },
@@ -148,6 +148,6 @@
     },
     "waveXp": 6
   },
-  "bossUpgrade": false,
-  "bossIntroSec": 2.4
+  "bossUpgrade": "ifLevelUp",
+  "bossIntroSec": 1.8
 }

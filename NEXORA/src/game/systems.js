@@ -53,7 +53,7 @@ export function update(dt) {
   let ax = 0;
   if (!state.over) {
     const retreating = p.retreat > 0;
-    const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < C.player.engageRange * S.rangeMul; });
+    const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < Math.max(C.player.engageRange * S.rangeMul, en.def.engage ?? 0); });
     if (retreating) { ax = -1; p.retreat -= dt; }              // boss saldırısını okuyup geri çekilme (boss.js tetikler)
     else if (!ahead && !live.some((e) => e.sp && e.sp.phase !== 'idle')) ax = 1;   // boss özel saldırıdayken kahraman yerinde bekler (boss'u geçip kaçmaz)
     p.dir = 1;
@@ -100,7 +100,7 @@ export function update(dt) {
       en.attackT += dt;
       if (!en.hitDone && en.attackT >= adur * (A?.impact ?? 0.5)) {
         en.hitDone = true;
-        if (dist <= en.def.contactRange * 1.25) hurtPlayer(en.damage);
+        if (dist <= (en.def.hitRange ?? en.def.contactRange * 1.25)) hurtPlayer(en.damage);   // boss'un gerçek erişimi hitRange (sprite'tan bağımsız)
       }
       if (en.attackT >= adur) { en.attackT = -1; en.atkTimer = en.attackCd ?? en.def.attackCooldown; }
       return;
@@ -112,7 +112,7 @@ export function update(dt) {
     else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * slowMul(en) * dt, Math.max(free, 0)) / r;
     else if (free < -4) en.a -= en.face * Math.min(40 * dt, -free) / r;          // iç içe girdiyse hafifçe geri it
     if (dist < en.def.contactRange * 0.55) en.a -= en.face * Math.min(60 * dt, en.def.contactRange * 0.55 - dist) / r;   // oyuncunun içine girmesin
-    if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) en.windT = C.enemies.windupSec;   // önce hazırlık, sonra saldırı
+    if (dist <= (en.def.hitRange ? en.def.hitRange * 0.95 : en.def.contactRange) && en.atkTimer <= 0 && en.stagger <= 0) en.windT = C.enemies.windupSec;   // önce hazırlık, sonra saldırı
   });
   // Çarpışma: düşman oyuncunun içine girmez ve arkasına geçmez — kendi tarafında (doğduğu sağ taraf) en az minGap uzakta kalır
   for (const en of live) {
@@ -120,6 +120,13 @@ export function update(dt) {
     const minGap = en.def.minGap ?? (en.def.width * 0.5 + (en.def.boss ? WAVES.boss.minGapExtra : 26));
     const gap = wrapAngle(en.a - p.a) * r * en.side;
     if (gap < minGap) en.a = p.a + en.side * minGap / r;
+  }
+  // Düşmanlar birbirinin içine girmez (boss dahil): oyuncuya yakından uzağa sıralı, her biri öncekinin arkasında en az genişlik payı bırakır
+  const lined = live.filter((e) => !e.dead).sort((x, y) => (x.a - p.a) * x.side - (y.a - p.a) * y.side);
+  for (let i = 1; i < lined.length; i++) {
+    const a = lined[i - 1], b = lined[i], need = ((a.def.width + b.def.width) * 0.5) * 0.85;
+    const gapAB = (b.a - a.a) * r * b.side;
+    if (gapAB < need) b.a = a.a + b.side * need / r;
   }
   for (const en of state.enemies) if (en.dead) en.deathT += dt;
 
@@ -130,7 +137,7 @@ export function update(dt) {
   const attackAnimBusy = p.anim.startsWith('attack') && cur && p.animT < cur.frames.length / cur.fps * 0.9;
   if (!state.over && p.atkTimer <= 0 && !attackAnimBusy) {
     let best = null, bd = C.player.attackRange * S.rangeMul;
-    for (const en of live) { const d = surfaceDist(en.a, p.a); if (d <= bd) { bd = d; best = en; } }
+    for (const en of live) { const d = surfaceDist(en.a, p.a) - (en.def.hitPad ?? 0); if (d <= bd) { bd = d; best = en; } }   // hitPad: büyük boss'a daha uzaktan vurulabilir
     if (best || manual) {
       p.dir = 1;
       p.atkTimer = C.player.attackCooldown / S.attackSpeedMul;
@@ -147,7 +154,7 @@ export function update(dt) {
         if (en.dead) continue;
         const diff = wrapAngle(en.a - p.a), d = Math.abs(diff) * r;
         // vuruş kutusu: kahramanın baktığı yönde, menzil + düşmanın yarım genişliği
-        if (Math.sign(diff) === p.hitDir && d <= C.player.attackRange * S.rangeMul + en.def.width * 0.35) hitEnemy(en, p.damage);
+        if (Math.sign(diff) === p.hitDir && d <= C.player.attackRange * S.rangeMul + (en.def.hitPad ?? en.def.width * 0.35)) hitEnemy(en, p.damage);
       }
     }
   }

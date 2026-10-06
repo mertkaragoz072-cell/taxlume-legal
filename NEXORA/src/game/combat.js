@@ -7,7 +7,9 @@ import { derived, recalcMaxHp, probRound } from './PlayerStats.js';
 import { hitSparks, deathBurst, hurtSparks, hitStop, xpBurst } from './fx.js';
 
 export function addText(a, h, text, color, scale = 1, crit = false) {
-  const life = CONFIG.hud.damageNumberLife;
+  const life = CONFIG.hud.damageNumberLife, R = CONFIG.planet.radius;
+  for (let k = 0; k < 5; k++) if (state.texts.some((t) => Math.abs(t.a - a) * R < 46 && Math.abs(t.h - h) < 20)) h += 22;   // yazılar üst üste binmesin
+  a += rand(-6, 6) / R;
   if (state.texts.length > 8) state.texts.shift();                 // ekranı yazıyla doldurma
   state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8), scale, crit });
 }
@@ -85,11 +87,17 @@ export function killEnemy(en) {
   for (let i = 0; i < n; i++) spawnPickup(en.a, 'coin', 14, 1);
   const gems = en.def.gems ? Math.round(rand(en.def.gems[0], en.def.gems[1])) : (Math.random() < (en.def.gemChance || 0) ? 1 : 0);
   for (let i = 0; i < gems; i++) spawnPickup(en.a, 'gem', 18, 1.1);
-  const xp = gainXp(en.def.xp);
+  const xp = gainXp(en.def.xp); state.lastXp = xp;
   addText(en.a, en.def.heightUnits + 34, '+' + xp + ' XP', '#7ee7ff', 0.7);
   events.onKill?.(en);
   deathBurst(en.a, en.def.heightUnits * 0.4, !!en.def.boss);
-  if (en.def.boss) { state.shake = Math.max(state.shake, 12); hitStop(0.14); state.slowT = 1.0; xpBurst(en.a, en.def.heightUnits * 0.6); bossReward(en); }
+  if (en.def.boss) { clearOthers(en); state.shake = Math.max(state.shake, 12); hitStop(0.14); state.slowT = 1.0; xpBurst(en.a, en.def.heightUnits * 0.6); bossReward(en); }
+}
+
+// Boss ölünce sahnedeki diğer düşmanlar ödülsüz temizlenir (ölüm animasyonu + toz) ve bekleyen doğuşlar iptal olur
+function clearOthers(boss) {
+  for (const o of state.enemies) if (o !== boss && !o.dead) { o.dead = true; o.rewarded = true; o.deathT = 0; deathBurst(o.a, o.def.heightUnits * 0.4, false); }
+  state.wave.queue = [];
 }
 
 // Boss ödülü: doğrudan coin (250 × boss coin çarpanı) + görsel coin yağmuru, gem, tam iyileşme, sonraki seçimin EFSANE olması
@@ -104,23 +112,23 @@ function bossReward() {                       // coin + gem pickup + tam iyileş
   if (R.epicUpgrade) state.wave.epicNext = true;
   state.bossReward = amount;
   events.onCoin?.();
-  events.onBoss?.('dead', amount);
+  events.onBoss?.('dead', amount, state.lastXp);
 }
 
 // XP: XP çarpanı uygulanır; döndürülen = eklenen XP
 export function gainXp(amount) {
   const p = state.player, L = CONFIG.leveling;
   amount = probRound(amount * derived(p).xpMul);
-  p.xp += amount;
+  p.xp += amount; const lv0 = p.level;
   while (p.xp >= p.xpNext) {
     p.xp -= p.xpNext; p.level++; p.xpNext = xpForLevel(p.level);
     p.damage += L.damagePerLevel;
     const before = p.maxHp; recalcMaxHp(p, true);
     p.hp = Math.min(p.maxHp, p.hp + (p.maxHp - p.hp) * L.healOnLevelUp);
-    addText(p.a, 150, 'LEVEL UP!', '#ffd23f');
     state.rings.push({ a: p.a, t: 0, life: 0.9 });
     events.onLevelUp?.(p.level);
   }
+  if (p.level > lv0) addText(p.a, 150, p.level - lv0 > 1 ? `LEVEL UP! ×${p.level - lv0}` : 'LEVEL UP!', '#ffd23f');   // tek yazı (çoklu seviye atlamada üst üste binmez)
   return amount;
 }
 

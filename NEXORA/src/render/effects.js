@@ -25,7 +25,7 @@ export function drawRing(ctx, g) {
   const u = g.t / g.life, k = 1 - Math.pow(1 - u, 3);
   onLane(ctx, g.a, 0, 0, () => {
     ctx.globalAlpha = 1 - u * 0.75;
-    ctx.beginPath(); ctx.ellipse(0, -2, 20 + k * (g.color ? 150 : 70), 5 + k * (g.color ? 26 : 12), 0, 0, TAU); ctx.lineWidth = 7 * (1 - u) + 1.5; ctx.strokeStyle = g.color || '#ffd23f'; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, -2, 20 + k * (g.r ?? (g.color ? 150 : 70)), 5 + k * (g.r ?? (g.color ? 150 : 70)) * 0.17, 0, 0, TAU); ctx.lineWidth = 7 * (1 - u) + 1.5; ctx.strokeStyle = g.color || '#ffd23f'; ctx.stroke();
     if (!g.color) for (let i = -3; i <= 3; i++) { const x = i * 11, hh = 30 + k * 60 + (i % 2 ? 14 : 0); const gr = ctx.createLinearGradient(0, 0, 0, -hh); gr.addColorStop(0, 'rgba(255,230,120,.8)'); gr.addColorStop(1, 'rgba(255,230,120,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 2, -hh * (0.4 + 0.6 * k), 4, hh * (0.4 + 0.6 * k)); }
     ctx.globalAlpha = 1;
   });
