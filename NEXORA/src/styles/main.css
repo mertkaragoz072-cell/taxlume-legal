@@ -217,3 +217,12 @@ html, body {
 
 #wave-box.wave-pop { animation: wavepop .7s ease-out; }
 @keyframes wavepop { 0% { transform: translateX(-50%) scale(1); } 30% { transform: translateX(-50%) scale(1.35); filter: brightness(1.25); } 100% { transform: translateX(-50%) scale(1); } }
+
+/* Boss HP: yumuşak düşen çubuk + hasar izi + öfke renkleri */
+#boss-bar .bb-trail { position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: #ffe7c2; opacity: .85; }
+#boss-bar .bb-fill { position: relative; transition: none; }
+#boss-bar.rage .bb-fill { background: linear-gradient(#ffb25a, #e0621a); }
+#boss-bar.enrage .bb-fill { background: linear-gradient(#ff5a7a, #b0102a); animation: bbpulse .5s infinite alternate; }
+#boss-bar.rage .bb-name, #boss-bar.enrage .bb-name { color: #ffb25a; }
+@keyframes bbpulse { to { filter: brightness(1.35); } }
+#banner.show.bossdead { animation-duration: 2.2s; }

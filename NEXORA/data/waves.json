@@ -11,12 +11,8 @@
   "bossType": "goblin_boss",
   "bossEscorts": 2,
   "boss": {
-    "slamEvery": 5,
-    "slamWind": 0.9,
-    "slamRadius": 120,
-    "slamDamageMul": 1.6,
     "summonAtHp": 0.5,
-    "enrageAtHp": 0.3,
+    "enrageAtHp": 0.2,
     "enrageSpeedMul": 1.35,
     "reward": {
       "coins": 250,
@@ -24,9 +20,49 @@
       "healFull": true,
       "epicUpgrade": false,
       "showerCoins": 24
+    },
+    "firstCd": 2.2,
+    "baseCd": [
+      2.6,
+      3.6
+    ],
+    "rageAtHp": 0.5,
+    "rageCdMul": 0.8,
+    "enrageCdMul": 0.6,
+    "rageSpeedMul": 1.15,
+    "dodge": {
+      "chance": 0.55,
+      "delay": 0.12,
+      "speed": 230
+    },
+    "hammer": {
+      "windup": 0.55,
+      "reach": 60,
+      "radius": 70,
+      "damageMul": 1.5,
+      "recover": 0.55,
+      "maxDist": 170
+    },
+    "charge": {
+      "pullback": 0.5,
+      "speed": 560,
+      "radius": 55,
+      "hitRadius": 62,
+      "damageMul": 1.3,
+      "recover": 0.8,
+      "minDist": 190,
+      "maxDist": 520,
+      "pullSpeed": 70
+    },
+    "smash": {
+      "windup": 0.7,
+      "radius": 150,
+      "damageMul": 1.8,
+      "recover": 0.6,
+      "maxDist": 230
     }
   },
-  "bossCompleteSec": 3.4,
+  "bossCompleteSec": 4.0,
   "wavesPerStage": 5,
   "waves": [
     [

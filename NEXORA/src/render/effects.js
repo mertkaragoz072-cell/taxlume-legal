@@ -1,6 +1,6 @@
 import { CONFIG, ANIMS, HERO, SKILLS } from '../core/config.js';
 import { Assets } from '../core/assets.js';
-import { clamp } from '../core/util.js';
+import { clamp, wrapAngle } from '../core/util.js';
 import { TAU } from '../core/util.js';
 import { state } from '../game/state.js';
 import { onLane, outline, outlined } from './draw.js';
@@ -49,11 +49,13 @@ export function drawSlash(ctx, s) {
 export function drawText(ctx, t) {
   onLane(ctx, t.a, t.h, 0, () => {
     ctx.globalAlpha = clamp(t.life / t.max * 1.5, 0, 1);
-    const big = t.text === 'LEVEL UP!';
-    ctx.font = `900 ${Math.round((big ? 28 : 24) * (t.scale || 1))}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
-    ctx.lineWidth = 4; ctx.strokeStyle = outline(); ctx.lineJoin = 'round';
+    const big = t.text === 'LEVEL UP!', age = 1 - t.life / t.max;
+    const pop = t.crit ? 1 + 0.45 * Math.pow(Math.max(0, 1 - age * 5), 2) : 1;          // kritik: büyüyerek belirir, sonra oturur
+    ctx.font = `900 ${Math.round((big ? 28 : 24) * (t.scale || 1) * pop)}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
+    ctx.lineWidth = t.crit ? 5 : 4; ctx.strokeStyle = t.crit ? '#7a2a00' : outline(); ctx.lineJoin = 'round';
+    if (t.crit) { ctx.shadowColor = 'rgba(255,190,40,.9)'; ctx.shadowBlur = 10; }
     ctx.strokeText(t.text, t.ox, 0); ctx.fillStyle = t.color; ctx.fillText(t.text, t.ox, 0);
-    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
   });
 }
 
@@ -91,9 +93,31 @@ export function drawSkillFx(ctx, f) {
 export function drawTelegraph(ctx, t) {
   const u = Math.min(1, t.t / t.life), pu = 0.5 + 0.5 * Math.sin(t.t * 18);
   onLane(ctx, t.a, 0, 0, () => {
+    if (t.line && t.boss) {                                           // hücum: boss'tan hedefe uyarı şeridi
+      const len = wrapAngle(t.boss.a - t.a) * CONFIG.planet.radius;
+      ctx.fillStyle = `rgba(255,50,40,${0.16 + 0.2 * u})`; ctx.fillRect(Math.min(0, len), -7, Math.abs(len), 14);
+    }
     ctx.beginPath(); ctx.ellipse(0, -1, t.radius, t.radius * 0.2, 0, 0, TAU);
     ctx.fillStyle = `rgba(255,50,40,${0.14 + 0.2 * u})`; ctx.fill();
     ctx.lineWidth = 2 + pu * 2; ctx.strokeStyle = `rgba(255,70,50,${0.55 + 0.4 * pu})`; ctx.stroke();
     ctx.beginPath(); ctx.ellipse(0, -1, t.radius * u, t.radius * 0.2 * u, 0, 0, TAU); ctx.strokeStyle = 'rgba(255,230,200,.9)'; ctx.lineWidth = 2; ctx.stroke();
   });
+}
+
+// Savaş parçacıkları (kıvılcım çizgisi / toz noktası): game/fx.js
+export function drawParticles(ctx, pt) {
+  const k = pt.life / pt.max;
+  onLane(ctx, pt.a, pt.h, 0, () => {
+    ctx.globalAlpha = Math.min(1, k * 1.6); ctx.fillStyle = pt.color; ctx.strokeStyle = pt.color;
+    if (pt.kind === 'streak') { const m = Math.hypot(pt.vx, pt.vh) || 1, L = 5 + pt.size * 2.2; ctx.lineWidth = pt.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-pt.vx / m * L, pt.vh / m * L); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(0, 0, pt.size * (0.5 + k * 0.6), 0, TAU); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  });
+}
+
+// Oyuncu hasar alınca ekran kenarlarında kısa kırmızı parlama (HUD'a dokunmaz; canvas içinde)
+export function drawHurtFlash(ctx, W, H, k) {
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+  g.addColorStop(0, 'rgba(255,40,30,0)'); g.addColorStop(1, `rgba(255,40,30,${0.38 * Math.min(1, k)})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 }

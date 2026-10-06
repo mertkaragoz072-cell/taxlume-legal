@@ -1,6 +1,6 @@
 // Ana oyun döngüsü (update). Parçalar: combat.js (hasar/ödül), EnemySpawner.js + WaveManager.js (dalgalar), boss.js, skills.js,
 // PlayerStats.js (güçlendirme statları). Burada: otomatik ilerleme, düşman hareketi, otomatik saldırı, pickup'lar, efekt zamanlayıcıları.
-import { CONFIG, ANIMS } from '../core/config.js';
+import { CONFIG, ANIMS, WAVES } from '../core/config.js';
 import { Input } from '../core/input.js';
 import { clamp, wrapAngle } from '../core/util.js';
 import { state } from './state.js';
@@ -10,6 +10,7 @@ import { updateWaves } from './WaveManager.js';
 import { updateBoss } from './boss.js';
 import { enemyMeta } from './EnemySpawner.js';
 import { derived } from './PlayerStats.js';
+import { updateParticles } from './fx.js';
 import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
 
 export { events };
@@ -33,6 +34,12 @@ function updatePlayerAnim(p, dt, atkMul) {
 
 export function update(dt) {
   if (state.paused) { Input.skillQueue.length = 0; Input.attackQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
+  if (state.hitStop > 0) {                                  // hit-stop: oyun mantığı kısa donar; saldırı sayacı akar (saldırı hızı bozulmaz), efektler yaşar
+    state.hitStop -= dt; state.player.atkTimer = Math.max(0, state.player.atkTimer - dt);
+    for (const t of state.texts) { t.life -= dt; t.h += 50 * dt; }
+    state.shake = Math.max(0, state.shake - dt * 30);
+    return;
+  }
   state.time += dt;
   const p = state.player, C = CONFIG, r = R(), S = derived(p);
 
@@ -41,11 +48,13 @@ export function update(dt) {
   const live = state.enemies.filter((x) => !x.dead);
   let ax = 0;
   if (!state.over) {
+    const retreating = p.retreat > 0;
     const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < C.player.engageRange * S.rangeMul; });
-    if (!ahead) ax = 1;
+    if (retreating) { ax = -1; p.retreat -= dt; }              // boss saldırısını okuyup geri çekilme (boss.js tetikler)
+    else if (!ahead && !live.some((e) => e.sp && e.sp.phase !== 'idle')) ax = 1;   // boss özel saldırıdayken kahraman yerinde bekler (boss'u geçip kaçmaz)
     p.dir = 1;
-    const speed = C.player.autoSpeed * S.moveMul;
-    p.a += ax * speed / r * dt;
+    const speed = retreating ? WAVES.boss.dodge.speed : C.player.autoSpeed * S.moveMul;
+    p.a += ax * speed / r * dt;                                // ax=-1 → geri
     if (ax !== 0) { p.walk += dt * 10 * S.moveMul; p.stride += speed * dt; }
     p.lean += (ax * 0.12 - p.lean) * Math.min(1, dt * 10);
     if (S.regen > 0 && p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + S.regen * dt);     // can yenileme
@@ -78,6 +87,11 @@ export function update(dt) {
       free = gap - (en.def.width + front.def.width) * 0.5 * C.enemies.separation;
     }
     const A = enemyMeta(en)?.anims.attack, adur = A ? A.frames.length / A.fps : 0.4;
+    if (en.windT > 0) {                                          // saldırı öncesi hazırlık: kısa süre geri çekilir (çizim: characters.js)
+      en.windT -= dt;
+      if (en.windT <= 0) { en.windT = -1; en.attackT = 0; en.hitDone = false; }
+      return;
+    }
     if (en.attackT >= 0) {                                       // saldırı animasyonu: dururken savurur, hasar etki anında
       en.attackT += dt;
       if (!en.hitDone && en.attackT >= adur * (A?.impact ?? 0.5)) {
@@ -94,7 +108,7 @@ export function update(dt) {
     else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * slowMul(en) * dt, Math.max(free, 0)) / r;
     else if (free < -4) en.a -= en.face * Math.min(40 * dt, -free) / r;          // iç içe girdiyse hafifçe geri it
     if (dist < en.def.contactRange * 0.55) en.a -= en.face * Math.min(60 * dt, en.def.contactRange * 0.55 - dist) / r;   // oyuncunun içine girmesin
-    if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) { en.attackT = 0; en.hitDone = false; }
+    if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) en.windT = C.enemies.windupSec;   // önce hazırlık, sonra saldırı
   });
   for (const en of state.enemies) if (en.dead) en.deathT += dt;
 
@@ -145,6 +159,7 @@ export function update(dt) {
   }
   state.coins = state.coins.filter((c) => !c.collected);
 
+  updateParticles(dt); state.hurtFlash = Math.max(0, state.hurtFlash - dt);
   for (const s of state.slashes) s.life -= dt;
   for (const f of state.hitFx) f.life -= dt;
   for (const g of state.rings) g.t += dt;

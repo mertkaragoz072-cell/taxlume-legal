@@ -156,3 +156,10 @@ Düşman `contactRange` ×1.5 (büyüyen sprite'larla oyuncu–düşman arası k
 
 ## Faz 14 — 4 farklı güç sınırı
 Oyuncu 4 farklı güç (`upgrades.json → maxDistinct: 4`) seçince kart ekranında yalnız sahip olduğu 4 gücün üst seviyeleri çıkar (maksimumdaki güç çıkmaz; hepsi maksimumdaysa ekran atlanır).
+
+## Faz 15 — Savaş hissi ve boss mekanikleri
+- `src/game/fx.js`: hit-stop (vuruş 0.04 sn, kritik 0.07, boss ölümü 0.14; saldırı sayacı akmaya devam eder → saldırı hızı değişmez), slash/kıvılcım, ölüm dumanı, yer tozu, hasar kıvılcımı parçacıkları. Kritik: büyük/pop'layan altın sayı + daha çok kıvılcım. Oyuncu hasar alınca kısa kırmızı kenar parlaması.
+- Goblin: saldırıdan önce `enemies.windupSec` (0.18 sn) hazırlık (geri çekilip yükselir); vuruş hazırlığı böler. Ölümde duman parçacığı.
+- Goblin Lordu (`boss.js`, ayarlar `waves.json → boss`): durum makinesi idle → windup (telegraph) → dash → recover. Saldırılar: **hammer** (yakın çekiç), **charge** (geri çekil, kırmızı daire + şerit, hücum), **ground smash** (0.7 sn uyarı, geniş şok dalgası). Öfke %50 (arası ×0.8, hız ×1.15, destek çağrısı), delilik %20 (arası ×0.6, hız ×1.35). HP barı yumuşak iner, arkada hasar izi, öfkede renk değişir.
+- Kahraman kendi hareket etmediği için "okuyup kaçma" otomatik geri çekilmeyle: `boss.dodge.chance` (0.55) olasılıkla uyarıdan 0.12 sn sonra geri koşar; boss özel saldırıdayken kahraman yerinde bekler.
+- Boss ölümü: büyük parçacık patlaması + sarsıntı + hit-stop, "BOSS YENİLDİ! +250 COIN", ardından "WAVE COMPLETE · Bölüm n tamamlandı".

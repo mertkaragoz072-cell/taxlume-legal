@@ -4,7 +4,7 @@ import { state } from '../game/state.js';
 import { visible } from './draw.js';
 import { drawSky, drawPlanet, drawForeground } from './world.js';
 import { drawPlayer, drawEnemy } from './characters.js';
-import { drawCoin, drawSlash, drawText, drawHitFx, drawSkillFx, drawRing, drawTelegraph } from './effects.js';
+import { drawCoin, drawSlash, drawText, drawHitFx, drawSkillFx, drawRing, drawTelegraph, drawParticles, drawHurtFlash } from './effects.js';
 
 // Çizim sırası: gökyüzü/parallax → gezegen+arka dekor → coin → düşman → oyuncu → slash → ön plan dekoru → yazılar
 export function render(ctx) {
@@ -23,7 +23,9 @@ export function render(ctx) {
   for (const g of state.rings) drawRing(ctx, g);
   for (const f of state.skillFx) if (visible(f.a + (f.type === 'wave' ? f.dir * f.x / 2000 : 0))) drawSkillFx(ctx, f);
   for (const f of state.hitFx) if (visible(f.a)) drawHitFx(ctx, f);
+  for (const pt of state.particles) if (visible(pt.a)) drawParticles(ctx, pt);
   drawForeground(ctx);
   for (const t of state.texts) if (visible(t.a)) drawText(ctx, t);
   ctx.restore();
+  if (state.hurtFlash > 0) drawHurtFlash(ctx, View.w, View.h, state.hurtFlash / 0.28);
 }

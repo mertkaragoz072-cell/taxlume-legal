@@ -5,13 +5,18 @@ import { WAVES } from '../core/config.js';
 let box, main, sub, banner, last = '';
 export function initWaveHud() { main = document.getElementById('wave-main'); sub = document.getElementById('wave-sub'); banner = document.getElementById('banner'); }
 
-let bar, fill, hpTxt;
+let bar, fill, trail, hpTxt, disp = 1, dispTrail = 1, wasBoss = false;
 function updateBossBar() {
-  bar ||= document.getElementById('boss-bar'); fill ||= document.getElementById('bb-fill');
+  bar ||= document.getElementById('boss-bar'); fill ||= document.getElementById('bb-fill'); trail ||= document.getElementById('bb-trail');
   const b = state.enemies.find((e) => e.def.boss && !e.dead);
   bar.classList.toggle('hidden', !b);
-  if (!b) return;
-  fill.style.width = Math.max(0, b.hp / b.maxHp * 100) + '%';
+  if (!b) { wasBoss = false; return; }
+  const k = Math.max(0, b.hp / b.maxHp);
+  if (!wasBoss) { disp = dispTrail = k; wasBoss = true; }
+  disp += (k - disp) * 0.22;                                    // ana çubuk yumuşak iner
+  dispTrail += (k - dispTrail) * 0.05;                          // arkadaki açık "hasar izi" daha yavaş
+  fill.style.width = (disp * 100).toFixed(2) + '%'; trail.style.width = (Math.max(dispTrail, disp) * 100).toFixed(2) + '%';
+  bar.classList.toggle('rage', k <= 0.5 && k > 0.2); bar.classList.toggle('enrage', k <= 0.2);
   (hpTxt ||= document.getElementById('bb-hp')).textContent = Math.max(0, Math.ceil(b.hp)) + ' / ' + Math.round(b.maxHp);
 }
 export function updateWaveHud() {

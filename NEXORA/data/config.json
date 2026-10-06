@@ -83,12 +83,13 @@
   },
   "enemies": {
     "spawnOffscreen": 130,
-    "spawnScreenFrac": 0.80,
+    "spawnScreenFrac": 0.8,
     "spawnMinGap": 95,
     "separation": 1.25,
     "speedJitter": 0.16,
     "eliteSpawnExtra": 260,
-    "eliteHoldRange": 190
+    "eliteHoldRange": 190,
+    "windupSec": 0.18
   },
   "loot": {
     "coinPopSpeed": 160,
@@ -115,7 +116,7 @@
     "visibleWidthUnits": 860,
     "visibleHeightUnits": 460,
     "heroScreenX": 0.37,
-    "groundScreenY": 0.70,
+    "groundScreenY": 0.7,
     "laneDepth": 14
   },
   "parallax": [

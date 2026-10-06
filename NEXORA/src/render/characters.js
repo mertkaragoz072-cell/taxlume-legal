@@ -195,8 +195,13 @@ export function drawEnemy(ctx, en) {
     const hitK = en.dead ? 0 : Math.max(0, en.stagger || 0) / 0.22, sq = en.dead ? 1 : 1 + (en.attackT >= 0 ? 0.03 : Math.sin(en.bob * 1.6) * 0.02) - hitK * 0.07;
     ctx.scale(meta.facing === 'right' ? en.face : -en.face, 1);       // kareler sağa bakar; oyuncuya dönük çizilir
     ctx.scale(1 / sq, sq);                                            // hafif squash/stretch + vuruş ezilmesi (ayak sabit)
+    const sp = en.sp, wk = en.windT > 0 ? Math.min(1, en.windT / CONFIG.enemies.windupSec) : 0;
+    if (wk > 0) { ctx.translate(-7 * (1 - wk * 0.4), -2 * wk); ctx.rotate(-0.1 * (1 - wk * 0.3)); }   // saldırı öncesi hazırlık: geri çekilip hafif yükselir
+    if (sp && sp.phase === 'windup' && sp.atk === 'charge') ctx.rotate(-0.12);                          // hücum hazırlığı: geriye yaslanır
+    else if (sp && sp.phase === 'dash') { ctx.rotate(0.16); ctx.translate(8, 0); }                       // hücum: öne eğik
+    else if (sp && sp.phase === 'recover') ctx.translate(0, Math.sin(en.bob * 2) * 1.2);
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
-    if (def.boss && !en.dead) { ctx.globalAlpha = 0.16 + 0.08 * Math.sin(state.time * 5); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.globalAlpha = 1; }
+    if (def.boss && !en.dead) { ctx.globalAlpha = (sp && sp.phase === 'windup' ? 0.32 + 0.22 * Math.sin(state.time * 22) : 0.16 + 0.08 * Math.sin(state.time * 5)) + (sp && sp.rage ? 0.1 * sp.rage : 0); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.globalAlpha = 1; }
     if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.5; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
     ctx.restore();
     ctx.globalAlpha = 1;

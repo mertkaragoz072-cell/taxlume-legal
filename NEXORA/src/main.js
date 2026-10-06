@@ -92,8 +92,11 @@ async function boot() {
   events.onSkill = (id) => Audio.play(id);
   const showOver = showGameOver;
   events.onWaveStart = (n, info) => { showBanner(info.boss ? 'BOSS WAVE' : `WAVE ${n} / 5`, info.boss ? 'boss' : '', info.boss ? 'GOBLIN LORDU geliyor!' : `Bölüm ${info.stage}`); Audio.play(info.boss ? 'skill2' : 'click'); };
-  events.onWaveComplete = (n, i) => { if (!i?.boss) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); } };
-  events.onBoss = (k, amount) => { if (k === 'slam') Audio.play('skill2'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
+  events.onWaveComplete = (n, i) => {
+    if (!i?.boss) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); }
+    else setTimeout(() => { showBanner('WAVE COMPLETE', 'complete', `Bölüm ${i.stage} tamamlandı`); Audio.play('levelup'); }, 2300);   // BOSS YENİLDİ! afişinden sonra
+  };
+  events.onBoss = (k, amount) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
   events.onUpgrade = (cards, boss) => {
     Audio.play('gem');
     showUpgrade(cards, boss, (card) => {
