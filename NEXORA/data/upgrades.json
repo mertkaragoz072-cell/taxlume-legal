@@ -52,7 +52,7 @@
       "icon": "⚔️",
       "name": "Saldırı Gücü",
       "stat": "damageMul",
-      "per": 0.2,
+      "per": 0.1,
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 10,
@@ -117,7 +117,8 @@
       "max": 8,
       "weight": 9,
       "title": "ÖLÜMCÜL DARBE",
-      "desc": "Kritik Hasarı"
+      "desc": "Kritik Hasarı",
+      "disabled": true
     },
     {
       "id": "range",
@@ -136,7 +137,8 @@
       "artText": [
         "#e2a6ff",
         "#3a0a6a"
-      ]
+      ],
+      "disabled": true
     },
     {
       "id": "defense",
@@ -150,7 +152,8 @@
       "max": 8,
       "weight": 9,
       "title": "DEMİR ZIRH",
-      "desc": "Savunma"
+      "desc": "Savunma",
+      "disabled": true
     },
     {
       "id": "maxHp",
@@ -183,7 +186,8 @@
       "max": 5,
       "weight": 7,
       "title": "YAŞAM PINARI",
-      "desc": "HP Yenilenmesi"
+      "desc": "HP Yenilenmesi",
+      "disabled": true
     },
     {
       "id": "damageTaken",
@@ -236,7 +240,8 @@
       "max": 5,
       "weight": 6,
       "title": "ŞANSLI CEP",
-      "desc": "Ekstra Coin Şansı"
+      "desc": "Ekstra Coin Şansı",
+      "disabled": true
     },
     {
       "id": "bossCoin",
@@ -250,7 +255,8 @@
       "max": 5,
       "weight": 4,
       "title": "AVCI ÖDÜLÜ",
-      "desc": "Boss Coin Ödülü"
+      "desc": "Boss Coin Ödülü",
+      "disabled": true
     },
     {
       "id": "fire",
@@ -264,7 +270,8 @@
       "max": 6,
       "weight": 6,
       "title": "ALEV RUHU",
-      "desc": "Ateş Hasarı"
+      "desc": "Ateş Hasarı",
+      "disabled": true
     },
     {
       "id": "ice",
@@ -278,7 +285,8 @@
       "max": 6,
       "weight": 6,
       "title": "BUZ RUHU",
-      "desc": "Buz Hasarı"
+      "desc": "Buz Hasarı",
+      "disabled": true
     },
     {
       "id": "lightning",
@@ -292,7 +300,8 @@
       "max": 6,
       "weight": 6,
       "title": "FIRTINA RUHU",
-      "desc": "Yıldırım Hasarı"
+      "desc": "Yıldırım Hasarı",
+      "disabled": true
     },
     {
       "id": "skillDamage",
@@ -311,7 +320,8 @@
       "artText": [
         "#ffb040",
         "#7a1a00"
-      ]
+      ],
+      "disabled": true
     },
     {
       "id": "xpGain",
@@ -330,7 +340,8 @@
       "artText": [
         "#6fd6ff",
         "#0a3a7a"
-      ]
+      ],
+      "disabled": true
     },
     {
       "id": "moveSpeed",
@@ -338,7 +349,7 @@
       "icon": "🏃",
       "name": "Hareket Hızı",
       "stat": "moveMul",
-      "per": 0.15,
+      "per": 0.2,
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 5,
@@ -358,10 +369,10 @@
       "icon": "⏳",
       "name": "Yetenek Cooldown",
       "stat": "skillCdMul",
-      "per": -0.15,
+      "per": -0.1,
       "fmt": "pct",
       "bonus": "-{v}%",
-      "max": 4,
+      "max": 5,
       "weight": 8,
       "floor": 0.4,
       "title": "HIZLI ZİHİN",

@@ -36,6 +36,7 @@ function rollRarity(boss, maxGain) {
 export function rollCards(n = 3, boss = false) {
   const p = state.player, fav = affinity(p);
   const pool = UPGRADES.list.filter((u) => {
+    if (u.disabled) return false;
     const lv = p.upgrades[u.id] || 0;
     if (lv >= u.max) return false;
     if (u.cap != null) return UPGRADES.base[u.stat] + u.per * lv < u.cap - 1e-9;

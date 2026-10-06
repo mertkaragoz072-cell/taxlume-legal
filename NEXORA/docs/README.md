@@ -140,3 +140,7 @@ Bölüm çarpanı: HP ×(1 + 0.4·(bölüm−1)) → ×1, ×1.4, ×1.8…; hasar
 - Ekran: "SEVİYE ATLADIN!" / "Bir geliştirme seç"; kart = nadirlik şeridi, madalyon ikon, ad (KILIÇ USTALIĞI), açıklama (Saldırı Hasarı), bonus (+20%), toplam, seviye ("SEVİYE 1 → 2"). Aynı ekranda 3 farklı güç.
 - Nadirlik (`data/upgrades.json → rarities`): COMMON/RARE/EPIC/LEGENDARY; kazanılan seviye 1/2/3/5. Normal seçimde 75/25/0/0, boss seçiminde 35/57/8/0 ağırlık. Yeni güç eklemek: `upgrades` listesine bir kayıt (`title`, `desc`, `stat`, `per`, `max`).
 - Yetenek bekleme süresi gücü (`skillCooldown`, alt sınır ×0.4). HUD: en fazla 6 çip.
+
+## Faz 10 — Sadeleştirilmiş kart havuzu
+Kart havuzu 8 güçle sınırlı (Hasar +10%, Can +20%, Kritik +10%, Saldırı Hızı +15%, Hareket Hızı +20%, Alınan Hasar −10%, Yetenek Soğuma −10%, Altın +20%); diğerleri `upgrades.json`'da `"disabled": true` (silince geri gelir).
+Boss sonrası kart ekranı kapalı (`waves.json → bossUpgrade: false`; `true` yapılırsa boss sonrası da 3 kart açılır). Seçimde seçilen karttan karaktere enerji küresi uçar, diğer kartlar küçülüp kaybolur.

@@ -212,3 +212,5 @@ html, body {
 .up-card.art { aspect-ratio: 322 / 373; }
 .up-card.art .tx { top: 69.6%; font-size: 15.5cqw; color: var(--txf, #ffd23f); -webkit-text-stroke: 2.5px var(--txs, #7a2a00); text-shadow: 0 .06em 0 var(--txs, #7a2a00); }
 .up-card.art .lv { top: 85.6%; height: 8.8%; left: 22%; right: 22%; font-size: 5.2cqw; }
+
+.up-cards.chosen .up-card:not(.picked) { opacity: 0; transform: scale(.55) translateY(18px); transition: transform .35s ease-in, opacity .3s; pointer-events: none; }

@@ -57,7 +57,8 @@ export function updateWaves(dt) {
   if (w.phase === 'complete') {
     w.t -= dt;
     if (w.t <= 0) {
-      if (w.boss || w.n >= WAVES.wavesPerStage) {                      // 5. dalga ve boss sonrası: oyun durur, 3 kart
+      if (w.boss && !WAVES.bossUpgrade) resumeAfterUpgrade();          // boss ödülü sonrası doğrudan yeni bölüm (waves.json → bossUpgrade: true ile kart ekranı açılır)
+      else if (w.boss || w.n >= WAVES.wavesPerStage) {                 // 5. dalga (ve isteğe bağlı boss) sonrası: oyun durur, 3 kart
         w.phase = 'upgrade'; state.paused = true;
         w.epicNext = false;
         events.onUpgrade?.(rollCards(3, w.boss), w.boss);
