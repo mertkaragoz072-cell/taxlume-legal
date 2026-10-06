@@ -4,10 +4,10 @@
 // Maks seviyedeki güçler çıkmaz; baskın build'in güçleri daha sık çıkar (buildAffinityWeight).
 import { UPGRADES } from '../core/config.js';
 import { state } from './state.js';
-import { recalcMaxHp } from './PlayerStats.js';
+import { recalcMaxHp, upgradeValue } from './PlayerStats.js';
 
 const bonusText = (u, lv) => {
-  const v = Math.abs(u.per * lv); const num = u.fmt === 'pct' ? Math.round(v * 100) : (Math.round(v * 10) / 10);
+  const v = Math.abs(upgradeValue(u, lv)); const num = u.fmt === 'pct' ? Math.round(v * 100) : (Math.round(v * 10) / 10);
   return u.bonus.replace('{v}', num);
 };
 export const upgradeById = (id) => UPGRADES.list.find((u) => u.id === id);
@@ -39,8 +39,8 @@ export function rollCards(n = 3, boss = false) {
     if (u.disabled) return false;
     const lv = p.upgrades[u.id] || 0;
     if (lv >= u.max) return false;
-    if (u.cap != null) return UPGRADES.base[u.stat] + u.per * lv < u.cap - 1e-9;
-    if (u.floor != null) return UPGRADES.base[u.stat] + u.per * lv > u.floor + 1e-9;
+    if (u.cap != null) return UPGRADES.base[u.stat] + upgradeValue(u, lv) < u.cap - 1e-9;
+    if (u.floor != null) return UPGRADES.base[u.stat] + upgradeValue(u, lv) > u.floor + 1e-9;
     return true;
   });
   // Yetenek sınırı: oyuncu maxDistinct (4) FARKLI güç seçtiyse artık yenisi çıkmaz, yalnız sahip olduklarının üst seviyeleri sunulur
@@ -55,7 +55,7 @@ export function rollCards(n = 3, boss = false) {
     const rarity = rollRarity(boss, u.max - lv), gain = UPGRADES.rarities[rarity].gain;
     cards.push({
       id: u.id, icon: u.icon, name: u.name, title: u.title, desc: u.desc, art: u.art, artText: u.artText, category: u.category, rarity, level: lv, next: lv + gain, gain,
-      bonus: bonusText(u, gain), total: bonusText(u, lv + gain),
+      bonus: bonusText(u, lv + gain), total: bonusText(u, lv + gain), current: lv ? bonusText(u, lv) : '',
       levelText: lv ? `SEVİYE ${lv} → ${lv + gain}` : `YENİ · SEVİYE ${gain}`,
     });
   }

@@ -1,7 +1,7 @@
 // HUD güç çipleri: edinilen güçler küçük çipler halinde ("⚔ +30%"), aktif build'ler altın çip, fazlası "+N" olarak toplanır.
 import { UPGRADES } from '../core/config.js';
 import { state } from '../game/state.js';
-import { buildLevels } from '../game/PlayerStats.js';
+import { buildLevels, upgradeValue } from '../game/PlayerStats.js';
 
 const MAX_CHIPS = 6;
 let el, last = '';
@@ -11,7 +11,7 @@ export function updateBuffs(force = false) {
   const p = state.player, items = [];
   for (const u of UPGRADES.list) {
     const lv = p.upgrades[u.id] || 0; if (!lv) continue;
-    const v = Math.abs(u.per * lv), num = u.fmt === 'pct' ? Math.round(v * 100) : Math.round(v * 10) / 10;
+    const v = Math.abs(upgradeValue(u, lv)), num = u.fmt === 'pct' ? Math.round(v * 100) : Math.round(v * 10) / 10;
     items.push({ icon: u.icon, text: u.bonus.replace('{v}', num).replace('+', ''), name: u.name, lv, color: UPGRADES.categories[u.category]?.color, sign: u.bonus.startsWith('-') ? '' : '+' });
   }
   items.sort((a, b) => b.lv - a.lv);

@@ -176,3 +176,6 @@ Düşmanlar birbirinin içine girmez (oyuncuya sıralı, genişlik payıyla), oy
 
 ## Faz 19 — Bug fix: tek seferlik olaylar, ilerleme korunumu, yazı süreleri
 LEVEL UP yalnız bir kez (`p.lvShown`; anahtarlı yazı yenilenir, ~1.8 sn); XP yazısı ~1.2 sn, hasar yazısı 0.85 sn; boss yazıları (`tag: 'boss'`) boss ölünce temizlenir; yazılar ekranda en çok 8 ve yukarıda üst sınırda kalır (boss HP barına binmez). Dalga durum bayrakları (`bossDefeated`, `rewardGranted`, `leaving`) her dalgada sıfırlanır; ödül/geçiş tek sefer. Boss ödülü artık canı tam doldurmaz (`healFull: false`) — wave geçişinde can/seviye korunur. Aynı anda en çok `enemies.maxAttackers` (2) düşman saldırır.
+
+## Faz 20 — 6 güç × 4 seviye
+Kart havuzu: Saldırı Gücü, Can, Hareket Hızı, Saldırı Hızı, Kritik Şansı, Kritik Hasarı (`upgrades.json → tiers`: seviye başına TOPLAM bonus, artan). Lv1→4: Saldırı +10/20/32/45%, Can +20/40/60/85%, Hareket +20/35/50/70%, Saldırı Hızı +15/30/45/65%, Kritik Şansı +10/20/30/45 puan, Kritik Hasarı +25/50/80/120%. Kart yeni seviyeyi ve toplam bonusu gösterir ("SEVİYE 2 → 3", +32%; "Şu an +20%"). Rarity artık seviye atlatmaz (hepsi +1). Diğer güçler `disabled`.

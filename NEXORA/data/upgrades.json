@@ -55,7 +55,7 @@
       "per": 0.1,
       "fmt": "pct",
       "bonus": "+{v}%",
-      "max": 10,
+      "max": 4,
       "weight": 10,
       "title": "SALDIRI GÜCÜ",
       "desc": "Saldırı Gücü",
@@ -63,6 +63,12 @@
       "artText": [
         "#ffc83a",
         "#7a2a00"
+      ],
+      "tiers": [
+        0.1,
+        0.2,
+        0.32,
+        0.45
       ]
     },
     {
@@ -74,7 +80,7 @@
       "per": 0.15,
       "fmt": "pct",
       "bonus": "+{v}%",
-      "max": 8,
+      "max": 4,
       "weight": 10,
       "cap": 3.0,
       "title": "ÇEVİKLİK",
@@ -83,6 +89,12 @@
       "artText": [
         "#ffc83a",
         "#7a3a00"
+      ],
+      "tiers": [
+        0.15,
+        0.3,
+        0.45,
+        0.65
       ]
     },
     {
@@ -94,7 +106,7 @@
       "per": 0.1,
       "fmt": "pct",
       "bonus": "+{v}%",
-      "max": 5,
+      "max": 4,
       "weight": 9,
       "cap": 0.75,
       "title": "KESKİN GÖZ",
@@ -103,6 +115,12 @@
       "artText": [
         "#e2a6ff",
         "#3a0a6a"
+      ],
+      "tiers": [
+        0.1,
+        0.2,
+        0.3,
+        0.45
       ]
     },
     {
@@ -114,11 +132,16 @@
       "per": 0.25,
       "fmt": "pct",
       "bonus": "+{v}%",
-      "max": 8,
+      "max": 4,
       "weight": 9,
       "title": "ÖLÜMCÜL DARBE",
       "desc": "Kritik Hasarı",
-      "disabled": true
+      "tiers": [
+        0.25,
+        0.5,
+        0.8,
+        1.2
+      ]
     },
     {
       "id": "range",
@@ -164,7 +187,7 @@
       "per": 0.2,
       "fmt": "pct",
       "bonus": "+{v}%",
-      "max": 10,
+      "max": 4,
       "weight": 10,
       "title": "DEV KALP",
       "desc": "Maksimum HP",
@@ -172,6 +195,12 @@
       "artText": [
         "#8dff55",
         "#0b5a12"
+      ],
+      "tiers": [
+        0.2,
+        0.4,
+        0.6,
+        0.85
       ]
     },
     {
@@ -207,7 +236,8 @@
       "artText": [
         "#6fd6ff",
         "#0a3a7a"
-      ]
+      ],
+      "disabled": true
     },
     {
       "id": "coinGain",
@@ -226,7 +256,8 @@
       "artText": [
         "#ffd23f",
         "#7a4a00"
-      ]
+      ],
+      "disabled": true
     },
     {
       "id": "extraCoin",
@@ -352,7 +383,7 @@
       "per": 0.2,
       "fmt": "pct",
       "bonus": "+{v}%",
-      "max": 5,
+      "max": 4,
       "weight": 4,
       "cap": 2.2,
       "title": "RÜZGAR ADIMI",
@@ -361,6 +392,12 @@
       "artText": [
         "#ffffff",
         "#4a2a10"
+      ],
+      "tiers": [
+        0.2,
+        0.35,
+        0.5,
+        0.7
       ]
     },
     {
@@ -381,7 +418,8 @@
       "artText": [
         "#8dff55",
         "#0b5a12"
-      ]
+      ],
+      "disabled": true
     }
   ],
   "builds": [
@@ -495,30 +533,31 @@
       "name": "SIRADAN",
       "gain": 1,
       "color": "#8a94a8",
-      "weight": 75,
-      "bossWeight": 35
+      "weight": 100,
+      "bossWeight": 100
     },
     "rare": {
       "name": "NADİR",
-      "gain": 2,
+      "gain": 1,
       "color": "#3a8bff",
-      "weight": 25,
-      "bossWeight": 57
+      "weight": 0,
+      "bossWeight": 0
     },
     "epic": {
       "name": "DESTANSI",
-      "gain": 3,
+      "gain": 1,
       "color": "#b04bff",
       "weight": 0,
-      "bossWeight": 8
+      "bossWeight": 0
     },
     "legendary": {
       "name": "EFSANEVİ",
-      "gain": 5,
+      "gain": 1,
       "color": "#ffb21f",
       "weight": 0,
       "bossWeight": 0
     }
   },
-  "maxDistinct": 4
+  "maxDistinct": 4,
+  "_tiers": "tiers: seviye başına TOPLAM bonus (Lv1..Lv4, artan). Kart seviye atlatır; rarity şimdilik yalnız etiket (hepsi +1 seviye)."
 }

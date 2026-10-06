@@ -14,11 +14,17 @@ export function buildLevels(p) {
   return out;
 }
 
+// Bir gücün seviye için TOPLAM bonusu: tiers (Lv1..Lv4, artan) varsa tablodan, yoksa per × seviye
+export function upgradeValue(u, lv) {
+  if (!lv) return 0;
+  return u.tiers ? u.tiers[Math.min(lv, u.tiers.length) - 1] : u.per * lv;
+}
+
 export function derived(p) {
   const s = { ...UPGRADES.base };
   for (const u of UPGRADES.list) {
     const lv = p.upgrades?.[u.id] || 0; if (!lv) continue;
-    s[u.stat] += u.per * lv;
+    s[u.stat] += upgradeValue(u, lv);
     if (u.cap != null) s[u.stat] = Math.min(u.cap, s[u.stat]);
   }
   const bl = buildLevels(p);
