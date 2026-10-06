@@ -1,5 +1,6 @@
 // UpgradeCard: "GÜÇLEN!" ekranı — 3 kart, yalnız biri seçilir. Seçilen büyür/parlar, diğerleri kaybolur (~0.55 sn), sonra onPick çağrılır.
-// Kısayol: 1/2/3 tuşları. Kart: ikon, ad, etki, "Lv. a → b" (ilk kez: "YENİ").
+// Kısayol: 1/2/3 tuşları. Kart: kategori, ikon, ad, bonus (+10%), seviye satırı ("YENİ - LV.1" / "LV.2 → LV.3").
+import { UPGRADES } from '../core/config.js';
 let cleanup = null;
 export function showUpgrade(cards, epic, onPick) {
   const root = document.getElementById('upgrade'), list = document.getElementById('up-cards'), title = document.getElementById('up-title'), sub = document.getElementById('up-sub');
@@ -14,7 +15,8 @@ export function showUpgrade(cards, epic, onPick) {
   };
   cards.forEach((c, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'up-card' + (c.epic ? ' epic' : '');
-    b.innerHTML = `<div class="ic">${c.icon}</div><div class="nm">${c.name}</div><div class="tx">${c.text}</div><div class="lv">${c.level ? `Lv. ${c.level} → ${c.next}` : `YENİ · Lv. ${c.next}`}</div>`;
+    b.style.setProperty('--cat', UPGRADES.categories[c.category]?.color || '#888');
+    b.innerHTML = `<div class="cat">${UPGRADES.categories[c.category]?.name || ''}</div><div class="ic">${c.icon}</div><div class="nm">${c.name}</div><div class="tx">${c.bonus}</div><div class="lv">${c.levelText}</div>`;
     b.addEventListener('click', () => pick(i)); list.appendChild(b);
   });
   const key = (e) => { const n = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code); if (n >= 0 && n < cards.length) pick(n); };

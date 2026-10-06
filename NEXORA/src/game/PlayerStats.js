@@ -2,12 +2,28 @@
 // p.upgrades = { upgradeId: seviye }. Türetilmiş değerler her çağrıda hesaplanır (basit, hızlı: ≤ 10 kayıt).
 import { CONFIG, UPGRADES } from '../core/config.js';
 
+// Build seviyesi: üyelerin toplam seviyesi eşiğe ulaşınca 1, 2×eşikte 2 (bonuslar buna göre katlanır)
+export function buildLevels(p) {
+  const out = {};
+  for (const b of UPGRADES.builds || []) {
+    const id = b.id, sum = b.members.reduce((t, m) => t + (p.upgrades?.[m] || 0), 0);
+    const lv = sum >= b.threshold * 2 ? 2 : sum >= b.threshold ? 1 : 0;
+    out[id] = { id, sum, lv, threshold: b.threshold, name: b.name, icon: b.icon, desc: b.desc };
+  }
+  return out;
+}
+
 export function derived(p) {
   const s = { ...UPGRADES.base };
   for (const u of UPGRADES.list) {
     const lv = p.upgrades?.[u.id] || 0; if (!lv) continue;
     s[u.stat] += u.per * lv;
     if (u.cap != null) s[u.stat] = Math.min(u.cap, s[u.stat]);
+  }
+  const bl = buildLevels(p);
+  for (const b of UPGRADES.builds || []) {
+    const lv = bl[b.id].lv; if (!lv) continue;
+    for (const [k, v] of Object.entries(b.bonus)) s[k] = (s[k] ?? 0) + v * lv;
   }
   return s;
 }

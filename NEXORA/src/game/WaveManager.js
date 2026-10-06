@@ -41,7 +41,7 @@ export function updateWaves(dt) {
       } else w.spawnT = 0.3;
     }
     if (!w.queue.length && aliveAny().length === 0) {
-      w.phase = 'complete'; w.t = WAVES.completeSec;
+      w.phase = 'complete'; w.t = isBossWave(w.n) ? (WAVES.bossCompleteSec || WAVES.completeSec) : WAVES.completeSec;
       state.player.coins += WAVES.coinBonusPerWave * w.n;
       events.onWaveComplete?.(w.n);
     }

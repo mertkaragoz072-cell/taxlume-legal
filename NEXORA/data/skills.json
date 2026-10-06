@@ -17,7 +17,8 @@
     ],
     "fxDuration": 0.55,
     "hitAt": 0.1,
-    "castAnim": "attack"
+    "castAnim": "attack",
+    "element": "fire"
   },
   "skill2": {
     "name": "Mavi Dalga",
@@ -31,6 +32,7 @@
     "width": 46,
     "fx": "fx_effect_slash_arc_01",
     "fxHeight": 110,
-    "castAnim": "attack"
+    "castAnim": "attack",
+    "element": "lightning"
   }
 }

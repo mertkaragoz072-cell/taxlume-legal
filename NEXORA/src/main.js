@@ -8,10 +8,12 @@ import { state, resetState } from './game/state.js';
 import { update, spawnEnemy } from './game/systems.js';
 import { render } from './render/renderer.js';
 import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar, pulse } from './ui/hud.js';
+import { initBuffs, updateBuffs, popBuffs } from './ui/buffs.js';
 import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
 import { showUpgrade } from './ui/UpgradeCard.js';
 import { startWave, resumeAfterUpgrade, isBossWave } from './game/WaveManager.js';
-import { applyUpgrade } from './game/UpgradeManager.js';
+import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
+import { addText } from './game/combat.js';
 import { events } from './game/events.js';
 
 function restart() {
@@ -19,7 +21,7 @@ function restart() {
   Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem/güçlendirme/dalga geri yüklenir
   startWave(state.wave.n);
   hideGameOver();
-  updateHud();
+  updateHud(); updateBuffs(true);
 }
 
 // Karakter seçim ekranı: kartlara dokununca o kahraman seçilir, oyun başlar. Seçim bir sonraki açılış için hatırlanır (vurgulanır).
@@ -65,6 +67,7 @@ async function boot() {
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   initHud();
   initWaveHud();
+  initBuffs();
   drawAvatar();
   Input.init();
   const onResize = () => View.resize(canvas);
@@ -86,10 +89,19 @@ async function boot() {
   events.onHurt = () => Audio.play('hurt');
   events.onSkill = (id) => Audio.play(id);
   const showOver = showGameOver;
-  events.onWaveStart = (n, info) => { showBanner(info.boss ? `BOSS DALGASI ${n}` : `WAVE ${n}`, info.boss ? 'boss' : ''); Audio.play(info.boss ? 'skill2' : 'click'); };
-  events.onWaveComplete = () => { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); };
-  events.onBoss = (k) => { if (k === 'slam') Audio.play('skill2'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'complete'); Audio.play('levelup'); } };
-  events.onUpgrade = (cards, epic) => { Audio.play('gem'); showUpgrade(cards, epic, (card) => { applyUpgrade(card.id, epic); Audio.play('levelup'); pulse('avatar-ring'); saveNowRef?.(); resumeAfterUpgrade(); }); };
+  events.onWaveStart = (n, info) => { showBanner(info.boss ? `BOSS DALGASI ${n}` : `WAVE ${n}`, info.boss ? 'boss' : '', info.boss ? 'Goblin Lordu geliyor!' : ''); Audio.play(info.boss ? 'skill2' : 'click'); };
+  events.onWaveComplete = (n) => { if (!isBossWave(n)) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); } };
+  events.onBoss = (k, amount) => { if (k === 'slam') Audio.play('skill2'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
+  events.onUpgrade = (cards, epic) => {
+    Audio.play('gem');
+    showUpgrade(cards, epic, (card) => {
+      applyUpgrade(card.id, epic);
+      const u = upgradeById(card.id), p = state.player;
+      addText(p.a, 150, `${card.icon} ${card.bonus} ${card.name}`, '#ffd23f', 1.1); addText(p.a, 125, 'GÜÇ UYGULANDI!', '#ffffff', 0.8);
+      state.rings.push({ a: p.a, t: 0, life: 0.9 }); state.rings.push({ a: p.a, t: 0, life: 1.3, color: '#ffd23f' });
+      updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); saveNowRef?.(); resumeAfterUpgrade();
+    });
+  };
   events.onGameOver = (st) => { Audio.play('gameover'); showOver(st); };
   events.onCoin = () => { pulse('pill-coin'); Audio.play('coin'); };
   events.onGem = () => { pulse('pill-gem'); Audio.play('gem'); };
@@ -114,6 +126,7 @@ async function boot() {
     update(dt);
     updateHud();
     updateWaveHud();
+    updateBuffs();
     render(ctx);
     requestAnimationFrame(frame);
   }

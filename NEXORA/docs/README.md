@@ -118,3 +118,11 @@ otomatik sağa koş → düşman → savaş (otomatik saldırı) → öldür →
 - Aynı güç tekrar çıkabilir; kart "Lv. 2 → 3" gösterir (ilk kez "YENİ · Lv. 1"). Seviyeler `player.upgrades` içinde, kahraman başına **kayıt dosyasında** saklanır (seviye, dalga, güçlendirmeler).
 - **Yeni güç eklemek:** `upgrades.json`'a `{id, category, icon, name, stat, per, fmt, text, weight, cap?}` kaydı eklemek yeterli; stat adı `PlayerStats.derived`'in okuduğu `base` alanlarından biri olmalı (yeni stat için `base`'e ve ilgili sistemde okumaya ekle).
 - Not: Yenilenme +5 HP/sn spesifikasyona göre; erken oyunda (can ≈ 120) çok güçlüdür — dengeyi `per` değerinden ayarla.
+
+## Faz 6 — Güç havuzu, build'ler, boss ödülü, HUD çipleri
+- `data/upgrades.json`: 18 güç (SALDIRI / SAVUNMA / EKONOMİ / ÖZEL / YARDIMCI), her biri `max` seviye ve gerekirse `cap` ile sınırlı; maks seviyedeki güç kart havuzundan çıkar.
+- Kart: kategori etiketi, ikon, ad, bonus ("+10%"), seviye satırı ("YENİ - LV.1" / "LV.2 → LV.3"). Epik (boss sonrası) seçimde bonus ve seviye ×2.
+- Build'ler (`builds`): üye güçlerin toplam seviyesi eşiğe ulaşınca bonus verir, 2×eşikte iki katı; HUD'da altın çip. Baskın build'in güçleri kartlarda ×1.6 ağırlıkla çıkar.
+- Elementler: ateş = yanma, buz = yavaşlatma, yıldırım = zincir; yetenekler element taşır (`skills.json`). Ayarlar: `config.json → player.burn/chill/chain`.
+- Boss (dalga 20, 40…): büyük "BOSS DALGASI" afişi, üstte büyük HP çubuğu, ödül `waves.json → boss.reward` (250 coin × boss coin çarpanı), "BOSS YENİLDİ! +250 COIN" afişi, ardından EFSANE güç seçimi.
+- HUD çipleri: `src/ui/buffs.js`. Kayıt: bilinmeyen güç id'leri yüklemede atlanır, seviyeler maks'a kırpılır.

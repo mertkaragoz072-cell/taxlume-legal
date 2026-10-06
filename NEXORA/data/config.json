@@ -57,7 +57,22 @@
     "hitDelay": 0.16,
     "slashFxScale": 0.5,
     "slashFxAlpha": 0.9,
-    "character": "male"
+    "character": "male",
+    "burn": {
+      "seconds": 3,
+      "dpsOfBase": 0.5
+    },
+    "chill": {
+      "seconds": 1.6,
+      "perPoint": 0.6,
+      "minMul": 0.35
+    },
+    "chain": {
+      "chancePerPoint": 1.5,
+      "maxChance": 0.8,
+      "radius": 170,
+      "damageMul": 0.6
+    }
   },
   "leveling": {
     "baseXpToNext": 30,

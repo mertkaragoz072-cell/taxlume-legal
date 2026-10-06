@@ -139,3 +139,29 @@ html, body {
 @keyframes cardin { from { opacity: 0; transform: translateY(26px) scale(.9); } }
 @keyframes uptitle { from { opacity: 0; transform: scale(.5); } }
 @media (max-height: 440px) { #wave-sub { display: none; } }
+
+/* --- Güç seçimi: kategori rengi, parlama --- */
+.up-card { border-color: var(--cat, #1f2a44); position: relative; }
+.up-card .cat { font-size: clamp(8px, 2.4vh, 10px); font-weight: 900; letter-spacing: 1px; color: #fff; background: var(--cat, #1f2a44); border-radius: 8px; padding: 0 6px; display: inline-block; margin-bottom: 2px; }
+.up-card .tx { font-size: clamp(16px, 5.4vh, 26px); font-weight: 900; color: var(--cat, #2a6a2a); -webkit-text-stroke: 0; }
+.up-card:hover, .up-card:focus-visible { transform: translateY(-5px) scale(1.04); filter: brightness(1.05); outline: none; }
+.up-card.picked { animation: cardpick .6s ease-out forwards; }
+@keyframes cardpick { 0% { transform: scale(1); } 35% { transform: scale(1.22) translateY(-8px); box-shadow: 0 0 0 5px #ffd23f, 0 0 46px rgba(255,220,80,1); } 100% { transform: scale(1.14) translateY(-6px); } }
+/* --- HUD güç çipleri --- */
+#buffs { position: absolute; left: 54px; top: clamp(58px, 17vh, 76px); display: flex; flex-wrap: wrap; gap: 3px; max-width: 22%; pointer-events: none; z-index: 9; }
+#buffs .chip { font-size: clamp(9px, 2.8vh, 12px); font-weight: 800; color: #fff; background: rgba(20,28,56,.78); border: 2px solid var(--cat, #1f2a44); border-radius: 9px; padding: 0 5px; line-height: 1.5; white-space: nowrap; }
+#buffs .chip.build { background: linear-gradient(#ffd23f, #f0a014); color: #1f2a44; border-color: #1f2a44; }
+#buffs .chip.more { background: rgba(255,255,255,.2); }
+#buffs.pop { animation: buffpop .5s ease-out; }
+@keyframes buffpop { 0% { transform: scale(1); } 30% { transform: scale(1.18); filter: drop-shadow(0 0 8px #ffd23f); } 100% { transform: scale(1); } }
+/* --- Boss HP çubuğu ve afişler --- */
+#boss-bar { position: absolute; left: 50%; top: clamp(44px, 15vh, 72px); transform: translateX(-50%); width: min(40%, 340px); z-index: 12; pointer-events: none; text-align: center; }
+#boss-bar.hidden { display: none; }
+#boss-bar .bb-name { font-weight: 900; font-size: clamp(11px, 3.6vh, 16px); color: #ff6b5a; letter-spacing: 2px; text-shadow: 0 2px 0 #1f2a44, 0 0 10px rgba(255,60,40,.8); }
+#boss-bar .bb-track { height: clamp(12px, 4vh, 20px); border: 3px solid #1f2a44; border-radius: 10px; background: #2a1620; overflow: hidden; box-shadow: 0 0 14px rgba(255,60,40,.55); }
+#boss-bar .bb-fill { height: 100%; width: 100%; background: linear-gradient(#ff8a6a, #d4281a); transition: width .15s linear; }
+#banner small { display: block; font-size: .5em; color: #ffd23f; margin-top: 2px; }
+#banner.boss { font-size: clamp(32px, 12vh, 68px); }
+#banner.show.boss { animation: bannerboss 2.2s ease-out forwards; }
+#banner.show.bossdead { animation: bannerboss 3.2s ease-out forwards; color: #ffd23f; font-size: clamp(30px, 11vh, 62px); }
+@keyframes bannerboss { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 16% { transform: translate(-48%, -50%) scale(1.04); } 20% { transform: translate(-52%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -58%) scale(1); } }

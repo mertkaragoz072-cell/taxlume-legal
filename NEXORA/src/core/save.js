@@ -2,7 +2,7 @@
 //   { level, xp, coins, gems, totalKills, bestLevel, wave, upgrades:{id:seviye} }  + son seçilen kahraman.
 // Ölünce seviye/coin/gem KALIR (yeni deneme aynı seviyeden başlar); düşmanlar ve konum sıfırlanır.
 // Bozuk/eski kayıt sessizce yok sayılır. Şema değişirse KEY'deki sürümü artır.
-import { CONFIG } from './config.js';
+import { CONFIG, UPGRADES } from './config.js';
 import { xpForLevel } from '../game/state.js';
 import { recalcMaxHp } from '../game/PlayerStats.js';
 
@@ -30,7 +30,8 @@ export const Save = {
     p.damage = CONFIG.player.attackDamage + L.damagePerLevel * (lv - 1);
     p.maxHp = CONFIG.player.maxHp + L.maxHpPerLevel * (lv - 1); p.hp = p.maxHp;
     p.coins = Math.max(0, s.coins | 0); p.gems = Math.max(0, s.gems | 0);
-    p.upgrades = s.upgrades && typeof s.upgrades === 'object' ? { ...s.upgrades } : {};
+    p.upgrades = {};            // bilinmeyen/eski id'ler atlanır, seviyeler maks'a kırpılır
+    if (s.upgrades && typeof s.upgrades === 'object') for (const u of UPGRADES.list) { const lv = Math.floor(+s.upgrades[u.id]); if (lv > 0) p.upgrades[u.id] = Math.min(lv, u.max); }
     recalcMaxHp(p, false); p.hp = p.maxHp;                           // can = seviye tabanı × can güçlendirmesi
     state.wave.n = Math.max(1, s.wave | 0 || 1);
     return true;

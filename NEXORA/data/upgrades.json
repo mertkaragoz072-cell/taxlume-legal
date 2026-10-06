@@ -1,39 +1,73 @@
 {
-  "_comment": "Güçlendirme verisi. Yeni güç eklemek = buraya kayıt: id, kategori, ikon, ad, stat (PlayerStats türetilmiş alan), per (seviye başına değer), fmt (pct|num), text ({v} yer tutucu), weight (çıkma ağırlığı), cap (opsiyonel üst sınır). base: stat başlangıç değerleri.",
+  "_comment": "Güçlendirme verisi. Yeni güç: id, category(offense|defense|economy|special|utility), icon, name (kartta güç adı), stat (PlayerStats alanı), per (seviye başına), fmt(pct|num), bonus ('+{v}%'), max (maks. seviye; dolunca kartta çıkmaz), weight, cap(opsiyonel stat üst sınırı). builds: üyelerin toplam seviyesi threshold'a ulaşınca bonus (2×threshold'da çift). Boss/EFSANE seçimde seviye ve değer epicMultiplier kat.",
   "base": {
     "damageMul": 1,
     "attackSpeedMul": 1,
     "critChance": 0.05,
     "critDamage": 1.5,
+    "rangeMul": 1,
     "maxHpMul": 1,
     "defense": 0,
     "regen": 0,
-    "moveMul": 1,
+    "dmgTaken": 0,
     "coinMul": 1,
-    "xpMul": 1
+    "extraCoin": 0,
+    "bossCoinMul": 1,
+    "fire": 0,
+    "ice": 0,
+    "lightning": 0,
+    "skillDmgMul": 1,
+    "skillCdMul": 1,
+    "xpMul": 1,
+    "moveMul": 1
   },
   "epicMultiplier": 2,
+  "buildAffinityWeight": 1.6,
+  "categories": {
+    "offense": {
+      "name": "SALDIRI",
+      "color": "#e2402c"
+    },
+    "defense": {
+      "name": "SAVUNMA",
+      "color": "#2f6fd6"
+    },
+    "economy": {
+      "name": "EKONOMİ",
+      "color": "#e0a31a"
+    },
+    "special": {
+      "name": "ÖZEL",
+      "color": "#9b4bd6"
+    },
+    "utility": {
+      "name": "YARDIMCI",
+      "color": "#3c9a52"
+    }
+  },
   "upgrades": [
     {
       "id": "attackDamage",
       "category": "offense",
       "icon": "⚔️",
-      "name": "KESKİN KILIÇ",
+      "name": "Saldırı Gücü",
       "stat": "damageMul",
-      "per": 0.2,
+      "per": 0.15,
       "fmt": "pct",
-      "text": "Saldırı +{v}%",
+      "bonus": "+{v}%",
+      "max": 10,
       "weight": 10
     },
     {
       "id": "attackSpeed",
       "category": "offense",
       "icon": "⚡",
-      "name": "HIZLI SAVAŞÇI",
+      "name": "Saldırı Hızı",
       "stat": "attackSpeedMul",
       "per": 0.15,
       "fmt": "pct",
-      "text": "Saldırı hızı +{v}%",
+      "bonus": "+{v}%",
+      "max": 8,
       "weight": 10,
       "cap": 3.0
     },
@@ -41,91 +75,302 @@
       "id": "critChance",
       "category": "offense",
       "icon": "🎯",
-      "name": "KESKİN GÖZ",
+      "name": "Kritik Şansı",
       "stat": "critChance",
       "per": 0.1,
       "fmt": "pct",
-      "text": "Kritik şansı +{v}%",
-      "weight": 8,
+      "bonus": "+{v}%",
+      "max": 5,
+      "weight": 9,
       "cap": 0.75
     },
     {
       "id": "critDamage",
       "category": "offense",
       "icon": "💥",
-      "name": "ÖLÜMCÜL DARBE",
+      "name": "Kritik Hasarı",
       "stat": "critDamage",
       "per": 0.25,
       "fmt": "pct",
-      "text": "Kritik hasar +{v}%",
-      "weight": 8
+      "bonus": "+{v}%",
+      "max": 8,
+      "weight": 9
     },
     {
-      "id": "maxHp",
-      "category": "defense",
-      "icon": "❤️",
-      "name": "DEV KALP",
-      "stat": "maxHpMul",
-      "per": 0.25,
+      "id": "range",
+      "category": "offense",
+      "icon": "📏",
+      "name": "Menzil",
+      "stat": "rangeMul",
+      "per": 0.15,
       "fmt": "pct",
-      "text": "Maks. can +{v}%",
-      "weight": 10
+      "bonus": "+{v}%",
+      "max": 4,
+      "weight": 6
     },
     {
       "id": "defense",
       "category": "defense",
       "icon": "🛡️",
-      "name": "ZIRH",
+      "name": "Savunma",
       "stat": "defense",
       "per": 0.15,
       "fmt": "pct",
-      "text": "Savunma +{v}%",
+      "bonus": "+{v}%",
+      "max": 8,
       "weight": 9
+    },
+    {
+      "id": "maxHp",
+      "category": "defense",
+      "icon": "❤️",
+      "name": "Maksimum HP",
+      "stat": "maxHpMul",
+      "per": 0.2,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 10,
+      "weight": 10
     },
     {
       "id": "regen",
       "category": "defense",
       "icon": "💚",
-      "name": "YENİLENME",
+      "name": "HP Yenilenmesi",
       "stat": "regen",
-      "per": 5,
+      "per": 2,
       "fmt": "num",
-      "text": "Can yenileme +{v} HP/sn",
+      "bonus": "+{v}/sn",
+      "max": 5,
       "weight": 7
+    },
+    {
+      "id": "damageTaken",
+      "category": "defense",
+      "icon": "🧱",
+      "name": "Alınan Hasar",
+      "stat": "dmgTaken",
+      "per": 0.1,
+      "fmt": "pct",
+      "bonus": "-{v}%",
+      "max": 5,
+      "weight": 7,
+      "cap": 0.6
+    },
+    {
+      "id": "coinGain",
+      "category": "economy",
+      "icon": "💰",
+      "name": "Coin Kazancı",
+      "stat": "coinMul",
+      "per": 0.2,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 10,
+      "weight": 7
+    },
+    {
+      "id": "extraCoin",
+      "category": "economy",
+      "icon": "🪙",
+      "name": "Ekstra Coin Şansı",
+      "stat": "extraCoin",
+      "per": 0.1,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 5,
+      "weight": 6
+    },
+    {
+      "id": "bossCoin",
+      "category": "economy",
+      "icon": "👑",
+      "name": "Boss Coin Ödülü",
+      "stat": "bossCoinMul",
+      "per": 0.3,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 5,
+      "weight": 4
+    },
+    {
+      "id": "fire",
+      "category": "special",
+      "icon": "🔥",
+      "name": "Ateş Hasarı",
+      "stat": "fire",
+      "per": 0.2,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 6,
+      "weight": 6
+    },
+    {
+      "id": "ice",
+      "category": "special",
+      "icon": "❄️",
+      "name": "Buz Hasarı",
+      "stat": "ice",
+      "per": 0.2,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 6,
+      "weight": 6
+    },
+    {
+      "id": "lightning",
+      "category": "special",
+      "icon": "🌩️",
+      "name": "Yıldırım Hasarı",
+      "stat": "lightning",
+      "per": 0.2,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 6,
+      "weight": 6
+    },
+    {
+      "id": "skillDamage",
+      "category": "special",
+      "icon": "✨",
+      "name": "Yetenek Hasarı",
+      "stat": "skillDmgMul",
+      "per": 0.25,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 6,
+      "weight": 8
+    },
+    {
+      "id": "xpGain",
+      "category": "utility",
+      "icon": "📘",
+      "name": "XP Kazancı",
+      "stat": "xpMul",
+      "per": 0.2,
+      "fmt": "pct",
+      "bonus": "+{v}%",
+      "max": 8,
+      "weight": 6
     },
     {
       "id": "moveSpeed",
       "category": "utility",
       "icon": "🏃",
-      "name": "RÜZGAR AYAĞI",
+      "name": "Hareket Hızı",
       "stat": "moveMul",
       "per": 0.1,
       "fmt": "pct",
-      "text": "Hareket hızı +{v}%",
-      "weight": 6,
+      "bonus": "+{v}%",
+      "max": 5,
+      "weight": 4,
       "cap": 2.2
+    }
+  ],
+  "builds": [
+    {
+      "id": "crit",
+      "name": "Kritik Ustası",
+      "icon": "🎯",
+      "members": [
+        "critChance",
+        "critDamage"
+      ],
+      "threshold": 6,
+      "bonus": {
+        "critDamage": 0.25
+      },
+      "desc": "Kritik hasar +25%"
     },
     {
-      "id": "coinGain",
-      "category": "utility",
-      "icon": "💰",
-      "name": "ALTIN ELİ",
-      "stat": "coinMul",
-      "per": 0.2,
-      "fmt": "pct",
-      "text": "Coin kazancı +{v}%",
-      "weight": 7
+      "id": "power",
+      "name": "Savaş Ustası",
+      "icon": "⚔️",
+      "members": [
+        "attackDamage",
+        "range"
+      ],
+      "threshold": 6,
+      "bonus": {
+        "damageMul": 0.15
+      },
+      "desc": "Saldırı +15%"
     },
     {
-      "id": "xpGain",
-      "category": "utility",
+      "id": "speed",
+      "name": "Hız Ustası",
+      "icon": "⚡",
+      "members": [
+        "attackSpeed",
+        "moveSpeed"
+      ],
+      "threshold": 6,
+      "bonus": {
+        "attackSpeedMul": 0.15
+      },
+      "desc": "Saldırı hızı +15%"
+    },
+    {
+      "id": "tank",
+      "name": "Demir Duvar",
+      "icon": "🛡️",
+      "members": [
+        "maxHp",
+        "defense",
+        "regen",
+        "damageTaken"
+      ],
+      "threshold": 8,
+      "bonus": {
+        "defense": 0.2,
+        "regen": 2
+      },
+      "desc": "Savunma +20%, +2 HP/sn"
+    },
+    {
+      "id": "skill",
+      "name": "Yetenek Ustası",
       "icon": "✨",
-      "name": "BİLGELİK",
-      "stat": "xpMul",
-      "per": 0.2,
-      "fmt": "pct",
-      "text": "XP kazancı +{v}%",
-      "weight": 7
+      "members": [
+        "skillDamage"
+      ],
+      "threshold": 4,
+      "bonus": {
+        "skillCdMul": -0.15
+      },
+      "desc": "Yetenek bekleme -15%"
+    },
+    {
+      "id": "element",
+      "name": "Element Büyücüsü",
+      "icon": "🔮",
+      "members": [
+        "fire",
+        "ice",
+        "lightning"
+      ],
+      "threshold": 6,
+      "bonus": {
+        "fire": 0.15,
+        "ice": 0.15,
+        "lightning": 0.15
+      },
+      "desc": "Tüm elementler +15%"
+    },
+    {
+      "id": "economy",
+      "name": "Altın Avcısı",
+      "icon": "💎",
+      "members": [
+        "coinGain",
+        "extraCoin",
+        "bossCoin"
+      ],
+      "threshold": 6,
+      "bonus": {
+        "coinMul": 0.2
+      },
+      "desc": "Coin kazancı +20%"
     }
   ]
 }

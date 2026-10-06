@@ -43,10 +43,12 @@
     "enrageAtHp": 0.3,
     "enrageSpeedMul": 1.35,
     "reward": {
-      "coins": 60,
+      "coins": 250,
       "gems": 6,
       "healFull": true,
-      "epicUpgrade": true
+      "epicUpgrade": true,
+      "showerCoins": 24
     }
-  }
+  },
+  "bossCompleteSec": 3.4
 }

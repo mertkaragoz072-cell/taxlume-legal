@@ -10,7 +10,7 @@ import { updateWaves } from './WaveManager.js';
 import { updateBoss } from './boss.js';
 import { enemyMeta } from './EnemySpawner.js';
 import { derived } from './PlayerStats.js';
-import { hitEnemy, hurtPlayer, collectCoin, collectGem } from './combat.js';
+import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
 
 export { events };
 export { spawnEnemy } from './EnemySpawner.js';
@@ -41,7 +41,7 @@ export function update(dt) {
   const live = state.enemies.filter((x) => !x.dead);
   let ax = 0;
   if (!state.over) {
-    const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < C.player.engageRange; });
+    const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < C.player.engageRange * S.rangeMul; });
     if (!ahead) ax = 1;
     p.dir = 1;
     const speed = C.player.autoSpeed * S.moveMul;
@@ -63,6 +63,8 @@ export function update(dt) {
   order.forEach((en, i) => {
     en.bob += dt * (5 + en.def.speed * 0.05); en.flash = Math.max(0, en.flash - dt); en.stagger = Math.max(0, (en.stagger || 0) - dt);
     en.atkTimer = Math.max(0, en.atkTimer - dt);
+    tickStatus(en, dt);
+    if (en.dead) return;
     const diff = wrapAngle(p.a - en.a);
     en.face = diff >= 0 ? 1 : -1;
     const dist = Math.abs(diff) * r;
@@ -88,7 +90,7 @@ export function update(dt) {
     const holding = en.def.hold && !en.def.boss && order.some((o) => !o.def.elite) && dist < C.enemies.eliteHoldRange + 40 && dist > C.enemies.eliteHoldRange - 40;
     if (en.knock > 0) { en.a -= en.face * en.knock * 40 / r * dt * 6; en.knock = Math.max(0, en.knock - dt * 6); }
     else if (holding) { /* elite: normaller bitene kadar geride bekler */ }
-    else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * dt, Math.max(free, 0)) / r;
+    else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * slowMul(en) * dt, Math.max(free, 0)) / r;
     else if (free < -4) en.a -= en.face * Math.min(40 * dt, -free) / r;          // iç içe girdiyse hafifçe geri it
     if (dist < en.def.contactRange * 0.55) en.a -= en.face * Math.min(60 * dt, en.def.contactRange * 0.55 - dist) / r;   // oyuncunun içine girmesin
     if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) { en.attackT = 0; en.hitDone = false; }
@@ -101,7 +103,7 @@ export function update(dt) {
   const cur = ANIMS.hero?.animations[p.anim];
   const attackAnimBusy = p.anim.startsWith('attack') && cur && p.animT < cur.frames.length / cur.fps * 0.9;
   if (!state.over && p.atkTimer <= 0 && !attackAnimBusy) {
-    let best = null, bd = C.player.attackRange;
+    let best = null, bd = C.player.attackRange * S.rangeMul;
     for (const en of live) { const d = surfaceDist(en.a, p.a); if (d <= bd) { bd = d; best = en; } }
     if (best || manual) {
       p.dir = 1;
@@ -119,7 +121,7 @@ export function update(dt) {
         if (en.dead) continue;
         const diff = wrapAngle(en.a - p.a), d = Math.abs(diff) * r;
         // vuruş kutusu: kahramanın baktığı yönde, menzil + düşmanın yarım genişliği
-        if (Math.sign(diff) === p.hitDir && d <= C.player.attackRange + en.def.width * 0.35) hitEnemy(en, p.damage);
+        if (Math.sign(diff) === p.hitDir && d <= C.player.attackRange * S.rangeMul + en.def.width * 0.35) hitEnemy(en, p.damage);
       }
     }
   }

@@ -4,6 +4,7 @@ import { wrapAngle } from '../core/util.js';
 import { state } from './state.js';
 import { hitEnemy, applyKnock } from './combat.js';
 import { events } from './events.js';
+import { derived } from './PlayerStats.js';
 
 // Yetenekler data/skills.json'dan okunur (tip: wave = ileri giden dalga, burst = önde alan patlaması).
 // Hasar = oyuncu hasarı × damageMul. Buton/Q,E ile tetiklenir; bekleme süresi HUD'da düğme üstünde gösterilir.
@@ -14,7 +15,7 @@ export const skillReady = (id) => state.skillCd[id] <= 0 && state.player.level >
 export function castSkill(id) {
   const sk = SKILLS[id], p = state.player;
   if (!sk || state.over || !skillReady(id)) return false;
-  state.skillCd[id] = sk.cooldown; events.onSkill?.(id);
+  state.skillCd[id] = sk.cooldown * derived(p).skillCdMul; events.onSkill?.(id);
   p.dir = p.dir || 1;
   const an = ANIMS.hero.animations.attack_2 ? 'attack_2' : (ANIMS.hero.animations.attack ? 'attack' : p.anim);
   p.anim = an; p.animT = 0; p.atkTimer = Math.max(p.atkTimer, 0.35);     // yetenek sırasında normal saldırı üst üste binmesin
@@ -34,13 +35,13 @@ export function updateSkills(dt) {
       const wa = f.a + f.dir * f.x / r;
       for (const en of state.enemies) {
         if (en.dead || f.hit.has(en)) continue;
-        if (Math.abs(wrapAngle(en.a - wa)) * r <= sk.width + en.def.width * 0.4) { f.hit.add(en); hitEnemy(en, p.damage * sk.damageMul); }
+        if (Math.abs(wrapAngle(en.a - wa)) * r <= sk.width + en.def.width * 0.4) { f.hit.add(en); hitEnemy(en, p.damage * sk.damageMul, { skill: true, element: sk.element }); }
       }
     } else if (!f.done && f.t >= sk.hitAt) {
       f.done = true;
       for (const en of state.enemies) {
         if (en.dead) continue;
-        if (Math.abs(wrapAngle(en.a - f.a)) * r <= sk.radius + en.def.width * 0.3) { hitEnemy(en, p.damage * sk.damageMul); applyKnock(en, sk.knockback); }
+        if (Math.abs(wrapAngle(en.a - f.a)) * r <= sk.radius + en.def.width * 0.3) { hitEnemy(en, p.damage * sk.damageMul, { skill: true, element: sk.element }); applyKnock(en, sk.knockback); }
       }
       state.shake = Math.max(state.shake, 4);
     }
