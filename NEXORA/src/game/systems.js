@@ -3,6 +3,7 @@ import { Input } from '../core/input.js';
 import { View } from '../core/view.js';
 import { rand, clamp, wrapAngle, TAU } from '../core/util.js';
 import { state, xpForLevel } from './state.js';
+import { updateSkills } from './skills.js';
 
 const R = () => CONFIG.planet.radius;
 const surfaceDist = (a, b) => Math.abs(wrapAngle(a - b)) * R();
@@ -60,7 +61,9 @@ function addText(a, h, text, color, scale = 1) {
   state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8), scale });
 }
 
-function damageEnemy(en, dmg) {
+export function applyKnock(en, k) { en.knock = Math.max(en.knock, k * (1 - en.def.knockResist)); en.stagger = Math.max(en.stagger, 0.3); }
+
+export function damageEnemy(en, dmg) {
   en.hp -= dmg; en.flash = 0.14; en.knock = 1 - en.def.knockResist; en.stagger = 0.22;
   if (en.def.knockResist < 0.5 && en.attackT >= 0) { en.attackT = -1; en.atkTimer = 0.5; }   // hafif düşmanın saldırısı vuruşla bölünür; elite bölünmez
   addText(en.a, en.def.heightUnits + 10, '-' + Math.round(dmg), '#ff4a4a', 0.75 + en.def.heightUnits / 300);
@@ -188,6 +191,7 @@ export function update(dt) {
   for (const en of state.enemies) if (en.dead) en.deathT += dt;
 
   // Saldırı: menzilde düşman varsa otomatik, ya da saldırı düğmesi/Space ile elle. Saldırı yönü kahramanın baktığı yön.
+  updateSkills(dt);
   const manual = Input.consumeAttack();
   const attackAnimBusy = p.anim.startsWith('attack') && ANIMS.hero?.animations[p.anim] && p.animT < ANIMS.hero.animations[p.anim].frames.length / ANIMS.hero.animations[p.anim].fps * 0.9;
   if (!state.over && p.atkTimer <= 0 && !attackAnimBusy) {

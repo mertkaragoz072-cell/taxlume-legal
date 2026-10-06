@@ -13,6 +13,7 @@ function tryFullscreenLandscape() {
 export const Input = {
   keys: {},
   axis: 0,
+  skillQueue: [],                            // yetenek düğmesi / Q,E → 'skill1' | 'skill2'
   attackQueued: false,                       // saldırı düğmesi / Space / J
   consumeAttack() { const q = this.attackQueued; this.attackQueued = false; return q; },
   joy: { id: null, ox: 0, oy: 0, x: 0 },
@@ -22,6 +23,12 @@ export const Input = {
     addEventListener('keyup', (e) => { if (map[e.code]) this.keys[map[e.code]] = false; });
     addEventListener('keydown', (e) => { if ((e.code === 'Space' || e.code === 'KeyJ') && !e.repeat) { this.attackQueued = true; e.preventDefault(); } });
     addEventListener('blur', () => { this.keys = {}; });
+    addEventListener('keydown', (e) => { if (e.repeat) return; if (e.code === 'KeyQ') this.skillQueue.push('skill1'); else if (e.code === 'KeyE') this.skillQueue.push('skill2'); });
+    for (const id of ['skill1', 'skill2']) {
+      const sb = document.getElementById('btn-' + id); if (!sb) continue;
+      sb.addEventListener('pointerdown', (e) => { this.skillQueue.push(id); sb.classList.add('pressed'); e.preventDefault(); e.stopPropagation(); });
+      for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) sb.addEventListener(ev, () => sb.classList.remove('pressed'));
+    }
     const atk = document.getElementById('btn-attack');
     if (atk) atk.addEventListener('pointerdown', (e) => { this.attackQueued = true; atk.classList.add('pressed'); e.preventDefault(); e.stopPropagation(); });
     for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) atk?.addEventListener(ev, () => atk.classList.remove('pressed'));

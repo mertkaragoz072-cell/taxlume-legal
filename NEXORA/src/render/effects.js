@@ -1,4 +1,4 @@
-import { CONFIG, ANIMS, HERO } from '../core/config.js';
+import { CONFIG, ANIMS, HERO, SKILLS } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { clamp } from '../core/util.js';
 import { TAU } from '../core/util.js';
@@ -49,4 +49,22 @@ export function drawHitFx(ctx, f) {
     else { ctx.beginPath(); ctx.arc(0, 0, 14 * k, 0, TAU); ctx.fillStyle = '#9fe0ff'; ctx.fill(); }
     ctx.globalAlpha = 1;
   });
+}
+
+// Yetenek efektleri: wave = ileri giden mavi hilal (dünya açısında ilerler), burst = yerde patlama kareleri
+export function drawSkillFx(ctx, f) {
+  const sk = SKILLS[f.id], R = CONFIG.planet.radius;
+  if (f.type === 'wave') {
+    const img = Assets.get(sk.fx); if (!img) return;
+    const a = f.a + f.dir * f.x / R, k = sk.fxHeight / img.height, fade = 1 - Math.pow(Math.min(1, f.t / f.life), 3);
+    onLane(ctx, a, 38, 0, () => {
+      ctx.scale(f.dir, 1); ctx.globalAlpha = fade;
+      for (let i = 3; i >= 0; i--) { ctx.globalAlpha = fade * (i === 0 ? 1 : 0.18 * (4 - i)); ctx.drawImage(img, -img.width * k * 0.5 - i * 14, -img.height * k * 0.5, img.width * k, img.height * k); }
+      ctx.globalAlpha = 1;
+    });
+  } else {
+    const n = sk.fxFrames.length, i = Math.min(n - 1, Math.floor(f.t / f.life * n)), img = Assets.get(sk.fxFrames[i]); if (!img) return;
+    const k = (sk.radius * 1.9) / img.width;
+    onLane(ctx, f.a, 0, 0, () => { ctx.globalAlpha = 1 - Math.pow(f.t / f.life, 6); ctx.drawImage(img, -img.width * k / 2, -img.height * k + 8, img.width * k, img.height * k); ctx.globalAlpha = 1; });
+  }
 }

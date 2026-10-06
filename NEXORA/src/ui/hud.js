@@ -1,4 +1,5 @@
 import { state } from '../game/state.js';
+import { SKILLS } from '../core/config.js';
 import { CONFIG, HERO } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 
@@ -9,7 +10,19 @@ export function initHud() {
   }
 }
 
+const skillEls = {};
+// Yetenek düğmeleri: bekleme süresi daire dilimi (--cd), hazırken parlama, seviye açılmamışsa gri
+function updateSkillButtons() {
+  for (const id of Object.keys(SKILLS)) {
+    const b = skillEls[id] || (skillEls[id] = document.getElementById('btn-' + id)); if (!b) continue;
+    const sk = SKILLS[id], locked = state.player.level < sk.unlockLevel, cd = locked ? 1 : state.skillCd[id] / sk.cooldown;
+    b.style.setProperty('--cd', cd.toFixed(3)); b.classList.toggle('locked', locked); b.classList.toggle('ready', !locked && cd <= 0);
+    b.title = locked ? `${sk.name} — Seviye ${sk.unlockLevel}'de açılır` : sk.name;
+  }
+}
+
 export function updateHud() {
+  updateSkillButtons();
   const p = state.player;
   el['hud-level'].textContent = p.level;
   el['hp-fill'].style.width = (p.hp / p.maxHp * 100) + '%';
