@@ -1,5 +1,5 @@
 {
-  "_comment": "Bölüm tanımları (şimdilik yalnız ad + tema anahtarı; görseller sonra). Bölüm sırası stage 1,2,3…; liste bitince başa döner ve ad sonuna II, III… eklenir. Zorluk çarpanları data/waves.json → stage.",
+  "_comment": "Bölüm tanımları: ad + tema (data/world_props.json → themes; 'meadow' = mevcut varsayılan görünüm). Bölüm sırası stage 1,2,3…; liste bitince başa döner ve ad sonuna ★ eklenir. Zorluk çarpanları data/waves.json → stage.",
   "chapters": [
     {
       "id": "meadowlands",
@@ -15,6 +15,16 @@
       "id": "frozen_peaks",
       "name": "FROZEN PEAKS",
       "theme": "frozen"
+    },
+    {
+      "id": "meadowlands_2",
+      "name": "MEADOWLANDS II",
+      "theme": "meadow2"
+    },
+    {
+      "id": "dark_forest_2",
+      "name": "DARK FOREST II",
+      "theme": "forest2"
     }
   ],
   "reward": {

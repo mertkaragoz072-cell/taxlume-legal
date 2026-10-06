@@ -5,6 +5,7 @@ import { TAU } from '../core/util.js';
 import { state } from '../game/state.js';
 import { onSurface, visible, outlined } from './draw.js';
 import { drawBackground } from './parallax.js';
+import { currentTheme } from './theme.js';
 
 export function drawSky(ctx) { drawBackground(ctx); }
 
@@ -28,13 +29,14 @@ function drawGroundTexture(ctx) {
 }
 
 export function drawPlanet(ctx) {
-  const { cx, cy, R } = View, c = CONFIG.planet.colors, sc = View.scale;
+  const { cx, cy, R } = View, th = currentTheme(), c = { ...CONFIG.planet.colors, ...(th?.ground?.colors || {}) }, sc = View.scale;
   const top = cy - R;
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU);
   const g = ctx.createLinearGradient(0, top, 0, top + 380 * sc);
   g.addColorStop(0, c.grassLight); g.addColorStop(0.18, c.grass); g.addColorStop(1, c.grassDark);
   ctx.fillStyle = g; ctx.fill();
   drawGroundTexture(ctx);
+  if (th?.ground?.tint) { ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fillStyle = th.ground.tint; ctx.fill(); }   // harita zemin tonu
   // üst kenarda koyu toprak/çim bandı + açık parlama
   ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
   ctx.beginPath(); ctx.arc(cx, cy, R - 9 * sc, 0, TAU);
@@ -62,7 +64,7 @@ function drawDecals(ctx) {
     }
     DECALS.sort((p, q) => p.depth - q.depth);
   }
-  ctx.globalAlpha = cfg.alpha ?? 1;
+  ctx.globalAlpha = (cfg.alpha ?? 1) * (currentTheme()?.ground?.decalAlpha ?? 1);
   for (const d of DECALS) {
     if (!visible(d.a)) continue;
     const img = Assets.get(d.key); if (!img) continue;
@@ -78,6 +80,16 @@ export function drawForeground(ctx) { drawDecor(ctx, 'front'); }
 const hasSprites = () => !!(WORLD.props && Assets.get('prop_pine_large'));
 
 function drawDecor(ctx, layer) {
+  const th = currentTheme();
+  if (th && Assets.get(`tp_${th.id}_${Object.keys(th.props)[0]}`)) {          // tema dekoru (data/world_props.json → themes)
+    for (const d of getThemeDecor(th)) {
+      if (d.layer !== layer || !visible(d.a)) continue;
+      const img = Assets.get(`tp_${th.id}_${d.key}`); if (!img) continue;
+      const p = th.props[d.key], k = (p.height * d.s) / img.height;
+      onSurface(ctx, d.a, -d.depth, 0, () => ctx.drawImage(img, -p.pivot[0] * k, -p.pivot[1] * k, img.width * k, img.height * k));
+    }
+    return;
+  }
   if (hasSprites()) {
     for (const d of getSpriteDecor()) {
       if (d.layer !== layer || !visible(d.a)) continue;
@@ -97,6 +109,20 @@ function drawDecor(ctx, layer) {
       else drawTree(ctx, d);
     });
   }
+}
+
+// Tema dekoru: aynı kurallar, tema başına deterministik saçılım (bölüm değişince farklı set)
+const THEME_DECOR = {};
+function getThemeDecor(th) {
+  if (THEME_DECOR[th.id]) return THEME_DECOR[th.id];
+  const list = [], len = TAU * CONFIG.planet.radius; let seed = 31 + th.id.length * 7;
+  const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (const g of th.decor) {
+    for (let i = 0, n = Math.round(len / g.every); i < n; i++) {
+      list.push({ key: g.keys[Math.floor(r() * g.keys.length)], a: r() * TAU - Math.PI, s: g.scale[0] + r() * (g.scale[1] - g.scale[0]), depth: g.depth[0] + r() * (g.depth[1] - g.depth[0]), layer: g.layer });
+    }
+  }
+  return (THEME_DECOR[th.id] = list.sort((a, b) => a.depth - b.depth));
 }
 
 // Sprite dekor: data/world_props.json → decor kuralları, yüzey uzunluğuna göre deterministik saçılım

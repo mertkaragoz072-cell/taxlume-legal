@@ -182,3 +182,6 @@ Kart havuzu: Saldırı Gücü, Can, Hareket Hızı, Saldırı Hızı, Kritik Şa
 
 ## Faz 21 — Kilitlenme düzeltmesi ve genel denetim
 Hafif düşmanın saldırısı bir vuruşla bölününce 1.6 sn bölünmezlik (`en.noInterrupt`): hızlı vuran oyuncu goblini sonsuza dek kilitleyemez. Denetim: 5 bölümlük (≈33 bin kare) mantık simülasyonu (erkek + kadın), ölüm/yeniden başlama, bozuk/eski kayıt, localStorage yok, karakter seçimi, yetenek/ses, dikey ekran duraklatma, maksimum güç kartı durumu, boss'ta ölüm → yeniden başlama: hata/anomali yok.
+
+## Faz 22 — Harita temaları
+Her bölüm kendi haritasını kullanır (chapters.json → theme): DARK FOREST, FROZEN PEAKS, MEADOWLANDS II, DARK FOREST II; MEADOWLANDS mevcut görünümü korur. Tema = gökyüzü renkleri + panorama arka plan şeridi + zemin tonu + o haritanın dekor sprite'ları (`src/render/theme.js`, parallax.js/world.js). Karakter, düşman, HUD, kamera aynı. 5 harita bitince başa döner ("MEADOWLANDS ★").

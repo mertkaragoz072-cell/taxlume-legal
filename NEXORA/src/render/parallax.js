@@ -4,6 +4,7 @@ import { View } from '../core/view.js';
 import { state } from '../game/state.js';
 import { TAU } from '../core/util.js';
 import { outlined } from './draw.js';
+import { currentTheme } from './theme.js';
 
 // ARKA PLAN KATMANLARI (uzaktan yakına). Her katman yatayda tekrarlanan bir şerittir; kayma = oyuncunun gittiği
 // mesafe × katman hızı. Derinlik hissi için uzak katmanlar gökyüzü rengine doğru "atmosferik sis" ile soldurulur;
@@ -33,9 +34,51 @@ function tinted(key, amt) {
   tintCache.set(id, cv); return cv;
 }
 
+// Tema arka planı (bölüm haritası): tema gökyüzü + uzak panorama şeridi (aynalı döşeme, üstü gökyüzüne solar) + ufuk sisi.
+// Panorama düşük çözünürlüklü olduğundan uzak/sisli katman olarak kullanılır.
+const backdropCache = new Map();
+function backdropImage(th, s) {
+  const key = th.id + '@' + s.toFixed(3), hit = backdropCache.get(key); if (hit) return hit;
+  const src = Assets.get(th.backdrop.key); if (!src) return null;
+  const h = Math.round(th.backdrop.height * s), k = h / src.height, w = Math.round(src.width * k);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d');
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, w, h);
+  g.globalCompositeOperation = 'destination-in'; const m = g.createLinearGradient(0, 0, 0, h); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.4, 'rgba(0,0,0,1)'); g.fillStyle = m; g.fillRect(0, 0, w, h);   // üst kenar gökyüzüne solar
+  const row = g.getImageData(0, h - 3, w, 1).data; let r = 0, gg = 0, b = 0, n = 0;                 // alt kenar ortalama rengi: şeridin altını doldurmak için
+  for (let i = 0; i < row.length; i += 4) if (row[i + 3] > 200) { r += row[i]; gg += row[i + 1]; b += row[i + 2]; n++; }
+  cv.floor = n ? `rgb(${Math.round(r / n)},${Math.round(gg / n)},${Math.round(b / n)})` : '#000';
+  backdropCache.set(key, cv); return cv;
+}
+function drawThemed(ctx, th, travelled, crest) {
+  const s = View.scale, sky = th.sky, hz = th.haze;
+  const gr = ctx.createLinearGradient(0, 0, 0, crest + 30 * s);
+  gr.addColorStop(0, sky[0]); gr.addColorStop(0.45, sky[1]); gr.addColorStop(0.8, sky[2]); gr.addColorStop(1, sky[3]);
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, View.w, View.h);
+  if (th.sun) {
+    const sx = View.w * 0.5, sy = crest * 0.5, sr = 120 * s, rg = ctx.createRadialGradient(sx, sy, sr * 0.15, sx, sy, sr * 2.2);
+    rg.addColorStop(0, 'rgba(255,250,210,.7)'); rg.addColorStop(0.35, 'rgba(255,246,190,.3)'); rg.addColorStop(1, 'rgba(255,246,190,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, View.w, View.h);
+  }
+  if (th.clouds) strip(ctx, travelled, 0.009, 1700, (x0, P) => farClouds(ctx, x0, P, crest));
+  const img = backdropImage(th, s);
+  if (img) {                                              // aynalı döşeme: dikiş görünmez
+    const w = img.width, scroll = travelled * th.backdrop.speed * s, t0 = Math.floor(scroll / w), off = scroll - t0 * w, y = crest - img.height + 16 * s;
+    for (let j = 0; -off + j * w < View.w; j++) {
+      const flip = ((t0 + j) % 2 + 2) % 2 === 1, x = -off + j * w;
+      ctx.save(); ctx.translate(flip ? x + w : x, y); if (flip) ctx.scale(-1, 1); ctx.drawImage(img, 0, 0); ctx.restore();
+    }
+    ctx.fillStyle = img.floor; ctx.fillRect(0, y + img.height - 1, View.w, View.h);      // gezegenin yanlarında görünen alan: şerit altı düz zemin rengi
+  }
+  const hg = ctx.createLinearGradient(0, crest - 70 * s, 0, crest + 40 * s);
+  hg.addColorStop(0, `rgba(${hz[0]},${hz[1]},${hz[2]},0)`); hg.addColorStop(0.7, `rgba(${hz[0]},${hz[1]},${hz[2]},.38)`); hg.addColorStop(1, `rgba(${hz[0]},${hz[1]},${hz[2]},0)`);
+  ctx.fillStyle = hg; ctx.fillRect(0, crest - 70 * s, View.w, 110 * s);
+}
+
 export function drawBackground(ctx) {
   const s = View.scale, travelled = state.player.a * CONFIG.planet.radius;
   const crest = View.cy - View.R;                       // zemin yayının tepe noktası (ufuk)
+  const th = currentTheme();
+  if (th && th.backdrop && Assets.get(th.backdrop.key)) { drawThemed(ctx, th, travelled, crest); return; }
   drawSky(ctx, crest);
   if (!hasSprites()) { drawLegacy(ctx, travelled, crest); return; }
 
