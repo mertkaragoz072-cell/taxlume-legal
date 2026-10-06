@@ -119,8 +119,8 @@ function drawProceduralHero(ctx, meta, anim) {
 export function drawPlayer(ctx) {
   if (drawPlayerSprite(ctx)) return;
   const p = state.player;
-  const step = Math.sin(p.walk) * (Math.abs(Input.axis) > 0 ? 1 : 0);
-  const bob = Math.abs(Math.sin(p.walk)) * 2 * Math.abs(Input.axis);
+  const step = Math.sin(p.walk) * (Math.abs(state.player.moveAxis) > 0 ? 1 : 0);
+  const bob = Math.abs(Math.sin(p.walk)) * 2 * Math.abs(state.player.moveAxis);
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.55;
   onLane(ctx, p.a, 0, p.lean, () => {
     const d = p.dir; ctx.scale(d, 1);

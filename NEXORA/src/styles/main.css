@@ -30,24 +30,6 @@ html, body {
 #btn-sound { pointer-events: auto; cursor: pointer; padding: 0; }
 #btn-sound:active { transform: translateY(2px); }
 
-/* Sabit sanal joystick: sol alt, şeffaf cam görünüm. Dokunma alanı: ekranın sol %55'i. */
-#joystick {
-  position: absolute; left: calc(env(safe-area-inset-left) + 28px); bottom: calc(env(safe-area-inset-bottom) + 18px);
-  width: 98px; height: 98px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.20), rgba(255,255,255,.06) 70%);
-  border: 2px solid rgba(255,255,255,.45); box-shadow: 0 0 0 4px rgba(31,42,68,.18), inset 0 0 14px rgba(255,255,255,.12);
-  backdrop-filter: blur(2px);
-}
-#joystick.active { background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.30), rgba(255,255,255,.10) 70%); border-color: rgba(255,255,255,.7); }
-#joystick .chev { position: absolute; top: 50%; width: 10px; height: 10px; margin-top: -5px; border: solid rgba(255,255,255,.7); border-width: 0 0 3px 3px; border-radius: 1px; }
-#joystick .chev.l { left: 9px; transform: rotate(45deg); }
-#joystick .chev.r { right: 9px; transform: rotate(-135deg); }
-#stick {
-  position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, #cfe9ff 60%, #8fc4f5); border: 2px solid rgba(31,42,68,.55);
-  box-shadow: 0 3px 8px rgba(0,0,0,.35), 0 0 10px rgba(140,200,255,.6);
-}
-
 /* Saldırı / yetenek düğmeleri: sağ alt */
 #actions { position: absolute; right: calc(env(safe-area-inset-right) + 22px); bottom: calc(env(safe-area-inset-bottom) + 16px); width: 150px; height: 110px; pointer-events: none; }
 #actions button { position: absolute; border-radius: 50%; border: 3px solid #1f2a44; color: #fff; pointer-events: auto; touch-action: manipulation; cursor: pointer; padding: 0;
@@ -85,8 +67,6 @@ html, body {
   .pill { height: 30px; min-width: 104px; font-size: 15px; }
   .hud-side { top: calc(env(safe-area-inset-top) + 86px); }
   .sidebtn { width: 46px; height: 46px; font-size: 21px; }
-  #joystick { width: 124px; height: 124px; }
-  #stick { width: 54px; height: 54px; margin: -27px 0 0 -27px; }
   #actions { width: 190px; height: 140px; } #btn-attack { width: 98px; height: 98px; } .skillbtn { width: 54px; height: 54px; }
   .skillbtn.s1 { right: 108px; } .skillbtn.s2 { right: 66px; bottom: 80px; }
 }
@@ -117,3 +97,10 @@ html, body {
 
 .sel-info { font-size: 12px; font-weight: 700; color: #5b6a8f; margin-top: 2px; }
 .sel-wipe { margin-top: 10px; background: transparent; border: 2px solid rgba(255,255,255,.55); color: #fff; font: inherit; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 12px; cursor: pointer; }
+
+/* Yetenek bekleme süresi: düğme kararır, kalan saniye ortada görünür */
+.skillbtn { position: absolute; }
+.skillbtn svg { position: relative; z-index: 1; transition: opacity .15s; }
+.skillbtn.cooling { filter: brightness(.62) saturate(.7); }
+.skillbtn.cooling svg { opacity: .35; }
+.skillbtn .cdtxt { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; color: #fff; text-shadow: 0 2px 0 #1f2a44, 0 0 6px #1f2a44; pointer-events: none; }

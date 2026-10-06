@@ -132,17 +132,16 @@ export function update(dt) {
   state.time += dt;
   const p = state.player, C = CONFIG, r = R();
 
-  // Hareket: joystick/klavye elle sürer; girdi yoksa kahraman sağa otomatik koşar, önünde düşman varsa durup savaşır.
+  // Hareket: tamamen OTOMATİK. Kahraman sürekli sağa koşar; önünde (engageRange içinde) canlı düşman varsa durup savaşır,
+  // düşman ölünce yeniden ilerler. Zemin eğimini lane/onSurface zaten takip eder.
   const live = state.enemies.filter((x) => !x.dead);
-  let ax = 0, speed = C.player.speed;
+  let ax = 0, speed = C.player.autoSpeed;
   if (!state.over) {
-    ax = Input.axis;
-    if (ax === 0 && C.player.autoRun) {
-      const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > 0 && d < C.player.engageRange; });
-      if (!ahead) { ax = 1; speed = C.player.autoSpeed; }
-    }
+    const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < C.player.engageRange; });
+    if (!ahead) ax = 1;
+    p.dir = 1;
     p.a += ax * speed / r * dt;
-    if (ax !== 0) { p.dir = Math.sign(ax); p.walk += dt * 10 * Math.abs(ax); p.stride += Math.abs(ax) * speed * dt; }
+    if (ax !== 0) { p.walk += dt * 10; p.stride += speed * dt; }
     p.lean += (ax * 0.12 - p.lean) * Math.min(1, dt * 10);
   }
   p.moveAxis = ax;
@@ -211,7 +210,7 @@ export function update(dt) {
       if (d <= bd) { bd = d; best = en; }
     }
     if (best || manual) {
-      if (best) p.dir = wrapAngle(best.a - p.a) >= 0 ? 1 : -1;
+      p.dir = 1;                                  // saldırı yönü her zaman sağ
       p.atkTimer = C.player.attackCooldown;
       const an = `attack_${p.combo + 1}`; p.anim = ANIMS.hero.animations[an] ? an : 'attack'; p.animT = 0; p.combo = (p.combo + 1) % 3;   // kadın karakterde tek 'attack' var
       state.slashes.push({ life: C.player.slashDuration, max: C.player.slashDuration, dir: p.dir, a: p.a });

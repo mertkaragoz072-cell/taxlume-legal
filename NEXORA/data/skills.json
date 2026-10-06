@@ -1,23 +1,9 @@
 {
   "skill1": {
-    "name": "Mavi Dalga",
-    "key": "KeyQ",
-    "cooldown": 6,
-    "unlockLevel": 1,
-    "damageMul": 2.0,
-    "type": "wave",
-    "speed": 520,
-    "range": 380,
-    "width": 46,
-    "fx": "fx_effect_slash_arc_01",
-    "fxHeight": 110,
-    "castAnim": "attack"
-  },
-  "skill2": {
     "name": "Yıldız Patlaması",
-    "key": "KeyE",
-    "cooldown": 12,
-    "unlockLevel": 3,
+    "key": "KeyQ",
+    "cooldown": 5,
+    "unlockLevel": 1,
     "damageMul": 3.0,
     "type": "burst",
     "radius": 150,
@@ -31,6 +17,20 @@
     ],
     "fxDuration": 0.55,
     "hitAt": 0.1,
+    "castAnim": "attack"
+  },
+  "skill2": {
+    "name": "Mavi Dalga",
+    "key": "KeyE",
+    "cooldown": 10,
+    "unlockLevel": 1,
+    "damageMul": 2.0,
+    "type": "wave",
+    "speed": 520,
+    "range": 380,
+    "width": 46,
+    "fx": "fx_effect_slash_arc_01",
+    "fxHeight": 110,
     "castAnim": "attack"
   }
 }

@@ -17,6 +17,8 @@ function updateSkillButtons() {
     const b = skillEls[id] || (skillEls[id] = document.getElementById('btn-' + id)); if (!b) continue;
     const sk = SKILLS[id], locked = state.player.level < sk.unlockLevel, cd = locked ? 1 : state.skillCd[id] / sk.cooldown;
     b.style.setProperty('--cd', cd.toFixed(3)); b.classList.toggle('locked', locked); b.classList.toggle('ready', !locked && cd <= 0);
+    const tx = b.querySelector('.cdtxt'); const rem = locked ? 0 : state.skillCd[id];
+    b.classList.toggle('cooling', rem > 0); if (tx) tx.textContent = rem > 0 ? (rem >= 1 ? Math.ceil(rem) : rem.toFixed(1)) : '';
     b.title = locked ? `${sk.name} — Seviye ${sk.unlockLevel}'de açılır` : sk.name;
   }
 }
