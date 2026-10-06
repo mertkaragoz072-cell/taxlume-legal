@@ -179,3 +179,6 @@ LEVEL UP yalnız bir kez (`p.lvShown`; anahtarlı yazı yenilenir, ~1.8 sn); XP 
 
 ## Faz 20 — 6 güç × 4 seviye
 Kart havuzu: Saldırı Gücü, Can, Hareket Hızı, Saldırı Hızı, Kritik Şansı, Kritik Hasarı (`upgrades.json → tiers`: seviye başına TOPLAM bonus, artan). Lv1→4: Saldırı +10/20/30/40%, Can +20/35/50/65%, Hareket +20/35/50/65%, Saldırı Hızı +15/30/45/60%, Kritik Şansı +10/20/30/40 puan, Kritik Hasarı +25/45/70/95%. Kart yeni seviyeyi ve toplam bonusu gösterir ("SEVİYE 2 → 3", +32%; "Şu an +20%"). Rarity artık seviye atlatmaz (hepsi +1). Diğer güçler `disabled`.
+
+## Faz 21 — Kilitlenme düzeltmesi ve genel denetim
+Hafif düşmanın saldırısı bir vuruşla bölününce 1.6 sn bölünmezlik (`en.noInterrupt`): hızlı vuran oyuncu goblini sonsuza dek kilitleyemez. Denetim: 5 bölümlük (≈33 bin kare) mantık simülasyonu (erkek + kadın), ölüm/yeniden başlama, bozuk/eski kayıt, localStorage yok, karakter seçimi, yetenek/ses, dikey ekran duraklatma, maksimum güç kartı durumu, boss'ta ölüm → yeniden başlama: hata/anomali yok.

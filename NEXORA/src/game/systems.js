@@ -76,7 +76,7 @@ export function update(dt) {
   order.forEach((en, i) => {
     en.bob += dt * (5 + en.def.speed * 0.05); en.flash = Math.max(0, en.flash - dt); en.stagger = Math.max(0, (en.stagger || 0) - dt);
     en.atkTimer = Math.max(0, en.atkTimer - dt);
-    en.age += dt;
+    en.age += dt; if (en.noInterrupt > 0) en.noInterrupt -= dt;
     tickStatus(en, dt);
     if (en.dead) return;
     const diff = wrapAngle(p.a - en.a);
