@@ -15,10 +15,12 @@ import { startWave, resumeAfterUpgrade, isBossWave } from './game/WaveManager.js
 import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
 import { addText } from './game/combat.js';
 import { events } from './game/events.js';
+import { CardSystem, debugGrantAll } from './game/CardSystem.js';
 
 function restart() {
   resetState();
   Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem/güçlendirme/dalga geri yüklenir
+  const cq = new URLSearchParams(location.search).get('cards'); if (cq) debugGrantAll(Math.max(1, +cq || 1));   // test: ?cards=1..5
   startWave();
   hideGameOver();
   updateHud(); updateBuffs(true);
@@ -141,6 +143,6 @@ async function boot() {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__game = { state, spawnEnemy, CONFIG, Audio, update, startWave }; // hata ayıklama
+  window.__game = { state, spawnEnemy, CONFIG, Audio, update, startWave }; window.__cards = CardSystem; // hata ayıklama
 }
 boot();

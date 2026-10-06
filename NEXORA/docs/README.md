@@ -150,3 +150,6 @@ Kamera: `visibleHeightUnits 460`, `groundScreenY 0.70`, `heroScreenX 0.37` (zemi
 
 ## Faz 12 — Savaş mesafesi ve performans
 Düşman `contactRange` ×1.5 (büyüyen sprite'larla oyuncu–düşman arası küçük, doğal boşluk), hit flash opaklığı 0.8 → 0.5. Uyarlanabilir çözünürlük: kare süresi 90 kare boyunca ortalama >26 ms ise `View.dprCap` 0.5 kademe düşer (3 → 1.25, geri artmaz); `?hq=1` ile kapatılır.
+
+## Faz 13 — Kart sistemi altyapısı (UI yok)
+`data/cards.json` (tanımlar) + `src/game/CardSystem.js` (ownedCards / equippedCards, en çok 3 aktif, seviye 1–5: bonus = effectValue × seviye). Bonuslar `PlayerStats.derived()` içinde mevcut statlara eklenir (attack→damageMul, crit→critChance, maxHp→maxHpMul); kaydedilir (`cards`). Test: `?cards=3` (3 kartı Lv.3 verip kuşandırır) veya konsolda `__cards.grantCard('warrior_power'); __cards.equipCard('warrior_power')`. Loglar `[CardSystem]` önekli; kapatmak: `__cards.log = false`.

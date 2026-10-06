@@ -1,0 +1,9 @@
+{
+  "_comment": "Kart sistemi (CardSystem) tanımları. effectType → PlayerStats'taki stat: attack→damageMul, crit→critChance, maxHp→maxHpMul (bkz. CardSystem.EFFECTS). Bonus = effectValue × seviye (Lv1 %5 … Lv5 %25). image: mevcut kart görseli (UI henüz yok).",
+  "maxEquipped": 3,
+  "cards": [
+    { "id": "warrior_power", "name": "Savaşçı Gücü", "description": "Saldırı gücünü artırır.", "rarity": "common", "icon": "⚔️", "image": "assets/ui/cards/card_attack_damage.png", "effectType": "attack", "effectValue": 0.05, "maxLevel": 5 },
+    { "id": "sharpshooter", "name": "Keskin Nişancı", "description": "Kritik vuruş şansını artırır.", "rarity": "common", "icon": "🎯", "image": "assets/ui/cards/card_crit_chance.png", "effectType": "crit", "effectValue": 0.05, "maxLevel": 5 },
+    { "id": "endurance", "name": "Dayanıklılık", "description": "Maksimum canı artırır.", "rarity": "common", "icon": "❤️", "image": "assets/ui/cards/card_max_hp.png", "effectType": "maxHp", "effectValue": 0.05, "maxLevel": 5 }
+  ]
+}

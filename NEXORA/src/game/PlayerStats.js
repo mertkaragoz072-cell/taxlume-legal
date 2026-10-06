@@ -1,6 +1,7 @@
 // PlayerStats: kalıcı güçlendirmelerden türetilen oyuncu statları. Veri: data/upgrades.json (base + her güçlendirmenin stat/per/cap).
 // p.upgrades = { upgradeId: seviye }. Türetilmiş değerler her çağrıda hesaplanır (basit, hızlı: ≤ 10 kayıt).
 import { CONFIG, UPGRADES } from '../core/config.js';
+import { equippedBonus, EFFECTS } from './CardSystem.js';
 
 // Build seviyesi: üyelerin toplam seviyesi eşiğe ulaşınca 1, 2×eşikte 2 (bonuslar buna göre katlanır)
 export function buildLevels(p) {
@@ -25,6 +26,8 @@ export function derived(p) {
     const lv = bl[b.id].lv; if (!lv) continue;
     for (const [k, v] of Object.entries(b.bonus)) s[k] = (s[k] ?? 0) + v * lv;
   }
+  const cb = equippedBonus(p);                                 // kuşanılmış kartlar: taban + kart bonusu (CardSystem)
+  for (const [type, v] of Object.entries(cb)) { const k = EFFECTS[type]; if (k) s[k] = (s[k] ?? 0) + v; }
   for (const u of UPGRADES.list) if (u.floor != null) s[u.stat] = Math.max(u.floor, s[u.stat]);   // alt sınır (ör. cooldown ≥ ×0.4)
   return s;
 }
