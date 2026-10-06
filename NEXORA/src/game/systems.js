@@ -32,7 +32,7 @@ function updatePlayerAnim(p, dt, atkMul) {
 }
 
 export function update(dt) {
-  if (state.paused) return;                       // güç seçimi ekranı: oyun tamamen durur
+  if (state.paused) { Input.skillQueue.length = 0; Input.attackQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
   state.time += dt;
   const p = state.player, C = CONFIG, r = R(), S = derived(p);
 
