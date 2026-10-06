@@ -153,3 +153,6 @@ Düşman `contactRange` ×1.5 (büyüyen sprite'larla oyuncu–düşman arası k
 
 ## Faz 13 — Kart sistemi altyapısı (UI yok)
 `data/cards.json` (tanımlar) + `src/game/CardSystem.js` (ownedCards / equippedCards, en çok 3 aktif, seviye 1–5: bonus = effectValue × seviye). Bonuslar `PlayerStats.derived()` içinde mevcut statlara eklenir (attack→damageMul, crit→critChance, maxHp→maxHpMul); kaydedilir (`cards`). Test: `?cards=3` (3 kartı Lv.3 verip kuşandırır) veya konsolda `__cards.grantCard('warrior_power'); __cards.equipCard('warrior_power')`. Loglar `[CardSystem]` önekli; kapatmak: `__cards.log = false`.
+
+## Faz 14 — 4 farklı güç sınırı
+Oyuncu 4 farklı güç (`upgrades.json → maxDistinct: 4`) seçince kart ekranında yalnız sahip olduğu 4 gücün üst seviyeleri çıkar (maksimumdaki güç çıkmaz; hepsi maksimumdaysa ekran atlanır).

@@ -4,7 +4,7 @@ export const CONFIG = {};
 export const ENEMY_TYPES = {};
 export const WORLD = {};      // data/world_props.json: prop boyutları, dekor kuralları, bulut/ada katmanları
 export const WAVES = {};        // data/waves.json
-export const UPGRADES = { base: {}, list: [], builds: [], categories: {}, epicMultiplier: 2, buildAffinityWeight: 1.6, rarities: {} };   // data/upgrades.json
+export const UPGRADES = { base: {}, list: [], builds: [], categories: {}, epicMultiplier: 2, buildAffinityWeight: 1.6, rarities: {}, maxDistinct: 4 };   // data/upgrades.json
 export const CARDS = { maxEquipped: 3, cards: [] };   // data/cards.json: kart sistemi tanımları (CardSystem)
 export const SKILLS = {};      // data/skills.json: yetenek tanımları (buton id → ayarlar)
 export const ANIMS = {};
@@ -29,7 +29,7 @@ export async function loadData(base = 'data/') {
   Object.assign(SKILLS, skills);
   Object.assign(CARDS, cards);
   Object.assign(WAVES, waves);
-  Object.assign(UPGRADES, { base: upgrades.base, list: upgrades.upgrades, builds: upgrades.builds, categories: upgrades.categories, epicMultiplier: upgrades.epicMultiplier, buildAffinityWeight: upgrades.buildAffinityWeight, rarities: upgrades.rarities });
+  Object.assign(UPGRADES, { base: upgrades.base, list: upgrades.upgrades, builds: upgrades.builds, categories: upgrades.categories, epicMultiplier: upgrades.epicMultiplier, buildAffinityWeight: upgrades.buildAffinityWeight, rarities: upgrades.rarities, maxDistinct: upgrades.maxDistinct || 0 });
   const q = new URLSearchParams(location.search).get('hero');
   HERO.fromUrl = !!(q && ANIMS[q]);
   setHero(HERO.fromUrl ? q : (config.player.character || 'male'));

@@ -61,7 +61,9 @@ export function updateWaves(dt) {
       else if (w.boss || w.n >= WAVES.wavesPerStage) {                 // 5. dalga (ve isteğe bağlı boss) sonrası: oyun durur, 3 kart
         w.phase = 'upgrade'; state.paused = true;
         w.epicNext = false;
-        events.onUpgrade?.(rollCards(3, w.boss), w.boss);
+        const cards = rollCards(3, w.boss);
+        if (cards.length) events.onUpgrade?.(cards, w.boss);
+        else resumeAfterUpgrade();                                       // tüm sahip olunan güçler maksimumda: seçilecek kart kalmadı
       } else resumeAfterUpgrade();
     }
   }

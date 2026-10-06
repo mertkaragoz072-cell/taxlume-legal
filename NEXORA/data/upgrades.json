@@ -519,5 +519,6 @@
       "weight": 0,
       "bossWeight": 0
     }
-  }
+  },
+  "maxDistinct": 4
 }

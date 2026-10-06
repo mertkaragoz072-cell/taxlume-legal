@@ -43,6 +43,9 @@ export function rollCards(n = 3, boss = false) {
     if (u.floor != null) return UPGRADES.base[u.stat] + u.per * lv > u.floor + 1e-9;
     return true;
   });
+  // Yetenek sınırı: oyuncu maxDistinct (4) FARKLI güç seçtiyse artık yenisi çıkmaz, yalnız sahip olduklarının üst seviyeleri sunulur
+  const ownedIds = UPGRADES.list.filter((u) => !u.disabled && (p.upgrades[u.id] || 0) > 0).map((u) => u.id);
+  if (UPGRADES.maxDistinct && ownedIds.length >= UPGRADES.maxDistinct) for (let i = pool.length - 1; i >= 0; i--) if (!ownedIds.includes(pool[i].id)) pool.splice(i, 1);
   const cards = [];
   while (cards.length < n && pool.length) {
     const w = (u) => u.weight * (fav && fav.members.includes(u.id) ? UPGRADES.buildAffinityWeight : 1);
