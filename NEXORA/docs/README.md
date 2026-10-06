@@ -167,3 +167,6 @@ Oyuncu 4 farklı güç (`upgrades.json → maxDistinct: 4`) seçince kart ekran�
 ## Faz 16 — Wave ve bölüm ilerlemesi
 Bölüm = 5 dalga (3 / 5 / 6 / 8 / 10 goblin, `waves.json → waves`) → kart seçimi → BOSS (Goblin Lord + 3 goblin; giriş: ekran kararır, "BOSS WAVE · GOBLIN LORD GELİYOR!") → "BOSS DEFEATED!" → **BÖLÜM TAMAMLANDI** ekranı (+50 altın, +1 kristal, +XP; `data/chapters.json → reward`) → DEVAM ET → sonraki bölüm.
 Dalga ölçeği (`stage.waveScale`): HP ×1/1.15/1.30/1.45/1.65, hasar, hız ve saldırı aralığı da kademeli; boss'a uygulanmaz (kendi statları + bölüm çarpanı). Bölüm adları: MEADOWLANDS → DARK FOREST → FROZEN PEAKS (sonra "… II"). Kayıt: bölüm, dalga, seviye, XP, coin, gem, karakter, güçler; bölüm tamamlama ekranı açıkken kapansa bile yeni bölümden devam eder.
+
+## Faz 17 — Combat polish & denge
+Maks can her karede formülden doğrulanır (120 + 15/seviye, × can güçlendirmesi; hatalı değer düzeltilir). Tek vuruş maks canın %35'ini geçmez (`player.maxHitFrac`). Hit-stop 0.05 (kritik 0.08). Düşmanlar oyuncunun içine girmez/arkasına geçmez (`en.side` + `minGap = genişlik/2 + 26`, boss +30). Boss: hasar 22, hammer ×1.4 / charge ×1.2 / smash ×1.6, hitbox'lar dünya birimi yarıçaplarıyla sprite'tan bağımsız. Boss ölümü: slow motion (~1 sn), XP/coin patlaması, ödüller bir kez (gem/coin doğrudan eklenir, yerdekiler görsel).

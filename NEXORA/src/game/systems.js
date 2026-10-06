@@ -42,6 +42,10 @@ export function update(dt) {
   }
   state.time += dt;
   const p = state.player, C = CONFIG, r = R(), S = derived(p);
+  // HP bütünlüğü: maks can her zaman seviye + güçlendirme formülünden gelir (hatalı/eski değer kendiliğinden düzelir), can maks'ı aşmaz
+  const expMax = Math.round((C.player.maxHp + C.leveling.maxHpPerLevel * (p.level - 1)) * S.maxHpMul);
+  if (p.maxHp !== expMax) p.maxHp = expMax;
+  if (p.hp > p.maxHp) p.hp = p.maxHp;
 
   // Hareket: tamamen OTOMATİK. Kahraman sürekli sağa koşar; önünde (engageRange içinde) canlı düşman varsa durup savaşır,
   // düşman ölünce yeniden ilerler. Zemin eğimini lane/onSurface zaten takip eder. Hız: autoSpeed × hareket hızı güçlendirmesi.
@@ -110,6 +114,13 @@ export function update(dt) {
     if (dist < en.def.contactRange * 0.55) en.a -= en.face * Math.min(60 * dt, en.def.contactRange * 0.55 - dist) / r;   // oyuncunun içine girmesin
     if (dist <= en.def.contactRange && en.atkTimer <= 0 && en.stagger <= 0) en.windT = C.enemies.windupSec;   // önce hazırlık, sonra saldırı
   });
+  // Çarpışma: düşman oyuncunun içine girmez ve arkasına geçmez — kendi tarafında (doğduğu sağ taraf) en az minGap uzakta kalır
+  for (const en of live) {
+    if (en.dead) continue;
+    const minGap = en.def.minGap ?? (en.def.width * 0.5 + (en.def.boss ? WAVES.boss.minGapExtra : 26));
+    const gap = wrapAngle(en.a - p.a) * r * en.side;
+    if (gap < minGap) en.a = p.a + en.side * minGap / r;
+  }
   for (const en of state.enemies) if (en.dead) en.deathT += dt;
 
   // Saldırı: menzilde düşman varsa OTOMATİK (ya da saldırı düğmesi/Space ile elle). Yön her zaman sağ. Hız: saldırı hızı güçlendirmesi.

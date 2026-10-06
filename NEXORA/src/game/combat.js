@@ -4,7 +4,7 @@ import { rand, TAU, wrapAngle } from '../core/util.js';
 import { state, xpForLevel } from './state.js';
 import { events } from './events.js';
 import { derived, recalcMaxHp, probRound } from './PlayerStats.js';
-import { hitSparks, deathBurst, hurtSparks, hitStop } from './fx.js';
+import { hitSparks, deathBurst, hurtSparks, hitStop, xpBurst } from './fx.js';
 
 export function addText(a, h, text, color, scale = 1, crit = false) {
   const life = CONFIG.hud.damageNumberLife;
@@ -66,7 +66,7 @@ export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
   if (en.def.knockResist < 0.5 && (en.attackT >= 0 || en.windT > 0)) { en.attackT = -1; en.windT = -1; en.atkTimer = 0.5; }   // hafif düşmanın saldırısı vuruşla bölünür; elite/boss bölünmez
   events.onHit?.(en, dmg);
   state.shake = Math.max(state.shake, crit ? 2.8 : 1.3);          // hafif vuruş sarsıntısı
-  hitStop(crit ? 0.07 : (en.def.boss ? 0.03 : 0.04));              // kısa hit-stop (kritikte biraz uzun)
+  hitStop(crit ? 0.08 : 0.05);              // kısa hit-stop (kritikte biraz uzun)
   addText(en.a, en.def.heightUnits + 10, (crit ? '' : '-') + Math.round(dmg) + (crit ? '!' : ''), crit ? '#ffd23f' : (color || '#ff4a4a'), (0.75 + en.def.heightUnits / 300) * (crit ? 1.8 : 1), crit);
   if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 190 * (crit ? 1.5 : 1), dir: -en.face });
   hitSparks(en.a, en.def.heightUnits * 0.55, -en.face, crit);
@@ -78,6 +78,7 @@ function spawnPickup(a, kind, h, spreadV) {
 }
 
 export function killEnemy(en) {
+  if (en.dead || en.rewarded) return; en.rewarded = true;          // ödül yalnız bir kez
   en.dead = true; en.deathT = 0; state.kills++;
   let n = Math.round(rand(en.def.coins[0], en.def.coins[1]));
   if (Math.random() < derived(state.player).extraCoin) n += 1 + (en.def.elite ? 2 : 0);
@@ -88,7 +89,7 @@ export function killEnemy(en) {
   addText(en.a, en.def.heightUnits + 34, '+' + xp + ' XP', '#7ee7ff', 0.7);
   events.onKill?.(en);
   deathBurst(en.a, en.def.heightUnits * 0.4, !!en.def.boss);
-  if (en.def.boss) { state.shake = Math.max(state.shake, 12); hitStop(0.14); bossReward(en); }
+  if (en.def.boss) { state.shake = Math.max(state.shake, 12); hitStop(0.14); state.slowT = 1.0; xpBurst(en.a, en.def.heightUnits * 0.6); bossReward(en); }
 }
 
 // Boss ödülü: doğrudan coin (250 × boss coin çarpanı) + görsel coin yağmuru, gem, tam iyileşme, sonraki seçimin EFSANE olması
@@ -97,7 +98,8 @@ function bossReward() {                       // coin + gem pickup + tam iyileş
   const amount = Math.round(R.coins * S.bossCoinMul);
   p.coins += amount;
   for (let i = 0; i < (R.showerCoins || 20); i++) { spawnPickup(p.a + 0.01 + i * 0.0006, 'coin', 30, 1.4); state.coins[state.coins.length - 1].value = 0; }
-  for (let i = 0; i < R.gems; i++) spawnPickup(p.a + 0.012 + i * 0.0007, 'gem', 34, 1.5);
+  p.gems += R.gems;                                                   // gem doğrudan (bir kez); yerdekiler yalnız görsel (değer 0)
+  for (let i = 0; i < R.gems; i++) { spawnPickup(p.a + 0.012 + i * 0.0007, 'gem', 34, 1.5); state.coins[state.coins.length - 1].value = 0; }
   if (R.healFull) p.hp = p.maxHp;
   if (R.epicUpgrade) state.wave.epicNext = true;
   state.bossReward = amount;
@@ -131,8 +133,9 @@ export function hurtPlayer(dmg) {
   if (p.invuln > 0 || state.over) return;
   const S = derived(p);
   dmg = Math.max(1, dmg / (1 + S.defense) * (1 - S.dmgTaken));
+  dmg = Math.min(dmg, p.maxHp * CONFIG.player.maxHitFrac);          // tek vuruş maksimum canın %35'inden fazlasını almaz
   p.hp = Math.max(0, p.hp - dmg);
-  p.invuln = CONFIG.player.invulnTime; p.hitFlash = 0.2; state.shake = 6;
+  p.invuln = CONFIG.player.invulnTime; p.hitFlash = 0.2; state.shake = Math.max(state.shake, 4);
   p.anim = 'hurt'; p.animT = 0; state.hurtFlash = 0.28; hurtSparks(p.a, 50);
   addText(p.a, 125, '-' + Math.round(dmg), '#ff9a3a');
   events.onHurt?.();

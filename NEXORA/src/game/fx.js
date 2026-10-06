@@ -46,3 +46,11 @@ export function updateParticles(dt) {
 
 // Hit-stop: saniye cinsinden kısa duraklama (en büyük değer geçerli). Savaş döngüsü bu sürede sadece efektleri/atış sayacını işletir.
 export function hitStop(sec) { state.hitStop = Math.max(state.hitStop || 0, sec); }
+
+// XP patlaması: boss ölümünde mavi/cam göbeği ışık parçacıkları yukarı süzülür
+export function xpBurst(a, h) {
+  for (let i = 0; i < 22; i++) {
+    const ang = rand(0, TAU), sp = rand(60, 220);
+    add({ a, h: h + rand(-10, 10), vx: Math.cos(ang) * sp, vh: Math.abs(Math.sin(ang)) * sp + 60, g: 120, life: rand(0.6, 1.1), size: rand(2.5, 4.5), color: i % 2 ? '#7ee7ff' : '#d8f6ff', kind: 'dot' });
+  }
+}

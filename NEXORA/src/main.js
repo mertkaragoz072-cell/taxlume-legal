@@ -109,7 +109,7 @@ async function boot() {
     Audio.play('levelup');
     showChapterClear({ name: chapterInfo(cleared).name, rewards: { coins: R.coins, gems: R.gems, xp }, next: chapterInfo(cleared + 1).name }, () => { continueChapter(); saveNowRef?.(); });
   };
-  events.onBoss = (k, amount) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS DEFEATED!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
+  events.onBoss = (k, amount) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
   events.onUpgrade = (cards, boss) => {
     Audio.play('gem');
     showUpgrade(cards, boss, (card) => {
@@ -146,7 +146,8 @@ async function boot() {
   }
   let last = performance.now();
   function frame(now) {
-    const raw = now - last, dt = Math.min(raw / 1000, 0.05); // sekme dönüşünde sıçramayı önle
+    const raw = now - last; let dt = Math.min(raw / 1000, 0.05); // sekme dönüşünde sıçramayı önle
+    if (state.slowT > 0) { state.slowT -= dt; dt *= 0.3; }          // boss ölümü: kısa slow motion (gerçek süreyle ~1 sn)
     adaptResolution(raw);
     last = now;
     if (window.innerHeight > window.innerWidth) { requestAnimationFrame(frame); return; }   // dikeyde duraklat (yatay uyarısı gösterilir)

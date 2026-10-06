@@ -72,7 +72,8 @@
       "maxChance": 0.8,
       "radius": 170,
       "damageMul": 0.6
-    }
+    },
+    "maxHitFrac": 0.35
   },
   "leveling": {
     "baseXpToNext": 30,

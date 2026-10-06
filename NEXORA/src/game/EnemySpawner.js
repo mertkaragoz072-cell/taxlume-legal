@@ -33,7 +33,7 @@ export function spawnEnemy(typeKey, offsetUnits = 0) {
     type: typeKey, def: t,
     a: spawnAngle(t, offsetUnits), age: 0,
     hp, maxHp: hp, damage: t.damage * (1 + S.dmgPerStage * (stage - 1)) * ws.dmg, attackCd: t.attackCooldown * ws.atk,
-    atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, windT: -1, hitDone: false,
+    side: 1, atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, windT: -1, hitDone: false,
     speedMul: (1 + rand(-CONFIG.enemies.speedJitter, CONFIG.enemies.speedJitter)) * ws.speed,
   };
   if (t.boss) en.sp = newBossState();
