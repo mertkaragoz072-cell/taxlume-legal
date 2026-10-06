@@ -2,7 +2,7 @@ import { SKILLS, ANIMS, CONFIG } from '../core/config.js';
 import { Input } from '../core/input.js';
 import { wrapAngle } from '../core/util.js';
 import { state } from './state.js';
-import { damageEnemy, applyKnock } from './systems.js';
+import { damageEnemy, applyKnock, events } from './systems.js';
 
 // Yetenekler data/skills.json'dan okunur (tip: wave = ileri giden dalga, burst = önde alan patlaması).
 // Hasar = oyuncu hasarı × damageMul. Buton/Q,E ile tetiklenir; bekleme süresi HUD'da düğme üstünde gösterilir.
@@ -13,7 +13,7 @@ export const skillReady = (id) => state.skillCd[id] <= 0 && state.player.level >
 export function castSkill(id) {
   const sk = SKILLS[id], p = state.player;
   if (!sk || state.over || !skillReady(id)) return false;
-  state.skillCd[id] = sk.cooldown;
+  state.skillCd[id] = sk.cooldown; events.onSkill?.(id);
   p.dir = p.dir || 1;
   const an = ANIMS.hero.animations.attack_2 ? 'attack_2' : (ANIMS.hero.animations.attack ? 'attack' : p.anim);
   p.anim = an; p.animT = 0; p.atkTimer = Math.max(p.atkTimer, 0.35);     // yetenek sırasında normal saldırı üst üste binmesin

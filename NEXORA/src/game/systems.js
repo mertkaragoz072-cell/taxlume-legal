@@ -66,6 +66,7 @@ export function applyKnock(en, k) { en.knock = Math.max(en.knock, k * (1 - en.de
 export function damageEnemy(en, dmg) {
   en.hp -= dmg; en.flash = 0.14; en.knock = 1 - en.def.knockResist; en.stagger = 0.22;
   if (en.def.knockResist < 0.5 && en.attackT >= 0) { en.attackT = -1; en.atkTimer = 0.5; }   // hafif düşmanın saldırısı vuruşla bölünür; elite bölünmez
+  events.onHit?.(en, dmg);
   addText(en.a, en.def.heightUnits + 10, '-' + Math.round(dmg), '#ff4a4a', 0.75 + en.def.heightUnits / 300);
   if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 190, dir: -en.face });
   if (en.hp <= 0 && !en.dead) killEnemy(en);
@@ -109,6 +110,7 @@ function hurtPlayer(dmg) {
   p.invuln = CONFIG.player.invulnTime; p.hitFlash = 0.2; state.shake = 6;
   p.anim = 'hurt'; p.animT = 0;
   addText(p.a, 125, '-' + Math.round(dmg), '#ff9a3a');
+  events.onHurt?.();
   if (p.hp <= 0) { state.over = true; p.anim = 'death'; p.animT = 0; events.onGameOver?.(state); }
 }
 
@@ -213,6 +215,7 @@ export function update(dt) {
       p.atkTimer = C.player.attackCooldown;
       const an = `attack_${p.combo + 1}`; p.anim = ANIMS.hero.animations[an] ? an : 'attack'; p.animT = 0; p.combo = (p.combo + 1) % 3;   // kadın karakterde tek 'attack' var
       state.slashes.push({ life: C.player.slashDuration, max: C.player.slashDuration, dir: p.dir, a: p.a });
+      events.onSlash?.();
       p.hitT = C.player.hitDelay; p.hitDir = p.dir;           // hasar savurmanın etki anında, güncel konumlara göre uygulanır
     }
   }

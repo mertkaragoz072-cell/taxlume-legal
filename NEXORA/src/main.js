@@ -1,5 +1,6 @@
 import { loadData, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
 import { Assets } from './core/assets.js';
+import { Audio } from './core/audio.js';
 import { Input } from './core/input.js';
 import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
@@ -57,10 +58,24 @@ async function boot() {
   addEventListener('orientationchange', onResize);
   onResize();
 
-  events.onGameOver = showGameOver;
-  events.onCoin = () => pulse('pill-coin');
-  events.onGem = () => pulse('pill-gem');
-  events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); };
+  // Ses: ilk dokunuş/tuşta kilit açılır; olay kancaları ses çalar; gear düğmesi / M ses aç-kapat
+  const unlock = () => Audio.unlock();
+  for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, unlock, { once: false, passive: true });
+  const soundBtn = document.getElementById('btn-sound');
+  const syncSound = () => { soundBtn.textContent = Audio.muted ? '\u{1F507}' : '\u{1F50A}'; };
+  soundBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); Audio.unlock(); Audio.toggle(); syncSound(); });
+  addEventListener('keydown', (e) => { if (e.code === 'KeyM' && !e.repeat) { Audio.toggle(); syncSound(); } });
+  syncSound();
+  events.onSlash = () => Audio.play('slash');
+  events.onHit = () => Audio.play('hit');
+  events.onKill = () => Audio.play('kill');
+  events.onHurt = () => Audio.play('hurt');
+  events.onSkill = (id) => Audio.play(id);
+  const showOver = showGameOver;
+  events.onGameOver = (st) => { Audio.play('gameover'); showOver(st); };
+  events.onCoin = () => { pulse('pill-coin'); Audio.play('coin'); };
+  events.onGem = () => { pulse('pill-gem'); Audio.play('gem'); };
+  events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); Audio.play('levelup'); };
   document.getElementById('restart-btn').addEventListener('click', restart);
   addEventListener('keydown', (e) => { if (state.over && (e.code === 'Enter' || e.code === 'Space')) restart(); });
   restart();
@@ -77,6 +92,6 @@ async function boot() {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__game = { state, spawnEnemy, CONFIG }; // hata ayıklama
+  window.__game = { state, spawnEnemy, CONFIG, Audio }; // hata ayıklama
 }
 boot();

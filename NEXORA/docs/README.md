@@ -80,3 +80,8 @@ Tasarım ve teknik notlar.
 - **XP:** düşman ölünce başında `+N XP` (mavi) çıkar. **Level-up:** ayaklardan genişleyen altın halka + yükselen ışık çizgileri, portre ve `Lv.` çubuğu "pop" animasyonu, `LEVEL UP!` yazısı.
 - **Coin/Gem:** toplanınca ilgili HUD kutusu pop yapar. **Gem** (mor elmas) elite'ten 1–2 adet garanti, normal goblinlerden küçük şansla (`enemies.json → gems / gemChance`) düşer; coin gibi mıknatısla toplanır, HUD gem sayacını artırır.
 - Olay kancaları: `src/game/systems.js → events` (onCoin, onGem, onLevelUp, onKill, onHit…). Ses ve kayıt da bu kancalara bağlanır.
+
+## Ses (src/core/audio.js)
+- **Harici ses dosyası yok**: tüm efektler (kılıç savurma, vuruş, ölüm, hasar, coin, gem, level-up, iki yetenek, game over, tık) ve sakin bir pentatonik müzik döngüsü Web Audio ile üretilir. Tarayıcı kuralı gereği ses ilk dokunuş/tuşta açılır.
+- Soldaki **hoparlör düğmesi** (eski ayar ikonu) veya **M** sesi açar/kapatır; seçim `localStorage` ('nexora_sound') ile hatırlanır. Aynı ses 25–45 ms içinde tekrar çalmaz (yığılma yok). Ses ayarları: `audio.js` içindeki `SFX` tablosu ve `musicGain` (0.16).
+- Not: sesler kodla sentezlendiği için profesyonel kayıtlar gibi değildir; gerçek ses dosyaları `audio/sfx`, `audio/music` klasörlerine eklenip `SFX`/müzik yerine yüklenebilir.
