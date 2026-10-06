@@ -54,7 +54,7 @@ export function drawAvatar() {
   }
   const cfg = CONFIG.hud.avatar, img = Assets.get(cfg.key); if (!img) return;
   const [sx, sy, sw, sh] = cfg.crop;
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
 }
 

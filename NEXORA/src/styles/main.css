@@ -165,3 +165,14 @@ html, body {
 #banner.show.boss { animation: bannerboss 2.2s ease-out forwards; }
 #banner.show.bossdead { animation: bannerboss 3.2s ease-out forwards; color: #ffd23f; font-size: clamp(30px, 11vh, 62px); }
 @keyframes bannerboss { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 16% { transform: translate(-48%, -50%) scale(1.04); } 20% { transform: translate(-52%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -58%) scale(1); } }
+
+/* --- Faz 7: boss afişi küçültüldü (ekran ortasını kapatmasın), boss HP çubuğu okunaklı --- */
+#banner.boss { font-size: clamp(20px, 7vh, 36px); top: 22%; }
+#banner.show.bossdead { font-size: clamp(20px, 7vh, 36px); top: 22%; }
+#banner small { font-size: .55em; }
+#boss-bar .bb-track { position: relative; height: clamp(12px, 3.8vh, 18px); }
+#boss-bar .bb-hp { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(8px, 2.5vh, 11px); font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000; }
+#boss-bar .bb-name { font-size: clamp(10px, 3vh, 14px); }
+#boss-bar .bb-track { height: clamp(16px, 5vh, 22px); }
+#boss-bar .bb-name { margin-bottom: 3px; line-height: 1.1; }
+#boss-bar .bb-hp { font-size: clamp(9px, 3vh, 12px); }

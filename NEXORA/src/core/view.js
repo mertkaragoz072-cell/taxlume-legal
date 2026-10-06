@@ -9,7 +9,7 @@ export const View = {
   visibleRightUnits: 0,                   // kahramanın sağında görünen mesafe (dünya birimi)
   resize(canvas) {
     const cam = CONFIG.camera;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = Math.min(window.devicePixelRatio || 1, 3);
     this.w = window.innerWidth; this.h = window.innerHeight;
     canvas.width = Math.round(this.w * this.dpr);
     canvas.height = Math.round(this.h * this.dpr);

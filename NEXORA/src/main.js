@@ -37,7 +37,7 @@ function chooseHero() {
       const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
       const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · Dalga ${sv.wave || 1}` : 'Yeni oyun'; b.appendChild(info);
       const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
-      if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = false; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
+      if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
       b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
       cards.appendChild(b);
     }

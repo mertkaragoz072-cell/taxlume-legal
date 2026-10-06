@@ -126,3 +126,8 @@ otomatik sağa koş → düşman → savaş (otomatik saldırı) → öldür →
 - Elementler: ateş = yanma, buz = yavaşlatma, yıldırım = zincir; yetenekler element taşır (`skills.json`). Ayarlar: `config.json → player.burn/chill/chain`.
 - Boss (dalga 20, 40…): büyük "BOSS DALGASI" afişi, üstte büyük HP çubuğu, ödül `waves.json → boss.reward` (250 coin × boss coin çarpanı), "BOSS YENİLDİ! +250 COIN" afişi, ardından EFSANE güç seçimi.
 - HUD çipleri: `src/ui/buffs.js`. Kayıt: bilinmeyen güç id'leri yüklemede atlanır, seviyeler maks'a kırpılır.
+
+## Faz 7 — Görüntü kalitesi
+- Canvas yüksek DPI: `View.dpr = min(devicePixelRatio, 3)` (iPhone 3×); her karede `imageSmoothingQuality = 'high'`. Portre/avatar kırpmaları artık en yakın komşu yerine yumuşak ölçekleniyor.
+- Boss ölçeği: `goblin_boss.spriteMul 1.3` (normal goblinin ~2 katı, oyuncunun ~1.6 katı). Boss'un dünya içi mini HP barı kaldırıldı; üstteki büyük HP çubuğu (ad + sayı) kullanılıyor. "BOSS DALGASI" afişi küçültüldü ve ekranın üstüne alındı.
+- Kaynak kareler (erkek 224×176, goblinler ~170–230 px) ekranda ~2× büyütülüyor; daha keskin görüntü için yüksek çözünürlüklü kaynak çizim gerekir (kod tarafında yeni asset üretilmedi).

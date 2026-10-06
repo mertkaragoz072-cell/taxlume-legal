@@ -9,6 +9,7 @@ import { drawCoin, drawSlash, drawText, drawHitFx, drawSkillFx, drawRing, drawTe
 // Çizim sırası: gökyüzü/parallax → gezegen+arka dekor → coin → düşman → oyuncu → slash → ön plan dekoru → yazılar
 export function render(ctx) {
   ctx.setTransform(View.dpr, 0, 0, View.dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';    // resize sonrası canvas durumu sıfırlanır; her karede garanti et
   ctx.save();
   if (state.shake > 0) ctx.translate(rand(-state.shake, state.shake) * 0.5, rand(-state.shake, state.shake) * 0.5);
   drawSky(ctx);
