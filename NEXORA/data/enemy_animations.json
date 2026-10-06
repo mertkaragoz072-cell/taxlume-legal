@@ -77,12 +77,11 @@
       },
       "attack": {
         "frames": [
-          "enemy_goblin_scout_attack_01",
-          "enemy_goblin_scout_attack_02",
+          "enemy_goblin_scout_attack_04",
           "enemy_goblin_scout_attack_03",
-          "enemy_goblin_scout_attack_04"
+          "enemy_goblin_scout_attack_01"
         ],
-        "fps": 10,
+        "fps": 8,
         "loop": false,
         "impact": 0.5
       },

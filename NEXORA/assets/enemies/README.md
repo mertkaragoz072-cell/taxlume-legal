@@ -15,3 +15,6 @@
 - **Animasyon eşlemesi (sheet'ten):** gürz/kılıç goblin: ilk kareler yürüme döngüsü, sonra savurma, 1–2 hasar kare, son kare yatan ölü; brute: 3 yürüme, 4 saldırı (kaldırma → yere vurma + ateş), 1 hasar, 1 ölü.
 - **Notlar/sınırlar:** efektler (altın/mavi yay, kıvılcım, ateş) karelere gömülü. Sheet'te kareler birbirine yaslandığı için bazı kenar efekt parçaları kesilmiş/atılmıştır; `goblin_scout` attack_4 kendi içinde kopuk bir kılıç parçası içerir. Sheet'teki yer gölgesi atıldı (oyun kendi gölgesini çizer). Kaynak çözünürlüğü kahramanla benzer (~90–110 px).
 - Manifest anahtarları: `enemy_<tür>_<anim>_NN`, `enemy_<tür>_portrait`.
+
+## Not (goblin_scout)
+`attack_02.png` sopalı savaşçı goblinden gelen yanlış bir kareydi; saldırı animasyonundan çıkarıldı (dosya durur, kullanılmıyor). Saldırı sırası: attack_04 → attack_03 → attack_01. `death_01.png` içindeki varil/sopa kareye ait değil; kılıçlı goblin için uygun ölüm karesi gelince değiştirilecek (kaynak sayfa: normal goblin "Ölüm" satırı).
