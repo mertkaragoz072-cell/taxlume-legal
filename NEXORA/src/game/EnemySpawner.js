@@ -10,12 +10,12 @@ export const aliveElite = () => state.enemies.filter((x) => !x.dead && x.def.eli
 export const aliveAny = () => state.enemies.filter((x) => !x.dead);
 
 export function spawnEnemy(typeKey, offsetUnits = 0) {
-  const t = ENEMY_TYPES[typeKey], n = state.wave.n;
-  const hp = t.hp * (1 + WAVES.hpPerWave * (n - 1));
+  const t = ENEMY_TYPES[typeKey], { stage, n } = state.wave, S = WAVES.stage;
+  const hp = t.hp * stageHpMul(stage) * (1 + S.hpPerWaveInStage * (n - 1));
   const en = {
     type: typeKey, def: t,
     a: state.player.a + (View.visibleRightUnits + CONFIG.enemies.spawnOffscreen + offsetUnits) / CONFIG.planet.radius,
-    hp, maxHp: hp, damage: t.damage * (1 + WAVES.dmgPerWave * (n - 1)),
+    hp, maxHp: hp, damage: t.damage * (1 + S.dmgPerStage * (stage - 1)),
     atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, hitDone: false,
     speedMul: 1 + rand(-CONFIG.enemies.speedJitter, CONFIG.enemies.speedJitter),
   };
@@ -24,14 +24,16 @@ export function spawnEnemy(typeKey, offsetUnits = 0) {
   return en;
 }
 
-// Dalga n için spawn kuyruğu: sırayla çıkacak düşman türleri. Boss dalgasında boss + eşlikçiler; elite dalgasında sonda elite.
-export function buildQueue(n) {
+// Bölüm çarpanı: Bölüm 1 ×1, Bölüm 2 ×1.4, Bölüm 3 ×1.8 ... (data/waves.json → stage.hpPerStage)
+export const stageHpMul = (stage) => 1 + WAVES.stage.hpPerStage * (stage - 1);
+
+// Dalga için spawn kuyruğu (data/waves.json → waves[n-1]); sonraki bölümlerde her 2 bölümde bir ekstra gözcü eklenir.
+// Boss dalgasında boss + eşlikçiler.
+export function buildQueue(stage, n, boss) {
   const W = WAVES;
-  if (n % W.bossEvery === 0) return [W.bossType, ...Array(W.bossEscorts).fill('goblin_scout')];
-  const total = Math.min(W.total.cap, W.total.base + Math.ceil(n * W.total.perWave));
-  const pool = Object.entries(W.weights).map(([k, w]) => ({ k, w: n < (w.fromWave || 1) ? 0 : Math.min(w.cap ?? 99, Math.max(w.min ?? 0, w.base + w.perWave * n)) })).filter((x) => x.w > 0);
-  const sum = pool.reduce((s, x) => s + x.w, 0), q = [];
-  for (let i = 0; i < total; i++) { let r = rand(0, sum), pick = pool[0].k; for (const x of pool) { if ((r -= x.w) <= 0) { pick = x.k; break; } } q.push(pick); }
-  if (n % W.eliteEvery === 0) q.push(W.eliteType);
+  if (boss) return [W.bossType, ...Array(W.bossEscorts).fill('goblin_scout')];
+  const q = [...W.waves[Math.min(n, W.waves.length) - 1]];
+  const extra = Math.floor((stage - 1) / 2) * W.stage.extraPerTwoStages;
+  for (let i = 0; i < extra; i++) q.splice(Math.floor(rand(0, q.length)), 0, 'goblin_scout');
   return q;
 }

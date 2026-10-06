@@ -19,7 +19,7 @@ import { events } from './game/events.js';
 function restart() {
   resetState();
   Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem/güçlendirme/dalga geri yüklenir
-  startWave(state.wave.n);
+  startWave();
   hideGameOver();
   updateHud(); updateBuffs(true);
 }
@@ -35,7 +35,7 @@ function chooseHero() {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'sel-card' + (h.id === last ? ' last' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
       const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
-      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · Dalga ${sv.wave || 1}` : 'Yeni oyun'; b.appendChild(info);
+      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · Bölüm ${sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1}` : 'Yeni oyun'; b.appendChild(info);
       const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
       if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
       b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
@@ -89,8 +89,8 @@ async function boot() {
   events.onHurt = () => Audio.play('hurt');
   events.onSkill = (id) => Audio.play(id);
   const showOver = showGameOver;
-  events.onWaveStart = (n, info) => { showBanner(info.boss ? `BOSS DALGASI ${n}` : `WAVE ${n}`, info.boss ? 'boss' : '', info.boss ? 'Goblin Lordu geliyor!' : ''); Audio.play(info.boss ? 'skill2' : 'click'); };
-  events.onWaveComplete = (n) => { if (!isBossWave(n)) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); } };
+  events.onWaveStart = (n, info) => { showBanner(info.boss ? 'BOSS DALGASI' : `WAVE ${n} / 5`, info.boss ? 'boss' : '', info.boss ? 'Goblin Lordu geliyor!' : `Bölüm ${info.stage}`); Audio.play(info.boss ? 'skill2' : 'click'); };
+  events.onWaveComplete = (n, i) => { if (!i?.boss) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); } };
   events.onBoss = (k, amount) => { if (k === 'slam') Audio.play('skill2'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
   events.onUpgrade = (cards, epic) => {
     Audio.play('gem');
@@ -99,7 +99,7 @@ async function boot() {
       const u = upgradeById(card.id), p = state.player;
       addText(p.a, 150, `${card.icon} ${card.bonus} ${card.name}`, '#ffd23f', 1.1); addText(p.a, 125, 'GÜÇ UYGULANDI!', '#ffffff', 0.8);
       state.rings.push({ a: p.a, t: 0, life: 0.9 }); state.rings.push({ a: p.a, t: 0, life: 1.3, color: '#ffd23f' });
-      updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); saveNowRef?.(); resumeAfterUpgrade();
+      updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
     });
   };
   events.onGameOver = (st) => { Audio.play('gameover'); showOver(st); };

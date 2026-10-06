@@ -131,3 +131,7 @@ otomatik sağa koş → düşman → savaş (otomatik saldırı) → öldür →
 - Canvas yüksek DPI: `View.dpr = min(devicePixelRatio, 3)` (iPhone 3×); her karede `imageSmoothingQuality = 'high'`. Portre/avatar kırpmaları artık en yakın komşu yerine yumuşak ölçekleniyor.
 - Boss ölçeği: `goblin_boss.spriteMul 1.3` (normal goblinin ~2 katı, oyuncunun ~1.6 katı). Boss'un dünya içi mini HP barı kaldırıldı; üstteki büyük HP çubuğu (ad + sayı) kullanılıyor. "BOSS DALGASI" afişi küçültüldü ve ekranın üstüne alındı.
 - Kaynak kareler (erkek 224×176, goblinler ~170–230 px) ekranda ~2× büyütülüyor; daha keskin görüntü için yüksek çözünürlüklü kaynak çizim gerekir (kod tarafında yeni asset üretilmedi).
+
+## Faz 8 — Bölüm döngüsü
+Bölüm = 5 dalga (`data/waves.json → waves`, dalga başına sabit düşman listesi) → 3 kart → BOSS (Goblin Lordu) → ödül + 3 kart → sonraki bölüm.
+Bölüm çarpanı: HP ×(1 + 0.4·(bölüm−1)) → ×1, ×1.4, ×1.8…; hasar +%15/bölüm; her 2 bölümde +1 gözcü. Kayıt: `stage`, `wave` (1–5), `boss`; eski kayıtlar (tek sayı) bölüm+dalgaya çevrilir.

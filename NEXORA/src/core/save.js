@@ -33,14 +33,16 @@ export const Save = {
     p.upgrades = {};            // bilinmeyen/eski id'ler atlanır, seviyeler maks'a kırpılır
     if (s.upgrades && typeof s.upgrades === 'object') for (const u of UPGRADES.list) { const lv = Math.floor(+s.upgrades[u.id]); if (lv > 0) p.upgrades[u.id] = Math.min(lv, u.max); }
     recalcMaxHp(p, false); p.hp = p.maxHp;                           // can = seviye tabanı × can güçlendirmesi
-    state.wave.n = Math.max(1, s.wave | 0 || 1);
+    const wv = Math.max(1, s.wave | 0 || 1);                     // eski kayıt: tek sayı (küresel dalga) → bölüm + dalga
+    if (s.stage) { state.wave.stage = Math.max(1, s.stage | 0); state.wave.n = Math.min(5, wv); state.wave.boss = !!s.boss; }
+    else { state.wave.stage = Math.floor((wv - 1) / 5) + 1; state.wave.n = ((wv - 1) % 5) + 1; state.wave.boss = false; }
     return true;
   },
   // Anlık durumu yaz. force=false ise yalnızca değişiklik varsa yazar.
   write(heroId, p, state) {
     if (!heroId || !p) return;
     const prev = data.heroes[heroId] || {};
-    const cur = { level: p.level, xp: p.xp, coins: p.coins, gems: p.gems, totalKills: kills0 + state.kills, bestLevel: Math.max(prev.bestLevel || 1, p.level), wave: state.wave.n, upgrades: { ...p.upgrades } };
+    const cur = { level: p.level, xp: p.xp, coins: p.coins, gems: p.gems, totalKills: kills0 + state.kills, bestLevel: Math.max(prev.bestLevel || 1, p.level), wave: state.wave.n, stage: state.wave.stage, boss: state.wave.boss, upgrades: { ...p.upgrades } };
     if (JSON.stringify(prev) === JSON.stringify(cur) && data.lastHero === heroId) return;
     data.heroes[heroId] = cur; data.lastHero = heroId;
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { /* dolu/yasak → oyun yine çalışır */ }

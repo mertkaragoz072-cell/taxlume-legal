@@ -3,7 +3,7 @@ import { CONFIG } from '../core/config.js';
 // Tek paylaşılan oyun durumu. Yeniden başlatırken Object.assign ile sıfırlanır (referans korunur).
 export const state = {
   time: 0, over: false, paused: false, kills: 0, shake: 0,
-  wave: { n: 1, phase: 'intro', t: 0, queue: [], total: 0, spawnT: 0, epicNext: false },
+  wave: { stage: 1, n: 1, boss: false, phase: 'intro', t: 0, queue: [], total: 0, spawnT: 0, epicNext: false },
   player: null, enemies: [], coins: [], slashes: [], texts: [], hitFx: [], rings: [], telegraphs: [], skillFx: [], skillCd: { skill1: 0, skill2: 0 },
 };
 
@@ -25,7 +25,7 @@ export function createPlayer() {
 export function resetState() {
   Object.assign(state, {
     time: 0, over: false, paused: false, kills: 0, shake: 0, player: createPlayer(),
-    wave: { n: 1, phase: 'intro', t: 0, queue: [], total: 0, spawnT: 0, epicNext: false },
+    wave: { stage: 1, n: 1, boss: false, phase: 'intro', t: 0, queue: [], total: 0, spawnT: 0, epicNext: false },
     enemies: [], coins: [], slashes: [], texts: [], hitFx: [], rings: [], telegraphs: [], skillFx: [], skillCd: { skill1: 0, skill2: 0 },
   });
 }
