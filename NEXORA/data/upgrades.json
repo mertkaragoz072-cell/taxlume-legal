@@ -1,0 +1,131 @@
+{
+  "_comment": "Güçlendirme verisi. Yeni güç eklemek = buraya kayıt: id, kategori, ikon, ad, stat (PlayerStats türetilmiş alan), per (seviye başına değer), fmt (pct|num), text ({v} yer tutucu), weight (çıkma ağırlığı), cap (opsiyonel üst sınır). base: stat başlangıç değerleri.",
+  "base": {
+    "damageMul": 1,
+    "attackSpeedMul": 1,
+    "critChance": 0.05,
+    "critDamage": 1.5,
+    "maxHpMul": 1,
+    "defense": 0,
+    "regen": 0,
+    "moveMul": 1,
+    "coinMul": 1,
+    "xpMul": 1
+  },
+  "epicMultiplier": 2,
+  "upgrades": [
+    {
+      "id": "attackDamage",
+      "category": "offense",
+      "icon": "⚔️",
+      "name": "KESKİN KILIÇ",
+      "stat": "damageMul",
+      "per": 0.2,
+      "fmt": "pct",
+      "text": "Saldırı +{v}%",
+      "weight": 10
+    },
+    {
+      "id": "attackSpeed",
+      "category": "offense",
+      "icon": "⚡",
+      "name": "HIZLI SAVAŞÇI",
+      "stat": "attackSpeedMul",
+      "per": 0.15,
+      "fmt": "pct",
+      "text": "Saldırı hızı +{v}%",
+      "weight": 10,
+      "cap": 3.0
+    },
+    {
+      "id": "critChance",
+      "category": "offense",
+      "icon": "🎯",
+      "name": "KESKİN GÖZ",
+      "stat": "critChance",
+      "per": 0.1,
+      "fmt": "pct",
+      "text": "Kritik şansı +{v}%",
+      "weight": 8,
+      "cap": 0.75
+    },
+    {
+      "id": "critDamage",
+      "category": "offense",
+      "icon": "💥",
+      "name": "ÖLÜMCÜL DARBE",
+      "stat": "critDamage",
+      "per": 0.25,
+      "fmt": "pct",
+      "text": "Kritik hasar +{v}%",
+      "weight": 8
+    },
+    {
+      "id": "maxHp",
+      "category": "defense",
+      "icon": "❤️",
+      "name": "DEV KALP",
+      "stat": "maxHpMul",
+      "per": 0.25,
+      "fmt": "pct",
+      "text": "Maks. can +{v}%",
+      "weight": 10
+    },
+    {
+      "id": "defense",
+      "category": "defense",
+      "icon": "🛡️",
+      "name": "ZIRH",
+      "stat": "defense",
+      "per": 0.15,
+      "fmt": "pct",
+      "text": "Savunma +{v}%",
+      "weight": 9
+    },
+    {
+      "id": "regen",
+      "category": "defense",
+      "icon": "💚",
+      "name": "YENİLENME",
+      "stat": "regen",
+      "per": 5,
+      "fmt": "num",
+      "text": "Can yenileme +{v} HP/sn",
+      "weight": 7
+    },
+    {
+      "id": "moveSpeed",
+      "category": "utility",
+      "icon": "🏃",
+      "name": "RÜZGAR AYAĞI",
+      "stat": "moveMul",
+      "per": 0.1,
+      "fmt": "pct",
+      "text": "Hareket hızı +{v}%",
+      "weight": 6,
+      "cap": 2.2
+    },
+    {
+      "id": "coinGain",
+      "category": "utility",
+      "icon": "💰",
+      "name": "ALTIN ELİ",
+      "stat": "coinMul",
+      "per": 0.2,
+      "fmt": "pct",
+      "text": "Coin kazancı +{v}%",
+      "weight": 7
+    },
+    {
+      "id": "xpGain",
+      "category": "utility",
+      "icon": "✨",
+      "name": "BİLGELİK",
+      "stat": "xpMul",
+      "per": 0.2,
+      "fmt": "pct",
+      "text": "XP kazancı +{v}%",
+      "weight": 7
+    }
+  ]
+}

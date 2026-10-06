@@ -104,3 +104,38 @@ html, body {
 .skillbtn.cooling { filter: brightness(.62) saturate(.7); }
 .skillbtn.cooling svg { opacity: .35; }
 .skillbtn .cdtxt { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; color: #fff; text-shadow: 0 2px 0 #1f2a44, 0 0 6px #1f2a44; pointer-events: none; }
+
+/* Dalga göstergesi (üst orta) */
+#wave-box { position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; }
+#wave-main { display: inline-block; padding: 3px 16px; border: 3px solid #1f2a44; border-radius: 14px; background: linear-gradient(#4a5b8c, #2c3866); color: #fff; font-weight: 900; font-size: 15px; letter-spacing: .5px; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 0 0 1px rgba(241,194,75,.6), 0 3px 0 rgba(31,42,68,.55); }
+#wave-main.boss { background: linear-gradient(#d9473a, #8e1f24); animation: bosspulse 1s infinite; }
+#wave-sub { margin-top: 3px; font-size: 11px; font-weight: 800; color: #fff; text-shadow: 0 1px 0 #1f2a44, 0 0 4px #1f2a44; }
+@keyframes bosspulse { 50% { filter: brightness(1.25); } }
+
+/* Afiş: WAVE n / WAVE COMPLETE */
+#banner { position: absolute; left: 50%; top: 26%; transform: translate(-50%, -50%); z-index: 20; pointer-events: none; font-weight: 900; font-size: clamp(26px, 9vh, 52px); color: #fff; -webkit-text-stroke: 2px #1f2a44; paint-order: stroke fill; text-shadow: 0 4px 0 #1f2a44, 0 0 18px rgba(80,160,255,.8); white-space: nowrap; opacity: 0; }
+#banner.show { animation: banner 1.3s ease-out forwards; }
+#banner.complete { color: #ffd23f; text-shadow: 0 4px 0 #1f2a44, 0 0 18px rgba(255,200,60,.9); }
+#banner.boss { color: #ff6b5a; text-shadow: 0 4px 0 #1f2a44, 0 0 22px rgba(255,60,40,.95); }
+@keyframes banner { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); } 30% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -62%) scale(1); } }
+
+/* Güçlen ekranı */
+#upgrade { position: absolute; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; background: rgba(10,16,40,.72); padding: 8px; }
+#upgrade.hidden { display: none; }
+.up-box { text-align: center; max-width: 100%; }
+#up-title { margin: 0; font-size: clamp(28px, 11vh, 56px); color: #ffd23f; -webkit-text-stroke: 2px #1f2a44; paint-order: stroke fill; text-shadow: 0 4px 0 #1f2a44, 0 0 22px rgba(255,200,60,.8); animation: uptitle .5s ease-out; }
+#up-title.epic { color: #ff9af0; text-shadow: 0 4px 0 #1f2a44, 0 0 26px rgba(255,120,240,.95); }
+#up-sub { color: #fff; font-weight: 800; font-size: clamp(11px, 3.4vh, 15px); margin: 2px 0 8px; text-shadow: 0 2px 0 #1f2a44; }
+.up-cards { display: flex; gap: clamp(8px, 2.4vw, 20px); justify-content: center; }
+.up-card { width: clamp(110px, 25vw, 190px); background: linear-gradient(#fff6e0, #f6dfae); border: 4px solid #1f2a44; border-radius: 16px; padding: clamp(6px, 2vh, 12px) 8px clamp(8px, 2.4vh, 14px); font: inherit; color: #1f2a44; cursor: pointer; box-shadow: 0 5px 0 rgba(20,30,60,.65); animation: cardin .45s ease-out backwards; transition: transform .2s, opacity .25s, filter .25s; }
+.up-card:nth-child(2) { animation-delay: .08s; } .up-card:nth-child(3) { animation-delay: .16s; }
+.up-card.epic { border-color: #c04bff; background: linear-gradient(#fff0ff, #f0cdf5); }
+.up-card .ic { font-size: clamp(26px, 9vh, 44px); line-height: 1.1; }
+.up-card .nm { font-weight: 900; font-size: clamp(12px, 3.8vh, 17px); margin: 2px 0; }
+.up-card .tx { font-weight: 800; font-size: clamp(11px, 3.4vh, 15px); color: #2a6a2a; }
+.up-card .lv { display: inline-block; margin-top: 5px; padding: 1px 8px; border-radius: 10px; background: #1f2a44; color: #ffd23f; font-weight: 800; font-size: clamp(10px, 3vh, 13px); }
+.up-card.picked { transform: scale(1.14) translateY(-6px); filter: brightness(1.12); box-shadow: 0 0 0 4px #ffd23f, 0 0 28px rgba(255,210,60,.9); z-index: 2; }
+.up-cards.chosen .up-card:not(.picked) { opacity: 0; transform: scale(.8) translateY(14px); pointer-events: none; }
+@keyframes cardin { from { opacity: 0; transform: translateY(26px) scale(.9); } }
+@keyframes uptitle { from { opacity: 0; transform: scale(.5); } }
+@media (max-height: 440px) { #wave-sub { display: none; } }

@@ -3,6 +3,7 @@ import { Assets } from '../core/assets.js';
 import { Input } from '../core/input.js';
 import { TAU, clamp } from '../core/util.js';
 import { state } from '../game/state.js';
+import { enemyMeta } from '../game/EnemySpawner.js';
 import { onSurface, onLane, groundShadow, outlined, outline } from './draw.js';
 
 function eyes(ctx, x, y, dir, big) {
@@ -176,20 +177,26 @@ function enemyFrame(en, meta) {
 }
 
 export function drawEnemy(ctx, en) {
-  const def = en.def, meta = ANIMS.enemies?.[en.type];
+  const def = en.def, meta = enemyMeta(en);
   if (!meta) return;
   const key = enemyFrame(en, meta), img = Assets.get(key);
   if (!img) return;
-  const sc = meta.scale, w = img.width * sc, h = img.height * sc;
+  const sc = meta.scale * (def.spriteMul || 1), w = img.width * sc, h = img.height * sc;
   const dp = en.dead ? clamp((en.deathT - 0.5) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
   onLane(ctx, en.a, 0, 0, () => {
     ctx.globalAlpha = 1 - dp;
+    if (def.boss && !en.dead) {                                       // boss: ayaklarında kırmızı aura
+      const pu = 0.5 + 0.5 * Math.sin(state.time * 4), g = ctx.createRadialGradient(0, 0, 0, 0, 0, def.width * 0.9);
+      g.addColorStop(0, `rgba(255,70,50,${0.35 + pu * 0.15})`); g.addColorStop(1, 'rgba(255,70,50,0)');
+      ctx.save(); ctx.scale(1, 0.22); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, def.width * 0.9, 0, TAU); ctx.fill(); ctx.restore();
+    }
     groundShadow(ctx, def.width * (en.dead ? 1.2 : 0.85), 0.36);      // ayakların hemen altında
     ctx.save();
     const hitK = en.dead ? 0 : Math.max(0, en.stagger || 0) / 0.22, sq = en.dead ? 1 : 1 + (en.attackT >= 0 ? 0.03 : Math.sin(en.bob * 1.6) * 0.02) - hitK * 0.07;
     ctx.scale(meta.facing === 'right' ? en.face : -en.face, 1);       // kareler sağa bakar; oyuncuya dönük çizilir
     ctx.scale(1 / sq, sq);                                            // hafif squash/stretch + vuruş ezilmesi (ayak sabit)
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
+    if (def.boss && !en.dead) { ctx.globalAlpha = 0.16 + 0.08 * Math.sin(state.time * 5); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.globalAlpha = 1; }
     if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.8; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
     ctx.restore();
     ctx.globalAlpha = 1;
@@ -200,6 +207,7 @@ export function drawEnemy(ctx, en) {
       ctx.beginPath(); ctx.roundRect(-bw / 2, y, bw * f, bh, 3);
       const g = ctx.createLinearGradient(0, y, 0, y + bh); g.addColorStop(0, '#ff6b6b'); g.addColorStop(1, '#d92f3f');
       ctx.fillStyle = g; ctx.fill();
+      if (def.boss) { ctx.font = '900 13px "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = outline(); ctx.strokeText('BOSS', 0, y - 6); ctx.fillStyle = '#ff6b5a'; ctx.fillText('BOSS', 0, y - 6); }
     }
   });
 }

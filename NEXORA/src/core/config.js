@@ -3,6 +3,8 @@
 export const CONFIG = {};
 export const ENEMY_TYPES = {};
 export const WORLD = {};      // data/world_props.json: prop boyutları, dekor kuralları, bulut/ada katmanları
+export const WAVES = {};        // data/waves.json
+export const UPGRADES = { base: {}, list: [], epicMultiplier: 2 };   // data/upgrades.json
 export const SKILLS = {};      // data/skills.json: yetenek tanımları (buton id → ayarlar)
 export const ANIMS = {};
 export const HERO = { id: 'male', fromUrl: false };
@@ -16,14 +18,16 @@ export async function loadData(base = 'data/') {
     if (!res.ok) throw new Error(`${base + f} yüklenemedi (${res.status})`);
     return res.json();
   };
-  const [config, enemies, manifest, male, world, enemyAnims, female, heroine, skills] = await Promise.all([
-    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'), get('world_props.json'), get('enemy_animations.json'), get('female_animations.json'), get('heroine_animations.json'), get('skills.json'),
+  const [config, enemies, manifest, male, world, enemyAnims, female, heroine, skills, waves, upgrades] = await Promise.all([
+    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'), get('world_props.json'), get('enemy_animations.json'), get('female_animations.json'), get('heroine_animations.json'), get('skills.json'), get('waves.json'), get('upgrades.json'),
   ]);
   Object.assign(CONFIG, config);
   Object.assign(ENEMY_TYPES, enemies);
   ANIMS.male = male; ANIMS.female = female;
   ANIMS.heroine = heroine;
   Object.assign(SKILLS, skills);
+  Object.assign(WAVES, waves);
+  UPGRADES.base = upgrades.base; UPGRADES.list = upgrades.upgrades; UPGRADES.epicMultiplier = upgrades.epicMultiplier;
   const q = new URLSearchParams(location.search).get('hero');
   HERO.fromUrl = !!(q && ANIMS[q]);
   setHero(HERO.fromUrl ? q : (config.player.character || 'male'));

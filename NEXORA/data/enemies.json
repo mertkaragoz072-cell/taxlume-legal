@@ -66,5 +66,33 @@
       1,
       2
     ]
+  },
+  "goblin_boss": {
+    "name": "Goblin Boss",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.7,
+    "heightUnits": 190,
+    "width": 130,
+    "barWidth": 120,
+    "hp": 700,
+    "damage": 18,
+    "speed": 38,
+    "xp": 300,
+    "coins": [
+      40,
+      50
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 80,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true
   }
 }

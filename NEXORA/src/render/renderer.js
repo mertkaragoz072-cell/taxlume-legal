@@ -4,7 +4,7 @@ import { state } from '../game/state.js';
 import { visible } from './draw.js';
 import { drawSky, drawPlanet, drawForeground } from './world.js';
 import { drawPlayer, drawEnemy } from './characters.js';
-import { drawCoin, drawSlash, drawText, drawHitFx, drawSkillFx, drawRing } from './effects.js';
+import { drawCoin, drawSlash, drawText, drawHitFx, drawSkillFx, drawRing, drawTelegraph } from './effects.js';
 
 // Çizim sırası: gökyüzü/parallax → gezegen+arka dekor → coin → düşman → oyuncu → slash → ön plan dekoru → yazılar
 export function render(ctx) {
@@ -13,6 +13,7 @@ export function render(ctx) {
   if (state.shake > 0) ctx.translate(rand(-state.shake, state.shake) * 0.5, rand(-state.shake, state.shake) * 0.5);
   drawSky(ctx);
   drawPlanet(ctx);
+  for (const t of state.telegraphs) if (visible(t.a)) drawTelegraph(ctx, t);
   for (const c of state.coins) if (visible(c.a)) drawCoin(ctx, c);
   // aynı şeritte: sağdakiler (uzak) önce, yakındakiler üstüne çizilir
   for (const en of state.enemies.slice().sort((p, q) => q.a - p.a)) if (visible(en.a)) drawEnemy(ctx, en);

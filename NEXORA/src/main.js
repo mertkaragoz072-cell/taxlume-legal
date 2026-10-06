@@ -5,13 +5,19 @@ import { Save } from './core/save.js';
 import { Input } from './core/input.js';
 import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
-import { update, events, spawnEnemy } from './game/systems.js';
+import { update, spawnEnemy } from './game/systems.js';
 import { render } from './render/renderer.js';
 import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar, pulse } from './ui/hud.js';
+import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
+import { showUpgrade } from './ui/UpgradeCard.js';
+import { startWave, resumeAfterUpgrade, isBossWave } from './game/WaveManager.js';
+import { applyUpgrade } from './game/UpgradeManager.js';
+import { events } from './game/events.js';
 
 function restart() {
   resetState();
-  Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem geri yüklenir
+  Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem/güçlendirme/dalga geri yüklenir
+  startWave(state.wave.n);
   hideGameOver();
   updateHud();
 }
@@ -27,7 +33,7 @@ function chooseHero() {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'sel-card' + (h.id === last ? ' last' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
       const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
-      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · ${sv.coins} coin` : 'Yeni oyun'; b.appendChild(info);
+      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · Dalga ${sv.wave || 1}` : 'Yeni oyun'; b.appendChild(info);
       const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
       if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = false; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
       b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
@@ -39,6 +45,7 @@ function chooseHero() {
   });
 }
 
+let saveNowRef = null;
 async function boot() {
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
@@ -57,6 +64,7 @@ async function boot() {
 
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   initHud();
+  initWaveHud();
   drawAvatar();
   Input.init();
   const onResize = () => View.resize(canvas);
@@ -78,6 +86,10 @@ async function boot() {
   events.onHurt = () => Audio.play('hurt');
   events.onSkill = (id) => Audio.play(id);
   const showOver = showGameOver;
+  events.onWaveStart = (n, info) => { showBanner(info.boss ? `BOSS DALGASI ${n}` : `WAVE ${n}`, info.boss ? 'boss' : ''); Audio.play(info.boss ? 'skill2' : 'click'); };
+  events.onWaveComplete = () => { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); };
+  events.onBoss = (k) => { if (k === 'slam') Audio.play('skill2'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'complete'); Audio.play('levelup'); } };
+  events.onUpgrade = (cards, epic) => { Audio.play('gem'); showUpgrade(cards, epic, (card) => { applyUpgrade(card.id, epic); Audio.play('levelup'); pulse('avatar-ring'); saveNowRef?.(); resumeAfterUpgrade(); }); };
   events.onGameOver = (st) => { Audio.play('gameover'); showOver(st); };
   events.onCoin = () => { pulse('pill-coin'); Audio.play('coin'); };
   events.onGem = () => { pulse('pill-gem'); Audio.play('gem'); };
@@ -86,7 +98,7 @@ async function boot() {
   addEventListener('keydown', (e) => { if (state.over && (e.code === 'Enter' || e.code === 'Space')) restart(); });
   restart();
   // Otomatik kayıt: 5 sn'de bir, seviye atlayınca, ölünce, sekme gizlenince/kapanınca
-  const saveNow = () => Save.write(HERO.id, state.player, state);
+  const saveNow = () => Save.write(HERO.id, state.player, state); saveNowRef = saveNow;
   setInterval(saveNow, 5000);
   addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
   addEventListener('pagehide', saveNow);
@@ -101,10 +113,11 @@ async function boot() {
     Input.update();
     update(dt);
     updateHud();
+    updateWaveHud();
     render(ctx);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__game = { state, spawnEnemy, CONFIG, Audio }; // hata ayıklama
+  window.__game = { state, spawnEnemy, CONFIG, Audio, update, startWave }; // hata ayıklama
 }
 boot();

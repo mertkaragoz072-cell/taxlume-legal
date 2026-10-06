@@ -6,9 +6,11 @@ Oyun kaynak kodu (vanilla JS, ES modülleri, HTML5 Canvas). Motor/framework yok.
 src/
   main.js            giriş: veri + asset yükle, döngüyü başlat (requestAnimationFrame, delta time)
   core/              config.js (data/*.json yükleyici), assets.js, input.js, view.js, util.js
-  game/              state.js (paylaşılan durum), systems.js (update mantığı)
+  game/              state.js, systems.js (ana update: otomatik ilerleme, düşman/saldırı döngüsü), events.js (olay kancaları),
+                     combat.js (CombatManager: hasar/kritik/ödül/XP), PlayerStats.js (güçlendirme statları), WaveManager.js, EnemySpawner.js,
+                     UpgradeManager.js (kart havuzu/uygulama), boss.js, skills.js
   render/            renderer.js (çizim sırası), world.js, characters.js, effects.js, draw.js
-  ui/hud.js          DOM HUD + Game Over
+  ui/hud.js (HUD, Game Over), waveHud.js (WAVE göstergesi, afişler), UpgradeCard.js (GÜÇLEN! ekranı)
   styles/main.css
 ```
 
@@ -25,4 +27,4 @@ ES modülleri ve JSON `file://` ile çalışmaz; proje kökünde yerel sunucu a�
 ```
 cd NEXORA && python3 -m http.server 8080   # → http://localhost:8080
 ```
-Kontrol: A/D veya ←/→; mobilde sol alttaki sabit joystick (ekranın sol %55'i). Oyun yalnızca yatay hedeflenir; dikey tutulursa duraklar ve çevirme uyarısı çıkar.
+Kontrol: **hareket yok** — kahraman otomatik sağa ilerler, düşmanla savaşır. Oyuncu yetenek düğmelerini (⭐ Q, ⚡ E), isteğe bağlı elle saldırıyı (kılıç düğmesi / Space) ve güç seçimlerini (1/2/3) yönetir. Oyun yalnızca yatay hedeflenir.

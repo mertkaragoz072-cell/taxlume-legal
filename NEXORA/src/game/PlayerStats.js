@@ -1,0 +1,29 @@
+// PlayerStats: kalıcı güçlendirmelerden türetilen oyuncu statları. Veri: data/upgrades.json (base + her güçlendirmenin stat/per/cap).
+// p.upgrades = { upgradeId: seviye }. Türetilmiş değerler her çağrıda hesaplanır (basit, hızlı: ≤ 10 kayıt).
+import { CONFIG, UPGRADES } from '../core/config.js';
+
+export function derived(p) {
+  const s = { ...UPGRADES.base };
+  for (const u of UPGRADES.list) {
+    const lv = p.upgrades?.[u.id] || 0; if (!lv) continue;
+    s[u.stat] += u.per * lv;
+    if (u.cap != null) s[u.stat] = Math.min(u.cap, s[u.stat]);
+  }
+  return s;
+}
+export const stats = (p) => derived(p);
+
+// Seviyeye göre taban can × can çarpanı. Güçlendirme/level-up sonrası çağır; healDelta=true ise artan can kadar iyileştirir.
+export function recalcMaxHp(p, healDelta = true) {
+  const L = CONFIG.leveling, base = CONFIG.player.maxHp + L.maxHpPerLevel * (p.level - 1);
+  const next = Math.round(base * derived(p).maxHpMul), delta = next - p.maxHp;
+  p.maxHp = next; p.hp = Math.min(p.maxHp, p.hp + (healDelta && delta > 0 ? delta : 0));
+}
+
+// Olasılıklı yuvarlama: 1.2 → %80 ihtimalle 1, %20 ihtimalle 2 (küçük çarpanlar da etkili olsun)
+export function probRound(x) { const f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); }
+
+export function describe(p) {          // HUD/hata ayıklama için okunur özet
+  const s = derived(p);
+  return `Hasar ×${s.damageMul.toFixed(2)} · Hız ×${s.attackSpeedMul.toFixed(2)} · Krit %${Math.round(s.critChance * 100)} ×${s.critDamage.toFixed(2)} · Can ×${s.maxHpMul.toFixed(2)} · Savunma ${Math.round(s.defense * 100)}% · Yenileme ${s.regen} HP/sn`;
+}

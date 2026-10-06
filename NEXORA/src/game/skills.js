@@ -2,7 +2,8 @@ import { SKILLS, ANIMS, CONFIG } from '../core/config.js';
 import { Input } from '../core/input.js';
 import { wrapAngle } from '../core/util.js';
 import { state } from './state.js';
-import { damageEnemy, applyKnock, events } from './systems.js';
+import { hitEnemy, applyKnock } from './combat.js';
+import { events } from './events.js';
 
 // Yetenekler data/skills.json'dan okunur (tip: wave = ileri giden dalga, burst = önde alan patlaması).
 // Hasar = oyuncu hasarı × damageMul. Buton/Q,E ile tetiklenir; bekleme süresi HUD'da düğme üstünde gösterilir.
@@ -33,13 +34,13 @@ export function updateSkills(dt) {
       const wa = f.a + f.dir * f.x / r;
       for (const en of state.enemies) {
         if (en.dead || f.hit.has(en)) continue;
-        if (Math.abs(wrapAngle(en.a - wa)) * r <= sk.width + en.def.width * 0.4) { f.hit.add(en); damageEnemy(en, p.damage * sk.damageMul); }
+        if (Math.abs(wrapAngle(en.a - wa)) * r <= sk.width + en.def.width * 0.4) { f.hit.add(en); hitEnemy(en, p.damage * sk.damageMul); }
       }
     } else if (!f.done && f.t >= sk.hitAt) {
       f.done = true;
       for (const en of state.enemies) {
         if (en.dead) continue;
-        if (Math.abs(wrapAngle(en.a - f.a)) * r <= sk.radius + en.def.width * 0.3) { damageEnemy(en, p.damage * sk.damageMul); applyKnock(en, sk.knockback); }
+        if (Math.abs(wrapAngle(en.a - f.a)) * r <= sk.radius + en.def.width * 0.3) { hitEnemy(en, p.damage * sk.damageMul); applyKnock(en, sk.knockback); }
       }
       state.shake = Math.max(state.shake, 4);
     }

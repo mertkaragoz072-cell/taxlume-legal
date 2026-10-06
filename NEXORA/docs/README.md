@@ -91,3 +91,30 @@ Tasarım ve teknik notlar.
 - **Otomatik kayıt:** 5 sn'de bir, seviye atlayınca, ölünce, sekme gizlenince/kapanınca (yalnız değişiklik varsa yazar). Açılışta seçim kartında `Lv. N · coin` görünür, son oynanan kart altın çerçeveli.
 - **Ölünce** seviye/coin/gem kalır; "Yeniden Başla" aynı seviyeden yeni deneme başlatır. Can ve hasar seviyeye göre türetilir (level-up formülüyle aynı).
 - Seçim ekranındaki **Kaydı Sil** (iki dokunuş: "Emin misin?") tüm kaydı siler. Bozuk kayıt sessizce yok sayılır. Yeni bir veri alanı eklerken `Save.write/apply` ve sürümü (`KEY`) güncelle.
+
+## Oynanış döngüsü: otomatik ilerle → dalga → güçlen (güncel)
+```
+otomatik sağa koş → düşman → savaş (otomatik saldırı) → öldür → ilerle → 5 dalga → GÜÇLEN! (3 karttan 1) → yeni dalga …
+```
+- **Hareket:** joystick YOK. Kahraman sürekli sağa koşar (`player.autoSpeed` × hareket hızı gücü); önünde `engageRange` içinde canlı düşman varsa durup savaşır, bitince devam eder. Saldırı yönü hep sağ. Oyuncunun kontrolü: ⭐ Yıldız Patlaması (Q, 5 sn), ⚡ Mavi Dalga (E, 10 sn), isteğe bağlı elle saldırı, güç seçimi. Bekleme sırasında düğme kararır ve kalan saniye yazar.
+- **Dalgalar** (`data/waves.json`, `WaveManager.js`, `EnemySpawner.js`): `intro` ("WAVE n" afişi) → `fight` (düşmanlar **sırayla**, aynı anda en fazla 3 normal) → `complete` ("WAVE COMPLETE" + coin bonusu) → sonraki dalga. Düşman sayısı = min(14, 4 + ⌈0.8·n⌉); HP +%10, hasar +%5 / dalga; goblin savaşçı 2. dalgadan itibaren artan oranda gelir. Ölünce **aynı dalga baştan** başlar (seviye/güçlendirmeler kalır).
+- **Her 5 dalgada** (`upgradeEvery`): oyun tamamen **durur**, büyük **"GÜÇLEN!"** başlığı ve 3 rastgele kart (`UpgradeManager.js`, `ui/UpgradeCard.js`). Yalnız biri seçilir; seçilen büyüyüp parlar, diğerleri kaybolur (0.6 sn), güç kalıcı uygulanır, oyun devam eder. 1/2/3 tuşları da çalışır. HUD'da üstte `WAVE 3 / 5` (5'lik blok içindeki sıra), altında dalga no ve kalan düşman.
+- **Elite:** her 5. dalganın sonunda `goblin_brute` (geride bekler, normaller bitince ilerler).
+- **Boss** (`bossEvery` = 20, `boss.js`): `goblin_boss` (elite sprite'ının 1.7× büyüğü, kırmızı aura, "BOSS" etiketi, HP 700 × dalga ölçeği, geri tepmez). Özel saldırılar: **yer darbesi** (kırmızı uyarı dairesi → 0.9 sn sonra şok dalgası, 1.6× hasar), **%50 canda 2 destek goblin**, **%30 canda öfke** (hızlanır). Ödül: 40–50 coin + 5–6 gem (+60 coin/6 gem bonus), tam iyileşme ve bir sonraki güç seçiminin **EFSANE** (çift güç, çift seviye) olması.
+
+### Güçlendirmeler (`data/upgrades.json`, `PlayerStats.js`)
+| Kategori | Güç | Etki / seviye |
+|---|---|---|
+| Saldırı | ⚔️ Keskin Kılıç | hasar +%20 |
+| | ⚡ Hızlı Savaşçı | saldırı hızı +%15 (animasyon da hızlanır, üst sınır ×3) |
+| | 🎯 Keskin Göz | kritik şansı +%10 (taban %5, üst sınır %75) |
+| | 💥 Ölümcül Darbe | kritik hasar +%25 (taban ×1.5) |
+| Savunma | ❤️ Dev Kalp | maks. can +%25 |
+| | 🛡️ Zırh | savunma +%15 (alınan hasar ÷ (1+savunma)) |
+| | 💚 Yenilenme | +5 HP/sn |
+| Yardımcı | 🏃 Rüzgar Ayağı | hareket hızı +%10 (üst sınır ×2.2) |
+| | 💰 Altın Eli | coin kazancı +%20 |
+| | ✨ Bilgelik | XP kazancı +%20 |
+- Aynı güç tekrar çıkabilir; kart "Lv. 2 → 3" gösterir (ilk kez "YENİ · Lv. 1"). Seviyeler `player.upgrades` içinde, kahraman başına **kayıt dosyasında** saklanır (seviye, dalga, güçlendirmeler).
+- **Yeni güç eklemek:** `upgrades.json`'a `{id, category, icon, name, stat, per, fmt, text, weight, cap?}` kaydı eklemek yeterli; stat adı `PlayerStats.derived`'in okuduğu `base` alanlarından biri olmalı (yeni stat için `base`'e ve ilgili sistemde okumaya ekle).
+- Not: Yenilenme +5 HP/sn spesifikasyona göre; erken oyunda (can ≈ 120) çok güçlüdür — dengeyi `per` değerinden ayarla.

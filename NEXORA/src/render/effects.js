@@ -25,8 +25,8 @@ export function drawRing(ctx, g) {
   const u = g.t / g.life, k = 1 - Math.pow(1 - u, 3);
   onLane(ctx, g.a, 0, 0, () => {
     ctx.globalAlpha = 1 - u * 0.75;
-    ctx.beginPath(); ctx.ellipse(0, -2, 20 + k * 70, 5 + k * 12, 0, 0, TAU); ctx.lineWidth = 7 * (1 - u) + 1.5; ctx.strokeStyle = '#ffd23f'; ctx.stroke();
-    for (let i = -3; i <= 3; i++) { const x = i * 11, hh = 30 + k * 60 + (i % 2 ? 14 : 0); const gr = ctx.createLinearGradient(0, 0, 0, -hh); gr.addColorStop(0, 'rgba(255,230,120,.8)'); gr.addColorStop(1, 'rgba(255,230,120,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 2, -hh * (0.4 + 0.6 * k), 4, hh * (0.4 + 0.6 * k)); }
+    ctx.beginPath(); ctx.ellipse(0, -2, 20 + k * (g.color ? 150 : 70), 5 + k * (g.color ? 26 : 12), 0, 0, TAU); ctx.lineWidth = 7 * (1 - u) + 1.5; ctx.strokeStyle = g.color || '#ffd23f'; ctx.stroke();
+    if (!g.color) for (let i = -3; i <= 3; i++) { const x = i * 11, hh = 30 + k * 60 + (i % 2 ? 14 : 0); const gr = ctx.createLinearGradient(0, 0, 0, -hh); gr.addColorStop(0, 'rgba(255,230,120,.8)'); gr.addColorStop(1, 'rgba(255,230,120,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 2, -hh * (0.4 + 0.6 * k), 4, hh * (0.4 + 0.6 * k)); }
     ctx.globalAlpha = 1;
   });
 }
@@ -85,4 +85,15 @@ export function drawSkillFx(ctx, f) {
     const k = (sk.radius * 1.9) / img.width;
     onLane(ctx, f.a, 0, 0, () => { ctx.globalAlpha = 1 - Math.pow(f.t / f.life, 6); ctx.drawImage(img, -img.width * k / 2, -img.height * k + 8, img.width * k, img.height * k); ctx.globalAlpha = 1; });
   }
+}
+
+// Boss yer darbesi uyarısı: hedef noktada kırmızı, nabız gibi atan oval (süre dolunca patlar)
+export function drawTelegraph(ctx, t) {
+  const u = Math.min(1, t.t / t.life), pu = 0.5 + 0.5 * Math.sin(t.t * 18);
+  onLane(ctx, t.a, 0, 0, () => {
+    ctx.beginPath(); ctx.ellipse(0, -1, t.radius, t.radius * 0.2, 0, 0, TAU);
+    ctx.fillStyle = `rgba(255,50,40,${0.14 + 0.2 * u})`; ctx.fill();
+    ctx.lineWidth = 2 + pu * 2; ctx.strokeStyle = `rgba(255,70,50,${0.55 + 0.4 * pu})`; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, -1, t.radius * u, t.radius * 0.2 * u, 0, 0, TAU); ctx.strokeStyle = 'rgba(255,230,200,.9)'; ctx.lineWidth = 2; ctx.stroke();
+  });
 }

@@ -1,0 +1,52 @@
+{
+  "_comment": "Dalga sistemi ayarları. total = min(cap, base + ceil(n × perWave)). maxAlive aynı anda en fazla normal düşman. Boss/elite normal sayıma girmez.",
+  "total": {
+    "base": 4,
+    "perWave": 0.8,
+    "cap": 14
+  },
+  "maxAlive": 3,
+  "spawnGapSec": [
+    0.9,
+    1.9
+  ],
+  "hpPerWave": 0.1,
+  "dmgPerWave": 0.05,
+  "introSec": 1.5,
+  "completeSec": 1.7,
+  "coinBonusPerWave": 2,
+  "upgradeEvery": 5,
+  "eliteEvery": 5,
+  "bossEvery": 20,
+  "weights": {
+    "goblin_scout": {
+      "base": 5,
+      "perWave": 0
+    },
+    "goblin_warrior": {
+      "base": 0,
+      "perWave": 0.8,
+      "min": 1,
+      "fromWave": 2,
+      "cap": 7
+    }
+  },
+  "eliteType": "goblin_brute",
+  "bossType": "goblin_boss",
+  "bossEscorts": 2,
+  "boss": {
+    "slamEvery": 5,
+    "slamWind": 0.9,
+    "slamRadius": 120,
+    "slamDamageMul": 1.6,
+    "summonAtHp": 0.5,
+    "enrageAtHp": 0.3,
+    "enrageSpeedMul": 1.35,
+    "reward": {
+      "coins": 60,
+      "gems": 6,
+      "healFull": true,
+      "epicUpgrade": true
+    }
+  }
+}
