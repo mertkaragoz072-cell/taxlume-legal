@@ -214,3 +214,6 @@ html, body {
 .up-card.art .lv { top: 85.6%; height: 8.8%; left: 22%; right: 22%; font-size: 5.2cqw; }
 
 .up-cards.chosen .up-card:not(.picked) { opacity: 0; transform: scale(.55) translateY(18px); transition: transform .35s ease-in, opacity .3s; pointer-events: none; }
+
+#wave-box.wave-pop { animation: wavepop .7s ease-out; }
+@keyframes wavepop { 0% { transform: translateX(-50%) scale(1); } 30% { transform: translateX(-50%) scale(1.35); filter: brightness(1.25); } 100% { transform: translateX(-50%) scale(1); } }

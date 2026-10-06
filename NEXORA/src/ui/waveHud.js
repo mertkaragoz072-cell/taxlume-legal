@@ -21,6 +21,7 @@ export function updateWaveHud() {
   const t = boss ? 'BOSS WAVE' : `WAVE ${w.n} / ${WAVES.wavesPerStage}`;
   const s = `Bölüm ${w.stage} · Kalan ${left}`;
   const key = t + s; if (key === last) return; last = key;
+  if (main.textContent !== t) { const bx = document.getElementById('wave-box'); bx.classList.remove('wave-pop'); void bx.offsetWidth; bx.classList.add('wave-pop'); }   // dalga değişince kısa büyüyüp küçülme
   main.textContent = t; main.classList.toggle('boss', boss); sub.textContent = s;
 }
 

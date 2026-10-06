@@ -144,3 +144,6 @@ Bölüm çarpanı: HP ×(1 + 0.4·(bölüm−1)) → ×1, ×1.4, ×1.8…; hasar
 ## Faz 10 — Sadeleştirilmiş kart havuzu
 Kart havuzu 8 güçle sınırlı (Hasar +10%, Can +20%, Kritik +10%, Saldırı Hızı +15%, Hareket Hızı +20%, Alınan Hasar −10%, Yetenek Soğuma −10%, Altın +20%); diğerleri `upgrades.json`'da `"disabled": true` (silince geri gelir).
 Boss sonrası kart ekranı kapalı (`waves.json → bossUpgrade: false`; `true` yapılırsa boss sonrası da 3 kart açılır). Seçimde seçilen karttan karaktere enerji küresi uçar, diğer kartlar küçülüp kaybolur.
+
+## Faz 11 — Yerleşim ve ölçek
+Kamera: `visibleHeightUnits 460`, `groundScreenY 0.70`, `heroScreenX 0.37` (zemin boşluğu azaldı). Kahraman sprite ölçeği ×1.085 (+kamera ≈ ×1.18 ekranda), goblinler ×1.03 (+kamera ≈ ×1.12); HP bar boyları buna göre. Spawn: sağ görünür alanın %80'i (`enemies.spawnScreenFrac`), üst üste binmeyi önleyen `spawnMinGap`, 0.3 sn fade-in. Vuruşta hafif sarsıntı; dalga değişince üst "WAVE n / 5" kutusu büyüyüp küçülür.

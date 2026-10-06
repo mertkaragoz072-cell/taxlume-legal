@@ -8,7 +8,7 @@
       86,
       138
     ],
-    "scale": 0.842,
+    "scale": 0.867,
     "facing": "right",
     "idleHeightPx": 95,
     "targetHeight": 80,
@@ -60,7 +60,7 @@
       98,
       126
     ],
-    "scale": 0.756,
+    "scale": 0.779,
     "facing": "right",
     "idleHeightPx": 90,
     "targetHeight": 68,
@@ -111,7 +111,7 @@
       114,
       212
     ],
-    "scale": 0.973,
+    "scale": 1.002,
     "facing": "right",
     "idleHeightPx": 112,
     "targetHeight": 109,

@@ -9,12 +9,26 @@ export const aliveNormal = () => state.enemies.filter((x) => !x.dead && !x.def.e
 export const aliveElite = () => state.enemies.filter((x) => !x.dead && x.def.elite);
 export const aliveAny = () => state.enemies.filter((x) => !x.dead);
 
+// Doğuş noktası: ekranın sağ bölümü (görünür sağ alanın ~%88'i); boss/elite offsetUnits ile dışarıdan gelir.
+// Yaşayan düşmanlarla üst üste binmesin: çakışıyorsa daha sağa kaydırılır.
+function spawnAngle(t, offsetUnits) {
+  const E = CONFIG.enemies, R = CONFIG.planet.radius;
+  let u = View.visibleRightUnits * E.spawnScreenFrac + offsetUnits;
+  for (let guard = 0; guard < 12; guard++) {
+    const a = state.player.a + u / R;
+    const hit = state.enemies.find((o) => !o.dead && Math.abs(o.a - a) * R < E.spawnMinGap + (o.def.width + t.width) * 0.25);
+    if (!hit) break;
+    u += E.spawnMinGap * 0.6;
+  }
+  return state.player.a + u / R;
+}
+
 export function spawnEnemy(typeKey, offsetUnits = 0) {
   const t = ENEMY_TYPES[typeKey], { stage, n } = state.wave, S = WAVES.stage;
   const hp = t.hp * stageHpMul(stage) * (1 + S.hpPerWaveInStage * (n - 1));
   const en = {
     type: typeKey, def: t,
-    a: state.player.a + (View.visibleRightUnits + CONFIG.enemies.spawnOffscreen + offsetUnits) / CONFIG.planet.radius,
+    a: spawnAngle(t, offsetUnits), age: 0,
     hp, maxHp: hp, damage: t.damage * (1 + S.dmgPerStage * (stage - 1)),
     atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, hitDone: false,
     speedMul: 1 + rand(-CONFIG.enemies.speedJitter, CONFIG.enemies.speedJitter),

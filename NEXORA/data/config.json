@@ -83,6 +83,8 @@
   },
   "enemies": {
     "spawnOffscreen": 130,
+    "spawnScreenFrac": 0.80,
+    "spawnMinGap": 95,
     "separation": 1.25,
     "speedJitter": 0.16,
     "eliteSpawnExtra": 260,
@@ -111,9 +113,9 @@
   "camera": {
     "_comment": "Yandan kamera, hafif yukarıdan (≈15-20°): dev gezegenin yüzeyi yumuşak bir tepe gibi görünür. Referans: assets/references/nexora_camera_gameplay_reference.png",
     "visibleWidthUnits": 860,
-    "visibleHeightUnits": 500,
-    "heroScreenX": 0.36,
-    "groundScreenY": 0.62,
+    "visibleHeightUnits": 460,
+    "heroScreenX": 0.37,
+    "groundScreenY": 0.70,
     "laneDepth": 14
   },
   "parallax": [

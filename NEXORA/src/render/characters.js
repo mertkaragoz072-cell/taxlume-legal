@@ -184,7 +184,7 @@ export function drawEnemy(ctx, en) {
   const sc = meta.scale * (def.spriteMul || 1), w = img.width * sc, h = img.height * sc;
   const dp = en.dead ? clamp((en.deathT - 0.5) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
   onLane(ctx, en.a, 0, 0, () => {
-    ctx.globalAlpha = 1 - dp;
+    ctx.globalAlpha = (1 - dp) * Math.min(1, en.age / 0.3);       // doğarken kısa fade-in
     if (def.boss && !en.dead) {                                       // boss: ayaklarında kırmızı aura
       const pu = 0.5 + 0.5 * Math.sin(state.time * 4), g = ctx.createRadialGradient(0, 0, 0, 0, 0, def.width * 0.9);
       g.addColorStop(0, `rgba(255,70,50,${0.35 + pu * 0.15})`); g.addColorStop(1, 'rgba(255,70,50,0)');

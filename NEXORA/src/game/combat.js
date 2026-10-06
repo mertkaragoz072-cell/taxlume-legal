@@ -64,6 +64,7 @@ export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
   en.flash = 0.14; en.knock = 1 - en.def.knockResist; en.stagger = en.def.boss ? 0 : 0.22;
   if (en.def.knockResist < 0.5 && en.attackT >= 0) { en.attackT = -1; en.atkTimer = 0.5; }   // hafif düşmanın saldırısı vuruşla bölünür; elite/boss bölünmez
   events.onHit?.(en, dmg);
+  state.shake = Math.max(state.shake, crit ? 2.6 : 1.3);          // hafif vuruş sarsıntısı
   addText(en.a, en.def.heightUnits + 10, (crit ? '' : '-') + Math.round(dmg) + (crit ? '!' : ''), crit ? '#ffd23f' : (color || '#ff4a4a'), (0.75 + en.def.heightUnits / 300) * (crit ? 1.35 : 1));
   if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 190, dir: -en.face });
   if (en.hp <= 0 && !en.dead) killEnemy(en);
