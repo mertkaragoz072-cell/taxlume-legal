@@ -1,5 +1,5 @@
 // Kayıt/yükleme: yalnızca tarayıcı localStorage (yerel, sunucu yok). Kahraman başına ilerleme:
-//   { level, xp, coins, gems, totalKills, bestLevel, wave, upgrades:{id:seviye} }  + son seçilen kahraman.
+//   { level, xp, coins, gems, hp, totalKills, bestLevel, wave, stage, boss, upgrades:{id:seviye}, cards }  + son seçilen kahraman.
 // Ölünce seviye/coin/gem KALIR (yeni deneme aynı seviyeden başlar); düşmanlar ve konum sıfırlanır.
 // Bozuk/eski kayıt sessizce yok sayılır. Şema değişirse KEY'deki sürümü artır.
 import { CONFIG, UPGRADES } from './config.js';
@@ -36,6 +36,7 @@ export const Save = {
     p.lvShown = lv;                                                  // yüklenen seviye için LEVEL UP yazısı çıkmaz
     restoreCards(p, s.cards);                                        // kart envanteri + kuşanılanlar (CardSystem)
     recalcMaxHp(p, false); p.hp = p.maxHp;                           // can = seviye tabanı × can güçlendirmesi
+    if (s.hp > 0) p.hp = Math.max(1, Math.min(p.maxHp, Math.round(s.hp)));   // kayıtlı can geri yüklenir (ölüm kaydı hp:null → tam can)
     const wv = Math.max(1, s.wave | 0 || 1);                     // eski kayıt: tek sayı (küresel dalga) → bölüm + dalga
     if (s.stage) { state.wave.stage = Math.max(1, s.stage | 0); state.wave.n = Math.min(5, wv); state.wave.boss = !!s.boss; }
     else { state.wave.stage = Math.floor((wv - 1) / 5) + 1; state.wave.n = ((wv - 1) % 5) + 1; state.wave.boss = false; }
@@ -45,7 +46,7 @@ export const Save = {
   write(heroId, p, state) {
     if (!heroId || !p) return;
     const prev = data.heroes[heroId] || {};
-    const cur = { level: p.level, xp: p.xp, coins: p.coins, gems: p.gems, totalKills: kills0 + state.kills, bestLevel: Math.max(prev.bestLevel || 1, p.level), wave: state.wave.n, stage: state.wave.stage, boss: state.wave.boss, upgrades: { ...p.upgrades }, cards: serializeCards(p) };
+    const cur = { level: p.level, xp: p.xp, coins: p.coins, gems: p.gems, totalKills: kills0 + state.kills, bestLevel: Math.max(prev.bestLevel || 1, p.level), wave: state.wave.n, stage: state.wave.stage, boss: state.wave.boss, upgrades: { ...p.upgrades }, cards: serializeCards(p), hp: state.over ? null : Math.max(1, Math.round(p.hp)) };
     if (JSON.stringify(prev) === JSON.stringify(cur) && data.lastHero === heroId) return;
     data.heroes[heroId] = cur; data.lastHero = heroId;
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { /* dolu/yasak → oyun yine çalışır */ }
