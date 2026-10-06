@@ -5,7 +5,7 @@ import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
 import { update, events, spawnEnemy } from './game/systems.js';
 import { render } from './render/renderer.js';
-import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar } from './ui/hud.js';
+import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar, pulse } from './ui/hud.js';
 
 function restart() {
   resetState();
@@ -58,6 +58,9 @@ async function boot() {
   onResize();
 
   events.onGameOver = showGameOver;
+  events.onCoin = () => pulse('pill-coin');
+  events.onGem = () => pulse('pill-gem');
+  events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); };
   document.getElementById('restart-btn').addEventListener('click', restart);
   addEventListener('keydown', (e) => { if (state.over && (e.code === 'Enter' || e.code === 'Space')) restart(); });
   restart();

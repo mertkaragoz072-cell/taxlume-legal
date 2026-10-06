@@ -8,8 +8,26 @@ import { onLane, outline, outlined } from './draw.js';
 export function drawCoin(ctx, c) {
   onLane(ctx, c.a, c.h, 0, () => {
     const w = Math.abs(Math.cos(c.spin)) * 7 + 1.5;
+    if (c.kind === 'gem') {                                           // mor elmas, dönerken parlar
+      ctx.rotate(Math.sin(c.spin) * 0.15);
+      ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(w + 2, 0); ctx.lineTo(0, 10); ctx.lineTo(-w - 2, 0); ctx.closePath();
+      ctx.fillStyle = '#c04bff'; ctx.fill(); outlined(ctx, 2);
+      ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(w * 0.5, -1); ctx.lineTo(0, 2); ctx.lineTo(-w * 0.6, -2); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill();
+      return;
+    }
     ctx.beginPath(); ctx.ellipse(0, 0, w, 7, 0, 0, TAU); ctx.fillStyle = '#ffd23f'; ctx.fill(); outlined(ctx, 2);
     ctx.beginPath(); ctx.ellipse(-w * 0.25, -2, w * 0.3, 2.5, 0, 0, TAU); ctx.fillStyle = '#fff6a8'; ctx.fill();
+  });
+}
+
+// Seviye atlama: oyuncunun ayaklarından genişleyen altın halka + yukarı süzülen ışık çizgileri
+export function drawRing(ctx, g) {
+  const u = g.t / g.life, k = 1 - Math.pow(1 - u, 3);
+  onLane(ctx, g.a, 0, 0, () => {
+    ctx.globalAlpha = 1 - u * 0.75;
+    ctx.beginPath(); ctx.ellipse(0, -2, 20 + k * 70, 5 + k * 12, 0, 0, TAU); ctx.lineWidth = 7 * (1 - u) + 1.5; ctx.strokeStyle = '#ffd23f'; ctx.stroke();
+    for (let i = -3; i <= 3; i++) { const x = i * 11, hh = 30 + k * 60 + (i % 2 ? 14 : 0); const gr = ctx.createLinearGradient(0, 0, 0, -hh); gr.addColorStop(0, 'rgba(255,230,120,.8)'); gr.addColorStop(1, 'rgba(255,230,120,0)'); ctx.fillStyle = gr; ctx.fillRect(x - 2, -hh * (0.4 + 0.6 * k), 4, hh * (0.4 + 0.6 * k)); }
+    ctx.globalAlpha = 1;
   });
 }
 

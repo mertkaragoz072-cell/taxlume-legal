@@ -106,3 +106,9 @@ html, body {
 .sel-card canvas { width: clamp(70px, 20vh, 120px); height: clamp(70px, 20vh, 120px); border-radius: 50%; border: 3px solid #f1c24b; outline: 3px solid #2b3550; background: radial-gradient(#ffd9a8, #e7a86a); display: block; margin: 0 auto 6px; }
 .sel-card:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(20,30,60,.6); }
 .sel-card.last { border-color: #f1c24b; }
+
+/* HUD toplama/seviye vurgusu */
+.pill, #avatar-ring, .lvbar { transition: transform .12s; }
+.pulse { animation: pop .38s ease-out; }
+@keyframes pop { 0% { transform: scale(1); } 35% { transform: scale(1.14); filter: brightness(1.35); } 100% { transform: scale(1); } }
+.lvbar .xpfill { transition: width .25s ease-out; }

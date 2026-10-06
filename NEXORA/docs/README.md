@@ -75,3 +75,8 @@ Tasarım ve teknik notlar.
 ## Yetenekler (data/skills.json)
 - Yıldız düğmesi / **E**: *Yıldız Patlaması* (seviye 3'te açılır, bekleme 12 sn, 3× hasar, önünde yarıçap 150 birim, geri iter). Şimşek düğmesi / **Q**: *Mavi Dalga* (bekleme 6 sn, 2× hasar, ileri giden dalga, menzil 380, geçtiği her düşmana bir kez vurur).
 - Düğme üstünde bekleme süresi dilimi; hazırken parlar; seviye açılmamışsa gri. Mantık `src/game/skills.js`, çizim `render/effects.js → drawSkillFx`. Yeni yetenek = `skills.json` kaydı + HTML düğmesi.
+
+## Ödül hissi
+- **XP:** düşman ölünce başında `+N XP` (mavi) çıkar. **Level-up:** ayaklardan genişleyen altın halka + yükselen ışık çizgileri, portre ve `Lv.` çubuğu "pop" animasyonu, `LEVEL UP!` yazısı.
+- **Coin/Gem:** toplanınca ilgili HUD kutusu pop yapar. **Gem** (mor elmas) elite'ten 1–2 adet garanti, normal goblinlerden küçük şansla (`enemies.json → gems / gemChance`) düşer; coin gibi mıknatısla toplanır, HUD gem sayacını artırır.
+- Olay kancaları: `src/game/systems.js → events` (onCoin, onGem, onLevelUp, onKill, onHit…). Ses ve kayıt da bu kancalara bağlanır.

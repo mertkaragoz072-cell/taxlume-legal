@@ -17,7 +17,8 @@
     "attackCooldown": 0.8,
     "minLevel": 1,
     "weight": 5,
-    "knockResist": 0.0
+    "knockResist": 0.0,
+    "gemChance": 0.02
   },
   "goblin_warrior": {
     "name": "Goblin Savaşçı (gürz)",
@@ -37,7 +38,8 @@
     "attackCooldown": 0.9,
     "minLevel": 1,
     "weight": 3,
-    "knockResist": 0.3
+    "knockResist": 0.3,
+    "gemChance": 0.06
   },
   "goblin_brute": {
     "name": "Elite Goblin Brute",
@@ -59,6 +61,10 @@
     "weight": 0,
     "knockResist": 0.8,
     "elite": true,
-    "hold": true
+    "hold": true,
+    "gems": [
+      1,
+      2
+    ]
   }
 }

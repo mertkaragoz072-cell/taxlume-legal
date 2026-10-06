@@ -55,3 +55,9 @@ export function drawAvatar() {
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
 }
+
+// Kısa "pop" animasyonu (coin/gem/level göstergeleri toplanınca/atlanınca)
+export function pulse(id) {
+  const el = document.getElementById(id); if (!el) return;
+  el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+}

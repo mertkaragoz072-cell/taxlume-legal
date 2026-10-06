@@ -9,7 +9,7 @@ const R = () => CONFIG.planet.radius;
 const surfaceDist = (a, b) => Math.abs(wrapAngle(a - b)) * R();
 
 // Olay kancası: UI/ses/save gibi sistemler buraya bağlanabilir (ör. events.onGameOver).
-export const events = { onGameOver: null };
+export const events = { onGameOver: null, onCoin: null, onGem: null, onLevelUp: null, onHit: null, onKill: null, onHurt: null, onSlash: null, onSkill: null };
 
 export function spawnEnemy(typeKey, offsetUnits = 0) {
   const t = ENEMY_TYPES[typeKey], p = state.player, e = CONFIG.enemies;
@@ -77,9 +77,15 @@ function killEnemy(en) {
   for (let i = 0; i < n; i++) {
     state.coins.push({
       a: en.a, h: 14, vh: rand(0.6, 1.2) * CONFIG.loot.coinPopSpeed, va: rand(-1, 1) * 0.25,
-      value: en.def.coinValue, magnet: false, grounded: false, spin: rand(0, TAU),
+      value: en.def.coinValue, magnet: false, grounded: false, spin: rand(0, TAU), kind: 'coin',
     });
   }
+  const gems = en.def.gems ? Math.round(rand(en.def.gems[0], en.def.gems[1])) : (Math.random() < (en.def.gemChance || 0) ? 1 : 0);
+  for (let i = 0; i < gems; i++) {
+    state.coins.push({ a: en.a, h: 18, vh: rand(0.9, 1.3) * CONFIG.loot.coinPopSpeed, va: rand(-1, 1) * 0.3, value: 1, magnet: false, grounded: false, spin: rand(0, TAU), kind: 'gem' });
+  }
+  addText(en.a, en.def.heightUnits + 34, '+' + en.def.xp + ' XP', '#7ee7ff', 0.7);
+  events.onKill?.(en);
   gainXp(en.def.xp);
 }
 
@@ -91,6 +97,8 @@ function gainXp(amount) {
     p.damage += L.damagePerLevel; p.maxHp += L.maxHpPerLevel;
     p.hp = Math.min(p.maxHp, p.hp + (p.maxHp - p.hp) * L.healOnLevelUp + L.maxHpPerLevel);
     addText(p.a, 150, 'LEVEL UP!', '#ffd23f');
+    state.rings.push({ a: p.a, t: 0, life: 0.9 });
+    events.onLevelUp?.(p.level);
   }
 }
 
@@ -230,7 +238,7 @@ export function update(dt) {
       c.a += clamp(diff, -sp / r, sp / r);
       c.h += clamp(24 - c.h, -sp, sp);
       c.grounded = false;
-      if (Math.abs(diff) * r < 14 && Math.abs(c.h - 24) < 14) { p.coins += c.value; c.collected = true; }
+      if (Math.abs(diff) * r < 14 && Math.abs(c.h - 24) < 14) { if (c.kind === 'gem') { p.gems += c.value; events.onGem?.(); } else { p.coins += c.value; events.onCoin?.(); } c.collected = true; }
     } else if (!c.grounded) {
       c.vh -= C.loot.coinGravity * dt; c.h += c.vh * dt; c.a += c.va * dt / r * 60;
       if (c.h <= 6) { c.h = 6; c.grounded = true; }
@@ -240,6 +248,8 @@ export function update(dt) {
 
   for (const s of state.slashes) s.life -= dt;
   for (const f of state.hitFx) f.life -= dt;
+  for (const g of state.rings) g.t += dt;
+  state.rings = state.rings.filter((g) => g.t < g.life);
   state.hitFx = state.hitFx.filter((f) => f.life > 0);
   state.slashes = state.slashes.filter((s) => s.life > 0);
   for (const t of state.texts) { t.life -= dt; t.h += 50 * dt; }
