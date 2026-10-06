@@ -17,7 +17,7 @@
     "reward": {
       "coins": 250,
       "gems": 2,
-      "healFull": true,
+      "healFull": false,
       "epicUpgrade": false,
       "showerCoins": 24
     },

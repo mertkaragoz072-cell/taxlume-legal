@@ -65,13 +65,13 @@ export function updateBoss(en, dt) {
   const B = WAVES.boss, sp = en.sp, p = state.player, r = R(), hpK = en.hp / en.maxHp;
   if (!sp.summoned && hpK <= B.summonAtHp) {
     sp.summoned = true; spawnEnemy('goblin_scout', 40); spawnEnemy('goblin_scout', 130);
-    addText(en.a, en.def.heightUnits + 60, 'DESTEK!', '#ff9a3a', 1.1); events.onBoss?.('summon');
+    addText(en.a, en.def.heightUnits + 60, 'DESTEK!', '#ff9a3a', 1.1, false, { tag: 'boss' }); events.onBoss?.('summon');
   }
   if (sp.rage < 1 && hpK <= B.rageAtHp) {
-    sp.rage = 1; en.speedMul *= B.rageSpeedMul; addText(en.a, en.def.heightUnits + 60, 'ÖFKELENDİ!', '#ff9a3a', 1.2); events.onBoss?.('enrage'); state.shake = Math.max(state.shake, 6);
+    sp.rage = 1; en.speedMul *= B.rageSpeedMul; addText(en.a, en.def.heightUnits + 60, 'ÖFKELENDİ!', '#ff9a3a', 1.2, false, { tag: 'boss' }); events.onBoss?.('enrage'); state.shake = Math.max(state.shake, 6);
   }
   if (sp.rage < 2 && hpK <= B.enrageAtHp) {
-    sp.rage = 2; en.speedMul *= B.enrageSpeedMul / B.rageSpeedMul; addText(en.a, en.def.heightUnits + 60, 'DELİRDİ!', '#ff4a4a', 1.3); events.onBoss?.('enrage'); state.shake = Math.max(state.shake, 9);
+    sp.rage = 2; en.speedMul *= B.enrageSpeedMul / B.rageSpeedMul; addText(en.a, en.def.heightUnits + 60, 'DELİRDİ!', '#ff4a4a', 1.3, false, { tag: 'boss' }); events.onBoss?.('enrage'); state.shake = Math.max(state.shake, 9);
   }
 
   if (sp.phase === 'idle') {

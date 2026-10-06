@@ -6,12 +6,14 @@ import { events } from './events.js';
 import { derived, recalcMaxHp, probRound } from './PlayerStats.js';
 import { hitSparks, deathBurst, hurtSparks, hitStop, xpBurst } from './fx.js';
 
-export function addText(a, h, text, color, scale = 1, crit = false) {
-  const life = CONFIG.hud.damageNumberLife, R = CONFIG.planet.radius;
+// opts: { life (sn), rise (birim/sn), tag (toplu temizlik için), key (aynı anahtarlı yazı tekrar basılmaz, yenilenir) }
+export function addText(a, h, text, color, scale = 1, crit = false, opts = {}) {
+  const life = opts.life ?? CONFIG.hud.damageNumberLife, R = CONFIG.planet.radius;
+  if (opts.key) { const ex = state.texts.find((t) => t.key === opts.key); if (ex) { Object.assign(ex, { text, color, life, max: life, h }); return; } }
   for (let k = 0; k < 5; k++) if (state.texts.some((t) => Math.abs(t.a - a) * R < 46 && Math.abs(t.h - h) < 20)) h += 22;   // yazılar üst üste binmesin
   a += rand(-6, 6) / R;
-  if (state.texts.length > 8) state.texts.shift();                 // ekranı yazıyla doldurma
-  state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8), scale, crit });
+  if (state.texts.length >= 8) state.texts.splice(Math.max(0, state.texts.findIndex((t) => !t.key)), 1);   // ekranı yazıyla doldurma (önce sıradan yazılar düşer)
+  state.texts.push({ a, h, text, color, life, max: life, ox: rand(-8, 8), scale, crit, rise: opts.rise ?? 50, tag: opts.tag, key: opts.key });
 }
 
 // Oyuncu hasarı: taban × hasar çarpanı, kritik şansıyla × kritik hasar. {dmg, crit}
@@ -88,10 +90,10 @@ export function killEnemy(en) {
   const gems = en.def.gems ? Math.round(rand(en.def.gems[0], en.def.gems[1])) : (Math.random() < (en.def.gemChance || 0) ? 1 : 0);
   for (let i = 0; i < gems; i++) spawnPickup(en.a, 'gem', 18, 1.1);
   const xp = gainXp(en.def.xp); state.lastXp = xp;
-  addText(en.a, en.def.heightUnits + 34, '+' + xp + ' XP', '#7ee7ff', 0.7);
+  addText(en.a, en.def.heightUnits + 34, '+' + xp + ' XP', '#7ee7ff', 0.7, false, { life: 1.2, rise: 28 });
   events.onKill?.(en);
   deathBurst(en.a, en.def.heightUnits * 0.4, !!en.def.boss);
-  if (en.def.boss) { clearOthers(en); state.shake = Math.max(state.shake, 12); hitStop(0.14); state.slowT = 1.0; xpBurst(en.a, en.def.heightUnits * 0.6); bossReward(en); }
+  if (en.def.boss) { state.wave.bossDefeated = true; state.texts = state.texts.filter((t) => t.tag !== 'boss'); clearOthers(en); state.shake = Math.max(state.shake, 12); hitStop(0.14); state.slowT = 1.0; xpBurst(en.a, en.def.heightUnits * 0.6); bossReward(en); }
 }
 
 // Boss ölünce sahnedeki diğer düşmanlar ödülsüz temizlenir (ölüm animasyonu + toz) ve bekleyen doğuşlar iptal olur
@@ -101,14 +103,15 @@ function clearOthers(boss) {
 }
 
 // Boss ödülü: doğrudan coin (250 × boss coin çarpanı) + görsel coin yağmuru, gem, tam iyileşme, sonraki seçimin EFSANE olması
-function bossReward() {                       // coin + gem pickup + tam iyileşme; XP killEnemy'de verilir
+function bossReward() {                       // coin + gem; XP killEnemy'de verilir; iyileşme yok (can korunur)
+  if (state.wave.rewardGranted) return; state.wave.rewardGranted = true;   // ödül bir kez
   const R = WAVES.boss.reward, p = state.player, S = derived(p);
   const amount = Math.round(R.coins * S.bossCoinMul);
   p.coins += amount;
   for (let i = 0; i < (R.showerCoins || 20); i++) { spawnPickup(p.a + 0.01 + i * 0.0006, 'coin', 30, 1.4); state.coins[state.coins.length - 1].value = 0; }
   p.gems += R.gems;                                                   // gem doğrudan (bir kez); yerdekiler yalnız görsel (değer 0)
   for (let i = 0; i < R.gems; i++) { spawnPickup(p.a + 0.012 + i * 0.0007, 'gem', 34, 1.5); state.coins[state.coins.length - 1].value = 0; }
-  if (R.healFull) p.hp = p.maxHp;
+  if (R.healFull) p.hp = p.maxHp;                                     // waves.json'da false: boss ödülü canı sıfırlamaz
   if (R.epicUpgrade) state.wave.epicNext = true;
   state.bossReward = amount;
   events.onCoin?.();
@@ -128,7 +131,11 @@ export function gainXp(amount) {
     state.rings.push({ a: p.a, t: 0, life: 0.9 });
     events.onLevelUp?.(p.level);
   }
-  if (p.level > lv0) addText(p.a, 150, p.level - lv0 > 1 ? `LEVEL UP! ×${p.level - lv0}` : 'LEVEL UP!', '#ffd23f');   // tek yazı (çoklu seviye atlamada üst üste binmez)
+  p.lvShown ??= lv0;
+  if (p.level > p.lvShown) {                                       // her seviye için yalnız bir kez; çoklu atlamada tek yazı; ~1.8 sn
+    addText(p.a, 150, p.level - p.lvShown > 1 ? `LEVEL UP! ×${p.level - p.lvShown}` : 'LEVEL UP!', '#ffd23f', 1, false, { life: 1.8, rise: 14, key: 'levelup' });
+    p.lvShown = p.level;
+  }
   return amount;
 }
 

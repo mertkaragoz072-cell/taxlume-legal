@@ -36,7 +36,7 @@ export function update(dt) {
   if (state.paused) { Input.skillQueue.length = 0; Input.attackQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
   if (state.hitStop > 0) {                                  // hit-stop: oyun mantığı kısa donar; saldırı sayacı akar (saldırı hızı bozulmaz), efektler yaşar
     state.hitStop -= dt; state.player.atkTimer = Math.max(0, state.player.atkTimer - dt);
-    for (const t of state.texts) { t.life -= dt; t.h += 50 * dt; }
+    for (const t of state.texts) { t.life -= dt; t.h = Math.min(t.h + (t.rise ?? 50) * dt, 185); }
     state.shake = Math.max(0, state.shake - dt * 30);
     return;
   }
@@ -112,7 +112,8 @@ export function update(dt) {
     else if (dist > en.def.contactRange * 0.8 && free > 0) en.a += en.face * Math.min(en.def.speed * en.speedMul * slowMul(en) * dt, Math.max(free, 0)) / r;
     else if (free < -4) en.a -= en.face * Math.min(40 * dt, -free) / r;          // iç içe girdiyse hafifçe geri it
     if (dist < en.def.contactRange * 0.55) en.a -= en.face * Math.min(60 * dt, en.def.contactRange * 0.55 - dist) / r;   // oyuncunun içine girmesin
-    if (dist <= (en.def.hitRange ? en.def.hitRange * 0.95 : en.def.contactRange) && en.atkTimer <= 0 && en.stagger <= 0) en.windT = C.enemies.windupSec;   // önce hazırlık, sonra saldırı
+    if (dist <= (en.def.hitRange ? en.def.hitRange * 0.95 : en.def.contactRange) && en.atkTimer <= 0 && en.stagger <= 0
+        && live.reduce((n, o) => n + (o !== en && !o.dead && (o.windT > 0 || o.attackT >= 0) ? 1 : 0), 0) < C.enemies.maxAttackers) en.windT = C.enemies.windupSec;   // önce hazırlık, sonra saldırı
   });
   // Çarpışma: düşman oyuncunun içine girmez ve arkasına geçmez — kendi tarafında (doğduğu sağ taraf) en az minGap uzakta kalır
   for (const en of live) {
@@ -186,7 +187,7 @@ export function update(dt) {
   state.telegraphs = state.telegraphs.filter((t) => t.t < t.life + 0.05 && !(t.boss && t.boss.dead));
   state.hitFx = state.hitFx.filter((f) => f.life > 0);
   state.slashes = state.slashes.filter((s) => s.life > 0);
-  for (const t of state.texts) { t.life -= dt; t.h += 50 * dt; }
+  for (const t of state.texts) { t.life -= dt; t.h = Math.min(t.h + (t.rise ?? 50) * dt, 185); }
   state.texts = state.texts.filter((t) => t.life > 0);
   state.shake = Math.max(0, state.shake - dt * 30);
 }

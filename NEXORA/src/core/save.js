@@ -33,6 +33,7 @@ export const Save = {
     p.coins = Math.max(0, s.coins | 0); p.gems = Math.max(0, s.gems | 0);
     p.upgrades = {};            // bilinmeyen/eski id'ler atlanır, seviyeler maks'a kırpılır
     if (s.upgrades && typeof s.upgrades === 'object') for (const u of UPGRADES.list) { const lv = Math.floor(+s.upgrades[u.id]); if (lv > 0) p.upgrades[u.id] = Math.min(lv, u.max); }
+    p.lvShown = lv;                                                  // yüklenen seviye için LEVEL UP yazısı çıkmaz
     restoreCards(p, s.cards);                                        // kart envanteri + kuşanılanlar (CardSystem)
     recalcMaxHp(p, false); p.hp = p.maxHp;                           // can = seviye tabanı × can güçlendirmesi
     const wv = Math.max(1, s.wave | 0 || 1);                     // eski kayıt: tek sayı (küresel dalga) → bölüm + dalga

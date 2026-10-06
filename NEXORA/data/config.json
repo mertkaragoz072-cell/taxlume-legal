@@ -90,14 +90,15 @@
     "speedJitter": 0.16,
     "eliteSpawnExtra": 260,
     "eliteHoldRange": 190,
-    "windupSec": 0.18
+    "windupSec": 0.18,
+    "maxAttackers": 2
   },
   "loot": {
     "coinPopSpeed": 160,
     "coinGravity": 700
   },
   "hud": {
-    "damageNumberLife": 0.55,
+    "damageNumberLife": 0.85,
     "avatar": {
       "key": "male_idle_01",
       "crop": [

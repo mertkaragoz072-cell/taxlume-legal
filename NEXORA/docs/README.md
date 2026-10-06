@@ -173,3 +173,6 @@ Maks can her karede formülden doğrulanır (120 + 15/seviye, × can güçlendir
 
 ## Faz 18 — Çarpışma, boss mesafesi ve ödül akışı
 Düşmanlar birbirinin içine girmez (oyuncuya sıralı, genişlik payıyla), oyuncunun içine girmez/arkasına geçmez. Boss savaş mesafesi: boss kendi `contactRange/engage/hitRange/hitPad/minGap` ile oyuncudan ~185 birim uzakta durur (ekranda oyuncu %37, boss ~%55); hammer/smash/charge menzilleri buna göre. Boss ölünce sahnedeki diğer düşmanlar ödülsüz temizlenir, HP barı kaybolur; banner "+250 COIN · +300 XP"; boss savaşı sırasında seviye atlandıysa (`waves.json → bossUpgrade: 'ifLevelUp'`) önce kart ekranı, sonra bölüm tamamlama. Hasar yazıları üst üste binmez; çoklu seviye atlama tek "LEVEL UP! ×n" yazısı. Boss giriş overlay'i 1.8 sn.
+
+## Faz 19 — Bug fix: tek seferlik olaylar, ilerleme korunumu, yazı süreleri
+LEVEL UP yalnız bir kez (`p.lvShown`; anahtarlı yazı yenilenir, ~1.8 sn); XP yazısı ~1.2 sn, hasar yazısı 0.85 sn; boss yazıları (`tag: 'boss'`) boss ölünce temizlenir; yazılar ekranda en çok 8 ve yukarıda üst sınırda kalır (boss HP barına binmez). Dalga durum bayrakları (`bossDefeated`, `rewardGranted`, `leaving`) her dalgada sıfırlanır; ödül/geçiş tek sefer. Boss ödülü artık canı tam doldurmaz (`healFull: false`) — wave geçişinde can/seviye korunur. Aynı anda en çok `enemies.maxAttackers` (2) düşman saldırır.
