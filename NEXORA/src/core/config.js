@@ -4,7 +4,7 @@ export const CONFIG = {};
 export const ENEMY_TYPES = {};
 export const WORLD = {};      // data/world_props.json: prop boyutları, dekor kuralları, bulut/ada katmanları
 export const WAVES = {};        // data/waves.json
-export const UPGRADES = { base: {}, list: [], builds: [], categories: {}, epicMultiplier: 2, buildAffinityWeight: 1.6 };   // data/upgrades.json
+export const UPGRADES = { base: {}, list: [], builds: [], categories: {}, epicMultiplier: 2, buildAffinityWeight: 1.6, rarities: {} };   // data/upgrades.json
 export const SKILLS = {};      // data/skills.json: yetenek tanımları (buton id → ayarlar)
 export const ANIMS = {};
 export const HERO = { id: 'male', fromUrl: false };
@@ -27,7 +27,7 @@ export async function loadData(base = 'data/') {
   ANIMS.heroine = heroine;
   Object.assign(SKILLS, skills);
   Object.assign(WAVES, waves);
-  Object.assign(UPGRADES, { base: upgrades.base, list: upgrades.upgrades, builds: upgrades.builds, categories: upgrades.categories, epicMultiplier: upgrades.epicMultiplier, buildAffinityWeight: upgrades.buildAffinityWeight });
+  Object.assign(UPGRADES, { base: upgrades.base, list: upgrades.upgrades, builds: upgrades.builds, categories: upgrades.categories, epicMultiplier: upgrades.epicMultiplier, buildAffinityWeight: upgrades.buildAffinityWeight, rarities: upgrades.rarities });
   const q = new URLSearchParams(location.search).get('hero');
   HERO.fromUrl = !!(q && ANIMS[q]);
   setHero(HERO.fromUrl ? q : (config.player.character || 'male'));

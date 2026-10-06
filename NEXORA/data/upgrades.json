@@ -52,11 +52,13 @@
       "icon": "⚔️",
       "name": "Saldırı Gücü",
       "stat": "damageMul",
-      "per": 0.15,
+      "per": 0.2,
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 10,
-      "weight": 10
+      "weight": 10,
+      "title": "KILIÇ USTALIĞI",
+      "desc": "Saldırı Hasarı"
     },
     {
       "id": "attackSpeed",
@@ -69,7 +71,9 @@
       "bonus": "+{v}%",
       "max": 8,
       "weight": 10,
-      "cap": 3.0
+      "cap": 3.0,
+      "title": "ÇEVİKLİK",
+      "desc": "Saldırı Hızı"
     },
     {
       "id": "critChance",
@@ -82,7 +86,9 @@
       "bonus": "+{v}%",
       "max": 5,
       "weight": 9,
-      "cap": 0.75
+      "cap": 0.75,
+      "title": "KESKİN GÖZ",
+      "desc": "Kritik Şansı"
     },
     {
       "id": "critDamage",
@@ -94,7 +100,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 8,
-      "weight": 9
+      "weight": 9,
+      "title": "ÖLÜMCÜL DARBE",
+      "desc": "Kritik Hasarı"
     },
     {
       "id": "range",
@@ -106,7 +114,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 4,
-      "weight": 6
+      "weight": 6,
+      "title": "UZUN KOL",
+      "desc": "Saldırı Menzili"
     },
     {
       "id": "defense",
@@ -118,7 +128,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 8,
-      "weight": 9
+      "weight": 9,
+      "title": "DEMİR ZIRH",
+      "desc": "Savunma"
     },
     {
       "id": "maxHp",
@@ -130,7 +142,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 10,
-      "weight": 10
+      "weight": 10,
+      "title": "DEV KALP",
+      "desc": "Maksimum HP"
     },
     {
       "id": "regen",
@@ -142,7 +156,9 @@
       "fmt": "num",
       "bonus": "+{v}/sn",
       "max": 5,
-      "weight": 7
+      "weight": 7,
+      "title": "YAŞAM PINARI",
+      "desc": "HP Yenilenmesi"
     },
     {
       "id": "damageTaken",
@@ -155,7 +171,9 @@
       "bonus": "-{v}%",
       "max": 5,
       "weight": 7,
-      "cap": 0.6
+      "cap": 0.6,
+      "title": "KALKAN USTASI",
+      "desc": "Alınan Hasar"
     },
     {
       "id": "coinGain",
@@ -167,7 +185,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 10,
-      "weight": 7
+      "weight": 7,
+      "title": "ALTIN KOKUSU",
+      "desc": "Coin Kazanımı"
     },
     {
       "id": "extraCoin",
@@ -179,7 +199,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 5,
-      "weight": 6
+      "weight": 6,
+      "title": "ŞANSLI CEP",
+      "desc": "Ekstra Coin Şansı"
     },
     {
       "id": "bossCoin",
@@ -191,7 +213,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 5,
-      "weight": 4
+      "weight": 4,
+      "title": "AVCI ÖDÜLÜ",
+      "desc": "Boss Coin Ödülü"
     },
     {
       "id": "fire",
@@ -203,7 +227,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 6,
-      "weight": 6
+      "weight": 6,
+      "title": "ALEV RUHU",
+      "desc": "Ateş Hasarı"
     },
     {
       "id": "ice",
@@ -215,7 +241,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 6,
-      "weight": 6
+      "weight": 6,
+      "title": "BUZ RUHU",
+      "desc": "Buz Hasarı"
     },
     {
       "id": "lightning",
@@ -227,7 +255,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 6,
-      "weight": 6
+      "weight": 6,
+      "title": "FIRTINA RUHU",
+      "desc": "Yıldırım Hasarı"
     },
     {
       "id": "skillDamage",
@@ -239,7 +269,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 6,
-      "weight": 8
+      "weight": 8,
+      "title": "YETENEK GÜCÜ",
+      "desc": "Yetenek Hasarı"
     },
     {
       "id": "xpGain",
@@ -251,7 +283,9 @@
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 8,
-      "weight": 6
+      "weight": 6,
+      "title": "BİLGE",
+      "desc": "XP Kazancı"
     },
     {
       "id": "moveSpeed",
@@ -259,12 +293,29 @@
       "icon": "🏃",
       "name": "Hareket Hızı",
       "stat": "moveMul",
-      "per": 0.1,
+      "per": 0.15,
       "fmt": "pct",
       "bonus": "+{v}%",
       "max": 5,
       "weight": 4,
-      "cap": 2.2
+      "cap": 2.2,
+      "title": "RÜZGAR ADIMI",
+      "desc": "Hareket Hızı"
+    },
+    {
+      "id": "skillCooldown",
+      "category": "special",
+      "icon": "⏳",
+      "name": "Yetenek Cooldown",
+      "stat": "skillCdMul",
+      "per": -0.15,
+      "fmt": "pct",
+      "bonus": "-{v}%",
+      "max": 4,
+      "weight": 8,
+      "floor": 0.4,
+      "title": "HIZLI ZİHİN",
+      "desc": "Yetenek Cooldown"
     }
   ],
   "builds": [
@@ -372,5 +423,35 @@
       },
       "desc": "Coin kazancı +20%"
     }
-  ]
+  ],
+  "rarities": {
+    "common": {
+      "name": "SIRADAN",
+      "gain": 1,
+      "color": "#8a94a8",
+      "weight": 75,
+      "bossWeight": 35
+    },
+    "rare": {
+      "name": "NADİR",
+      "gain": 2,
+      "color": "#3a8bff",
+      "weight": 25,
+      "bossWeight": 57
+    },
+    "epic": {
+      "name": "DESTANSI",
+      "gain": 3,
+      "color": "#b04bff",
+      "weight": 0,
+      "bossWeight": 8
+    },
+    "legendary": {
+      "name": "EFSANEVİ",
+      "gain": 5,
+      "color": "#ffb21f",
+      "weight": 0,
+      "bossWeight": 0
+    }
+  }
 }

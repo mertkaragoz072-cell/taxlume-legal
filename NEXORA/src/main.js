@@ -92,12 +92,12 @@ async function boot() {
   events.onWaveStart = (n, info) => { showBanner(info.boss ? 'BOSS DALGASI' : `WAVE ${n} / 5`, info.boss ? 'boss' : '', info.boss ? 'Goblin Lordu geliyor!' : `Bölüm ${info.stage}`); Audio.play(info.boss ? 'skill2' : 'click'); };
   events.onWaveComplete = (n, i) => { if (!i?.boss) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); } };
   events.onBoss = (k, amount) => { if (k === 'slam') Audio.play('skill2'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
-  events.onUpgrade = (cards, epic) => {
+  events.onUpgrade = (cards, boss) => {
     Audio.play('gem');
-    showUpgrade(cards, epic, (card) => {
-      applyUpgrade(card.id, epic);
+    showUpgrade(cards, boss, (card) => {
+      applyUpgrade(card);
       const u = upgradeById(card.id), p = state.player;
-      addText(p.a, 150, `${card.icon} ${card.bonus} ${card.name}`, '#ffd23f', 1.1); addText(p.a, 125, 'GÜÇ UYGULANDI!', '#ffffff', 0.8);
+      addText(p.a, 150, `${card.icon} ${card.bonus} ${card.desc}`, '#ffd23f', 1.1); addText(p.a, 125, 'GÜÇ UYGULANDI!', '#ffffff', 0.8);
       state.rings.push({ a: p.a, t: 0, life: 0.9 }); state.rings.push({ a: p.a, t: 0, life: 1.3, color: '#ffd23f' });
       updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
     });

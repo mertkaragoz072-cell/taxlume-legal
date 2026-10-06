@@ -25,6 +25,7 @@ export function derived(p) {
     const lv = bl[b.id].lv; if (!lv) continue;
     for (const [k, v] of Object.entries(b.bonus)) s[k] = (s[k] ?? 0) + v * lv;
   }
+  for (const u of UPGRADES.list) if (u.floor != null) s[u.stat] = Math.max(u.floor, s[u.stat]);   // alt sınır (ör. cooldown ≥ ×0.4)
   return s;
 }
 export const stats = (p) => derived(p);

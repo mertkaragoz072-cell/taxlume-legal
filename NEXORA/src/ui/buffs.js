@@ -11,14 +11,17 @@ export function updateBuffs(force = false) {
   const p = state.player, items = [];
   for (const u of UPGRADES.list) {
     const lv = p.upgrades[u.id] || 0; if (!lv) continue;
-    const v = u.per * lv, num = u.fmt === 'pct' ? Math.round(v * 100) : Math.round(v * 10) / 10;
+    const v = Math.abs(u.per * lv), num = u.fmt === 'pct' ? Math.round(v * 100) : Math.round(v * 10) / 10;
     items.push({ icon: u.icon, text: u.bonus.replace('{v}', num).replace('+', ''), name: u.name, lv, color: UPGRADES.categories[u.category]?.color, sign: u.bonus.startsWith('-') ? '' : '+' });
   }
+  items.sort((a, b) => b.lv - a.lv);
   const builds = Object.values(buildLevels(p)).filter((b) => b.lv > 0);
   const key = JSON.stringify([items.map((i) => i.name + i.lv), builds.map((b) => b.id + b.lv)]);
   if (key === last && !force) return; last = key;
-  const shown = items.slice(0, MAX_CHIPS - builds.length > 2 ? MAX_CHIPS - builds.length : 2);
-  let html = builds.map((b) => `<span class="chip build" title="${b.desc || ''}">${b.icon} ${b.name}${b.lv > 1 ? ' II' : ''}</span>`).join('');
+  const bs = builds.slice(0, 1);                                            // en çok 6 çip: (1 build) + güçler + "+N"
+  const room = MAX_CHIPS - bs.length, fits = items.length <= room;
+  const shown = items.slice(0, fits ? room : room - 1);
+  let html = bs.map((b) => `<span class="chip build" title="${b.desc || ''}">${b.icon} ${b.name}${b.lv > 1 ? ' II' : ''}</span>`).join('');
   html += shown.map((i) => `<span class="chip" style="--cat:${i.color}" title="${i.name} LV.${i.lv}">${i.icon} ${i.sign}${i.text}</span>`).join('');
   if (items.length > shown.length) html += `<span class="chip more">+${items.length - shown.length}</span>`;
   el.innerHTML = html;

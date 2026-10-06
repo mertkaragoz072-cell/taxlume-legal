@@ -59,8 +59,8 @@ export function updateWaves(dt) {
     if (w.t <= 0) {
       if (w.boss || w.n >= WAVES.wavesPerStage) {                      // 5. dalga ve boss sonrası: oyun durur, 3 kart
         w.phase = 'upgrade'; state.paused = true;
-        const epic = w.epicNext; w.epicNext = false;
-        events.onUpgrade?.(rollCards(3, epic), epic);
+        w.epicNext = false;
+        events.onUpgrade?.(rollCards(3, w.boss), w.boss);
       } else resumeAfterUpgrade();
     }
   }

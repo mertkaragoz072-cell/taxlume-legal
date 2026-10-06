@@ -135,3 +135,8 @@ otomatik sağa koş → düşman → savaş (otomatik saldırı) → öldür →
 ## Faz 8 — Bölüm döngüsü
 Bölüm = 5 dalga (`data/waves.json → waves`, dalga başına sabit düşman listesi) → 3 kart → BOSS (Goblin Lordu) → ödül + 3 kart → sonraki bölüm.
 Bölüm çarpanı: HP ×(1 + 0.4·(bölüm−1)) → ×1, ×1.4, ×1.8…; hasar +%15/bölüm; her 2 bölümde +1 gözcü. Kayıt: `stage`, `wave` (1–5), `boss`; eski kayıtlar (tek sayı) bölüm+dalgaya çevrilir.
+
+## Faz 9 — Profesyonel geliştirme sistemi
+- Ekran: "SEVİYE ATLADIN!" / "Bir geliştirme seç"; kart = nadirlik şeridi, madalyon ikon, ad (KILIÇ USTALIĞI), açıklama (Saldırı Hasarı), bonus (+20%), toplam, seviye ("SEVİYE 1 → 2"). Aynı ekranda 3 farklı güç.
+- Nadirlik (`data/upgrades.json → rarities`): COMMON/RARE/EPIC/LEGENDARY; kazanılan seviye 1/2/3/5. Normal seçimde 75/25/0/0, boss seçiminde 35/57/8/0 ağırlık. Yeni güç eklemek: `upgrades` listesine bir kayıt (`title`, `desc`, `stat`, `per`, `max`).
+- Yetenek bekleme süresi gücü (`skillCooldown`, alt sınır ×0.4). HUD: en fazla 6 çip.
