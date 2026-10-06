@@ -147,3 +147,6 @@ Boss sonrası kart ekranı kapalı (`waves.json → bossUpgrade: false`; `true` 
 
 ## Faz 11 — Yerleşim ve ölçek
 Kamera: `visibleHeightUnits 460`, `groundScreenY 0.70`, `heroScreenX 0.37` (zemin boşluğu azaldı). Kahraman sprite ölçeği ×1.085 (+kamera ≈ ×1.18 ekranda), goblinler ×1.03 (+kamera ≈ ×1.12); HP bar boyları buna göre. Spawn: sağ görünür alanın %80'i (`enemies.spawnScreenFrac`), üst üste binmeyi önleyen `spawnMinGap`, 0.3 sn fade-in. Vuruşta hafif sarsıntı; dalga değişince üst "WAVE n / 5" kutusu büyüyüp küçülür.
+
+## Faz 12 — Savaş mesafesi ve performans
+Düşman `contactRange` ×1.5 (büyüyen sprite'larla oyuncu–düşman arası küçük, doğal boşluk), hit flash opaklığı 0.8 → 0.5. Uyarlanabilir çözünürlük: kare süresi 90 kare boyunca ortalama >26 ms ise `View.dprCap` 0.5 kademe düşer (3 → 1.25, geri artmaz); `?hq=1` ile kapatılır.

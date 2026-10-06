@@ -117,9 +117,19 @@ async function boot() {
   const lvl = events.onLevelUp; events.onLevelUp = (l) => { lvl?.(l); saveNow(); };
   const over = events.onGameOver; events.onGameOver = (st) => { over?.(st); saveNow(); };
 
+  // Uyarlanabilir çözünürlük: kare süresi sürekli >26 ms ise (yavaş cihaz) canvas çözünürlüğü kademeli düşürülür (3 → 2.5 → … → 1.25); geri artmaz.
+  // ?hq=1 ile kapatılır (ekran görüntüsü/test).
+  let slowSum = 0, slowN = 0; const hq = new URLSearchParams(location.search).has('hq');
+  function adaptResolution(raw) {
+    if (hq || raw > 200 || document.hidden) return;                 // sekme dönüşü/duraklama sayılmaz
+    slowSum += raw; if (++slowN < 90) return;
+    const avg = slowSum / slowN; slowSum = 0; slowN = 0;
+    if (avg > 26 && View.dprCap > 1.25 && View.dpr > 1.25) { View.dprCap = Math.max(1.25, View.dprCap - 0.5); View.resize(canvas); }
+  }
   let last = performance.now();
   function frame(now) {
-    const dt = Math.min((now - last) / 1000, 0.05); // sekme dönüşünde sıçramayı önle
+    const raw = now - last, dt = Math.min(raw / 1000, 0.05); // sekme dönüşünde sıçramayı önle
+    adaptResolution(raw);
     last = now;
     if (window.innerHeight > window.innerWidth) { requestAnimationFrame(frame); return; }   // dikeyde duraklat (yatay uyarısı gösterilir)
     Input.update();

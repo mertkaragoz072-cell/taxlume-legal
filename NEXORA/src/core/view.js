@@ -3,13 +3,13 @@ import { CONFIG } from './config.js';
 // Ekran düzeni. Kamera yandan; gezegen çok büyük olduğundan yüzey yumuşak bir tepe gibi görünür.
 // Kahraman ekranda solda (heroScreenX), düşmanlar sağdan gelir. Dünya birimi = oyun birimi (px değil).
 export const View = {
-  w: 0, h: 0, dpr: 1, scale: 1, cx: 0, cy: 0, R: 0,
+  w: 0, h: 0, dpr: 1, dprCap: 3, scale: 1, cx: 0, cy: 0, R: 0,
   heroX: 0, heroY: 0, heroAngle: 0,       // kahramanın ekran konumu ve yüzeydeki ekran açısı (tepe noktasının solu)
   spanLeft: 0, spanRight: 0,              // kahramanın solunda/sağında görünen açı (radyan)
   visibleRightUnits: 0,                   // kahramanın sağında görünen mesafe (dünya birimi)
   resize(canvas) {
     const cam = CONFIG.camera;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 3);
+    this.dpr = Math.min(window.devicePixelRatio || 1, this.dprCap);
     this.w = window.innerWidth; this.h = window.innerHeight;
     canvas.width = Math.round(this.w * this.dpr);
     canvas.height = Math.round(this.h * this.dpr);

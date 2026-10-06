@@ -197,7 +197,7 @@ export function drawEnemy(ctx, en) {
     ctx.scale(1 / sq, sq);                                            // hafif squash/stretch + vuruş ezilmesi (ayak sabit)
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
     if (def.boss && !en.dead) { ctx.globalAlpha = 0.16 + 0.08 * Math.sin(state.time * 5); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.globalAlpha = 1; }
-    if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.8; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
+    if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.5; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
     ctx.restore();
     ctx.globalAlpha = 1;
     if (!en.dead && !def.boss) {                      // temiz küçük HP bar (boss'un çubuğu ekranın üstünde)
