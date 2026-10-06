@@ -1,6 +1,7 @@
 // Dalga HUD'u: üst ortada "WAVE n / 5" (5'lik blok içindeki sıra), boss dalgasında "BOSS", altında dalga no + kalan düşman; afişler.
 import { state } from '../game/state.js';
 import { WAVES } from '../core/config.js';
+import { chapterInfo } from '../game/chapters.js';
 
 let box, main, sub, banner, last = '';
 export function initWaveHud() { main = document.getElementById('wave-main'); sub = document.getElementById('wave-sub'); banner = document.getElementById('banner'); }
@@ -24,7 +25,7 @@ export function updateWaveHud() {
   const w = state.wave, boss = w.boss;
   const left = w.queue.length + state.enemies.filter((e) => !e.dead).length;
   const t = boss ? 'BOSS WAVE' : `WAVE ${w.n} / ${WAVES.wavesPerStage}`;
-  const s = `Bölüm ${w.stage} · Kalan ${left}`;
+  const s = `${chapterInfo(w.stage).name} · Kalan ${left}`;
   const key = t + s; if (key === last) return; last = key;
   if (main.textContent !== t) { const bx = document.getElementById('wave-box'); bx.classList.remove('wave-pop'); void bx.offsetWidth; bx.classList.add('wave-pop'); }   // dalga değişince kısa büyüyüp küçülme
   main.textContent = t; main.classList.toggle('boss', boss); sub.textContent = s;

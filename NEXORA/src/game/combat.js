@@ -92,7 +92,7 @@ export function killEnemy(en) {
 }
 
 // Boss ödülü: doğrudan coin (250 × boss coin çarpanı) + görsel coin yağmuru, gem, tam iyileşme, sonraki seçimin EFSANE olması
-function bossReward() {
+function bossReward() {                       // coin + gem pickup + tam iyileşme; XP killEnemy'de verilir
   const R = WAVES.boss.reward, p = state.player, S = derived(p);
   const amount = Math.round(R.coins * S.bossCoinMul);
   p.coins += amount;

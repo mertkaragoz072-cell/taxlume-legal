@@ -25,14 +25,16 @@ function spawnAngle(t, offsetUnits) {
 }
 
 export function spawnEnemy(typeKey, offsetUnits = 0) {
-  const t = ENEMY_TYPES[typeKey], { stage, n } = state.wave, S = WAVES.stage;
-  const hp = t.hp * stageHpMul(stage) * (1 + S.hpPerWaveInStage * (n - 1));
+  const t = ENEMY_TYPES[typeKey], { stage, n } = state.wave, S = WAVES.stage, k = Math.min(n, S.waveScale.hp.length) - 1;
+  // Dalga ölçeği (wave 1→5: HP %100→165 vb.) yalnız normal düşmanlara; boss'un kendi statları (enemies.json) + yalnız bölüm çarpanı
+  const ws = t.boss ? { hp: 1, dmg: 1, speed: 1, atk: 1 } : { hp: S.waveScale.hp[k], dmg: S.waveScale.dmg[k], speed: S.waveScale.speed[k], atk: S.waveScale.atk[k] };
+  const hp = t.hp * stageHpMul(stage) * ws.hp;
   const en = {
     type: typeKey, def: t,
     a: spawnAngle(t, offsetUnits), age: 0,
-    hp, maxHp: hp, damage: t.damage * (1 + S.dmgPerStage * (stage - 1)),
+    hp, maxHp: hp, damage: t.damage * (1 + S.dmgPerStage * (stage - 1)) * ws.dmg, attackCd: t.attackCooldown * ws.atk,
     atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, windT: -1, hitDone: false,
-    speedMul: 1 + rand(-CONFIG.enemies.speedJitter, CONFIG.enemies.speedJitter),
+    speedMul: (1 + rand(-CONFIG.enemies.speedJitter, CONFIG.enemies.speedJitter)) * ws.speed,
   };
   if (t.boss) en.sp = newBossState();
   state.enemies.push(en);

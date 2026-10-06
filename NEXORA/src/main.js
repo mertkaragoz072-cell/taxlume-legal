@@ -1,4 +1,4 @@
-import { loadData, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
+import { loadData, CHAPTERS, WAVES, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
 import { Assets } from './core/assets.js';
 import { Audio } from './core/audio.js';
 import { Save } from './core/save.js';
@@ -11,9 +11,11 @@ import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar, pulse } fro
 import { initBuffs, updateBuffs, popBuffs } from './ui/buffs.js';
 import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
 import { showUpgrade } from './ui/UpgradeCard.js';
-import { startWave, resumeAfterUpgrade, isBossWave } from './game/WaveManager.js';
+import { showChapterClear } from './ui/ChapterClear.js';
+import { chapterInfo } from './game/chapters.js';
+import { startWave, resumeAfterUpgrade, isBossWave, continueChapter } from './game/WaveManager.js';
 import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
-import { addText } from './game/combat.js';
+import { addText, gainXp } from './game/combat.js';
 import { events } from './game/events.js';
 import { CardSystem, debugGrantAll } from './game/CardSystem.js';
 
@@ -91,12 +93,23 @@ async function boot() {
   events.onHurt = () => Audio.play('hurt');
   events.onSkill = (id) => Audio.play(id);
   const showOver = showGameOver;
-  events.onWaveStart = (n, info) => { showBanner(info.boss ? 'BOSS WAVE' : `WAVE ${n} / 5`, info.boss ? 'boss' : '', info.boss ? 'GOBLIN LORDU geliyor!' : `Bölüm ${info.stage}`); Audio.play(info.boss ? 'skill2' : 'click'); };
-  events.onWaveComplete = (n, i) => {
-    if (!i?.boss) { showBanner('WAVE COMPLETE', 'complete'); Audio.play('levelup'); }
-    else setTimeout(() => { showBanner('WAVE COMPLETE', 'complete', `Bölüm ${i.stage} tamamlandı`); Audio.play('levelup'); }, 2300);   // BOSS YENİLDİ! afişinden sonra
+  let bossIntroTimer = 0;
+  events.onWaveStart = (n, info) => {
+    const bi = document.getElementById('boss-intro');
+    if (info.boss) {                                                  // boss girişi: ekran kararır, ortada BOSS WAVE / GOBLIN LORD GELİYOR!
+      bi.classList.remove('hidden', 'show'); void bi.offsetWidth; bi.classList.add('show'); clearTimeout(bossIntroTimer);
+      bossIntroTimer = setTimeout(() => bi.classList.add('hidden'), WAVES.bossIntroSec * 1000 + 100); Audio.play('skill2');
+    } else { bi.classList.add('hidden'); showBanner(`WAVE ${n} / 5`, '', n === 1 ? chapterInfo(info.stage).name : ''); Audio.play('click'); }
   };
-  events.onBoss = (k, amount) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
+  events.onWaveComplete = (n, i) => { if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('levelup'); } };
+  events.onChapterClear = (cleared) => {
+    const p = state.player, R = CHAPTERS.reward, xp = gainXp(R.xp * cleared);
+    p.coins += R.coins; p.gems += R.gems; events.onCoin?.(); events.onGem?.();
+    saveNowRef?.();                                                   // ilerleme (yeni bölüm, dalga 1) + ödüller hemen kaydedilir
+    Audio.play('levelup');
+    showChapterClear({ name: chapterInfo(cleared).name, rewards: { coins: R.coins, gems: R.gems, xp }, next: chapterInfo(cleared + 1).name }, () => { continueChapter(); saveNowRef?.(); });
+  };
+  events.onBoss = (k, amount) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS DEFEATED!', 'bossdead', `+${amount} COIN`); Audio.play('levelup'); } };
   events.onUpgrade = (cards, boss) => {
     Audio.play('gem');
     showUpgrade(cards, boss, (card) => {

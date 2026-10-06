@@ -98,7 +98,7 @@ export function update(dt) {
         en.hitDone = true;
         if (dist <= en.def.contactRange * 1.25) hurtPlayer(en.damage);
       }
-      if (en.attackT >= adur) { en.attackT = -1; en.atkTimer = en.def.attackCooldown; }
+      if (en.attackT >= adur) { en.attackT = -1; en.atkTimer = en.attackCd ?? en.def.attackCooldown; }
       return;
     }
     if (en.stagger > 0 && en.knock > 0) { en.a -= en.face * en.knock * 40 / r * dt * 6; en.knock = Math.max(0, en.knock - dt * 6); return; }

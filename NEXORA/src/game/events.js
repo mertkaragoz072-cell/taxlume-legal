@@ -4,5 +4,6 @@ export const events = {
   onWaveStart: null,      // (n, info)
   onWaveComplete: null,   // (n)
   onUpgrade: null,        // (cards, epic) — oyun duraklatılır, UI kart gösterir
+  onChapterClear: null,   // (clearedStage) — oyun duraklatılır, UI bölüm tamamlama ekranını gösterir
   onBoss: null,           // ('spawn'|'slam'|'summon'|'enrage'|'dead')
 };

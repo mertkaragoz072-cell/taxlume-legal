@@ -9,7 +9,7 @@ import { state } from './state.js';
 import { events } from './events.js';
 import { buildQueue, spawnEnemy, aliveNormal, aliveElite, aliveAny } from './EnemySpawner.js';
 import { rollCards } from './UpgradeManager.js';
-import { addText } from './combat.js';
+import { addText, gainXp } from './combat.js';
 
 export const isBossWave = () => state.wave.boss;
 export const wavesPerStage = () => WAVES.wavesPerStage;
@@ -18,16 +18,25 @@ export const wavesPerStage = () => WAVES.wavesPerStage;
 export function startWave(stage = state.wave.stage, n = state.wave.n, boss = state.wave.boss) {
   const w = state.wave;
   w.stage = Math.max(1, stage); w.n = Math.min(WAVES.wavesPerStage, Math.max(1, n)); w.boss = !!boss;
-  w.phase = 'intro'; w.t = WAVES.introSec; w.queue = buildQueue(w.stage, w.n, w.boss); w.total = w.queue.length; w.spawnT = 0.4;
+  w.phase = 'intro'; w.t = w.boss ? WAVES.bossIntroSec : WAVES.introSec; w.queue = buildQueue(w.stage, w.n, w.boss); w.total = w.queue.length; w.spawnT = 0.4;
   events.onWaveStart?.(w.n, { boss: w.boss, stage: w.stage });
 }
 
 export function restartWave() { startWave(); }                          // ölünce aynı dalga baştan
 
-// Güç seçimi bitince: 5. dalgadan sonra BOSS, boss'tan sonra yeni bölümün 1. dalgası
+// Bölüm tamamlandı: oyun durur, "BÖLÜM TAMAMLANDI" ekranı (UI) açılır. İlerleme (bölüm+1, dalga 1) BURADA state'e yazılır ki ekran açıkken
+// kapanırsa kayıt yeni bölümden devam etsin; DEVAM ET → startWave() yeni bölümü başlatır.
+function chapterClear() {
+  const w = state.wave; w.phase = 'chapterclear'; state.paused = true;
+  const cleared = w.stage; w.stage++; w.n = 1; w.boss = false;
+  events.onChapterClear?.(cleared);
+}
+export function continueChapter() { state.paused = false; startWave(); }
+
+// Güç seçimi bitince: 5. dalgadan sonra BOSS, boss'tan sonra bölüm tamamlama ekranı
 export function resumeAfterUpgrade() {
   const w = state.wave; state.paused = false;
-  if (w.boss) startWave(w.stage + 1, 1, false);
+  if (w.boss) chapterClear();
   else if (w.n >= WAVES.wavesPerStage) startWave(w.stage, WAVES.wavesPerStage, true);
   else startWave(w.stage, w.n + 1, false);
 }
@@ -50,6 +59,7 @@ export function updateWaves(dt) {
     if (!w.queue.length && aliveAny().length === 0) {
       w.phase = 'complete'; w.t = w.boss ? (WAVES.bossCompleteSec || WAVES.completeSec) : WAVES.completeSec;
       state.player.coins += WAVES.stage.coinBonusPerWave * w.n + WAVES.stage.coinBonusPerStage * (w.stage - 1);
+      if (!w.boss) gainXp(WAVES.stage.waveXp * w.n * w.stage);                  // dalga bitirme XP ödülü
       events.onWaveComplete?.(w.n, { boss: w.boss, stage: w.stage });
     }
     return;
@@ -57,7 +67,7 @@ export function updateWaves(dt) {
   if (w.phase === 'complete') {
     w.t -= dt;
     if (w.t <= 0) {
-      if (w.boss && !WAVES.bossUpgrade) resumeAfterUpgrade();          // boss ödülü sonrası doğrudan yeni bölüm (waves.json → bossUpgrade: true ile kart ekranı açılır)
+      if (w.boss && !WAVES.bossUpgrade) chapterClear();                 // boss ödülü sonrası bölüm tamamlama ekranı (waves.json → bossUpgrade: true ile önce kart ekranı)
       else if (w.boss || w.n >= WAVES.wavesPerStage) {                 // 5. dalga (ve isteğe bağlı boss) sonrası: oyun durur, 3 kart
         w.phase = 'upgrade'; state.paused = true;
         w.epicNext = false;

@@ -163,3 +163,7 @@ Oyuncu 4 farklı güç (`upgrades.json → maxDistinct: 4`) seçince kart ekran�
 - Goblin Lordu (`boss.js`, ayarlar `waves.json → boss`): durum makinesi idle → windup (telegraph) → dash → recover. Saldırılar: **hammer** (yakın çekiç), **charge** (geri çekil, kırmızı daire + şerit, hücum), **ground smash** (0.7 sn uyarı, geniş şok dalgası). Öfke %50 (arası ×0.8, hız ×1.15, destek çağrısı), delilik %20 (arası ×0.6, hız ×1.35). HP barı yumuşak iner, arkada hasar izi, öfkede renk değişir.
 - Kahraman kendi hareket etmediği için "okuyup kaçma" otomatik geri çekilmeyle: `boss.dodge.chance` (0.55) olasılıkla uyarıdan 0.12 sn sonra geri koşar; boss özel saldırıdayken kahraman yerinde bekler.
 - Boss ölümü: büyük parçacık patlaması + sarsıntı + hit-stop, "BOSS YENİLDİ! +250 COIN", ardından "WAVE COMPLETE · Bölüm n tamamlandı".
+
+## Faz 16 — Wave ve bölüm ilerlemesi
+Bölüm = 5 dalga (3 / 5 / 6 / 8 / 10 goblin, `waves.json → waves`) → kart seçimi → BOSS (Goblin Lord + 3 goblin; giriş: ekran kararır, "BOSS WAVE · GOBLIN LORD GELİYOR!") → "BOSS DEFEATED!" → **BÖLÜM TAMAMLANDI** ekranı (+50 altın, +1 kristal, +XP; `data/chapters.json → reward`) → DEVAM ET → sonraki bölüm.
+Dalga ölçeği (`stage.waveScale`): HP ×1/1.15/1.30/1.45/1.65, hasar, hız ve saldırı aralığı da kademeli; boss'a uygulanmaz (kendi statları + bölüm çarpanı). Bölüm adları: MEADOWLANDS → DARK FOREST → FROZEN PEAKS (sonra "… II"). Kayıt: bölüm, dalga, seviye, XP, coin, gem, karakter, güçler; bölüm tamamlama ekranı açıkken kapansa bile yeni bölümden devam eder.

@@ -5,18 +5,18 @@
     0.9,
     1.9
   ],
-  "introSec": 1.5,
-  "completeSec": 1.7,
+  "introSec": 1.3,
+  "completeSec": 1.1,
   "coinBonusPerWave": 2,
   "bossType": "goblin_boss",
-  "bossEscorts": 2,
+  "bossEscorts": 3,
   "boss": {
     "summonAtHp": 0.5,
     "enrageAtHp": 0.2,
     "enrageSpeedMul": 1.35,
     "reward": {
       "coins": 250,
-      "gems": 6,
+      "gems": 2,
       "healFull": true,
       "epicUpgrade": false,
       "showerCoins": 24
@@ -62,34 +62,48 @@
       "maxDist": 230
     }
   },
-  "bossCompleteSec": 4.0,
+  "bossCompleteSec": 3.0,
   "wavesPerStage": 5,
   "waves": [
     [
       "goblin_scout",
-      "goblin_scout"
-    ],
-    [
-      "goblin_scout",
       "goblin_scout",
       "goblin_scout"
     ],
     [
       "goblin_scout",
       "goblin_scout",
-      "goblin_warrior"
-    ],
-    [
       "goblin_scout",
-      "goblin_warrior",
       "goblin_scout",
       "goblin_warrior"
     ],
     [
       "goblin_scout",
-      "goblin_warrior",
-      "goblin_warrior",
       "goblin_scout",
+      "goblin_scout",
+      "goblin_warrior",
+      "goblin_warrior",
+      "goblin_warrior"
+    ],
+    [
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_warrior",
+      "goblin_warrior",
+      "goblin_warrior",
+      "goblin_warrior"
+    ],
+    [
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_scout",
+      "goblin_warrior",
+      "goblin_warrior",
+      "goblin_warrior",
       "goblin_warrior",
       "goblin_brute"
     ]
@@ -98,9 +112,41 @@
     "hpPerStage": 0.4,
     "dmgPerStage": 0.15,
     "extraPerTwoStages": 1,
-    "hpPerWaveInStage": 0.05,
+    "hpPerWaveInStage": 0,
     "coinBonusPerWave": 2,
-    "coinBonusPerStage": 10
+    "coinBonusPerStage": 10,
+    "waveScale": {
+      "hp": [
+        1,
+        1.15,
+        1.3,
+        1.45,
+        1.65
+      ],
+      "dmg": [
+        1,
+        1.1,
+        1.2,
+        1.32,
+        1.45
+      ],
+      "speed": [
+        1,
+        1.04,
+        1.08,
+        1.16,
+        1.22
+      ],
+      "atk": [
+        1,
+        0.97,
+        0.94,
+        0.9,
+        0.85
+      ]
+    },
+    "waveXp": 6
   },
-  "bossUpgrade": false
+  "bossUpgrade": false,
+  "bossIntroSec": 2.4
 }
