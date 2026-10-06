@@ -85,3 +85,9 @@ Tasarım ve teknik notlar.
 - **Harici ses dosyası yok**: tüm efektler (kılıç savurma, vuruş, ölüm, hasar, coin, gem, level-up, iki yetenek, game over, tık) ve sakin bir pentatonik müzik döngüsü Web Audio ile üretilir. Tarayıcı kuralı gereği ses ilk dokunuş/tuşta açılır.
 - Soldaki **hoparlör düğmesi** (eski ayar ikonu) veya **M** sesi açar/kapatır; seçim `localStorage` ('nexora_sound') ile hatırlanır. Aynı ses 25–45 ms içinde tekrar çalmaz (yığılma yok). Ses ayarları: `audio.js` içindeki `SFX` tablosu ve `musicGain` (0.16).
 - Not: sesler kodla sentezlendiği için profesyonel kayıtlar gibi değildir; gerçek ses dosyaları `audio/sfx`, `audio/music` klasörlerine eklenip `SFX`/müzik yerine yüklenebilir.
+
+## Kayıt (src/core/save.js)
+- Yalnızca tarayıcı `localStorage` ('nexora_save_v1'), kahraman başına: seviye, XP, coin, gem, toplam öldürme, en iyi seviye + son seçilen kahraman. Sunucu/harici istek yok.
+- **Otomatik kayıt:** 5 sn'de bir, seviye atlayınca, ölünce, sekme gizlenince/kapanınca (yalnız değişiklik varsa yazar). Açılışta seçim kartında `Lv. N · coin` görünür, son oynanan kart altın çerçeveli.
+- **Ölünce** seviye/coin/gem kalır; "Yeniden Başla" aynı seviyeden yeni deneme başlatır. Can ve hasar seviyeye göre türetilir (level-up formülüyle aynı).
+- Seçim ekranındaki **Kaydı Sil** (iki dokunuş: "Emin misin?") tüm kaydı siler. Bozuk kayıt sessizce yok sayılır. Yeni bir veri alanı eklerken `Save.write/apply` ve sürümü (`KEY`) güncelle.

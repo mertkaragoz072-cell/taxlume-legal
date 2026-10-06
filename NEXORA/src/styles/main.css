@@ -114,3 +114,6 @@ html, body {
 .pulse { animation: pop .38s ease-out; }
 @keyframes pop { 0% { transform: scale(1); } 35% { transform: scale(1.14); filter: brightness(1.35); } 100% { transform: scale(1); } }
 .lvbar .xpfill { transition: width .25s ease-out; }
+
+.sel-info { font-size: 12px; font-weight: 700; color: #5b6a8f; margin-top: 2px; }
+.sel-wipe { margin-top: 10px; background: transparent; border: 2px solid rgba(255,255,255,.55); color: #fff; font: inherit; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 12px; cursor: pointer; }

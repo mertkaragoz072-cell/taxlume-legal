@@ -1,6 +1,7 @@
 import { loadData, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
 import { Assets } from './core/assets.js';
 import { Audio } from './core/audio.js';
+import { Save } from './core/save.js';
 import { Input } from './core/input.js';
 import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
@@ -10,6 +11,7 @@ import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar, pulse } fro
 
 function restart() {
   resetState();
+  Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem geri yüklenir
   hideGameOver();
   updateHud();
 }
@@ -18,18 +20,21 @@ function restart() {
 const PORTRAITS = { male: () => ({ img: 'male_idle_01', crop: CONFIG.hud.avatar.crop }), heroine: () => ({ img: 'heroine_portrait', crop: null }) };
 function chooseHero() {
   return new Promise((resolve) => {
-    let last = null; try { last = localStorage.getItem('nexora_hero'); } catch (_) { /* yoksay */ }
+    const last = Save.lastHero();
     const box = document.getElementById('select'), cards = document.getElementById('sel-cards');
     cards.innerHTML = '';
     for (const h of HEROES) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'sel-card' + (h.id === last ? ' last' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
       const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
+      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · ${sv.coins} coin` : 'Yeni oyun'; b.appendChild(info);
       const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
       if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = false; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
-      b.addEventListener('click', () => { setHero(h.id); try { localStorage.setItem('nexora_hero', h.id); } catch (_) { /* yoksay */ } box.classList.add('hidden'); resolve(h.id); });
+      b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
       cards.appendChild(b);
     }
+    const wipe = document.getElementById('sel-wipe'); let armed = false;
+    if (wipe) { wipe.onclick = () => { if (!armed) { armed = true; wipe.textContent = 'Emin misin? Tekrar dokun'; setTimeout(() => { armed = false; wipe.textContent = 'Kaydı Sil'; }, 3000); return; } Save.clear(); chooseHero().then(resolve); }; }
     box.classList.remove('hidden');
   });
 }
@@ -48,6 +53,7 @@ async function boot() {
     throw err;
   }
   await Assets.load(manifest.images);
+  Save.load();
 
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   initHud();
@@ -79,6 +85,13 @@ async function boot() {
   document.getElementById('restart-btn').addEventListener('click', restart);
   addEventListener('keydown', (e) => { if (state.over && (e.code === 'Enter' || e.code === 'Space')) restart(); });
   restart();
+  // Otomatik kayıt: 5 sn'de bir, seviye atlayınca, ölünce, sekme gizlenince/kapanınca
+  const saveNow = () => Save.write(HERO.id, state.player, state);
+  setInterval(saveNow, 5000);
+  addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+  addEventListener('pagehide', saveNow);
+  const lvl = events.onLevelUp; events.onLevelUp = (l) => { lvl?.(l); saveNow(); };
+  const over = events.onGameOver; events.onGameOver = (st) => { over?.(st); saveNow(); };
 
   let last = performance.now();
   function frame(now) {
