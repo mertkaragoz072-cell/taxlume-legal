@@ -59,7 +59,11 @@
       "weight": 10,
       "title": "SALDIRI GÜCÜ",
       "desc": "Saldırı Gücü",
-      "art": "assets/ui/cards/card_attack_damage.png"
+      "art": "assets/ui/cards/card_attack_damage.png",
+      "artText": [
+        "#ffc83a",
+        "#7a2a00"
+      ]
     },
     {
       "id": "attackSpeed",
@@ -74,7 +78,12 @@
       "weight": 10,
       "cap": 3.0,
       "title": "ÇEVİKLİK",
-      "desc": "Saldırı Hızı"
+      "desc": "Saldırı Hızı",
+      "art": "assets/ui/cards/card_attack_speed.png",
+      "artText": [
+        "#ffc83a",
+        "#7a3a00"
+      ]
     },
     {
       "id": "critChance",
@@ -89,7 +98,12 @@
       "weight": 9,
       "cap": 0.75,
       "title": "KESKİN GÖZ",
-      "desc": "Kritik Şansı"
+      "desc": "Kritik Şansı",
+      "art": "assets/ui/cards/card_crit_chance.png",
+      "artText": [
+        "#e2a6ff",
+        "#3a0a6a"
+      ]
     },
     {
       "id": "critDamage",
@@ -117,7 +131,12 @@
       "max": 4,
       "weight": 6,
       "title": "UZUN KOL",
-      "desc": "Saldırı Menzili"
+      "desc": "Saldırı Menzili",
+      "art": "assets/ui/cards/card_range.png",
+      "artText": [
+        "#e2a6ff",
+        "#3a0a6a"
+      ]
     },
     {
       "id": "defense",
@@ -145,7 +164,12 @@
       "max": 10,
       "weight": 10,
       "title": "DEV KALP",
-      "desc": "Maksimum HP"
+      "desc": "Maksimum HP",
+      "art": "assets/ui/cards/card_max_hp.png",
+      "artText": [
+        "#8dff55",
+        "#0b5a12"
+      ]
     },
     {
       "id": "regen",
@@ -174,7 +198,12 @@
       "weight": 7,
       "cap": 0.6,
       "title": "KALKAN USTASI",
-      "desc": "Alınan Hasar"
+      "desc": "Alınan Hasar",
+      "art": "assets/ui/cards/card_damage_taken.png",
+      "artText": [
+        "#6fd6ff",
+        "#0a3a7a"
+      ]
     },
     {
       "id": "coinGain",
@@ -188,7 +217,12 @@
       "max": 10,
       "weight": 7,
       "title": "ALTIN KOKUSU",
-      "desc": "Coin Kazanımı"
+      "desc": "Coin Kazanımı",
+      "art": "assets/ui/cards/card_coin_gain.png",
+      "artText": [
+        "#ffd23f",
+        "#7a4a00"
+      ]
     },
     {
       "id": "extraCoin",
@@ -272,7 +306,12 @@
       "max": 6,
       "weight": 8,
       "title": "YETENEK GÜCÜ",
-      "desc": "Yetenek Hasarı"
+      "desc": "Yetenek Hasarı",
+      "art": "assets/ui/cards/card_skill_damage.png",
+      "artText": [
+        "#ffb040",
+        "#7a1a00"
+      ]
     },
     {
       "id": "xpGain",
@@ -286,7 +325,12 @@
       "max": 8,
       "weight": 6,
       "title": "BİLGE",
-      "desc": "XP Kazancı"
+      "desc": "XP Kazancı",
+      "art": "assets/ui/cards/card_xp_gain.png",
+      "artText": [
+        "#6fd6ff",
+        "#0a3a7a"
+      ]
     },
     {
       "id": "moveSpeed",
@@ -301,7 +345,12 @@
       "weight": 4,
       "cap": 2.2,
       "title": "RÜZGAR ADIMI",
-      "desc": "Hareket Hızı"
+      "desc": "Hareket Hızı",
+      "art": "assets/ui/cards/card_move_speed.png",
+      "artText": [
+        "#ffffff",
+        "#4a2a10"
+      ]
     },
     {
       "id": "skillCooldown",
@@ -316,7 +365,12 @@
       "weight": 8,
       "floor": 0.4,
       "title": "HIZLI ZİHİN",
-      "desc": "Yetenek Cooldown"
+      "desc": "Yetenek Cooldown",
+      "art": "assets/ui/cards/card_skill_cooldown.png",
+      "artText": [
+        "#8dff55",
+        "#0b5a12"
+      ]
     }
   ],
   "builds": [

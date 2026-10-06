@@ -19,6 +19,7 @@ export function showUpgrade(cards, epic, onPick) {
     b.style.setProperty('--cat', UPGRADES.categories[c.category]?.color || '#888'); b.style.setProperty('--rar', RR.color || '#888');
     if (c.art) {                                           // hazır kart görseli: başlık/ikon görselde, bonus ve seviye üstüne yazılır
       b.classList.add('art'); b.style.backgroundImage = `url(${c.art})`;
+      if (c.artText) { b.style.setProperty('--txf', c.artText[0]); b.style.setProperty('--txs', c.artText[1]); }
       b.innerHTML = `<div class="tx">${c.bonus}</div><div class="lv">${c.levelText}</div>`;
     } else b.innerHTML = `<div class="rib">${RR.name || ''}</div><div class="ic"><span>${c.icon}</span></div><div class="nm">${c.title || c.name}</div><div class="ds">${c.desc || c.name}</div><div class="tx">${c.bonus}</div>${c.level ? `<div class="tt">Toplam ${c.total}</div>` : ''}<div class="lv">${c.levelText}</div><i class="shine"></i>`;
     b.addEventListener('click', () => pick(i)); list.appendChild(b);

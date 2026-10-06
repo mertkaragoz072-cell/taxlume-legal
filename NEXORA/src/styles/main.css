@@ -207,3 +207,8 @@ html, body {
 .up-card.art .lv { position: absolute; left: 24%; right: 24%; top: 85.2%; height: 5.6%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; background: none; border-radius: 0; font-size: 5cqw; color: #fff3d6; text-shadow: 0 1px 0 #3a0000; white-space: nowrap; }
 .up-card.art:hover, .up-card.art:focus-visible { transform: translateY(-5px) scale(1.04); }
 .up-card.art.picked { box-shadow: none; filter: drop-shadow(0 0 22px #ffd23f) drop-shadow(0 0 8px #fff); }
+
+/* Kart görselleri (322×373 civarı): bonus ve seviye metni görseldeki temizlenmiş alanlara yazılır, renk karta göre (--txf/--txs) */
+.up-card.art { aspect-ratio: 322 / 373; }
+.up-card.art .tx { top: 69.6%; font-size: 15.5cqw; color: var(--txf, #ffd23f); -webkit-text-stroke: 2.5px var(--txs, #7a2a00); text-shadow: 0 .06em 0 var(--txs, #7a2a00); }
+.up-card.art .lv { top: 85.6%; height: 8.8%; left: 22%; right: 22%; font-size: 5.2cqw; }
