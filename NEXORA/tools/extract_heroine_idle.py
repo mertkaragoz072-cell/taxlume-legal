@@ -1,4 +1,4 @@
-"""Kadın savaşçı bekleme (idle) kareleri: references/nexora_heroine_idle_source.png (1774x887, SİYAH ARKA PLANLI, 3 satır x 10 sütun = 30 kare, numaralar sol üstte) ->
+"""Kadın savaşçı bekleme (idle) kareleri: references/nexora_heroine_idle_source.png (1774x887, SİYAH ARKA PLANLI, 3 satır x 10 sütun = 30 kare, numarasız) ->
 assets/characters/female/idle/idle_01..30.png (şeffaf; sadece karakter, numara ve zemin gölgesi YOK — oyun kendi gölgesini çizer).
 Yöntem: (1) arka plan = kenardan başlayan flood-fill (max kanal < 34; gölge elipsi de bu aralıkta); kenar bandında siyah matte çözülür (alfa = yumuşak eşik, renk = rgb/alfa → koyu hale yok);
 (2) bileşenler: büyük = karakter; küçük gri/beyaz (numara) atılır, küçük renkli parçalar (kırmızı şerit) karaktere yakınsa kalır; (3) satır/sütun sırasıyla 1..30;
@@ -12,12 +12,20 @@ ROOT = os.path.join(os.path.dirname(__file__), '..')
 im = Image.open(os.path.join(ROOT, 'references/nexora_heroine_idle_source.png')).convert('RGB'); rgb = np.array(im).astype(np.float32); H, W = rgb.shape[:2]
 info = json.load(open(os.path.join(ROOT, 'assets/characters/female/death_frames_info.json'))); Wc, Hc = info['canvas']; PX, PY = info['pivot']; TARGET_H = info['standingHeightPx']
 mx = rgb.max(2); sat = rgb.max(2) - rgb.min(2)
-# arka plan: saf siyah (max<=8) VEYA gri-koyu (düşük doygunluk, max<34: zemin gölgesi elipsi); kenardan bağlı olanlar. Karakterin koyu çizgileri/gözleri kahverengi (doygun) olduğundan gri kuralına girmez.
-dark = (mx <= 8) | ((mx < 34) & (sat < 13))
+# arka plan: saf siyah, kenardan bağlı olan alan.
+dark = mx <= 10          # saf siyah. (Önceki sayfadaki gri gölge elipsi kuralı kaldırıldı: bu sayfada gölge yok, siyah taytlar yanlışlıkla arka plan sayılıyordu)
 lab, n = ndi.label(dark); border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
 bg = np.isin(lab, list(border))
 bg = ndi.binary_opening(bg, iterations=1) | (bg & ~ndi.binary_dilation(~bg, iterations=1))   # ince sızıntı kanallarını kapat
-fg = ndi.binary_fill_holes(~bg)                                  # karakter içindeki delikler (göz/çizgi) her zaman karakterdir
+fg0 = ~bg; fg = ndi.binary_fill_holes(fg0)                          # karakter içindeki delikler (göz/çizgi) karakterdir...
+hl, hn = ndi.label(fg & ~fg0)
+for k in range(1, hn + 1):                                         # ...ama saf siyah, büyük kapalı boşluklar (bacak arası vb.) arka plandır
+    m = hl == k
+    if m.sum() > 100 and mx[m].mean() < 14: fg[m] = False
+pl, pn = ndi.label(mx <= 8)                                        # kapanan dar kanallar yüzünden 'kapalı' kalan saf siyah alanlar (bacak arası): büyükse arka plandır (göz bebeği/çizgi küçüktür)
+psz = ndi.sum(mx <= 8, pl, range(1, pn + 1))
+for k in range(1, pn + 1):
+    if psz[k - 1] > 80: fg[pl == k] = False
 bg = ~fg
 lab2, n2 = ndi.label(fg)
 comps = []
