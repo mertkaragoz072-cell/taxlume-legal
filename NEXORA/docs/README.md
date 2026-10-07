@@ -201,5 +201,5 @@ Yeni asset sayfasındaki "ZEMİN (SEAMLESS)" plakaları gezegen yüzeyi olarak �
 Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada ★ zorluk katlanarak döner). Yeni dünya/tema yok.
 - **Mantık soak'u** (erkek + kadın, 5 bölüm × (5 dalga + boss), kartlar, bölüm sonu, ölüm/yeniden başla): 0 anomali, 0 konsol hatası, maks. 6 düşman / 90 parçacık / 5 yazı.
 - **Doğrulananlar:** kayıt/yükleme (seviye, güçler, dalga, coin/kristal reload sonrası aynı), boss ödülü + bölüm sonu ödülü HUD'a yansır, kart seçimi (3 farklı kart, 4 seviye, üst seviye sunumu), karakter seçimi, ölüm/Oyun Bitti → yeniden başla, bölüm tamamlandı ekranı, sonsuz zemin (±π ve 50 rad), farklı ekran oranlarında eşit zemin yüksekliği.
-- **Yeni:** 🎒 Karakter paneli (statlar + edinilen güçler) ve 📜 Görev paneli (bölüm/dalga hedefi, ilerleme); eskiden pasif "yakında" butonlardı. Açıkken oyun durur (`state.userPause`), Esc/I kısayolu.
+- **Yeni:** 🎒 Karakter paneli (statlar + edinilen güçler); eskiden pasif "yakında" butonlardı. Açıkken oyun durur (`state.userPause`), Esc/I kısayolu.
 - Bilinen sınırlar: gerçek telefon cihaz testi yapılmadı (ortam yazılım çizimi); dekor sprite'ları yumuşatmalı çizilir (yalnız zemin nearest-neighbor); ses efektleri Web Audio sentezi (müzik yok).
