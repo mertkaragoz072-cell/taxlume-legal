@@ -59,7 +59,7 @@ export function startTutorial() {
   card.onpointerdown = (e) => e.stopPropagation();
   card.onclick = (e) => { const a = e.target.closest('button')?.dataset.a; if (a === 'next') next(); else if (a === 'skip') finish(); };
   setTimeout(() => {
-    if (!running) return; root.classList.remove('hidden'); show();
+    if (!running) return; if (Settings.get('tutorialDone')) { running = false; return; } root.classList.remove('hidden'); show();
     // güç seçimi / oyun sonu gibi başka ekranlar açılırsa tur geçici gizlenir
     poll = setInterval(() => { if (state.over) return finish(); const busy = state.paused; root.classList.toggle('hidden', busy); if (!busy && STEPS[i] && !STEPS[i].live) state.userPause = true; }, 300);
   }, 1500);
