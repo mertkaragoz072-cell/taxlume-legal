@@ -33,6 +33,12 @@ export function groundDust(a, n = 12, spread = 140) {
   }
 }
 
+// Koşu adımı tozu: her ayak vuruşunda arkaya küçük toz (zemine basma hissi)
+export function stepDust(a, dir = 1) {
+  const R = CONFIG.planet.radius;
+  for (let i = 0; i < 3; i++) add({ a: a - dir * rand(2, 10) / R, h: rand(1, 4), vx: -dir * rand(25, 70), vh: rand(18, 55), g: 160, life: rand(0.25, 0.45), size: rand(1.6, 3.2), color: i % 2 ? '#d8cfa6' : '#b79c68', kind: 'dot' });
+}
+
 // Oyuncu hasar alınca kırmızı kıvılcımlar
 export function hurtSparks(a, h) {
   for (let i = 0; i < 7; i++) add({ a, h: h + rand(-14, 14), vx: rand(-160, 160), vh: rand(40, 190), g: 420, life: rand(0.2, 0.4), size: rand(2, 3.6), color: i % 2 ? '#ff5a4a' : '#ffb0a0', kind: 'dot' });

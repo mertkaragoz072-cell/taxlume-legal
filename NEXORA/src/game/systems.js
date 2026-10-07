@@ -10,6 +10,7 @@ import { updateWaves } from './WaveManager.js';
 import { updateBoss } from './boss.js';
 import { enemyMeta } from './EnemySpawner.js';
 import { derived } from './PlayerStats.js';
+import { stepDust } from './fx.js';
 import { updateParticles } from './fx.js';
 import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
 
@@ -59,7 +60,10 @@ export function update(dt) {
     p.dir = 1;
     const speed = retreating ? WAVES.boss.dodge.speed : C.player.autoSpeed * S.moveMul;
     p.a += ax * speed / r * dt;                                // ax=-1 → geri
-    if (ax !== 0) { p.walk += dt * 10 * S.moveMul; p.stride += speed * dt; }
+    if (ax !== 0) {
+      p.walk += dt * 10 * S.moveMul; p.stride += speed * dt;
+      const step = Math.floor(p.stride / 46); if (ax > 0 && step !== p.lastStep) stepDust(p.a, p.dir); p.lastStep = step;     // ayak vuruşu tozu
+    }
     p.lean += (ax * 0.12 - p.lean) * Math.min(1, dt * 10);
     if (S.regen > 0 && p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + S.regen * dt);     // can yenileme
   }
