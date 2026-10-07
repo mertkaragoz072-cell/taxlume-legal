@@ -72,7 +72,7 @@ function drawHeroFrames(ctx, meta, anim) {
     ctx.scale(p.dir, 1);
     if (name !== 'death') castShadow(ctx, img, key, -px, -py, w, h, p.dir);
     ctx.globalAlpha = alpha; ctx.drawImage(img, -px, -py, w, h);
-    if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.45 * hurtK; ctx.drawImage(whiteSilhouette(img, key, '#ff5a4a'), -px, -py, w, h); }
+    if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.45 * hurtK; ctx.drawImage(whiteSilhouette(img, key, '#ff5a4a'), -px + (anim.dx?.[i] || 0), -py, w, h); }
     if (name === 'attack' && anim.fx === 'overlay') {                    // oyunun mavi hilali kılıç ucuna (kareye özel uç noktası varsa o)
       const tip = anim.swordTipFrames?.[key.replace('heroine_', '')] || anim.swordTip, u = Math.min(1, p.animT * anim.fps / n);
       const fx = Assets.get('fx_attack_1_slash');

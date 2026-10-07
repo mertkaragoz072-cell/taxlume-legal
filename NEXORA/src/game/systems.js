@@ -10,7 +10,7 @@ import { updateWaves } from './WaveManager.js';
 import { updateBoss } from './boss.js';
 import { enemyMeta } from './EnemySpawner.js';
 import { derived } from './PlayerStats.js';
-import { stepDust } from './fx.js';
+import { stepDust, groundDust } from './fx.js';
 import { HULL, startRagdoll, stepRagdoll } from './ragdoll.js';
 import { updateParticles } from './fx.js';
 import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
@@ -25,10 +25,20 @@ const surfaceDist = (a, b) => Math.abs(wrapAngle(a - b)) * R();
 // Animasyon durum makinesi: ölüm > hasar > saldırı (bitene kadar) > koşu/bekleme. Saldırı animasyonu saldırı hızıyla hızlanır.
 function updatePlayerAnim(p, dt, atkMul) {
   const set = ANIMS.hero?.animations;
+  const prevT = p.animT;
   p.animT += dt * (p.anim.startsWith('attack') ? atkMul : 1);
-  if (p.anim === 'death' && ANIMS.hero?.static) {                // kadın karakter: ölüm = fizik simülasyonu (ragdoll.js)
+  const dth = set?.death;
+  if (p.anim === 'death' && ANIMS.hero?.static && dth?.procedural) {   // kare yoksa: fizik ragdoll (ragdoll.js)
     if (!p.rag && HULL) startRagdoll(p, HULL);
     stepRagdoll(p, dt, CONFIG.planet.radius);
+  } else if (p.anim === 'death' && ANIMS.hero?.static && dth) {         // kare tabanlı ölüm: dizlerin/gövdenin yere çarptığı karelerde toz
+    const i0 = Math.floor(prevT * dth.fps), i1 = Math.floor(p.animT * dth.fps), R = CONFIG.planet.radius;
+    for (let i = i0 + 1; i <= i1; i++) {
+      const dx = (dth.dx?.[Math.min(i, dth.dx.length - 1)] || 0) / R;
+      if (i === 4) groundDust(p.a + dx - 0.004, 10, 90);
+      if (i === 5) { groundDust(p.a + dx, 18, 150); state.shake = Math.max(state.shake, 5); }
+      if (i === 6) groundDust(p.a + dx, 12, 120);
+    }
   }
   if (!set || p.anim === 'death') return;
   const cur = set[p.anim];

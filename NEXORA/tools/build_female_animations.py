@@ -81,6 +81,7 @@ for an in ANIMS:
             key = f'heroine_{an}_{i:02d}'; names.append(key)
             man['images'][key] = os.path.relpath(f, ROOT).replace(os.sep, '/')
         e = {'frames': names, 'fps': cfg.get('fps', {}).get(an, DEF_FPS[an]), 'loop': LOOP.get(an, False)}
+        if cfg.get('dx', {}).get(an): e['dx'] = cfg['dx'][an]
         if an == 'run': e['strideUnits'] = cfg.get('strideUnits', 15)
         if an == 'attack':
             e['impact'] = cfg.get('impact', 0.5); e['fx'] = cfg.get('attackFx', 'overlay')

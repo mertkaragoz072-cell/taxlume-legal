@@ -135,6 +135,17 @@
     "ground_dirt_05": "assets/environment/ground/dirt_patch_05.png",
     "ground_hill": "assets/environment/ground/hill_ground.png",
     "ground_tile": "assets/environment/ground/ground_tile_grass.png",
+    "gt_meadow_ground": "assets/environment/ground/tiles/meadow_ground.png",
+    "heroine_death_01": "assets/characters/female/death/death_01.png",
+    "heroine_death_02": "assets/characters/female/death/death_02.png",
+    "heroine_death_03": "assets/characters/female/death/death_03.png",
+    "heroine_death_04": "assets/characters/female/death/death_04.png",
+    "heroine_death_05": "assets/characters/female/death/death_05.png",
+    "heroine_death_06": "assets/characters/female/death/death_06.png",
+    "heroine_death_07": "assets/characters/female/death/death_07.png",
+    "heroine_death_08": "assets/characters/female/death/death_08.png",
+    "heroine_death_09": "assets/characters/female/death/death_09.png",
+    "heroine_death_10": "assets/characters/female/death/death_10.png",
     "heroine_main": "assets/characters/female/heroine_main.png",
     "heroine_portrait": "assets/characters/female/heroine_portrait.png",
     "male_attack_1_01": "assets/characters/male/animations/attack_1_01.png",
@@ -298,7 +309,6 @@
     "prop_rock_medium_02": "assets/environment/props/rock_medium_02.png",
     "prop_rock_small_01": "assets/environment/props/rock_small_01.png",
     "prop_rock_small_02": "assets/environment/props/rock_small_02.png",
-    "prop_signpost": "assets/environment/props/signpost.png",
-    "gt_meadow_ground": "assets/environment/ground/tiles/meadow_ground.png"
+    "prop_signpost": "assets/environment/props/signpost.png"
   }
 }

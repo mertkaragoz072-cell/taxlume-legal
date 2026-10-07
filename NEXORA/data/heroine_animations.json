@@ -16,7 +16,17 @@
       252
     ]
   },
-  "framed": null,
+  "framed": {
+    "size": [
+      447,
+      287
+    ],
+    "pivot": [
+      223,
+      277
+    ],
+    "scale": 0.365
+  },
   "facing": "right",
   "animations": {
     "idle": {
@@ -54,11 +64,31 @@
     },
     "death": {
       "frames": [
-        "main"
+        "heroine_death_01",
+        "heroine_death_02",
+        "heroine_death_03",
+        "heroine_death_04",
+        "heroine_death_05",
+        "heroine_death_06",
+        "heroine_death_07",
+        "heroine_death_08",
+        "heroine_death_09",
+        "heroine_death_10"
       ],
-      "fps": 1.25,
+      "fps": 8,
       "loop": false,
-      "procedural": true
+      "dx": [
+        0,
+        0,
+        -3,
+        -8,
+        -16,
+        -26,
+        -34,
+        -38,
+        -40,
+        -40
+      ]
     }
   },
   "image": "heroine_main",
