@@ -87,7 +87,10 @@ for i, f in enumerate(frames, 1):
     sub = arr[f['ry0']:f['ry0'] + f['keep'].shape[0], f['cx0']:f['cx0'] + f['keep'].shape[1]].copy(); sub[~ndi.binary_dilation(f['keep'], iterations=3)] = 0                 # düşük alfalı halo kırıntıları (komşu karelerden) sadece kare silüetinin 3 px çevresinde kalır
     crop = Image.fromarray(sub[f['y0']:f['y1'], f['x0']:f['x1']], 'RGBA')
     cv = Image.new('RGBA', (Wc, H + 0), (0, 0, 0, 0)); ypos = GROUND - (f['bodybottom'] - f['y0'])      # gövde alt kenarı zemin çizgisinde
-    cx = np.where(np.array(crop)[:, :, 3] > 40)[1].mean(); cv.alpha_composite(crop, (int(Wc // 2 - cx), int(ypos))); cv.save(os.path.join(out_dir, f'death_{i:02d}.png'))
+    al_ = np.array(crop)[:, :, 3] > 40; cx = np.where(al_)[1].mean()
+    if f['y1'] - f['y0'] >= 195:                                                         # ayakta duran kareler (düşüş başlamadan): BOTLAR bekleme animasyonuyla aynı pivotta → bekleme→ölüm geçişinde zıplama yok
+        b_ = np.where(al_.any(1))[0]; bb_ = b_.max() + 1; lw = np.where(al_[int(bb_ - 0.18 * (bb_ - b_.min())):bb_].any(0))[0]; cx = (lw.min() + lw.max()) / 2
+    cv.alpha_composite(crop, (int(Wc // 2 - cx), int(ypos))); cv.save(os.path.join(out_dir, f'death_{i:02d}.png'))
 f1 = frames[0]; low = f1['keep'][int(f1['y1'] - 0.2 * (f1['y1'] - f1['y0'])):f1['y1']]; fx = np.where(low.any(0))[0]
 PIVX = Wc // 2
 print('tuval', (Wc, H), 'pivot', (PIVX, GROUND), 'ayakta boy', f1['y1'] - f1['y0'], 'kare', len(frames))
