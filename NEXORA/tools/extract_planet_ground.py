@@ -40,6 +40,7 @@ for th, (y0, y1) in zip(THEMES, BANDS):
         info[th].append({'file': name, 'w': im.width, 'h': im.height, 'bottom': bot})
     print(th, [(t['w'], t['h']) for t in info[th]])
 json.dump(info, open(os.path.join(out_dir, 'tiles.json'), 'w'), indent=1)
+# (kaynak sayfa depodan çıkarıldı; diğer dünyalar eklenirken yeniden kullanılır)
 # desert / volcanic panorama (ARKA PLAN panosu, etiketsiz kısım)
 for th, (y0, y1) in (('desert', (630, 785)), ('volcanic', (826, 975))):
     d = os.path.join(ROOT, 'assets/environment/themes', th); os.makedirs(d, exist_ok=True)
