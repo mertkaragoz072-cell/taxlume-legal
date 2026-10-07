@@ -35,9 +35,8 @@ function updatePlayerAnim(p, dt, atkMul) {
     const i0 = dth.durations ? frameAt(dth.durations, prevT).i : Math.floor(prevT * dth.fps), i1 = dth.durations ? frameAt(dth.durations, p.animT).i : Math.floor(p.animT * dth.fps), R = CONFIG.planet.radius;
     for (let i = i0 + 1; i <= i1; i++) {
       const dx = (dth.dx?.[Math.min(i, dth.dx.length - 1)] || 0) / R;
-      if (i === 4) groundDust(p.a + dx - 0.004, 10, 90);
-      if (i === 5) { groundDust(p.a + dx, 18, 150); state.shake = Math.max(state.shake, 5); }
-      if (i === 6) groundDust(p.a + dx, 12, 120);
+      for (const [fr, n, spread] of dth.dust || []) if (fr === i) groundDust(p.a + dx - 0.002, n, spread);
+      if (dth.shake === i) state.shake = Math.max(state.shake, 5);
     }
   }
   if (!set || p.anim === 'death') return;
