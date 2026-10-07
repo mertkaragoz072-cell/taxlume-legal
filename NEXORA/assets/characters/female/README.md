@@ -3,7 +3,7 @@
 | Yol | İçerik |
 |---|---|
 | `heroine_main.png`, `heroine_portrait.png` | ana görsel (kullanıcının yüklediği, **görünüm değişmez**) ve portre; kaynak `../../references/nexora_heroine_source.png` |
-| `idle/ run/ attack/ hurt/ death/` | **gerçek animasyon kareleri için hazır klasörler** (şu an boş) |
+| `idle/ run/ attack/ hurt/ death/` | gerçek animasyon kareleri: **idle (30), run (30), death (29) dolu**; attack/hurt henüz boş (prosedürel) |
 | `frames.json` (opsiyonel) | pivot, ölçek, FPS, `strideUnits`, `attackFx`, `swordTip`, `impact` |
 | `animations/`, `layers/`, `portraits/` | **eski** kare tabanlı kadın sheet (`?hero=female` geliştirme alternatifi); yeni sistemle ilgisi yok |
 
@@ -29,3 +29,7 @@ Kaynak `references/nexora_heroine_death_source.png` (2172×724, şeffaf; numaral
 ## Bekleme (idle) = kare tabanlı, 30 FPS (güncel sayfa: kırmızı pelerinli, numaralar altta)
 Kaynak `references/nexora_heroine_idle_source.png` (1774×887, siyah arka planlı, 3×10 = 30 kare, numaralar kare altında). `tools/extract_heroine_idle.py`: kenardan flood-fill ile saf siyah arka plan silinir (bacak arası siyah boşluklar dahil; siyah tayt/göz korunur); birbirine değen komşu kareler (≈2 kare alanlı bileşenler) en boş sütundan bölünür; küçük gri/beyaz parçalar (numara, komşu kılıç ucu) atılır, kırmızı/kahverengi saç-pelerin uçları kalır; kenarda siyah matte çözülür; satır/sütun sırasıyla 1→30. Ölüm karesiyle aynı tuval (340×235), pivot (170,225), boy eşit; botlar pivota hizalı. `frames.json`: fps.idle = 30, loop → 1 sn. Bu sayfada kare-kare hareket (pelerin/saç) fazla olduğundan kare farkı yüksek (ortalama ≈ 11.9, 30→1 ≈ 9.4: döngü dikişi ortalamanın altında). Kaynaktaki bazı karelerde saç/şerit uçları komşu kareyle iç içe; birkaç karede küçük kırıntılar kalmış olabilir. Koşu/saldırı/hasar prosedürel.
 - **Bekleme↔ölüm birleşimi (kontrol):** ayakta duran ölüm kareleri (boy ≥ 195 px: 1–6, 11–12) botlardan hizalanır → bekleme ile aynı pivot (170), geçişte öne zıplama yok (eskiden ~12 birim). Aynı tuval/ölçek (0.455). Gerçek akış testi: bekleme → ölümcül hasar → ölüm (29 kare, durur) → "Oyun Bitti" → yeniden başla (anim=idle, ragdoll sıfır), hata yok. Bilinen fark: ölüm ve bekleme sayfaları farklı çizimler (saç/pelerin/yüz farklı) → geçişte hafif stil değişimi.
+
+## Koşu (run) = kare tabanlı, 30 kare (güncel)
+Kaynak `references/nexora_heroine_run_source.png` (1500×750, alfa kanallı, 3×10 = 30 kare, numaralar kare altında, zemin gölgeli). `tools/extract_heroine_run.py`: büyük bileşenler = karakter; numara (gri/beyaz küçük bileşen) ve zemin gölgesi (karakter çekirdeği dışında kalan yarı saydam alan) silinir; ölçek kafa-bandana yüksekliğinin bekleme karelerine eşitlenmesiyle bulunur (×1.292 → karakter boyu bekleme ile aynı, 213 px); yer çizgisi satırın gölge merkezi+13 px, x = gölge merkezi (zıplama/uçuş fazları korunur); tuval 340×235, pivot (170,225) — bekleme/ölümle aynı.
+- Oyunda: kare, geçen zamana değil kat edilen mesafeye bağlıdır: `frames.json → strideUnits` 2.2 birim/kare (30 karelik tam döngü ≈ 66 birim; ayak kaydırma varsa bu değer değiştirilir: büyütünce adım uzar). Durunca idle'a geçer.

@@ -67,11 +67,40 @@
     },
     "run": {
       "frames": [
-        "main"
+        "heroine_run_01",
+        "heroine_run_02",
+        "heroine_run_03",
+        "heroine_run_04",
+        "heroine_run_05",
+        "heroine_run_06",
+        "heroine_run_07",
+        "heroine_run_08",
+        "heroine_run_09",
+        "heroine_run_10",
+        "heroine_run_11",
+        "heroine_run_12",
+        "heroine_run_13",
+        "heroine_run_14",
+        "heroine_run_15",
+        "heroine_run_16",
+        "heroine_run_17",
+        "heroine_run_18",
+        "heroine_run_19",
+        "heroine_run_20",
+        "heroine_run_21",
+        "heroine_run_22",
+        "heroine_run_23",
+        "heroine_run_24",
+        "heroine_run_25",
+        "heroine_run_26",
+        "heroine_run_27",
+        "heroine_run_28",
+        "heroine_run_29",
+        "heroine_run_30"
       ],
-      "fps": 1,
+      "fps": 30,
       "loop": true,
-      "procedural": true
+      "strideUnits": 2.2
     },
     "attack": {
       "frames": [

@@ -274,3 +274,7 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Dayanıklılık (soak): 2 kahraman × (bölüm 5/10/15 başlangıcı), 75 sn gerçek süre ≈ 2.5 saatlik oyun; 3 evren + ★ döngüsü (bölüm 22–29'a kadar), 9 boss türünün tamamı, rastgele kaçış/yetenek/saldırı girdisi: 0 istisna, 0 NaN, 0 konsol hatası.
 - Arayüz: 568×320, 667×375, 844×390, 932×430, 1024×768 ekranlarda tüm paneller/öğretici/kartlar/evren ekranı taşma denetimi: sorun yok. Bilgi panelindeki fazladan üst boşluk (Faz 29 kurdele dolgusu) giderildi; dar ekranda ayar satırları sarıyor; rekor satırı evren biçiminde ("Evren 2 · 3/5 · W4").
 - Öğretici: Enter/→ ilerler, Esc atlar; öğretici sürerken çanta (I) açılmaz. Boss uyarı çemberine koyu dış çizgi eklendi (kırmızı evrende okunurluk).
+
+## Faz 38 — Kadın savaşçı koşu animasyonu (30 kare)
+- Kullanıcının verdiği 30 karelik koşu sayfası (`references/nexora_heroine_run_source.png`, alfa kanallı) `tools/extract_heroine_run.py` ile `assets/characters/female/run/run_01..30.png` olarak çıkarıldı: numaralar ve zemin gölgesi temizlendi, boy bekleme karelerine eşitlendi (kafa bandı 62–63 px, toplam 213 px), yer çizgisi satır gölgesinden alınarak zıplama fazları korundu, tuval/pivot bekleme-ölümle aynı (340×235, 170/225).
+- `frames.json`: `strideUnits` 2.2 (mesafeye bağlı kare seçimi), `build_female_animations.py` tutarlılık kontrolü temiz. Kalan prosedürel durumlar: attack, hurt.
