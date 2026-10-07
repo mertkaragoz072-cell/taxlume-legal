@@ -143,8 +143,8 @@ function fogBanks(ctx, x0, P, crest) {
   for (let i = 0; i < 5; i++) {
     const img = tinted('bg_cloud_' + String((i % 6) + 1).padStart(2, '0'), 0.1); if (!img) continue;
     const k = s * (1.5 + (i % 2) * 0.5), w = img.width * k;
-    ctx.globalAlpha = 0.6;
-    ctx.drawImage(img, x0 + P * (i + 0.3) / 5 - w / 2, crest - img.height * k * 0.7, w, img.height * k);
+    ctx.globalAlpha = 0.28;
+    ctx.drawImage(img, x0 + P * (i + 0.3) / 5 - w / 2, crest - img.height * k * 0.55, w, img.height * k * 0.8);
   }
   ctx.globalAlpha = 1;
 }

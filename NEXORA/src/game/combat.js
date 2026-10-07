@@ -71,7 +71,7 @@ export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
   events.onHit?.(en, dmg);
   state.shake = Math.max(state.shake, crit ? 2.8 : 1.3);          // hafif vuruş sarsıntısı
   hitStop(crit ? 0.08 : 0.05);              // kısa hit-stop (kritikte biraz uzun)
-  addText(en.a, en.def.heightUnits + 10, (crit ? '' : '-') + Math.round(dmg) + (crit ? '!' : ''), crit ? '#ffd23f' : (color || '#ff4a4a'), (0.75 + en.def.heightUnits / 300) * (crit ? 1.8 : 1), crit);
+  addText(en.a, en.def.heightUnits + 10, (crit ? '' : '-') + Math.round(dmg) + (crit ? '!' : ''), crit ? '#ffd23f' : (color || '#ff6048'), (0.75 + en.def.heightUnits / 300) * (crit ? 1.8 : 1), crit);
   if (state.hitFx.length < 4) state.hitFx.push({ a: en.a, h: en.def.heightUnits * 0.55, life: 0.2, max: 0.2, k: en.def.heightUnits / 190 * (crit ? 1.5 : 1), dir: -en.face });
   hitSparks(en.a, en.def.heightUnits * 0.55, -en.face, crit);
   if (en.hp <= 0 && !en.dead) killEnemy(en);

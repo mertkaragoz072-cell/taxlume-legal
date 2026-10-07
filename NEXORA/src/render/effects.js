@@ -52,7 +52,7 @@ export function drawText(ctx, t) {
     const big = t.text === 'LEVEL UP!', age = 1 - t.life / t.max;
     const pop = t.crit ? 1 + 0.45 * Math.pow(Math.max(0, 1 - age * 5), 2) : 1;          // kritik: büyüyerek belirir, sonra oturur
     ctx.font = `900 ${Math.round((big ? 28 : 24) * (t.scale || 1) * pop)}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center';
-    ctx.lineWidth = t.crit ? 5 : 4; ctx.strokeStyle = t.crit ? '#7a2a00' : outline(); ctx.lineJoin = 'round';
+    ctx.lineWidth = t.crit ? 5 : 5; ctx.strokeStyle = t.crit ? '#7a2a00' : '#2a1020'; ctx.lineJoin = 'round';
     if (t.crit) { ctx.shadowColor = 'rgba(255,190,40,.9)'; ctx.shadowBlur = 10; }
     ctx.strokeText(t.text, t.ox, 0); ctx.fillStyle = t.color; ctx.fillText(t.text, t.ox, 0);
     ctx.shadowBlur = 0; ctx.globalAlpha = 1;
