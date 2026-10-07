@@ -205,3 +205,15 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Bilinen sınırlar: gerçek telefon cihaz testi yapılmadı (ortam yazılım çizimi); dekor sprite'ları yumuşatmalı çizilir (yalnız zemin nearest-neighbor); ses efektleri Web Audio sentezi (müzik yok).
 
 - **Faz 26 (grafik cilası):** ufuktaki soluk sis dairesi kaldırıldı (alfa 0.28), zemin çimi üst kenarındaki koyu kesikli çizgi kapatıldı (zemin alt rengi yeşil), mor-mavi taş sprite'ları yüklemede sıcak gri-kahveye çevrildi (core/assets.js warmRock), hasar yazıları daha okunaklı (turuncu-kırmızı, koyu mor kontur).
+
+## Faz 27 — Oynanış + teknik altyapı turu
+- **Manuel kaçınma:** düğme / Shift,K,↓ (`data/config.json → dodge`: 0.42 sn sıçrama, 105 birim geri, 1.7 sn bekleme). Süresince dokunulmaz; saldırı tam o sırada isabet edecekse **mükemmel kaçınma** (bekleme sıfırlanır, yavaş çekim, +XP, başarım/görev sayacı).
+- **Boss:** öfke fazından itibaren **3'lü çekiç kombosu** (`waves.json → boss.combo`: öne adım, her vuruşta uyarı %15 kısalır); saldırı sonrası "savunmasız" beklemede alınan hasar ×1.25 (`recoverDamageMul`); otomatik geri çekilme şansı 0.55 → 0.30 (artık oyuncunun kendi kaçınması var).
+- **Denge:** `tools/tests/balance_sim.js` (pasif vs kaçınan bot). 5 bölümde bölüm ≈ 2 dk, boss 20–40 sn; pasif bot yaklaşık 2 bölümde 1 ölüm, kaçınan bot daha az → değerler değiştirilmedi.
+- **Meta (hesap geneli, `data/meta.json`, `src/game/Meta.js`):** 10 başarım, günlük 3 görev (gün tohumlu, ödül elle alınır), kalıcı mağaza (5 ürün: hasar, can, kritik, altın, yenilenme; coin/kristal ile). Panel sekmeleri 🎒: KARAKTER · GÖREVLER · MAĞAZA; başarım/görev bildirimi (toast).
+- **Kayıt şema v2:** `Save.migrate` (v1→v2), gelecekteki sürüme dokunmaz, okunamayan kayıt `nexora_save_corrupt` anahtarına yedeklenir.
+- **PWA:** `sw.js` (kabuk ağ-öncelikli, görseller önbellek-öncelikli; `tools/build_sw.py` sürüm üretir), kayıt `main.js` içinde (CSP satır içi scripti engeller). Çevrimdışı açılış testi geçti (413 dosya önbellekte).
+- **Performans:** statik tam ekran katmanlar önbellekli (gökyüzü/güneş/derecelendirme/zemin sisi), uzak parallax düşük kalite filtre, zemin dilimleri birleştirme + durağan kare önbelleği → kare süresi yazılım çizimde 87 → 35 ms (gerçek cihazda ölçülmeli).
+- **Test paketi:** `npm test` (`tools/tests/run_all.js`, 11 test, ≈ 30 sn) + `test:offline` + `balance`. Testler CSP hatasını (SW kaydı) yakaladı.
+- **Yayın:** `npm run build:www` → `www/` (≈ 18 MB), `capacitor.config.json`, `store/` (mağaza metni, gizlilik), `docs/RELEASE.md`.
+- **Yapılmadı (ayrı ele alınacak):** düşman çeşitliliği (oynanış 2) ve ses/müzik (teknik 2) — ikisi de "2" olduğu için atlandı.
