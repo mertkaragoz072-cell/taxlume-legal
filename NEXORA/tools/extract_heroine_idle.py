@@ -28,8 +28,21 @@ for k in range(1, pn + 1):
     if psz[k - 1] > 80: fg[pl == k] = False
 bg = ~fg
 lab2, n2 = ndi.label(fg)
+# Birbirine değen komşu kareler tek bileşen olur (alan ≈ 2 kare): ızgara sütun genişliğine göre en boş sütundan ikiye bölünür
+single = float(np.median([a for a in ndi.sum(fg, lab2, range(1, n2 + 1)) if a > 12000]))
+nxt = lab2.max() + 1
+for k, s in enumerate(ndi.find_objects(lab2), 1):
+    m = lab2 == k; ar = int(m.sum())
+    if ar > 1.6 * single:
+        parts = int(round(ar / single)); x0, x1 = s[1].start, s[1].stop; occ = m.sum(0); cuts = [x0]
+        for j in range(1, parts):
+            g = x0 + (x1 - x0) * j / parts; lo, hi = int(g - 30), int(g + 30); cuts.append(min(range(lo, hi), key=lambda c: occ[c - 0] if 0 <= c < len(occ) else 1e9))
+        cuts.append(x1)
+        for j in range(1, parts):
+            lab2[:, cuts[j]:cuts[j + 1] if j + 1 < len(cuts) else x1][m[:, cuts[j]:cuts[j + 1] if j + 1 < len(cuts) else x1]] = nxt; nxt += 1
 comps = []
 for k, s in enumerate(ndi.find_objects(lab2), 1):
+    if s is None: continue
     m = (lab2 == k) & fg; a = int(m.sum())
     if a < 30: continue
     comps.append((k, s, a, float(sat[m].mean()), float(mx[m].mean())))
@@ -47,6 +60,10 @@ def crop_of(c):
     k, s, a, _, _ = c; keep = (lab2 == k) & fg
     for sm in small:                                            # karaktere yakın renkli küçük parçalar (şerit/saç) eklenir; gri-beyaz küçükler (numara) atılır
         if sm[3] > 55 and ndi.binary_dilation((lab2 == k), iterations=14)[(lab2 == sm[0])].any(): keep |= (lab2 == sm[0]) & fg
+    pl, pn = ndi.label(ndi.binary_dilation(keep, iterations=2)); psz = ndi.sum(keep, pl, range(1, pn + 1)); pmain = int(np.argmax(psz)) + 1
+    for q in range(1, pn + 1):                                  # ana parça dışındaki GRİ/beyaz kırıntılar (komşu karenin kılıç ucu) atılır; kırmızı/kahverengi şerit-saç parçaları kalır
+        mq = (pl == q) & keep
+        if q != pmain and (sat[mq].mean() < 55 or mq.sum() < 12): keep &= ~mq
     keep = ndi.binary_dilation(keep, iterations=3) & (alpha > 0.01)
     ys, xs = np.where(keep); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
     sub = rgba[y0:y1, x0:x1].copy(); sub[~keep[y0:y1, x0:x1]] = 0; return Image.fromarray(sub, 'RGBA')
