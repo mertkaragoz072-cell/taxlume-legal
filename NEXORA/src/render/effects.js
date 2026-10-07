@@ -101,7 +101,8 @@ export function drawTelegraph(ctx, t) {
       ctx.fillStyle = `rgba(${fill},${0.16 + 0.2 * u})`; ctx.fillRect(Math.min(0, len), -7, Math.abs(len), 14);
     }
     ctx.beginPath(); ctx.ellipse(0, -1, t.radius, t.radius * 0.2, 0, 0, TAU);
-    ctx.fillStyle = `rgba(${fill},${0.14 + 0.2 * u})`; ctx.fill();
+    ctx.fillStyle = `rgba(${fill},${0.18 + 0.22 * u})`; ctx.fill();
+    if (!cb) { ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(40,6,6,.55)'; ctx.stroke(); }                // koyu dış çizgi: kırmızı/turuncu evrenlerde de okunur
     if (cb) { ctx.setLineDash([10, 7]); ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(30,20,0,.85)'; ctx.stroke(); }
     ctx.lineWidth = 2 + pu * 2; ctx.strokeStyle = `rgba(${edge},${0.55 + 0.4 * pu})`; ctx.stroke(); ctx.setLineDash([]);
     ctx.beginPath(); ctx.ellipse(0, -1, t.radius * u, t.radius * 0.2 * u, 0, 0, TAU); ctx.strokeStyle = 'rgba(255,230,200,.9)'; ctx.lineWidth = 2; ctx.stroke();

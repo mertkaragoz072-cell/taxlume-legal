@@ -5,6 +5,7 @@ import { state } from '../game/state.js';
 import { derived, buildLevels, upgradeValue } from '../game/PlayerStats.js';
 import { progressOf, claimDaily, shopLevel, shopBuy, skillLevel, topRuns } from '../game/Meta.js';
 import { Settings } from '../core/settings.js';
+import { chapterInfo } from '../game/chapters.js';
 import { Audio } from '../core/audio.js';
 import { errorCount, errorText, clearErrors } from '../core/errorlog.js';
 import { restartTutorial, tutorialActive } from './Tutorial.js';
@@ -25,7 +26,7 @@ function statsHtml() {
 }
 function runsHtml() {
   const r = topRuns(); if (!r.length) return '';
-  return '<h4>🏆 REKORLAR</h4>' + r.map((x, i) => `<div class="ip-item"><b>#${i + 1}</b><div class="t">${x.score} puan<small>Bölüm ${x.stage}-${x.wave} · ${x.kills} düşman · ${x.bosses} boss · ${x.day}</small></div></div>`).join('');
+  return '<h4>🏆 REKORLAR</h4>' + r.map((x, i) => `<div class="ip-item"><b>#${i + 1}</b><div class="t">${x.score} puan<small>${chapterInfo(x.stage).short} · W${x.wave} · ${x.kills} düşman · ${x.bosses} boss · ${x.day}</small></div></div>`).join('');
 }
 
 function questsHtml() {
