@@ -53,3 +53,15 @@ export const visible = (a) => {
 };
 
 export function outlined(ctx, lw = 3) { ctx.lineWidth = lw; ctx.strokeStyle = outline(); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke(); }
+
+// Statik tam ekran katman önbelleği (gökyüzü gradyanı, güneş, sahne derecelendirmesi, zemin sisi): key değişmedikçe bir kez çizilir, sonra tek drawImage ile basılır.
+// Yazılım çizimli/yavaş cihazlarda tam ekran gradyanlar karenin büyük kısmını yiyordu. fn(g, w, h) CSS birimlerinde çizer (g dpr ile ölçeklidir).
+export function makeLayer() {
+  let cv = null, k = '';
+  return (ctx, key, fn) => {
+    const w = View.w, h = View.h, d = View.dpr, kk = `${key}|${w}x${h}@${d}`;
+    if (!cv || cv.width !== Math.round(w * d) || cv.height !== Math.round(h * d)) { cv = document.createElement('canvas'); cv.width = Math.round(w * d); cv.height = Math.round(h * d); k = ''; }
+    if (kk !== k) { k = kk; const g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h); fn(g, w, h); }
+    ctx.drawImage(cv, 0, 0, w, h);
+  };
+}

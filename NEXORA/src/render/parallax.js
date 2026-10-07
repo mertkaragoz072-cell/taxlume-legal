@@ -3,7 +3,7 @@ import { Assets } from '../core/assets.js';
 import { View } from '../core/view.js';
 import { state } from '../game/state.js';
 import { TAU } from '../core/util.js';
-import { outlined } from './draw.js';
+import { outlined, makeLayer } from './draw.js';
 import { currentTheme } from './theme.js';
 
 // ARKA PLAN KATMANLARI (uzaktan yakına). Her katman yatayda tekrarlanan bir şerittir; kayma = oyuncunun gittiği
@@ -83,6 +83,7 @@ export function drawBackground(ctx) {
   if (th && th.backdrop && Assets.get(th.backdrop.key)) { drawThemed(ctx, th, travelled, crest); return; }
   drawSky(ctx, crest);
   if (!hasSprites()) { drawLegacy(ctx, travelled, crest); return; }
+  ctx.imageSmoothingQuality = 'low';                    // uzak/sisli katmanlar: hızlı bilinear (yüksek kalite filtre yavaş cihazlarda pahalı, bu katmanlarda fark görünmez)
 
   strip(ctx, travelled, 0.009, 1700, (x0, P) => farClouds(ctx, x0, P, crest));
   for (const L of WORLD.islandLayers) {
@@ -104,6 +105,7 @@ export function drawBackground(ctx) {
   const hg = ctx.createLinearGradient(0, crest - 90 * s, 0, crest + 40 * s);
   hg.addColorStop(0, 'rgba(214,236,255,0)'); hg.addColorStop(0.7, 'rgba(214,236,255,.35)'); hg.addColorStop(1, 'rgba(214,236,255,0)');
   ctx.fillStyle = hg; ctx.fillRect(0, crest - 90 * s, View.w, 130 * s);
+  ctx.imageSmoothingQuality = 'high';
 }
 
 // Yatayda tekrarlanan şerit: period birim genişlikte, hız oyuncu mesafesiyle çarpılır.
@@ -113,15 +115,18 @@ function strip(ctx, travelled, speed, periodUnits, fn) {
   for (let x = -P - off; x < View.w + P; x += P) fn(x, P);
 }
 
+const skyLayer = makeLayer();
 function drawSky(ctx, crest) {
-  const g = ctx.createLinearGradient(0, 0, 0, crest + 30 * View.scale);
-  g.addColorStop(0, '#2a7de0'); g.addColorStop(0.45, '#58aef2'); g.addColorStop(0.8, '#a9dcfb'); g.addColorStop(1, '#d6ecff');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, View.w, View.h);
-  // büyük yumuşak güneş parıltısı
-  const sx = View.w * 0.5, sy = crest * 0.5, sr = 120 * View.scale;
-  const rg = ctx.createRadialGradient(sx, sy, sr * 0.15, sx, sy, sr * 2.2);
-  rg.addColorStop(0, 'rgba(255,250,210,.95)'); rg.addColorStop(0.35, 'rgba(255,246,190,.5)'); rg.addColorStop(1, 'rgba(255,246,190,0)');
-  ctx.fillStyle = rg; ctx.fillRect(0, 0, View.w, View.h);
+  skyLayer(ctx, 'sky' + crest.toFixed(1), (g) => {
+    const g1 = g.createLinearGradient(0, 0, 0, crest + 30 * View.scale);
+    g1.addColorStop(0, '#2a7de0'); g1.addColorStop(0.45, '#58aef2'); g1.addColorStop(0.8, '#a9dcfb'); g1.addColorStop(1, '#d6ecff');
+    g.fillStyle = g1; g.fillRect(0, 0, View.w, View.h);
+    // büyük yumuşak güneş parıltısı
+    const sx = View.w * 0.5, sy = crest * 0.5, sr = 120 * View.scale;
+    const rg = g.createRadialGradient(sx, sy, sr * 0.15, sx, sy, sr * 2.2);
+    rg.addColorStop(0, 'rgba(255,250,210,.95)'); rg.addColorStop(0.35, 'rgba(255,246,190,.5)'); rg.addColorStop(1, 'rgba(255,246,190,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, View.w, View.h);
+  });
 }
 
 // 1: uzak bulutlar — hem yavaş parallax hem zamanla sürüklenme
