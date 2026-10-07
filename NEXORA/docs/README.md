@@ -196,3 +196,10 @@ Yeni asset sayfasındaki "ZEMİN (SEAMLESS)" plakaları gezegen yüzeyi olarak �
 - Ayak hizası `camera.laneDepth` 40 (toprak yolun ortası), koşarken adım tozu (`fx.stepDust`).
 - **Faz 24b (profesyonel cila):** (1) güneşten düşen silüet gölgesi (`characters.js → castShadow`: sprite silüeti ayaktan yere yatırılır, sağa uzar; oyuncu/düşman/boss); (2) zemin atmosferik perspektifi (ufukta hafif aydınlık sis, alta doğru koyulaşma — `world.js drawTileGround`); (3) sahne renk derecelendirmesi `drawGrade` (sol üst sıcak ışık + köşe vinyeti); (4) aktör katmanı yalnız karakter bandı (heroY−340…+140 birim) için temizlenip bindirilir (performans).
 - **Faz 24c — eşit zemin yüksekliği:** kahraman/yüzey çizgisi artık ekranın üstünden yüzdeyle değil, ekranın ALTINDAN sabit birimle yerleştirilir (`camera.groundBelowUnits` = 138, `core/view.js`). Böylece yüzey çizgisi ile ekran altı arasındaki zemin her ekran oranında aynı yükseklikte (138 birim × ölçek); geniş ekranlarda önceki 0.70 ile aynı sonuç, dar/yüksek ekranlarda zemin kalınlaşıp boşluk bırakmaz.
+
+## Faz 25 — Meadowlands final kontrol (yayın adayı)
+Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada ★ zorluk katlanarak döner). Yeni dünya/tema yok.
+- **Mantık soak'u** (erkek + kadın, 5 bölüm × (5 dalga + boss), kartlar, bölüm sonu, ölüm/yeniden başla): 0 anomali, 0 konsol hatası, maks. 6 düşman / 90 parçacık / 5 yazı.
+- **Doğrulananlar:** kayıt/yükleme (seviye, güçler, dalga, coin/kristal reload sonrası aynı), boss ödülü + bölüm sonu ödülü HUD'a yansır, kart seçimi (3 farklı kart, 4 seviye, üst seviye sunumu), karakter seçimi, ölüm/Oyun Bitti → yeniden başla, bölüm tamamlandı ekranı, sonsuz zemin (±π ve 50 rad), farklı ekran oranlarında eşit zemin yüksekliği.
+- **Yeni:** 🎒 Karakter paneli (statlar + edinilen güçler) ve 📜 Görev paneli (bölüm/dalga hedefi, ilerleme); eskiden pasif "yakında" butonlardı. Açıkken oyun durur (`state.userPause`), Esc/I kısayolu.
+- Bilinen sınırlar: gerçek telefon cihaz testi yapılmadı (ortam yazılım çizimi); dekor sprite'ları yumuşatmalı çizilir (yalnız zemin nearest-neighbor); ses efektleri Web Audio sentezi (müzik yok).
