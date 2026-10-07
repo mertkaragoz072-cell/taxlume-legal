@@ -416,11 +416,11 @@
         "meadow_ground"
       ],
       "mirror": true,
-      "scale": 0.9,
+      "scale": 0.45,
       "lift": 2,
       "deep": "#4a3524"
     },
-    "sliceWidth": 8,
+    "sliceWidth": 16,
     "extend": 0
   }
 }

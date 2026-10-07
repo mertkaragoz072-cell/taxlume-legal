@@ -85,7 +85,8 @@ function drawTileGround(ctx, tg, deepColor) {
       const rel = wrapAngle(a - pa);                                  // yalnız ekrandaki dilimler
       if (rel < -View.spanLeft - 0.02 || rel > View.spanRight + 0.02) continue;
       ctx.save(); ctx.rotate(sa);
-      ctx.drawImage(img, sx * j, 0, sx, img.height, -dw * sc / 2 - 0.6, top, dw * sc + 1.2, hh);
+      const pd = 1.1 / (p.w / img.width), l = Math.max(0, sx * j - pd), r = Math.min(img.width, sx * (j + 1) + pd), k = dw / sx * sc;   // komşu dilimlerle 1.1 birim örtüşme (kaynak ve hedef orantılı → esneme yok)
+      ctx.drawImage(img, l, 0, r - l, img.height, (l - sx * (j + 0.5)) * k, top, (r - l) * k, hh);
       ctx.restore();
     }
   }
