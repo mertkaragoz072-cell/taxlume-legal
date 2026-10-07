@@ -143,24 +143,21 @@ function fogBanks(ctx, x0, P, crest) {
   for (let i = 0; i < 5; i++) {
     const img = tinted('bg_cloud_' + String((i % 6) + 1).padStart(2, '0'), 0.1); if (!img) continue;
     const k = s * (1.5 + (i % 2) * 0.5), w = img.width * k;
-    ctx.globalAlpha = 0.9;
-    ctx.drawImage(img, x0 + P * (i + 0.3) / 5 - w / 2, crest - img.height * k * 0.55, w, img.height * k);
+    ctx.globalAlpha = 0.6;
+    ctx.drawImage(img, x0 + P * (i + 0.3) / 5 - w / 2, crest - img.height * k * 0.7, w, img.height * k);
   }
   ctx.globalAlpha = 1;
 }
 
 // 5: uzak tepe siluetleri (mavi-yeşil, sisli)
 function hills(ctx, x0, P, crest, speed) {
-  const s = View.scale, base = crest - 6 * s;
-  ctx.beginPath(); ctx.moveTo(x0, View.h);
-  const n = 12;
-  for (let i = 0; i <= n; i++) {
-    const t = i / n, h = (26 + 20 * Math.sin(t * TAU * 2 + 0.6) + 12 * Math.sin(t * TAU * 5)) * s;
-    ctx.lineTo(x0 + P * t, base - h);
-  }
-  ctx.lineTo(x0 + P, View.h); ctx.closePath();
+  const s = View.scale, base = crest - 6 * s, n = 40;       // yumuşak yuvarlak tepeler (40 örnek, orta noktalardan ikinci derece eğri)
+  const hy = (t) => base - (30 + 18 * Math.sin(t * TAU * 2 + 0.6) + 9 * Math.sin(t * TAU * 5 + 1.3) + 4 * Math.sin(t * TAU * 11)) * s;
+  ctx.beginPath(); ctx.moveTo(x0, View.h); ctx.lineTo(x0, hy(0));
+  for (let i = 1; i <= n; i++) { const t0 = (i - 1) / n, t1 = i / n, xm = x0 + P * (t0 + t1) / 2, ym = (hy(t0) + hy(t1)) / 2; ctx.quadraticCurveTo(x0 + P * t0, hy(t0), xm, ym); }
+  ctx.lineTo(x0 + P, hy(1)); ctx.lineTo(x0 + P, View.h); ctx.closePath();
   const g = ctx.createLinearGradient(0, base - 60 * s, 0, base + 10 * s);
-  g.addColorStop(0, 'rgba(120,175,200,.9)'); g.addColorStop(1, 'rgba(160,205,210,.95)');
+  g.addColorStop(0, 'rgba(132,184,206,.78)'); g.addColorStop(0.5, 'rgba(150,196,210,.9)'); g.addColorStop(1, 'rgba(176,214,214,.95)');
   ctx.fillStyle = g; ctx.fill();
 }
 

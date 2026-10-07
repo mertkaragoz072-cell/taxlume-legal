@@ -174,7 +174,7 @@ html, body {
 #boss-bar .bb-hp { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(8px, 2.5vh, 11px); font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000; }
 #boss-bar .bb-name { font-size: clamp(10px, 3vh, 14px); }
 #boss-bar .bb-track { height: clamp(16px, 5vh, 22px); }
-#boss-bar .bb-name { margin-bottom: 3px; line-height: 1.1; }
+#boss-bar .bb-name { margin-bottom: 3px; line-height: 1.1; color: #fff3e0; -webkit-text-stroke: 3px #1f2a44; paint-order: stroke fill; text-shadow: 0 2px 0 #1f2a44, 0 0 8px rgba(255,60,40,.65); }
 #boss-bar .bb-hp { font-size: clamp(9px, 3vh, 12px); }
 
 /* --- Faz 9: profesyonel geliştirme kartları (parşömen + madalyon ikon + nadirlik şeridi) --- */
@@ -223,7 +223,7 @@ html, body {
 #boss-bar .bb-fill { position: relative; transition: none; }
 #boss-bar.rage .bb-fill { background: linear-gradient(#ffb25a, #e0621a); }
 #boss-bar.enrage .bb-fill { background: linear-gradient(#ff5a7a, #b0102a); animation: bbpulse .5s infinite alternate; }
-#boss-bar.rage .bb-name, #boss-bar.enrage .bb-name { color: #ffb25a; }
+#boss-bar.rage .bb-name, #boss-bar.enrage .bb-name { color: #ffd08a; }
 @keyframes bbpulse { to { filter: brightness(1.35); } }
 #banner.show.bossdead { animation-duration: 2.2s; }
 
