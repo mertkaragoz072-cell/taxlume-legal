@@ -119,6 +119,7 @@
     "visibleHeightUnits": 460,
     "heroScreenX": 0.37,
     "groundScreenY": 0.7,
+    "groundBelowUnits": 138,
     "laneDepth": 40
   },
   "parallax": [
