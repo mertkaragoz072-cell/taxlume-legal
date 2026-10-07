@@ -4,12 +4,13 @@ import { WORLD } from '../core/config.js';
 import { state } from '../game/state.js';
 import { chapterInfo } from '../game/chapters.js';
 
-let lastStage = -1, cached = null;
+let lastStage = -1, cached = null, cachedId = 'meadow';
+export const currentThemeId = () => { currentTheme(); return cachedId; };   // 'meadow' dahil (tema tanımı olmasa da)
 export function currentTheme() {
   const st = state.wave.stage;
   if (st !== lastStage) {
     lastStage = st;
-    const id = chapterInfo(st).theme, t = WORLD.themes?.[id];
+    const id = chapterInfo(st).theme; cachedId = id; const t = WORLD.themes?.[id];
     cached = t ? { id, ...t } : null;
   }
   return cached;

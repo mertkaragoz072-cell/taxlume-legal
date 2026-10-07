@@ -1390,6 +1390,133 @@
         "height": 210,
         "speed": 0.07
       }
+    },
+    "desert": {
+      "sky": [
+        "#e8884a",
+        "#f2a85c",
+        "#f8c880",
+        "#fbdfa6"
+      ],
+      "haze": [
+        250,
+        210,
+        150
+      ],
+      "sun": true,
+      "clouds": false,
+      "ground": {
+        "colors": {
+          "grassLight": "#e0b070",
+          "grass": "#c28c52",
+          "grassDark": "#7a5230"
+        },
+        "tint": null,
+        "decalAlpha": 0
+      },
+      "props": {},
+      "decor": [],
+      "backdrop": {
+        "key": "theme_desert_backdrop",
+        "height": 210,
+        "speed": 0.07
+      }
+    },
+    "volcanic": {
+      "sky": [
+        "#2a0a10",
+        "#6a1a14",
+        "#b8421c",
+        "#e8801c"
+      ],
+      "haze": [
+        190,
+        70,
+        30
+      ],
+      "sun": false,
+      "clouds": false,
+      "ground": {
+        "colors": {
+          "grassLight": "#5a3a3a",
+          "grass": "#34262c",
+          "grassDark": "#1a1216"
+        },
+        "tint": null,
+        "decalAlpha": 0
+      },
+      "props": {},
+      "decor": [],
+      "backdrop": {
+        "key": "theme_volcanic_backdrop",
+        "height": 210,
+        "speed": 0.07
+      }
     }
+  },
+  "groundTiles": {
+    "_comment": "Gezegen zemin plakaları (tools/extract_planet_ground.py). tiles: manifest 'gt_<ad>'; scale: dünya birimi/px; lift: plaka üst kenarının yüzey çizgisinin ÜSTÜNDE kalma miktarı (birim; ayaklar yüzeyin laneDepth altında → plaka üst yüzünde); deep: plakanın altındaki koyu dolgu.",
+    "meadow": {
+      "tiles": [
+        "meadow_01",
+        "meadow_02",
+        "meadow_03",
+        "meadow_04",
+        "meadow_05"
+      ],
+      "scale": 1.6,
+      "lift": 2,
+      "deep": "#373a22"
+    },
+    "forest": {
+      "tiles": [
+        "forest_01",
+        "forest_02",
+        "forest_03",
+        "forest_04",
+        "forest_05"
+      ],
+      "scale": 1.5,
+      "lift": 2,
+      "deep": "#1b1c2a"
+    },
+    "frozen": {
+      "tiles": [
+        "frozen_01",
+        "frozen_02",
+        "frozen_03",
+        "frozen_04",
+        "frozen_05"
+      ],
+      "scale": 1.45,
+      "lift": 2,
+      "deep": "#1c426d"
+    },
+    "desert": {
+      "tiles": [
+        "desert_01",
+        "desert_02",
+        "desert_03",
+        "desert_04",
+        "desert_05"
+      ],
+      "scale": 1.8,
+      "lift": 2,
+      "deep": "#4f3328"
+    },
+    "volcanic": {
+      "tiles": [
+        "volcanic_01",
+        "volcanic_02",
+        "volcanic_03",
+        "volcanic_04",
+        "volcanic_05"
+      ],
+      "scale": 1.75,
+      "lift": 2,
+      "deep": "#2d1524"
+    },
+    "sliceWidth": 8,
+    "extend": 70
   }
 }

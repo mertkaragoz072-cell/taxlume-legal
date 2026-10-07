@@ -185,3 +185,6 @@ Hafif düşmanın saldırısı bir vuruşla bölününce 1.6 sn bölünmezlik (`
 
 ## Faz 22 — Harita temaları
 Her bölüm kendi haritasını kullanır (chapters.json → theme): DARK FOREST, FROZEN PEAKS, MEADOWLANDS II, DARK FOREST II; MEADOWLANDS mevcut görünümü korur. Tema = gökyüzü renkleri + panorama arka plan şeridi + zemin tonu + o haritanın dekor sprite'ları (`src/render/theme.js`, parallax.js/world.js). Karakter, düşman, HUD, kamera aynı. 5 harita bitince başa döner ("MEADOWLANDS ★").
+
+## Faz 23 — Gezegen plaka zemini (5 gezegen)
+Yeni asset sayfasındaki "ZEMİN (SEAMLESS)" plakaları gezegen yüzeyi olarak çevreye dizildi (ayrıntı: `assets/environment/ground/README.md`). Yarıçap 1100, bölüm 4/5 → DESERT RUINS / VOLCANIC REALM temaları (sky/haze/backdrop). Eski dama/çim deseni, toprak lekeleri ve kontur artık yalnız plakası olmayan temalar için yedek. Doğrulama: 5 bölüm ekran görüntüsü, ±π dikişi, erkek+kadın, konsol hatası 0.

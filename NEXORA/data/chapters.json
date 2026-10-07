@@ -17,14 +17,14 @@
       "theme": "frozen"
     },
     {
-      "id": "meadowlands_2",
-      "name": "MEADOWLANDS II",
-      "theme": "meadow2"
+      "id": "desert_ruins",
+      "name": "DESERT RUINS",
+      "theme": "desert"
     },
     {
-      "id": "dark_forest_2",
-      "name": "DARK FOREST II",
-      "theme": "forest2"
+      "id": "volcanic_realm",
+      "name": "VOLCANIC REALM",
+      "theme": "volcanic"
     }
   ],
   "reward": {

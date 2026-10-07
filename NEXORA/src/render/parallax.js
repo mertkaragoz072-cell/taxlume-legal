@@ -67,7 +67,9 @@ function drawThemed(ctx, th, travelled, crest) {
       const flip = ((t0 + j) % 2 + 2) % 2 === 1, x = -off + j * w;
       ctx.save(); ctx.translate(flip ? x + w : x, y); if (flip) ctx.scale(-1, 1); ctx.drawImage(img, 0, 0); ctx.restore();
     }
-    ctx.fillStyle = img.floor; ctx.fillRect(0, y + img.height - 1, View.w, View.h);      // gezegenin yanlarında görünen alan: şerit altı düz zemin rengi
+    ctx.fillStyle = img.floor; ctx.fillRect(0, y + img.height - 1, View.w, View.h);      // gezegenin yanlarında görünen alan: şerit altı zemin rengi (alta doğru kararır)
+    const fg = ctx.createLinearGradient(0, y + img.height, 0, y + img.height + 220 * s); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(1, 'rgba(0,0,0,.6)');
+    ctx.fillStyle = fg; ctx.fillRect(0, y + img.height - 1, View.w, View.h);
   }
   const hg = ctx.createLinearGradient(0, crest - 70 * s, 0, crest + 40 * s);
   hg.addColorStop(0, `rgba(${hz[0]},${hz[1]},${hz[2]},0)`); hg.addColorStop(0.7, `rgba(${hz[0]},${hz[1]},${hz[2]},.38)`); hg.addColorStop(1, `rgba(${hz[0]},${hz[1]},${hz[2]},0)`);

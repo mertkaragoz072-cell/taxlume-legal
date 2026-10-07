@@ -13,3 +13,9 @@ Dünya zemini görselleri. Kaynak: `../../references/nexora_world_ground_source.
 
 - Toprak lekeleri dokuya gömülmedi (ayna döşemede zikzak oluşturuyordu); bunun yerine yüzeye rastgele **serpilir** (`data/config.json → planet.decals`: aralık, ölçek, derinlik, genişlik, opaklık). Manifest anahtarları: `ground_dirt_01…05`.
 - Sınırlar: lekeler tepeden renk eşiğiyle ayrıldığı için kenarlarında hafif sarı-yeşil halo olabilir; `dirt_patch_03` altında ince koyu bir çizgi kırıntısı var.
+
+## Gezegen plaka zemini (`tiles/`)
+Kaynak: `references/nexora_planet_sheet_source.png` (1536×1024, 5 gezegen); betik: `tools/extract_planet_ground.py`. Her gezegenden 5 "seamless" plaka: `<tema>_01..05.png` (meadow, forest, frozen, desert, volcanic; 50–220 px geniş, 43–78 px yüksek, yanlardan 5–6 px kırpılmış). Bilgi: `tiles/tiles.json`. Manifest anahtarı `gt_<ad>`.
+- Oyunda (`src/render/world.js → drawTileGround`): kalınlığı benzer plakalar tohumlu rastgele sırayla gezegen çevresine (2πR) dizilir, toplam genişlik çevreye tam oturacak ölçeklenir (iki yandan sonsuz, ±π dikişi yok). Plakalar üst kenardan hizalanır, 8 birimlik dilimlerle yüzeye teğet döndürülür (kavis), altına tema rengine doğru koyulaşan dolgu gelir. Ayaklar (`laneDepth` 14) plakanın üst yüzüne basar; `lift` plaka üstünün yüzey çizgisine göre yüksekliği.
+- Veri: `data/world_props.json → groundTiles.<tema>` (`tiles`, `scale` birim/px, `lift`, `deep`), `sliceWidth`, `extend`. Gezegen yarıçapı 2000 → **1100** (daha belirgin yuvarlak yüzey; tüm mesafeler açı×R olduğundan oynanış aynı).
+- Bölümler: 1 MEADOWLANDS (meadow), 2 DARK FOREST (forest), 3 FROZEN PEAKS (frozen), 4 DESERT RUINS (desert), 5 VOLCANIC REALM (volcanic). desert/volcanic: gökyüzü + arka plan panosu (`themes/<id>/backdrop.png`) var, dekor (props) henüz yok.
