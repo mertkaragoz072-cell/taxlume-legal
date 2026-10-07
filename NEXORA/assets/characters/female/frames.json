@@ -1,12 +1,13 @@
 {
- "_comment": "death/ klasörü: 29 kare (kullanıcı sayfası, tools/extract_heroine_death.py; '26' etiketli kare sayfada yok). fps 30. scale: ayakta kare boyu 211 px ≈ 96 birim. dx: gövdenin geriye kayışı (birim, kare başına). dust: [kare, parçacık, yayılma] yer tozu anları; shake: sarsıntı karesi. Diğer animasyonlar prosedürel.",
+ "_comment": "idle/ (30 kare, tools/extract_heroine_idle.py) ve death/ (29 kare, tools/extract_heroine_death.py) dolu; run/attack/hurt prosedürel. fps 30. scale: 0.455 birim/px ortak (ayakta ≈ 91-96 birim); tuval 340x235, pivot (170,225). dx: ölümde gövdenin geriye kayışı (birim). dust: [kare, parçacık, yayılma]; shake: sarsıntı karesi.",
  "pivot": [
   170,
   225
  ],
  "scale": 0.455,
  "fps": {
-  "death": 30
+  "death": 30,
+  "idle": 30
  },
  "dx": {
   "death": [

@@ -31,11 +31,39 @@
   "animations": {
     "idle": {
       "frames": [
-        "main"
+        "heroine_idle_01",
+        "heroine_idle_02",
+        "heroine_idle_03",
+        "heroine_idle_04",
+        "heroine_idle_05",
+        "heroine_idle_06",
+        "heroine_idle_07",
+        "heroine_idle_08",
+        "heroine_idle_09",
+        "heroine_idle_10",
+        "heroine_idle_11",
+        "heroine_idle_12",
+        "heroine_idle_13",
+        "heroine_idle_14",
+        "heroine_idle_15",
+        "heroine_idle_16",
+        "heroine_idle_17",
+        "heroine_idle_18",
+        "heroine_idle_19",
+        "heroine_idle_20",
+        "heroine_idle_21",
+        "heroine_idle_22",
+        "heroine_idle_23",
+        "heroine_idle_24",
+        "heroine_idle_25",
+        "heroine_idle_26",
+        "heroine_idle_27",
+        "heroine_idle_28",
+        "heroine_idle_29",
+        "heroine_idle_30"
       ],
-      "fps": 1,
-      "loop": true,
-      "procedural": true
+      "fps": 30,
+      "loop": true
     },
     "run": {
       "frames": [
