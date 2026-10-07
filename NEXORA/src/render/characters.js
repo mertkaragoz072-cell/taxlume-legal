@@ -88,18 +88,20 @@ function drawHeroFrames(ctx, meta, anim) {
 // Kadın savaşçı "kesme bebek" (cutout puppet) animasyonu: tek ana görsel üç katmana bölünür (arka bacak, ön bacak, gövde+saç/pelerin).
 // Koşuda bacaklar kalça etrafında kat edilen mesafeyle senkron döner/kalkar, gövde kalçadan eğilir ve sekir; saç/pelerin/eşarp
 // dalga bükmesiyle (dikey şeritler) savrulur; saldırıda ayaklar yere basık kalır, gövde kalçadan geri yaslanıp öne savrulur (hayalet izleriyle).
-const HERO_CUT = { y: 365, ext: 26, back: [130, 290], front: [300, 425], hipBack: [215, 352], hipFront: [350, 352], hip: [280, 355] };
+const HERO_CUT = { y: 365, ext: 26, back: [130, 290], front: [300, 425], hipBack: [215, 352], hipFront: [350, 352], hip: [280, 355], swordX: 385, grip: [385, 330] };
 let heroLayers = null;
 function getHeroLayers(img) {
   if (heroLayers && heroLayers.src === img) return heroLayers;
   const C = HERO_CUT, mk = () => { const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; return cv; };
-  const torso = mk(), back = mk(), front = mk(), tg = torso.getContext('2d');
-  tg.drawImage(img, 0, 0); tg.clearRect(C.back[0], C.y, C.front[1] - C.back[0], img.height - C.y);          // bacaklar gövdeden ayrılır
+  const torso = mk(), back = mk(), front = mk(), sword = mk(), tg = torso.getContext('2d');
+  const sg = sword.getContext('2d'), SR = [[C.swordX, 268, 500 - C.swordX, C.y - 268], [500, 236, img.width - 500, C.y - 236]];      // kılıç (bıçak+kabza) ayrı katman; saç telleri dışarıda
+  tg.drawImage(img, 0, 0);
+  for (const [x, y, w, h] of SR) { sg.drawImage(img, x, y, w, h, x, y, w, h); tg.clearRect(x, y, w, h); } tg.clearRect(C.back[0], C.y, C.front[1] - C.back[0], img.height - C.y);          // bacaklar gövdeden ayrılır
   for (const [cv, r] of [[back, C.back], [front, C.front]]) {
     const g = cv.getContext('2d'), y0 = C.y - C.ext;
     g.drawImage(img, r[0], y0, r[1] - r[0], img.height - y0, r[0], y0, r[1] - r[0], img.height - y0);        // üst 26 px gövde altında gizlenen binme payı
   }
-  return (heroLayers = { src: img, torso, back, front });
+  return (heroLayers = { src: img, torso, back, front, sword });
 }
 
 // Saç/pelerin dalgası: sol (arka) taraftaki sütunlar dikey şeritler halinde sinüsle kaydırılır; gövde tarafı (x>270) sabit.
@@ -116,7 +118,7 @@ function drawProceduralHero(ctx, meta, anim) {
   if (!img) return false;
   const L = getHeroLayers(img), C = HERO_CUT;
   const sc = meta.scale, T = p.animT, dur = anim.frames.length / anim.fps, u = Math.min(1, T / dur), name = p.anim, time = state.time;
-  let dx = 0, dy = 0, grot = 0, hipRot = 0, thB = 0, thF = 0, liftB = 0, liftF = 0, alpha = 1, amp = 3.2, ghost = 0;
+  let dx = 0, dy = 0, grot = 0, hipRot = 0, thB = 0, thF = 0, liftB = 0, liftF = 0, alpha = 1, amp = 3.2, ghost = 0, swordRot = 0;
   const hurtK = Math.max(0, p.hitFlash) / 0.2;
   const ease = (x) => x * x * (3 - 2 * x);
   if (name === 'idle') {
@@ -135,10 +137,11 @@ function drawProceduralHero(ctx, meta, anim) {
     hipRot = -0.3 * k; thB = 0.45 * k; thF = -0.35 * k; liftB = hop * 6; liftF = hop * 5; amp = 7 * k + 2; ghost = 0;
   } else if (name === 'death') {
     // devrilme: geri fırlar (yay), havada döner, yere çarpıp iki kez seker, yatar; bacaklar havada çırpınır
-    const t = T, A = 0.5, B = 0.74, C2 = 0.9;
-    if (t < A) { const q = t / A; dx = -78 * q; dy = -64 * Math.sin(q * Math.PI * 0.92); grot = -1.65 * (q * (2 - q)) - 0.28 * Math.sin(q * 9); hipRot = -0.25 * q; thB = 0.9 * Math.sin(q * 7); thF = -0.8 * Math.sin(q * 7 + 1); }
-    else if (t < B) { const q = (t - A) / (B - A); dx = -78 - 16 * q; dy = -22 * Math.sin(q * Math.PI); grot = -1.65 - 0.08 * q; thB = 0.3 * (1 - q); thF = -0.25 * (1 - q); }
-    else { const q = Math.min(1, (t - B) / (C2 - B)); dx = -94 - 6 * q; dy = -7 * Math.sin(q * Math.PI); grot = -1.73 + 0.05 * q; }
+    const t = T, A = 0.5, B = 0.74, C2 = 0.95, ez = (x) => x * x * (3 - 2 * x);
+    if (t < A) { const q = t / A; dx = -58 * q; dy = -60 * Math.sin(q * Math.PI * 0.92); grot = -1.8 * (q * (2 - q)) - 0.25 * Math.sin(q * 9); hipRot = -0.2 * q; thB = 0.9 * Math.sin(q * 7); thF = -0.8 * Math.sin(q * 7 + 1); }
+    else if (t < B) { const q = (t - A) / (B - A); dx = -58 - 12 * q; dy = -18 * Math.sin(q * Math.PI); grot = -1.8 - 0.1 * q; thB = 0.95 * ez(q); thF = 0.8 * ez(q); }
+    else { const q = Math.min(1, (t - B) / (C2 - B)); dx = -70 - 5 * q; dy = -5 * Math.sin(q * Math.PI) - 10 * q; grot = -1.9 + 0.05 * q; thB = 0.95 + 0.05 * q; thF = 0.8 + 0.05 * q; }
+    swordRot = Math.min(1, Math.max(0, (t - 0.12) / 0.55)) * 1.85;             // kılıç elinden savrulup yere yatar
     amp = t < A ? 8 : 1.5; alpha = 1 - Math.max(0, (T - 1.4) / 1.2) * 0.4;
   }
   if (p.invuln > 0 && Math.floor(time * 20) % 2 === 0 && !state.over) alpha *= 0.6;
@@ -161,6 +164,8 @@ function drawProceduralHero(ctx, meta, anim) {
     const body = (a, extraRot) => {
       ctx.save(); ctx.globalAlpha = alpha * a; ctx.translate((C.hip[0] - px) * sc, (C.hip[1] - py) * sc); ctx.rotate(hipRot + extraRot); ctx.translate(-(C.hip[0] - px) * sc, -(C.hip[1] - py) * sc);
       drawWarped(ctx, L.torso, px, py, sc, time, amp, name === 'run' ? 1 : 0);
+      ctx.save(); const gx = (C.grip[0] - px) * sc, gy = (C.grip[1] - py) * sc; ctx.translate(gx, gy); ctx.rotate(swordRot); ctx.translate(-gx, -gy);
+      ctx.drawImage(L.sword, -px * sc, -py * sc, L.sword.width * sc, L.sword.height * sc); ctx.restore();
       if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(L.torso, 'heroineT', '#ff5a4a'), -px * sc, -py * sc, L.torso.width * sc, L.torso.height * sc); }
       ctx.restore();
     };
