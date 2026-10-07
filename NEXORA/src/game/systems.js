@@ -2,7 +2,7 @@
 // PlayerStats.js (güçlendirme statları). Burada: otomatik ilerleme, düşman hareketi, otomatik saldırı, pickup'lar, efekt zamanlayıcıları.
 import { CONFIG, ANIMS, WAVES, HERO } from '../core/config.js';
 import { Input } from '../core/input.js';
-import { clamp, wrapAngle } from '../core/util.js';
+import { clamp, wrapAngle, frameAt } from '../core/util.js';
 import { state } from './state.js';
 import { events } from './events.js';
 import { updateSkills } from './skills.js';
@@ -32,7 +32,7 @@ function updatePlayerAnim(p, dt, atkMul) {
     if (!p.rag && HULL) startRagdoll(p, HULL);
     stepRagdoll(p, dt, CONFIG.planet.radius);
   } else if (p.anim === 'death' && ANIMS.hero?.static && dth) {         // kare tabanlı ölüm: dizlerin/gövdenin yere çarptığı karelerde toz
-    const i0 = Math.floor(prevT * dth.fps), i1 = Math.floor(p.animT * dth.fps), R = CONFIG.planet.radius;
+    const i0 = dth.durations ? frameAt(dth.durations, prevT).i : Math.floor(prevT * dth.fps), i1 = dth.durations ? frameAt(dth.durations, p.animT).i : Math.floor(p.animT * dth.fps), R = CONFIG.planet.radius;
     for (let i = i0 + 1; i <= i1; i++) {
       const dx = (dth.dx?.[Math.min(i, dth.dx.length - 1)] || 0) / R;
       if (i === 4) groundDust(p.a + dx - 0.004, 10, 90);

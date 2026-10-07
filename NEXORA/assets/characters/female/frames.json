@@ -1,7 +1,39 @@
 {
-  "_comment": "Yalnız death/ klasörü dolu (10 kare, tools/extract_heroine_death.py; bandanalı sürüm). Diğer animasyonlar prosedürel. scale: ayakta kare boyu (302 px) ≈ 96 birim. dx: ölüm karelerinde gövdenin geriye kayışı (birim).",
-  "pivot": [242, 312],
+  "_comment": "Yalnız death/ klasörü dolu (10 kare, tools/extract_heroine_death.py; bandanalı sürüm). Diğer animasyonlar prosedürel. scale: ayakta kare boyu (302 px) ≈ 96 birim. dx: ölüm karelerinde gövdenin geriye kayışı (birim). durations: ölüm karelerinin süreleri (sn): vuruş karesi biraz tutulur, düşüş hızlı, yatış yavaşlar; kareler arası %35 karışma.",
+  "pivot": [
+    242,
+    312
+  ],
   "scale": 0.318,
-  "fps": { "death": 8 },
-  "dx": { "death": [0, 0, -3, -8, -15, -22, -28, -34, -38, -40] }
+  "fps": {
+    "death": 8
+  },
+  "dx": {
+    "death": [
+      0,
+      0,
+      -3,
+      -8,
+      -15,
+      -22,
+      -28,
+      -34,
+      -38,
+      -40
+    ]
+  },
+  "durations": {
+    "death": [
+      0.07,
+      0.11,
+      0.12,
+      0.13,
+      0.12,
+      0.11,
+      0.11,
+      0.13,
+      0.15,
+      0.3
+    ]
+  }
 }

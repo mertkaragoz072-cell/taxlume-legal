@@ -82,6 +82,7 @@ for an in ANIMS:
             man['images'][key] = os.path.relpath(f, ROOT).replace(os.sep, '/')
         e = {'frames': names, 'fps': cfg.get('fps', {}).get(an, DEF_FPS[an]), 'loop': LOOP.get(an, False)}
         if cfg.get('dx', {}).get(an): e['dx'] = cfg['dx'][an]
+        if cfg.get('durations', {}).get(an): e['durations'] = cfg['durations'][an]      # kare başına süre (sn); varsa fps yerine
         if an == 'run': e['strideUnits'] = cfg.get('strideUnits', 15)
         if an == 'attack':
             e['impact'] = cfg.get('impact', 0.5); e['fx'] = cfg.get('attackFx', 'overlay')

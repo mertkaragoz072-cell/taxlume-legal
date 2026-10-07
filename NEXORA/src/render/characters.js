@@ -1,7 +1,7 @@
 import { CONFIG, ANIMS, HERO } from '../core/config.js';
 import { Assets } from '../core/assets.js';
 import { Input } from '../core/input.js';
-import { TAU, clamp } from '../core/util.js';
+import { TAU, clamp, frameAt } from '../core/util.js';
 import { state } from '../game/state.js';
 import { enemyMeta } from '../game/EnemySpawner.js';
 import { onSurface, onLane, groundShadow, outlined, outline } from './draw.js';
@@ -59,8 +59,9 @@ function drawHeroine(ctx, meta, anim) {
 // ayaklar pivotta (zemin). Dönüş/ezilme yok; sadece kare seçimi. Run karesi geçen zamana değil kat edilen mesafeye bağlı (ayak kaymaz).
 function drawHeroFrames(ctx, meta, anim) {
   const p = state.player, F = meta.framed, name = p.anim, n = anim.frames.length;
-  let i;
+  let i, xf = 0;
   if (name === 'run' && anim.strideUnits) i = Math.floor(p.stride / anim.strideUnits) % n;
+  else if (anim.durations) { const fa = frameAt(anim.durations, p.animT); i = fa.i; xf = fa.f; }
   else i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
   const key = anim.frames[i], img = Assets.get(key);
   if (!img || !F) return false;
