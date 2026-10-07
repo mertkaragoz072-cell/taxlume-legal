@@ -1,15 +1,47 @@
 {
-  "_comment": "Bölüm tanımları: ad + tema (data/world_props.json → themes; 'meadow' = mevcut varsayılan görünüm). Bölüm sırası stage 1,2,3…; liste bitince başa döner ve ad sonuna ★ eklenir. Zorluk çarpanları data/waves.json → stage.",
-  "chapters": [
+  "_comment": "Evren sistemi: her evren (world) stagesPerWorld bölümden oluşur; her bölüm 5 dalga + 1 BOSS (data/waves.json). Evrenin son bossu yenilince 'EVREN TAMAMLANDI' ekranı çıkar ve sıradaki evrene geçilir. Liste bitince başa döner (★) ve zorluk artmaya devam eder. theme = data/world_props.json → themes (özel görsel seti; tanımsız/'meadow' = mevcut Meadowlands görünümü). tint = sahne renk tonu [r,g,b,alpha] — özel evren görselleri gelene kadar evreni ayırt eden renk derecelendirmesi.",
+  "stagesPerWorld": 5,
+  "worlds": [
     {
       "id": "meadowlands",
       "name": "MEADOWLANDS",
-      "theme": "meadow"
+      "universe": "I",
+      "theme": "meadow",
+      "tint": null
+    },
+    {
+      "id": "emberfall",
+      "name": "EMBERFALL",
+      "universe": "II",
+      "theme": "meadow",
+      "tint": [
+        255,
+        96,
+        32,
+        0.2
+      ]
+    },
+    {
+      "id": "frostveil",
+      "name": "FROSTVEIL",
+      "universe": "III",
+      "theme": "meadow",
+      "tint": [
+        70,
+        170,
+        255,
+        0.22
+      ]
     }
   ],
   "reward": {
     "coins": 50,
     "gems": 1,
     "xp": 120
+  },
+  "worldReward": {
+    "coins": 400,
+    "gems": 8,
+    "xp": 600
   }
 }

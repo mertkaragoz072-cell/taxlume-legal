@@ -25,7 +25,7 @@ export function updateWaveHud() {
   const w = state.wave, boss = w.boss;
   const left = w.queue.length + state.enemies.filter((e) => !e.dead).length;
   const t = boss ? 'BOSS WAVE' : `WAVE ${w.n} / ${WAVES.wavesPerStage}`;
-  const s = `${chapterInfo(w.stage).name} · Kalan ${left}`;
+  const s = `${chapterInfo(w.stage).label} · Kalan ${left}`;
   const key = t + s; if (key === last) return; last = key;
   if (main.textContent !== t) { const bx = document.getElementById('wave-box'); bx.classList.remove('wave-pop'); void bx.offsetWidth; bx.classList.add('wave-pop'); }   // dalga değişince kısa büyüyüp küçülme
   main.textContent = t; main.classList.toggle('boss', boss); sub.textContent = s;

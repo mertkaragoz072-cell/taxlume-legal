@@ -244,3 +244,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 31 — Modern konuşma balonu
 - Öğretici kartı konuşma balonuna dönüştü: oyuncunun karakter portresi "rehber" olarak başlıkta, adım sayacı, kelime kelime beliren metin, vurgulu anahtar kelimeler, ilerleme çubuğu, modern düğmeler ve anlatılan düğmeyi gösteren kuyruk.
+
+## Faz 32 — Evrenler (5 boss = 1 evren)
+- `data/chapters.json` artık `worlds` listesi + `stagesPerWorld: 5` taşır. Her bölüm 5 dalga + 1 boss; **5. boss yenilince evren biter**: altın "EVREN TAMAMLANDI!" ekranı (bonus ödül `worldReward`), başarım "Evren Gezgini" (`stat: worlds`), ardından sıradaki evrene geçilir; ilk dalgada "✦ EVREN N · AD ✦" bandı çıkar. Evren listesi bitince başa döner (★), zorluk stage ile artmaya devam eder.
+- Evrenler: Meadowlands (I), Emberfall (II, sıcak ton), Frostveil (III, soğuk ton). Özel evren görselleri hazır olana kadar her evren `tint` ile renk derecelendirilir (soft-light + overlay, `drawGrade`); yeni evren eklemek = JSON'a bir satır, görsel seti gelince `theme` alanı doldurulur.
+- HUD/seçim ekranı/bölüm sonu metinleri "EMBERFALL · 3/5" biçimine geçti.

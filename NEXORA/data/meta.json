@@ -156,6 +156,18 @@
         "coins": 150,
         "gems": 2
       }
+    },
+    {
+      "id": "world_1",
+      "icon": "🌌",
+      "name": "Evren Gezgini",
+      "desc": "Bir evreni tamamla (5 boss)",
+      "stat": "worlds",
+      "target": 1,
+      "reward": {
+        "coins": 300,
+        "gems": 5
+      }
     }
   ],
   "dailyCount": 3,

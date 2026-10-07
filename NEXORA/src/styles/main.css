@@ -361,3 +361,9 @@ html, body {
 .tut-card[data-tail="b"] .tut-tail { bottom: -10px; left: calc(var(--tail) - 9px); border-left: 0; border-top: 0; }
 .tut-card[data-tail="t"] .tut-tail { top: -10px; left: calc(var(--tail) - 9px); border-right: 0; border-bottom: 0; }
 .tut-card.pop { animation: tutpop .32s cubic-bezier(.2,1.4,.4,1); } @keyframes tutpop { from { opacity: 0; scale: .88; } to { opacity: 1; scale: 1; } }
+
+/* Faz 32 — evren tamamlama ekranı */
+#chapter-clear.world .cc-panel { width: min(90vw, 400px); box-shadow: 0 6px 0 rgba(20,30,60,.7), inset 0 0 0 3px rgba(255,255,255,.55), 0 0 40px rgba(255,210,60,.95), 0 0 90px rgba(120,160,255,.6); }
+#chapter-clear.world .cc-ribbon { background: linear-gradient(#ffcf3f, #e0901a); text-shadow: 0 2px 0 #7a4a00; }
+#chapter-clear.world .cc-star { animation: uptitle .8s ease-out, ccspin 6s linear infinite; } @keyframes ccspin { 50% { transform: scale(1.12) rotate(6deg); } }
+#chapter-clear.world .cc-sub { font-size: clamp(14px, 4.4vh, 20px); letter-spacing: 1px; }

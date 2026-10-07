@@ -45,7 +45,7 @@ function chooseHero() {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'sel-card' + (h.id === last ? ' last' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
       const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
-      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · Bölüm ${sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1}` : 'Yeni oyun'; b.appendChild(info);
+      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · ${chapterInfo(sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1).short}` : 'Yeni oyun'; b.appendChild(info);
       const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
       if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
       b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
@@ -111,7 +111,7 @@ async function boot() {
     if (info.boss) {                                                  // boss girişi: ekran kararır, ortada BOSS WAVE / GOBLIN LORD GELİYOR!
       bi.classList.remove('hidden', 'show'); void bi.offsetWidth; bi.classList.add('show'); clearTimeout(bossIntroTimer);
       bossIntroTimer = setTimeout(() => bi.classList.add('hidden'), WAVES.bossIntroSec * 1000 + 100); Audio.play('skill2');
-    } else { bi.classList.add('hidden'); showBanner(`WAVE ${n} / 5`, '', n === 1 ? chapterInfo(info.stage).name : ''); Audio.play('click'); }
+    } else { bi.classList.add('hidden'); showBanner(`WAVE ${n} / 5`, '', n === 1 ? (chapterInfo(info.stage).isWorldStart ? `✦ EVREN ${chapterInfo(info.stage).universeNo} · ${chapterInfo(info.stage).name} ✦` : chapterInfo(info.stage).label) : ''); Audio.play('click'); }
   };
   events.onWaveComplete = (n, i) => {
     if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('levelup'); }
@@ -122,11 +122,12 @@ async function boot() {
     }
   };
   events.onChapterClear = (cleared) => {
-    const p = state.player, R = CHAPTERS.reward, xp = gainXp(R.xp * cleared); metaAdd('chapters');
+    const p = state.player, R = CHAPTERS.reward; let xp = gainXp(R.xp * cleared); metaAdd('chapters'); const ci = chapterInfo(cleared), WR = CHAPTERS.worldReward; if (ci.isWorldEnd) { metaAdd('worlds'); p.coins += WR.coins; p.gems += WR.gems; xp += gainXp(WR.xp); }
     p.coins += R.coins; p.gems += R.gems; events.onCoin?.(); events.onGem?.();
     saveNowRef?.();                                                   // ilerleme (yeni bölüm, dalga 1) + ödüller hemen kaydedilir
     Audio.play('levelup');
-    showChapterClear({ name: chapterInfo(cleared).name, rewards: { coins: R.coins, gems: R.gems, xp }, next: chapterInfo(cleared + 1).name }, () => { continueChapter(); saveNowRef?.(); });
+    const nx = chapterInfo(cleared + 1), cr = ci.isWorldEnd ? { coins: R.coins + WR.coins, gems: R.gems + WR.gems, xp } : { coins: R.coins, gems: R.gems, xp };
+    showChapterClear({ name: ci.isWorldEnd ? `Evren ${ci.universeNo} · ${ci.name}` : ci.label, rewards: cr, world: ci.isWorldEnd, next: ci.isWorldEnd ? `Yeni evren: Evren ${nx.universeNo} · ${nx.name}` : `Sıradaki bölüm: ${nx.label}` }, () => { continueChapter(); saveNowRef?.(); });
   };
   events.onBoss = (k, amount, xp) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN · +${xp} XP`); Audio.play('levelup'); } };
   events.onUpgrade = (cards, boss) => {

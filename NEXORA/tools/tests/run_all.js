@@ -124,6 +124,17 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     ok(await pg.evaluate(async () => (await import('/src/core/settings.js')).Settings.get('tutorialDone')), 'öğretici bitince işaretlenmedi'); await pg.close();
   });
 
+  await test('world_ends_after_5_bosses', async () => {
+    const pg = await page('male', '');
+    const r = await pg.evaluate(async () => {
+      const { chapterInfo } = await import('/src/game/chapters.js'), WM = await import('/src/game/WaveManager.js'), st = window.__game.state;
+      const a = chapterInfo(4), b = chapterInfo(5), c = chapterInfo(6);
+      st.wave.stage = 5; st.wave.boss = true; WM.resumeAfterUpgrade();
+      return { a: a.isWorldEnd, b: b.isWorldEnd, c: c.universeNo + ':' + c.isWorldStart, title: document.getElementById('cc-title').textContent, stage: st.wave.stage };
+    });
+    ok(!r.a && r.b && r.c === '2:true', 'evren sınırı yanlış ' + JSON.stringify(r)); ok(r.title === 'EVREN TAMAMLANDI!' && r.stage === 6, 'evren sonu ekranı/ilerleme yok ' + JSON.stringify(r)); await pg.close();
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);
