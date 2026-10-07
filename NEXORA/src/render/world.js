@@ -52,9 +52,13 @@ function getTileGround(id) {
     g.drawImage(img, 0, pad - tops[i]); return cv;
   });
   tops.pad = pad;
+  if (cfg.mirror) pieces.push(...pieces.map((cv) => { const m = document.createElement('canvas'); m.width = cv.width; m.height = cv.height; const g = m.getContext('2d'); g.translate(cv.width, 0); g.scale(-1, 1); g.drawImage(cv, 0, 0); return m; }));   // ayna kopyaları: [P,P'] ardışık dizilince birleşim yerleri simetrik → dikişsiz
   const len = TAU * CONFIG.planet.radius, list = []; let seed = 5 + id.length * 13, x = 0, last = -1;
   const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  while (x < len) {
+  if (cfg.mirror) {                                   // dönüşümlü orijinal/ayna, çift sayıda plaka
+    const n0 = pieces.length / 2, n = Math.max(2, Math.round(len / (pieces[0].width * cfg.scale) / 2) * 2);
+    for (let i = 0; i < n; i++) { const k = (Math.floor(i / 2) % n0) + ((i % 2) ? n0 : 0), w = pieces[k].width * cfg.scale; list.push({ k, x, w }); x += w; }
+  } else while (x < len) {
     let k; do { k = Math.floor(r() * pieces.length); } while (k === last && pieces.length > 1);
     const w = pieces[k].width * cfg.scale; list.push({ k, x, w }); x += w; last = k;
   }

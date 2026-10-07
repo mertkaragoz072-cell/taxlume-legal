@@ -1,54 +1,9 @@
 {
  "meadow": [
   {
-   "file": "meadow_01.png",
-   "w": 91,
-   "h": 49,
-   "bottom": [
-    80,
-    72,
-    45
-   ]
-  },
-  {
-   "file": "meadow_02.png",
-   "w": 105,
-   "h": 49,
-   "bottom": [
-    75,
-    76,
-    43
-   ]
-  },
-  {
-   "file": "meadow_03.png",
-   "w": 94,
-   "h": 48,
-   "bottom": [
-    79,
-    74,
-    43
-   ]
-  },
-  {
-   "file": "meadow_04.png",
-   "w": 221,
-   "h": 78,
-   "bottom": [
-    64,
-    95,
-    47
-   ]
-  },
-  {
-   "file": "meadow_05.png",
-   "w": 85,
-   "h": 77,
-   "bottom": [
-    77,
-    73,
-    55
-   ]
+   "file": "meadow_ground.png",
+   "w": 2172,
+   "h": 204
   }
  ]
 }

@@ -299,10 +299,6 @@
     "prop_rock_small_01": "assets/environment/props/rock_small_01.png",
     "prop_rock_small_02": "assets/environment/props/rock_small_02.png",
     "prop_signpost": "assets/environment/props/signpost.png",
-    "gt_meadow_01": "assets/environment/ground/tiles/meadow_01.png",
-    "gt_meadow_02": "assets/environment/ground/tiles/meadow_02.png",
-    "gt_meadow_03": "assets/environment/ground/tiles/meadow_03.png",
-    "gt_meadow_04": "assets/environment/ground/tiles/meadow_04.png",
-    "gt_meadow_05": "assets/environment/ground/tiles/meadow_05.png"
+    "gt_meadow_ground": "assets/environment/ground/tiles/meadow_ground.png"
   }
 }

@@ -396,15 +396,12 @@
     "_comment": "Gezegen zemin plakaları (tools/extract_planet_ground.py). tiles: manifest 'gt_<ad>'; scale: dünya birimi/px; lift: plaka üst kenarının yüzey çizgisinin ÜSTÜNDE kalma miktarı (birim; ayaklar yüzeyin laneDepth altında → plaka üst yüzünde); deep: plakanın altındaki koyu dolgu.",
     "meadow": {
       "tiles": [
-        "meadow_01",
-        "meadow_02",
-        "meadow_03",
-        "meadow_04",
-        "meadow_05"
+        "meadow_ground"
       ],
-      "scale": 1.6,
-      "lift": 2,
-      "deep": "#373a22"
+      "mirror": true,
+      "scale": 0.55,
+      "lift": 14,
+      "deep": "#4a3524"
     },
     "sliceWidth": 8,
     "extend": 70
