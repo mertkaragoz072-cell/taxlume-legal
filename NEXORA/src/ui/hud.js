@@ -30,8 +30,17 @@ function updateSkillButtons() {
   }
 }
 
+let comboEl = null, comboLast = '';
+function updateCombo() {
+  comboEl = comboEl || document.getElementById('combo'); if (!comboEl) return;
+  const c = state.combo, n = c.n; let bonus = 0; for (const [at, v] of CONFIG.combo.tiers) if (n >= at) bonus = v;
+  const txt = n >= 3 ? `🔥 ×${n} KOMBO${bonus ? ` · +%${Math.round(bonus * 100)}` : ''}` : '';
+  if (txt !== comboLast) { comboLast = txt; comboEl.textContent = txt; comboEl.classList.toggle('on', !!txt); if (txt) { comboEl.classList.remove('bump'); void comboEl.offsetWidth; comboEl.classList.add('bump'); } }
+  comboEl.style.setProperty('--t', Math.max(0, c.t / CONFIG.combo.window).toFixed(2));
+}
+
 export function updateHud() {
-  updateSkillButtons();
+  updateSkillButtons(); updateCombo();
   const p = state.player;
   el['hud-level'].textContent = p.level;
   el['hp-fill'].style.width = (p.hp / p.maxHp * 100) + '%';

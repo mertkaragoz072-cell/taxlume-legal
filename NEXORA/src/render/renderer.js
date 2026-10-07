@@ -2,7 +2,9 @@ import { View } from '../core/view.js';
 import { rand } from '../core/util.js';
 import { state } from '../game/state.js';
 import { visible, groundBounce } from './draw.js';
+import { shakeScale } from '../core/settings.js';
 import { drawSky, drawPlanet, drawForeground, drawGrade } from './world.js';
+import { drawChests, drawLowHp } from './effects.js';
 import { drawPlayer, drawEnemy } from './characters.js';
 import { drawCoin, drawSlash, drawText, drawHitFx, drawSkillFx, drawRing, drawTelegraph, drawParticles, drawHurtFlash } from './effects.js';
 
@@ -19,12 +21,13 @@ export function render(ctx) {
   ctx.setTransform(View.dpr, 0, 0, View.dpr, 0, 0);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';    // resize sonrası canvas durumu sıfırlanır; her karede garanti et
   ctx.save();
-  const q = (v) => Math.round(v * View.dpr) / View.dpr, sh = state.shake > 0 ? [q(rand(-state.shake, state.shake) * 0.5), q(rand(-state.shake, state.shake) * 0.5)] : [0, 0];   // sarsıntı cihaz pikseline yuvarlanır (zemin keskin kalsın)
+  const q = (v) => Math.round(v * View.dpr) / View.dpr, shk = state.shake * shakeScale(), sh = shk > 0 ? [q(rand(-shk, shk) * 0.5), q(rand(-shk, shk) * 0.5)] : [0, 0];   // sarsıntı cihaz pikseline yuvarlanır (zemin keskin kalsın)
   ctx.translate(sh[0], sh[1]);
   drawSky(ctx);
   drawPlanet(ctx);
   for (const t of state.telegraphs) if (visible(t.a)) drawTelegraph(ctx, t);
   for (const c of state.coins) if (visible(c.a)) drawCoin(ctx, c);
+  drawChests(ctx);
   // aynı şeritte: sağdakiler (uzak) önce, yakındakiler üstüne çizilir
   const lc = actorsLayer(), lg = lc.g;
   const by0 = Math.max(0, Math.floor(View.heroY - 340 * View.scale)), bh = Math.min(View.h, Math.ceil(View.heroY + 140 * View.scale)) - by0;   // yalnız aktörlerin bulunduğu yatay bant temizlenir/bindirilir (performans)
@@ -42,5 +45,6 @@ export function render(ctx) {
   drawGrade(ctx);
   for (const t of state.texts) if (visible(t.a)) drawText(ctx, t);
   ctx.restore();
+  drawLowHp(ctx);
   if (state.hurtFlash > 0) drawHurtFlash(ctx, View.w, View.h, state.hurtFlash / 0.28);
 }

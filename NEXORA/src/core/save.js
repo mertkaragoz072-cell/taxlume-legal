@@ -12,7 +12,7 @@ import { restoreCards, serializeCards } from '../game/CardSystem.js';
 // eski sürüm yükleyince migrate() ile yükseltilir, bozuk kayıt yedeklenip (nexora_save_corrupt) temiz başlanır.
 const KEY = 'nexora_save_v1', BACKUP_KEY = 'nexora_save_corrupt', VERSION = 2;
 const fresh = () => ({ v: VERSION, lastHero: null, heroes: {}, meta: freshMeta() });
-export const freshMeta = () => ({ ach: {}, stats: { kills: 0, bosses: 0, deaths: 0, coins: 0, crits: 0, chapters: 0 }, daily: { day: '', goals: [], claimed: [] }, shop: { owned: {}, spent: 0 } });
+export const freshMeta = () => ({ runs: [], ach: {}, stats: { kills: 0, bosses: 0, deaths: 0, coins: 0, crits: 0, chapters: 0 }, daily: { day: '', goals: [], claimed: [] }, shop: { owned: {}, spent: 0 } });
 const MIGRATIONS = {                                   // from → to (sırayla uygulanır)
   1: (d) => { d.meta = freshMeta(); d.v = 2; return d; },
 };

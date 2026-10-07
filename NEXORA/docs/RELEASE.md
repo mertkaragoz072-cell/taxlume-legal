@@ -29,6 +29,6 @@ npx cap open android     # Android Studio: imzala (keystore), AAB üret
 
 ## Bilinen eksikler (yayın öncesi bakılmalı)
 - Gerçek cihaz testi yapılmadı (bu ortamda yazılım çizim); kare süresi telefonda ölçülmeli (`?fps` göstergesi yok → Chrome DevTools Performance).
-- Müzik ve ses mikseri yok (yalnızca sentez efektler) — ayrıca ele alınacak.
+- Ses: tüm efektler VE müzik Web Audio ile üretiliyor (harici dosya yok; Ayarlar'da müzik/efekt ayrı kapatılır). Gerçek müzik dosyası/profesyonel ses tasarımı ayrıca ele alınacak (teknik madde 2).
 - Kadın karakter koşu/saldırı/hasar çizim kareleri yok (prosedürel); erkek portre düşük çözünürlük.
 - Tek dünya (Meadowlands); bölümler ★ zorlukla döner.

@@ -2,6 +2,7 @@
 // Tarayıcılar sesi ilk kullanıcı dokunuşuna kadar kilitler; Audio.unlock() ilk dokunuşta çağrılır.
 // Ses açık/kapalı (gear düğmesi / M) kaydedilir. Yeni ses = SFX tablosuna fonksiyon eklemek.
 const LS = 'nexora_sound';
+let musicOn = true, sfxOn = true;
 let ctx = null, master = null, musicGain = null, sfxGain = null, noiseBuf = null, muted = false, musicTimer = null, step = 0, lastAt = {};
 try { muted = localStorage.getItem(LS) === 'off'; } catch (_) { /* yoksay */ }
 
@@ -9,8 +10,8 @@ function ensure() {
   if (ctx) return ctx;
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
   ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(ctx.destination);
-  sfxGain = ctx.createGain(); sfxGain.gain.value = 0.55; sfxGain.connect(master);
-  musicGain = ctx.createGain(); musicGain.gain.value = 0.16; musicGain.connect(master);
+  sfxGain = ctx.createGain(); sfxGain.gain.value = sfxOn ? 0.55 : 0; sfxGain.connect(master);
+  musicGain = ctx.createGain(); musicGain.gain.value = musicOn ? 0.16 : 0; musicGain.connect(master);
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
   const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   return ctx;
@@ -34,6 +35,7 @@ const SFX = {
   slash: () => { noise(0.14, 1800, 500, 0.32, 0, 0.8); tone('triangle', 520, 260, 0.1, 0.12); },
   hit: () => { tone('square', 180 + Math.random() * 40, 70, 0.09, 0.3); noise(0.07, 2500, 800, 0.28); },
   kill: () => { tone('sawtooth', 220, 60, 0.22, 0.28); noise(0.16, 1200, 200, 0.3); },
+  heartbeat: () => { tone('sine', 70, 45, 0.16, 0.5); tone('sine', 62, 40, 0.18, 0.4, 0.2); },
   hurt: () => { tone('sawtooth', 320, 110, 0.24, 0.32); noise(0.1, 900, 300, 0.2); },
   coin: () => { tone('sine', 988, 988, 0.07, 0.3); tone('sine', 1319, 1319, 0.14, 0.3, 0.06); },
   gem: () => { [0, 4, 7, 12].forEach((s, i) => tone('sine', N(s + 12), N(s + 12), 0.16, 0.26, i * 0.07)); },
@@ -65,6 +67,7 @@ export const Audio = {
     lastAt[name] = now; SFX[name]();
   },
   get muted() { return muted; },
+  setChannels(music, sfx) { musicOn = !!music; sfxOn = !!sfx; if (musicGain) musicGain.gain.value = musicOn ? 0.16 : 0; if (sfxGain) sfxGain.gain.value = sfxOn ? 0.55 : 0; },
   toggle() {
     muted = !muted; try { localStorage.setItem(LS, muted ? 'off' : 'on'); } catch (_) { /* yoksay */ }
     if (master) master.gain.value = muted ? 0 : 0.9;

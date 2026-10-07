@@ -13,7 +13,11 @@ import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
 import { showUpgrade } from './ui/UpgradeCard.js';
 import { showChapterClear } from './ui/ChapterClear.js';
 import { initInfoPanel } from './ui/InfoPanel.js';
-import { initMeta, add as metaAdd, setMax as metaMax } from './game/Meta.js';
+import { initMeta, add as metaAdd, setMax as metaMax, recordRun } from './game/Meta.js';
+import { Settings, haptic } from './core/settings.js';
+import { initErrorLog } from './core/errorlog.js';
+import { startTutorial, tutorialDodgeUsed } from './ui/Tutorial.js';
+import { maybeSpawnChest } from './game/Chests.js';
 import { chapterInfo } from './game/chapters.js';
 import { startWave, resumeAfterUpgrade, isBossWave, continueChapter } from './game/WaveManager.js';
 import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
@@ -69,7 +73,7 @@ async function boot() {
   }
   await Assets.load(manifest.images);
   Save.load();
-  initMeta();
+  initMeta(); Settings.apply();
 
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   initHud();
@@ -93,20 +97,30 @@ async function boot() {
   syncSound();
   events.onSlash = () => Audio.play('slash');
   events.onHit = () => Audio.play('hit');
-  events.onKill = () => Audio.play('kill');
-  events.onHurt = () => Audio.play('hurt');
+  events.onKill = (en) => { Audio.play('kill'); if (en?.def?.boss) haptic([80, 40, 80]); };
+  events.onHurt = () => { Audio.play('hurt'); haptic(45); };
   events.onSkill = (id) => Audio.play(id);
-  events.onDodge = (perfect) => Audio.play(perfect ? 'levelup' : 'click');
+  events.onDodge = (perfect) => { Audio.play(perfect ? 'levelup' : 'click'); haptic(perfect ? [25, 30, 25] : 12); tutorialDodgeUsed(); };
+  events.onCrit = () => haptic(10);
+  events.onChest = () => { Audio.play('gem'); haptic(30); };
   const showOver = showGameOver;
   let bossIntroTimer = 0;
   events.onWaveStart = (n, info) => {
+    state.hitsWave = 0; maybeSpawnChest(info.boss); if (n === 1 && info.stage === 1) startTutorial();
     const bi = document.getElementById('boss-intro');
     if (info.boss) {                                                  // boss girişi: ekran kararır, ortada BOSS WAVE / GOBLIN LORD GELİYOR!
       bi.classList.remove('hidden', 'show'); void bi.offsetWidth; bi.classList.add('show'); clearTimeout(bossIntroTimer);
       bossIntroTimer = setTimeout(() => bi.classList.add('hidden'), WAVES.bossIntroSec * 1000 + 100); Audio.play('skill2');
     } else { bi.classList.add('hidden'); showBanner(`WAVE ${n} / 5`, '', n === 1 ? chapterInfo(info.stage).name : ''); Audio.play('click'); }
   };
-  events.onWaveComplete = (n, i) => { if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('levelup'); } };
+  events.onWaveComplete = (n, i) => {
+    if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('levelup'); }
+    if (state.hitsWave === 0 && !state.over) {                                  // KUSURSUZ: dalga boyunca hiç hasar alınmadı
+      const F = CONFIG.flawless, p = state.player, coins = (i?.boss ? F.bossBase : F.base) + F.perStage * i.stage, gems = i?.boss ? F.bossGems : 0;
+      p.coins += coins; p.gems += gems; metaAdd('flawless'); events.onCoin?.(); if (gems) events.onGem?.();
+      addText(p.a, 165, `KUSURSUZ! +${coins} COIN${gems ? ` +${gems} 💎` : ''}`, '#7dffb0', 1.1, false, { life: 1.6, rise: 24, key: 'flawless' });
+    }
+  };
   events.onChapterClear = (cleared) => {
     const p = state.player, R = CHAPTERS.reward, xp = gainXp(R.xp * cleared); metaAdd('chapters');
     p.coins += R.coins; p.gems += R.gems; events.onCoin?.(); events.onGem?.();
@@ -125,10 +139,10 @@ async function boot() {
       updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
     });
   };
-  events.onGameOver = (st) => { Audio.play('gameover'); setTimeout(() => { if (state.over) showOver(st); }, 1400); };   // düşme animasyonu görünsün diye panel gecikmeli
+  events.onGameOver = (st) => { Audio.play('gameover'); haptic([120, 60, 120]); const rr = recordRun({ kills: state.kills, bosses: state.runBosses, stage: state.wave.stage, wave: state.wave.n }); const gs = document.getElementById('go-score'); if (gs && rr) gs.textContent = `Skor ${rr.score}  ·  ${rr.isBest ? '🏆 YENİ REKOR!' : 'En iyi ' + rr.best}`; setTimeout(() => { if (state.over) showOver(st); }, 1400); };   // düşme animasyonu görünsün diye panel gecikmeli
   events.onCoin = () => { pulse('pill-coin'); Audio.play('coin'); };
   events.onGem = () => { pulse('pill-gem'); Audio.play('gem'); };
-  events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); Audio.play('levelup'); };
+  events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); Audio.play('levelup'); haptic([40, 30, 40]); };
   document.getElementById('restart-btn').addEventListener('click', restart);
   addEventListener('keydown', (e) => { if (state.over && (e.code === 'Enter' || e.code === 'Space')) restart(); });
   restart();
@@ -153,6 +167,11 @@ async function boot() {
     const avg = slowSum / slowN; slowSum = 0; slowN = 0;
     if (avg > 26 && View.dprCap > 1.25 && View.dpr > 1.25) { View.dprCap = Math.max(1.25, View.dprCap - 0.5); View.resize(canvas); }
   }
+  let lowT = 0;
+  function lowHpTick(dt) {                                         // can düşük: kalp atışı sesi + hafif titreşim
+    const p = state.player; if (state.over || state.paused || p.hp / p.maxHp > CONFIG.lowHp.frac) { lowT = 0; return; }
+    if ((lowT -= dt) <= 0) { lowT = 0.95; Audio.play('heartbeat'); haptic(20); }
+  }
   let last = performance.now();
   function frame(now) {
     const raw = now - last; let dt = Math.min(raw / 1000, 0.05); // sekme dönüşünde sıçramayı önle
@@ -162,6 +181,7 @@ async function boot() {
     if (window.innerHeight > window.innerWidth) { requestAnimationFrame(frame); return; }   // dikeyde duraklat (yatay uyarısı gösterilir)
     Input.update();
     update(dt);
+    lowHpTick(dt);
     updateHud();
     updateWaveHud();
     updateBuffs();
@@ -173,4 +193,5 @@ async function boot() {
 }
 // Çevrimdışı/PWA: service worker (CSP satır içi scripti engellediği için burada; test için ?hq=1 veya ?nosw ile kapalı)
 if ('serviceWorker' in navigator && !/[?&](hq|nosw)\b/.test(location.search) && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+initErrorLog();
 boot();

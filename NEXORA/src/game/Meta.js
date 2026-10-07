@@ -42,6 +42,7 @@ export function claimDaily(id) {
 }
 
 // Mağaza: kalıcı güçlendirmeler (hesap geneli seviye), cüzdan = aktif kahraman. Statlar PlayerStats.derived içinde uygulanır.
+export const skillLevel = (id) => (M()?.shop.owned[id] || 0);
 export const shopLevel = (id) => (M()?.shop.owned[id] || 0);
 export function shopBonus() {
   const out = {}, m = M(); if (!m) return out;
@@ -49,10 +50,19 @@ export function shopBonus() {
   return out;
 }
 export function shopBuy(id) {
-  const it = META.shop.find((x) => x.id === id), m = M(), p = state.player; if (!it || !m) return { ok: false, why: 'yok' };
+  const it = META.shop.find((x) => x.id === id) || META.skills.find((x) => x.id === id), m = M(), p = state.player; if (!it || !m) return { ok: false, why: 'yok' };
   const lv = m.shop.owned[id] || 0; if (lv >= it.max) return { ok: false, why: 'maks' };
   const cost = it.cost[lv]; if ((p[it.currency] || 0) < cost) return { ok: false, why: 'yetersiz' };
   p[it.currency] -= cost; m.shop.owned[id] = lv + 1; m.shop.spent += cost;
   if (it.stat === 'maxHpMul') recalcMaxHp(p, true);
   Save.saveMeta(); return { ok: true };
 }
+
+// Skor tablosu (rekorlar): ölümde koşunun skoru kaydedilir, en iyi 5 tutulur. Skor = öldürme×10 + boss×500 + ulaşılan dalga×50.
+export function recordRun(r) {
+  const m = M(); if (!m) return null; m.runs = (m.runs || []);
+  const score = r.kills * 10 + r.bosses * 500 + ((r.stage - 1) * 5 + r.wave) * 50, entry = { score, kills: r.kills, bosses: r.bosses, stage: r.stage, wave: r.wave, day: today() };
+  m.runs.push(entry); m.runs.sort((a, b) => b.score - a.score); m.runs = m.runs.slice(0, 5); Save.saveMeta();
+  return { score, rank: m.runs.indexOf(entry) + 1, best: m.runs[0].score, isBest: m.runs[0] === entry };
+}
+export const topRuns = () => M()?.runs || [];

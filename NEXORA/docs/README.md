@@ -217,3 +217,16 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - **Test paketi:** `npm test` (`tools/tests/run_all.js`, 11 test, ≈ 30 sn) + `test:offline` + `balance`. Testler CSP hatasını (SW kaydı) yakaladı.
 - **Yayın:** `npm run build:www` → `www/` (≈ 18 MB), `capacitor.config.json`, `store/` (mağaza metni, gizlilik), `docs/RELEASE.md`.
 - **Yapılmadı (ayrı ele alınacak):** düşman çeşitliliği (oynanış 2) ve ses/müzik (teknik 2) — ikisi de "2" olduğu için atlandı.
+
+## Faz 28 — Cila ve oyuncu deneyimi turu (5. madde hariç)
+- **Kombo zinciri** (`config.json → combo`): son öldürmeden 4 sn içinde yenisi gelirse sürer; 5/10/20/40 zincirde altın+XP +%10/20/35/50; gerçek hasar zinciri bozar. HUD sağ üstte "🔥 ×N KOMBO" + süre çubuğu. **Kusursuz dalga** (`flawless`): dalgada hiç hasar alınmazsa altın (boss: +kristal).
+- **Sandık olayı** (`chest`): normal dalga başında %35 şansla önde sandık; yaklaşınca açılır (altın/kristal/can/XP). Başarım + günlük görev sayacı (`chests`).
+- **Yetenek ağacı** (`meta.json → skills`, panel YETENEK sekmesi): iki yetenek × (güç +%20, bekleme −%8, alan +%12) × 3 seviye, kristalle, kalıcı; `skills.js` uygular.
+- **Rekorlar:** her ölümde skor (öldürme×10 + boss×500 + ulaşılan dalga×50) kaydı, en iyi 5 (`Meta.recordRun`); Oyun Bitti panelinde skor/rekor, KARAKTER sekmesinde liste. (Hikâye modu ★ zorlukla sınırsız sürdüğü için ayrı "sonsuz mod" yerine rekor tablosu.)
+- **Hissiyat:** kritik vuruşta mini donma + titreşim, düşük can (≤%30) kırmızı nabız vinyeti + kalp atışı sesi + titreşim, ekran sarsıntısı ayarı.
+- **Öğretici** (`ui/Tutorial.js`): ilk oyunda 4 ipucu (otomatik savaş → kaçınma → yetenekler → çanta), dokunarak geçilir, Ayarlar'dan tekrar gösterilir.
+- **Ayarlar sekmesi** (`core/settings.js`, kalıcı): ses/müzik/efekt, titreşim, sarsıntı (yok/az/tam), sol el düzeni, büyük düğmeler, renk körü modu (sarı kesikli uyarılar + mavi can çubuğu), düşük efekt modu (çözünürlük ≤1.5×), öğretici, hata günlüğü.
+- **Haptik:** `navigator.vibrate` — hasar, kritik, boss ölümü, seviye, kaçınma, sandık, ölüm (titreşim ayarıyla kapanır; iOS Safari desteklemez).
+- **Hata günlüğü** (`core/errorlog.js`): yakalanmamış hata/promise son 20 kayıt, Ayarlar'dan panoya kopyala.
+- **Düzeltme:** ses sistemi zaten prosedürel müzik içeriyor (önceki notlarda "müzik yok" yazıyordu, yanlıştı).
+- Testler: 14/14 (`combo_chest_flawless_runs`, `settings_panel_and_accessibility`, `tutorial_shows_once` eklendi).

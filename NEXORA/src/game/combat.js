@@ -61,7 +61,7 @@ export const slowMul = (en) => (en.chill ? en.chill.mul : 1);
 export function applyKnock(en, k) { en.knock = Math.max(en.knock, k * (1 - en.def.knockResist)); en.stagger = Math.max(en.stagger, 0.3); }
 
 export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
-  if (crit && !dot) metaAdd('crits');
+  if (crit && !dot) { metaAdd('crits'); events.onCrit?.(); hitStop(0.04); }
   if (en.def.boss && en.sp?.phase === 'recover') dmg *= WAVES.boss.recoverDamageMul || 1;     // saldırı sonrası savunmasız bekleme
   en.hp -= dmg;
   if (dot) {
@@ -84,15 +84,17 @@ function spawnPickup(a, kind, h, spreadV) {
   state.coins.push({ a, h, vh: rand(0.6, 1.2) * CONFIG.loot.coinPopSpeed * spreadV, va: rand(-1, 1) * 0.3, value: 1, magnet: false, grounded: false, spin: rand(0, TAU), kind });
 }
 
+const comboBonus = (n) => { let b = 0; for (const [at, v] of CONFIG.combo.tiers) if (n >= at) b = v; return b; };
 export function killEnemy(en) {
   if (en.dead || en.rewarded) return; en.rewarded = true;          // ödül yalnız bir kez
-  en.dead = true; en.deathT = 0; state.kills++; metaAdd('kills'); if (en.def.boss) metaAdd('bosses');
-  let n = Math.round(rand(en.def.coins[0], en.def.coins[1]));
+  en.dead = true; en.deathT = 0; state.kills++; metaAdd('kills'); if (en.def.boss) { metaAdd('bosses'); state.runBosses++; }
+  const cb = state.combo; cb.n++; cb.t = CONFIG.combo.window; cb.best = Math.max(cb.best, cb.n); metaMax('combo', cb.n); const cbn = comboBonus(cb.n);     // öldürme zinciri → altın/XP bonusu
+  let n = Math.round(rand(en.def.coins[0], en.def.coins[1]) * (1 + cbn));
   if (Math.random() < derived(state.player).extraCoin) n += 1 + (en.def.elite ? 2 : 0);
   for (let i = 0; i < n; i++) spawnPickup(en.a, 'coin', 14, 1);
   const gems = en.def.gems ? Math.round(rand(en.def.gems[0], en.def.gems[1])) : (Math.random() < (en.def.gemChance || 0) ? 1 : 0);
   for (let i = 0; i < gems; i++) spawnPickup(en.a, 'gem', 18, 1.1);
-  const xp = gainXp(en.def.xp); state.lastXp = xp;
+  const xp = gainXp(en.def.xp * (1 + cbn)); state.lastXp = xp;
   addText(en.a, en.def.heightUnits + 34, '+' + xp + ' XP', '#7ee7ff', 0.7, false, { life: 1.2, rise: 28 });
   events.onKill?.(en);
   deathBurst(en.a, en.def.heightUnits * 0.4, !!en.def.boss);
@@ -156,6 +158,7 @@ export function hurtPlayer(dmg) {
     return;
   }
   if (p.invuln > 0 || state.over) return;
+  state.combo.n = 0; state.hitsWave++;                              // gerçek hasar: kombo zinciri ve 'kusursuz dalga' bozulur
   const S = derived(p);
   dmg = Math.max(1, dmg / (1 + S.defense) * (1 - S.dmgTaken));
   dmg = Math.min(dmg, p.maxHp * CONFIG.player.maxHitFrac);          // tek vuruş maksimum canın %35'inden fazlasını almaz

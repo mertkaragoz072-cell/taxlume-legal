@@ -11,6 +11,7 @@ import { updateBoss } from './boss.js';
 import { enemyMeta } from './EnemySpawner.js';
 import { derived } from './PlayerStats.js';
 import { stepDust, groundDust } from './fx.js';
+import { updateChests } from './Chests.js';
 import { HULL, startRagdoll, stepRagdoll } from './ragdoll.js';
 import { updateParticles } from './fx.js';
 import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
@@ -82,6 +83,8 @@ export function update(dt) {
     p.lean += (ax * 0.12 - p.lean) * Math.min(1, dt * 10);
     if (S.regen > 0 && p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + S.regen * dt);     // can yenileme
   }
+  if (state.combo.n > 0 && (state.combo.t -= dt) <= 0) state.combo.n = 0;
+  updateChests(dt);
   // Manuel kaçınma (Input.dodgeQueued): kısa geri sıçrama, süresince dokunulmaz (combat.hurtPlayer → mükemmel kaçınma)
   const D = C.dodge;
   p.dodgeCd = Math.max(0, p.dodgeCd - dt);

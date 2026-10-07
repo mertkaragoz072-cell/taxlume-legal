@@ -152,5 +152,68 @@
     "cooldown": 1.7,
     "perfectSlow": 0.5,
     "perfectXp": 6
+  },
+  "combo": {
+    "_comment": "Öldürme zinciri: son öldürmeden sonra window sn içinde yeni kill gelirse zincir sürer; hasar alınca (mükemmel kaçınma hariç) sıfırlanır. tiers: [zincir≥, altın/XP bonusu].",
+    "window": 4.0,
+    "tiers": [
+      [
+        5,
+        0.1
+      ],
+      [
+        10,
+        0.2
+      ],
+      [
+        20,
+        0.35
+      ],
+      [
+        40,
+        0.5
+      ]
+    ]
+  },
+  "flawless": {
+    "_comment": "Hasarsız dalga ödülü: o dalgada hiç hasar alınmadıysa altın = base + perStage × bölüm.",
+    "base": 15,
+    "perStage": 5,
+    "bossBase": 60,
+    "bossGems": 1
+  },
+  "chest": {
+    "_comment": "Rastgele sandık olayı: normal dalga başında şans; kahraman önüne doğru koşarken toplar. Ödül ağırlıkları.",
+    "chance": 0.35,
+    "ahead": 260,
+    "touch": 55,
+    "rewards": [
+      {
+        "id": "coins",
+        "w": 50,
+        "min": 45,
+        "max": 90
+      },
+      {
+        "id": "gems",
+        "w": 18,
+        "min": 1,
+        "max": 2
+      },
+      {
+        "id": "heal",
+        "w": 22,
+        "frac": 0.3
+      },
+      {
+        "id": "xp",
+        "w": 10,
+        "amount": 30
+      }
+    ]
+  },
+  "lowHp": {
+    "_comment": "Can düşük uyarısı: can oranı ≤ frac iken kırmızı nabız + kalp atışı sesi + titreşim.",
+    "frac": 0.3
   }
 }

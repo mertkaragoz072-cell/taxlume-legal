@@ -89,6 +89,39 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     }); ok(Object.values(r).every(Boolean), JSON.stringify(r)); await pg.close();
   });
 
+  await test('combo_chest_flawless_runs', async () => {
+    const pg = await page(); const r = await pg.evaluate(async () => {
+      const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'), CH = await import('/src/game/Chests.js'), M = await import('/src/game/Meta.js'), S = await import('/src/core/save.js'), { CONFIG } = await import('/src/core/config.js'), out = {};
+      st.enemies.length = 0; st.wave.phase = 'x'; let coins0 = 0;
+      for (let i = 0; i < 6; i++) { g.spawnEnemy('goblin_scout'); c.damageEnemy(st.enemies[st.enemies.length - 1], 1e6); } out.comboN = st.combo.n === 6; out.comboBest = st.combo.best >= 6;
+      p.invuln = 0; c.hurtPlayer(5); out.comboReset = st.combo.n === 0; out.hitsWave = st.hitsWave === 1;
+      st.combo.n = 3; st.combo.t = 0.05; for (let i = 0; i < 10; i++) g.update(1 / 60); out.comboExpire = st.combo.n === 0;
+      CONFIG.chest.chance = 1; CH.maybeSpawnChest(false); out.chestSpawn = st.chests.length === 1; p.a = st.chests[0].a; coins0 = p.coins + p.gems * 1000 + p.xp; g.update(1 / 60); out.chestOpen = st.chests.length === 0 && (p.coins + p.gems * 1000 + p.xp + p.hp) !== 0;
+      CH.maybeSpawnChest(true); out.bossNoChest = st.chests.length === 0;
+      const r1 = M.recordRun({ kills: 30, bosses: 1, stage: 2, wave: 3 }); out.run = r1.score === 30 * 10 + 500 + 8 * 50 && r1.isBest; M.recordRun({ kills: 1, bosses: 0, stage: 1, wave: 1 }); out.runsSorted = S.Save.meta().runs[0].score === r1.score;
+      p.gems = 100; const cd0 = (await import('/src/core/config.js')).SKILLS.skill1.cooldown; out.skillBuy = M.shopBuy('k1_cd').ok && M.skillLevel('k1_cd') === 1; return out;
+    }); ok(Object.values(r).every(Boolean), JSON.stringify(r)); ok(pg.errs.length === 0, pg.errs[0]); await pg.close();
+  });
+
+  await test('settings_panel_and_accessibility', async () => {
+    const pg = await page(); await pg.evaluate(() => { window.requestAnimationFrame = () => 0; });
+    await pg.evaluate(async () => { const { Settings } = await import('/src/core/settings.js'); Settings.set('lefty', true); Settings.set('bigButtons', true); Settings.set('colorblind', true); Settings.set('shake', 0.5); });
+    const r = await pg.evaluate(() => { const g = document.getElementById('game').classList; return { lefty: g.contains('lefty'), big: g.contains('big'), cb: g.contains('cb'), saved: JSON.parse(localStorage.getItem('nexora_settings_v1')).shake === 0.5 }; });
+    ok(r.lefty && r.big && r.cb && r.saved, JSON.stringify(r));
+    await pg.click('#btn-bag'); for (const t of ['stats', 'quests', 'shop', 'skills', 'settings']) { await pg.click(`[data-tab=${t}]`); const n = await pg.evaluate(() => document.getElementById('ip-body').innerText.length); ok(n > 20, 'boş sekme: ' + t); }
+    await pg.click('[data-set=vibration]'); ok(await pg.evaluate(async () => !(await import('/src/core/settings.js')).Settings.get('vibration')), 'titreşim anahtarı');
+    await pg.goto(`${base}/index.html?hq=1&nosw&hero=male`); await pg.waitForFunction(() => window.__game && window.__game.state.player);
+    ok(await pg.evaluate(() => document.getElementById('game').classList.contains('lefty')), 'ayar yeniden açılışta kalıcı değil'); ok(pg.errs.length === 0, pg.errs[0]); await pg.close();
+  });
+
+  await test('tutorial_shows_once', async () => {
+    const pg = await page('male', ''); await pg.evaluate(async () => { const { Settings } = await import('/src/core/settings.js'); Settings.set('tutorialDone', false); localStorage.removeItem('x'); });
+    await pg.goto(`${base}/index.html?hq=1&nosw&hero=male`); await pg.waitForFunction(() => window.__game && window.__game.state.player); await pg.waitForSelector('#hint:not(.hidden)', { timeout: 8000 });
+    ok(await pg.evaluate(() => document.getElementById('hint').innerText.includes('otomatik')), 'ilk ipucu yok');
+    for (let i = 0; i < 4; i++) { await pg.click('#hint', { force: true }).catch(() => {}); await pg.waitForTimeout(1700); if (await pg.evaluate(() => document.getElementById('hint').classList.contains('hidden'))) break; }
+    ok(await pg.evaluate(async () => (await import('/src/core/settings.js')).Settings.get('tutorialDone')), 'öğretici bitince işaretlenmedi'); await pg.close();
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);
