@@ -85,33 +85,84 @@ function drawHeroFrames(ctx, meta, anim) {
   return true;
 }
 
+// Kadın savaşçı "kesme bebek" (cutout puppet) animasyonu: tek ana görsel üç katmana bölünür (arka bacak, ön bacak, gövde+saç/pelerin).
+// Koşuda bacaklar kalça etrafında kat edilen mesafeyle senkron döner/kalkar, gövde kalçadan eğilir ve sekir; saç/pelerin/eşarp
+// dalga bükmesiyle (dikey şeritler) savrulur; saldırıda ayaklar yere basık kalır, gövde kalçadan geri yaslanıp öne savrulur (hayalet izleriyle).
+const HERO_CUT = { y: 365, ext: 26, back: [130, 290], front: [300, 425], hipBack: [215, 352], hipFront: [350, 352], hip: [280, 355] };
+let heroLayers = null;
+function getHeroLayers(img) {
+  if (heroLayers && heroLayers.src === img) return heroLayers;
+  const C = HERO_CUT, mk = () => { const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; return cv; };
+  const torso = mk(), back = mk(), front = mk(), tg = torso.getContext('2d');
+  tg.drawImage(img, 0, 0); tg.clearRect(C.back[0], C.y, C.front[1] - C.back[0], img.height - C.y);          // bacaklar gövdeden ayrılır
+  for (const [cv, r] of [[back, C.back], [front, C.front]]) {
+    const g = cv.getContext('2d'), y0 = C.y - C.ext;
+    g.drawImage(img, r[0], y0, r[1] - r[0], img.height - y0, r[0], y0, r[1] - r[0], img.height - y0);        // üst 26 px gövde altında gizlenen binme payı
+  }
+  return (heroLayers = { src: img, torso, back, front });
+}
+
+// Saç/pelerin dalgası: sol (arka) taraftaki sütunlar dikey şeritler halinde sinüsle kaydırılır; gövde tarafı (x>270) sabit.
+function drawWarped(ctx, cv, px, py, sc, t, amp, flow = 0) {
+  const W = cv.width, H = cv.height, S = 8;
+  for (let x = 0; x < W; x += S) {
+    const wgt = Math.min(1, Math.max(0, (275 - (x + S / 2)) / 175)), off = wgt * amp * (Math.sin(t * 7.5 - x * 0.034) + 0.35 * Math.sin(t * 12.7 - x * 0.07));
+    ctx.drawImage(cv, x, 0, S + 0.6, H, (x - px) * sc, (off - py - flow * wgt * (275 - x) * 0.05) * sc, (S + 0.6) * sc, H * sc);
+  }
+}
+
 function drawProceduralHero(ctx, meta, anim) {
   const p = state.player, img = Assets.get(meta.image);
   if (!img) return false;
-  const sc = meta.scale, T = p.animT, dur = anim.frames.length / anim.fps, u = Math.min(1, T / dur), name = p.anim;
-  let dx = 0, dy = 0, rot = 0, sx = 1, sy = 1, alpha = 1;
+  const L = getHeroLayers(img), C = HERO_CUT;
+  const sc = meta.scale, T = p.animT, dur = anim.frames.length / anim.fps, u = Math.min(1, T / dur), name = p.anim, time = state.time;
+  let dx = 0, dy = 0, grot = 0, hipRot = 0, thB = 0, thF = 0, liftB = 0, liftF = 0, alpha = 1, amp = 3.2, ghost = 0;
   const hurtK = Math.max(0, p.hitFlash) / 0.2;
-  if (name === 'idle') { const b = Math.sin(state.time * 2.6); sy = 1 + b * 0.012; sx = 1 / sy; rot = Math.sin(state.time * 1.3) * 0.008; }
-  else if (name === 'run') { const w = p.walk; dy = -Math.abs(Math.sin(w)) * 4; rot = 0.07 + Math.sin(w) * 0.025; sy = 1 + Math.sin(w * 2) * 0.035; sx = 1 / sy; }
-  else if (name === 'attack') {
-    const k = u < 0.3 ? -(u / 0.3) : (u < 0.55 ? -1 + ((u - 0.3) / 0.25) * 2.4 : 1.4 - ((u - 0.55) / 0.45) * 1.4);   // toparlan → atılır → döner
-    dx = k * 7; rot = k * 0.11; sy = 1 + (u > 0.3 && u < 0.6 ? 0.025 : 0);
-  } else if (name === 'hurt') { const k = 1 - u; dx = -9 * k; rot = -0.15 * k; sy = 1 - 0.06 * k; sx = 1 / sy; dx += Math.sin(T * 60) * 1.5 * k; }
-  else if (name === 'death') { const e = 1 - Math.pow(1 - u, 2); rot = -e * 1.5; dx = -22 * e; dy = -16 * e; alpha = 1 - Math.max(0, (T - dur) / 1.2) * 0.4; }
-  if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) alpha *= 0.6;
-  const w = img.width * sc, h = img.height * sc, px = meta.pivot[0] * sc, py = meta.pivot[1] * sc;
-  onLane(ctx, p.a, 0, p.lean * 0.4, () => {
+  const ease = (x) => x * x * (3 - 2 * x);
+  if (name === 'idle') {
+    const b = Math.sin(time * 2.6); hipRot = 0.012 + b * 0.012; dy = b * 0.9; thB = 0.03 + b * 0.01; thF = -0.02; amp = 2.6;
+  } else if (name === 'run') {
+    const ph = (p.stride / 62) * TAU, sn = Math.sin(ph), cs = Math.cos(ph);
+    thF = 0.42 * sn; thB = -0.42 * sn; liftF = Math.max(0, cs) * 7; liftB = Math.max(0, -cs) * 7;
+    dy = -Math.abs(sn) * 3.4; hipRot = 0.075 + Math.sin(ph * 2) * 0.018; amp = 5.2;
+  } else if (name === 'attack') {
+    const k = u < 0.3 ? -ease(u / 0.3) : (u < 0.55 ? -1 + ease((u - 0.3) / 0.25) * 2.35 : 1.35 - ease((u - 0.55) / 0.45) * 1.35);   // toparlan → savrulur → döner
+    hipRot = k * 0.17; dx = k * 7; thF = Math.max(0, k) * 0.16; thB = -Math.max(0, k) * 0.08; amp = 4.4;
+    if (u > 0.3 && u < 0.62) ghost = 1;
+  } else if (name === 'hurt') {
+    const k = 1 - u; dx = -9 * k + Math.sin(T * 60) * 1.4 * k; hipRot = -0.2 * k; thB = 0.1 * k; thF = -0.1 * k; amp = 5 * k + 2;
+  } else if (name === 'death') {
+    const e = 1 - Math.pow(1 - u, 2); grot = -e * 1.5; dx = -22 * e; dy = -16 * e; alpha = 1 - Math.max(0, (T - dur) / 1.2) * 0.4; amp = 1;
+  }
+  if (p.invuln > 0 && Math.floor(time * 20) % 2 === 0 && !state.over) alpha *= 0.6;
+  const px = meta.pivot[0], py = meta.pivot[1];
+  const part = (cv, key, hx, hy, rot, lift) => {                               // bir katmanı (kalça pivotuyla) döndürerek çiz
+    ctx.save(); ctx.translate((hx - px) * sc, (hy - py - lift / sc) * sc); ctx.rotate(rot);
+    ctx.drawImage(cv, -hx * sc, -hy * sc, cv.width * sc, cv.height * sc);
+    if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(cv, 'heroine' + key, '#ff5a4a'), -hx * sc, -hy * sc, cv.width * sc, cv.height * sc); ctx.globalAlpha = alpha; }
+    ctx.restore();
+  };
+  onLane(ctx, p.a, 0, p.lean * 0.3, () => {
     groundShadow(ctx, 60 * (name === 'death' ? 1.6 : 1), 0.34);
     ctx.scale(p.dir, 1);
-    if (name !== 'death') castShadow(ctx, img, 'heroine', -px, -py, w, h, p.dir);
+    if (name !== 'death') castShadow(ctx, img, 'heroine', -px * sc, -py * sc, img.width * sc, img.height * sc, p.dir);
     ctx.globalAlpha = alpha;
-    ctx.translate(dx, dy); ctx.rotate(rot); ctx.scale(sx, sy);           // ayaklar (pivot) orijinde: dönüş/ezilme ayaklardan
-    ctx.drawImage(img, -px, -py, w, h);
-    if (hurtK > 0) { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(img, 'heroine', '#ff5a4a'), -px, -py, w, h); }
-    if (name === 'attack' && u > 0.28 && u < 0.75) {                     // kılıç ucundan küçük mavi hilal
+    ctx.translate(dx, dy); ctx.rotate(grot);                                   // grup hareketi (ayaklar orijinde)
+    part(L.back, 'B', C.hipBack[0], C.hipBack[1], thB, liftB);
+    part(L.front, 'F', C.hipFront[0], C.hipFront[1], thF, liftF);
+    // gövde: kalçadan eğilir; saldırıda iki hayalet iz
+    const body = (a, extraRot) => {
+      ctx.save(); ctx.globalAlpha = alpha * a; ctx.translate((C.hip[0] - px) * sc, (C.hip[1] - py) * sc); ctx.rotate(hipRot + extraRot); ctx.translate(-(C.hip[0] - px) * sc, -(C.hip[1] - py) * sc);
+      drawWarped(ctx, L.torso, px, py, sc, time, amp, name === 'run' ? 1 : 0);
+      if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(L.torso, 'heroineT', '#ff5a4a'), -px * sc, -py * sc, L.torso.width * sc, L.torso.height * sc); }
+      ctx.restore();
+    };
+    if (ghost) { body(0.12, -0.2); body(0.2, -0.1); }
+    body(1, 0);
+    if (name === 'attack' && u > 0.28 && u < 0.75) {                           // kılıç ucundan küçük mavi hilal
       const fx = Assets.get('fx_attack_1_slash'), a = 1 - (u - 0.28) / 0.47;
       if (fx) {
-        const k = CONFIG.player.slashFxScale * 0.55, tx = (meta.swordTip[0]) * sc - px, ty = meta.swordTip[1] * sc - py;
+        const k = CONFIG.player.slashFxScale * 0.55, tx = (meta.swordTip[0]) * sc - px * sc, ty = meta.swordTip[1] * sc - py * sc;
         ctx.globalAlpha = alpha * 0.9 * a; ctx.drawImage(fx, tx - fx.width * k * 0.75, ty - fx.height * k * 0.5, fx.width * k, fx.height * k);
       }
     }
