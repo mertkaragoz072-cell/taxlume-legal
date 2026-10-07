@@ -71,26 +71,28 @@ function getTileGround(id) {
 }
 
 function drawTileGround(ctx, tg, deepColor) {
-  const { cx, cy, R } = View, sc = View.scale, Rw = CONFIG.planet.radius, pa = state.player.a;
+  const { cx, cy, R } = View, sc = View.scale, d = View.dpr, Rw = CONFIG.planet.radius, pa = state.player.a;
   ctx.beginPath(); ctx.arc(cx, cy, R + 1, 0, TAU); ctx.fillStyle = deepColor; ctx.fill();
-  const sw = WORLD.groundTiles.sliceWidth, top = -(R + (tg.cfg.lift + tg.pad * tg.cfg.scale) * sc), hh = tg.Hc * tg.cfg.scale * sc;
-  ctx.save(); ctx.translate(cx, cy);
+  // NETLİK: doku orijinal çözünürlükte, nearest-neighbor ile ve TAM SAYI büyütmeyle çizilir (1 kaynak px = N cihaz px, N = yuvarlanmış 0.9·ölçek·dpr).
+  // Dönme/bilinear yok: yüzey kavisi dar dilimlerin (4 kaynak px) dikey kaydırılmasıyla verilir; konumlar cihaz pikseline yuvarlanır.
+  const N = Math.max(1, Math.round(tg.cfg.scale * sc * d)), SL = 4, half = Math.max(View.spanLeft, View.spanRight);
+  const m = ctx.getTransform();
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, Math.round(m.e), Math.round(m.f)); ctx.imageSmoothingEnabled = false;
+  const liftDev = (tg.cfg.lift * sc) * d, padDev = tg.pad * N, hh = tg.Hc * N;
+  const X = (wx) => (cx + R * Math.sin(wx / Rw - Math.PI - pa + View.heroAngle)) * d;
   for (const p of tg.list) {
-    const ac = (p.x + p.w / 2) / Rw - Math.PI;                    // plaka merkez açısı (-π..π)
-    const hw = p.w / 2 / Rw, rel0 = wrapAngle(ac - pa);
+    const ac = (p.x + p.w / 2) / Rw - Math.PI, hw = p.w / 2 / Rw, rel0 = wrapAngle(ac - pa);
     if (rel0 < -View.spanLeft - hw || rel0 > View.spanRight + hw) continue;
-    const img = tg.pieces[p.k], n = Math.max(1, Math.round(p.w / sw)), dw = p.w / n, sx = img.width / n;
-    for (let j = 0; j < n; j++) {
-      const a = (p.x + dw * (j + 0.5)) / Rw - Math.PI, sa = a - pa + View.heroAngle;
-      const rel = wrapAngle(a - pa);                                  // yalnız ekrandaki dilimler
-      if (rel < -View.spanLeft - 0.02 || rel > View.spanRight + 0.02) continue;
-      ctx.save(); ctx.rotate(sa);
-      const pd = 1.1 / (p.w / img.width), l = Math.max(0, sx * j - pd), r = Math.min(img.width, sx * (j + 1) + pd), k = dw / sx * sc;   // komşu dilimlerle 1.1 birim örtüşme (kaynak ve hedef orantılı → esneme yok)
-      ctx.drawImage(img, l, 0, r - l, img.height, (l - sx * (j + 0.5)) * k, top, (r - l) * k, hh);
-      ctx.restore();
+    const img = tg.pieces[p.k], k = p.w / img.width;                 // dünya birimi / kaynak px
+    for (let c = 0; c < img.width; c += SL) {
+      const cw = Math.min(SL, img.width - c), w0 = p.x + c * k, w1 = p.x + (c + cw) * k, wm = (w0 + w1) / 2;
+      const rel = wrapAngle(wm / Rw - Math.PI - pa); if (rel < -View.spanLeft - 0.02 || rel > View.spanRight + 0.02) continue;
+      const sa = wm / Rw - Math.PI - pa + View.heroAngle, x0 = Math.round(X(w0)), x1 = Math.round(X(w1));
+      const y = Math.round((cy - R * Math.cos(sa)) * d - liftDev - padDev);
+      ctx.drawImage(img, c, 0, cw, img.height, x0, y, Math.max(1, x1 - x0), hh);
     }
   }
-  ctx.restore();
+  ctx.restore(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   // atmosferik perspektif: ufka yakın zemin hafif sisli/aydınlık, ekranın altına doğru koyulaşır (derinlik)
   const crest = cy - R, g = ctx.createLinearGradient(0, crest, 0, View.h);
   g.addColorStop(0, 'rgba(255,250,200,.16)'); g.addColorStop(Math.min(.2, 60 * sc / (View.h - crest)), 'rgba(255,250,200,0)');

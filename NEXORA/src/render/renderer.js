@@ -19,7 +19,7 @@ export function render(ctx) {
   ctx.setTransform(View.dpr, 0, 0, View.dpr, 0, 0);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';    // resize sonrası canvas durumu sıfırlanır; her karede garanti et
   ctx.save();
-  const sh = state.shake > 0 ? [rand(-state.shake, state.shake) * 0.5, rand(-state.shake, state.shake) * 0.5] : [0, 0];
+  const q = (v) => Math.round(v * View.dpr) / View.dpr, sh = state.shake > 0 ? [q(rand(-state.shake, state.shake) * 0.5), q(rand(-state.shake, state.shake) * 0.5)] : [0, 0];   // sarsıntı cihaz pikseline yuvarlanır (zemin keskin kalsın)
   ctx.translate(sh[0], sh[1]);
   drawSky(ctx);
   drawPlanet(ctx);
