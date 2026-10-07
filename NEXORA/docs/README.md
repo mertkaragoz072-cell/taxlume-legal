@@ -249,3 +249,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - `data/chapters.json` artık `worlds` listesi + `stagesPerWorld: 5` taşır. Her bölüm 5 dalga + 1 boss; **5. boss yenilince evren biter**: altın "EVREN TAMAMLANDI!" ekranı (bonus ödül `worldReward`), başarım "Evren Gezgini" (`stat: worlds`), ardından sıradaki evrene geçilir; ilk dalgada "✦ EVREN N · AD ✦" bandı çıkar. Evren listesi bitince başa döner (★), zorluk stage ile artmaya devam eder.
 - Evrenler: Meadowlands (I), Emberfall (II, sıcak ton), Frostveil (III, soğuk ton). Özel evren görselleri hazır olana kadar her evren `tint` ile renk derecelendirilir (soft-light + overlay, `drawGrade`); yeni evren eklemek = JSON'a bir satır, görsel seti gelince `theme` alanı doldurulur.
 - HUD/seçim ekranı/bölüm sonu metinleri "EMBERFALL · 3/5" biçimine geçti.
+
+## Faz 33 — Evren paketi hattı (assetler için hazırlık)
+- `tools/worlds.py new|check|build`: `assets/environment/worlds/<id>/` altına konan `ground.png`, `backdrop.png`, `props/<tall|mid|front|tiny>_*.png` + `world.json` → `world_props.json` (themes/groundTiles), `asset_manifest.json`, `chapters.json` otomatik üretilir; boyut/şeffaflık uyarıları verir. Tam rehber: `assets/environment/worlds/README.md`.
+- Eksik parça yedeklenir: evrenin zemini yoksa Meadowlands zemini, görseli hiç yoksa `tint` renk tonu kullanılır (hata yok). Önizleme için `?stage=N` parametresi.
+- Sentetik bir test evreniyle (kendi zemin + backdrop + dekor) uçtan uca doğrulandı, ardından silindi.

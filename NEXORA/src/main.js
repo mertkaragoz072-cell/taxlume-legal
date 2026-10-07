@@ -29,6 +29,7 @@ function restart() {
   resetState();
   Save.apply(state.player, HERO.id, state);          // kayıtlı seviye/coin/gem/güçlendirme/dalga geri yüklenir
   const cq = new URLSearchParams(location.search).get('cards'); if (cq) debugGrantAll(Math.max(1, +cq || 1));   // test: ?cards=1..5
+  const sq = new URLSearchParams(location.search).get('stage'); if (sq) { Object.assign(state.wave, { stage: Math.max(1, +sq | 0), n: 1, boss: false }); }   // önizleme: ?stage=6 → 2. evrenin 1. bölümü
   startWave();
   hideGameOver();
   updateHud(); updateBuffs(true);

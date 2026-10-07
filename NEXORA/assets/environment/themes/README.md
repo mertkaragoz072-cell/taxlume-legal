@@ -1,2 +1,2 @@
 # Harita temaları
-Şimdilik yalnız **MEADOWLANDS (yeşil dünya)** var (varsayılan görünüm, tema tanımı yok). Diğer dünyaların (forest, frozen, desert, volcanic…) assetleri silindi; yeniden eklenirken `data/world_props.json → themes.<id>` + `groundTiles.<id>` ve `data/chapters.json` kullanılır (bkz. docs/README.md Faz 22–23, `tools/extract_planet_ground.py`; kaynak sayfa `references/` altına geri konmalı).
+Evren paketleri artık `assets/environment/worlds/<id>/` altında (bkz. oradaki README ve `tools/worlds.py`). Bu klasör eski tema sistemi için ayrılmıştı; yeni evrenler worlds/ kullanır.

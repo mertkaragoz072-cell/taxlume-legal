@@ -37,7 +37,7 @@ const TILE_GROUND = {};
 function getTileGround(id) {
   if (id in TILE_GROUND) return TILE_GROUND[id];
   const cfg = WORLD.groundTiles?.[id], all = cfg && cfg.tiles.map((k) => Assets.get('gt_' + k));
-  if (!cfg || all.some((i) => !i)) return (TILE_GROUND[id] = null);
+  if (!cfg || all.some((i) => !i)) return (TILE_GROUND[id] = id === 'meadow' ? null : getTileGround('meadow'));   // evrenin kendi zemini yoksa Meadowlands zemini kullanılır
   const minH = Math.min(...all.map((i) => i.height)), imgs = all.filter((i) => i.height <= minH * 1.15);   // kalınlığı benzer plakalar (kalın olanlar alt kenarda basamak yapar)
   const ext = WORLD.groundTiles.extend;
   const rowAvg = (img, y0, n) => { const t = document.createElement('canvas'); t.width = img.width; t.height = img.height; const tg = t.getContext('2d'); tg.drawImage(img, 0, 0); const d = tg.getImageData(0, 0, img.width, img.height).data; return { d, cover: (y) => { let c = 0; for (let x = 0; x < img.width; x++) if (d[(y * img.width + x) * 4 + 3] > 128) c++; return c / img.width; } }; };

@@ -1,0 +1,37 @@
+{
+  "id": "emberfall",
+  "name": "EMBERFALL",
+  "order": 2,
+  "_notlar": "order: evren sırası (Meadowlands=1). tint: görsel yokken kullanılan renk tonu [r,g,b,alpha] — kendi görselleri tamamlanınca null yapın. sky: gökyüzü 4 renk (üst→ufuk), haze: ufuk sisi [r,g,b]. ground.scale: birim/px (meadow 0.9), lift: yürüme yüzeyi yüksekliği, deep: zemin altı dolgu rengi. backdrop.height: birim (yükseklik), speed: kayma hızı. propScale: dekor px→birim çarpanı; props.<ad> ile tek tek height(birim)/pivot([x,y] px) ezilebilir.",
+  "tint": [
+    255,
+    96,
+    32,
+    0.2
+  ],
+  "sky": [
+    "#3b86d8",
+    "#78b8ee",
+    "#bcdcf6",
+    "#e6f3fc"
+  ],
+  "haze": [
+    226,
+    240,
+    252
+  ],
+  "sun": true,
+  "clouds": true,
+  "ground": {
+    "scale": 0.9,
+    "lift": 2,
+    "deep": "#4a3524",
+    "mirror": true
+  },
+  "backdrop": {
+    "height": 210,
+    "speed": 0.07
+  },
+  "propScale": 1.0,
+  "props": {}
+}
