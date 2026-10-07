@@ -90,6 +90,25 @@ function drawTileGround(ctx, tg, deepColor) {
     }
   }
   ctx.restore();
+  // atmosferik perspektif: ufka yakın zemin hafif sisli/aydınlık, ekranın altına doğru koyulaşır (derinlik)
+  const crest = cy - R, g = ctx.createLinearGradient(0, crest, 0, View.h);
+  g.addColorStop(0, 'rgba(255,250,200,.16)'); g.addColorStop(Math.min(.2, 60 * sc / (View.h - crest)), 'rgba(255,250,200,0)');
+  g.addColorStop(0.55, 'rgba(8,22,6,0)'); g.addColorStop(1, 'rgba(8,22,6,.34)');
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip(); ctx.fillStyle = g; ctx.fillRect(0, crest, View.w, View.h - crest); ctx.restore();
+}
+
+// Sahne renk derecelendirmesi: sol üstten sıcak güneş ışığı + köşe vinyeti (tüm sahneyi tek görsel bütüne bağlar)
+let gradeKey = '', gradeA = null, gradeB = null;
+export function drawGrade(ctx) {
+  const k = View.w + 'x' + View.h;
+  if (k !== gradeKey) {
+    gradeKey = k;
+    gradeA = ctx.createLinearGradient(0, 0, View.w * 0.7, View.h * 0.9); gradeA.addColorStop(0, 'rgba(255,230,170,.13)'); gradeA.addColorStop(0.5, 'rgba(255,230,170,0)');
+    gradeB = ctx.createRadialGradient(View.w / 2, View.h * 0.55, Math.min(View.w, View.h) * 0.45, View.w / 2, View.h * 0.55, Math.max(View.w, View.h) * 0.75);
+    gradeB.addColorStop(0, 'rgba(12,22,48,0)'); gradeB.addColorStop(1, 'rgba(12,22,48,.34)');
+  }
+  ctx.fillStyle = gradeA; ctx.fillRect(0, 0, View.w, View.h);
+  ctx.fillStyle = gradeB; ctx.fillRect(0, 0, View.w, View.h);
 }
 
 export function drawPlanet(ctx) {

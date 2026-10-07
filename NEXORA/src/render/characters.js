@@ -27,6 +27,7 @@ function drawPlayerSprite(ctx) {
   onLane(ctx, p.a, 0, p.lean * 0.5, () => {
     groundShadow(ctx, 56, 0.34);                                   // ayakların altında küçük yumuşak oval
     ctx.scale(p.dir, 1);
+    if (p.anim !== 'death') castShadow(ctx, img, 'p:' + anim.frames[i], -meta.pivot[0] * meta.scale, -meta.pivot[1] * meta.scale, img.width * meta.scale, img.height * meta.scale, p.dir);
     const sc = meta.scale, hurt = Math.max(0, p.hitFlash) / 0.2, running = Math.abs(p.moveAxis) > 0 && p.anim === 'run';
     // squash/stretch: koşarken adım ritmi, saldırıda hafif uzama, hasarda ezilme (ayaklar sabit kalır)
     const sy = 1 + (running ? Math.sin(p.walk * 2) * 0.025 : 0) - hurt * 0.07 + (p.anim.startsWith('attack') ? 0.02 : 0);
@@ -68,6 +69,7 @@ function drawHeroFrames(ctx, meta, anim) {
   onLane(ctx, p.a, 0, p.lean * 0.3, () => {
     groundShadow(ctx, 56 * (name === 'death' ? 1.5 : 1), 0.34);
     ctx.scale(p.dir, 1);
+    if (name !== 'death') castShadow(ctx, img, key, -px, -py, w, h, p.dir);
     ctx.globalAlpha = alpha; ctx.drawImage(img, -px, -py, w, h);
     if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.45 * hurtK; ctx.drawImage(whiteSilhouette(img, key, '#ff5a4a'), -px, -py, w, h); }
     if (name === 'attack' && anim.fx === 'overlay') {                    // oyunun mavi hilali kılıç ucuna (kareye özel uç noktası varsa o)
@@ -101,6 +103,7 @@ function drawProceduralHero(ctx, meta, anim) {
   onLane(ctx, p.a, 0, p.lean * 0.4, () => {
     groundShadow(ctx, 60 * (name === 'death' ? 1.6 : 1), 0.34);
     ctx.scale(p.dir, 1);
+    if (name !== 'death') castShadow(ctx, img, 'heroine', -px, -py, w, h, p.dir);
     ctx.globalAlpha = alpha;
     ctx.translate(dx, dy); ctx.rotate(rot); ctx.scale(sx, sy);           // ayaklar (pivot) orijinde: dönüş/ezilme ayaklardan
     ctx.drawImage(img, -px, -py, w, h);
@@ -163,6 +166,13 @@ function whiteSilhouette(img, key, color = '#fff') {
   whiteCache.set(id, cv); return cv;
 }
 
+// Güneşten düşen gölge: sprite silüeti ayaklardan yere yatırılır (dikey çevrilip 0.2'ye ezilir, güneş solda → sağa doğru uzar).
+// Matris yerel koordinatta (ayak = orijin); sign = ekranda sağa uzama yönü düzeltmesi (yatay çevrili çizimlerde -1).
+function castShadow(ctx, img, key, x, y, w, h, sign = 1, alpha = 0.42) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.transform(1, 0, -0.62 * sign, -0.2, 0, 0);
+  ctx.drawImage(whiteSilhouette(img, key, '#0e1406'), x, y, w, h); ctx.restore();
+}
+
 // Düşman animasyonu: durum → kare. death > hurt > attack > walk. Kareler data/enemy_animations.json'dan (goblin sheet'i).
 function enemyFrame(en, meta) {
   const A = meta.anims;
@@ -200,6 +210,7 @@ export function drawEnemy(ctx, en) {
     if (sp && sp.phase === 'windup' && sp.atk === 'charge') ctx.rotate(-0.12);                          // hücum hazırlığı: geriye yaslanır
     else if (sp && sp.phase === 'dash') { ctx.rotate(0.16); ctx.translate(8, 0); }                       // hücum: öne eğik
     else if (sp && sp.phase === 'recover') ctx.translate(0, Math.sin(en.bob * 2) * 1.2);
+    if (!en.dead) castShadow(ctx, img, key, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h, meta.facing === 'right' ? en.face : -en.face, def.boss ? 0.3 : 0.34);
     ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
     if (def.boss && !en.dead) { ctx.globalAlpha = (sp && sp.phase === 'windup' ? 0.32 + 0.22 * Math.sin(state.time * 22) : 0.16 + 0.08 * Math.sin(state.time * 5)) + (sp && sp.rage ? 0.1 * sp.rage : 0); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.globalAlpha = 1; }
     if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.5; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }

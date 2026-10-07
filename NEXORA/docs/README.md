@@ -194,3 +194,4 @@ Yeni asset sayfasındaki "ZEMİN (SEAMLESS)" plakaları gezegen yüzeyi olarak �
 - `groundShadow` (draw.js): geniş yumuşak gölge (güneşe göre hafif sağa kayık) + ayakların altında koyu temas gölgesi; tabanlara oturacak şekilde ayarlı.
 - Ön plan otları (`world_props.json → decor`, layer front, depth 36–52): ayakların alt kısmını örten çim/çiçek tutamları.
 - Ayak hizası `camera.laneDepth` 40 (toprak yolun ortası), koşarken adım tozu (`fx.stepDust`).
+- **Faz 24b (profesyonel cila):** (1) güneşten düşen silüet gölgesi (`characters.js → castShadow`: sprite silüeti ayaktan yere yatırılır, sağa uzar; oyuncu/düşman/boss); (2) zemin atmosferik perspektifi (ufukta hafif aydınlık sis, alta doğru koyulaşma — `world.js drawTileGround`); (3) sahne renk derecelendirmesi `drawGrade` (sol üst sıcak ışık + köşe vinyeti); (4) aktör katmanı yalnız karakter bandı (heroY−340…+140 birim) için temizlenip bindirilir (performans).
