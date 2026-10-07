@@ -32,25 +32,39 @@ function layout() {
   const s = STEPS[i]; if (!s) return;
   const g = document.getElementById('game').getBoundingClientRect(), W = g.width, H = g.height, r = rectOf(s.target);
   const blur = root.querySelector('.tut-blur');
-  if (!r) { blur.style.clipPath = 'none'; hole.style.display = 'none'; card.style.left = '50%'; card.style.top = '50%'; card.style.transform = 'translate(-50%,-50%)'; return; }
+  if (!r) { card.dataset.tail = ''; blur.style.clipPath = 'none'; hole.style.display = 'none'; card.style.left = '50%'; card.style.top = '50%'; card.style.transform = 'translate(-50%,-50%)'; return; }
   const p = 8, x = r.x - p, y = r.y - p, w = r.w + p * 2, h = r.h + p * 2, rad = Math.min(w, h) / 2 < 40 ? Math.min(w, h) / 2 : 18;
   const hp = `M${x + rad} ${y}h${w - 2 * rad}a${rad} ${rad} 0 0 1 ${rad} ${rad}v${h - 2 * rad}a${rad} ${rad} 0 0 1 -${rad} ${rad}h-${w - 2 * rad}a${rad} ${rad} 0 0 1 -${rad} -${rad}v-${h - 2 * rad}a${rad} ${rad} 0 0 1 ${rad} -${rad}z`;
   blur.style.clipPath = `path(evenodd,"M0 0H${W}V${H}H0Z ${hp}")`;
   Object.assign(hole.style, { display: 'block', left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', borderRadius: rad + 'px' });
-  card.style.transform = 'none';
+  card.style.transform = 'none'; card.dataset.tail = '';
   const cw = Math.min(card.offsetWidth || 300, W - 20), ch = card.offsetHeight || 150, gap = 16;
   let left = x + w / 2 > W / 2 ? x - gap - cw : x + w + gap, top = y + h / 2 - ch / 2;
   if (left < 10 || left + cw > W - 10) { left = x + w / 2 - cw / 2; top = y > H / 2 ? y - gap - ch : y + h + gap; }
-  card.style.left = Math.max(10, Math.min(W - cw - 10, left)) + 'px'; card.style.top = Math.max(16, Math.min(H - ch - 10, top)) + 'px';
+  left = Math.max(10, Math.min(W - cw - 10, left)); top = Math.max(16, Math.min(H - ch - 10, top));
+  card.style.left = left + 'px'; card.style.top = top + 'px';
+  // konuşma balonu kuyruğu hedefi gösterir
+  const tcx = x + w / 2, tcy = y + h / 2, side = left + cw <= x ? 'r' : left >= x + w ? 'l' : top + ch <= y ? 'b' : 't';
+  card.dataset.tail = side;
+  const horiz = side === 'r' || side === 'l', off = horiz ? Math.max(22, Math.min(ch - 22, tcy - top)) : Math.max(22, Math.min(cw - 22, tcx - left));
+  card.style.setProperty('--tail', off + 'px');
 }
 function show() {
   const s = STEPS[i]; if (!s) return finish();
   const dots = STEPS.map((_, k) => `<i class="${k === i ? 'on' : k < i ? 'done' : ''}"></i>`).join('');
   const keys = s.keys ? `<div class="tut-keys"><span>Klavye:</span>${s.keys.map((k) => `<kbd>${k}</kbd>`).join('')}</div>` : '';
-  card.innerHTML = `<div class="tut-rib"><span>${s.ic}</span>${s.title}</div><p>${s.text}</p>${keys}<div class="tut-dots">${dots}</div>
-    <div class="tut-btns"><button type="button" data-a="skip" class="tut-skip">${s.last ? '' : 'Atla'}</button><button type="button" data-a="next" class="tut-next">${s.last ? 'OYNA ▶' : s.live ? 'Geç' : 'İleri ▶'}</button></div>`;
+  card.innerHTML = `<div class="tut-head"><canvas class="tut-av" width="72" height="72"></canvas><div class="tut-ttl"><small>${i + 1} / ${STEPS.length}</small><b>${s.title}</b></div><span class="tut-ic">${s.ic}</span></div><p></p>${keys}
+    <div class="tut-prog"><i style="width:${((i + 1) / STEPS.length) * 100}%"></i></div>
+    <div class="tut-btns"><button type="button" data-a="skip" class="tut-skip">${s.last ? '' : 'Atla'}</button><button type="button" data-a="next" class="tut-next">${s.last ? 'OYNA ▶' : s.live ? 'Geç' : 'İleri ▶'}</button></div><div class="tut-tail"></div>`;
+  words(card.querySelector('p'), s.text);
+  try { const av = document.getElementById('avatar'), c = card.querySelector('.tut-av'); if (av) c.getContext('2d').drawImage(av, 0, 0, 72, 72); } catch {}
   card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
   root.classList.toggle('live', !!s.live); state.userPause = !s.live; layout(); requestAnimationFrame(layout);
+}
+function words(el, html) {
+  const t = document.createElement('template'); t.innerHTML = html; let n = 0;
+  const walk = (node) => { for (const c of [...node.childNodes]) { if (c.nodeType === 3) { const f = document.createDocumentFragment(); for (const w of c.textContent.split(/(\s+)/)) { if (!w.trim()) { f.append(w); continue; } const sp = document.createElement('span'); sp.className = 'w'; sp.style.animationDelay = (n++ * 28) + 'ms'; sp.textContent = w; f.append(sp); } c.replaceWith(f); } else if (c.nodeType === 1) walk(c); } };
+  walk(t.content); el.append(t.content);
 }
 function next() { i++; show(); }
 function finish() { running = false; clearInterval(poll); root?.classList.add('hidden'); state.userPause = prevPause; Settings.set('tutorialDone', true); }

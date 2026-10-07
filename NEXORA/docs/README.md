@@ -241,3 +241,6 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - `src/ui/Tutorial.js` yeniden yazıldı: 11 adımlı tur (hoş geldin, can/seviye, dalga, coin/elmas, saldırı, 2 yetenek, kaçın, çanta, ses, bitiş).
 - Her adımda arka plan bulanıklaşır (`backdrop-filter` + `clip-path` deliği), anlatılan düğme parlayan halkayla açık kalır, yanında parşömen kart çıkar (başlık kurdelesi, açıklama, klavye tuş rozetleri — dokunmatik cihazda gizli, adım noktaları, Atla / İleri).
 - Adımlar oyunu durdurur; KAÇIN adımı canlıdır (oyuncu düğmeye basınca ilerler). Güç kartı vb. açılırsa tur geçici gizlenir. Ayarlar → Öğretici ile tekrar izlenir.
+
+## Faz 31 — Modern konuşma balonu
+- Öğretici kartı konuşma balonuna dönüştü: oyuncunun karakter portresi "rehber" olarak başlıkta, adım sayacı, kelime kelime beliren metin, vurgulu anahtar kelimeler, ilerleme çubuğu, modern düğmeler ve anlatılan düğmeyi gösteren kuyruk.
