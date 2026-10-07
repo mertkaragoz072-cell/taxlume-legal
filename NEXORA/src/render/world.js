@@ -70,30 +70,40 @@ function getTileGround(id) {
   return (TILE_GROUND[id] = { cfg, pieces, list, Hc, pad });
 }
 
-const atmoLayer = makeLayer();
-function drawTileGround(ctx, tg, deepColor) {
+function renderGroundSlices(g, tg, W, H) {
   const { cx, cy, R } = View, sc = View.scale, d = View.dpr, Rw = CONFIG.planet.radius, pa = state.player.a;
-  ctx.beginPath(); ctx.arc(cx, cy, R + 1, 0, TAU); ctx.fillStyle = deepColor; ctx.fill();
-  // NETLİK: doku orijinal çözünürlükte, nearest-neighbor ile ve TAM SAYI büyütmeyle çizilir (1 kaynak px = N cihaz px, N = yuvarlanmış 0.9·ölçek·dpr).
-  // Dönme/bilinear yok: yüzey kavisi dar dilimlerin (4 kaynak px) dikey kaydırılmasıyla verilir; konumlar cihaz pikseline yuvarlanır.
-  const N = Math.max(1, Math.round(tg.cfg.scale * sc * d)), SL = 4, half = Math.max(View.spanLeft, View.spanRight);
-  const m = ctx.getTransform();
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, Math.round(m.e), Math.round(m.f)); ctx.imageSmoothingEnabled = false;
+  const N = Math.max(1, Math.round(tg.cfg.scale * sc * d)), SL = 4;
   const liftDev = (tg.cfg.lift * sc) * d, padDev = tg.pad * N, hh = tg.Hc * N;
   const X = (wx) => (cx + R * Math.sin(wx / Rw - Math.PI - pa + View.heroAngle)) * d;
   for (const p of tg.list) {
     const ac = (p.x + p.w / 2) / Rw - Math.PI, hw = p.w / 2 / Rw, rel0 = wrapAngle(ac - pa);
     if (rel0 < -View.spanLeft - hw || rel0 > View.spanRight + hw) continue;
     const img = tg.pieces[p.k], k = p.w / img.width;                 // dünya birimi / kaynak px
+    let run = null;
+    const flush = () => { if (!run) return; const dh = Math.min(hh, H - run.y + 1); if (dh > 0 && run.x1 > run.x0) { const sh = Math.min(img.height, Math.ceil(dh / N)); g.drawImage(img, run.c0, 0, run.c1 - run.c0, sh, run.x0, run.y, run.x1 - run.x0, sh * N); } run = null; };
     for (let c = 0; c < img.width; c += SL) {
       const cw = Math.min(SL, img.width - c), w0 = p.x + c * k, w1 = p.x + (c + cw) * k, wm = (w0 + w1) / 2;
-      const rel = wrapAngle(wm / Rw - Math.PI - pa); if (rel < -View.spanLeft - 0.02 || rel > View.spanRight + 0.02) continue;
-      const sa = wm / Rw - Math.PI - pa + View.heroAngle, x0 = Math.round(X(w0)), x1 = Math.round(X(w1));
+      const rel = wrapAngle(wm / Rw - Math.PI - pa); if (rel < -View.spanLeft - 0.02 || rel > View.spanRight + 0.02) { flush(); continue; }
+      const sa = wm / Rw - Math.PI - pa + View.heroAngle, x0 = Math.round(X(w0)), x1 = Math.max(x0 + 1, Math.round(X(w1)));
       const y = Math.round((cy - R * Math.cos(sa)) * d - liftDev - padDev);
-      ctx.drawImage(img, c, 0, cw, img.height, x0, y, Math.max(1, x1 - x0), hh);
+      if (run && run.y === y && run.x1 === x0 && run.c1 === c) { run.x1 = x1; run.c1 = c + cw; } else { flush(); run = { y, x0, x1, c0: c, c1: c + cw }; }
     }
+    flush();
   }
-  ctx.restore(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+}
+
+const atmoLayer = makeLayer();
+let groundLayer = null, groundKey = '';
+function drawTileGround(ctx, tg, deepColor) {
+  const { cx, cy, R } = View, sc = View.scale, d = View.dpr, pa = state.player.a;
+  ctx.beginPath(); ctx.arc(cx, cy, R + 1, 0, TAU); ctx.fillStyle = deepColor; ctx.fill();
+  // NETLİK: nearest-neighbor, dönme/bilinear yok; yüzey kavisi dar dilimlerin dikey kaydırılmasıyla verilir, konumlar cihaz pikseline yuvarlanır.
+  // PERFORMANS: aynı yükseklikteki bitişik dilimler tek drawImage'da birleşir; görünür satırlarla sınırlanır; kahraman durup savaşırken (pa değişmedi) önceki zemin katmanı blit edilir.
+  const W = Math.round(View.w * d), H = Math.round(View.h * d), key = `${pa.toFixed(7)}|${W}x${H}|${sc.toFixed(4)}|${tg.cfg.scale}`;
+  if (!groundLayer || groundLayer.width !== W || groundLayer.height !== H) { groundLayer = document.createElement('canvas'); groundLayer.width = W; groundLayer.height = H; groundKey = ''; }
+  if (key !== groundKey) { groundKey = key; const g = groundLayer.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.imageSmoothingEnabled = false; renderGroundSlices(g, tg, W, H); }
+  const m = ctx.getTransform();
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, Math.round(m.e), Math.round(m.f)); ctx.imageSmoothingEnabled = false; ctx.drawImage(groundLayer, 0, 0); ctx.restore(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   // atmosferik perspektif: ufka yakın zemin hafif sisli/aydınlık, ekranın altına doğru koyulaşır (derinlik) — statik, önbellekli katman
   const crest = cy - R; atmoLayer(ctx, 'atmo' + crest.toFixed(1) + '|' + sc.toFixed(4), (g) => {
     const gr = g.createLinearGradient(0, crest, 0, View.h);
