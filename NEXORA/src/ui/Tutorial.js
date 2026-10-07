@@ -1,27 +1,68 @@
-// İlk oyun öğreticisi: 4 kısa ipucu (otomatik savaş → kaçınma → yetenekler → çanta). Oyunu durdurmaz; dokunarak geçilir; kaçınma kullanılınca 2. adım biter.
-// Bittiğinde Settings.tutorialDone = true (Ayarlar'dan yeniden gösterilebilir).
+// İlk oyun öğreticisi: adım adım "spot ışığı" turu. Arka plan bulanıklaştırılır, anlatılan düğme/alan açık bırakılır, yanında kart (başlık, açıklama, tuş rozetleri) çıkar.
+// Adımlar oyunu durdurur (state.userPause); KAÇIN adımı canlıdır — oyuncu düğmeye gerçekten basınca ilerler. Bittiğinde Settings.tutorialDone = true (Ayarlar'dan yeniden gösterilebilir).
 import { Settings } from '../core/settings.js';
 import { state } from '../game/state.js';
 
 const STEPS = [
-  { text: '⚔️ Savaşçın <b>otomatik koşar ve saldırır</b>.', ms: 3800 },
-  { text: '🟢 Kırmızı uyarı belirince <b>KAÇIN</b> düğmesine bas (Shift / K). Doğru zamanda basarsan hasar almazsın ve ödül kazanırsın!', target: 'btn-dodge', ms: 11000, until: 'dodge' },
-  { text: '⭐ ⚡ <b>Yetenekler</b>: bekleme dolunca kullan (Q / E).', target: ['btn-skill1', 'btn-skill2'], ms: 4500 },
-  { text: '🎒 Çanta: <b>görevler, mağaza</b> ve ayarlar burada.', target: 'btn-bag', ms: 4000 },
+  { ic: '🌍', title: 'NEXORA\'ya hoş geldin!', text: 'Savaşçın <b>kendiliğinden koşar ve yakındaki düşmanlara saldırır</b>. Sen düğmelerle onu yönetirsin. Amaç: <b>5 dalgayı</b> geçip <b>Goblin Lordu</b>\'nu yenmek.' },
+  { ic: '❤️', title: 'Can ve seviye', target: '.hud-left', text: '<b>Kırmızı çubuk</b> canın, altındaki <b>mavi çubuk</b> deneyimin. Düşmanları yendikçe seviye atlar, her seviyede <b>güç kartı</b> seçersin. Canın azalınca ekran kenarı kırmızıya döner.' },
+  { ic: '🌊', title: 'Dalga sayacı', target: '#wave-box', text: 'Şu an kaçıncı dalgada olduğunu gösterir. Her dalga bitince ödül kazanırsın; <b>hasar almadan</b> bitirirsen ekstra ödül var!' },
+  { ic: '🪙', title: 'Coin ve elmas', target: '.hud-right', text: '<b>Coin</b> ve <b>elmas</b> toplarsın. Bunlarla 🎒 çantadaki <b>mağazadan</b> kalıcı güçlendirmeler alır, yetenek ağacını açarsın.' },
+  { ic: '⚔️', title: 'Saldırı', target: '#btn-attack', keys: ['Boşluk', 'J'], text: 'Savaşçın zaten otomatik vurur; bu düğmeyle <b>anında saldırırsın</b>. Art arda vurdukça <b>kombo</b> artar ve hasarın büyür. Canın azalınca kombo sıfırlanır.' },
+  { ic: '⭐', title: 'Yıldız Patlaması', target: '#btn-skill1', keys: ['Q'], text: 'Çevrendeki düşmanlara <b>alan hasarı</b> verir. Kullandıktan sonra düğme üzerindeki sayaç dolana kadar <b>bekleme süresi</b> vardır.' },
+  { ic: '⚡', title: 'Mavi Dalga', target: '#btn-skill2', keys: ['E'], text: 'Önündeki düşmanlara <b>güçlü bir dalga</b> gönderir. Kalabalık dalgalarda ve bossa karşı ideal.' },
+  { ic: '💨', title: 'Kaçın!', target: '#btn-dodge', keys: ['Shift', 'K', '↓'], live: true, text: '<b>Kırmızı uyarı</b> belirince düğmeye bas: kısa süre <b>hasar almazsın</b>. Tam doğru anda basarsan <b>mükemmel kaçınma</b> olur ve ödül kazanırsın.<br><b>Şimdi dene: KAÇIN düğmesine bas!</b>' },
+  { ic: '🎒', title: 'Çanta', target: '#btn-bag', keys: ['I'], text: 'Karakter istatistikleri, <b>görevler</b>, <b>mağaza</b>, yetenek ağacı ve <b>ayarlar</b> burada. Açıkken oyun durur.' },
+  { ic: '🔊', title: 'Ses', target: '#btn-sound', keys: ['M'], text: 'Müzik ve efektleri tek dokunuşla açıp kapatırsın. Ayrıntılı ses ayarı Çanta → Ayarlar\'da.' },
+  { ic: '🏆', title: 'Hazırsın!', text: 'Bu turu istediğin zaman <b>Çanta → Ayarlar → Öğretici</b>\'nden tekrar izleyebilirsin. İyi şanslar, savaşçı!', last: true },
 ];
-let el, i = -1, timer = null, running = false;
-const targets = (s) => (s?.target ? [].concat(s.target).map((id) => document.getElementById(id)).filter(Boolean) : []);
-function clear() { for (const t of targets(STEPS[i])) t.classList.remove('hint-pulse'); clearTimeout(timer); }
+let root, hole, card, i = -1, running = false, prevPause = false, poll = null;
+
+function build() {
+  if (root) return;
+  const game = document.getElementById('game');
+  root = document.createElement('div'); root.id = 'tut'; root.className = 'hidden';
+  root.innerHTML = '<div class="tut-blur"></div><div class="tut-ring"></div><div class="tut-card" role="dialog" aria-live="polite"></div>';
+  game.appendChild(root);
+  hole = root.querySelector('.tut-ring'); card = root.querySelector('.tut-card');
+  addEventListener('resize', () => running && layout());
+}
+function rectOf(sel) { const t = sel && document.querySelector(sel); if (!t) return null; const g = document.getElementById('game').getBoundingClientRect(), r = t.getBoundingClientRect(); return { x: r.left - g.left, y: r.top - g.top, w: r.width, h: r.height }; }
+function layout() {
+  const s = STEPS[i]; if (!s) return;
+  const g = document.getElementById('game').getBoundingClientRect(), W = g.width, H = g.height, r = rectOf(s.target);
+  const blur = root.querySelector('.tut-blur');
+  if (!r) { blur.style.clipPath = 'none'; hole.style.display = 'none'; card.style.left = '50%'; card.style.top = '50%'; card.style.transform = 'translate(-50%,-50%)'; return; }
+  const p = 8, x = r.x - p, y = r.y - p, w = r.w + p * 2, h = r.h + p * 2, rad = Math.min(w, h) / 2 < 40 ? Math.min(w, h) / 2 : 18;
+  const hp = `M${x + rad} ${y}h${w - 2 * rad}a${rad} ${rad} 0 0 1 ${rad} ${rad}v${h - 2 * rad}a${rad} ${rad} 0 0 1 -${rad} ${rad}h-${w - 2 * rad}a${rad} ${rad} 0 0 1 -${rad} -${rad}v-${h - 2 * rad}a${rad} ${rad} 0 0 1 ${rad} -${rad}z`;
+  blur.style.clipPath = `path(evenodd,"M0 0H${W}V${H}H0Z ${hp}")`;
+  Object.assign(hole.style, { display: 'block', left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', borderRadius: rad + 'px' });
+  card.style.transform = 'none';
+  const cw = Math.min(card.offsetWidth || 300, W - 20), ch = card.offsetHeight || 150, gap = 16;
+  let left = x + w / 2 > W / 2 ? x - gap - cw : x + w + gap, top = y + h / 2 - ch / 2;
+  if (left < 10 || left + cw > W - 10) { left = x + w / 2 - cw / 2; top = y > H / 2 ? y - gap - ch : y + h + gap; }
+  card.style.left = Math.max(10, Math.min(W - cw - 10, left)) + 'px'; card.style.top = Math.max(16, Math.min(H - ch - 10, top)) + 'px';
+}
 function show() {
-  const s = STEPS[i]; if (!s) { running = false; el.classList.add('hidden'); Settings.set('tutorialDone', true); return; }
-  el.innerHTML = s.text + '<small>dokun: geç</small>'; el.classList.remove('hidden'); for (const t of targets(s)) t.classList.add('hint-pulse');
-  const wait = () => { if (state.paused || state.userPause || state.over) { timer = setTimeout(wait, 400); return; } timer = setTimeout(next, s.ms); }; wait();
+  const s = STEPS[i]; if (!s) return finish();
+  const dots = STEPS.map((_, k) => `<i class="${k === i ? 'on' : k < i ? 'done' : ''}"></i>`).join('');
+  const keys = s.keys ? `<div class="tut-keys"><span>Klavye:</span>${s.keys.map((k) => `<kbd>${k}</kbd>`).join('')}</div>` : '';
+  card.innerHTML = `<div class="tut-rib"><span>${s.ic}</span>${s.title}</div><p>${s.text}</p>${keys}<div class="tut-dots">${dots}</div>
+    <div class="tut-btns"><button type="button" data-a="skip" class="tut-skip">${s.last ? '' : 'Atla'}</button><button type="button" data-a="next" class="tut-next">${s.last ? 'OYNA ▶' : s.live ? 'Geç' : 'İleri ▶'}</button></div>`;
+  card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
+  root.classList.toggle('live', !!s.live); state.userPause = !s.live; layout(); requestAnimationFrame(layout);
 }
-function next() { clear(); i++; show(); }
+function next() { i++; show(); }
+function finish() { running = false; clearInterval(poll); root?.classList.add('hidden'); state.userPause = prevPause; Settings.set('tutorialDone', true); }
 export function startTutorial() {
-  if (Settings.get('tutorialDone') || running) return; running = true; el = document.getElementById('hint'); i = 0;
-  el.onpointerdown = (e) => { e.stopPropagation(); next(); };
-  setTimeout(show, 1500);
+  if (Settings.get('tutorialDone') || running) return; build(); running = true; i = 0; prevPause = false;
+  card.onpointerdown = (e) => e.stopPropagation();
+  card.onclick = (e) => { const a = e.target.closest('button')?.dataset.a; if (a === 'next') next(); else if (a === 'skip') finish(); };
+  setTimeout(() => {
+    if (!running) return; root.classList.remove('hidden'); show();
+    // güç seçimi / oyun sonu gibi başka ekranlar açılırsa tur geçici gizlenir
+    poll = setInterval(() => { if (state.over) return finish(); const busy = state.paused; root.classList.toggle('hidden', busy); if (!busy && STEPS[i] && !STEPS[i].live) state.userPause = true; }, 300);
+  }, 1500);
 }
-export function tutorialDodgeUsed() { if (running && STEPS[i]?.until === 'dodge') next(); }
+export function tutorialDodgeUsed() { if (running && STEPS[i]?.live) setTimeout(() => running && STEPS[i]?.live && next(), 700); }
 export function restartTutorial() { Settings.set('tutorialDone', false); running = false; startTutorial(); }

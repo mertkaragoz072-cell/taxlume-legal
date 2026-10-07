@@ -308,3 +308,29 @@ html, body {
 #hint { z-index: 30; }
 .panel h1 { display: inline-block; margin: -40px -14px 10px; padding: 4px 22px; border: 4px solid #1f2a44; border-radius: 12px; background: linear-gradient(#f0405a, #c0182e); color: #fff; -webkit-text-stroke: 0; text-shadow: 0 2px 0 #7a0a14; box-shadow: 0 4px 0 rgba(20,30,60,.6); font-size: clamp(20px, 6vh, 32px); }
 .panel { padding-top: 34px; }
+
+/* Faz 30 — spot ışıklı öğretici */
+#hint { display: none !important; }
+#tut { position: absolute; inset: 0; z-index: 39; pointer-events: auto; }
+#tut.hidden { display: none; }
+#tut.live { pointer-events: none; }
+#tut.live .tut-card { pointer-events: auto; }
+.tut-blur { position: absolute; inset: 0; background: rgba(10,16,40,.55); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.tut-ring { position: absolute; border: 4px solid #ffd23f; box-shadow: 0 0 0 3px rgba(31,42,68,.8), 0 0 22px rgba(255,210,63,.95); animation: tutring 1s ease-in-out infinite; pointer-events: none; }
+@keyframes tutring { 50% { box-shadow: 0 0 0 3px rgba(31,42,68,.8), 0 0 34px rgba(255,210,63,1), 0 0 0 9px rgba(255,210,63,.35); } }
+.tut-card { position: absolute; width: min(330px, calc(100% - 20px)); padding: 26px 16px 12px; text-align: center; color: #1f2a44; border: 4px solid #1f2a44; border-radius: 20px; background: radial-gradient(120% 70% at 50% 0%, #fffaf0 0%, #f6e2b4 60%, #e7c98a 100%); box-shadow: 0 6px 0 rgba(20,30,60,.65), inset 0 0 0 3px rgba(255,255,255,.45); }
+.tut-card.pop { animation: cardin .35s ease-out; }
+.tut-rib { position: absolute; left: -10px; right: -10px; top: -17px; padding: 3px 6px; border: 4px solid #1f2a44; border-radius: 12px; font-weight: 900; font-size: clamp(14px, 4.6vh, 20px); color: #fff; text-shadow: 0 2px 0 #7a0a14; background: linear-gradient(#f0405a, #c0182e); box-shadow: 0 4px 0 rgba(20,30,60,.6); white-space: nowrap; }
+.tut-rib span { margin-right: 6px; }
+.tut-card p { margin: 6px 0 8px; font-weight: 700; font-size: clamp(11px, 3.5vh, 14.5px); line-height: 1.35; }
+.tut-keys { display: flex; gap: 6px; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 12px; font-weight: 800; color: #5b4a2a; }
+@media (pointer: coarse) { .tut-keys { display: none; } }
+.tut-keys kbd { min-width: 22px; padding: 1px 8px; border: 2px solid #1f2a44; border-bottom-width: 4px; border-radius: 7px; background: #fff; color: #1f2a44; font: inherit; font-weight: 900; }
+.tut-dots { display: flex; gap: 4px; justify-content: center; margin-bottom: 8px; }
+.tut-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(31,42,68,.25); }
+.tut-dots i.done { background: #3aa84a; } .tut-dots i.on { background: #e23b4e; transform: scale(1.4); }
+.tut-btns { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tut-btns button { font: inherit; font-weight: 900; border: 3px solid #1f2a44; border-radius: 12px; cursor: pointer; }
+.tut-next { margin-left: auto; padding: 5px 16px; color: #fff; font-size: 14px; background: linear-gradient(#4cd061, #2e9c42); text-shadow: 0 2px 0 rgba(0,0,0,.35); box-shadow: 0 3px 0 rgba(20,30,60,.6); }
+.tut-next:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(20,30,60,.6); }
+.tut-skip { padding: 3px 10px; font-size: 12px; background: transparent; border-color: transparent !important; color: #5b4a2a; text-decoration: underline; }

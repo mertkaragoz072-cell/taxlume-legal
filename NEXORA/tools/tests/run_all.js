@@ -116,9 +116,11 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
 
   await test('tutorial_shows_once', async () => {
     const pg = await page('male', ''); await pg.evaluate(async () => { const { Settings } = await import('/src/core/settings.js'); Settings.set('tutorialDone', false); localStorage.removeItem('x'); });
-    await pg.goto(`${base}/index.html?hq=1&nosw&hero=male`); await pg.waitForFunction(() => window.__game && window.__game.state.player); await pg.waitForSelector('#hint:not(.hidden)', { timeout: 8000 });
-    ok(await pg.evaluate(() => document.getElementById('hint').innerText.includes('otomatik')), 'ilk ipucu yok');
-    for (let i = 0; i < 4; i++) { await pg.click('#hint', { force: true }).catch(() => {}); await pg.waitForTimeout(1700); if (await pg.evaluate(() => document.getElementById('hint').classList.contains('hidden'))) break; }
+    await pg.goto(`${base}/index.html?hq=1&nosw&hero=male`); await pg.waitForFunction(() => window.__game && window.__game.state.player); await pg.waitForSelector('#tut:not(.hidden)', { timeout: 8000 });
+    ok(await pg.evaluate(() => document.querySelector('.tut-card').innerText.includes('otomatik')), 'ilk adım yok');
+    ok(await pg.evaluate(() => window.__game.state.userPause === true), 'öğretici oyunu durdurmadı');
+    for (let i = 0; i < 14; i++) { if (await pg.evaluate(() => document.getElementById('tut').classList.contains('hidden'))) break; if (await pg.evaluate(() => document.querySelector('.tut-rib')?.innerText.includes('Kaçın'))) { await pg.keyboard.press('Shift'); await pg.waitForTimeout(1200); continue; } await pg.click('.tut-next', { force: true }).catch(() => {}); await pg.waitForTimeout(300); }
+    ok(await pg.evaluate(() => window.__game.state.userPause === false), 'öğretici bitince oyun devam etmedi');
     ok(await pg.evaluate(async () => (await import('/src/core/settings.js')).Settings.get('tutorialDone')), 'öğretici bitince işaretlenmedi'); await pg.close();
   });
 

@@ -236,3 +236,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Eğitim ipucu (`#hint`) z-index 30'a indirildi; modal katmanlarının (35–40) altında kalır.
 - Kaçış butonu ikonu net bir "atılma oku" ile değiştirildi.
 - Tüm modüller `node --check`, 14 test, ofline testi ve ekran görüntüleri tekrar doğrulandı; konsol hatası yok.
+
+## Faz 30 — Spot ışıklı öğretici
+- `src/ui/Tutorial.js` yeniden yazıldı: 11 adımlı tur (hoş geldin, can/seviye, dalga, coin/elmas, saldırı, 2 yetenek, kaçın, çanta, ses, bitiş).
+- Her adımda arka plan bulanıklaşır (`backdrop-filter` + `clip-path` deliği), anlatılan düğme parlayan halkayla açık kalır, yanında parşömen kart çıkar (başlık kurdelesi, açıklama, klavye tuş rozetleri — dokunmatik cihazda gizli, adım noktaları, Atla / İleri).
+- Adımlar oyunu durdurur; KAÇIN adımı canlıdır (oyuncu düğmeye basınca ilerler). Güç kartı vb. açılırsa tur geçici gizlenir. Ayarlar → Öğretici ile tekrar izlenir.
