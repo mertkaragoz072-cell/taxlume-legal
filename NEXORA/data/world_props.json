@@ -318,6 +318,23 @@
         118
       ],
       "layer": "front"
+    },
+    {
+      "keys": [
+        "grass_tuft_01",
+        "grass_tuft_02",
+        "flower_white"
+      ],
+      "every": 150,
+      "scale": [
+        0.9,
+        1.35
+      ],
+      "depth": [
+        36,
+        52
+      ],
+      "layer": "front"
     }
   ],
   "clouds": {

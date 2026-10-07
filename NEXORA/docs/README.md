@@ -188,3 +188,9 @@ Her bölüm kendi haritasını kullanır (chapters.json → theme): DARK FOREST,
 
 ## Faz 23 — Gezegen plaka zemini (5 gezegen)
 Yeni asset sayfasındaki "ZEMİN (SEAMLESS)" plakaları gezegen yüzeyi olarak çevreye dizildi (ayrıntı: `assets/environment/ground/README.md`). Yarıçap 1100, bölüm 4/5 → DESERT RUINS / VOLCANIC REALM temaları (sky/haze/backdrop). Eski dama/çim deseni, toprak lekeleri ve kontur artık yalnız plakası olmayan temalar için yedek. Doğrulama: 5 bölüm ekran görüntüsü, ±π dikişi, erkek+kadın, konsol hatası 0.
+
+## Faz 24 — Karakter–zemin derinliği
+- Aktörler (düşman+oyuncu) `render/renderer.js`'te ayrı katmana çizilir; her aktörün ayağına `groundBounce` (source-atop, zeminin yeşil/toprak yansıması) işlenip ana tuvale bindirilir → sprite zemine ait görünür.
+- `groundShadow` (draw.js): geniş yumuşak gölge (güneşe göre hafif sağa kayık) + ayakların altında koyu temas gölgesi; tabanlara oturacak şekilde ayarlı.
+- Ön plan otları (`world_props.json → decor`, layer front, depth 36–52): ayakların alt kısmını örten çim/çiçek tutamları.
+- Ayak hizası `camera.laneDepth` 40 (toprak yolun ortası), koşarken adım tozu (`fx.stepDust`).
