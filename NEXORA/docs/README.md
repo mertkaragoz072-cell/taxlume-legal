@@ -230,3 +230,9 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - **Hata günlüğü** (`core/errorlog.js`): yakalanmamış hata/promise son 20 kayıt, Ayarlar'dan panoya kopyala.
 - **Düzeltme:** ses sistemi zaten prosedürel müzik içeriyor (önceki notlarda "müzik yok" yazıyordu, yanlıştı).
 - Testler: 14/14 (`combo_chest_flawless_runs`, `settings_panel_and_accessibility`, `tutorial_shows_once` eklendi).
+
+## Faz 29 — Bütünlük denetimi
+- Tüm paneller (oyun sonu, karakter seçimi, bilgi paneli) tek parşömen tasarımına ve kırmızı kurdele başlığa geçirildi (`.cc-panel` / `.up-card` ile aynı dil).
+- Eğitim ipucu (`#hint`) z-index 30'a indirildi; modal katmanlarının (35–40) altında kalır.
+- Kaçış butonu ikonu net bir "atılma oku" ile değiştirildi.
+- Tüm modüller `node --check`, 14 test, ofline testi ve ekran görüntüleri tekrar doğrulandı; konsol hatası yok.
