@@ -726,5 +726,185 @@
       },
       "summonAtHp": 0.65
     }
+  },
+  "goblin_sprinter": {
+    "name": "Goblin Koşucu",
+    "heightUnits": 60,
+    "width": 38,
+    "barWidth": 30,
+    "hp": 12,
+    "damage": 5,
+    "speed": 150,
+    "xp": 9,
+    "coins": [
+      1,
+      2
+    ],
+    "coinValue": 1,
+    "contactRange": 57,
+    "attackCooldown": 0.8,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.0,
+    "gemChance": 0.02,
+    "spriteMul": 0.86,
+    "minStage": 1,
+    "tint": {
+      "hue": -38,
+      "sat": 1.1,
+      "light": 1.12
+    }
+  },
+  "goblin_pikeman": {
+    "name": "Goblin Mızrakçı",
+    "heightUnits": 74,
+    "width": 45,
+    "barWidth": 35,
+    "hp": 34,
+    "damage": 8,
+    "speed": 70,
+    "xp": 12,
+    "coins": [
+      1,
+      2
+    ],
+    "coinValue": 1,
+    "contactRange": 92,
+    "attackCooldown": 1.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.0,
+    "gemChance": 0.02,
+    "minStage": 1,
+    "tint": {
+      "hue": -20,
+      "sat": 0.8,
+      "light": 0.95
+    }
+  },
+  "goblin_shield": {
+    "name": "Goblin Kalkancı",
+    "heightUnits": 88,
+    "width": 56,
+    "barWidth": 43,
+    "hp": 70,
+    "damage": 9,
+    "speed": 50,
+    "xp": 18,
+    "coins": [
+      2,
+      4
+    ],
+    "coinValue": 1,
+    "contactRange": 63,
+    "attackCooldown": 0.9,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.6,
+    "gemChance": 0.06,
+    "spriteMul": 1.08,
+    "armor": 0.45,
+    "minStage": 2,
+    "tint": {
+      "hue": 18,
+      "sat": 0.55,
+      "light": 0.78
+    }
+  },
+  "goblin_berserker": {
+    "name": "Goblin Çılgın",
+    "heightUnits": 82,
+    "width": 52,
+    "barWidth": 43,
+    "hp": 48,
+    "damage": 13,
+    "speed": 66,
+    "xp": 18,
+    "coins": [
+      2,
+      4
+    ],
+    "coinValue": 1,
+    "contactRange": 63,
+    "attackCooldown": 0.9,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.3,
+    "gemChance": 0.06,
+    "minStage": 2,
+    "rage": {
+      "at": 0.5,
+      "speedMul": 1.7,
+      "damageMul": 1.3
+    },
+    "tint": {
+      "hue": -80,
+      "sat": 1.4,
+      "light": 1.0
+    }
+  },
+  "goblin_bomber": {
+    "name": "Goblin Bombacı",
+    "heightUnits": 70,
+    "width": 45,
+    "barWidth": 35,
+    "hp": 22,
+    "damage": 8,
+    "speed": 100,
+    "xp": 15,
+    "coins": [
+      1,
+      2
+    ],
+    "coinValue": 1,
+    "contactRange": 57,
+    "attackCooldown": 0.8,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.0,
+    "gemChance": 0.02,
+    "minStage": 3,
+    "explode": {
+      "radius": 105,
+      "damageMul": 1.5
+    },
+    "tint": {
+      "hue": -60,
+      "sat": 1.5,
+      "light": 1.2
+    }
+  },
+  "goblin_shaman": {
+    "name": "Goblin Şaman",
+    "heightUnits": 70,
+    "width": 45,
+    "barWidth": 35,
+    "hp": 30,
+    "damage": 5,
+    "speed": 58,
+    "xp": 20,
+    "coins": [
+      1,
+      2
+    ],
+    "coinValue": 1,
+    "contactRange": 57,
+    "attackCooldown": 0.8,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.0,
+    "gemChance": 0.02,
+    "spriteMul": 0.95,
+    "minStage": 2,
+    "heal": {
+      "radius": 280,
+      "perSec": 0.1,
+      "every": 1.2
+    },
+    "tint": {
+      "hue": 95,
+      "sat": 1.1,
+      "light": 1.1
+    }
   }
 }

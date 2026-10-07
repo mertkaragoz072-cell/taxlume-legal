@@ -7,6 +7,14 @@
       "goblin_boss",
       "goblin_warlord",
       "goblin_king"
+    ],
+    "extras": [
+      "goblin_sprinter",
+      "goblin_pikeman",
+      "goblin_shield",
+      "goblin_berserker",
+      "goblin_shaman",
+      "goblin_bomber"
     ]
   },
   "emberfall": {

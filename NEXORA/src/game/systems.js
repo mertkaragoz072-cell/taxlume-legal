@@ -14,7 +14,7 @@ import { stepDust, groundDust } from './fx.js';
 import { updateChests } from './Chests.js';
 import { HULL, startRagdoll, stepRagdoll } from './ragdoll.js';
 import { updateParticles } from './fx.js';
-import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
+import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul, addText } from './combat.js';
 
 export { events };
 export { spawnEnemy } from './EnemySpawner.js';
@@ -111,6 +111,9 @@ export function update(dt) {
     en.age += dt; if (en.noInterrupt > 0) en.noInterrupt -= dt;
     tickStatus(en, dt);
     if (en.dead) return;
+    const D = en.def;
+    if (D.rage && !en.raged && en.hp / en.maxHp <= D.rage.at) { en.raged = true; en.speedMul *= D.rage.speedMul; en.damage *= D.rage.damageMul; addText(en.a, D.heightUnits + 26, 'ÖFKE!', '#ff5a4a', 0.7, false, { life: 0.9 }); en.flash = 0.25; }   // çılgın: canı azalınca hızlanır
+    if (D.heal) { en.healT = (en.healT ?? D.heal.every) - dt; if (en.healT <= 0) { en.healT = D.heal.every; let any = false; for (const o of state.enemies) if (o !== en && !o.dead && !o.def.boss && o.hp < o.maxHp && Math.abs(wrapAngle(o.a - en.a)) * r <= D.heal.radius) { o.hp = Math.min(o.maxHp, o.hp + o.maxHp * D.heal.perSec * D.heal.every); any = true; } if (any) state.rings.push({ a: en.a, t: 0, life: 0.6, color: '#7dff8a', r: D.heal.radius }); } }   // şaman: yakındaki dostları iyileştirir
     if (en.def.regen) en.hp = Math.min(en.maxHp, en.hp + en.def.regen * dt);       // buz düşmanları yavaşça iyileşir
     const diff = wrapAngle(p.a - en.a);
     en.face = diff >= 0 ? 1 : -1;

@@ -10,8 +10,8 @@ export function chapterInfo(stage) {
 }
 
 // Evrenin düşman/boss seti (data/world_roster.json). rosterType: waves.json'daki goblin_* yuvasını bu evrenin karşılığına çevirir.
-import { ROSTER } from '../core/config.js';
+import { ROSTER, ENEMY_TYPES } from '../core/config.js';
 const setOf = (stage) => ROSTER[chapterInfo(stage).id] || {};
 export const rosterType = (type, stage) => setOf(stage).roster?.[type] || type;
-export const worldExtras = (stage) => setOf(stage).extras || [];
+export const worldExtras = (stage) => (setOf(stage).extras || []).filter((k) => (ENEMY_TYPES[k]?.minStage || 1) <= chapterInfo(stage).stage);   // minStage: erken bölümlerde zor düşman çıkmaz
 export const bossFor = (stage, fallback) => { const b = setOf(stage).bosses; return b?.length ? b[(chapterInfo(stage).stageInWorld - 1) % b.length] : fallback; };
