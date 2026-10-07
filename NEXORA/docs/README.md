@@ -263,3 +263,7 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 35 — Meadowlands goblin çeşitleri
 - 6 yeni goblin (`data/enemies.json`, `data/world_roster.json → meadowlands.extras`): **Koşucu** (çok hızlı/zayıf), **Mızrakçı** (uzaktan vurur), **Kalkancı** (zırhlı, yavaş), **Çılgın** (canı yarıya inince hızlanır/güçlenir: `rage`), **Şaman** (yakındaki dostları iyileştirir: `heal`), **Bombacı** (ölünce patlar: `explode`). 2. dalgadan itibaren dalga no/2 adet karışır; `minStage` ile zor tipler erken bölümlerde çıkmaz (Bombacı 3. bölümden). Sprite'lar mevcut goblin karelerinin hafif renk/boyut varyantları (yer tutucu).
+
+## Faz 36 — Kılıç görünürlüğü + boy oranı kontrolü
+- Sorun: kadın savaşçının saldırısında mavi hilal efekti (`fx_attack_1_slash`) bıçağın üstüne %90 opaklıkla çiziliyor ve bıçağı örtüp "kılıç yok oluyor" gibi görünüyordu. Çözüm: efekt artık gövdeyle birlikte dönen katmanda, kılıcın ARKASINDA ve daha saydam (%70) çiziliyor; bıçak her karede net.
+- Boy oranı ölçüldü: kadın kahraman ≈ 97 birim (bekleme kareleri 95.5–96.9, prosedürel kare 96.5 → tutarlı); Goblin Gözcü 70, Savaşçı 82, Canavar 115, Boss 149–165 birim. Oran uygun bulundu, değiştirilmedi.

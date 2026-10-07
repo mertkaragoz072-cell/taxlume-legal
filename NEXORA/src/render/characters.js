@@ -218,6 +218,10 @@ function drawProceduralHero(ctx, meta, anim) {
     const body = (a, extraRot) => {
       ctx.save(); ctx.globalAlpha = alpha * a; ctx.translate((C.hip[0] - px) * sc, (C.hip[1] - py) * sc); ctx.rotate(hipRot + extraRot); ctx.translate(-(C.hip[0] - px) * sc, -(C.hip[1] - py) * sc);
       drawWarped(ctx, L.torso, px, py, sc, time, amp, name === 'run' ? 1 : 0);
+      if (a === 1 && name === 'attack' && u > 0.28 && u < 0.75) {               // mavi hilal kılıcın ARKASINDA (gövdeyle birlikte döner), bıçağı örtmez
+        const fx = Assets.get('fx_attack_1_slash'), fa = 1 - (u - 0.28) / 0.47;
+        if (fx) { const k = CONFIG.player.slashFxScale * 0.55, tx = (meta.swordTip[0] - px) * sc + 14, ty = (meta.swordTip[1] - py) * sc; ctx.save(); ctx.globalAlpha = alpha * 0.7 * fa; ctx.drawImage(fx, tx - fx.width * k * 0.5, ty - fx.height * k * 0.5, fx.width * k, fx.height * k); ctx.restore(); }
+      }
       ctx.save(); const gx = (C.grip[0] - px) * sc, gy = (C.grip[1] - py) * sc; ctx.translate(gx, gy); ctx.rotate(swordRot); ctx.translate(-gx, -gy); ctx.translate(-44 * swordFall, 52 * swordFall);   // kılıç yere düşüp elinden uzaklaşır (yerel eksenler grup dönüşüyle dönmüş: -x = ekranda aşağı, +y = ekranda sağa)
       ctx.drawImage(L.sword, -px * sc, -py * sc, L.sword.width * sc, L.sword.height * sc); ctx.restore();
       if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(L.torso, 'heroineT', '#ff5a4a'), -px * sc, -py * sc, L.torso.width * sc, L.torso.height * sc); }
@@ -225,13 +229,6 @@ function drawProceduralHero(ctx, meta, anim) {
     };
     if (ghost) { body(0.12, -0.2); body(0.2, -0.1); }
     body(1, 0);
-    if (name === 'attack' && u > 0.28 && u < 0.75) {                           // kılıç ucundan küçük mavi hilal
-      const fx = Assets.get('fx_attack_1_slash'), a = 1 - (u - 0.28) / 0.47;
-      if (fx) {
-        const k = CONFIG.player.slashFxScale * 0.55, tx = (meta.swordTip[0]) * sc - px * sc, ty = meta.swordTip[1] * sc - py * sc;
-        ctx.globalAlpha = alpha * 0.9 * a; ctx.drawImage(fx, tx - fx.width * k * 0.75, ty - fx.height * k * 0.5, fx.width * k, fx.height * k);
-      }
-    }
     ctx.globalAlpha = 1;
   });
   return true;
