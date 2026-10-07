@@ -123,16 +123,23 @@ function drawProceduralHero(ctx, meta, anim) {
     const b = Math.sin(time * 2.6); hipRot = 0.012 + b * 0.012; dy = b * 0.9; thB = 0.03 + b * 0.01; thF = -0.02; amp = 2.6;
   } else if (name === 'run') {
     const ph = (p.stride / 62) * TAU, sn = Math.sin(ph), cs = Math.cos(ph);
-    thF = 0.42 * sn; thB = -0.42 * sn; liftF = Math.max(0, cs) * 7; liftB = Math.max(0, -cs) * 7;
-    dy = -Math.abs(sn) * 3.4; hipRot = 0.075 + Math.sin(ph * 2) * 0.018; amp = 5.2;
+    thF = 0.55 * sn; thB = -0.55 * sn; liftF = Math.max(0, cs) * 10; liftB = Math.max(0, -cs) * 10;
+    dy = -Math.abs(sn) * 5; hipRot = 0.1 + Math.sin(ph * 2) * 0.03; amp = 6.5;
   } else if (name === 'attack') {
     const k = u < 0.3 ? -ease(u / 0.3) : (u < 0.55 ? -1 + ease((u - 0.3) / 0.25) * 2.35 : 1.35 - ease((u - 0.55) / 0.45) * 1.35);   // toparlan → savrulur → döner
-    hipRot = k * 0.17; dx = k * 7; thF = Math.max(0, k) * 0.16; thB = -Math.max(0, k) * 0.08; amp = 4.4;
+    hipRot = k * 0.22; dx = k * 12; dy = -Math.max(0, k) * 5; thF = Math.max(0, k) * 0.28; liftB = Math.max(0, k) * 4; thB = -Math.max(0, k) * 0.08; amp = 4.4;
     if (u > 0.3 && u < 0.62) ghost = 1;
   } else if (name === 'hurt') {
-    const k = 1 - u; dx = -9 * k + Math.sin(T * 60) * 1.4 * k; hipRot = -0.2 * k; thB = 0.1 * k; thF = -0.1 * k; amp = 5 * k + 2;
+    const k = 1 - u, hop = Math.sin(Math.min(1, T / 0.28) * Math.PI);                  // vuruşta geri savrulup küçük sıçrama + ezilme
+    dx = -16 * (1 - Math.pow(1 - Math.min(1, T / 0.18), 2)) * (0.4 + 0.6 * k) + Math.sin(T * 70) * 1.6 * k; dy = -hop * 10;
+    hipRot = -0.3 * k; thB = 0.45 * k; thF = -0.35 * k; liftB = hop * 6; liftF = hop * 5; amp = 7 * k + 2; ghost = 0;
   } else if (name === 'death') {
-    const e = 1 - Math.pow(1 - u, 2); grot = -e * 1.5; dx = -22 * e; dy = -16 * e; alpha = 1 - Math.max(0, (T - dur) / 1.2) * 0.4; amp = 1;
+    // devrilme: geri fırlar (yay), havada döner, yere çarpıp iki kez seker, yatar; bacaklar havada çırpınır
+    const t = T, A = 0.5, B = 0.74, C2 = 0.9;
+    if (t < A) { const q = t / A; dx = -78 * q; dy = -64 * Math.sin(q * Math.PI * 0.92); grot = -1.65 * (q * (2 - q)) - 0.28 * Math.sin(q * 9); hipRot = -0.25 * q; thB = 0.9 * Math.sin(q * 7); thF = -0.8 * Math.sin(q * 7 + 1); }
+    else if (t < B) { const q = (t - A) / (B - A); dx = -78 - 16 * q; dy = -22 * Math.sin(q * Math.PI); grot = -1.65 - 0.08 * q; thB = 0.3 * (1 - q); thF = -0.25 * (1 - q); }
+    else { const q = Math.min(1, (t - B) / (C2 - B)); dx = -94 - 6 * q; dy = -7 * Math.sin(q * Math.PI); grot = -1.73 + 0.05 * q; }
+    amp = t < A ? 8 : 1.5; alpha = 1 - Math.max(0, (T - 1.4) / 1.2) * 0.4;
   }
   if (p.invuln > 0 && Math.floor(time * 20) % 2 === 0 && !state.over) alpha *= 0.6;
   const px = meta.pivot[0], py = meta.pivot[1];
