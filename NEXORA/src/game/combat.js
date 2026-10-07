@@ -145,6 +145,13 @@ export function collectGem(value) { state.player.gems += value; events.onGem?.()
 // Oyuncuya hasar: savunma hasarı 1/(1+savunma) kadar azaltır
 export function hurtPlayer(dmg) {
   const p = state.player;
+  if (p.dodgeT > 0 && !state.over) {                               // kaçınma sıçraması: hasar yok; sıçrama başına bir kez MÜKEMMEL KAÇINMA ödülü
+    if (!p.perfectDone) {
+      p.perfectDone = true; p.dodgeCd = 0; state.slowT = Math.max(state.slowT, CONFIG.dodge.perfectSlow);
+      addText(p.a, 135, 'KAÇTIN!', '#7dffb0', 1.1, false, { life: 1.1, rise: 40, key: 'dodge' }); gainXp(CONFIG.dodge.perfectXp); events.onDodge?.(true);
+    }
+    return;
+  }
   if (p.invuln > 0 || state.over) return;
   const S = derived(p);
   dmg = Math.max(1, dmg / (1 + S.defense) * (1 - S.dmgTaken));

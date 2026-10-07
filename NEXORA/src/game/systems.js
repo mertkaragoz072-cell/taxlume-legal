@@ -48,7 +48,7 @@ function updatePlayerAnim(p, dt, atkMul) {
 }
 
 export function update(dt) {
-  if (state.paused || state.userPause) { Input.skillQueue.length = 0; Input.attackQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
+  if (state.paused || state.userPause) { Input.skillQueue.length = 0; Input.attackQueued = false; Input.dodgeQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
   if (state.hitStop > 0) {                                  // hit-stop: oyun mantığı kısa donar; saldırı sayacı akar (saldırı hızı bozulmaz), efektler yaşar
     state.hitStop -= dt; state.player.atkTimer = Math.max(0, state.player.atkTimer - dt);
     for (const t of state.texts) { t.life -= dt; t.h = Math.min(t.h + (t.rise ?? 50) * dt, 185); }
@@ -69,7 +69,8 @@ export function update(dt) {
   if (!state.over) {
     const retreating = p.retreat > 0;
     const ahead = live.some((en) => { const d = wrapAngle(en.a - p.a) * r; return d > -20 && d < Math.max(C.player.engageRange * S.rangeMul, en.def.engage ?? 0); });
-    if (retreating) { ax = -1; p.retreat -= dt; }              // boss saldırısını okuyup geri çekilme (boss.js tetikler)
+    if (retreating) { ax = -1; p.retreat -= dt; }
+    else if (p.dodgeT > 0) ax = 0;                              // kaçınma sıçraması sürerken otomatik ilerleme durur              // boss saldırısını okuyup geri çekilme (boss.js tetikler)
     else if (!ahead && !live.some((e) => e.sp && e.sp.phase !== 'idle')) ax = 1;   // boss özel saldırıdayken kahraman yerinde bekler (boss'u geçip kaçmaz)
     p.dir = 1;
     const speed = retreating ? WAVES.boss.dodge.speed : C.player.autoSpeed * S.moveMul;
@@ -81,6 +82,16 @@ export function update(dt) {
     p.lean += (ax * 0.12 - p.lean) * Math.min(1, dt * 10);
     if (S.regen > 0 && p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + S.regen * dt);     // can yenileme
   }
+  // Manuel kaçınma (Input.dodgeQueued): kısa geri sıçrama, süresince dokunulmaz (combat.hurtPlayer → mükemmel kaçınma)
+  const D = C.dodge;
+  p.dodgeCd = Math.max(0, p.dodgeCd - dt);
+  if (Input.dodgeQueued && !state.over && p.dodgeCd <= 0 && p.dodgeT <= 0) { p.dodgeT = D.duration; p.dodgeCd = D.cooldown; p.perfectDone = false; groundDust(p.a, 8, 110); events.onDodge?.(false); }
+  Input.dodgeQueued = false;
+  if (p.dodgeT > 0) {
+    const q = 1 - p.dodgeT / D.duration; p.hopH = Math.sin(Math.PI * q) * D.height;
+    p.a -= (D.distance / D.duration) * Math.sin(Math.PI * q) * (Math.PI / 2) * dt / r;     // geri kayış: yarım sinüs hız profili (toplam ≈ distance)
+    p.dodgeT -= dt; if (p.dodgeT <= 0) { p.dodgeT = 0; p.hopH = 0; groundDust(p.a, 6, 90); }
+  } else p.hopH = 0;
   p.moveAxis = ax;
   p.invuln = Math.max(0, p.invuln - dt);
   p.hitFlash = Math.max(0, p.hitFlash - dt);

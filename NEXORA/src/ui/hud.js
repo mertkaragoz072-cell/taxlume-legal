@@ -12,7 +12,14 @@ export function initHud() {
 
 const skillEls = {};
 // Yetenek düğmeleri: bekleme süresi daire dilimi (--cd), hazırken parlama, seviye açılmamışsa gri
+function updateDodgeButton() {
+  const b = skillEls.dodge || (skillEls.dodge = document.getElementById('btn-dodge')); if (!b) return;
+  const cd = state.player.dodgeCd / CONFIG.dodge.cooldown;
+  b.style.setProperty('--cd', cd.toFixed(3)); b.classList.toggle('ready', cd <= 0); b.classList.toggle('cooling', cd > 0);
+  const tx = b.querySelector('.cdtxt'); if (tx) tx.textContent = state.player.dodgeCd > 0 ? (state.player.dodgeCd >= 1 ? Math.ceil(state.player.dodgeCd) : state.player.dodgeCd.toFixed(1)) : '';
+}
 function updateSkillButtons() {
+  updateDodgeButton();
   for (const id of Object.keys(SKILLS)) {
     const b = skillEls[id] || (skillEls[id] = document.getElementById('btn-' + id)); if (!b) continue;
     const sk = SKILLS[id], locked = state.player.level < sk.unlockLevel, cd = locked ? 1 : state.skillCd[id] / sk.cooldown;

@@ -7,6 +7,9 @@ import { enemyMeta } from '../game/EnemySpawner.js';
 import { onSurface, onLane, groundShadow, outlined, outline } from './draw.js';
 import { setHull } from '../game/ragdoll.js';
 
+// Havadayken (kaçınma sıçraması) gölge yerde kalır ve küçülür
+function plShadow(ctx, p, w, a) { const h = p.hopH || 0; ctx.save(); ctx.translate(0, h); groundShadow(ctx, w * (1 - Math.min(0.4, h / 120)), a * (1 - Math.min(0.5, h / 90))); ctx.restore(); }
+
 function eyes(ctx, x, y, dir, big) {
   const r = big ? 4 : 3;
   for (const ex of [x - 5, x + 5]) {
@@ -25,8 +28,8 @@ function drawPlayerSprite(ctx) {
   const img = Assets.get(HERO.id + '_' + anim.frames[i]);
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
-  onLane(ctx, p.a, 0, p.lean * 0.5, () => {
-    groundShadow(ctx, 56, 0.34);                                   // ayakların altında küçük yumuşak oval
+  onLane(ctx, p.a, p.hopH || 0, p.lean * 0.5, () => {
+    plShadow(ctx, p, 56, 0.34);                                    // ayakların altında küçük yumuşak oval
     ctx.scale(p.dir, 1);
     if (p.anim !== 'death') castShadow(ctx, img, 'p:' + anim.frames[i], -meta.pivot[0] * meta.scale, -meta.pivot[1] * meta.scale, img.width * meta.scale, img.height * meta.scale, p.dir);
     const sc = meta.scale, hurt = Math.max(0, p.hitFlash) / 0.2, running = Math.abs(p.moveAxis) > 0 && p.anim === 'run';
@@ -68,8 +71,8 @@ function drawHeroFrames(ctx, meta, anim) {
   const sc = F.scale, w = img.width * sc, h = img.height * sc, px = F.pivot[0] * sc, py = F.pivot[1] * sc, hurtK = Math.max(0, p.hitFlash) / 0.2;
   let alpha = 1;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) alpha = 0.6;
-  onLane(ctx, p.a, 0, p.lean * 0.3, () => {
-    groundShadow(ctx, 56 * (name === 'death' ? 1.5 : 1), 0.34);
+  onLane(ctx, p.a, p.hopH || 0, p.lean * 0.3, () => {
+    plShadow(ctx, p, 56 * (name === 'death' ? 1.5 : 1), 0.34);
     ctx.scale(p.dir, 1);
     if (name !== 'death') castShadow(ctx, img, key, -px, -py, w, h, p.dir);
     ctx.globalAlpha = alpha; ctx.drawImage(img, -px, -py, w, h);
@@ -140,7 +143,7 @@ function drawHeroRagdoll(ctx, meta, L, p) {
   const [cx, cy] = [Math.cos(B.r), Math.sin(B.r)], ox = B.x - (h.com[0] * cx - h.com[1] * cy), oy = B.y - (h.com[0] * cy + h.com[1] * cx);   // pivotun (ayak orijini) dünya konumu
   const sp = Math.hypot(B.vx, B.vy), amp = Math.min(9, 1.5 + sp * 0.03);
   const fade = R.done ? 1 : 1;
-  onLane(ctx, p.a, 0, 0, () => {
+  onLane(ctx, p.a, p.hopH || 0, 0, () => {
     ctx.scale(p.dir, 1);
     const gy = Math.max(0, -(oy + h.com[1]) ), k = 1 / (1 + Math.max(0, -B.y - 30) / 90);       // yerden yükseldikçe gölge küçülür/solar
     ctx.save(); ctx.translate(B.x, 0); ctx.globalAlpha = k; groundShadow(ctx, 62 * (0.8 + k * 0.5), 0.38); ctx.restore();
@@ -203,8 +206,8 @@ function drawProceduralHero(ctx, meta, anim) {
     if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(cv, 'heroine' + key, '#ff5a4a'), -hx * sc, -hy * sc, cv.width * sc, cv.height * sc); ctx.globalAlpha = alpha; }
     ctx.restore();
   };
-  onLane(ctx, p.a, 0, p.lean * 0.3, () => {
-    groundShadow(ctx, 60 * (name === 'death' ? 1.6 : 1), 0.34);
+  onLane(ctx, p.a, p.hopH || 0, p.lean * 0.3, () => {
+    plShadow(ctx, p, 60 * (name === 'death' ? 1.6 : 1), 0.34);
     ctx.scale(p.dir, 1);
     if (name !== 'death') castShadow(ctx, img, 'heroine', -px * sc, -py * sc, img.width * sc, img.height * sc, p.dir);
     ctx.globalAlpha = alpha;
@@ -240,7 +243,7 @@ export function drawPlayer(ctx) {
   const step = Math.sin(p.walk) * (Math.abs(state.player.moveAxis) > 0 ? 1 : 0);
   const bob = Math.abs(Math.sin(p.walk)) * 2 * Math.abs(state.player.moveAxis);
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.55;
-  onLane(ctx, p.a, 0, p.lean, () => {
+  onLane(ctx, p.a, p.hopH || 0, p.lean, () => {
     const d = p.dir; ctx.scale(d, 1);
     ctx.translate(0, -bob);
     // gölge

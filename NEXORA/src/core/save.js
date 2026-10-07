@@ -1,4 +1,5 @@
 // Kayıt/yükleme: yalnızca tarayıcı localStorage (yerel, sunucu yok). Kahraman başına ilerleme:
+// (v2: data.meta = { ach, stats, daily, shop } hesap geneli)
 //   { level, xp, coins, gems, hp, totalKills, bestLevel, wave, stage, boss, upgrades:{id:seviye}, cards }  + son seçilen kahraman.
 // Ölünce seviye/coin/gem KALIR (yeni deneme aynı seviyeden başlar); düşmanlar ve konum sıfırlanır.
 // Bozuk/eski kayıt sessizce yok sayılır. Şema değişirse KEY'deki sürümü artır.
@@ -7,20 +8,38 @@ import { xpForLevel } from '../game/state.js';
 import { recalcMaxHp } from '../game/PlayerStats.js';
 import { restoreCards, serializeCards } from '../game/CardSystem.js';
 
-const KEY = 'nexora_save_v1';
-let data = { v: 1, lastHero: null, heroes: {} };
+// Şema sürümleri: v1 (heroes + lastHero) → v2 (+ meta: başarımlar, günlük görevler, mağaza; hesap geneli). Anahtar sabit (nexora_save_v1), sürüm veri içindeki `v` alanıdır;
+// eski sürüm yükleyince migrate() ile yükseltilir, bozuk kayıt yedeklenip (nexora_save_corrupt) temiz başlanır.
+const KEY = 'nexora_save_v1', BACKUP_KEY = 'nexora_save_corrupt', VERSION = 2;
+const fresh = () => ({ v: VERSION, lastHero: null, heroes: {}, meta: freshMeta() });
+export const freshMeta = () => ({ ach: {}, stats: { kills: 0, bosses: 0, deaths: 0, coins: 0, crits: 0, chapters: 0 }, daily: { day: '', goals: [], claimed: [] }, shop: { owned: {}, spent: 0 } });
+const MIGRATIONS = {                                   // from → to (sırayla uygulanır)
+  1: (d) => { d.meta = freshMeta(); d.v = 2; return d; },
+};
+export function migrate(d) {
+  if (!d || typeof d !== 'object' || !d.heroes || typeof d.heroes !== 'object') return null;
+  let v = Number.isInteger(d.v) ? d.v : 1; if (v > VERSION) return null;              // gelecekteki sürüm: dokunma (geri sarma yok)
+  while (v < VERSION) { if (!MIGRATIONS[v]) return null; d = MIGRATIONS[v](d); v = d.v; }
+  const m = d.meta = { ...freshMeta(), ...(d.meta || {}) };                            // eksik meta alanlarını tamamla
+  m.stats = { ...freshMeta().stats, ...(m.stats || {}) }; m.daily = { ...freshMeta().daily, ...(m.daily || {}) }; m.shop = { ...freshMeta().shop, ...(m.shop || {}) };
+  return d;
+}
+let data = fresh();
 let kills0 = 0, dirty = false;
 
 export const Save = {
   load() {
     try {
       const raw = localStorage.getItem(KEY); if (!raw) return data;
-      const d = JSON.parse(raw);
-      if (d && d.v === 1 && d.heroes && typeof d.heroes === 'object') data = d;
-    } catch (_) { /* bozuk kayıt → yok say */ }
+      let d = null; try { d = migrate(JSON.parse(raw)); } catch (_) { d = null; }
+      if (d) data = d;
+      else { try { localStorage.setItem(BACKUP_KEY, raw); } catch (_) { /* yoksay */ } }     // okunamayan/yeni sürüm kayıt: yedeklenir, temiz başlanır (üzerine yazılmadan önce)
+    } catch (_) { /* localStorage erişilemez */ }
     return data;
   },
   lastHero: () => data.lastHero,
+  meta: () => data.meta,
+  saveMeta() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { /* yoksay */ } },
   of: (id) => data.heroes[id] || null,
   // Kayıtlı ilerlemeyi oyuncuya uygula (can/hasar seviyeye göre türetilir; gainXp ile aynı formül)
   apply(p, heroId, state) {
@@ -52,5 +71,5 @@ export const Save = {
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { /* dolu/yasak → oyun yine çalışır */ }
   },
   setLast(id) { data.lastHero = id; try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { /* yoksay */ } },
-  clear() { data = { v: 1, lastHero: null, heroes: {} }; kills0 = 0; try { localStorage.removeItem(KEY); } catch (_) { /* yoksay */ } },
+  clear() { data = fresh(); kills0 = 0; try { localStorage.removeItem(KEY); } catch (_) { /* yoksay */ } },
 };

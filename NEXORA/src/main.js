@@ -94,6 +94,7 @@ async function boot() {
   events.onKill = () => Audio.play('kill');
   events.onHurt = () => Audio.play('hurt');
   events.onSkill = (id) => Audio.play(id);
+  events.onDodge = (perfect) => Audio.play(perfect ? 'levelup' : 'click');
   const showOver = showGameOver;
   let bossIntroTimer = 0;
   events.onWaveStart = (n, info) => {

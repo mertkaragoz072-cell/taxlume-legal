@@ -17,7 +17,7 @@ export function createPlayer() {
     a: 0, dir: 1, lean: 0, walk: 0, stride: 0,   // a: gezegen açısı (radyan); stride: kat edilen mesafe (kare tabanlı run bununla senkron)
     hp: c.maxHp, maxHp: c.maxHp, damage: c.attackDamage,
     level: 1, xp: 0, xpNext: xpForLevel(1), coins: 0, gems: 0, upgrades: {}, retreat: 0, cards: { owned: {}, equipped: [] },   // upgrades: { güçId: seviye } (PlayerStats/UpgradeManager)
-    atkTimer: 0, invuln: 0, hitFlash: 0, hitT: 0, hitDir: 1,
+    dodgeT: 0, dodgeCd: 0, hopH: 0, atkTimer: 0, invuln: 0, hitFlash: 0, hitT: 0, hitDir: 1,
     anim: 'idle', animT: 0, combo: 0,         // animasyon: ad, geçen süre, saldırı kombosu (0..2)
   };
 }

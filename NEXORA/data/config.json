@@ -143,5 +143,14 @@
       "speed": 0.32,
       "period": 700
     }
-  ]
+  ],
+  "dodge": {
+    "_comment": "Manuel kaçınma (düğme / Shift,K,↓): kısa geri sıçrama, süresince dokunulmazlık. Boss/düşman saldırısı tam bu sırada isabet edecekse MÜKEMMEL KAÇINMA: bekleme sıfırlanır + kısa yavaş çekim + bonus XP.",
+    "duration": 0.42,
+    "distance": 105,
+    "height": 34,
+    "cooldown": 1.7,
+    "perfectSlow": 0.5,
+    "perfectXp": 6
+  }
 }

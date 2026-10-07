@@ -268,3 +268,8 @@ html, body {
 .ip-steps span { width: clamp(22px, 7vh, 32px); height: clamp(22px, 7vh, 32px); border-radius: 50%; border: 3px solid #1f2a44; display: grid; place-items: center; font-weight: 900; font-size: clamp(10px, 3vh, 14px); background: #fff; color: #1f2a44; opacity: .55; }
 .ip-steps span.done { background: #4fc65a; opacity: 1; } .ip-steps span.cur { background: #ffd23f; opacity: 1; box-shadow: 0 0 0 3px rgba(255,210,63,.5); } .ip-steps span.boss.cur { background: #e23b4e; color: #fff; }
 .ip-sub .chip { font-size: 10px; font-weight: 800; border: 2px solid #1f2a44; border-radius: 9px; padding: 0 5px; margin-left: 4px; background: linear-gradient(#ffd23f, #f0a014); color: #1f2a44; letter-spacing: 0; }
+
+/* kaçınma düğmesi */
+.skillbtn.s3 { right: 100px; bottom: 60px; background: radial-gradient(circle at 35% 30%, #8ee0a0, #2f9a5a 70%); }
+#btn-dodge { --cd: 0; } #btn-dodge.cooling { filter: brightness(.62) saturate(.7); } #btn-dodge.ready { box-shadow: 0 4px 0 rgba(31,42,68,.6), 0 0 0 2px rgba(255,255,255,.55), 0 0 12px rgba(140,240,170,.9); }
+@media (min-height: 430px) { .skillbtn.s3 { right: 130px; bottom: 82px; } }
