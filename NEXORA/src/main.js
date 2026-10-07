@@ -171,4 +171,6 @@ async function boot() {
   requestAnimationFrame(frame);
   window.__game = { state, spawnEnemy, CONFIG, Audio, update, startWave, render: () => render(ctx) }; window.__cards = CardSystem; // hata ayıklama
 }
+// Çevrimdışı/PWA: service worker (CSP satır içi scripti engellediği için burada; test için ?hq=1 veya ?nosw ile kapalı)
+if ('serviceWorker' in navigator && !/[?&](hq|nosw)\b/.test(location.search) && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 boot();
