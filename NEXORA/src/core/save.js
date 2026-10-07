@@ -25,7 +25,7 @@ export function migrate(d) {
   return d;
 }
 let data = fresh();
-let kills0 = 0, dirty = false;
+let kills0 = 0, dirty = false, lastMeta = '';
 
 export const Save = {
   load() {
@@ -66,7 +66,7 @@ export const Save = {
     if (!heroId || !p) return;
     const prev = data.heroes[heroId] || {};
     const cur = { level: p.level, xp: p.xp, coins: p.coins, gems: p.gems, totalKills: kills0 + state.kills, bestLevel: Math.max(prev.bestLevel || 1, p.level), wave: state.wave.n, stage: state.wave.stage, boss: state.wave.boss, upgrades: { ...p.upgrades }, cards: serializeCards(p), hp: state.over ? null : Math.max(1, Math.round(p.hp)) };
-    if (JSON.stringify(prev) === JSON.stringify(cur) && data.lastHero === heroId) return;
+    const mj = JSON.stringify(data.meta); if (JSON.stringify(prev) === JSON.stringify(cur) && data.lastHero === heroId && mj === lastMeta) return; lastMeta = mj;
     data.heroes[heroId] = cur; data.lastHero = heroId;
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { /* dolu/yasak → oyun yine çalışır */ }
   },

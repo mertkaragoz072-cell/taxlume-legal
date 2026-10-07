@@ -1,0 +1,31 @@
+{
+  "_comment": "Meta sistemler (hesap geneli, Save.meta): başarımlar (stat ≥ target → ödül anında), günlük görevler (her gün 3 görev, ilerleme = o günkü artış, ödül elle alınır), kalıcı mağaza. Cüzdan: aktif kahramanın coin/kristali. İstatistikler: kills, bosses, deaths, coins, crits, chapters, dodges (mükemmel kaçınma), level (en yüksek).",
+  "achievements": [
+    { "id": "kill_50", "icon": "⚔️", "name": "Goblin Avcısı", "desc": "50 düşman yen", "stat": "kills", "target": 50, "reward": { "coins": 40, "gems": 0 } },
+    { "id": "kill_500", "icon": "🗡️", "name": "Goblin Kâbusu", "desc": "500 düşman yen", "stat": "kills", "target": 500, "reward": { "coins": 250, "gems": 2 } },
+    { "id": "boss_1", "icon": "👑", "name": "Lord'un Sonu", "desc": "Goblin Lordu'nu yen", "stat": "bosses", "target": 1, "reward": { "coins": 80, "gems": 1 } },
+    { "id": "boss_5", "icon": "🏆", "name": "Boss Avcısı", "desc": "5 boss yen", "stat": "bosses", "target": 5, "reward": { "coins": 300, "gems": 3 } },
+    { "id": "chapter_3", "icon": "🌍", "name": "Gezgin", "desc": "3 bölüm tamamla", "stat": "chapters", "target": 3, "reward": { "coins": 150, "gems": 2 } },
+    { "id": "level_10", "icon": "⭐", "name": "Yükselen Yıldız", "desc": "10. seviyeye ulaş", "stat": "level", "target": 10, "reward": { "coins": 120, "gems": 1 } },
+    { "id": "level_20", "icon": "🌟", "name": "Efsane", "desc": "20. seviyeye ulaş", "stat": "level", "target": 20, "reward": { "coins": 400, "gems": 4 } },
+    { "id": "dodge_5", "icon": "💨", "name": "Gölge Gibi", "desc": "5 mükemmel kaçınma yap", "stat": "dodges", "target": 5, "reward": { "coins": 90, "gems": 1 } },
+    { "id": "crit_100", "icon": "💥", "name": "Keskin Nişancı", "desc": "100 kritik vuruş yap", "stat": "crits", "target": 100, "reward": { "coins": 150, "gems": 1 } },
+    { "id": "coin_1000", "icon": "🪙", "name": "Hazine Avcısı", "desc": "1000 altın topla", "stat": "coins", "target": 1000, "reward": { "coins": 100, "gems": 2 } }
+  ],
+  "dailyCount": 3,
+  "dailyPool": [
+    { "id": "d_kill", "stat": "kills", "targets": [30, 40, 60], "text": "{n} düşman yen", "reward": { "coins": 60, "gems": 0 } },
+    { "id": "d_boss", "stat": "bosses", "targets": [1], "text": "Bir boss yen", "reward": { "coins": 120, "gems": 1 } },
+    { "id": "d_dodge", "stat": "dodges", "targets": [2, 3], "text": "{n} mükemmel kaçınma yap", "reward": { "coins": 70, "gems": 1 } },
+    { "id": "d_crit", "stat": "crits", "targets": [15, 25], "text": "{n} kritik vuruş yap", "reward": { "coins": 60, "gems": 0 } },
+    { "id": "d_coin", "stat": "coins", "targets": [150, 250], "text": "{n} altın topla", "reward": { "coins": 50, "gems": 1 } },
+    { "id": "d_chapter", "stat": "chapters", "targets": [1], "text": "Bir bölümü tamamla", "reward": { "coins": 100, "gems": 1 } }
+  ],
+  "shop": [
+    { "id": "s_damage", "icon": "⚔️", "name": "Güç Taşı", "desc": "+%5 hasar", "stat": "damageMul", "per": 0.05, "max": 5, "currency": "coins", "cost": [150, 300, 500, 800, 1200] },
+    { "id": "s_hp", "icon": "❤️", "name": "Can Kristali", "desc": "+%5 maksimum can", "stat": "maxHpMul", "per": 0.05, "max": 5, "currency": "coins", "cost": [150, 300, 500, 800, 1200] },
+    { "id": "s_crit", "icon": "🎯", "name": "Keskin Göz", "desc": "+%2 kritik şansı", "stat": "critChance", "per": 0.02, "max": 5, "currency": "gems", "cost": [3, 5, 8, 12, 18] },
+    { "id": "s_coin", "icon": "🧲", "name": "Altın Mıknatısı", "desc": "+%10 altın kazancı", "stat": "coinMul", "per": 0.1, "max": 5, "currency": "gems", "cost": [3, 5, 8, 12, 18] },
+    { "id": "s_regen", "icon": "🍀", "name": "Şifa Çiçeği", "desc": "+0.3 can/sn yenilenme", "stat": "regen", "per": 0.3, "max": 3, "currency": "gems", "cost": [6, 12, 20] }
+  ]
+}

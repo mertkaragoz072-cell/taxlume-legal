@@ -31,7 +31,7 @@
     "enrageCdMul": 0.6,
     "rageSpeedMul": 1.15,
     "dodge": {
-      "chance": 0.55,
+      "chance": 0.3,
       "delay": 0.12,
       "speed": 230
     },
@@ -61,7 +61,17 @@
       "recover": 0.6,
       "maxDist": 300
     },
-    "minGapExtra": 30
+    "minGapExtra": 30,
+    "combo": {
+      "hits": 3,
+      "windup": 0.5,
+      "step": 80,
+      "damageMul": 0.85,
+      "minRage": 1,
+      "recover": 0.7,
+      "_comment": "Öfke fazından itibaren: 3 ardışık çekiç; her vuruşta boss öne adım atar, uyarı süresi %15 kısalır. Aralarda kaçınma/geri çekilme gerekir."
+    },
+    "recoverDamageMul": 1.25
   },
   "bossCompleteSec": 3.0,
   "wavesPerStage": 5,

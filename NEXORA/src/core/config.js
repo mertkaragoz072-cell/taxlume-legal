@@ -7,6 +7,7 @@ export const WAVES = {};        // data/waves.json
 export const UPGRADES = { base: {}, list: [], builds: [], categories: {}, epicMultiplier: 2, buildAffinityWeight: 1.6, rarities: {}, maxDistinct: 4 };   // data/upgrades.json
 export const CARDS = { maxEquipped: 3, cards: [] };   // data/cards.json: kart sistemi tanımları (CardSystem)
 export const CHAPTERS = { chapters: [], reward: { coins: 50, gems: 1, xp: 120 } };   // data/chapters.json
+export const META = { achievements: [], dailyPool: [], dailyCount: 3, shop: [] };   // data/meta.json: başarımlar, günlük görevler, mağaza
 export const SKILLS = {};      // data/skills.json: yetenek tanımları (buton id → ayarlar)
 export const ANIMS = {};
 export const HERO = { id: 'male', fromUrl: false };
@@ -20,8 +21,8 @@ export async function loadData(base = 'data/') {
     if (!res.ok) throw new Error(`${base + f} yüklenemedi (${res.status})`);
     return res.json();
   };
-  const [config, enemies, manifest, male, world, enemyAnims, female, heroine, skills, waves, upgrades, cards, chapters] = await Promise.all([
-    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'), get('world_props.json'), get('enemy_animations.json'), get('female_animations.json'), get('heroine_animations.json'), get('skills.json'), get('waves.json'), get('upgrades.json'), get('cards.json'), get('chapters.json'),
+  const [config, enemies, manifest, male, world, enemyAnims, female, heroine, skills, waves, upgrades, cards, chapters, meta] = await Promise.all([
+    get('config.json'), get('enemies.json'), get('asset_manifest.json'), get('male_animations.json'), get('world_props.json'), get('enemy_animations.json'), get('female_animations.json'), get('heroine_animations.json'), get('skills.json'), get('waves.json'), get('upgrades.json'), get('cards.json'), get('chapters.json'), get('meta.json'),
   ]);
   Object.assign(CONFIG, config);
   Object.assign(ENEMY_TYPES, enemies);
@@ -29,7 +30,7 @@ export async function loadData(base = 'data/') {
   ANIMS.heroine = heroine;
   Object.assign(SKILLS, skills);
   Object.assign(CARDS, cards);
-  Object.assign(CHAPTERS, chapters);
+  Object.assign(CHAPTERS, chapters); Object.assign(META, meta);
   Object.assign(WAVES, waves);
   Object.assign(UPGRADES, { base: upgrades.base, list: upgrades.upgrades, builds: upgrades.builds, categories: upgrades.categories, epicMultiplier: upgrades.epicMultiplier, buildAffinityWeight: upgrades.buildAffinityWeight, rarities: upgrades.rarities, maxDistinct: upgrades.maxDistinct || 0 });
   const q = new URLSearchParams(location.search).get('hero');

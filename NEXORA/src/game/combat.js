@@ -4,6 +4,7 @@ import { rand, TAU, wrapAngle } from '../core/util.js';
 import { state, xpForLevel } from './state.js';
 import { events } from './events.js';
 import { derived, recalcMaxHp, probRound } from './PlayerStats.js';
+import { add as metaAdd, setMax as metaMax } from './Meta.js';
 import { hitSparks, deathBurst, hurtSparks, hitStop, xpBurst } from './fx.js';
 
 // opts: { life (sn), rise (birim/sn), tag (toplu temizlik için), key (aynı anahtarlı yazı tekrar basılmaz, yenilenir) }
@@ -60,6 +61,8 @@ export const slowMul = (en) => (en.chill ? en.chill.mul : 1);
 export function applyKnock(en, k) { en.knock = Math.max(en.knock, k * (1 - en.def.knockResist)); en.stagger = Math.max(en.stagger, 0.3); }
 
 export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
+  if (crit && !dot) metaAdd('crits');
+  if (en.def.boss && en.sp?.phase === 'recover') dmg *= WAVES.boss.recoverDamageMul || 1;     // saldırı sonrası savunmasız bekleme
   en.hp -= dmg;
   if (dot) {
     addText(en.a, en.def.heightUnits + 6, Math.round(dmg), color || '#ff8a3a', 0.6);
@@ -83,7 +86,7 @@ function spawnPickup(a, kind, h, spreadV) {
 
 export function killEnemy(en) {
   if (en.dead || en.rewarded) return; en.rewarded = true;          // ödül yalnız bir kez
-  en.dead = true; en.deathT = 0; state.kills++;
+  en.dead = true; en.deathT = 0; state.kills++; metaAdd('kills'); if (en.def.boss) metaAdd('bosses');
   let n = Math.round(rand(en.def.coins[0], en.def.coins[1]));
   if (Math.random() < derived(state.player).extraCoin) n += 1 + (en.def.elite ? 2 : 0);
   for (let i = 0; i < n; i++) spawnPickup(en.a, 'coin', 14, 1);
@@ -124,7 +127,7 @@ export function gainXp(amount) {
   amount = probRound(amount * derived(p).xpMul);
   p.xp += amount; const lv0 = p.level;
   while (p.xp >= p.xpNext) {
-    p.xp -= p.xpNext; p.level++; p.xpNext = xpForLevel(p.level);
+    p.xp -= p.xpNext; p.level++; p.xpNext = xpForLevel(p.level); metaMax('level', p.level);
     p.damage += L.damagePerLevel;
     const before = p.maxHp; recalcMaxHp(p, true);
     p.hp = Math.min(p.maxHp, p.hp + (p.maxHp - p.hp) * L.healOnLevelUp);
@@ -139,7 +142,7 @@ export function gainXp(amount) {
   return amount;
 }
 
-export function collectCoin(value) { const p = state.player; p.coins += probRound(value * derived(p).coinMul); events.onCoin?.(); }
+export function collectCoin(value) { const p = state.player, n = probRound(value * derived(p).coinMul); p.coins += n; metaAdd('coins', n); events.onCoin?.(); }
 export function collectGem(value) { state.player.gems += value; events.onGem?.(); }
 
 // Oyuncuya hasar: savunma hasarı 1/(1+savunma) kadar azaltır
@@ -148,7 +151,7 @@ export function hurtPlayer(dmg) {
   if (p.dodgeT > 0 && !state.over) {                               // kaçınma sıçraması: hasar yok; sıçrama başına bir kez MÜKEMMEL KAÇINMA ödülü
     if (!p.perfectDone) {
       p.perfectDone = true; p.dodgeCd = 0; state.slowT = Math.max(state.slowT, CONFIG.dodge.perfectSlow);
-      addText(p.a, 135, 'KAÇTIN!', '#7dffb0', 1.1, false, { life: 1.1, rise: 40, key: 'dodge' }); gainXp(CONFIG.dodge.perfectXp); events.onDodge?.(true);
+      addText(p.a, 135, 'KAÇTIN!', '#7dffb0', 1.1, false, { life: 1.1, rise: 40, key: 'dodge' }); gainXp(CONFIG.dodge.perfectXp); metaAdd('dodges'); events.onDodge?.(true);
     }
     return;
   }
@@ -161,5 +164,5 @@ export function hurtPlayer(dmg) {
   p.anim = 'hurt'; p.animT = 0; state.hurtFlash = 0.28; hurtSparks(p.a, 50);
   addText(p.a, 125, '-' + Math.round(dmg), '#ff9a3a');
   events.onHurt?.();
-  if (p.hp <= 0) { state.over = true; p.anim = 'death'; p.animT = 0; events.onGameOver?.(state); }
+  if (p.hp <= 0) { metaAdd('deaths'); state.over = true; p.anim = 'death'; p.animT = 0; events.onGameOver?.(state); }
 }

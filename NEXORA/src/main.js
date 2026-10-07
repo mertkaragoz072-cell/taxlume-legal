@@ -13,6 +13,7 @@ import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
 import { showUpgrade } from './ui/UpgradeCard.js';
 import { showChapterClear } from './ui/ChapterClear.js';
 import { initInfoPanel } from './ui/InfoPanel.js';
+import { initMeta, add as metaAdd, setMax as metaMax } from './game/Meta.js';
 import { chapterInfo } from './game/chapters.js';
 import { startWave, resumeAfterUpgrade, isBossWave, continueChapter } from './game/WaveManager.js';
 import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
@@ -68,6 +69,7 @@ async function boot() {
   }
   await Assets.load(manifest.images);
   Save.load();
+  initMeta();
 
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   initHud();
@@ -106,7 +108,7 @@ async function boot() {
   };
   events.onWaveComplete = (n, i) => { if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('levelup'); } };
   events.onChapterClear = (cleared) => {
-    const p = state.player, R = CHAPTERS.reward, xp = gainXp(R.xp * cleared);
+    const p = state.player, R = CHAPTERS.reward, xp = gainXp(R.xp * cleared); metaAdd('chapters');
     p.coins += R.coins; p.gems += R.gems; events.onCoin?.(); events.onGem?.();
     saveNowRef?.();                                                   // ilerleme (yeni bölüm, dalga 1) + ödüller hemen kaydedilir
     Audio.play('levelup');
@@ -130,6 +132,10 @@ async function boot() {
   document.getElementById('restart-btn').addEventListener('click', restart);
   addEventListener('keydown', (e) => { if (state.over && (e.code === 'Enter' || e.code === 'Space')) restart(); });
   restart();
+  metaMax('level', state.player.level);
+  const toastEl = document.getElementById('toast'); let toastQ = [], toastBusy = false;
+  events.onToast = (html) => { toastQ.push(html); if (!toastBusy) nextToast(); };
+  function nextToast() { const h = toastQ.shift(); if (!h) { toastBusy = false; return; } toastBusy = true; toastEl.innerHTML = h; toastEl.classList.add('show'); Audio.play('levelup'); setTimeout(() => { toastEl.classList.remove('show'); setTimeout(nextToast, 350); }, 2600); }
   // Otomatik kayıt: 5 sn'de bir, seviye atlayınca, ölünce, sekme gizlenince/kapanınca
   const saveNow = () => Save.write(HERO.id, state.player, state); saveNowRef = saveNow;
   setInterval(saveNow, 5000);

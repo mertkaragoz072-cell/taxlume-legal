@@ -22,6 +22,7 @@ export const newBossState = () => ({ cd: WAVES.boss.firstCd, phase: 'idle', t: 0
 function pickAttack(en, d) {
   const B = WAVES.boss, pool = [];
   if (d <= B.hammer.maxDist) pool.push('hammer');
+  if (en.sp.rage >= B.combo.minRage && d <= B.hammer.maxDist) pool.push('combo');
   if (d <= B.smash.maxDist) pool.push('smash');
   if (d >= B.charge.minDist && d <= B.charge.maxDist) pool.push('charge');
   const fresh = pool.filter((k) => k !== en.sp.last);
@@ -32,7 +33,7 @@ function pickAttack(en, d) {
 function startAttack(en, atk) {
   const B = WAVES.boss, sp = en.sp, p = state.player, r = R();
   sp.phase = 'windup'; sp.atk = atk; sp.t = 0; sp.hit = false;
-  if (atk === 'hammer') { const H = B.hammer; sp.dur = H.windup; sp.center = en.a + en.face * H.reach / r; state.telegraphs.push({ a: sp.center, radius: H.radius, t: 0, life: H.windup, boss: en }); }
+  if (atk === 'hammer' || atk === 'combo') { const H = B.hammer; sp.dur = atk === 'combo' ? B.combo.windup : H.windup; sp.combo = atk === 'combo' ? B.combo.hits : 0; sp.center = en.a + en.face * H.reach / r; state.telegraphs.push({ a: sp.center, radius: H.radius, t: 0, life: H.windup, boss: en }); }
   else if (atk === 'smash') { const S = B.smash; sp.dur = S.windup; sp.center = en.a; state.telegraphs.push({ a: en.a, radius: S.radius, t: 0, life: S.windup, boss: en }); }
   else { const C = B.charge; sp.dur = C.pullback; sp.target = p.a; state.telegraphs.push({ a: p.a, radius: C.radius, t: 0, life: C.pullback + 0.15, boss: en, line: true }); }
   sp.dodgeIn = Math.random() < B.dodge.chance ? B.dodge.delay : null;      // bu saldırıyı "okuyup" kaçacak mı
@@ -43,12 +44,17 @@ function impact(en, atk) {
   const B = WAVES.boss, sp = en.sp, p = state.player;
   en.attackT = -1; en.atkTimer = 1;
   state.telegraphs = state.telegraphs.filter((t) => t.boss !== en);
-  if (atk === 'hammer') {
-    const H = B.hammer;
+  if (atk === 'hammer' || atk === 'combo') {
+    const H = B.hammer, cm = atk === 'combo';
     state.rings.push({ a: sp.center, t: 0, life: 0.45, color: '#ff9a3a' }); groundDust(sp.center, 14, 150);
     state.shake = Math.max(state.shake, 5); hitStop(0.05); events.onBoss?.('slam');
-    if (dist(p.a, sp.center) <= H.radius) hurtPlayer(en.damage * H.damageMul);
-    sp.phase = 'recover'; sp.dur = H.recover;
+    if (dist(p.a, sp.center) <= H.radius) hurtPlayer(en.damage * H.damageMul * (cm ? B.combo.damageMul : 1));
+    if (cm && sp.combo > 1) {                                // kombo: bir sonraki çekiç — boss öne adım atar, uyarı kısalır
+      sp.combo--; en.a += en.face * B.combo.step / R(); sp.phase = 'windup'; sp.t = 0; sp.dur = Math.max(0.3, B.combo.windup * (0.85 ** (B.combo.hits - sp.combo))); sp.hit = false; sp.dodgeIn = null;
+      sp.center = en.a + en.face * H.reach / R(); state.telegraphs.push({ a: sp.center, radius: H.radius, t: 0, life: sp.dur, boss: en }); events.onBoss?.('telegraph', 'hammer');
+      sp.t = 0; return;
+    }
+    sp.phase = 'recover'; sp.dur = cm ? B.combo.recover : H.recover;
   } else if (atk === 'smash') {
     const S = B.smash;
     state.rings.push({ a: en.a, t: 0, life: 0.75, color: '#ff5a4a', r: S.radius }); state.rings.push({ a: en.a, t: 0, life: 0.5, color: '#ffd0a0' });

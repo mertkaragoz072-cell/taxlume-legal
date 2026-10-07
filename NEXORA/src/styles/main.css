@@ -273,3 +273,14 @@ html, body {
 .skillbtn.s3 { right: 100px; bottom: 60px; background: radial-gradient(circle at 35% 30%, #8ee0a0, #2f9a5a 70%); }
 #btn-dodge { --cd: 0; } #btn-dodge.cooling { filter: brightness(.62) saturate(.7); } #btn-dodge.ready { box-shadow: 0 4px 0 rgba(31,42,68,.6), 0 0 0 2px rgba(255,255,255,.55), 0 0 12px rgba(140,240,170,.9); }
 @media (min-height: 430px) { .skillbtn.s3 { right: 130px; bottom: 82px; } }
+
+/* sekmeli panel + bildirim */
+.ip-tabs { display: flex; gap: 6px; } .ip-tabs button { border: 3px solid #1f2a44; border-radius: 10px; background: #e8d9b4; color: #1f2a44; font-weight: 900; font-size: clamp(10px, 3.2vh, 13px); letter-spacing: 1px; padding: 4px 10px; cursor: pointer; }
+.ip-tabs button.on { background: #ffd23f; box-shadow: 0 3px 0 rgba(31,42,68,.55); }
+.ip-col h4 { margin: 8px 0 4px; font-size: 12px; letter-spacing: 1px; color: #6a4a1a; }
+.ip-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin-bottom: 4px; border-radius: 8px; background: rgba(31,42,68,.08); border-left: 4px solid #8a6a2a; font-size: clamp(10px, 3vh, 13px); color: #1f2a44; }
+.ip-item.done { border-left-color: #2f9a5a; background: rgba(60,160,90,.15); } .ip-item .t { flex: 1; min-width: 0; } .ip-item .t small { display: block; opacity: .7; }
+.ip-bar { height: 6px; border-radius: 3px; background: rgba(31,42,68,.2); margin-top: 3px; overflow: hidden; } .ip-bar i { display: block; height: 100%; background: #4fc65a; }
+.ip-btn { border: 3px solid #1f2a44; border-radius: 9px; background: linear-gradient(#ffd23f, #f0a014); color: #1f2a44; font-weight: 900; font-size: 12px; padding: 3px 9px; cursor: pointer; white-space: nowrap; } .ip-btn:disabled { filter: grayscale(.8) opacity(.6); cursor: default; }
+#toast { position: absolute; left: 50%; top: calc(env(safe-area-inset-top) + 64px); transform: translate(-50%, -20px); z-index: 40; pointer-events: none; opacity: 0; transition: opacity .25s, transform .25s; background: linear-gradient(#2f3d6b, #1f2a44); border: 3px solid #f1c24b; border-radius: 14px; padding: 6px 14px; color: #fff; text-align: center; box-shadow: 0 4px 0 rgba(0,0,0,.35); max-width: 80vw; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); } #toast b { display: block; font-size: clamp(12px, 3.6vh, 16px); color: #ffd23f; } #toast span { font-size: clamp(10px, 3vh, 13px); }
