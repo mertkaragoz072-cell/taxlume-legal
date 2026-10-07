@@ -8,3 +8,10 @@ export function chapterInfo(stage) {
   return { ...w, stage, loop, name, worldIndex: wi, universeNo: uni, stageInWorld: inWorld, stagesPerWorld: per, isWorldEnd: inWorld === per, isWorldStart: inWorld === 1,
     label: `${name} · ${inWorld}/${per}`, short: `Evren ${uni} · ${inWorld}/${per}` };
 }
+
+// Evrenin düşman/boss seti (data/world_roster.json). rosterType: waves.json'daki goblin_* yuvasını bu evrenin karşılığına çevirir.
+import { ROSTER } from '../core/config.js';
+const setOf = (stage) => ROSTER[chapterInfo(stage).id] || {};
+export const rosterType = (type, stage) => setOf(stage).roster?.[type] || type;
+export const worldExtras = (stage) => setOf(stage).extras || [];
+export const bossFor = (stage, fallback) => { const b = setOf(stage).bosses; return b?.length ? b[(chapterInfo(stage).stageInWorld - 1) % b.length] : fallback; };

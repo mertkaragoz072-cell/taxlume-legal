@@ -97,6 +97,634 @@
     "engage": 210,
     "hitRange": 200,
     "hitPad": 90,
-    "minGap": 150
+    "minGap": 150,
+    "title": "GOBLIN LORDU"
+  },
+  "goblin_warlord": {
+    "name": "Goblin Savaş Lordu",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.38,
+    "heightUnits": 149,
+    "width": 103,
+    "barWidth": 103,
+    "hp": 820,
+    "damage": 24,
+    "speed": 44,
+    "xp": 300,
+    "coins": [
+      40,
+      50
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "GOBLIN SAVAŞ LORDU",
+    "tint": {
+      "hue": -18,
+      "sat": 0.85,
+      "light": 0.78
+    },
+    "bossCfg": {
+      "baseCd": [
+        2.0,
+        3.0
+      ],
+      "charge": {
+        "speed": 520,
+        "minDist": 200
+      },
+      "disable": [
+        "smash"
+      ]
+    }
+  },
+  "goblin_king": {
+    "name": "Goblin Kralı",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.52,
+    "heightUnits": 165,
+    "width": 114,
+    "barWidth": 114,
+    "hp": 1150,
+    "damage": 27,
+    "speed": 40,
+    "xp": 420,
+    "coins": [
+      60,
+      75
+    ],
+    "coinValue": 1,
+    "gems": [
+      7,
+      8
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "GOBLIN KRALI",
+    "tint": {
+      "hue": -55,
+      "sat": 1.2,
+      "light": 1.05
+    },
+    "bossCfg": {
+      "combo": {
+        "minRage": 0,
+        "hits": 4
+      },
+      "smash": {
+        "radius": 330
+      }
+    }
+  },
+  "ember_imp": {
+    "name": "Kor İmp",
+    "heightUnits": 63,
+    "width": 40,
+    "barWidth": 32,
+    "hp": 16,
+    "damage": 5,
+    "speed": 124,
+    "xp": 9,
+    "coins": [
+      1,
+      2
+    ],
+    "coinValue": 1,
+    "contactRange": 57,
+    "attackCooldown": 0.8,
+    "minLevel": 1,
+    "weight": 5,
+    "knockResist": 0.0,
+    "gemChance": 0.02,
+    "spriteMul": 0.9,
+    "tint": {
+      "hue": -122,
+      "sat": 1.35,
+      "light": 1.08
+    }
+  },
+  "ember_guard": {
+    "name": "Kor Muhafız",
+    "heightUnits": 82,
+    "width": 52,
+    "barWidth": 43,
+    "hp": 64,
+    "damage": 12,
+    "speed": 58,
+    "xp": 18,
+    "coins": [
+      2,
+      4
+    ],
+    "coinValue": 1,
+    "contactRange": 63,
+    "attackCooldown": 0.9,
+    "minLevel": 1,
+    "weight": 3,
+    "knockResist": 0.55,
+    "gemChance": 0.06,
+    "armor": 0.28,
+    "tint": {
+      "hue": -108,
+      "sat": 1.2,
+      "light": 0.92
+    }
+  },
+  "ember_brute": {
+    "name": "Kor Canavarı",
+    "heightUnits": 115,
+    "width": 82,
+    "barWidth": 64,
+    "hp": 310,
+    "damage": 20,
+    "speed": 42,
+    "xp": 55,
+    "coins": [
+      6,
+      10
+    ],
+    "coinValue": 1,
+    "contactRange": 87,
+    "attackCooldown": 1.4,
+    "minLevel": 3,
+    "weight": 0,
+    "knockResist": 0.8,
+    "elite": true,
+    "hold": true,
+    "gems": [
+      1,
+      2
+    ],
+    "tint": {
+      "hue": -128,
+      "sat": 1.3,
+      "light": 0.9
+    }
+  },
+  "ember_bomber": {
+    "name": "Patlayıcı İmp",
+    "heightUnits": 82,
+    "width": 52,
+    "barWidth": 43,
+    "hp": 30,
+    "damage": 9,
+    "speed": 104,
+    "xp": 16,
+    "coins": [
+      2,
+      4
+    ],
+    "coinValue": 1,
+    "contactRange": 63,
+    "attackCooldown": 0.9,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.3,
+    "gemChance": 0.06,
+    "spriteMul": 0.95,
+    "explode": {
+      "radius": 110,
+      "damageMul": 1.5
+    },
+    "tint": {
+      "hue": -82,
+      "sat": 1.5,
+      "light": 1.18
+    }
+  },
+  "ember_chief": {
+    "name": "Kül Şefi",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.3,
+    "heightUnits": 149,
+    "width": 103,
+    "barWidth": 103,
+    "hp": 780,
+    "damage": 24,
+    "speed": 42,
+    "xp": 300,
+    "coins": [
+      40,
+      50
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "KÜL ŞEFİ",
+    "tint": {
+      "hue": -124,
+      "sat": 1.3,
+      "light": 0.95
+    },
+    "bossCfg": {
+      "baseCd": [
+        2.2,
+        3.2
+      ],
+      "charge": {
+        "speed": 560,
+        "damageMul": 1.35
+      },
+      "combo": {
+        "minRage": 0
+      }
+    }
+  },
+  "ember_juggernaut": {
+    "name": "Kor Devi",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.42,
+    "heightUnits": 158,
+    "width": 108,
+    "barWidth": 108,
+    "hp": 980,
+    "damage": 26,
+    "speed": 34,
+    "xp": 300,
+    "coins": [
+      40,
+      50
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "KOR DEVİ",
+    "armor": 0.15,
+    "tint": {
+      "hue": -112,
+      "sat": 1.25,
+      "light": 0.8
+    },
+    "bossCfg": {
+      "disable": [
+        "charge"
+      ],
+      "smash": {
+        "radius": 320,
+        "windup": 0.8
+      }
+    }
+  },
+  "ember_overlord": {
+    "name": "Emberfall Hükümdarı",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.56,
+    "heightUnits": 168,
+    "width": 116,
+    "barWidth": 116,
+    "hp": 1350,
+    "damage": 29,
+    "speed": 40,
+    "xp": 450,
+    "coins": [
+      65,
+      80
+    ],
+    "coinValue": 1,
+    "gems": [
+      8,
+      9
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "EMBERFALL HÜKÜMDARI",
+    "armor": 0.1,
+    "tint": {
+      "hue": -135,
+      "sat": 1.45,
+      "light": 0.92
+    },
+    "bossCfg": {
+      "combo": {
+        "minRage": 0,
+        "hits": 4
+      },
+      "baseCd": [
+        2.0,
+        3.0
+      ],
+      "summonAtHp": 0.65
+    }
+  },
+  "frost_scout": {
+    "name": "Buz Gözcü",
+    "heightUnits": 70,
+    "width": 45,
+    "barWidth": 35,
+    "hp": 26,
+    "damage": 6,
+    "speed": 82,
+    "xp": 8,
+    "coins": [
+      1,
+      2
+    ],
+    "coinValue": 1,
+    "contactRange": 57,
+    "attackCooldown": 0.8,
+    "minLevel": 1,
+    "weight": 5,
+    "knockResist": 0.0,
+    "gemChance": 0.02,
+    "regen": 1.5,
+    "tint": {
+      "hue": 62,
+      "sat": 0.9,
+      "light": 1.2
+    }
+  },
+  "frost_warrior": {
+    "name": "Buz Savaşçı",
+    "heightUnits": 82,
+    "width": 52,
+    "barWidth": 43,
+    "hp": 56,
+    "damage": 11,
+    "speed": 54,
+    "xp": 14,
+    "coins": [
+      2,
+      4
+    ],
+    "coinValue": 1,
+    "contactRange": 63,
+    "attackCooldown": 0.9,
+    "minLevel": 1,
+    "weight": 3,
+    "knockResist": 0.45,
+    "gemChance": 0.06,
+    "armor": 0.3,
+    "tint": {
+      "hue": 70,
+      "sat": 0.85,
+      "light": 1.15
+    }
+  },
+  "frost_brute": {
+    "name": "Buz Canavarı",
+    "heightUnits": 115,
+    "width": 82,
+    "barWidth": 64,
+    "hp": 340,
+    "damage": 18,
+    "speed": 38,
+    "xp": 58,
+    "coins": [
+      6,
+      10
+    ],
+    "coinValue": 1,
+    "contactRange": 87,
+    "attackCooldown": 1.4,
+    "minLevel": 3,
+    "weight": 0,
+    "knockResist": 0.8,
+    "elite": true,
+    "hold": true,
+    "gems": [
+      1,
+      2
+    ],
+    "armor": 0.2,
+    "regen": 4,
+    "tint": {
+      "hue": 58,
+      "sat": 0.9,
+      "light": 1.1
+    }
+  },
+  "frost_crusher": {
+    "name": "Buz Ezici",
+    "heightUnits": 95,
+    "width": 60,
+    "barWidth": 48,
+    "hp": 95,
+    "damage": 15,
+    "speed": 46,
+    "xp": 24,
+    "coins": [
+      2,
+      4
+    ],
+    "coinValue": 1,
+    "contactRange": 63,
+    "attackCooldown": 0.9,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.7,
+    "gemChance": 0.06,
+    "spriteMul": 1.15,
+    "armor": 0.35,
+    "tint": {
+      "hue": 78,
+      "sat": 0.8,
+      "light": 1.28
+    }
+  },
+  "frost_warden": {
+    "name": "Buz Muhafızı",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.3,
+    "heightUnits": 149,
+    "width": 103,
+    "barWidth": 103,
+    "hp": 920,
+    "damage": 24,
+    "speed": 32,
+    "xp": 300,
+    "coins": [
+      40,
+      50
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "BUZ MUHAFIZI",
+    "armor": 0.2,
+    "tint": {
+      "hue": 66,
+      "sat": 0.9,
+      "light": 1.1
+    },
+    "bossCfg": {
+      "disable": [
+        "charge"
+      ],
+      "smash": {
+        "radius": 340,
+        "windup": 0.85,
+        "damageMul": 1.25
+      }
+    }
+  },
+  "frost_stalker": {
+    "name": "Kış Avcısı",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.25,
+    "heightUnits": 149,
+    "width": 103,
+    "barWidth": 103,
+    "hp": 740,
+    "damage": 23,
+    "speed": 52,
+    "xp": 300,
+    "coins": [
+      40,
+      50
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "KIŞ AVCISI",
+    "tint": {
+      "hue": 84,
+      "sat": 0.85,
+      "light": 1.25
+    },
+    "bossCfg": {
+      "disable": [
+        "smash"
+      ],
+      "charge": {
+        "speed": 600,
+        "minDist": 160
+      },
+      "baseCd": [
+        1.8,
+        2.8
+      ]
+    }
+  },
+  "frost_king": {
+    "name": "Donmuş Kral",
+    "animFrom": "goblin_brute",
+    "spriteMul": 1.55,
+    "heightUnits": 167,
+    "width": 115,
+    "barWidth": 115,
+    "hp": 1420,
+    "damage": 28,
+    "speed": 38,
+    "xp": 460,
+    "coins": [
+      65,
+      80
+    ],
+    "coinValue": 1,
+    "gems": [
+      8,
+      9
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "DONMUŞ KRAL",
+    "armor": 0.18,
+    "tint": {
+      "hue": 72,
+      "sat": 0.95,
+      "light": 1.3
+    },
+    "bossCfg": {
+      "combo": {
+        "minRage": 0,
+        "hits": 4
+      },
+      "smash": {
+        "radius": 330
+      },
+      "summonAtHp": 0.65
+    }
   }
 }

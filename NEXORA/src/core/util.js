@@ -9,3 +9,6 @@ export function frameAt(durs, t) {
   for (let i = 0; i < durs.length; i++) { if (t < a + durs[i]) return { i, f: (t - a) / durs[i] }; a += durs[i]; }
   return { i: durs.length - 1, f: 1 };
 }
+
+// Derin birleştirme (nesneler iç içe birleşir, diziler/değerler ezilir): boss/düşman bossCfg ezmeleri için
+export function deepMerge(base, over) { const o = { ...base }; for (const k in over) o[k] = over[k] && typeof over[k] === 'object' && !Array.isArray(over[k]) && base?.[k] && typeof base[k] === 'object' ? deepMerge(base[k], over[k]) : over[k]; return o; }

@@ -1,0 +1,46 @@
+{
+  "_comment": "Evren başına düşman/boss seti (id = data/chapters.json → worlds[].id). roster: dalga şablonundaki (data/waves.json) goblin_* yuvalarının bu evrendeki karşılığı; extras: 2. dalgadan itibaren karışan özel düşmanlar (dalga no kadar/2 adet); bosses: bölüm 1–5 için boss türleri (sonuncusu evren sonu bossu). Tanımsız evren = varsayılan goblin seti. Yeni düşman: data/enemies.json (tint = sprite renk kaydırma; özel sprite gelince animFrom/tint kaldırılır).",
+  "meadowlands": {
+    "bosses": [
+      "goblin_boss",
+      "goblin_warlord",
+      "goblin_boss",
+      "goblin_warlord",
+      "goblin_king"
+    ]
+  },
+  "emberfall": {
+    "roster": {
+      "goblin_scout": "ember_imp",
+      "goblin_warrior": "ember_guard",
+      "goblin_brute": "ember_brute"
+    },
+    "extras": [
+      "ember_bomber"
+    ],
+    "bosses": [
+      "ember_chief",
+      "ember_juggernaut",
+      "ember_chief",
+      "ember_juggernaut",
+      "ember_overlord"
+    ]
+  },
+  "frostveil": {
+    "roster": {
+      "goblin_scout": "frost_scout",
+      "goblin_warrior": "frost_warrior",
+      "goblin_brute": "frost_brute"
+    },
+    "extras": [
+      "frost_crusher"
+    ],
+    "bosses": [
+      "frost_warden",
+      "frost_stalker",
+      "frost_warden",
+      "frost_stalker",
+      "frost_king"
+    ]
+  }
+}

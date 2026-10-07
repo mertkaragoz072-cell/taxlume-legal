@@ -1,7 +1,8 @@
 // EnemySpawner: düşman oluşturma + dalga içeriği. Sağ ekran kenarının DIŞINDA doğar (aniden belirmez).
 import { CONFIG, WAVES, ENEMY_TYPES, ANIMS } from '../core/config.js';
 import { View } from '../core/view.js';
-import { rand, TAU } from '../core/util.js';
+import { rand, TAU, deepMerge } from '../core/util.js';
+import { rosterType, worldExtras, bossFor } from './chapters.js';
 import { state } from './state.js';
 import { newBossState } from './boss.js';
 
@@ -36,7 +37,7 @@ export function spawnEnemy(typeKey, offsetUnits = 0) {
     side: 1, atkTimer: 0.3, flash: 0, bob: rand(0, TAU), face: -1, knock: 0, dead: false, deathT: 0, stagger: 0, attackT: -1, windT: -1, hitDone: false,
     speedMul: (1 + rand(-CONFIG.enemies.speedJitter, CONFIG.enemies.speedJitter)) * ws.speed,
   };
-  if (t.boss) en.sp = newBossState();
+  if (t.boss) { en.sp = newBossState(); en.bossCfg = t.bossCfg ? deepMerge(WAVES.boss, t.bossCfg) : WAVES.boss; }
   state.enemies.push(en);
   return en;
 }
@@ -48,9 +49,10 @@ export const stageHpMul = (stage) => 1 + WAVES.stage.hpPerStage * (stage - 1);
 // Boss dalgasında boss + eşlikçiler.
 export function buildQueue(stage, n, boss) {
   const W = WAVES;
-  if (boss) return [W.bossType, ...Array(W.bossEscorts).fill('goblin_scout')];
-  const q = [...W.waves[Math.min(n, W.waves.length) - 1]];
+  if (boss) return [bossFor(stage, W.bossType), ...Array(W.bossEscorts).fill(rosterType('goblin_scout', stage))];
+  const q = W.waves[Math.min(n, W.waves.length) - 1].map((k) => rosterType(k, stage));
   const extra = Math.floor((stage - 1) / 2) * W.stage.extraPerTwoStages;
-  for (let i = 0; i < extra; i++) q.splice(Math.floor(rand(0, q.length)), 0, 'goblin_scout');
+  for (let i = 0; i < extra; i++) q.splice(Math.floor(rand(0, q.length)), 0, rosterType('goblin_scout', stage));
+  const sp = worldExtras(stage); if (sp.length && n >= 2) for (let i = 0; i < Math.floor(n / 2); i++) q.splice(Math.floor(rand(0, q.length)), 0, sp[Math.floor(rand(0, sp.length))]);   // evrene özgü düşmanlar
   return q;
 }

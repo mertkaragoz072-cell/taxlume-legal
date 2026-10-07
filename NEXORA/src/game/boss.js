@@ -12,6 +12,7 @@ import { state } from './state.js';
 import { events } from './events.js';
 import { hurtPlayer, addText } from './combat.js';
 import { spawnEnemy, enemyMeta } from './EnemySpawner.js';
+import { rosterType } from './chapters.js';
 import { groundDust, hitStop } from './fx.js';
 
 const R = () => CONFIG.planet.radius;
@@ -20,18 +21,19 @@ const dist = (a, b) => Math.abs(wrapAngle(a - b)) * R();
 export const newBossState = () => ({ cd: WAVES.boss.firstCd, phase: 'idle', t: 0, dur: 0, atk: null, last: null, rage: 0, summoned: false, target: 0, center: 0, dir: 1, hit: false, dodgeIn: null });
 
 function pickAttack(en, d) {
-  const B = WAVES.boss, pool = [];
+  const B = en.bossCfg || WAVES.boss, pool = [];
   if (d <= B.hammer.maxDist) pool.push('hammer');
   if (en.sp.rage >= B.combo.minRage && d <= B.hammer.maxDist) pool.push('combo');
   if (d <= B.smash.maxDist) pool.push('smash');
   if (d >= B.charge.minDist && d <= B.charge.maxDist) pool.push('charge');
+  if (B.disable?.length) for (let i = pool.length - 1; i >= 0; i--) if (B.disable.includes(pool[i])) pool.splice(i, 1);
   const fresh = pool.filter((k) => k !== en.sp.last);
   const from = fresh.length ? fresh : pool;
   return from.length ? from[Math.floor(rand(0, from.length))] : null;
 }
 
 function startAttack(en, atk) {
-  const B = WAVES.boss, sp = en.sp, p = state.player, r = R();
+  const B = en.bossCfg || WAVES.boss, sp = en.sp, p = state.player, r = R();
   sp.phase = 'windup'; sp.atk = atk; sp.t = 0; sp.hit = false;
   if (atk === 'hammer' || atk === 'combo') { const H = B.hammer; sp.dur = atk === 'combo' ? B.combo.windup : H.windup; sp.combo = atk === 'combo' ? B.combo.hits : 0; sp.center = en.a + en.face * H.reach / r; state.telegraphs.push({ a: sp.center, radius: H.radius, t: 0, life: H.windup, boss: en }); }
   else if (atk === 'smash') { const S = B.smash; sp.dur = S.windup; sp.center = en.a; state.telegraphs.push({ a: en.a, radius: S.radius, t: 0, life: S.windup, boss: en }); }
@@ -41,7 +43,7 @@ function startAttack(en, atk) {
 }
 
 function impact(en, atk) {
-  const B = WAVES.boss, sp = en.sp, p = state.player;
+  const B = en.bossCfg || WAVES.boss, sp = en.sp, p = state.player;
   en.attackT = -1; en.atkTimer = 1;
   state.telegraphs = state.telegraphs.filter((t) => t.boss !== en);
   if (atk === 'hammer' || atk === 'combo') {
@@ -68,9 +70,9 @@ function impact(en, atk) {
 }
 
 export function updateBoss(en, dt) {
-  const B = WAVES.boss, sp = en.sp, p = state.player, r = R(), hpK = en.hp / en.maxHp;
+  const B = en.bossCfg || WAVES.boss, sp = en.sp, p = state.player, r = R(), hpK = en.hp / en.maxHp;
   if (!sp.summoned && hpK <= B.summonAtHp) {
-    sp.summoned = true; spawnEnemy('goblin_scout', 40); spawnEnemy('goblin_scout', 130);
+    sp.summoned = true; { const mk = rosterType('goblin_scout', state.wave.stage); spawnEnemy(mk, 40); spawnEnemy(mk, 130); }
     addText(en.a, en.def.heightUnits + 60, 'DESTEK!', '#ff9a3a', 1.1, false, { tag: 'boss' }); events.onBoss?.('summon');
   }
   if (sp.rage < 1 && hpK <= B.rageAtHp) {

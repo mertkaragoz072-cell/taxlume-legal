@@ -5,7 +5,7 @@ import { state, xpForLevel } from './state.js';
 import { events } from './events.js';
 import { derived, recalcMaxHp, probRound } from './PlayerStats.js';
 import { add as metaAdd, setMax as metaMax } from './Meta.js';
-import { hitSparks, deathBurst, hurtSparks, hitStop, xpBurst } from './fx.js';
+import { hitSparks, deathBurst, hurtSparks, hitStop, xpBurst, groundDust } from './fx.js';
 
 // opts: { life (sn), rise (birim/sn), tag (toplu temizlik için), key (aynı anahtarlı yazı tekrar basılmaz, yenilenir) }
 export function addText(a, h, text, color, scale = 1, crit = false, opts = {}) {
@@ -63,6 +63,7 @@ export function applyKnock(en, k) { en.knock = Math.max(en.knock, k * (1 - en.de
 export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
   if (crit && !dot) { metaAdd('crits'); events.onCrit?.(); hitStop(0.04); }
   if (en.def.boss && en.sp?.phase === 'recover') dmg *= WAVES.boss.recoverDamageMul || 1;     // saldırı sonrası savunmasız bekleme
+  if (en.def.armor) dmg *= 1 - en.def.armor;                      // zırhlı düşmanlar (evren düşmanları)
   en.hp -= dmg;
   if (dot) {
     addText(en.a, en.def.heightUnits + 6, Math.round(dmg), color || '#ff8a3a', 0.6);
@@ -98,6 +99,10 @@ export function killEnemy(en) {
   addText(en.a, en.def.heightUnits + 34, '+' + xp + ' XP', '#7ee7ff', 0.7, false, { life: 1.2, rise: 28 });
   events.onKill?.(en);
   deathBurst(en.a, en.def.heightUnits * 0.4, !!en.def.boss);
+  if (en.def.explode) {                                            // patlayıcı düşman: ölünce yakındaki kahramana hasar
+    const X = en.def.explode; state.rings.push({ a: en.a, t: 0, life: 0.5, color: '#ff8a3a', r: X.radius }); groundDust(en.a, 12, 160); state.shake = Math.max(state.shake, 4);
+    if (Math.abs(wrapAngle(state.player.a - en.a)) * CONFIG.planet.radius <= X.radius) hurtPlayer(en.damage * X.damageMul);
+  }
   if (en.def.boss) { state.wave.bossDefeated = true; state.texts = state.texts.filter((t) => t.tag !== 'boss'); clearOthers(en); state.shake = Math.max(state.shake, 12); hitStop(0.14); state.slowT = 1.0; xpBurst(en.a, en.def.heightUnits * 0.6); bossReward(en); }
 }
 

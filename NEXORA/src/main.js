@@ -1,4 +1,4 @@
-import { loadData, CHAPTERS, WAVES, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
+import { loadData, ENEMY_TYPES, CHAPTERS, WAVES, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
 import { Assets } from './core/assets.js';
 import { Audio } from './core/audio.js';
 import { Save } from './core/save.js';
@@ -18,7 +18,7 @@ import { Settings, haptic } from './core/settings.js';
 import { initErrorLog } from './core/errorlog.js';
 import { startTutorial, tutorialDodgeUsed } from './ui/Tutorial.js';
 import { maybeSpawnChest } from './game/Chests.js';
-import { chapterInfo } from './game/chapters.js';
+import { chapterInfo, bossFor } from './game/chapters.js';
 import { startWave, resumeAfterUpgrade, isBossWave, continueChapter } from './game/WaveManager.js';
 import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
 import { addText, gainXp } from './game/combat.js';
@@ -109,7 +109,8 @@ async function boot() {
   events.onWaveStart = (n, info) => {
     state.hitsWave = 0; maybeSpawnChest(info.boss); if (n === 1 && info.stage === 1) startTutorial();
     const bi = document.getElementById('boss-intro');
-    if (info.boss) {                                                  // boss girişi: ekran kararır, ortada BOSS WAVE / GOBLIN LORD GELİYOR!
+    if (info.boss) {                                                  // boss girişi: ekran kararır, ortada BOSS WAVE / <BOSS ADI> GELİYOR!
+      bi.querySelector('p').textContent = `${ENEMY_TYPES[bossFor(info.stage, WAVES.bossType)]?.title || 'BOSS'} GELİYOR!`;
       bi.classList.remove('hidden', 'show'); void bi.offsetWidth; bi.classList.add('show'); clearTimeout(bossIntroTimer);
       bossIntroTimer = setTimeout(() => bi.classList.add('hidden'), WAVES.bossIntroSec * 1000 + 100); Audio.play('skill2');
     } else { bi.classList.add('hidden'); showBanner(`WAVE ${n} / 5`, '', n === 1 ? (chapterInfo(info.stage).isWorldStart ? `✦ EVREN ${chapterInfo(info.stage).universeNo} · ${chapterInfo(info.stage).name} ✦` : chapterInfo(info.stage).label) : ''); Audio.play('click'); }

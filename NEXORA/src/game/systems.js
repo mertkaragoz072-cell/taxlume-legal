@@ -111,6 +111,7 @@ export function update(dt) {
     en.age += dt; if (en.noInterrupt > 0) en.noInterrupt -= dt;
     tickStatus(en, dt);
     if (en.dead) return;
+    if (en.def.regen) en.hp = Math.min(en.maxHp, en.hp + en.def.regen * dt);       // buz düşmanları yavaşça iyileşir
     const diff = wrapAngle(p.a - en.a);
     en.face = diff >= 0 ? 1 : -1;
     const dist = Math.abs(diff) * r;

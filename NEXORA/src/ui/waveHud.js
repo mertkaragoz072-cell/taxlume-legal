@@ -13,6 +13,7 @@ function updateBossBar() {
   bar.classList.toggle('hidden', !b);
   if (!b) { wasBoss = false; return; }
   const k = Math.max(0, b.hp / b.maxHp);
+  const nm = b.def.title || 'BOSS'; if (bar.dataset.nm !== nm) { bar.dataset.nm = nm; bar.querySelector('.bb-name').textContent = nm; }
   if (!wasBoss) { disp = dispTrail = k; wasBoss = true; }
   disp += (k - disp) * 0.22;                                    // ana çubuk yumuşak iner
   dispTrail += (k - dispTrail) * 0.05;                          // arkadaki açık "hasar izi" daha yavaş

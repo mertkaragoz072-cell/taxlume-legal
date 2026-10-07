@@ -254,3 +254,9 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - `tools/worlds.py new|check|build`: `assets/environment/worlds/<id>/` altına konan `ground.png`, `backdrop.png`, `props/<tall|mid|front|tiny>_*.png` + `world.json` → `world_props.json` (themes/groundTiles), `asset_manifest.json`, `chapters.json` otomatik üretilir; boyut/şeffaflık uyarıları verir. Tam rehber: `assets/environment/worlds/README.md`.
 - Eksik parça yedeklenir: evrenin zemini yoksa Meadowlands zemini, görseli hiç yoksa `tint` renk tonu kullanılır (hata yok). Önizleme için `?stage=N` parametresi.
 - Sentetik bir test evreniyle (kendi zemin + backdrop + dekor) uçtan uca doğrulandı, ardından silindi.
+
+## Faz 34 — Evrene özgü düşman ve boss çeşitleri
+- `data/world_roster.json`: evren id'sine göre `roster` (waves.json'daki goblin_scout/warrior/brute yuvalarının karşılığı), `extras` (2. dalgadan itibaren karışan özel düşmanlar) ve `bosses` (bölüm 1–5 boss türleri; 5. = evren sonu bossu). Tanımsız evren = varsayılan goblin seti.
+- Yeni düşmanlar (`data/enemies.json`): Emberfall — Kor İmp (hızlı/zayıf), Kor Muhafız (zırhlı), Kor Canavarı, Patlayıcı İmp (ölünce patlar); Frostveil — Buz Gözcü/Savaşçı/Canavarı (yenilenen, zırhlı), Buz Ezici. Yeni mekanikler: `armor` (hasar azaltma), `regen` (can yenileme), `explode` (ölümde alan hasarı), `tint` (sprite renk kaydırma: hue/sat/light — özel sprite gelene kadar yer tutucu).
+- Bosslar: Meadowlands — Goblin Lordu, Goblin Savaş Lordu, Goblin Kralı; Emberfall — Kül Şefi, Kor Devi, Emberfall Hükümdarı; Frostveil — Buz Muhafızı, Kış Avcısı, Donmuş Kral. Her boss `bossCfg` ile genel boss ayarlarını (hammer/smash/charge/combo süreleri, `disable` ile kapalı saldırılar, summonAtHp…) ezer; boss adı HUD ve giriş ekranında görünür.
+- Özel düşman/boss görseli geldiğinde: `animFrom`/`tint` yerine kendi sprite+animasyon girişi (data/enemy_animations.json) kullanılır.

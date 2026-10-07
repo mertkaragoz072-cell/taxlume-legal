@@ -303,11 +303,27 @@ function enemyFrame(en, meta) {
   return L.frames[idx];
 }
 
+// Düşman renk kaydırma (enemies.json → tint {hue,sat,light}): evrene özel düşman varyantları için; kare başına bir kez hesaplanıp önbelleğe alınır (özel sprite gelince kaldırılır).
+const tintCache = new Map();
+function tintedFrame(img, key, t) {
+  const k = key + '|' + t.hue + '|' + (t.sat ?? 1) + '|' + (t.light ?? 1); let cv = tintCache.get(k); if (cv) return cv;
+  cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, cv.width, cv.height), px = d.data, a = t.hue * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), S = t.sat ?? 1, L = t.light ?? 1;
+  const m = [0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928, 0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283, 0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072];
+  for (let i = 0; i < px.length; i += 4) {
+    if (!px[i + 3]) continue; const r = px[i], gg = px[i + 1], b = px[i + 2];
+    let R = m[0] * r + m[1] * gg + m[2] * b, G = m[3] * r + m[4] * gg + m[5] * b, B = m[6] * r + m[7] * gg + m[8] * b; const y = 0.3 * R + 0.59 * G + 0.11 * B;
+    px[i] = Math.max(0, Math.min(255, (y + (R - y) * S) * L)); px[i + 1] = Math.max(0, Math.min(255, (y + (G - y) * S) * L)); px[i + 2] = Math.max(0, Math.min(255, (y + (B - y) * S) * L));
+  }
+  g.putImageData(d, 0, 0); tintCache.set(k, cv); return cv;
+}
+
 export function drawEnemy(ctx, en) {
   const def = en.def, meta = enemyMeta(en);
   if (!meta) return;
-  const key = enemyFrame(en, meta), img = Assets.get(key);
-  if (!img) return;
+  const key = enemyFrame(en, meta), raw = Assets.get(key);
+  if (!raw) return;
+  const img = en.def.tint ? tintedFrame(raw, key, en.def.tint) : raw;
   const sc = meta.scale * (def.spriteMul || 1), w = img.width * sc, h = img.height * sc;
   const dp = en.dead ? clamp((en.deathT - 0.5) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
   onLane(ctx, en.a, 0, 0, () => {

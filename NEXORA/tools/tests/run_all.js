@@ -135,6 +135,21 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     ok(!r.a && r.b && r.c === '2:true', 'evren sınırı yanlış ' + JSON.stringify(r)); ok(r.title === 'EVREN TAMAMLANDI!' && r.stage === 6, 'evren sonu ekranı/ilerleme yok ' + JSON.stringify(r)); await pg.close();
   });
 
+  await test('world_rosters_bosses_mechanics', async () => {
+    const pg = await page('male', '');
+    const r = await pg.evaluate(async () => {
+      const ES = await import('/src/game/EnemySpawner.js'), C = await import('/src/game/combat.js'), CH = await import('/src/game/chapters.js'), st = window.__game.state, out = {};
+      out.m = ES.buildQueue(1, 3, false).every((k) => k.startsWith('goblin')); out.e = ES.buildQueue(6, 4, false).every((k) => /^(ember_|goblin_)/.test(k) && !k.startsWith('goblin')); out.f = ES.buildQueue(11, 2, false).every((k) => k.startsWith('frost_'));
+      out.bosses = [1, 2, 5, 6, 10, 15].map((s) => ES.buildQueue(s, 1, true)[0]).join(',');
+      const t = ES.spawnEnemy('ember_guard'); const h0 = t.hp; C.damageEnemy(t, 100); out.armor = Math.round(h0 - t.hp);
+      const b = ES.spawnEnemy('frost_warden'); out.cfg = b.bossCfg.disable?.[0] === 'charge' && b.bossCfg.hammer.radius > 0 && b.bossCfg.smash.radius === 340;
+      st.player.hp = st.player.maxHp = 500; const bo = ES.spawnEnemy('ember_bomber'); bo.a = st.player.a; const hp0 = st.player.hp; C.killEnemy(bo); out.boom = st.player.hp < hp0;
+      return out;
+    });
+    ok(r.m && r.e && r.f, 'evren rosterları yanlış ' + JSON.stringify(r)); ok(r.bosses === 'goblin_boss,goblin_warlord,goblin_king,ember_chief,ember_overlord,frost_king', 'boss listesi ' + r.bosses);
+    ok(r.armor === 72, 'zırh çalışmıyor ' + r.armor); ok(r.cfg, 'bossCfg birleşmedi'); ok(r.boom, 'patlayıcı düşman hasar vermedi'); await pg.close();
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);

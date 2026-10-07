@@ -3,7 +3,7 @@
 //   intro:    "WAVE n / 5" (veya BOSS) afişi, kahraman koşmaya devam eder
 //   fight:    EnemySpawner kuyruğundan sırayla düşman çıkarır (aynı anda en fazla maxAlive normal); hepsi ölünce complete
 //   complete: "WAVE COMPLETE" + coin bonusu; sonra güç seçimi (5. dalga ve boss sonrası) ya da sonraki dalga
-import { WAVES } from '../core/config.js';
+import { WAVES, ENEMY_TYPES } from '../core/config.js';
 import { rand } from '../core/util.js';
 import { state } from './state.js';
 import { events } from './events.js';
@@ -51,11 +51,11 @@ export function updateWaves(dt) {
   if (w.phase === 'fight') {
     w.spawnT -= dt;
     if (w.queue.length && w.spawnT <= 0) {
-      const next = w.queue[0], isBig = next === WAVES.bossType || next === WAVES.eliteType;
-      const ok = isBig ? aliveNormal().length <= (next === WAVES.bossType ? 2 : 1) : aliveNormal().length < WAVES.maxAlive;
+      const next = w.queue[0], nd = ENEMY_TYPES[next], isBoss = !!nd?.boss, isBig = isBoss || !!nd?.elite;
+      const ok = isBig ? aliveNormal().length <= (isBoss ? 2 : 1) : aliveNormal().length < WAVES.maxAlive;
       if (ok && !(isBig && aliveElite().length)) {
         w.queue.shift(); spawnEnemy(next, isBig ? 160 : 0);
-        if (next === WAVES.bossType) { addText(state.player.a, 175, 'BOSS!', '#ff4a4a', 1.4, false, { tag: 'boss' }); events.onBoss?.('spawn'); }
+        if (isBoss) { addText(state.player.a, 175, 'BOSS!', '#ff4a4a', 1.4, false, { tag: 'boss' }); events.onBoss?.('spawn'); }
         w.spawnT = rand(WAVES.spawnGapSec[0], WAVES.spawnGapSec[1]);
       } else w.spawnT = 0.3;
     }
