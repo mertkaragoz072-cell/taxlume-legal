@@ -139,7 +139,7 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     const pg = await page('male', '');
     const r = await pg.evaluate(async () => {
       const ES = await import('/src/game/EnemySpawner.js'), C = await import('/src/game/combat.js'), CH = await import('/src/game/chapters.js'), st = window.__game.state, out = {};
-      out.m = ES.buildQueue(1, 3, false).every((k) => k.startsWith('goblin')) && ES.buildQueue(7, 5, false).some((k) => ['goblin_shield','goblin_berserker','goblin_shaman','goblin_bomber','goblin_sprinter','goblin_pikeman'].includes(k)); out.e = ES.buildQueue(6, 4, false).every((k) => /^(ember_|goblin_)/.test(k) && !k.startsWith('goblin')); out.f = ES.buildQueue(11, 2, false).every((k) => k.startsWith('frost_'));
+      out.m = ES.buildQueue(1, 3, false).every((k) => k.startsWith('goblin')) && ES.buildQueue(3, 5, false).some((k) => ['goblin_shield','goblin_berserker','goblin_shaman','goblin_bomber','goblin_sprinter','goblin_pikeman'].includes(k)); out.e = ES.buildQueue(6, 4, false).every((k) => /^(ember_|goblin_)/.test(k) && !k.startsWith('goblin')); out.f = ES.buildQueue(11, 2, false).every((k) => k.startsWith('frost_'));
       out.bosses = [1, 2, 5, 6, 10, 15].map((s) => ES.buildQueue(s, 1, true)[0]).join(',');
       const t = ES.spawnEnemy('ember_guard'); const h0 = t.hp; C.damageEnemy(t, 100); out.armor = Math.round(h0 - t.hp);
       const b = ES.spawnEnemy('frost_warden'); out.cfg = b.bossCfg.disable?.[0] === 'charge' && b.bossCfg.hammer.radius > 0 && b.bossCfg.smash.radius === 340;
