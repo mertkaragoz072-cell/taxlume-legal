@@ -44,12 +44,14 @@ function getTileGround(id) {
   const pad = Math.max(...tops), maxH = Math.max(...imgs.map((im, i) => im.height - tops[i])) + pad, Hc = maxH + ext;
   const pieces = imgs.map((img, i) => {                    // plakalar üst kenardan hizalanır; alta doğru koyulaşan dolgu (pürüzlü alt kenarı örter)
     const cv = document.createElement('canvas'); cv.width = img.width; cv.height = Hc; const g = cv.getContext('2d');
-    const { d } = rowAvg(img); let r = 0, gg = 0, b = 0, n = 0;
-    for (let y = img.height - 5; y < img.height - 2; y++) for (let x = 0; x < img.width; x++) { const o = (y * img.width + x) * 4; if (d[o + 3] > 128) { r += d[o]; gg += d[o + 1]; b += d[o + 2]; n++; } }
-    const col = n ? `rgb(${r / n | 0},${gg / n | 0},${b / n | 0})` : cfg.deep, yb = pad - tops[i] + img.height - 10;
-    const bot = g.createLinearGradient(0, yb, 0, Hc); bot.addColorStop(0, col); bot.addColorStop(1, cfg.deep);
-    g.fillStyle = bot; g.fillRect(0, yb, img.width, Hc - yb);
-    g.drawImage(img, 0, pad - tops[i]); return cv;
+    const off = pad - tops[i], y0 = off + Math.round(img.height * 0.86), ch = Math.round(img.height * 0.4);     // alt %14 pürüzlü kenar atılır; yalnız kaya kısmından (çim/sarmaşık hariç) %40'lık bant dikey ayna ile aşağı doğru döşenir (ekran altına kadar zemin)
+    g.drawImage(img, 0, off);
+    const snap = document.createElement('canvas'); snap.width = img.width; snap.height = ch; snap.getContext('2d').drawImage(cv, 0, y0 - ch, img.width, ch, 0, 0, img.width, ch);
+    for (let k = 0, y = y0; y < Hc; k++, y += ch) {
+      g.save(); g.translate(0, y); if (k % 2 === 0) { g.translate(0, ch); g.scale(1, -1); } g.drawImage(snap, 0, 0); g.restore();
+    }
+    const dk = g.createLinearGradient(0, y0, 0, Hc); dk.addColorStop(0, 'rgba(20,10,4,0)'); dk.addColorStop(1, 'rgba(20,10,4,.4)');   // derinlikte hafif koyulaşma
+    g.fillStyle = dk; g.fillRect(0, y0, img.width, Hc - y0); return cv;
   });
   tops.pad = pad;
   if (cfg.mirror) pieces.push(...pieces.map((cv) => { const m = document.createElement('canvas'); m.width = cv.width; m.height = cv.height; const g = m.getContext('2d'); g.translate(cv.width, 0); g.scale(-1, 1); g.drawImage(cv, 0, 0); return m; }));   // ayna kopyaları: [P,P'] ardışık dizilince birleşim yerleri simetrik → dikişsiz
