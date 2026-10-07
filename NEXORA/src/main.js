@@ -12,6 +12,7 @@ import { initBuffs, updateBuffs, popBuffs } from './ui/buffs.js';
 import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
 import { showUpgrade } from './ui/UpgradeCard.js';
 import { showChapterClear } from './ui/ChapterClear.js';
+import { initInfoPanel } from './ui/InfoPanel.js';
 import { chapterInfo } from './game/chapters.js';
 import { startWave, resumeAfterUpgrade, isBossWave, continueChapter } from './game/WaveManager.js';
 import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
@@ -72,6 +73,7 @@ async function boot() {
   initHud();
   initWaveHud();
   initBuffs();
+  initInfoPanel();
   drawAvatar();
   Input.init();
   const onResize = () => View.resize(canvas);

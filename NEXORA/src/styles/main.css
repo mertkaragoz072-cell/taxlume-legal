@@ -26,7 +26,7 @@ html, body {
 .coin-icon { border-radius: 50%; background: #ffd23f; }
 .gem-icon { background: #c04bff; transform: rotate(45deg) scale(.8); border-radius: 3px; }
 .hud-side { position: absolute; top: calc(env(safe-area-inset-top) + 68px); left: calc(env(safe-area-inset-left) + 12px); display: flex; flex-direction: column; gap: 5px; }
-.sidebtn { width: 32px; height: 32px; border-radius: 10px; border: 3px solid #1f2a44; background: linear-gradient(#4a5b8c, #34426e); box-shadow: 0 0 0 1px rgba(241,194,75,.55), 0 3px 0 rgba(31,42,68,.55); color: #fff; font-size: 16px; line-height: 1; opacity: .92; pointer-events: none; text-shadow: 0 1px 0 #1f2a44; }
+.sidebtn { pointer-events: auto; cursor: pointer; padding: 0; width: 32px; height: 32px; border-radius: 10px; border: 3px solid #1f2a44; background: linear-gradient(#4a5b8c, #34426e); box-shadow: 0 0 0 1px rgba(241,194,75,.55), 0 3px 0 rgba(31,42,68,.55); color: #fff; font-size: 16px; line-height: 1; opacity: .92; text-shadow: 0 1px 0 #1f2a44; }
 #btn-sound { pointer-events: auto; cursor: pointer; padding: 0; }
 #btn-sound:active { transform: translateY(2px); }
 
@@ -248,3 +248,23 @@ html, body {
 .cc-next { font-weight: 800; font-size: clamp(10px, 3vh, 13px); color: #5b4a2a; margin-bottom: 8px; }
 #cc-continue { font: inherit; font-weight: 900; font-size: clamp(15px, 4.6vh, 20px); color: #fff; background: linear-gradient(#5ed06a, #35a443); border: 4px solid #1f2a44; border-radius: 14px; padding: 6px 28px; text-shadow: 0 2px 0 #1f2a44; box-shadow: 0 4px 0 #1f2a44; cursor: pointer; }
 #cc-continue:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f2a44; }
+
+/* --- Bilgi paneli (karakter / görev) --- */
+#info-panel { position: absolute; inset: 0; z-index: 36; display: flex; align-items: center; justify-content: center; background: rgba(10,16,40,.6); padding: 8px; }
+#info-panel.hidden { display: none; }
+.ip-panel { width: min(92vw, 640px); max-height: 92vh; overflow: auto; padding: clamp(8px, 2.6vh, 16px) clamp(10px, 3vw, 20px); text-align: left; }
+.ip-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(4px, 1.5vh, 10px); }
+.ip-head h2 { margin: 0; font-size: clamp(16px, 5vh, 24px); color: #e23b4e; -webkit-text-stroke: 1px #1f2a44; text-shadow: 0 2px 0 #1f2a44; letter-spacing: 2px; }
+#ip-close { width: 34px; height: 34px; border-radius: 10px; border: 3px solid #1f2a44; background: #e23b4e; color: #fff; font-size: 22px; line-height: 1; font-weight: 900; cursor: pointer; padding: 0; }
+.ip-cols { display: flex; gap: clamp(8px, 2vw, 18px); }
+.ip-col { flex: 1; min-width: 0; }
+.ip-row { display: flex; justify-content: space-between; padding: clamp(1px, .6vh, 4px) 0; border-bottom: 1px dashed rgba(31,42,68,.25); font-size: clamp(11px, 3.3vh, 14px); color: #1f2a44; }
+.ip-sub { font-weight: 900; font-size: clamp(10px, 2.8vh, 12px); letter-spacing: 1px; color: #6a4a1a; margin-bottom: 4px; }
+.ip-pow { display: flex; align-items: center; gap: 6px; padding: 2px 6px; margin-bottom: 3px; border-left: 4px solid var(--cat); background: rgba(31,42,68,.08); border-radius: 6px; font-size: clamp(10px, 3vh, 13px); color: #1f2a44; }
+.ip-pow i { font-style: normal; } .ip-pow span { flex: 1; font-weight: 800; } .ip-pow em { font-style: normal; font-size: .85em; opacity: .7; } .ip-pow b { color: #1c7d3a; }
+.ip-empty, .ip-hint { font-size: clamp(10px, 2.9vh, 12px); color: #5a4a2a; opacity: .85; margin-top: 6px; }
+.ip-goal { font-weight: 900; font-size: clamp(13px, 4vh, 18px); color: #1f2a44; margin: 4px 0 8px; }
+.ip-steps { display: flex; gap: 6px; margin-bottom: 8px; }
+.ip-steps span { width: clamp(22px, 7vh, 32px); height: clamp(22px, 7vh, 32px); border-radius: 50%; border: 3px solid #1f2a44; display: grid; place-items: center; font-weight: 900; font-size: clamp(10px, 3vh, 14px); background: #fff; color: #1f2a44; opacity: .55; }
+.ip-steps span.done { background: #4fc65a; opacity: 1; } .ip-steps span.cur { background: #ffd23f; opacity: 1; box-shadow: 0 0 0 3px rgba(255,210,63,.5); } .ip-steps span.boss.cur { background: #e23b4e; color: #fff; }
+.ip-sub .chip { font-size: 10px; font-weight: 800; border: 2px solid #1f2a44; border-radius: 9px; padding: 0 5px; margin-left: 4px; background: linear-gradient(#ffd23f, #f0a014); color: #1f2a44; letter-spacing: 0; }

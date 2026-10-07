@@ -34,7 +34,7 @@ function updatePlayerAnim(p, dt, atkMul) {
 }
 
 export function update(dt) {
-  if (state.paused) { Input.skillQueue.length = 0; Input.attackQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
+  if (state.paused || state.userPause) { Input.skillQueue.length = 0; Input.attackQueued = false; return; }   // güç seçimi ekranı: oyun tamamen durur (bekleyen tuşlar da atılır)
   if (state.hitStop > 0) {                                  // hit-stop: oyun mantığı kısa donar; saldırı sayacı akar (saldırı hızı bozulmaz), efektler yaşar
     state.hitStop -= dt; state.player.atkTimer = Math.max(0, state.player.atkTimer - dt);
     for (const t of state.texts) { t.life -= dt; t.h = Math.min(t.h + (t.rise ?? 50) * dt, 185); }

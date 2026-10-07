@@ -34,8 +34,8 @@
     </div>
     <div class="hud-side">
       <button type="button" class="sidebtn" id="btn-sound" title="Ses aç/kapat (M)">&#128266;</button>
-      <button type="button" class="sidebtn" disabled title="Envanter (yakında)">&#127890;</button>
-      <button type="button" class="sidebtn" disabled title="Görevler (yakında)">&#128220;</button>
+      <button type="button" class="sidebtn" id="btn-bag" title="Karakter (I)">&#127890;</button>
+      <button type="button" class="sidebtn" id="btn-quest" title="Görev">&#128220;</button>
     </div>
   </div>
 
@@ -71,6 +71,10 @@
       <div class="cc-next" id="cc-next"></div>
       <button type="button" id="cc-continue">DEVAM ET</button>
     </div>
+  </div>
+
+  <div id="info-panel" class="hidden">
+    <div class="panel ip-panel"><div class="ip-head"><h2 id="ip-title">KARAKTER</h2><button type="button" id="ip-close" aria-label="Kapat">&times;</button></div><div id="ip-body"></div></div>
   </div>
 
   <div id="upgrade" class="hidden">
