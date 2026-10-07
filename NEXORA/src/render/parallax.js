@@ -3,7 +3,7 @@ import { Assets } from '../core/assets.js';
 import { View } from '../core/view.js';
 import { state } from '../game/state.js';
 import { TAU } from '../core/util.js';
-import { outlined, makeLayer } from './draw.js';
+import { makeLayer } from './draw.js';
 import { currentTheme } from './theme.js';
 
 // ARKA PLAN KATMANLARI (uzaktan yakına). Her katman yatayda tekrarlanan bir şerittir; kayma = oyuncunun gittiği

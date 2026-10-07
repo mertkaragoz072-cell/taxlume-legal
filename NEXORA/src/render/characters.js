@@ -1,10 +1,9 @@
 import { CONFIG, ANIMS, HERO } from '../core/config.js';
 import { Assets } from '../core/assets.js';
-import { Input } from '../core/input.js';
 import { TAU, clamp, frameAt } from '../core/util.js';
 import { state } from '../game/state.js';
 import { enemyMeta } from '../game/EnemySpawner.js';
-import { onSurface, onLane, groundShadow, outlined, outline } from './draw.js';
+import { onLane, groundShadow, outlined, outline } from './draw.js';
 import { setHull } from '../game/ragdoll.js';
 
 // Havadayken (kaçınma sıçraması) gölge yerde kalır ve küçülür
@@ -62,9 +61,9 @@ function drawHeroine(ctx, meta, anim) {
 // ayaklar pivotta (zemin). Dönüş/ezilme yok; sadece kare seçimi. Run karesi geçen zamana değil kat edilen mesafeye bağlı (ayak kaymaz).
 function drawHeroFrames(ctx, meta, anim) {
   const p = state.player, F = meta.framed, name = p.anim, n = anim.frames.length;
-  let i, xf = 0;
+  let i;
   if (name === 'run' && anim.strideUnits) i = Math.floor(p.stride / anim.strideUnits) % n;
-  else if (anim.durations) { const fa = frameAt(anim.durations, p.animT); i = fa.i; xf = fa.f; }
+  else if (anim.durations) { const fa = frameAt(anim.durations, p.animT); i = fa.i; }
   else i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
   const key = anim.frames[i], img = Assets.get(key);
   if (!img || !F) return false;
@@ -145,11 +144,11 @@ function drawHeroRagdoll(ctx, meta, L, p) {
   const fade = R.done ? 1 : 1;
   onLane(ctx, p.a, p.hopH || 0, 0, () => {
     ctx.scale(p.dir, 1);
-    const gy = Math.max(0, -(oy + h.com[1]) ), k = 1 / (1 + Math.max(0, -B.y - 30) / 90);       // yerden yükseldikçe gölge küçülür/solar
+    const k = 1 / (1 + Math.max(0, -B.y - 30) / 90);       // yerden yükseldikçe gölge küçülür/solar
     ctx.save(); ctx.translate(B.x, 0); ctx.globalAlpha = k; groundShadow(ctx, 62 * (0.8 + k * 0.5), 0.38); ctx.restore();
     ctx.globalAlpha = fade;
     ctx.save(); ctx.translate(ox, oy); ctx.rotate(B.r);
-    for (const [cv, hip, leg, key] of [[L.back, [C.hipBack[0], C.hipBack[1]], R.legB, 'B'], [L.front, [C.hipFront[0], C.hipFront[1]], R.legF, 'F']]) {
+    for (const [cv, hip, leg] of [[L.back, [C.hipBack[0], C.hipBack[1]], R.legB], [L.front, [C.hipFront[0], C.hipFront[1]], R.legF]]) {
       ctx.save(); ctx.translate((hip[0] - px) * sc, (hip[1] - py) * sc); ctx.rotate(leg.a - B.r);
       ctx.drawImage(cv, -hip[0] * sc, -hip[1] * sc, cv.width * sc, cv.height * sc); ctx.restore();
     }

@@ -1,7 +1,6 @@
 // Kadın savaşçı ölüm fiziği (ragdoll): gövde (dönen katı cisim), iki bacak (menteşeli sarkaç) ve kılıç (ayrı katı cisim) gerçek yerçekimi,
 // zeminle temas (dışbükey kabuk), sekme ve sürtünmeyle simüle edilir → düşüş, sekme ve yatış kodlanmış hareket değil fizikten çıkar.
 // Koordinatlar: şerit orijini = ayakların zemine bastığı nokta, x ileri (kahraman sağa bakar), y AŞAĞI (ekran), zemin y=0. Birim = dünya birimi.
-import { CONFIG } from '../core/config.js';
 import { groundDust } from './fx.js';
 import { state } from './state.js';
 
@@ -66,7 +65,7 @@ export function stepRagdoll(p, dt, R2) {
     integrate(B, sdt); solve(B, onImpact);
     // menteşeli parçalar (bacaklar + saç): menteşenin dünya konumu, sarkaç (yerçekimi + gövde ivmesi), mafsal sınırı, zemin
     for (const [leg, hip, L, b0, lim] of [[R.legB, h.hipB, h.legLen, Math.PI / 2, 1.15], [R.legF, h.hipF, h.legLen, Math.PI / 2, 1.15], [R.hair, h.hinge, h.hairLen, h.hairB0, 1.5]]) {
-      const [hx, hy] = rot(B.r, hip[0] - h.com[0], hip[1] - h.com[1]);
+      const [, hy] = rot(B.r, hip[0] - h.com[0], hip[1] - h.com[1]);
       const hipY = B.y + hy, beta = b0 + leg.a;
       const alpha = (GRAV / L) * Math.cos(beta) * (leg === R.hair ? 0.35 : 0.55) - leg.w * (leg === R.hair ? 4.5 : 3.2) - B.w * 0.9;
       leg.w += alpha * sdt; leg.a += leg.w * sdt;

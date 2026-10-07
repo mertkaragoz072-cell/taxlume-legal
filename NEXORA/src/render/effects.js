@@ -5,7 +5,7 @@ import { Assets } from '../core/assets.js';
 import { clamp, wrapAngle } from '../core/util.js';
 import { TAU } from '../core/util.js';
 import { state } from '../game/state.js';
-import { onLane, outline, outlined, visible } from './draw.js';
+import { onLane, outlined, visible } from './draw.js';
 
 export function drawCoin(ctx, c) {
   onLane(ctx, c.a, c.h, 0, () => {

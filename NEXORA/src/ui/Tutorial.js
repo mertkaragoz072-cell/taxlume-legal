@@ -26,6 +26,7 @@ function build() {
   game.appendChild(root);
   hole = root.querySelector('.tut-ring'); card = root.querySelector('.tut-card');
   addEventListener('resize', () => running && layout());
+  addEventListener('keydown', (e) => { if (!running || root.classList.contains('hidden') || e.repeat) return; if (e.code === 'Enter' || e.code === 'ArrowRight') { e.preventDefault(); if (!STEPS[i]?.live) next(); } else if (e.code === 'Escape') finish(); });   // Enter/→ ilerler, Esc atlar
 }
 function rectOf(sel) { const t = sel && document.querySelector(sel); if (!t) return null; const g = document.getElementById('game').getBoundingClientRect(), r = t.getBoundingClientRect(); return { x: r.left - g.left, y: r.top - g.top, w: r.width, h: r.height }; }
 function layout() {
@@ -51,7 +52,6 @@ function layout() {
 }
 function show() {
   const s = STEPS[i]; if (!s) return finish();
-  const dots = STEPS.map((_, k) => `<i class="${k === i ? 'on' : k < i ? 'done' : ''}"></i>`).join('');
   const keys = s.keys ? `<div class="tut-keys"><span>Klavye:</span>${s.keys.map((k) => `<kbd>${k}</kbd>`).join('')}</div>` : '';
   card.innerHTML = `<div class="tut-head"><canvas class="tut-av" width="72" height="72"></canvas><div class="tut-ttl"><small>${i + 1} / ${STEPS.length}</small><b>${s.title}</b></div><span class="tut-ic">${s.ic}</span></div><p></p>${keys}
     <div class="tut-prog"><i style="width:${((i + 1) / STEPS.length) * 100}%"></i></div>
@@ -79,4 +79,5 @@ export function startTutorial() {
   }, 1500);
 }
 export function tutorialDodgeUsed() { if (running && STEPS[i]?.live) setTimeout(() => running && STEPS[i]?.live && next(), 700); }
+export const tutorialActive = () => running && !Settings.get('tutorialDone');
 export function restartTutorial() { Settings.set('tutorialDone', false); running = false; startTutorial(); }

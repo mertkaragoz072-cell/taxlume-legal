@@ -3,7 +3,7 @@ import { state } from '../game/state.js';
 import { WAVES } from '../core/config.js';
 import { chapterInfo } from '../game/chapters.js';
 
-let box, main, sub, banner, last = '';
+let main, sub, banner, last = '';
 export function initWaveHud() { main = document.getElementById('wave-main'); sub = document.getElementById('wave-sub'); banner = document.getElementById('banner'); }
 
 let bar, fill, trail, hpTxt, disp = 1, dispTrail = 1, wasBoss = false;

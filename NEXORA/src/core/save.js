@@ -25,7 +25,7 @@ export function migrate(d) {
   return d;
 }
 let data = fresh();
-let kills0 = 0, dirty = false, lastMeta = '';
+let kills0 = 0, lastMeta = '';
 
 export const Save = {
   load() {

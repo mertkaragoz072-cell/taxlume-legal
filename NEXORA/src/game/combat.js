@@ -136,7 +136,7 @@ export function gainXp(amount) {
   while (p.xp >= p.xpNext) {
     p.xp -= p.xpNext; p.level++; p.xpNext = xpForLevel(p.level); metaMax('level', p.level);
     p.damage += L.damagePerLevel;
-    const before = p.maxHp; recalcMaxHp(p, true);
+    recalcMaxHp(p, true);
     p.hp = Math.min(p.maxHp, p.hp + (p.maxHp - p.hp) * L.healOnLevelUp);
     state.rings.push({ a: p.a, t: 0, life: 0.9 });
     events.onLevelUp?.(p.level);

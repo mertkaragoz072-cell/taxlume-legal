@@ -367,3 +367,7 @@ html, body {
 #chapter-clear.world .cc-ribbon { background: linear-gradient(#ffcf3f, #e0901a); text-shadow: 0 2px 0 #7a4a00; }
 #chapter-clear.world .cc-star { animation: uptitle .8s ease-out, ccspin 6s linear infinite; } @keyframes ccspin { 50% { transform: scale(1.12) rotate(6deg); } }
 #chapter-clear.world .cc-sub { font-size: clamp(14px, 4.4vh, 20px); letter-spacing: 1px; }
+
+/* Faz 37 — denetim düzeltmeleri: bilgi panelinde kurdele boşluğu yok; dar ekranda ayar satırları sarar */
+.panel.ip-panel { padding-top: clamp(8px, 2.6vh, 16px); }
+.ip-set { flex-wrap: wrap; gap: 4px 8px; } .ip-set > span:first-child { min-width: 0; }

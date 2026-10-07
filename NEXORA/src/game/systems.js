@@ -1,6 +1,6 @@
 // Ana oyun döngüsü (update). Parçalar: combat.js (hasar/ödül), EnemySpawner.js + WaveManager.js (dalgalar), boss.js, skills.js,
 // PlayerStats.js (güçlendirme statları). Burada: otomatik ilerleme, düşman hareketi, otomatik saldırı, pickup'lar, efekt zamanlayıcıları.
-import { CONFIG, ANIMS, WAVES, HERO } from '../core/config.js';
+import { CONFIG, ANIMS, WAVES } from '../core/config.js';
 import { Input } from '../core/input.js';
 import { clamp, wrapAngle, frameAt } from '../core/util.js';
 import { state } from './state.js';

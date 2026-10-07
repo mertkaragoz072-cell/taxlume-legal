@@ -7,7 +7,7 @@ import { progressOf, claimDaily, shopLevel, shopBuy, skillLevel, topRuns } from 
 import { Settings } from '../core/settings.js';
 import { Audio } from '../core/audio.js';
 import { errorCount, errorText, clearErrors } from '../core/errorlog.js';
-import { restartTutorial } from './Tutorial.js';
+import { restartTutorial, tutorialActive } from './Tutorial.js';
 
 const $ = (id) => document.getElementById(id);
 const pct = (v) => Math.round(v * 100) + '%';
@@ -75,7 +75,7 @@ let el, body, tab = 'stats', tabsEl;
 const render = () => { body.innerHTML = tab === 'stats' ? statsHtml() : tab === 'quests' ? questsHtml() : tab === 'shop' ? shopHtml() : tab === 'skills' ? skillsHtml() : settingsHtml(); for (const b of tabsEl.children) b.classList.toggle('on', b.dataset.tab === tab); };
 function close() { el.classList.add('hidden'); state.userPause = false; }
 function open() {
-  if (state.paused || state.over) return;
+  if (state.paused || state.over || tutorialActive()) return;                       // öğretici sürerken çanta açılmaz
   if (!el.classList.contains('hidden')) { close(); return; }
   render(); el.classList.remove('hidden'); state.userPause = true;
 }

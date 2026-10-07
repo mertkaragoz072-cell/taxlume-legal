@@ -150,6 +150,14 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     ok(r.armor === 72, 'zırh çalışmıyor ' + r.armor); ok(r.cfg, 'bossCfg birleşmedi'); ok(r.boom, 'patlayıcı düşman hasar vermedi'); await pg.close();
   });
 
+  await test('every_enemy_has_animations_and_frames', async () => {
+    const pg = await page('male', '');
+    const bad = await pg.evaluate(async () => { const { ENEMY_TYPES, ANIMS } = await import('/src/core/config.js'), { Assets } = await import('/src/core/assets.js'), out = [];
+      for (const [k, d] of Object.entries(ENEMY_TYPES)) { const m = ANIMS.enemies[d.animFrom || k]; if (!m) { out.push(k + ': animasyon yok'); continue; } for (const an of ['walk', 'attack', 'hurt', 'death']) for (const f of (m.anims[an]?.frames || [])) if (!Assets.get(f)) out.push(k + ':' + f); if (!m.anims.walk || !m.anims.death) out.push(k + ': walk/death eksik'); }
+      return out; });
+    ok(!bad.length, 'düşman animasyon/kare eksik: ' + bad.slice(0, 5).join(', ')); await pg.close();
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);

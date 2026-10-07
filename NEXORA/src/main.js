@@ -1,4 +1,4 @@
-import { loadData, ENEMY_TYPES, CHAPTERS, WAVES, CONFIG, HERO, HEROES, setHero, ANIMS } from './core/config.js';
+import { loadData, ENEMY_TYPES, CHAPTERS, WAVES, CONFIG, HERO, HEROES, setHero } from './core/config.js';
 import { Assets } from './core/assets.js';
 import { Audio } from './core/audio.js';
 import { Save } from './core/save.js';
@@ -19,8 +19,8 @@ import { initErrorLog } from './core/errorlog.js';
 import { startTutorial, tutorialDodgeUsed } from './ui/Tutorial.js';
 import { maybeSpawnChest } from './game/Chests.js';
 import { chapterInfo, bossFor } from './game/chapters.js';
-import { startWave, resumeAfterUpgrade, isBossWave, continueChapter } from './game/WaveManager.js';
-import { applyUpgrade, upgradeById } from './game/UpgradeManager.js';
+import { startWave, resumeAfterUpgrade, continueChapter } from './game/WaveManager.js';
+import { applyUpgrade } from './game/UpgradeManager.js';
 import { addText, gainXp } from './game/combat.js';
 import { events } from './game/events.js';
 import { CardSystem, debugGrantAll } from './game/CardSystem.js';
@@ -136,7 +136,7 @@ async function boot() {
     Audio.play('gem');
     showUpgrade(cards, boss, (card) => {
       applyUpgrade(card);
-      const u = upgradeById(card.id), p = state.player;
+      const p = state.player;
       addText(p.a, 150, `${card.icon} ${card.bonus} ${card.desc}`, '#ffd23f', 1.1); addText(p.a, 125, 'GÜÇ UYGULANDI!', '#ffffff', 0.8);
       state.rings.push({ a: p.a, t: 0, life: 0.9 }); state.rings.push({ a: p.a, t: 0, life: 1.3, color: '#ffd23f' });
       updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
