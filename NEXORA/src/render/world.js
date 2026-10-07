@@ -46,12 +46,14 @@ function getTileGround(id) {
     const cv = document.createElement('canvas'); cv.width = img.width; cv.height = Hc; const g = cv.getContext('2d');
     const off = pad - tops[i], y0 = off + Math.round(img.height * 0.86), ch = Math.round(img.height * 0.4);     // alt %14 pürüzlü kenar atılır; yalnız kaya kısmından (çim/sarmaşık hariç) %40'lık bant dikey ayna ile aşağı doğru döşenir (ekran altına kadar zemin)
     g.drawImage(img, 0, off);
+    if (ext > 0) {                                      // ek derinlik istenirse (extend>0) kaya bandı dikey ayna ile döşenir; 0 = asset olduğu gibi
     const snap = document.createElement('canvas'); snap.width = img.width; snap.height = ch; snap.getContext('2d').drawImage(cv, 0, y0 - ch, img.width, ch, 0, 0, img.width, ch);
     for (let k = 0, y = y0; y < Hc; k++, y += ch) {
       g.save(); g.translate(0, y); if (k % 2 === 0) { g.translate(0, ch); g.scale(1, -1); } g.drawImage(snap, 0, 0); g.restore();
     }
     const dk = g.createLinearGradient(0, y0, 0, Hc); dk.addColorStop(0, 'rgba(20,10,4,0)'); dk.addColorStop(1, 'rgba(20,10,4,.4)');   // derinlikte hafif koyulaşma
-    g.fillStyle = dk; g.fillRect(0, y0, img.width, Hc - y0); return cv;
+    g.fillStyle = dk; g.fillRect(0, y0, img.width, Hc - y0); }
+    return cv;
   });
   tops.pad = pad;
   if (cfg.mirror) pieces.push(...pieces.map((cv) => { const m = document.createElement('canvas'); m.width = cv.width; m.height = cv.height; const g = m.getContext('2d'); g.translate(cv.width, 0); g.scale(-1, 1); g.drawImage(cv, 0, 0); return m; }));   // ayna kopyaları: [P,P'] ardışık dizilince birleşim yerleri simetrik → dikişsiz
