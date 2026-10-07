@@ -118,7 +118,7 @@ function drawProceduralHero(ctx, meta, anim) {
   if (!img) return false;
   const L = getHeroLayers(img), C = HERO_CUT;
   const sc = meta.scale, T = p.animT, dur = anim.frames.length / anim.fps, u = Math.min(1, T / dur), name = p.anim, time = state.time;
-  let dx = 0, dy = 0, grot = 0, hipRot = 0, thB = 0, thF = 0, liftB = 0, liftF = 0, alpha = 1, amp = 3.2, ghost = 0, swordRot = 0;
+  let dx = 0, dy = 0, grot = 0, hipRot = 0, thB = 0, thF = 0, liftB = 0, liftF = 0, alpha = 1, amp = 3.2, ghost = 0, swordRot = 0, swordFall = 0;
   const hurtK = Math.max(0, p.hitFlash) / 0.2;
   const ease = (x) => x * x * (3 - 2 * x);
   if (name === 'idle') {
@@ -138,10 +138,10 @@ function drawProceduralHero(ctx, meta, anim) {
   } else if (name === 'death') {
     // devrilme: geri fırlar (yay), havada döner, yere çarpıp iki kez seker, yatar; bacaklar havada çırpınır
     const t = T, A = 0.5, B = 0.74, C2 = 0.95, ez = (x) => x * x * (3 - 2 * x);
-    if (t < A) { const q = t / A; dx = -58 * q; dy = -60 * Math.sin(q * Math.PI * 0.92); grot = -1.8 * (q * (2 - q)) - 0.25 * Math.sin(q * 9); hipRot = -0.2 * q; thB = 0.9 * Math.sin(q * 7); thF = -0.8 * Math.sin(q * 7 + 1); }
-    else if (t < B) { const q = (t - A) / (B - A); dx = -58 - 12 * q; dy = -18 * Math.sin(q * Math.PI); grot = -1.8 - 0.1 * q; thB = 0.95 * ez(q); thF = 0.8 * ez(q); }
-    else { const q = Math.min(1, (t - B) / (C2 - B)); dx = -70 - 5 * q; dy = -5 * Math.sin(q * Math.PI) - 10 * q; grot = -1.9 + 0.05 * q; thB = 0.95 + 0.05 * q; thF = 0.8 + 0.05 * q; }
-    swordRot = Math.min(1, Math.max(0, (t - 0.12) / 0.55)) * 1.85;             // kılıç elinden savrulup yere yatar
+    if (t < A) { const q = t / A; dx = -58 * q; dy = -60 * Math.sin(q * Math.PI * 0.92); grot = -1.74 * (q * (2 - q)) - 0.25 * Math.sin(q * 9); hipRot = -0.2 * q; thB = 0.9 * Math.sin(q * 7); thF = -0.8 * Math.sin(q * 7 + 1); }
+    else if (t < B) { const q = (t - A) / (B - A); dx = -58 - 12 * q; dy = -18 * Math.sin(q * Math.PI); grot = -1.74 - 0.02 * q; thB = 0.95 * ez(q); thF = 0.8 * ez(q); }
+    else { const q = Math.min(1, (t - B) / (C2 - B)); dx = -70 - 5 * q; dy = -4 * Math.sin(q * Math.PI) - 14 * ez(q); grot = -1.76; thB = 0.95; thF = 0.8; }
+    swordRot = Math.min(1, Math.max(0, (t - 0.12) / 0.55)) * 1.98; swordFall = Math.min(1, Math.max(0, (t - 0.45) / 0.3));             // kılıç elinden savrulup yere yatar
     amp = t < A ? 8 : 1.5; alpha = 1 - Math.max(0, (T - 1.4) / 1.2) * 0.4;
   }
   if (p.invuln > 0 && Math.floor(time * 20) % 2 === 0 && !state.over) alpha *= 0.6;
@@ -164,7 +164,7 @@ function drawProceduralHero(ctx, meta, anim) {
     const body = (a, extraRot) => {
       ctx.save(); ctx.globalAlpha = alpha * a; ctx.translate((C.hip[0] - px) * sc, (C.hip[1] - py) * sc); ctx.rotate(hipRot + extraRot); ctx.translate(-(C.hip[0] - px) * sc, -(C.hip[1] - py) * sc);
       drawWarped(ctx, L.torso, px, py, sc, time, amp, name === 'run' ? 1 : 0);
-      ctx.save(); const gx = (C.grip[0] - px) * sc, gy = (C.grip[1] - py) * sc; ctx.translate(gx, gy); ctx.rotate(swordRot); ctx.translate(-gx, -gy);
+      ctx.save(); const gx = (C.grip[0] - px) * sc, gy = (C.grip[1] - py) * sc; ctx.translate(gx, gy); ctx.rotate(swordRot); ctx.translate(-gx, -gy); ctx.translate(-44 * swordFall, 52 * swordFall);   // kılıç yere düşüp elinden uzaklaşır (yerel eksenler grup dönüşüyle dönmüş: -x = ekranda aşağı, +y = ekranda sağa)
       ctx.drawImage(L.sword, -px * sc, -py * sc, L.sword.width * sc, L.sword.height * sc); ctx.restore();
       if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.5 * hurtK; ctx.drawImage(whiteSilhouette(L.torso, 'heroineT', '#ff5a4a'), -px * sc, -py * sc, L.torso.width * sc, L.torso.height * sc); }
       ctx.restore();

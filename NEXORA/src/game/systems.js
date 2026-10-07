@@ -1,6 +1,6 @@
 // Ana oyun döngüsü (update). Parçalar: combat.js (hasar/ödül), EnemySpawner.js + WaveManager.js (dalgalar), boss.js, skills.js,
 // PlayerStats.js (güçlendirme statları). Burada: otomatik ilerleme, düşman hareketi, otomatik saldırı, pickup'lar, efekt zamanlayıcıları.
-import { CONFIG, ANIMS, WAVES } from '../core/config.js';
+import { CONFIG, ANIMS, WAVES, HERO } from '../core/config.js';
 import { Input } from '../core/input.js';
 import { clamp, wrapAngle } from '../core/util.js';
 import { state } from './state.js';
@@ -10,7 +10,7 @@ import { updateWaves } from './WaveManager.js';
 import { updateBoss } from './boss.js';
 import { enemyMeta } from './EnemySpawner.js';
 import { derived } from './PlayerStats.js';
-import { stepDust } from './fx.js';
+import { stepDust, groundDust } from './fx.js';
 import { updateParticles } from './fx.js';
 import { hitEnemy, hurtPlayer, collectCoin, collectGem, tickStatus, slowMul } from './combat.js';
 
@@ -24,7 +24,13 @@ const surfaceDist = (a, b) => Math.abs(wrapAngle(a - b)) * R();
 // Animasyon durum makinesi: ölüm > hasar > saldırı (bitene kadar) > koşu/bekleme. Saldırı animasyonu saldırı hızıyla hızlanır.
 function updatePlayerAnim(p, dt, atkMul) {
   const set = ANIMS.hero?.animations;
+  const prevT = p.animT;
   p.animT += dt * (p.anim.startsWith('attack') ? atkMul : 1);
+  if (p.anim === 'death' && HERO.id === 'heroine') {           // düşme anlarında yer tozu (kadın karakter ölüm animasyonu: 0.5 sn ilk çarpma, 0.74 sn ikinci)
+    const R = CONFIG.planet.radius;
+    if (prevT < 0.5 && p.animT >= 0.5) { groundDust(p.a - 58 / R, 22, 190); state.shake = Math.max(state.shake, 5); }
+    if (prevT < 0.74 && p.animT >= 0.74) groundDust(p.a - 72 / R, 14, 130);
+  }
   if (!set || p.anim === 'death') return;
   const cur = set[p.anim];
   const done = cur && !cur.loop && p.animT >= cur.frames.length / cur.fps;

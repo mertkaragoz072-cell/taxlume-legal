@@ -122,7 +122,7 @@ async function boot() {
       updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
     });
   };
-  events.onGameOver = (st) => { Audio.play('gameover'); showOver(st); };
+  events.onGameOver = (st) => { Audio.play('gameover'); setTimeout(() => { if (state.over) showOver(st); }, 1500); };   // düşme animasyonu görünsün diye panel gecikmeli
   events.onCoin = () => { pulse('pill-coin'); Audio.play('coin'); };
   events.onGem = () => { pulse('pill-gem'); Audio.play('gem'); };
   events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); Audio.play('levelup'); };
