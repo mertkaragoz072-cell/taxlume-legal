@@ -330,3 +330,6 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 ## Faz 49 — goblin_warrior saldırı animasyonu (30 kare, gömülü ateş yayı + toz)
 - `extract_enemy_sheet.py` **hücre tabanlı** ayıklamaya geçirildi (yay/toz efektleri karakterden ayrı bileşen olabilir ve komşu kareler birbirine değebilir): satır sınırları gövde merkezlerinden, sütunlar ızgaradan; dar bileşen bütünüyle ağırlık merkezinin hücresine, geniş (birleşik) bileşenler piksel bazlı kesilir; numara etiketleri küçük/düşük doygunluklu bileşen olarak atılır; gövde = erozyonla efektten ayrılan en büyük bileşen (boy/ayak ölçümü efektten etkilenmez); hücreye ait olmayan taşkın parçalar atılır. goblin_scout karelerini yeniden üretmek gerekmez (aynı sonuç).
 - `goblin_warrior attack ... --fps 45 --impact 0.37 --ref-frames 21-30`: süre 0.67 sn, hasar gürz yere inerken (kare ≈ 11). Bilinen küçük kusur: 12. karede sol kenarda komşu karenin küçük bir kıvılcım kırıntısı kalabilir (1 kare, ≈ 22 ms).
+
+## Faz 50 — goblin_warrior hasar alma animasyonu (30 kare)
+- `extract_enemy_sheet.py goblin_warrior hurt references/nexora_goblin_warrior_hurt_source.png --vis 0.45 --ref-frames 19-30` (ölçek 0.4893, yürüme 0.4952 ile uyumlu; yıldızlar/darbe efekti gömülü). `visDur` 0.45 sn, ayrı sayaçla oynar (gözcüyle aynı mantık). Kalan eski kare: goblin_warrior death.
