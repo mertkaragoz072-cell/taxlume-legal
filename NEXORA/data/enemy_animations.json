@@ -417,12 +417,49 @@
     "anims": {
       "walk": {
         "frames": [
-          "enemy_goblin_brute_walk_01",
-          "enemy_goblin_brute_walk_02",
-          "enemy_goblin_brute_walk_03"
+          "enemy_goblin_brute_hd_walk_01",
+          "enemy_goblin_brute_hd_walk_02",
+          "enemy_goblin_brute_hd_walk_03",
+          "enemy_goblin_brute_hd_walk_04",
+          "enemy_goblin_brute_hd_walk_05",
+          "enemy_goblin_brute_hd_walk_06",
+          "enemy_goblin_brute_hd_walk_07",
+          "enemy_goblin_brute_hd_walk_08",
+          "enemy_goblin_brute_hd_walk_09",
+          "enemy_goblin_brute_hd_walk_10",
+          "enemy_goblin_brute_hd_walk_11",
+          "enemy_goblin_brute_hd_walk_12",
+          "enemy_goblin_brute_hd_walk_13",
+          "enemy_goblin_brute_hd_walk_14",
+          "enemy_goblin_brute_hd_walk_15",
+          "enemy_goblin_brute_hd_walk_16",
+          "enemy_goblin_brute_hd_walk_17",
+          "enemy_goblin_brute_hd_walk_18",
+          "enemy_goblin_brute_hd_walk_19",
+          "enemy_goblin_brute_hd_walk_20",
+          "enemy_goblin_brute_hd_walk_21",
+          "enemy_goblin_brute_hd_walk_22",
+          "enemy_goblin_brute_hd_walk_23",
+          "enemy_goblin_brute_hd_walk_24",
+          "enemy_goblin_brute_hd_walk_25",
+          "enemy_goblin_brute_hd_walk_26",
+          "enemy_goblin_brute_hd_walk_27",
+          "enemy_goblin_brute_hd_walk_28",
+          "enemy_goblin_brute_hd_walk_29",
+          "enemy_goblin_brute_hd_walk_30"
         ],
-        "fps": 6,
-        "loop": true
+        "fps": 30.0,
+        "loop": true,
+        "canvas": [
+          260,
+          204
+        ],
+        "pivot": [
+          130,
+          196
+        ],
+        "scale": 0.636,
+        "strideUnits": 1.6
       },
       "attack": {
         "frames": [
@@ -449,6 +486,7 @@
         "fps": 6,
         "loop": false
       }
-    }
+    },
+    "hdTarget": 113.2
   }
 }
