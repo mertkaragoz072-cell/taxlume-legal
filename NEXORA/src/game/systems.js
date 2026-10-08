@@ -121,6 +121,7 @@ export function update(dt) {
     en.bob += dt * (5 + en.def.speed * 0.05); en.flash = Math.max(0, en.flash - dt); en.stagger = Math.max(0, (en.stagger || 0) - dt);
     en.atkTimer = Math.max(0, en.atkTimer - dt);
     en.age += dt; if (en.noInterrupt > 0) en.noInterrupt -= dt;
+    en.walkD = (en.walkD || 0) + Math.abs(wrapAngle(en.a - (en.pa ?? en.a))) * r; en.pa = en.a;               // kat edilen mesafe: yürüme karesi buna bağlı (ayak kaymaz)
     tickStatus(en, dt);
     if (en.dead) return;
     const D = en.def;
