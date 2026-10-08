@@ -84,6 +84,7 @@ for an in ANIMS:
         if cfg.get('dx', {}).get(an): e['dx'] = cfg['dx'][an]
         if cfg.get('dust', {}).get(an): e['dust'] = cfg['dust'][an]
         if cfg.get('shake', {}).get(an) is not None: e['shake'] = cfg['shake'][an]
+        if cfg.get('recoil', {}).get(an): e['recoil'] = cfg['recoil'][an]            # [birim, tepe anı sn, bitiş sn]: sprite'ın geriye tepmesi (kare verisinde yer değiştirme yoksa)
         if cfg.get('durations', {}).get(an): e['durations'] = cfg['durations'][an]      # kare başına süre (sn); varsa fps yerine
         if an == 'run': e['strideUnits'] = cfg.get('strideUnits', 15)
         if an == 'attack':

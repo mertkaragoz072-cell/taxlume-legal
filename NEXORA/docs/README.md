@@ -287,3 +287,6 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 ## Faz 40 — Kadın savaşçı hasar alma animasyonu (30 kare) + süre hatası düzeltmesi
 - Kullanıcının verdiği 30 karelik hasar sayfası `tools/extract_heroine_hurt.py` ile `hurt/hurt_01..30.png` olarak çıkarıldı (kırmızı ünlem/çizgi efektleri gömülü, numaralar silindi, boy bekleme ile eşit). Kadın savaşçının tüm durumları artık kare tabanlı; kodla çizilen kesme-bebek yalnız ölüm fiziği (ragdoll) yedeği olarak duruyor.
 - **Hata düzeltmesi (Faz 39'dan):** animasyon bitişi/saldırı meşguliyeti `kare sayısı/fps` ile hesaplanıyordu; `durations` kullanan animasyonda saldırı 0.53 sn'de bitse de oyun 1.0 sn boyunca saldırı durumunda sayıyor, koşuyu ve yeni saldırıyı geciktiriyordu. `animDuration()` ile düzeltildi; yeni test saldırı/hasar süre eşleşmesini doğrular.
+
+## Faz 41 — Hasar alma geri tepmesi
+- `frames.json → recoil.hurt = [7 birim, 0.07 sn, 0.34 sn]`: hasar alınca sprite (gölgesiyle) arkaya 7 birim fırlayıp yumuşakça yerine döner (karelerde yer değiştirme olmadığı için görsel efekt; kahramanın mantıksal konumu değişmez). `build_female_animations.py` alanı `heroine_animations.json`'a yazar, `drawHeroFrames` uygular. Başka animasyon için aynı alan kullanılabilir.

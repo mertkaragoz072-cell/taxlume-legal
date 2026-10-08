@@ -70,7 +70,9 @@ function drawHeroFrames(ctx, meta, anim) {
   const sc = F.scale, w = img.width * sc, h = img.height * sc, px = F.pivot[0] * sc, py = F.pivot[1] * sc, hurtK = Math.max(0, p.hitFlash) / 0.2;
   let alpha = 1;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) alpha = 0.6;
+  const rc = anim.recoil, T = p.animT, rec = rc ? (T < rc[1] ? rc[0] * (1 - (1 - T / rc[1]) ** 2) : T < rc[2] ? rc[0] * (1 - (T - rc[1]) / (rc[2] - rc[1])) ** 2 : 0) : 0;   // geri tepme: tepe anına hızlı çıkış, sonra yumuşak dönüş
   onLane(ctx, p.a, p.hopH || 0, p.lean * 0.3, () => {
+    if (rec) ctx.translate(-p.dir * rec, 0);
     plShadow(ctx, p, 56 * (name === 'death' ? 1.5 : 1), 0.34);
     ctx.scale(p.dir, 1);
     if (name !== 'death') castShadow(ctx, img, key, -px, -py, w, h, p.dir);
