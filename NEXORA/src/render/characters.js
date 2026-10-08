@@ -351,7 +351,11 @@ export function drawEnemy(ctx, en) {
     else if (sp && sp.phase === 'dash') { ctx.rotate(0.16); ctx.translate(8, 0); }                       // hücum: öne eğik
     else if (sp && sp.phase === 'recover') ctx.translate(0, Math.sin(en.bob * 2) * 1.2);
     if (!en.dead) castShadow(ctx, img, key, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h, meta.facing === 'right' ? en.face : -en.face, def.boss ? 0.3 : 0.34);
-    ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
+    if (en.dead && en.deathT < 0.18) {                                 // ölüm geçişi: ayakta (acı karesi) → yatan kare; geriye eğilip solar, yatan kare belirir ve küçük bir sıçrayışla yere iner (tek kareli ölüm animasyonunda ani sıçrama olmasın)
+      const k = en.deathT / 0.18, pre = Assets.get(meta.anims.hurt?.frames?.[0] || meta.anims.walk.frames[0]), ga = ctx.globalAlpha;
+      if (pre) { ctx.save(); ctx.globalAlpha = ga * (1 - k); ctx.translate(0, -10 * Math.sin(Math.PI * k)); ctx.rotate(-0.5 * k); ctx.drawImage(pre, -meta.pivot[0] * sc, -meta.pivot[1] * sc, pre.width * sc, pre.height * sc); ctx.restore(); }
+      ctx.save(); ctx.globalAlpha = ga * Math.min(1, k * 1.6); ctx.translate(0, -16 * Math.sin(Math.PI * k) * (1 - k)); ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.restore();
+    } else ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h);
     if (def.boss && !en.dead) { ctx.globalAlpha = (sp && sp.phase === 'windup' ? 0.32 + 0.22 * Math.sin(state.time * 22) : 0.16 + 0.08 * Math.sin(state.time * 5)) + (sp && sp.rage ? 0.1 * sp.rage : 0); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); ctx.globalAlpha = 1; }
     if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.5; ctx.drawImage(whiteSilhouette(img, key), -meta.pivot[0] * sc, -meta.pivot[1] * sc, w, h); }
     ctx.restore();
