@@ -302,8 +302,8 @@ function enemyFrame(en, meta) {
   const A = meta.anims;
   let an, t;
   if (en.dead) { an = 'death'; t = en.deathT; }
-  else if (A.hurt?.visDur && en.hurtAge < A.hurt.visDur && en.attackT < 0 && !(en.windT > 0)) { an = 'hurt'; t = en.hurtAge * A.hurt.frames.length / A.hurt.visDur / A.hurt.fps; }   // uzun hasar animasyonu: sersemleme (0.22 sn) bittikten sonra da toparlanma kareleri oynar (saldırı/hazırlık önceliklidir)
-  else if (!A.hurt?.visDur && en.stagger > 0 && A.hurt) { an = 'hurt'; t = 0.22 - en.stagger; }
+  else if (A.hurt?.visDur && !en.def.boss && en.hurtAge < A.hurt.visDur && en.attackT < 0 && !(en.windT > 0)) { an = 'hurt'; t = en.hurtAge * A.hurt.frames.length / A.hurt.visDur / A.hurt.fps; }   // uzun hasar animasyonu: sersemleme (0.22 sn) bittikten sonra da toparlanma kareleri oynar (saldırı/hazırlık önceliklidir)
+  else if ((!A.hurt?.visDur || en.def.boss) && en.stagger > 0 && A.hurt) { an = 'hurt'; t = 0.22 - en.stagger; }
   else if (en.attackT >= 0 && A.attack) { an = 'attack'; t = en.attackT; }
   else { an = 'walk'; t = en.bob / 8; }
   const L = A[an], n = L.frames.length;
