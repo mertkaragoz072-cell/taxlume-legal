@@ -13,7 +13,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 ap = argparse.ArgumentParser(); ap.add_argument('type'); ap.add_argument('anim'); ap.add_argument('src')
 ap.add_argument('--cols', type=int, default=6); ap.add_argument('--rows', type=int, default=5); ap.add_argument('--fps', type=float, default=30)
-ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default='')
+ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--land', type=int, default=0)
 a = ap.parse_args(); N = a.cols * a.rows
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 rgb = np.array(Image.open(os.path.join(ROOT, a.src) if not os.path.isabs(a.src) else a.src).convert('RGB')).astype(np.float32); H, W = rgb.shape[:2]
@@ -40,7 +40,11 @@ for k, (i, s) in enumerate(order, 1):
     rb = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.45); l2, k2 = ndi.label(rb)
     bh = 0
     if k2: j = 1 + int(np.argmax(ndi.sum(rb, l2, range(1, k2 + 1)))); ys2 = np.where(l2 == j)[0] if False else np.where((l2 == j).any(1))[0]; bh = ys2.max() - ys2.min() + 1      # bandana yüksekliği (ölçek eşlemesi için)
-    recs.append(dict(img=np.dstack([col, alpha * 255])[y0:y1, x0:x1].astype(np.uint8), ax=ax - x0, bot=bot + 1 - y0, h=bot - top + 1, bh=bh))
+    recs.append(dict(img=np.dstack([col, alpha * 255])[y0:y1, x0:x1].astype(np.uint8), ax=ax - x0, bot=bot + 1 - y0, h=bot - top + 1, bh=bh, x0=x0, y0=y0, abs_bot=bot + 1))
+if a.grid:                                                  # düşme/ölüm gibi gövdenin yer değiştirdiği animasyonlar: kare konumu sayfa ızgarasına göre korunur (x = hücre merkezi, yer = 1. karenin zemin çizgisi, satır ofsetiyle)
+    cw, ch = W / a.cols, H / a.rows; g1 = recs[0]['abs_bot']
+    for k, r in enumerate(recs):
+        row, col = divmod(k, a.cols); r['ax'] = (col + 0.5) * cw - r['x0']; r['bot'] = row * ch + g1 - r['y0']
 hmed = float(np.median([r['h'] for r in recs]))
 meta_p = os.path.join(ROOT, 'data/enemy_animations.json'); E = json.load(open(meta_p)); T = E[a.type]
 def old_walk_h():
@@ -73,6 +77,7 @@ for i, r in enumerate(recs, 1):
 man['images'] = dict(sorted(man['images'].items())); json.dump(man, open(man_p, 'w'), indent=2, ensure_ascii=False); open(man_p, 'a').write('\n')
 anim = {'frames': keys, 'fps': a.fps, 'loop': a.loop, 'canvas': [Wc, Hc], 'pivot': [PXc, PYc], 'scale': round(scale, 4)}
 old = T['anims'].get(a.anim, {})
+if a.land: anim['landFrame'] = a.land                          # ölüm: gövdenin yere çarptığı kare (toz)
 if a.vis: anim['visDur'] = a.vis                              # hasar animasyonu: tüm kareler bu sürede (sn) oynar (gerçek sersemleme süresinden bağımsız)
 if a.impact: anim['impact'] = a.impact
 elif 'impact' in old: anim['impact'] = old['impact']

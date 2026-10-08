@@ -205,10 +205,49 @@
       },
       "death": {
         "frames": [
-          "enemy_goblin_scout_death_01"
+          "enemy_goblin_scout_hd_death_01",
+          "enemy_goblin_scout_hd_death_02",
+          "enemy_goblin_scout_hd_death_03",
+          "enemy_goblin_scout_hd_death_04",
+          "enemy_goblin_scout_hd_death_05",
+          "enemy_goblin_scout_hd_death_06",
+          "enemy_goblin_scout_hd_death_07",
+          "enemy_goblin_scout_hd_death_08",
+          "enemy_goblin_scout_hd_death_09",
+          "enemy_goblin_scout_hd_death_10",
+          "enemy_goblin_scout_hd_death_11",
+          "enemy_goblin_scout_hd_death_12",
+          "enemy_goblin_scout_hd_death_13",
+          "enemy_goblin_scout_hd_death_14",
+          "enemy_goblin_scout_hd_death_15",
+          "enemy_goblin_scout_hd_death_16",
+          "enemy_goblin_scout_hd_death_17",
+          "enemy_goblin_scout_hd_death_18",
+          "enemy_goblin_scout_hd_death_19",
+          "enemy_goblin_scout_hd_death_20",
+          "enemy_goblin_scout_hd_death_21",
+          "enemy_goblin_scout_hd_death_22",
+          "enemy_goblin_scout_hd_death_23",
+          "enemy_goblin_scout_hd_death_24",
+          "enemy_goblin_scout_hd_death_25",
+          "enemy_goblin_scout_hd_death_26",
+          "enemy_goblin_scout_hd_death_27",
+          "enemy_goblin_scout_hd_death_28",
+          "enemy_goblin_scout_hd_death_29",
+          "enemy_goblin_scout_hd_death_30"
         ],
-        "fps": 6,
-        "loop": false
+        "fps": 30.0,
+        "loop": false,
+        "canvas": [
+          280,
+          203
+        ],
+        "pivot": [
+          140,
+          195
+        ],
+        "scale": 0.4596,
+        "landFrame": 14
       }
     },
     "hdTarget": 71.3

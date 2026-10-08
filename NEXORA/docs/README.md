@@ -317,3 +317,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - `tools/extract_enemy_sheet.py goblin_scout hurt references/nexora_goblin_scout_hurt_source.png --vis 0.45 --ref-frames 19-30`: 30 kare, bandana boyu yürüme/saldırı ile eşit (ölçek 0.4714; ölçüm yalnız baş dik karelerden).
 - Oyun: gerçek sersemleme 0.22 sn olduğundan uzun hasar animasyonu `anims.hurt.visDur` (0.45 sn) ile ayrı sayaçtan (`en.hurtAge`) oynar: vuruş tepkisi + yıldızlar + toparlanma; sersemleme bitince saldırı/hazırlık animasyonu önceliklidir; yeni vuruşta animasyon baştan başlar. Ölüm geçişi (acı karesi → yatan kare) HD hurt karesinin kendi pivot/ölçeğini kullanır.
 - Kalan eski kare: goblin_scout death (tek, bandanasız).
+
+## Faz 47 — goblin_scout ölüm animasyonu (30 kare) — gözcü artık tamamen tek tasarım
+- `tools/extract_enemy_sheet.py goblin_scout death references/nexora_goblin_scout_death_source.png --fps 30 --ref-frames 1-1 --grid --land 14`: yeni `--grid` modu: gövdenin yer değiştirdiği (düşüp sürünen) animasyonlarda kare konumu sayfa ızgarasına göre korunur (x = hücre merkezi, yer çizgisi 1. karenin tabanı); ölçek 1. karedeki (ayakta) bandana boyuyla yürümeye eşit. `--land` = yere çarpış karesi.
+- Oyun: ölüm 1.0 sn oynar (30 kare / 30 FPS), yere çarpış karesinde (14) toz + hafif sarsıntı (`landFrame`), yatış oturduktan sonra solar (çok kareli ölümde sönme animasyon süresi + 0.5 sn); tek kareli ölümler (diğer düşmanlar) önceki çapraz geçişi kullanır.
+- Gözcünün 4 durumu da (yürüme/saldırı/hasar/ölüm) yeni bandanalı tasarım, 30 kare. Sıradaki: goblin_warrior ve goblin_brute (aynı sayfa şablonları).

@@ -208,7 +208,8 @@ export function update(dt) {
       }
     }
   }
-  state.enemies = state.enemies.filter((e) => !e.dead || e.deathT < 0.95);
+  for (const e of state.enemies) if (e.dead) { const D = enemyMeta(e)?.anims.death; if (D?.landFrame && !e.landed && e.deathT >= D.landFrame / D.fps) { e.landed = true; groundDust(e.a, 7, 100); state.shake = Math.max(state.shake, e.def.boss ? 8 : 1.5); } }   // yere çarpış tozu
+  state.enemies = state.enemies.filter((e) => { if (!e.dead) return true; const D = enemyMeta(e)?.anims.death, dur = D ? D.frames.length / D.fps : 0; return e.deathT < (dur >= 0.5 ? dur + 0.5 : 0.95); });
 
   for (const c of state.coins) {
     c.spin += dt * 8;

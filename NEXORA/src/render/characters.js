@@ -335,7 +335,8 @@ export function drawEnemy(ctx, en) {
   if (!raw) return;
   const img = en.def.tint ? tintedFrame(raw, key, en.def.tint) : raw;
   const AN = enemyFrame.anim, piv = AN.pivot || meta.pivot, sc = (AN.scale || meta.scale) * (def.spriteMul || 1), w = img.width * sc, h = img.height * sc;
-  const dp = en.dead ? clamp((en.deathT - 0.5) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
+  const dFade = (() => { const D = meta.anims.death, dur = D.frames.length / D.fps; return dur >= 0.5 ? dur : 0.5; })();     // çok kareli ölüm: yatış oturduktan sonra solar
+  const dp = en.dead ? clamp((en.deathT - dFade) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
   onLane(ctx, en.a, 0, 0, () => {
     ctx.globalAlpha = (1 - dp) * Math.min(1, en.age / 0.3);       // doğarken kısa fade-in
     if (def.boss && !en.dead) {                                       // boss: ayaklarında kırmızı aura
@@ -354,7 +355,7 @@ export function drawEnemy(ctx, en) {
     else if (sp && sp.phase === 'dash') { ctx.rotate(0.16); ctx.translate(8, 0); }                       // hücum: öne eğik
     else if (sp && sp.phase === 'recover') ctx.translate(0, Math.sin(en.bob * 2) * 1.2);
     if (!en.dead) castShadow(ctx, img, key, -piv[0] * sc, -piv[1] * sc, w, h, meta.facing === 'right' ? en.face : -en.face, def.boss ? 0.3 : 0.34);
-    if (en.dead && en.deathT < 0.18) {                                 // ölüm geçişi: ayakta (acı karesi) → yatan kare; geriye eğilip solar, yatan kare belirir ve küçük bir sıçrayışla yere iner (tek kareli ölüm animasyonunda ani sıçrama olmasın)
+    if (en.dead && en.deathT < 0.18 && AN.frames.length === 1) {                                 // ölüm geçişi: ayakta (acı karesi) → yatan kare; geriye eğilip solar, yatan kare belirir ve küçük bir sıçrayışla yere iner (tek kareli ölüm animasyonunda ani sıçrama olmasın)
       const HA = meta.anims.hurt || meta.anims.walk, k = en.deathT / 0.18, pre = Assets.get(HA.frames[Math.min(HA.frames.length - 1, HA.visDur ? 5 : 0)]), ga = ctx.globalAlpha, ppiv = HA.pivot || meta.pivot, psc = (HA.scale || meta.scale) * (def.spriteMul || 1);
       if (pre) { ctx.save(); ctx.globalAlpha = ga * (1 - k); ctx.translate(0, -10 * Math.sin(Math.PI * k)); ctx.rotate(-0.5 * k); ctx.drawImage(pre, -ppiv[0] * psc, -ppiv[1] * psc, pre.width * psc, pre.height * psc); ctx.restore(); }
       ctx.save(); ctx.globalAlpha = ga * Math.min(1, k * 1.6); ctx.translate(0, -16 * Math.sin(Math.PI * k) * (1 - k)); ctx.drawImage(img, -piv[0] * sc, -piv[1] * sc, w, h); ctx.restore();
