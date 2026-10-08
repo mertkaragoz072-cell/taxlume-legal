@@ -26,19 +26,19 @@ function drawPlayerSprite(ctx) {
   const p = state.player, meta = ANIMS.hero, anim = meta?.animations[p.anim];
   if (!anim) return false;
   if (meta.static) return drawHeroine(ctx, meta, anim);       // kadın savaşçı: kare tabanlı VEYA prosedürel (animasyon başına)
-  const n = anim.frames.length;
+  const n = anim.frames.length, PV = anim.pivot || meta.pivot, MSC = anim.scale || meta.scale;     // animasyon düzeyi pivot/ölçek (yüksek çözünürlüklü kare setleri)
   const i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
   const img = Assets.get(HERO.id + '_' + anim.frames[i]);
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
   const rc = anim.recoil, rT = p.animT, rec = rc ? (rT < rc[1] ? rc[0] * (1 - (1 - rT / rc[1]) ** 2) : rT < rc[2] ? rc[0] * (1 - (rT - rc[1]) / (rc[2] - rc[1])) ** 2 : 0) : 0;
-  xfTrack(p.anim.startsWith('attack') ? 'attack' : p.anim, { img, x: -meta.pivot[0] * meta.scale, y: -meta.pivot[1] * meta.scale, w: img.width * meta.scale, h: img.height * meta.scale });
+  xfTrack(p.anim.startsWith('attack') ? 'attack' : p.anim, { img, x: -PV[0] * MSC, y: -PV[1] * MSC, w: img.width * MSC, h: img.height * MSC });
   onLane(ctx, p.a, p.hopH || 0, p.lean * 0.5, () => {
     if (rec) ctx.translate(-p.dir * rec, 0);
     plShadow(ctx, p, 56, 0.34);                                    // ayakların altında küçük yumuşak oval
     ctx.scale(p.dir, 1);
-    if (p.anim !== 'death') castShadow(ctx, img, 'p:' + anim.frames[i], -meta.pivot[0] * meta.scale, -meta.pivot[1] * meta.scale, img.width * meta.scale, img.height * meta.scale, p.dir);
-    const sc = meta.scale, hurt = Math.max(0, p.hitFlash) / 0.2, running = Math.abs(p.moveAxis) > 0 && p.anim === 'run';
+    if (p.anim !== 'death') castShadow(ctx, img, 'p:' + anim.frames[i], -PV[0] * MSC, -PV[1] * MSC, img.width * MSC, img.height * MSC, p.dir);
+    const sc = MSC, hurt = Math.max(0, p.hitFlash) / 0.2, running = Math.abs(p.moveAxis) > 0 && p.anim === 'run';
     // squash/stretch: koşarken adım ritmi, saldırıda hafif uzama, hasarda ezilme (ayaklar sabit kalır)
     const sy = 1 + (running ? Math.sin(p.walk * 2) * 0.025 : 0) - hurt * 0.07 + (p.anim.startsWith('attack') ? 0.02 : 0);
     const sx = 1 / sy;
@@ -46,14 +46,14 @@ function drawPlayerSprite(ctx) {
     const fxMul = CONFIG.player.slashFxScale, body = Assets.get(HERO.id + 'body_' + anim.frames[i]), fx = Assets.get(HERO.id + 'fx_' + anim.frames[i]), anc = meta.fxAnchor?.[anim.frames[i]];
     if (body && fx && anc) {
       // gövde katmanı tam boy; mavi kılıç efekti kılıcın çıktığı noktaya (çapa) sabitlenip küçültülür
-      ctx.drawImage(body, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+      ctx.drawImage(body, -PV[0] * sc, -PV[1] * sc, img.width * sc, img.height * sc);
       ctx.save(); ctx.globalAlpha *= CONFIG.player.slashFxAlpha;
-      ctx.translate((anc[0] - meta.pivot[0]) * sc, (anc[1] - meta.pivot[1]) * sc); ctx.scale(fxMul, fxMul);
+      ctx.translate((anc[0] - PV[0]) * sc, (anc[1] - PV[1]) * sc); ctx.scale(fxMul, fxMul);
       ctx.drawImage(fx, -anc[0] * sc, -anc[1] * sc, img.width * sc, img.height * sc);
       ctx.restore();
-    } else ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+    } else ctx.drawImage(img, -PV[0] * sc, -PV[1] * sc, img.width * sc, img.height * sc);
     xfDraw(ctx);
-    if (hurt > 0) { ctx.globalAlpha = 0.55 * hurt; ctx.drawImage(whiteSilhouette(img, 'p:' + anim.frames[i], '#ff5a4a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc); }
+    if (hurt > 0) { ctx.globalAlpha = 0.55 * hurt; ctx.drawImage(whiteSilhouette(img, 'p:' + anim.frames[i], '#ff5a4a'), -PV[0] * sc, -PV[1] * sc, img.width * sc, img.height * sc); }
   });
   ctx.globalAlpha = 1;
   return true;

@@ -358,3 +358,7 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 ## Faz 56 — goblin_brute ölüm animasyonu (30 kare) — brute ve bosslar tamamen yeni çizim
 - `extract_enemy_sheet.py goblin_brute death ... --fps 30 --ref-frames 1-1 --grid --land 19` (ölçek 0.627; 1 sn; yere çarpış karesi 19'da büyük toz + sarsıntı: boss'ta güçlü). Brute ve boss (goblin_boss/warlord/king; `animFrom: goblin_brute`) artık yürüme/saldırı/hasar/ölüm 30 kare yeni tasarım; çok kareli ölüm sönmesi animasyon süresine (+0.5 sn) göre.
 - Yeni çizime geçen türler: goblin_scout, goblin_warrior, goblin_brute (+3 boss). Kalan eski tasarım: yok (tüm goblin_* kareleri yeni).
+
+## Faz 57 — Erkek kahraman: 30 karelik bekleme animasyonu (yeni tasarım)
+- `tools/extract_enemy_sheet.py male idle references/nexora_male_idle_source.png --fps 30 --loop --target 97 --anchor feet --dark`: araç **kahraman modu** kazandı (`male` → `data/male_animations.json`, kareler `assets/characters/male/hd/`, anahtar `male_hd_<anim>_NN`, referans animasyon idle). Yeni bayraklar: `--anchor feet` (x/y ayaklardan: sarkan kılıç/pelerin yer çizgisini bozmaz; tuval yer çizgisinin altını da kapsar), `--dark` (siyah/koyu kıyafetli karakterlerde koyu pikseller arka plan sanılmaz: kapalı gövde dolgusu).
+- Oyun: `drawPlayerSprite` animasyon düzeyinde `pivot/scale` okur (eski erkek kareleri değişmeden yanında çalışır). Bekleme yeni çizim (ölçek 0.569, boy 97 birim = kadın kahramanla aynı). Koşu/saldırı/hasar/ölüm sayfaları gelince aynı araçla; saldırıda attack_1/2/3 üçlüsü tek yeni animasyona bağlanacak.

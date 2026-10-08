@@ -12,20 +12,48 @@
   "animations": {
     "idle": {
       "frames": [
-        "idle_01",
-        "idle_02",
-        "idle_03",
-        "idle_04",
-        "idle_05",
-        "idle_06",
-        "idle_07",
-        "idle_08",
-        "idle_09",
-        "idle_10",
-        "idle_11"
+        "hd_idle_01",
+        "hd_idle_02",
+        "hd_idle_03",
+        "hd_idle_04",
+        "hd_idle_05",
+        "hd_idle_06",
+        "hd_idle_07",
+        "hd_idle_08",
+        "hd_idle_09",
+        "hd_idle_10",
+        "hd_idle_11",
+        "hd_idle_12",
+        "hd_idle_13",
+        "hd_idle_14",
+        "hd_idle_15",
+        "hd_idle_16",
+        "hd_idle_17",
+        "hd_idle_18",
+        "hd_idle_19",
+        "hd_idle_20",
+        "hd_idle_21",
+        "hd_idle_22",
+        "hd_idle_23",
+        "hd_idle_24",
+        "hd_idle_25",
+        "hd_idle_26",
+        "hd_idle_27",
+        "hd_idle_28",
+        "hd_idle_29",
+        "hd_idle_30"
       ],
-      "fps": 8,
-      "loop": true
+      "fps": 30.0,
+      "loop": true,
+      "canvas": [
+        230,
+        193
+      ],
+      "pivot": [
+        115,
+        183
+      ],
+      "scale": 0.5689
     },
     "run": {
       "frames": [
@@ -106,7 +134,7 @@
       ],
       "fps": 11,
       "loop": false,
-      "_note": "9 karelik sayfa yere yıkılma; oyunda yalnız ilk 2 kare (sarsılma) 0.18 sn oynar + geri tepme",
+      "_note": "9 karelik sayfa yere y\u0131k\u0131lma; oyunda yaln\u0131z ilk 2 kare (sars\u0131lma) 0.18 sn oynar + geri tepme",
       "recoil": [
         5,
         0.05,
@@ -237,5 +265,6 @@
       98,
       106
     ]
-  }
+  },
+  "hdTarget": 97.0
 }
