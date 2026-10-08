@@ -2,7 +2,7 @@
 // PlayerStats.js (güçlendirme statları). Burada: otomatik ilerleme, düşman hareketi, otomatik saldırı, pickup'lar, efekt zamanlayıcıları.
 import { CONFIG, ANIMS, WAVES } from '../core/config.js';
 import { Input } from '../core/input.js';
-import { clamp, wrapAngle, frameAt } from '../core/util.js';
+import { clamp, wrapAngle, frameAt, animDuration } from '../core/util.js';
 import { state } from './state.js';
 import { events } from './events.js';
 import { updateSkills } from './skills.js';
@@ -42,7 +42,7 @@ function updatePlayerAnim(p, dt, atkMul) {
   }
   if (!set || p.anim === 'death') return;
   const cur = set[p.anim];
-  const done = cur && !cur.loop && p.animT >= cur.frames.length / cur.fps;
+  const done = cur && !cur.loop && p.animT >= animDuration(cur);
   if (p.anim === 'hurt' || p.anim.startsWith('attack')) { if (!done) return; }
   const next = Math.abs(p.moveAxis) > 0 ? 'run' : 'idle';
   if (p.anim !== next) { p.anim = next; p.animT = 0; }
@@ -171,7 +171,7 @@ export function update(dt) {
   updateSkills(dt);
   const manual = Input.consumeAttack();
   const cur = ANIMS.hero?.animations[p.anim];
-  const attackAnimBusy = p.anim.startsWith('attack') && cur && p.animT < cur.frames.length / cur.fps * 0.9;
+  const attackAnimBusy = p.anim.startsWith('attack') && cur && p.animT < animDuration(cur) * 0.9;
   if (!state.over && p.atkTimer <= 0 && !attackAnimBusy) {
     let best = null, bd = C.player.attackRange * S.rangeMul;
     for (const en of live) { const d = surfaceDist(en.a, p.a) - (en.def.hitPad ?? 0); if (d <= bd) { bd = d; best = en; } }   // hitPad: büyük boss'a daha uzaktan vurulabilir

@@ -158,6 +158,14 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     ok(!bad.length, 'düşman animasyon/kare eksik: ' + bad.slice(0, 5).join(', ')); await pg.close();
   });
 
+  await test('framed_anim_duration_matches_durations', async () => {
+    const pg = await page('heroine', '');
+    const r = await pg.evaluate(async () => { const { ANIMS } = await import('/src/core/config.js'), { animDuration } = await import('/src/core/util.js'), A = ANIMS.heroine.animations, out = {};
+      for (const k of ['attack', 'hurt']) { const a = A[k]; out[k] = [Math.round(animDuration(a) * 1000), a.durations ? Math.round(a.durations.reduce((s, d) => s + d, 0) * 1000) : null]; }
+      const g = window.__game, st = g.state, p = st.player; p.anim = 'attack'; p.animT = 0; st.paused = false; let t = 0; while (p.anim === 'attack' && t < 2) { g.update(1 / 60); t += 1 / 60; } out.attackEnds = Math.round(t * 1000); return out; });
+    ok(r.attack[0] === r.attack[1] && r.hurt[0] === r.hurt[1], 'animDuration durations toplamı değil ' + JSON.stringify(r)); ok(r.attackEnds < 700, 'saldırı durumu geç bitiyor ' + r.attackEnds + ' ms'); await pg.close();
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);
