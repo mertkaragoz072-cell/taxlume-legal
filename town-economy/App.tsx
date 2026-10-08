@@ -25,6 +25,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
+import { AmbientGlow } from "./src/components/AmbientGlow";
 import { GoodMomModal } from "./src/components/GoodMomModal";
 import { ProposalModal } from "./src/components/ProposalModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
@@ -345,6 +346,7 @@ function Game() {
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
+      <AmbientGlow />
       <SpotlightProvider style={styles.content}>
         <SpotlightTarget id="inflation">
           <InflationHeader
