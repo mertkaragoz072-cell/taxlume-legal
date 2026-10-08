@@ -463,14 +463,49 @@
       },
       "attack": {
         "frames": [
-          "enemy_goblin_brute_attack_01",
-          "enemy_goblin_brute_attack_02",
-          "enemy_goblin_brute_attack_03",
-          "enemy_goblin_brute_attack_04"
+          "enemy_goblin_brute_hd_attack_01",
+          "enemy_goblin_brute_hd_attack_02",
+          "enemy_goblin_brute_hd_attack_03",
+          "enemy_goblin_brute_hd_attack_04",
+          "enemy_goblin_brute_hd_attack_05",
+          "enemy_goblin_brute_hd_attack_06",
+          "enemy_goblin_brute_hd_attack_07",
+          "enemy_goblin_brute_hd_attack_08",
+          "enemy_goblin_brute_hd_attack_09",
+          "enemy_goblin_brute_hd_attack_10",
+          "enemy_goblin_brute_hd_attack_11",
+          "enemy_goblin_brute_hd_attack_12",
+          "enemy_goblin_brute_hd_attack_13",
+          "enemy_goblin_brute_hd_attack_14",
+          "enemy_goblin_brute_hd_attack_15",
+          "enemy_goblin_brute_hd_attack_16",
+          "enemy_goblin_brute_hd_attack_17",
+          "enemy_goblin_brute_hd_attack_18",
+          "enemy_goblin_brute_hd_attack_19",
+          "enemy_goblin_brute_hd_attack_20",
+          "enemy_goblin_brute_hd_attack_21",
+          "enemy_goblin_brute_hd_attack_22",
+          "enemy_goblin_brute_hd_attack_23",
+          "enemy_goblin_brute_hd_attack_24",
+          "enemy_goblin_brute_hd_attack_25",
+          "enemy_goblin_brute_hd_attack_26",
+          "enemy_goblin_brute_hd_attack_27",
+          "enemy_goblin_brute_hd_attack_28",
+          "enemy_goblin_brute_hd_attack_29",
+          "enemy_goblin_brute_hd_attack_30"
         ],
-        "fps": 8,
+        "fps": 36.0,
         "loop": false,
-        "impact": 0.62
+        "canvas": [
+          415,
+          225
+        ],
+        "pivot": [
+          207,
+          217
+        ],
+        "scale": 0.7671,
+        "impact": 0.6
       },
       "hurt": {
         "frames": [

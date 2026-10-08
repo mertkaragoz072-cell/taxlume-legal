@@ -77,12 +77,19 @@ scale = target / hmed
 walk = T['anims'].get('walk', {})
 if a.anim != 'walk' and walk.get('frames') and str(walk['frames'][0]).startswith(f'enemy_{a.type}_hd_walk'):      # diğer durumlar: bandana boyu yürüme karesininkine eşitlenir → durumlar arası boy tutarlı
     wk = [np.array(Image.open(os.path.join(ROOT, 'assets/enemies', a.type, 'hd', f'walk_{i:02d}.png')).convert('RGBA')) for i in (1, 8, 15, 22)]
-    def band(arr):
+    def band(arr):                                              # bandana (kırmızı) yüksekliği; bandanasız türlerde (brute) None → gövde boyuna düşülür
         al = arr[..., 3] > 150; ys, xs = np.where(al); t0, b0 = ys.min(), ys.max(); r = al & (arr[..., 0] > 150) & (arr[..., 1] < 70) & (arr[..., 2] < 70); r[int(t0 + (b0 - t0) * 0.45):] = False
-        l, k = ndi.label(r); j = 1 + int(np.argmax(ndi.sum(r, l, range(1, k + 1)))); yy_ = np.where((l == j).any(1))[0]; return yy_.max() - yy_.min() + 1
-    wband = float(np.median([band(w) for w in wk])); rs, re_ = (int(x) for x in a.ref_frames.split('-')) if a.ref_frames else (1, N)                  # ölçek ölçümü yalnız bu karelerden (baş yan yatık karelerde bandana boyu yanıltır)
-    rband = float(np.median([r['bh'] for r in recs[rs - 1:re_] if r['bh']]))
-    if wband and rband: scale = walk['scale'] * wband / rband
+        l, k = ndi.label(r)
+        if k == 0: return None
+        j = 1 + int(np.argmax(ndi.sum(r, l, range(1, k + 1)))); yy_ = np.where((l == j).any(1))[0]; return yy_.max() - yy_.min() + 1
+    rs, re_ = (int(x) for x in a.ref_frames.split('-')) if a.ref_frames else (1, N)                  # ölçek ölçümü yalnız bu karelerden (baş yan yatık karelerde bandana boyu yanıltır)
+    wbs = [band(w) for w in wk]
+    if all(x for x in wbs) and any(r['bh'] for r in recs[rs - 1:re_]):
+        wband = float(np.median(wbs)); rband = float(np.median([r['bh'] for r in recs[rs - 1:re_] if r['bh']]))
+        if wband and rband: scale = walk['scale'] * wband / rband
+    else:                                                       # bandanasız: aynı duruştaki (ref-frames) gövde boyu yürüme gövde boyuyla eşitlenir
+        wh = float(np.median([np.ptp(np.where((w[..., 3] > 150).any(1))[0]) + 1 for w in wk])); rh = float(np.median([np.ptp(np.where((r['img'][..., 3] > 150).any(1))[0]) + 1 for r in recs[rs - 1:re_]]))   # walk ile aynı ölçüt: alfa>150 satır genişliği
+        scale = walk['scale'] * wh / rh
 L = max(r['ax'] for r in recs); R = max(r['img'].shape[1] - r['ax'] for r in recs); Hh = max(r['bot'] for r in recs) + max(r['img'].shape[0] - r['bot'] for r in recs)
 Wc = int(2 * max(L, R) + 8); Hc = int(max(r['img'].shape[0] for r in recs) + 16); PXc, PYc = Wc // 2, Hc - 8
 out = os.path.join(ROOT, 'assets/enemies', a.type, 'hd'); os.makedirs(out, exist_ok=True)

@@ -346,3 +346,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 53 — goblin_brute yürüme animasyonu (30 kare)
 - `extract_enemy_sheet.py goblin_brute walk references/nexora_goblin_brute_walk_source.png --fps 30 --loop --stride 48`: 30 kare, özgün çözünürlük, hedef boy 113 birim (eski brute), mesafeye bağlı kare (1.6 birim/kare) + kareler arası çapraz geçiş. goblin_boss/warlord/king aynı kareleri (`animFrom`) 1.3–1.5× kullanır → yürümeleri de yenilendi; saldırı/hasar/ölüm eski karelerde (sayfaları gelince).
+
+## Faz 54 — goblin_brute saldırı animasyonu (30 kare) + boss saldırı eşlemesi
+- `extract_enemy_sheet.py goblin_brute attack ... --fps 36 --impact 0.6 --ref-frames 1-1` (süre 0.83 sn; vuruş karesi 19). Araç: bandanasız türlerde (brute) ölçek, aynı duruştaki ref-frames gövde boyunun yürüme gövde boyuyla eşitlenmesinden bulunur (alfa>150 satır ölçütü; kare 1: 113.5 ≈ yürüme 116 birim); yukarı kaldırılmış çekiçli kareler doğal olarak daha uzundur (≈ 145 birim).
+- **Boss saldırı eşlemesi düzeltildi** (`boss.js`): eskiden tüm saldırı animasyonu uyarı (windup) süresine sığdırılıyordu; 30 karelik animasyonda çekiç yere uyarı bitmeden iniyor, vuruş karesi ile hasar eşleşmiyordu. Şimdi uyarı süresi animasyonun vuruş anına kadar olan kısmına eşlenir (`A.impact`), hasar o anda uygulanır, kalan kare (toz/toparlanma) recover sırasında oynar (`sp.postAtk`). Combo'da her çekiç aynı şekilde yeniden başlar.
+- Brute + goblin_boss/warlord/king saldırıları bu animasyonu kullanır; hasar alma/ölüm eski karelerde (sayfaları gelince).

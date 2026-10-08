@@ -44,7 +44,7 @@ function startAttack(en, atk) {
 
 function impact(en, atk) {
   const B = en.bossCfg || WAVES.boss, sp = en.sp, p = state.player;
-  en.attackT = -1; en.atkTimer = 1;
+  { const A = enemyMeta(en)?.anims.attack; sp.postAtk = (atk === 'hammer' || atk === 'combo' || atk === 'smash') && A && A.impact && A.impact < 1 ? { dur: A.frames.length / A.fps, imp: A.impact } : null; en.attackT = sp.postAtk ? sp.postAtk.dur * sp.postAtk.imp : -1; } en.atkTimer = 1;      // vuruştan sonra animasyonun kalan kısmı (toparlanma) recover sırasında oynar
   state.telegraphs = state.telegraphs.filter((t) => t.boss !== en);
   if (atk === 'hammer' || atk === 'combo') {
     const H = B.hammer, cm = atk === 'combo';
@@ -94,7 +94,7 @@ export function updateBoss(en, dt) {
   if (sp.phase === 'windup') {
     if (sp.dodgeIn != null && (sp.dodgeIn -= dt) <= 0) { p.retreat = Math.max(0.2, sp.dur - sp.t); sp.dodgeIn = null; }
     if (sp.atk === 'charge') en.a -= en.face * B.charge.pullSpeed * dt / r;                       // saldırıdan önce geri çekilir
-    else { const A = enemyMeta(en)?.anims.attack, dur = A ? A.frames.length / A.fps : 0.5; en.attackT = Math.min(dur * 0.95, (sp.t / sp.dur) * dur); en.hitDone = true; }
+    else { const A = enemyMeta(en)?.anims.attack, dur = A ? A.frames.length / A.fps : 0.5, imp = A?.impact ?? 1; en.attackT = Math.min(dur * imp * 0.999, (sp.t / sp.dur) * dur * imp); en.hitDone = true; }   // uyarı süresi animasyonun vuruş anına kadar olan kısmına eşlenir (vuruş = darbe anı)
     if (sp.t >= sp.dur) impact(en, sp.atk);
     return true;
   }
@@ -113,8 +113,9 @@ export function updateBoss(en, dt) {
     return true;
   }
   // recover: boss kısa süre savunmasız bekler, sonra bir sonraki saldırı için sayaç
+  if (sp.postAtk && sp.phase === 'recover') en.attackT = Math.min(sp.postAtk.dur * 0.999, sp.postAtk.dur * sp.postAtk.imp + (sp.t / sp.dur) * sp.postAtk.dur * (1 - sp.postAtk.imp));
   if (sp.t >= sp.dur) {
-    sp.phase = 'idle'; sp.last = sp.atk; sp.atk = null;
+    sp.phase = 'idle'; sp.last = sp.atk; sp.atk = null; if (sp.postAtk) { en.attackT = -1; sp.postAtk = null; }
     sp.cd = rand(B.baseCd[0], B.baseCd[1]) * (sp.rage >= 2 ? B.enrageCdMul : sp.rage >= 1 ? B.rageCdMul : 1);
   }
   return true;
