@@ -18,6 +18,10 @@ function eyes(ctx, x, y, dir, big) {
 }
 
 // Sprite varsa (data/male_animations.json + manifest) kare kare çizer; yoksa false döner.
+// Animasyon geçişi yumuşatma: farklı çizim setleri (bekleme/koşu/saldırı/hasar) farklı duruşlarda olduğundan, durum değişince önceki karenin silueti 0.09 sn içinde solar (çapraz geçiş).
+const XF = { name: '', last: null, from: null, t0: -9 }, XF_DUR = 0.09;
+function xfTrack(name, cur) { if (XF.name && XF.name !== name && XF.last) { XF.from = XF.last; XF.t0 = state.time; } XF.name = name; XF.last = cur; }
+function xfDraw(ctx, scaleX = 1) { const f = XF.from, k = (state.time - XF.t0) / XF_DUR; if (!f || k >= 1 || k < 0) return; ctx.save(); ctx.globalAlpha = 0.55 * (1 - k); ctx.drawImage(f.img, f.x, f.y, f.w, f.h); ctx.restore(); }
 function drawPlayerSprite(ctx) {
   const p = state.player, meta = ANIMS.hero, anim = meta?.animations[p.anim];
   if (!anim) return false;
@@ -27,7 +31,10 @@ function drawPlayerSprite(ctx) {
   const img = Assets.get(HERO.id + '_' + anim.frames[i]);
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;
+  const rc = anim.recoil, rT = p.animT, rec = rc ? (rT < rc[1] ? rc[0] * (1 - (1 - rT / rc[1]) ** 2) : rT < rc[2] ? rc[0] * (1 - (rT - rc[1]) / (rc[2] - rc[1])) ** 2 : 0) : 0;
+  xfTrack(p.anim.startsWith('attack') ? 'attack' : p.anim, { img, x: -meta.pivot[0] * meta.scale, y: -meta.pivot[1] * meta.scale, w: img.width * meta.scale, h: img.height * meta.scale });
   onLane(ctx, p.a, p.hopH || 0, p.lean * 0.5, () => {
+    if (rec) ctx.translate(-p.dir * rec, 0);
     plShadow(ctx, p, 56, 0.34);                                    // ayakların altında küçük yumuşak oval
     ctx.scale(p.dir, 1);
     if (p.anim !== 'death') castShadow(ctx, img, 'p:' + anim.frames[i], -meta.pivot[0] * meta.scale, -meta.pivot[1] * meta.scale, img.width * meta.scale, img.height * meta.scale, p.dir);
@@ -45,6 +52,7 @@ function drawPlayerSprite(ctx) {
       ctx.drawImage(fx, -anc[0] * sc, -anc[1] * sc, img.width * sc, img.height * sc);
       ctx.restore();
     } else ctx.drawImage(img, -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc);
+    xfDraw(ctx);
     if (hurt > 0) { ctx.globalAlpha = 0.55 * hurt; ctx.drawImage(whiteSilhouette(img, 'p:' + anim.frames[i], '#ff5a4a'), -meta.pivot[0] * sc, -meta.pivot[1] * sc, img.width * sc, img.height * sc); }
   });
   ctx.globalAlpha = 1;
@@ -70,13 +78,14 @@ function drawHeroFrames(ctx, meta, anim) {
   const sc = F.scale, w = img.width * sc, h = img.height * sc, px = F.pivot[0] * sc, py = F.pivot[1] * sc, hurtK = Math.max(0, p.hitFlash) / 0.2;
   let alpha = 1;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) alpha = 0.6;
+  xfTrack(name, { img, x: -px, y: -py, w, h });
   const rc = anim.recoil, T = p.animT, rec = rc ? (T < rc[1] ? rc[0] * (1 - (1 - T / rc[1]) ** 2) : T < rc[2] ? rc[0] * (1 - (T - rc[1]) / (rc[2] - rc[1])) ** 2 : 0) : 0;   // geri tepme: tepe anına hızlı çıkış, sonra yumuşak dönüş
   onLane(ctx, p.a, p.hopH || 0, p.lean * 0.3, () => {
     if (rec) ctx.translate(-p.dir * rec, 0);
     plShadow(ctx, p, 56 * (name === 'death' ? 1.5 : 1), 0.34);
     ctx.scale(p.dir, 1);
     if (name !== 'death') castShadow(ctx, img, key, -px, -py, w, h, p.dir);
-    ctx.globalAlpha = alpha; ctx.drawImage(img, -px, -py, w, h);
+    ctx.globalAlpha = alpha; ctx.drawImage(img, -px, -py, w, h); xfDraw(ctx);
     if (hurtK > 0 && name !== 'death') { ctx.globalAlpha = alpha * 0.45 * hurtK; ctx.drawImage(whiteSilhouette(img, key, '#ff5a4a'), -px + (anim.dx?.[i] || 0), -py, w, h); }
     if (name === 'attack' && anim.fx === 'overlay') {                    // oyunun mavi hilali kılıç ucuna (kareye özel uç noktası varsa o)
       const tip = anim.swordTipFrames?.[key.replace('heroine_', '')] || anim.swordTip, u = Math.min(1, p.animT * anim.fps / n);

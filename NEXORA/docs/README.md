@@ -290,3 +290,10 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 41 — Hasar alma geri tepmesi
 - `frames.json → recoil.hurt = [7 birim, 0.07 sn, 0.34 sn]`: hasar alınca sprite (gölgesiyle) arkaya 7 birim fırlayıp yumuşakça yerine döner (karelerde yer değiştirme olmadığı için görsel efekt; kahramanın mantıksal konumu değişmez). `build_female_animations.py` alanı `heroine_animations.json`'a yazar, `drawHeroFrames` uygular. Başka animasyon için aynı alan kullanılabilir.
+
+## Faz 42 — Karakter animasyonu bütünlük denetimi ve akıcılık düzeltmeleri
+- **Denetim yöntemi:** (1) kare başına ölçüm: kütle merkezi/baş (bandana) konumu/ayak çizgisi/boy, ardışık kare sıçraması, döngü dikişi, animasyonlar arası geçiş farkı; (2) gerçek oyunda 90 sn savaş kaydı: durum geçişleri ve süreleri (yanıp sönme tespiti).
+- **Bulgu 1 (kadın):** saldırı/hasar sayfaları çömelmiş duruşta (baş ≈ −65…−73 birim), bekleme/koşu dik duruşta (≈ −87) → geçişlerde baş 15–24 birim sıçrıyordu; ayrıca her vuruş arasında 1 karelik bekleme/koşu "yanıp sönmesi" vardı (90 sn'de 67 kısa durum).
+- **Bulgu 2 (erkek):** hasar animasyonu 9 karelik **yere yığılma** idi (0.9 sn yerde yatıp ayağa zıplıyordu). Yalnız ilk 2 kare (sarsılma, 0.18 sn) + geri tepme kullanılıyor.
+- **Düzeltmeler:** (a) savaş duruşu: vuruş bitince düşman yakındaysa son kare tutulur, koşuya geçiş 0.09 sn kararlılık ister, bekleme↔koşu 0.06 sn (yakında 0.12 sn) filtreli → kısa durumlar 67→6 (kadın), 17→5 (erkek); (b) durum değişiminde önceki karenin silueti 0.09 sn solar (çapraz geçiş) — duruş farkı sıçrama olarak görünmez; (c) kadın koşu `strideUnits` 2.2→2.7 (tik başına ≤ ~1.2 kare: daha az kare atlama; ayak kayması/akıcılık dengesi); (d) yeni test `hero_animation_no_flicker_in_combat`.
+- Bilinen sınırlar: sayfalar arası duruş farkı sanat kaynaklıdır (çömelmiş saldırı/hasar vs dik bekleme) — çapraz geçiş ve savaş duruşu bunu gizler, tamamen gidermez; kadın koşusunda ayak kayması küçük (≈%15–40) olabilir, telefonda gözle doğrulanmalı.

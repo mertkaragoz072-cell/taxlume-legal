@@ -43,9 +43,21 @@ function updatePlayerAnim(p, dt, atkMul) {
   if (!set || p.anim === 'death') return;
   const cur = set[p.anim];
   const done = cur && !cur.loop && p.animT >= animDuration(cur);
-  if (p.anim === 'hurt' || p.anim.startsWith('attack')) { if (!done) return; }
   const next = Math.abs(p.moveAxis) > 0 ? 'run' : 'idle';
-  if (p.anim !== next) { p.anim = next; p.animT = 0; }
+  if (p.anim === 'hurt' || p.anim.startsWith('attack')) {
+    if (!done) return;
+    // Savaş duruşu: vuruş bitince düşman yakındaysa son kare (hazır duruş) tutulur → saldırılar arasında tek karelik bekleme/koşu "yanıp sönmesi" olmaz. Koşuya geçiş 0.09 sn kararlı kalmalı.
+    const near = state.enemies.some((e) => !e.dead && surfaceDist(e.a, p.a) < CONFIG.player.attackRange * 1.8);
+    p.holdT = (p.holdT || 0) + dt; p.runWant = next === 'run' ? (p.runWant || 0) + dt : 0;
+    if (near && p.holdT < 0.7 && (next === 'idle' || p.runWant < 0.09)) { p.animT = animDuration(cur); return; }
+    p.holdT = 0; p.runWant = 0; p.anim = next; p.animT = 0; p.sw = 0; return;
+  }
+  p.holdT = 0;
+  // bekleme ↔ koşu: kısa süreli (≤ 0.06 sn) hareket değişimleri yok sayılır (titreme/yanıp sönme)
+  if (p.anim !== next) {
+    const nearE = state.enemies.some((e) => !e.dead && surfaceDist(e.a, p.a) < CONFIG.player.attackRange * 1.8);
+    p.sw = (p.sw || 0) + dt; if (p.sw >= (next === 'idle' && nearE ? 0.12 : 0.06)) { p.anim = next; p.animT = 0; p.sw = 0; }     // düşman yakınken durma, bir sonraki vuruşa kadar bekleme karesine gitmez (yanıp sönme olmaz)
+  } else p.sw = 0;
 }
 
 export function update(dt) {

@@ -102,17 +102,16 @@
     "hurt": {
       "frames": [
         "hurt_01",
-        "hurt_02",
-        "hurt_03",
-        "hurt_04",
-        "hurt_05",
-        "hurt_06",
-        "hurt_07",
-        "hurt_08",
-        "hurt_09"
+        "hurt_02"
       ],
-      "fps": 10,
-      "loop": false
+      "fps": 11,
+      "loop": false,
+      "_note": "9 karelik sayfa yere yıkılma; oyunda yalnız ilk 2 kare (sarsılma) 0.18 sn oynar + geri tepme",
+      "recoil": [
+        5,
+        0.05,
+        0.18
+      ]
     },
     "death": {
       "frames": [

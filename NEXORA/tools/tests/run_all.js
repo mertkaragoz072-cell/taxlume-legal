@@ -166,6 +166,16 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     ok(r.attack[0] === r.attack[1] && r.hurt[0] === r.hurt[1], 'animDuration durations toplamı değil ' + JSON.stringify(r)); ok(r.attackEnds < 700, 'saldırı durumu geç bitiyor ' + r.attackEnds + ' ms'); await pg.close();
   });
 
+  await test('hero_animation_no_flicker_in_combat', async () => {
+    for (const hero of ['heroine', 'male']) {
+      const pg = await page(hero, '');
+      const r = await pg.evaluate(async () => { const g = window.__game, st = g.state, p = st.player, In = (await import('/src/core/input.js')).Input; p.maxHp = p.hp = 1e7; const log = []; let last = '', lt = 0, t = 0;
+        for (let f = 0; f < 60 * 60; f++) { t += 1 / 60; p.hp = 1e7; if (f % 97 === 0) In.attackQueued = true; g.update(1 / 60); if (p.anim !== last) { log.push([t, last, p.anim]); last = p.anim; } if (st.paused) st.paused = false; const cc = document.querySelector('#chapter-clear:not(.hidden)'); if (cc) document.getElementById('cc-continue').click(); }
+        let short = 0, idleFlash = 0; for (let i = 1; i < log.length; i++) { const dur = log[i][0] - log[i - 1][0], st0 = log[i - 1][2]; if (dur < 0.05 && st0 !== 'hurt') short++; if (st0 === 'idle' && dur < 0.07) idleFlash++; } return { short, idleFlash, n: log.length }; });
+      ok(r.idleFlash <= 2 && r.short <= 4, hero + ' savaşta animasyon yanıp sönüyor ' + JSON.stringify(r)); await pg.close();
+    }
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);
