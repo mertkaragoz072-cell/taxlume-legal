@@ -326,3 +326,7 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 ## Faz 48 — goblin_warrior yürüme animasyonu (30 kare)
 - `tools/extract_enemy_sheet.py goblin_warrior walk references/nexora_goblin_warrior_walk_source.png --fps 30 --loop --stride 55`: 30 kare, özgün çözünürlük, hedef boy = eski yürüme boyu (83 birim, gürz dahil), mesafeye bağlı kare (1.83 birim/kare). Sonraki durumlar (saldırı/hasar/ölüm) bandana boyuyla bu yürümeye eşlenir (`hdTarget`).
 - Yürümede gürz omuzda yukarı uzanır; oyunda goblin_warrior kafa boyu gözcüyle uyumlu görünüyor. Eski saldırı/hasar/ölüm kareleri (bandanasız) sayfalar gelene kadar kalır.
+
+## Faz 49 — goblin_warrior saldırı animasyonu (30 kare, gömülü ateş yayı + toz)
+- `extract_enemy_sheet.py` **hücre tabanlı** ayıklamaya geçirildi (yay/toz efektleri karakterden ayrı bileşen olabilir ve komşu kareler birbirine değebilir): satır sınırları gövde merkezlerinden, sütunlar ızgaradan; dar bileşen bütünüyle ağırlık merkezinin hücresine, geniş (birleşik) bileşenler piksel bazlı kesilir; numara etiketleri küçük/düşük doygunluklu bileşen olarak atılır; gövde = erozyonla efektten ayrılan en büyük bileşen (boy/ayak ölçümü efektten etkilenmez); hücreye ait olmayan taşkın parçalar atılır. goblin_scout karelerini yeniden üretmek gerekmez (aynı sonuç).
+- `goblin_warrior attack ... --fps 45 --impact 0.37 --ref-frames 21-30`: süre 0.67 sn, hasar gürz yere inerken (kare ≈ 11). Bilinen küçük kusur: 12. karede sol kenarda komşu karenin küçük bir kıvılcım kırıntısı kalabilir (1 kare, ≈ 22 ms).

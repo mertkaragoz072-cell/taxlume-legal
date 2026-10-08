@@ -18,23 +18,43 @@ a = ap.parse_args(); N = a.cols * a.rows
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 rgb = np.array(Image.open(os.path.join(ROOT, a.src) if not os.path.isabs(a.src) else a.src).convert('RGB')).astype(np.float32); H, W = rgb.shape[:2]
 mx = rgb.max(2); sat = mx - rgb.min(2); yy, xx = np.indices((H, W))
-lab, n = ndi.label(mx >= 14, structure=np.ones((3, 3), bool)); area = ndi.sum(mx >= 14, lab, range(1, n + 1)); objs = ndi.find_objects(lab)
-thr = 0.35 * float(np.median(sorted(area)[-N:]))
-big = [(i + 1, objs[i]) for i in range(n) if area[i] > thr]; assert len(big) == N, f'{N} karakter bekleniyordu, {len(big)} bulundu (alanlar: {sorted(int(x) for x in area)[-(N + 4):]})'
-small = [(i + 1, objs[i]) for i in range(n) if 30 < area[i] <= thr]
-cy = lambda c: (c[1][0].start + c[1][0].stop) / 2; cx = lambda c: (c[1][1].start + c[1][1].stop) / 2
-big.sort(key=cy); rows = [sorted(big[r * a.cols:(r + 1) * a.cols], key=cx) for r in range(a.rows)]; order = [c for r in rows for c in r]
+# --- Hücre ataması: efektler (yay, toz) karakterden ayrı bileşen olabilir ve komşu kareler birbirine değebilir → bileşen sayısına değil ızgara hücresine göre bölünür.
+fg14 = mx >= 14
+lab, n = ndi.label(fg14, structure=np.ones((3, 3), bool)); area = ndi.sum(fg14, lab, range(1, n + 1)); objs = ndi.find_objects(lab)
+cw = W / a.cols
+cent = [(ndi.center_of_mass(lab == i + 1)[0], i + 1) for i in range(n) if area[i] > 9000]
+ys_sorted = np.sort([c[0] for c in cent]); gaps = np.diff(ys_sorted); cuts = sorted(np.argsort(gaps)[-(a.rows - 1):]) if a.rows > 1 else []
+row_bounds = [-1] + [float((ys_sorted[c] + ys_sorted[c + 1]) / 2) for c in cuts] + [1e9]
+rowmap = np.zeros(H, int)
+for r in range(a.rows): rowmap[(np.arange(H) > row_bounds[r]) & (np.arange(H) <= row_bounds[r + 1])] = r
+cellid = rowmap[:, None] * a.cols + np.minimum((xx // cw).astype(int), a.cols - 1)            # piksel bazlı hücre (yalnızca birbirine değen geniş bileşenler için)
+for i in range(n):                                                                              # dar bileşen bütünüyle ağırlık merkezinin hücresine verilir (yay/toz komşu hücreye taşsa da karakterine bağlı kalır)
+    sl = objs[i]
+    if sl[1].stop - sl[1].start <= 1.25 * cw and area[i] > 30:
+        cy_, cx_ = ndi.center_of_mass(lab[sl] == i + 1); cy_ += sl[0].start; cx_ += sl[1].start
+        cid = int(rowmap[min(int(cy_), H - 1)]) * a.cols + min(int(cx_ // cw), a.cols - 1)
+        cellid[sl][lab[sl] == i + 1] = cid
+# numara etiketleri: küçük, düşük doygunluklu bileşenler
+numlab = np.zeros(n + 1, bool)
+for i in range(n):
+    sl = objs[i]; hh = sl[0].stop - sl[0].start
+    if area[i] < 2500 and hh < 48 and sat[lab == i + 1].mean() < 60: numlab[i + 1] = True
+fg_clean = fg14 & ~numlab[lab]
+order = []
+for k in range(N):
+    m = fg_clean & (cellid == k); ys_, xs_ = np.where(m); order.append((k, (ys_.min(), ys_.max() + 1, xs_.min(), xs_.max() + 1)) if len(ys_) else None)
+assert all(o for o in order), 'boş hücre'
 recs = []
-for k, (i, s) in enumerate(order, 1):
-    m = lab == i; keep = m.copy()
-    for sm, _ in small:
-        smm = lab == sm
-        if sat[smm].mean() > 70 and ndi.binary_dilation(m, iterations=16)[smm].any(): keep |= smm
+for k, _o in enumerate(order, 1):
+    m = fg_clean & (cellid == k - 1)
+    gl, gn = ndi.label(ndi.binary_dilation(m, iterations=12)); main_l = 1 + int(np.argmax(ndi.sum(m, gl, range(1, gn + 1))))      # komşu karenin yay/toz taşkını (hücre sınırında kesilmiş) ana parçaya bağlı değildir → atılır
+    keep = m & (gl == main_l)
     solid = ndi.binary_fill_holes(keep & (mx >= 45)); solid = ndi.binary_dilation(solid, iterations=1) & (mx >= 22) | solid
     soft = np.clip((mx - 8) / 40.0, 0, 1); alpha = np.where(solid, 1.0, soft) * ndi.binary_dilation(keep, iterations=4)
     col = np.where((alpha[..., None] > 0.02) & (~solid[..., None]), np.clip(rgb / np.maximum(alpha[..., None], 0.06), 0, 255), rgb)
     ys, xs = np.where(alpha > 0.02); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
-    body = alpha > 0.6; yb, xb = np.where(body); top, bot = yb.min(), yb.max()
+    sc_ = ndi.binary_erosion(alpha > 0.6, iterations=3); bl, bn = ndi.label(sc_)                  # gövde = erozyonla ince efektlerden (yay, kıvılcım) ayrılan en büyük bileşen
+    body = ndi.binary_dilation(bl == (1 + int(np.argmax(ndi.sum(sc_, bl, range(1, bn + 1))))), iterations=3) & (alpha > 0.6); yb, xb = np.where(body); top, bot = yb.min(), yb.max()
     red = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.4)
     ax = float(xx[red].mean()) if red.sum() > 150 else float(xb.mean())
     rb = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.45); l2, k2 = ndi.label(rb)

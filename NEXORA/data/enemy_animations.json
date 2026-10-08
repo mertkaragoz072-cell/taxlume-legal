@@ -61,13 +61,49 @@
       },
       "attack": {
         "frames": [
-          "enemy_goblin_warrior_attack_01",
-          "enemy_goblin_warrior_attack_02",
-          "enemy_goblin_warrior_attack_03"
+          "enemy_goblin_warrior_hd_attack_01",
+          "enemy_goblin_warrior_hd_attack_02",
+          "enemy_goblin_warrior_hd_attack_03",
+          "enemy_goblin_warrior_hd_attack_04",
+          "enemy_goblin_warrior_hd_attack_05",
+          "enemy_goblin_warrior_hd_attack_06",
+          "enemy_goblin_warrior_hd_attack_07",
+          "enemy_goblin_warrior_hd_attack_08",
+          "enemy_goblin_warrior_hd_attack_09",
+          "enemy_goblin_warrior_hd_attack_10",
+          "enemy_goblin_warrior_hd_attack_11",
+          "enemy_goblin_warrior_hd_attack_12",
+          "enemy_goblin_warrior_hd_attack_13",
+          "enemy_goblin_warrior_hd_attack_14",
+          "enemy_goblin_warrior_hd_attack_15",
+          "enemy_goblin_warrior_hd_attack_16",
+          "enemy_goblin_warrior_hd_attack_17",
+          "enemy_goblin_warrior_hd_attack_18",
+          "enemy_goblin_warrior_hd_attack_19",
+          "enemy_goblin_warrior_hd_attack_20",
+          "enemy_goblin_warrior_hd_attack_21",
+          "enemy_goblin_warrior_hd_attack_22",
+          "enemy_goblin_warrior_hd_attack_23",
+          "enemy_goblin_warrior_hd_attack_24",
+          "enemy_goblin_warrior_hd_attack_25",
+          "enemy_goblin_warrior_hd_attack_26",
+          "enemy_goblin_warrior_hd_attack_27",
+          "enemy_goblin_warrior_hd_attack_28",
+          "enemy_goblin_warrior_hd_attack_29",
+          "enemy_goblin_warrior_hd_attack_30"
         ],
-        "fps": 9,
+        "fps": 45.0,
         "loop": false,
-        "impact": 0.5
+        "canvas": [
+          327,
+          211
+        ],
+        "pivot": [
+          163,
+          203
+        ],
+        "scale": 0.5012,
+        "impact": 0.37
       },
       "hurt": {
         "frames": [
