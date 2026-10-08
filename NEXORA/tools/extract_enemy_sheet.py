@@ -28,12 +28,13 @@ row_bounds = [-1] + [float((ys_sorted[c] + ys_sorted[c + 1]) / 2) for c in cuts]
 rowmap = np.zeros(H, int)
 for r in range(a.rows): rowmap[(np.arange(H) > row_bounds[r]) & (np.arange(H) <= row_bounds[r + 1])] = r
 cellid = rowmap[:, None] * a.cols + np.minimum((xx // cw).astype(int), a.cols - 1)            # piksel bazlı hücre (yalnızca birbirine değen geniş bileşenler için)
+whole = np.zeros((H, W), bool)
 for i in range(n):                                                                              # dar bileşen bütünüyle ağırlık merkezinin hücresine verilir (yay/toz komşu hücreye taşsa da karakterine bağlı kalır)
     sl = objs[i]
     if sl[1].stop - sl[1].start <= 1.25 * cw and area[i] > 30:
         cy_, cx_ = ndi.center_of_mass(lab[sl] == i + 1); cy_ += sl[0].start; cx_ += sl[1].start
         cid = int(rowmap[min(int(cy_), H - 1)]) * a.cols + min(int(cx_ // cw), a.cols - 1)
-        cellid[sl][lab[sl] == i + 1] = cid
+        cellid[sl][lab[sl] == i + 1] = cid; whole[sl] |= (lab[sl] == i + 1)
 # numara etiketleri: küçük, düşük doygunluklu bileşenler
 numlab = np.zeros(n + 1, bool)
 for i in range(n):
@@ -48,7 +49,7 @@ recs = []
 for k, _o in enumerate(order, 1):
     m = fg_clean & (cellid == k - 1)
     gl, gn = ndi.label(ndi.binary_dilation(m, iterations=12)); main_l = 1 + int(np.argmax(ndi.sum(m, gl, range(1, gn + 1))))      # komşu karenin yay/toz taşkını (hücre sınırında kesilmiş) ana parçaya bağlı değildir → atılır
-    keep = m & (gl == main_l)
+    keep = m & ((gl == main_l) | whole)                                                          # bütün atanan bileşenler (ör. fırlayan gürz, ayrı yay) korunur; yalnız piksel-kesimli parçalar ana parçaya bağlıysa kalır
     solid = ndi.binary_fill_holes(keep & (mx >= 45)); solid = ndi.binary_dilation(solid, iterations=1) & (mx >= 22) | solid
     soft = np.clip((mx - 8) / 40.0, 0, 1); alpha = np.where(solid, 1.0, soft) * ndi.binary_dilation(keep, iterations=4)
     col = np.where((alpha[..., None] > 0.02) & (~solid[..., None]), np.clip(rgb / np.maximum(alpha[..., None], 0.06), 0, 255), rgb)

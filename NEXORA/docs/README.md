@@ -333,3 +333,7 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 50 — goblin_warrior hasar alma animasyonu (30 kare)
 - `extract_enemy_sheet.py goblin_warrior hurt references/nexora_goblin_warrior_hurt_source.png --vis 0.45 --ref-frames 19-30` (ölçek 0.4893, yürüme 0.4952 ile uyumlu; yıldızlar/darbe efekti gömülü). `visDur` 0.45 sn, ayrı sayaçla oynar (gözcüyle aynı mantık). Kalan eski kare: goblin_warrior death.
+
+## Faz 51 — goblin_warrior ölüm animasyonu (30 kare) — savaşçı tamamen tek tasarım
+- `extract_enemy_sheet.py goblin_warrior death ... --fps 30 --ref-frames 1-1 --grid --land 19`. Araç düzeltmesi: elinden fırlayan gürz gibi gövdeden ayrı duran büyük parçalar artık hücreye bütünüyle atanır ve korunur (bağlantı filtresi yalnız piksel-kesimli taşkın parçalara uygulanır); saldırı sayfası yeniden işlendi (yalnız bir karede küçük fark).
+- Süre 1.0 sn, yere çarpış karesi 19'da toz (landFrame); düşmanın 4 durumu da yeni tasarım. Sıradaki: goblin_brute (4 sayfa).
