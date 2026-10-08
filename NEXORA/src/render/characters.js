@@ -20,8 +20,8 @@ function eyes(ctx, x, y, dir, big) {
 // Sprite varsa (data/male_animations.json + manifest) kare kare çizer; yoksa false döner.
 // Animasyon geçişi yumuşatma: farklı çizim setleri (bekleme/koşu/saldırı/hasar) farklı duruşlarda olduğundan, durum değişince önceki karenin silueti 0.09 sn içinde solar (çapraz geçiş).
 const XF = { name: '', last: null, from: null, t0: -9 }, XF_DUR = 0.09;
-function xfTrack(name, cur) { if (XF.name && XF.name !== name && XF.last) { XF.from = XF.last; XF.t0 = state.time; } XF.name = name; XF.last = cur; }
-function xfDraw(ctx, scaleX = 1) { const f = XF.from, k = (state.time - XF.t0) / XF_DUR; if (!f || k >= 1 || k < 0) return; ctx.save(); ctx.globalAlpha = 0.55 * (1 - k); ctx.drawImage(f.img, f.x, f.y, f.w, f.h); ctx.restore(); }
+function xfTrack(name, cur) { if (XF.name && XF.name !== name && XF.last) { XF.from = XF.last; XF.t0 = performance.now() / 1000; } XF.name = name; XF.last = cur; }
+function xfDraw(ctx, scaleX = 1) { const f = XF.from, k = (performance.now() / 1000 - XF.t0) / XF_DUR; if (!f || k >= 1 || k < 0) return; ctx.save(); ctx.globalAlpha = 0.55 * (1 - k); ctx.drawImage(f.img, f.x, f.y, f.w, f.h); ctx.restore(); }
 function drawPlayerSprite(ctx) {
   const p = state.player, meta = ANIMS.hero, anim = meta?.animations[p.anim];
   if (!anim) return false;
@@ -309,6 +309,8 @@ function enemyFrame(en, meta) {
   const L = A[an], n = L.frames.length;
   const idx = an === 'walk' && L.strideUnits ? Math.floor((en.walkD || 0) / L.strideUnits) % n    // yürüme: kat edilen mesafeye bağlı kare (ayak kaymaz)
     : L.loop ? Math.floor(t * L.fps) % n : Math.min(n - 1, Math.floor(t * L.fps));
+  enemyFrame.nxt = null;
+  if (an === 'walk' && L.strideUnits) { const ph = (en.walkD || 0) / L.strideUnits; enemyFrame.nxt = { key: L.frames[(Math.floor(ph) + 1) % n], f: ph - Math.floor(ph) }; }   // yürüme: ardışık kareler arası çapraz geçiş (döngü dikişi dahil) → kare atlaması/yürüme sıçraması görünmez
   enemyFrame.anim = L;                                                // animasyon düzeyi pivot/ölçek (yüksek çözünürlüklü kareler tür tuvalinden farklı olabilir)
   return L.frames[idx];
 }
@@ -320,10 +322,14 @@ function tintedFrame(img, key, t) {
   cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
   const d = g.getImageData(0, 0, cv.width, cv.height), px = d.data, a = t.hue * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), S = t.sat ?? 1, L = t.light ?? 1;
   const m = [0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928, 0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283, 0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072];
+  const sm = (x, a0, a1) => { const t = Math.max(0, Math.min(1, (x - a0) / (a1 - a0))); return t * t * (3 - 2 * t); };
   for (let i = 0; i < px.length; i += 4) {
-    if (!px[i + 3]) continue; const r = px[i], gg = px[i + 1], b = px[i + 2];
-    let R = m[0] * r + m[1] * gg + m[2] * b, G = m[3] * r + m[4] * gg + m[5] * b, B = m[6] * r + m[7] * gg + m[8] * b; const y = 0.3 * R + 0.59 * G + 0.11 * B;
-    px[i] = Math.max(0, Math.min(255, (y + (R - y) * S) * L)); px[i + 1] = Math.max(0, Math.min(255, (y + (G - y) * S) * L)); px[i + 2] = Math.max(0, Math.min(255, (y + (B - y) * S) * L));
+    if (!px[i + 3]) continue; const r = px[i], gg = px[i + 1], b = px[i + 2], mxc = Math.max(r, gg, b), mnc = Math.min(r, gg, b);
+    // yalnız yeşil-sarı tonlar (goblin cildi) kaydırılır; kırmızı bandana, kahverengi deri, gümüş metal rengini korur → evrenler arası görsel bütünlük
+    let w = 1;
+    if (mxc - mnc > 12) { const hh = mxc === r ? ((gg - b) / (mxc - mnc) + 6) % 6 * 60 : mxc === gg ? ((b - r) / (mxc - mnc) + 2) * 60 : ((r - gg) / (mxc - mnc) + 4) * 60; w = sm(hh, 45, 70) * (1 - sm(hh, 150, 185)); } else w = 0;
+    let R = r + (m[0] * r + m[1] * gg + m[2] * b - r) * w, G = gg + (m[3] * r + m[4] * gg + m[5] * b - gg) * w, B = b + (m[6] * r + m[7] * gg + m[8] * b - b) * w; const y = 0.3 * R + 0.59 * G + 0.11 * B, ww = Math.max(w, 0.35);
+    px[i] = Math.max(0, Math.min(255, (y + (R - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww))); px[i + 1] = Math.max(0, Math.min(255, (y + (G - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww))); px[i + 2] = Math.max(0, Math.min(255, (y + (B - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww)));
   }
   g.putImageData(d, 0, 0); tintCache.set(k, cv); return cv;
 }
@@ -334,7 +340,7 @@ export function drawEnemy(ctx, en) {
   const key = enemyFrame(en, meta), raw = Assets.get(key);
   if (!raw) return;
   const img = en.def.tint ? tintedFrame(raw, key, en.def.tint) : raw;
-  const AN = enemyFrame.anim, piv = AN.pivot || meta.pivot, sc = (AN.scale || meta.scale) * (def.spriteMul || 1), w = img.width * sc, h = img.height * sc;
+  const AN = enemyFrame.anim, NXT = enemyFrame.nxt, piv = AN.pivot || meta.pivot, sc = (AN.scale || meta.scale) * (def.spriteMul || 1), w = img.width * sc, h = img.height * sc;
   const dFade = (() => { const D = meta.anims.death, dur = D.frames.length / D.fps; return dur >= 0.5 ? dur : 0.5; })();     // çok kareli ölüm: yatış oturduktan sonra solar
   const dp = en.dead ? clamp((en.deathT - dFade) / 0.4, 0, 1) : 0;       // ölünce önce yatar, sonra solar
   onLane(ctx, en.a, 0, 0, () => {
@@ -360,6 +366,7 @@ export function drawEnemy(ctx, en) {
       if (pre) { ctx.save(); ctx.globalAlpha = ga * (1 - k); ctx.translate(0, -10 * Math.sin(Math.PI * k)); ctx.rotate(-0.5 * k); ctx.drawImage(pre, -ppiv[0] * psc, -ppiv[1] * psc, pre.width * psc, pre.height * psc); ctx.restore(); }
       ctx.save(); ctx.globalAlpha = ga * Math.min(1, k * 1.6); ctx.translate(0, -16 * Math.sin(Math.PI * k) * (1 - k)); ctx.drawImage(img, -piv[0] * sc, -piv[1] * sc, w, h); ctx.restore();
     } else ctx.drawImage(img, -piv[0] * sc, -piv[1] * sc, w, h);
+    if (NXT && !en.dead && NXT.f > 0.02) { const nr = Assets.get(NXT.key); if (nr) { const ni = def.tint ? tintedFrame(nr, NXT.key, def.tint) : nr; ctx.save(); ctx.globalAlpha = (1 - dp) * Math.min(1, en.age / 0.3) * NXT.f; ctx.drawImage(ni, -piv[0] * sc, -piv[1] * sc, ni.width * sc, ni.height * sc); ctx.restore(); } }
     if (def.boss && !en.dead) { ctx.globalAlpha = (sp && sp.phase === 'windup' ? 0.32 + 0.22 * Math.sin(state.time * 22) : 0.16 + 0.08 * Math.sin(state.time * 5)) + (sp && sp.rage ? 0.1 * sp.rage : 0); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -piv[0] * sc, -piv[1] * sc, w, h); ctx.globalAlpha = 1; }
     if (en.flash > 0) { ctx.globalAlpha = (1 - dp) * Math.min(1, en.flash / 0.14) * 0.5; ctx.drawImage(whiteSilhouette(img, key), -piv[0] * sc, -piv[1] * sc, w, h); }
     ctx.restore();
