@@ -27,7 +27,7 @@ function drawPlayerSprite(ctx) {
   if (!anim) return false;
   if (meta.static) return drawHeroine(ctx, meta, anim);       // kadın savaşçı: kare tabanlı VEYA prosedürel (animasyon başına)
   const n = anim.frames.length, PV = anim.pivot || meta.pivot, MSC = anim.scale || meta.scale;     // animasyon düzeyi pivot/ölçek (yüksek çözünürlüklü kare setleri)
-  const i = anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));
+  const i = (p.anim === 'run' && anim.strideUnits) ? Math.floor(p.stride / anim.strideUnits) % n : anim.loop ? Math.floor(p.animT * anim.fps) % n : Math.min(n - 1, Math.floor(p.animT * anim.fps));      // koşu: kat edilen mesafeye bağlı kare (ayak kaymaz)
   const img = Assets.get(HERO.id + '_' + anim.frames[i]);
   if (!img) return false;
   if (p.invuln > 0 && Math.floor(state.time * 20) % 2 === 0 && !state.over) ctx.globalAlpha = 0.6;

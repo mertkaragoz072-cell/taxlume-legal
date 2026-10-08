@@ -65,8 +65,11 @@ for k, _o in enumerate(order, 1):
     if a.anchor == 'feet':                                         # kılıç ucu/pelerin ayak hizasından aşağı sarkabilir: ayaklar = tam maskenin sağ %60'ındaki en alt noktalar (gövde erozyonu botları kırpar)
         fm = alpha > 0.6; yf, xf = np.where(fm); xsel = xf > xf.min() + 0.40 * (xf.max() - xf.min()); bot = int(yf[xsel].max())
         low_x = xf[xsel & (yf > bot - max(6, int((bot - top) * 0.10)))]
+    elif a.anchor == 'torso':                                      # koşu/atılma gibi ayakların açıldığı hareketler: x = gövde (yüksekliğin %30–60'ı, sol %40'taki pelerin/kılıç hariç) merkezi; yer = ayakların en alt noktası
+        fm = alpha > 0.6; yf, xf = np.where(fm); xsel = xf > xf.min() + 0.40 * (xf.max() - xf.min()); bot = int(yf[xsel].max()); top_ = yf.min()
+        band_ = (yf > top_ + 0.30 * (bot - top_)) & (yf < top_ + 0.60 * (bot - top_)) & xsel; low_x = np.array([xf[band_].mean()]) if band_.any() else xf[xsel]
     else: low_x = None
-    ax = float((low_x.min() + low_x.max()) / 2) if a.anchor == 'feet' else (float(xx[red].mean()) if red.sum() > 150 else float(xb.mean()))        # feet: ayakların (en alt %10) orta noktası
+    ax = float((low_x.min() + low_x.max()) / 2) if a.anchor in ('feet', 'torso') else (float(xx[red].mean()) if red.sum() > 150 else float(xb.mean()))        # feet: ayakların (en alt %10) orta noktası
     rb = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.45); l2, k2 = ndi.label(rb)
     bh = 0
     if k2: j = 1 + int(np.argmax(ndi.sum(rb, l2, range(1, k2 + 1)))); ys2 = np.where(l2 == j)[0] if False else np.where((l2 == j).any(1))[0]; bh = ys2.max() - ys2.min() + 1      # bandana yüksekliği (ölçek eşlemesi için)
