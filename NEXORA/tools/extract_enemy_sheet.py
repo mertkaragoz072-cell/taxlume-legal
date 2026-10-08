@@ -13,7 +13,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 ap = argparse.ArgumentParser(); ap.add_argument('type'); ap.add_argument('anim'); ap.add_argument('src')
 ap.add_argument('--cols', type=int, default=6); ap.add_argument('--rows', type=int, default=5); ap.add_argument('--fps', type=float, default=30)
-ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0)
+ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0)
 a = ap.parse_args(); N = a.cols * a.rows
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 rgb = np.array(Image.open(os.path.join(ROOT, a.src) if not os.path.isabs(a.src) else a.src).convert('RGB')).astype(np.float32); H, W = rgb.shape[:2]
@@ -37,11 +37,26 @@ for k, (i, s) in enumerate(order, 1):
     body = alpha > 0.6; yb, xb = np.where(body); top, bot = yb.min(), yb.max()
     red = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.4)
     ax = float(xx[red].mean()) if red.sum() > 150 else float(xb.mean())
-    recs.append(dict(img=np.dstack([col, alpha * 255])[y0:y1, x0:x1].astype(np.uint8), ax=ax - x0, bot=bot + 1 - y0, h=bot - top + 1))
+    rb = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.45); l2, k2 = ndi.label(rb)
+    bh = 0
+    if k2: j = 1 + int(np.argmax(ndi.sum(rb, l2, range(1, k2 + 1)))); ys2 = np.where(l2 == j)[0] if False else np.where((l2 == j).any(1))[0]; bh = ys2.max() - ys2.min() + 1      # bandana yüksekliği (ölçek eşlemesi için)
+    recs.append(dict(img=np.dstack([col, alpha * 255])[y0:y1, x0:x1].astype(np.uint8), ax=ax - x0, bot=bot + 1 - y0, h=bot - top + 1, bh=bh))
 hmed = float(np.median([r['h'] for r in recs]))
 meta_p = os.path.join(ROOT, 'data/enemy_animations.json'); E = json.load(open(meta_p)); T = E[a.type]
-target = a.target or round(T['scale'] * np.median([Image.open(os.path.join(ROOT, 'assets/enemies', a.type, f'walk_{i:02d}.png')).getbbox()[3] - Image.open(os.path.join(ROOT, 'assets/enemies', a.type, f'walk_{i:02d}.png')).getbbox()[1] for i in range(1, len(T['anims']['walk']['frames']) + 1)]), 1)
+def old_walk_h():
+    ims = [Image.open(os.path.join(ROOT, 'assets/enemies', a.type, f'walk_{i:02d}.png')) for i in range(1, len(T['anims']['walk']['frames']) + 1)]
+    return round(T['scale'] * float(np.median([im.getbbox()[3] - im.getbbox()[1] for im in ims])), 1)
+target = a.target or T.get('hdTarget') or old_walk_h()
+if a.anim == 'walk' and not T.get('hdTarget'): T['hdTarget'] = target                     # ilk yüksek çözünürlüklü yürüme: hedef boy kaydedilir (sonraki durumlar bandana boyuyla eşlenir)
 scale = target / hmed
+walk = T['anims'].get('walk', {})
+if a.anim != 'walk' and walk.get('frames') and str(walk['frames'][0]).startswith(f'enemy_{a.type}_hd_walk'):      # diğer durumlar: bandana boyu yürüme karesininkine eşitlenir → durumlar arası boy tutarlı
+    wk = [np.array(Image.open(os.path.join(ROOT, 'assets/enemies', a.type, 'hd', f'walk_{i:02d}.png')).convert('RGBA')) for i in (1, 8, 15, 22)]
+    def band(arr):
+        al = arr[..., 3] > 150; ys, xs = np.where(al); t0, b0 = ys.min(), ys.max(); r = al & (arr[..., 0] > 150) & (arr[..., 1] < 70) & (arr[..., 2] < 70); r[int(t0 + (b0 - t0) * 0.45):] = False
+        l, k = ndi.label(r); j = 1 + int(np.argmax(ndi.sum(r, l, range(1, k + 1)))); yy_ = np.where((l == j).any(1))[0]; return yy_.max() - yy_.min() + 1
+    wband = float(np.median([band(w) for w in wk])); rband = float(np.median([r['bh'] for r in recs if r['bh']]))
+    if wband and rband: scale = walk['scale'] * wband / rband
 L = max(r['ax'] for r in recs); R = max(r['img'].shape[1] - r['ax'] for r in recs); Hh = max(r['bot'] for r in recs) + max(r['img'].shape[0] - r['bot'] for r in recs)
 Wc = int(2 * max(L, R) + 8); Hc = int(max(r['img'].shape[0] for r in recs) + 16); PXc, PYc = Wc // 2, Hc - 8
 out = os.path.join(ROOT, 'assets/enemies', a.type, 'hd'); os.makedirs(out, exist_ok=True)
@@ -57,7 +72,8 @@ for i, r in enumerate(recs, 1):
 man['images'] = dict(sorted(man['images'].items())); json.dump(man, open(man_p, 'w'), indent=2, ensure_ascii=False); open(man_p, 'a').write('\n')
 anim = {'frames': keys, 'fps': a.fps, 'loop': a.loop, 'canvas': [Wc, Hc], 'pivot': [PXc, PYc], 'scale': round(scale, 4)}
 old = T['anims'].get(a.anim, {})
-if 'impact' in old: anim['impact'] = old['impact']
+if a.impact: anim['impact'] = a.impact
+elif 'impact' in old: anim['impact'] = old['impact']
 if a.stride: anim['strideUnits'] = a.stride / N
 T['anims'][a.anim] = anim; json.dump(E, open(meta_p, 'w'), indent=2); open(meta_p, 'a').write('\n')
 print(f'{a.type}/{a.anim}: {N} kare, tuval {Wc}x{Hc}, pivot ({PXc},{PYc}), ölçek {scale:.4f} (hedef boy {target} birim / ortanca kare boyu {hmed:.0f} px)')
