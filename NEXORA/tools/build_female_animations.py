@@ -88,6 +88,7 @@ for an in ANIMS:
         if an == 'run': e['strideUnits'] = cfg.get('strideUnits', 15)
         if an == 'attack':
             e['impact'] = cfg.get('impact', 0.5); e['fx'] = cfg.get('attackFx', 'overlay')
+            if cfg.get('hitDelay') is not None: e['hitDelay'] = cfg['hitDelay']          # hasarın uygulandığı an (sn); yoksa data/config.json → player.hitDelay
             e['swordTip'] = cfg.get('swordTip'); e['swordTipFrames'] = cfg.get('swordTipFrames', {})
         anims[an] = e
     else:   # klasör boş → prosedürel (tek görsel), süreler kodla

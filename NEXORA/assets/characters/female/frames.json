@@ -1,5 +1,5 @@
 {
- "_comment": "idle/ (30 kare, tools/extract_heroine_idle.py) ve death/ (29 kare, tools/extract_heroine_death.py) dolu; run/ (30 kare, tools/extract_heroine_run.py) dolu; attack/hurt prosedürel. fps 30. scale: 0.455 birim/px ortak (ayakta ≈ 91-96 birim); tuval 340x235, pivot (170,225). dx: ölümde gövdenin geriye kayışı (birim). dust: [kare, parçacık, yayılma]; shake: sarsıntı karesi.",
+ "_comment": "idle/ (30 kare, tools/extract_heroine_idle.py) ve death/ (29 kare, tools/extract_heroine_death.py) dolu; run/ (30 kare, tools/extract_heroine_run.py) dolu; attack/ (30 kare, tools/extract_heroine_attack.py; efekt karelerde gömülü: attackFx baked) dolu; yalnız hurt prosedürel. fps 30. scale: 0.455 birim/px ortak (ayakta ≈ 91-96 birim); tuval 380x235 (tools/widen_heroine_canvas.py: sağa genişletildi), pivot (170,225). dx: ölümde gövdenin geriye kayışı (birim). dust: [kare, parçacık, yayılma]; shake: sarsıntı karesi.",
  "pivot": [
   170,
   225
@@ -8,7 +8,8 @@
  "fps": {
   "death": 30,
   "idle": 30,
-  "run": 30
+  "run": 30,
+  "attack": 30
  },
  "dx": {
   "death": [
@@ -65,5 +66,42 @@
  "shake": {
   "death": 13
  },
- "strideUnits": 2.2
+ "strideUnits": 2.2,
+ "durations": {
+  "attack": [
+   0.012,
+   0.012,
+   0.016,
+   0.016,
+   0.016,
+   0.016,
+   0.016,
+   0.016,
+   0.016,
+   0.014,
+   0.014,
+   0.014,
+   0.022,
+   0.03,
+   0.034,
+   0.034,
+   0.026,
+   0.02,
+   0.02,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155,
+   0.0155
+  ]
+ },
+ "attackFx": "baked",
+ "impact": 0.33,
+ "hitDelay": 0.2
 }

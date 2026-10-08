@@ -181,7 +181,7 @@ export function update(dt) {
       const an = `attack_${p.combo + 1}`; p.anim = ANIMS.hero.animations[an] ? an : 'attack'; p.animT = 0; p.combo = (p.combo + 1) % 3;   // kadın karakterde tek 'attack' var
       state.slashes.push({ life: C.player.slashDuration, max: C.player.slashDuration, dir: p.dir, a: p.a });
       events.onSlash?.();
-      p.hitT = C.player.hitDelay / S.attackSpeedMul; p.hitDir = p.dir;           // hasar savurmanın etki anında, güncel konumlara göre uygulanır
+      p.hitT = (ANIMS.hero.animations[p.anim]?.hitDelay ?? C.player.hitDelay) / S.attackSpeedMul; p.hitDir = p.dir;           // hasar savurmanın etki anında, güncel konumlara göre uygulanır
     }
   }
   if (p.hitT > 0 && !state.over) {

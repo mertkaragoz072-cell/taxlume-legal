@@ -278,3 +278,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 ## Faz 38 — Kadın savaşçı koşu animasyonu (30 kare)
 - Kullanıcının verdiği 30 karelik koşu sayfası (`references/nexora_heroine_run_source.png`, alfa kanallı) `tools/extract_heroine_run.py` ile `assets/characters/female/run/run_01..30.png` olarak çıkarıldı: numaralar ve zemin gölgesi temizlendi, boy bekleme karelerine eşitlendi (kafa bandı 62–63 px, toplam 213 px), yer çizgisi satır gölgesinden alınarak zıplama fazları korundu, tuval/pivot bekleme-ölümle aynı (340×235, 170/225).
 - `frames.json`: `strideUnits` 2.2 (mesafeye bağlı kare seçimi), `build_female_animations.py` tutarlılık kontrolü temiz. Kalan prosedürel durumlar: attack, hurt.
+
+## Faz 39 — Kadın savaşçı saldırı animasyonu (30 kare, efekt gömülü)
+- Kullanıcının verdiği 30 karelik saldırı sayfası (siyah zeminli, ateş hilali/saplama efektli) `tools/extract_heroine_attack.py` ile `attack/attack_01..30.png` olarak çıkarıldı: numaralar silindi, siyah zemin parlama-korumalı alfaya çevrildi (efektler yumuşak şeffaf), boy bekleme/koşuyla eşitlendi.
+- Tuval 340→380 px (`tools/widen_heroine_canvas.py`; idle/run/death sağdan dolgulandı, pivot sabit). Kare süreleri `frames.json → durations.attack` (toplam 0.535 sn, saplama kareleri yavaş); `hitDelay` kahraman animasyonundan okunur (`data/config.json → player.hitDelay` yedek); efekt gömülü olduğu için eski hilal çizimi kapalı (`attackFx: baked`).
+- Prosedürel (kodla) kalan tek kadın durumu: hurt.
