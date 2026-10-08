@@ -354,3 +354,7 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 55 — goblin_brute hasar alma animasyonu (30 kare)
 - `extract_enemy_sheet.py goblin_brute hurt ... --vis 0.45 --ref-frames 13-30` (ölçek 0.654, yürüme 0.636). Brute (elit) bu animasyonu 0.45 sn oynar; **bosslar** (aynı kareleri paylaşır, `stagger` = 0) hasar animasyonu göstermez (önceki davranış korunur: boss vuruşta sersemlemez, yalnız beyaz parlama). Kalan eski kare: brute death.
+
+## Faz 56 — goblin_brute ölüm animasyonu (30 kare) — brute ve bosslar tamamen yeni çizim
+- `extract_enemy_sheet.py goblin_brute death ... --fps 30 --ref-frames 1-1 --grid --land 19` (ölçek 0.627; 1 sn; yere çarpış karesi 19'da büyük toz + sarsıntı: boss'ta güçlü). Brute ve boss (goblin_boss/warlord/king; `animFrom: goblin_brute`) artık yürüme/saldırı/hasar/ölüm 30 kare yeni tasarım; çok kareli ölüm sönmesi animasyon süresine (+0.5 sn) göre.
+- Yeni çizime geçen türler: goblin_scout, goblin_warrior, goblin_brute (+3 boss). Kalan eski tasarım: yok (tüm goblin_* kareleri yeni).
