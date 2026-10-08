@@ -312,3 +312,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - `tools/extract_enemy_sheet.py goblin_scout attack references/nexora_goblin_scout_attack_source.png --fps 45 --impact 0.47`: 30 kare, özgün çözünürlük; **ölçek bandana boyunun yürüme karesiyle eşitlenmesinden** bulunur (ikisi de 18.4 birim) → yürüme↔saldırı baş konumu farkı ≈ 6 birim, saldırı→yürüme ≈ 2.4 birim. Tuval/pivot animasyona özel (efekt genişliği otomatik).
 - Süre 30/45 = 0.67 sn; hasar `impact` 0.47'de (kılıç tam uzanınca, kare ≈ 14). Efekt (mavi hilal) karelerde gömülü. Araç artık `hdTarget` (ilk HD yürümeden kaydedilen hedef boy) ve `--impact` kullanır.
 - Kalan eski (düşük çözünürlük, bandanasız) kareler: goblin_scout hurt/death.
+
+## Faz 46 — goblin_scout hasar alma animasyonu (30 kare)
+- `tools/extract_enemy_sheet.py goblin_scout hurt references/nexora_goblin_scout_hurt_source.png --vis 0.45 --ref-frames 19-30`: 30 kare, bandana boyu yürüme/saldırı ile eşit (ölçek 0.4714; ölçüm yalnız baş dik karelerden).
+- Oyun: gerçek sersemleme 0.22 sn olduğundan uzun hasar animasyonu `anims.hurt.visDur` (0.45 sn) ile ayrı sayaçtan (`en.hurtAge`) oynar: vuruş tepkisi + yıldızlar + toparlanma; sersemleme bitince saldırı/hazırlık animasyonu önceliklidir; yeni vuruşta animasyon baştan başlar. Ölüm geçişi (acı karesi → yatan kare) HD hurt karesinin kendi pivot/ölçeğini kullanır.
+- Kalan eski kare: goblin_scout death (tek, bandanasız).

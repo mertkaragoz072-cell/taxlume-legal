@@ -302,7 +302,8 @@ function enemyFrame(en, meta) {
   const A = meta.anims;
   let an, t;
   if (en.dead) { an = 'death'; t = en.deathT; }
-  else if (en.stagger > 0 && A.hurt) { an = 'hurt'; t = 0.22 - en.stagger; }
+  else if (A.hurt?.visDur && en.hurtAge < A.hurt.visDur && en.attackT < 0 && !(en.windT > 0)) { an = 'hurt'; t = en.hurtAge * A.hurt.frames.length / A.hurt.visDur / A.hurt.fps; }   // uzun hasar animasyonu: sersemleme (0.22 sn) bittikten sonra da toparlanma kareleri oynar (saldırı/hazırlık önceliklidir)
+  else if (!A.hurt?.visDur && en.stagger > 0 && A.hurt) { an = 'hurt'; t = 0.22 - en.stagger; }
   else if (en.attackT >= 0 && A.attack) { an = 'attack'; t = en.attackT; }
   else { an = 'walk'; t = en.bob / 8; }
   const L = A[an], n = L.frames.length;
@@ -354,8 +355,8 @@ export function drawEnemy(ctx, en) {
     else if (sp && sp.phase === 'recover') ctx.translate(0, Math.sin(en.bob * 2) * 1.2);
     if (!en.dead) castShadow(ctx, img, key, -piv[0] * sc, -piv[1] * sc, w, h, meta.facing === 'right' ? en.face : -en.face, def.boss ? 0.3 : 0.34);
     if (en.dead && en.deathT < 0.18) {                                 // ölüm geçişi: ayakta (acı karesi) → yatan kare; geriye eğilip solar, yatan kare belirir ve küçük bir sıçrayışla yere iner (tek kareli ölüm animasyonunda ani sıçrama olmasın)
-      const k = en.deathT / 0.18, pre = Assets.get(meta.anims.hurt?.frames?.[0] || meta.anims.walk.frames[0]), ga = ctx.globalAlpha;
-      if (pre) { ctx.save(); ctx.globalAlpha = ga * (1 - k); ctx.translate(0, -10 * Math.sin(Math.PI * k)); ctx.rotate(-0.5 * k); ctx.drawImage(pre, -piv[0] * sc, -piv[1] * sc, pre.width * sc, pre.height * sc); ctx.restore(); }
+      const HA = meta.anims.hurt || meta.anims.walk, k = en.deathT / 0.18, pre = Assets.get(HA.frames[Math.min(HA.frames.length - 1, HA.visDur ? 5 : 0)]), ga = ctx.globalAlpha, ppiv = HA.pivot || meta.pivot, psc = (HA.scale || meta.scale) * (def.spriteMul || 1);
+      if (pre) { ctx.save(); ctx.globalAlpha = ga * (1 - k); ctx.translate(0, -10 * Math.sin(Math.PI * k)); ctx.rotate(-0.5 * k); ctx.drawImage(pre, -ppiv[0] * psc, -ppiv[1] * psc, pre.width * psc, pre.height * psc); ctx.restore(); }
       ctx.save(); ctx.globalAlpha = ga * Math.min(1, k * 1.6); ctx.translate(0, -16 * Math.sin(Math.PI * k) * (1 - k)); ctx.drawImage(img, -piv[0] * sc, -piv[1] * sc, w, h); ctx.restore();
     } else ctx.drawImage(img, -piv[0] * sc, -piv[1] * sc, w, h);
     if (def.boss && !en.dead) { ctx.globalAlpha = (sp && sp.phase === 'windup' ? 0.32 + 0.22 * Math.sin(state.time * 22) : 0.16 + 0.08 * Math.sin(state.time * 5)) + (sp && sp.rage ? 0.1 * sp.rage : 0); ctx.drawImage(whiteSilhouette(img, key, '#ff3b2a'), -piv[0] * sc, -piv[1] * sc, w, h); ctx.globalAlpha = 1; }

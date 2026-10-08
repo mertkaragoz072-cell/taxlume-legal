@@ -70,7 +70,7 @@ export function damageEnemy(en, dmg, crit = false, color = null, dot = false) {
     if (en.hp <= 0 && !en.dead) killEnemy(en);
     return;
   }
-  en.flash = 0.1; en.knock = 1 - en.def.knockResist; en.stagger = en.def.boss ? 0 : 0.22;
+  en.hurtAge = 0; en.flash = 0.1; en.knock = 1 - en.def.knockResist; en.stagger = en.def.boss ? 0 : 0.22;
   if (en.def.knockResist < 0.5 && (en.attackT >= 0 || en.windT > 0) && !(en.noInterrupt > 0)) { en.attackT = -1; en.windT = -1; en.atkTimer = 0.4; en.noInterrupt = 1.6; }   // vuruş saldırıyı böler, ama art arda bölünüp goblin kilitlenmesin (1.6 sn dokunulmazlık)   // hafif düşmanın saldırısı vuruşla bölünür; elite/boss bölünmez
   events.onHit?.(en, dmg);
   state.shake = Math.max(state.shake, crit ? 2.8 : 1.3);          // hafif vuruş sarsıntısı

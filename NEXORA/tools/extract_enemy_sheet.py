@@ -1,5 +1,5 @@
 """Düşman animasyon sayfasından kare çıkarma (yüksek kare sayılı, kullanıcı çizimi sayfalar).
-Kullanım: python3 tools/extract_enemy_sheet.py <tür> <anim> <kaynak.png> [--cols 6] [--rows 5] [--fps 30] [--stride 55] [--loop] [--target 70]
+Kullanım: python3 tools/extract_enemy_sheet.py <tür> <anim> <kaynak.png> [--cols 6] [--rows 5] [--fps 30] [--stride 55] [--loop] [--target 70] [--impact 0.47] [--vis 0.45] [--ref-frames 19-30]
   <tür>: goblin_scout | goblin_warrior | goblin_brute | goblin_boss …   <anim>: walk | attack | hurt | death
 Kaynak: SİYAH arka planlı, numaralı (kare altında) sayfa, cols×rows kare (öntanımlı 6×5 = 30), sağa bakan karakter.
 Yöntem (extract_heroine_attack.py ile aynı): mx>=14 bileşenleri → büyük = karakter, küçük gri/beyaz = numara (atılır); alfa = katı gövde (mx>=45, delikler dolu) + efekt için yumuşak eşik (siyah matte çözülür);
@@ -13,7 +13,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 ap = argparse.ArgumentParser(); ap.add_argument('type'); ap.add_argument('anim'); ap.add_argument('src')
 ap.add_argument('--cols', type=int, default=6); ap.add_argument('--rows', type=int, default=5); ap.add_argument('--fps', type=float, default=30)
-ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0)
+ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default='')
 a = ap.parse_args(); N = a.cols * a.rows
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 rgb = np.array(Image.open(os.path.join(ROOT, a.src) if not os.path.isabs(a.src) else a.src).convert('RGB')).astype(np.float32); H, W = rgb.shape[:2]
@@ -55,7 +55,8 @@ if a.anim != 'walk' and walk.get('frames') and str(walk['frames'][0]).startswith
     def band(arr):
         al = arr[..., 3] > 150; ys, xs = np.where(al); t0, b0 = ys.min(), ys.max(); r = al & (arr[..., 0] > 150) & (arr[..., 1] < 70) & (arr[..., 2] < 70); r[int(t0 + (b0 - t0) * 0.45):] = False
         l, k = ndi.label(r); j = 1 + int(np.argmax(ndi.sum(r, l, range(1, k + 1)))); yy_ = np.where((l == j).any(1))[0]; return yy_.max() - yy_.min() + 1
-    wband = float(np.median([band(w) for w in wk])); rband = float(np.median([r['bh'] for r in recs if r['bh']]))
+    wband = float(np.median([band(w) for w in wk])); rs, re_ = (int(x) for x in a.ref_frames.split('-')) if a.ref_frames else (1, N)                  # ölçek ölçümü yalnız bu karelerden (baş yan yatık karelerde bandana boyu yanıltır)
+    rband = float(np.median([r['bh'] for r in recs[rs - 1:re_] if r['bh']]))
     if wband and rband: scale = walk['scale'] * wband / rband
 L = max(r['ax'] for r in recs); R = max(r['img'].shape[1] - r['ax'] for r in recs); Hh = max(r['bot'] for r in recs) + max(r['img'].shape[0] - r['bot'] for r in recs)
 Wc = int(2 * max(L, R) + 8); Hc = int(max(r['img'].shape[0] for r in recs) + 16); PXc, PYc = Wc // 2, Hc - 8
@@ -72,6 +73,7 @@ for i, r in enumerate(recs, 1):
 man['images'] = dict(sorted(man['images'].items())); json.dump(man, open(man_p, 'w'), indent=2, ensure_ascii=False); open(man_p, 'a').write('\n')
 anim = {'frames': keys, 'fps': a.fps, 'loop': a.loop, 'canvas': [Wc, Hc], 'pivot': [PXc, PYc], 'scale': round(scale, 4)}
 old = T['anims'].get(a.anim, {})
+if a.vis: anim['visDur'] = a.vis                              # hasar animasyonu: tüm kareler bu sürede (sn) oynar (gerçek sersemleme süresinden bağımsız)
 if a.impact: anim['impact'] = a.impact
 elif 'impact' in old: anim['impact'] = old['impact']
 if a.stride: anim['strideUnits'] = a.stride / N
