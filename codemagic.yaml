@@ -14,7 +14,7 @@ workflows:
       vars:
         APP_ID: com.nexora.game
         APP_NAME: CLASHBORN
-        APP_STORE_APPLE_ID: "BURAYA_APPLE_ID"   # App Store Connect > Uygulama > App Information > Apple ID (sayı)
+        APP_STORE_APPLE_ID: "6821135973"   # App Store Connect > Uygulama > App Information > Apple ID (sayı)
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.nexora.game
