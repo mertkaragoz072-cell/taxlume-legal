@@ -103,43 +103,192 @@
     },
     "attack_1": {
       "frames": [
-        "attack_1_01",
-        "attack_1_02",
-        "attack_1_03",
-        "attack_1_04",
-        "attack_1_05",
-        "attack_1_06",
-        "attack_1_07",
-        "attack_1_08",
-        "attack_1_09"
+        "hd_attack_01",
+        "hd_attack_02",
+        "hd_attack_03",
+        "hd_attack_04",
+        "hd_attack_05",
+        "hd_attack_06",
+        "hd_attack_07",
+        "hd_attack_08",
+        "hd_attack_09",
+        "hd_attack_10",
+        "hd_attack_11",
+        "hd_attack_12",
+        "hd_attack_13",
+        "hd_attack_14",
+        "hd_attack_15",
+        "hd_attack_16",
+        "hd_attack_17",
+        "hd_attack_18",
+        "hd_attack_19",
+        "hd_attack_20",
+        "hd_attack_21",
+        "hd_attack_22"
       ],
-      "fps": 16,
-      "loop": false
+      "fps": 30.0,
+      "durations": [
+        0.025,
+        0.025,
+        0.025,
+        0.025,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.04
+      ],
+      "loop": false,
+      "canvas": [
+        291,
+        152
+      ],
+      "pivot": [
+        145,
+        141
+      ],
+      "scale": 0.7548,
+      "hitDelay": 0.2,
+      "fx": "baked"
     },
     "attack_2": {
       "frames": [
-        "attack_2_01",
-        "attack_2_02",
-        "attack_2_03",
-        "attack_2_04",
-        "attack_2_05",
-        "attack_2_06",
-        "attack_2_07",
-        "attack_2_08",
-        "attack_2_09"
+        "hd_attack_01",
+        "hd_attack_02",
+        "hd_attack_03",
+        "hd_attack_04",
+        "hd_attack_05",
+        "hd_attack_06",
+        "hd_attack_07",
+        "hd_attack_08",
+        "hd_attack_09",
+        "hd_attack_10",
+        "hd_attack_11",
+        "hd_attack_12",
+        "hd_attack_13",
+        "hd_attack_14",
+        "hd_attack_15",
+        "hd_attack_16",
+        "hd_attack_17",
+        "hd_attack_18",
+        "hd_attack_19",
+        "hd_attack_20",
+        "hd_attack_21",
+        "hd_attack_22"
       ],
-      "fps": 16,
-      "loop": false
+      "fps": 30.0,
+      "durations": [
+        0.025,
+        0.025,
+        0.025,
+        0.025,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.04
+      ],
+      "loop": false,
+      "canvas": [
+        291,
+        152
+      ],
+      "pivot": [
+        145,
+        141
+      ],
+      "scale": 0.7548,
+      "hitDelay": 0.2,
+      "fx": "baked"
     },
     "attack_3": {
       "frames": [
-        "attack_3_01",
-        "attack_3_02",
-        "attack_3_03",
-        "attack_3_04"
+        "hd_attack_01",
+        "hd_attack_02",
+        "hd_attack_03",
+        "hd_attack_04",
+        "hd_attack_05",
+        "hd_attack_06",
+        "hd_attack_07",
+        "hd_attack_08",
+        "hd_attack_09",
+        "hd_attack_10",
+        "hd_attack_11",
+        "hd_attack_12",
+        "hd_attack_13",
+        "hd_attack_14",
+        "hd_attack_15",
+        "hd_attack_16",
+        "hd_attack_17",
+        "hd_attack_18",
+        "hd_attack_19",
+        "hd_attack_20",
+        "hd_attack_21",
+        "hd_attack_22"
       ],
-      "fps": 14,
-      "loop": false
+      "fps": 30.0,
+      "durations": [
+        0.025,
+        0.025,
+        0.025,
+        0.025,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.03,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.04
+      ],
+      "loop": false,
+      "canvas": [
+        291,
+        152
+      ],
+      "pivot": [
+        145,
+        141
+      ],
+      "scale": 0.7548,
+      "hitDelay": 0.2,
+      "fx": "baked"
     },
     "jump": {
       "frames": [
@@ -163,7 +312,7 @@
       ],
       "fps": 11,
       "loop": false,
-      "_note": "9 karelik sayfa yere yıkılma; oyunda yalnız ilk 2 kare (sarsılma) 0.18 sn oynar + geri tepme",
+      "_note": "9 karelik sayfa yere y\u0131k\u0131lma; oyunda yaln\u0131z ilk 2 kare (sars\u0131lma) 0.18 sn oynar + geri tepme",
       "recoil": [
         5,
         0.05,
@@ -205,95 +354,6 @@
       "loop": false
     }
   },
-  "fxAnchor": {
-    "attack_1_01": [
-      123,
-      131
-    ],
-    "attack_1_02": [
-      131,
-      124
-    ],
-    "attack_1_03": [
-      127,
-      126
-    ],
-    "attack_1_04": [
-      70,
-      118
-    ],
-    "attack_1_05": [
-      163,
-      115
-    ],
-    "attack_1_06": [
-      110,
-      127
-    ],
-    "attack_1_07": [
-      114,
-      127
-    ],
-    "attack_1_08": [
-      109,
-      126
-    ],
-    "attack_1_09": [
-      171,
-      122
-    ],
-    "attack_2_01": [
-      66,
-      115
-    ],
-    "attack_2_02": [
-      171,
-      96
-    ],
-    "attack_2_03": [
-      130,
-      123
-    ],
-    "attack_2_04": [
-      84,
-      108
-    ],
-    "attack_2_05": [
-      65,
-      114
-    ],
-    "attack_2_06": [
-      70,
-      116
-    ],
-    "attack_2_07": [
-      69,
-      114
-    ],
-    "attack_2_08": [
-      146,
-      115
-    ],
-    "attack_2_09": [
-      42,
-      119
-    ],
-    "attack_3_01": [
-      171,
-      104
-    ],
-    "attack_3_02": [
-      94,
-      72
-    ],
-    "attack_3_03": [
-      158,
-      116
-    ],
-    "attack_3_04": [
-      98,
-      106
-    ]
-  },
+  "fxAnchor": {},
   "hdTarget": 97.0
 }

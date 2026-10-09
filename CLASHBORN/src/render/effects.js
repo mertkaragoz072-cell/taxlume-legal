@@ -34,7 +34,7 @@ export function drawRing(ctx, g) {
 }
 
 export function drawSlash(ctx, s) {
-  const A = ANIMS.hero?.animations.attack; if (A?.fx === 'baked') return;                                                     // efekt karelerde gömülü (kadın savaşçı)
+  const A = ANIMS.hero?.animations.attack || ANIMS.hero?.animations.attack_1; if (A?.fx === 'baked') return;                                                     // efekt karelerde gömülü (kadın savaşçı)
   if (Assets.get(HERO.id + '_' + (ANIMS.hero?.animations.attack_1?.frames[0] || ANIMS.hero?.animations.attack?.frames[0] || ''))) return; // sprite karelerinde efekt zaten var
 
   const t = 1 - s.life / s.max;

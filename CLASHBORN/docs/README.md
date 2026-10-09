@@ -376,3 +376,10 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Tüm görünür metinler, başlık (`<title>`), PWA manifesti, Capacitor `appName`, `package.json`, mağaza ve gizlilik metinleri, öğretici, hata günlüğü ve belgeler NEXORA → **CLASHBORN**; service worker önbellek öneki `clashborn-` (eski önbellekler otomatik silinir); test/araç ortam değişkeni `CLASHBORN_URL`. Proje klasörü `NEXORA/` → `CLASHBORN/`.
 - Eski NEXORA yazılı logo kaldırıldı; seçim ekranında geçici CSS yazı logosu var. **Bekleyenler:** yeni logo (`assets/logo/clashborn_logo.png`) ve CLASHBORN yazılı uygulama ikonu (`app_icon_1024_opaque.png`, alfasız).
 - Bilerek DEĞİŞMEDİ: `localStorage` anahtarları (`nexora_save_v1`, `nexora_settings_v1`, `nexora_errlog`, `nexora_sound`; kayıtlar kaybolmasın), referans kaynak dosya adları (`references/nexora_*_source.png`) ve Capacitor/iOS paket kimliği `com.nexora.game` (Apple'da kayıtlı Bundle ID sonradan değişmez; adı bundan bağımsız).
+
+## Faz 61 — Erkek kahraman: 30 karelik saldırı (efekt gömülü)
+- Kaynak: `references/nexora_male_attack_source.png` (1536×1024, 6×5, kareler arası boşluklu yeni sayfa). `tools/extract_enemy_sheet.py male attack ... --fps 30 --anchor feet --dark --ref-frames 25-30` (ölçek 0.7548; bekleme boyuyla aynı gövde boyu). Araç iyileştirmesi: gövde bileşeni eşiği 9000 → 5000 px (küçük karakterli sayfalar); `--fxsplit <satırlar>` bayrağı (yaylar komşu kareye değen sıkışık sayfalar için; yeni boşluklu sayfada gerekmedi).
+- Oyunda `attack_1/2/3` aynı 22 kareyi kullanır (kare 23–30 duruş tekrarı olduğundan silindi; hazırlık 1–5, savurma 6–12, uzanma 13–17, toparlanma 18–22). `durations` toplamı 0.71 sn, `hitDelay` 0.2 (savurmanın yaydan temas anı, kare 8), `fx: baked` (mavi yay karelerde gömülü; ayrı hilal efekti çizilmez).
+- `drawPlayerSprite` artık `durations` destekler; `drawSlash` kontrolü `attack_1`'e de bakar.
+- Eski düşük çözünürlüklü `attack_1/2/3` kareleri, `malebody_/malefx_` katmanları ve manifest girdileri silindi.
+- Sıradaki (erkek): hasar, ölüm, portre.

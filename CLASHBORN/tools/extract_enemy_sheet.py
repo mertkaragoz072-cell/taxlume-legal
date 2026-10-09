@@ -13,7 +13,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 ap = argparse.ArgumentParser(); ap.add_argument('type'); ap.add_argument('anim'); ap.add_argument('src')
 ap.add_argument('--cols', type=int, default=6); ap.add_argument('--rows', type=int, default=5); ap.add_argument('--fps', type=float, default=30)
-ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--anchor', default='auto'); ap.add_argument('--dark', action='store_true'); ap.add_argument('--land', type=int, default=0)
+ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--anchor', default='auto'); ap.add_argument('--dark', action='store_true'); ap.add_argument('--land', type=int, default=0); ap.add_argument('--fxsplit', default='')
 a = ap.parse_args(); N = a.cols * a.rows
 HERO = a.type == 'male'                                       # kahraman modu: data/male_animations.json (animations.<anim>), kareler assets/characters/male/hd/, anahtar male_hd_<anim>_NN, referans animasyon idle
 ROOT = os.path.join(os.path.dirname(__file__), '..')
@@ -23,7 +23,7 @@ mx = rgb.max(2); sat = mx - rgb.min(2); yy, xx = np.indices((H, W))
 fg14 = mx >= 14
 lab, n = ndi.label(fg14, structure=np.ones((3, 3), bool)); area = ndi.sum(fg14, lab, range(1, n + 1)); objs = ndi.find_objects(lab)
 cw = W / a.cols
-cent = [(ndi.center_of_mass(lab == i + 1)[0], i + 1) for i in range(n) if area[i] > 9000]
+cent = [(ndi.center_of_mass(lab == i + 1)[0], i + 1) for i in range(n) if area[i] > 5000]
 ys_sorted = np.sort([c[0] for c in cent]); gaps = np.diff(ys_sorted); cuts = sorted(np.argsort(gaps)[-(a.rows - 1):]) if a.rows > 1 else []
 row_bounds = [-1] + [float((ys_sorted[c] + ys_sorted[c + 1]) / 2) for c in cuts] + [1e9]
 rowmap = np.zeros(H, int)
@@ -36,6 +36,21 @@ for i in range(n):                                                              
         cy_, cx_ = ndi.center_of_mass(lab[sl] == i + 1); cy_ += sl[0].start; cx_ += sl[1].start
         cid = int(rowmap[min(int(cy_), H - 1)]) * a.cols + min(int(cx_ // cw), a.cols - 1)
         cellid[sl][lab[sl] == i + 1] = cid; whole[sl] |= (lab[sl] == i + 1)
+if a.fxsplit:                                                  # yay/efektlerin komşu kareye taştığı satırlar (--fxsplit 2,3 = 1 tabanlı satır no): kareler arası dikey ayrım hattı. Boş sütun (≤12 px) varsa o; yoksa komşu karenin pelerin ucu = baş merkezi − (satırın ilk karesinde ölçülen baş→pelerin ucu mesafesi)
+    hair = fg14 & (rgb[..., 0] > 70) & (rgb[..., 0] < 160) & (rgb[..., 1] < 85) & (rgb[..., 2] < 75) & (rgb[..., 0] > rgb[..., 1] * 1.6)
+    red = fg14 & (rgb[..., 0] > 150) & (rgb[..., 1] < 80) & (rgb[..., 2] < 80)
+    def head_x(rr, k):                                         # hücrenin en büyük saç bileşeninin merkezi
+        m = hair & (rowmap == rr)[:, None] & (xx >= k * cw) & (xx < (k + 1) * cw); l_, n_ = ndi.label(m)
+        return float(ndi.center_of_mass(l_ == 1 + int(np.argmax(ndi.sum(m, l_, range(1, n_ + 1)))))[1]) if n_ else (k + .5) * cw
+    for rr in (int(x) - 1 for x in a.fxsplit.split(',')):
+        rm = rowmap == rr; cc = (fg14 & rm[:, None]).sum(0); seams = []
+        hx = [head_x(rr, k) for k in range(a.cols)]; capeL = np.where((red & rm[:, None] & (xx < cw)).any(0))[0].min(); D = hx[0] - capeL
+        for k in range(1, a.cols):
+            b = int(k * cw); lo, hi = b - int(.25 * cw), b + int(.35 * cw); m_ = int(np.argmin(cc[lo:hi])) + lo
+            seams.append(m_ if cc[m_] <= 12 else int(hx[k] - D - 3))
+        colk = np.searchsorted(np.array(seams), np.arange(W), side='right')
+        sel = fg14 & rm[:, None]; cellid[sel] = (rr * a.cols + colk)[np.where(sel)[1]]; whole |= sel
+        print('fxsplit satır', rr + 1, 'ayrım hatları', seams, 'D', round(D))
 # numara etiketleri: küçük, düşük doygunluklu bileşenler
 numlab = np.zeros(n + 1, bool)
 for i in range(n):
