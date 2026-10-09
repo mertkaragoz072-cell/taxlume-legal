@@ -1,0 +1,62 @@
+# CLASHBORN — iOS (TestFlight) derlemesi. Proje klasörü: CLASHBORN/
+# Kurulum: docs/CODEMAGIC.md (CLASHBORN klasöründe)
+workflows:
+  clashborn-ios:
+    name: CLASHBORN iOS (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: codemagic   # Codemagic > Teams > Integrations'taki API anahtarının adı
+    environment:
+      node: 20
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_ID: com.nexora.game
+        APP_NAME: CLASHBORN
+        APP_STORE_APPLE_ID: "BURAYA_APPLE_ID"   # App Store Connect > Uygulama > App Information > Apple ID (sayı)
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.nexora.game
+    scripts:
+      - name: Bağımlılıklar ve web paketi
+        script: |
+          cd CLASHBORN
+          npm install --no-audit --no-fund
+          npm run build:www
+      - name: iOS projesi (Capacitor)
+        script: |
+          cd CLASHBORN
+          npx cap add ios
+          npx cap sync ios
+          PLIST=ios/App/App/Info.plist
+          # yatay oyun
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" $PLIST || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationLandscapeLeft" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:1 string UIInterfaceOrientationLandscapeRight" $PLIST
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" $PLIST || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad array" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:0 string UIInterfaceOrientationLandscapeLeft" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:1 string UIInterfaceOrientationLandscapeRight" $PLIST
+          # şifreleme beyanı (TestFlight "Missing Compliance" sormasın)
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $PLIST || true
+          # uygulama ikonu (1024, alfasız)
+          cp assets/app_icon/app_icon_1024_opaque.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+      - name: Derleme numarası ve imzalama
+        script: |
+          cd CLASHBORN/ios/App
+          BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          BUILD=$((BUILD + 1))
+          agvtool new-version -all "$BUILD"
+          xcode-project use-profiles
+      - name: IPA oluştur
+        script: |
+          cd CLASHBORN/ios/App
+          xcode-project build-ipa --workspace App.xcworkspace --scheme App
+    artifacts:
+      - CLASHBORN/ios/App/build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
