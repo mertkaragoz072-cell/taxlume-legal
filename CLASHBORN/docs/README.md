@@ -383,3 +383,9 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - `drawPlayerSprite` artık `durations` destekler; `drawSlash` kontrolü `attack_1`'e de bakar.
 - Eski düşük çözünürlüklü `attack_1/2/3` kareleri, `malebody_/malefx_` katmanları ve manifest girdileri silindi.
 - Sıradaki (erkek): hasar, ölüm, portre.
+
+## Faz 62 — Erkek kahraman: 30 karelik hasar alma
+- Kaynak: `references/nexora_male_hurt_source.png`. `extract_enemy_sheet.py male hurt ... --fps 30 --anchor feet --dark --ref-frames 1-3` (ham ölçek 0.6062).
+- Oyunda kare 2–24 (23 kare; 1 hazırlık, 25–30 duruş tekrarı silindi), `durations` toplamı 0.374 sn (vuruş anı hızlı, toparlanma yavaş), geri tepme `[6, 0.06, 0.3]`.
+- Ölçek baş boyuna göre ayarlandı: ham 0.6062 → **0.5529** (saç/baş yüksekliği bekleme 23, koşu 26, saldırı 24, hasar 25 birim; sayfalardaki çizim farkı dengelendi).
+- Eski düşük çözünürlüklü `hurt_01..09` kareleri silindi. Sıradaki (erkek): ölüm, portre.

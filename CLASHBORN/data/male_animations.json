@@ -307,16 +307,70 @@
     },
     "hurt": {
       "frames": [
-        "hurt_01",
-        "hurt_02"
+        "hd_hurt_02",
+        "hd_hurt_03",
+        "hd_hurt_04",
+        "hd_hurt_05",
+        "hd_hurt_06",
+        "hd_hurt_07",
+        "hd_hurt_08",
+        "hd_hurt_09",
+        "hd_hurt_10",
+        "hd_hurt_11",
+        "hd_hurt_12",
+        "hd_hurt_13",
+        "hd_hurt_14",
+        "hd_hurt_15",
+        "hd_hurt_16",
+        "hd_hurt_17",
+        "hd_hurt_18",
+        "hd_hurt_19",
+        "hd_hurt_20",
+        "hd_hurt_21",
+        "hd_hurt_22",
+        "hd_hurt_23",
+        "hd_hurt_24"
       ],
-      "fps": 11,
+      "fps": 30.0,
+      "durations": [
+        0.014,
+        0.014,
+        0.014,
+        0.014,
+        0.014,
+        0.014,
+        0.014,
+        0.014,
+        0.014,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.016,
+        0.016,
+        0.016,
+        0.016,
+        0.016,
+        0.016,
+        0.016,
+        0.016
+      ],
       "loop": false,
-      "_note": "9 karelik sayfa yere y\u0131k\u0131lma; oyunda yaln\u0131z ilk 2 kare (sars\u0131lma) 0.18 sn oynar + geri tepme",
+      "canvas": [
+        272,
+        183
+      ],
+      "pivot": [
+        136,
+        173
+      ],
+      "scale": 0.5529,
       "recoil": [
-        5,
-        0.05,
-        0.18
+        6,
+        0.06,
+        0.3
       ]
     },
     "death": {
