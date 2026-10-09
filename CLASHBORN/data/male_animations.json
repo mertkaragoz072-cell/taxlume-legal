@@ -375,18 +375,77 @@
     },
     "death": {
       "frames": [
-        "death_01",
-        "death_02",
-        "death_03",
-        "death_04",
-        "death_05",
-        "death_06",
-        "death_07",
-        "death_08",
-        "death_09"
+        "hd_death_03",
+        "hd_death_04",
+        "hd_death_05",
+        "hd_death_06",
+        "hd_death_07",
+        "hd_death_08",
+        "hd_death_09",
+        "hd_death_10",
+        "hd_death_11",
+        "hd_death_12",
+        "hd_death_13",
+        "hd_death_14",
+        "hd_death_15",
+        "hd_death_16",
+        "hd_death_17",
+        "hd_death_18",
+        "hd_death_19",
+        "hd_death_20",
+        "hd_death_21",
+        "hd_death_22",
+        "hd_death_23",
+        "hd_death_24"
       ],
-      "fps": 8,
-      "loop": false
+      "fps": 30.0,
+      "durations": [
+        0.02,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.034,
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.04,
+        0.045,
+        0.045,
+        0.045,
+        0.045,
+        0.045,
+        0.045
+      ],
+      "loop": false,
+      "canvas": [
+        278,
+        207
+      ],
+      "pivot": [
+        139,
+        179
+      ],
+      "scale": 0.5843,
+      "dust": [
+        [
+          10,
+          10,
+          110
+        ],
+        [
+          13,
+          6,
+          90
+        ]
+      ],
+      "shake": 10
     },
     "turn": {
       "frames": [

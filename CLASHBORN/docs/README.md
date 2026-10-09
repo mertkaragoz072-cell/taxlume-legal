@@ -389,3 +389,9 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Oyunda kare 2–24 (23 kare; 1 hazırlık, 25–30 duruş tekrarı silindi), `durations` toplamı 0.374 sn (vuruş anı hızlı, toparlanma yavaş), geri tepme `[6, 0.06, 0.3]`.
 - Ölçek baş boyuna göre ayarlandı: ham 0.6062 → **0.5529** (saç/baş yüksekliği bekleme 23, koşu 26, saldırı 24, hasar 25 birim; sayfalardaki çizim farkı dengelendi).
 - Eski düşük çözünürlüklü `hurt_01..09` kareleri silindi. Sıradaki (erkek): ölüm, portre.
+
+## Faz 63 — Erkek kahraman: 30 karelik ölüm
+- Kaynak: `references/nexora_male_death_source.png`. `extract_enemy_sheet.py male death ... --fps 30 --anchor label --land 13 --dark --ref-frames 1-3` (ölçek 0.5843).
+- **Yeni `--anchor label`:** gövdenin havaya fırlayıp yere yattığı animasyonlar için. x = karenin numara etiketinin ortası (karakterin hücre içindeki kayışı korunur); zemin = etiket üstü − sabit boşluk (havadaki kareler); `--land` karesinden itibaren (yatış) zemin = kendi en alt satırı. Etiket = hücrenin en alttaki küçük bileşenleri (eldiven/kabza etiket sanılmaz).
+- Oyunda kare 3–24 (22 kare; 1–2 ayakta, 25–30 yatış tekrarı silindi), süre 0.84 sn: savrulma hızlı (0.034), yere çarpma/seken 0.04, yatış 0.045; son kare tutulur. Yere çarpış (kare 13 → indeks 10): iki toz patlaması + sarsıntı (`dust`, `shake`; artık kare tabanlı erkek de bunları kullanır, `systems.js`).
+- Eski düşük çözünürlüklü `death_01..09` kareleri silindi. Sıradaki (erkek): portre.

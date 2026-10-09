@@ -88,7 +88,15 @@ for k, _o in enumerate(order, 1):
     rb = body & (rgb[..., 0] > 150) & (rgb[..., 1] < 70) & (rgb[..., 2] < 70) & (yy < top + (bot - top) * 0.45); l2, k2 = ndi.label(rb)
     bh = 0
     if k2: j = 1 + int(np.argmax(ndi.sum(rb, l2, range(1, k2 + 1)))); ys2 = np.where(l2 == j)[0] if False else np.where((l2 == j).any(1))[0]; bh = ys2.max() - ys2.min() + 1      # bandana yüksekliği (ölçek eşlemesi için)
-    recs.append(dict(img=np.dstack([col, alpha * 255])[y0:y1, x0:x1].astype(np.uint8), ax=ax - x0, bot=bot + 1 - y0, h=bot - top + 1, bh=bh, x0=x0, y0=y0, abs_bot=bot + 1))
+    nm = numlab[lab] & (cellid == k - 1); nys, nxs = np.where(nm); sel_ = nys > nys.max() - 30 if len(nys) else nys; nys, nxs = nys[sel_], nxs[sel_];                  # numara = hücredeki en alttaki küçük bileşenler (kılıç kabzası/eldiven gibi küçük parçalar etiket sanılmasın)
+    lab_top = float(nys.min()) if len(nys) else 0.0; lab_cx = float((nxs.min() + nxs.max()) / 2) if len(nxs) else 0.0
+    own_bot = int(np.where(alpha > 0.6)[0].max()) + 1                                               # maskenin en alt satırı (yatan gövde/kılıç = zemin)
+    recs.append(dict(img=np.dstack([col, alpha * 255])[y0:y1, x0:x1].astype(np.uint8), ax=ax - x0, bot=bot + 1 - y0, h=bot - top + 1, bh=bh, x0=x0, y0=y0, abs_bot=bot + 1, lab_top=lab_top, lab_cx=lab_cx, own_bot=own_bot))
+if a.anchor == 'label':                                        # ölüm gibi gövdenin havaya fırlayıp yere yattığı animasyonlar: x = karenin NUMARA etiketinin ortası (hücre içi kayış korunur), zemin = etiket üstü − sabit boşluk (havadaki kareler); --land karesinden itibaren (yatış) zemin = kendi en alt satırı
+    L0 = a.land or N + 1; goff = float(np.median([r['lab_top'] - r['own_bot'] for r in recs[L0 - 1:]])) if L0 <= N else 22.0
+    for k, r in enumerate(recs, 1):
+        r['ax'] = r['lab_cx'] - r['x0']; r['bot'] = (r['own_bot'] - r['y0']) if k >= L0 else (r['lab_top'] - goff - r['y0'])
+    print('etiket çapası: boşluk', round(goff, 1), 'px; yatış karesi', L0)
 if a.grid:                                                  # düşme/ölüm gibi gövdenin yer değiştirdiği animasyonlar: kare konumu sayfa ızgarasına göre korunur (x = hücre merkezi, yer = 1. karenin zemin çizgisi, satır ofsetiyle)
     cw, ch = W / a.cols, H / a.rows; g1 = recs[0]['abs_bot']
     for k, r in enumerate(recs):
