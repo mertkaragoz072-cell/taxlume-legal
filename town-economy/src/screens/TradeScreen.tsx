@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { BargainingModal } from "../components/BargainingModal";
 import { CaravanRoad } from "../components/CaravanRoad";
+import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
@@ -420,7 +421,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                     style={[styles.heatmapGoodCell, g.id === goodId && { borderColor: g.color }]}
                     scaleTo={0.95}
                   >
-                    <Text style={styles.heatmapGoodIcon}>{g.icon}</Text>
+                    <GoodIcon id={g.id} fallback={g.icon} size={17} />
                   </ScalePressable>
                   {ALL_TOWNS.map((tn) => {
                     const pct = cellPct(g, tn);
@@ -972,7 +973,6 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     marginRight: 2,
   },
-  heatmapGoodIcon: { fontSize: 17 },
   heatmapCell: {
     flex: 1,
     height: 34,

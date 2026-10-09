@@ -19,6 +19,7 @@ import { BuySellPanel } from "../components/BuySellPanel";
 import { DemandForecastCard } from "../components/DemandForecastCard";
 import { SeasonStrip } from "../components/SeasonStrip";
 import { GoodCard } from "../components/GoodCard";
+import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ProductionChainLine } from "../components/ProductionChainLine";
@@ -155,9 +156,16 @@ export function MarketScreen({ sounds }: Props) {
           <View style={styles.pulseMoversRow}>
             <View style={styles.pulseMover}>
               <Text style={styles.pulseMoverLabel}>{t("market.pulse.topGainer")}</Text>
-              <Text style={styles.pulseMoverGood} numberOfLines={1}>
-                {marketPulse.topGainer.good.icon} {t(marketPulse.topGainer.good.nameKey)}
-              </Text>
+              <View style={styles.pulseMoverRow}>
+                <GoodIcon
+                  id={marketPulse.topGainer.good.id}
+                  fallback={marketPulse.topGainer.good.icon}
+                  size={TYPE.title}
+                />
+                <Text style={styles.pulseMoverGood} numberOfLines={1}>
+                  {t(marketPulse.topGainer.good.nameKey)}
+                </Text>
+              </View>
               <Text style={[styles.pulseMoverPct, { color: COLORS.positive }]}>
                 {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
                 {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
@@ -166,9 +174,16 @@ export function MarketScreen({ sounds }: Props) {
             <View style={styles.pulseMoverDivider} />
             <View style={styles.pulseMover}>
               <Text style={styles.pulseMoverLabel}>{t("market.pulse.topLoser")}</Text>
-              <Text style={styles.pulseMoverGood} numberOfLines={1}>
-                {marketPulse.topLoser.good.icon} {t(marketPulse.topLoser.good.nameKey)}
-              </Text>
+              <View style={styles.pulseMoverRow}>
+                <GoodIcon
+                  id={marketPulse.topLoser.good.id}
+                  fallback={marketPulse.topLoser.good.icon}
+                  size={TYPE.title}
+                />
+                <Text style={styles.pulseMoverGood} numberOfLines={1}>
+                  {t(marketPulse.topLoser.good.nameKey)}
+                </Text>
+              </View>
               <Text style={[styles.pulseMoverPct, { color: COLORS.negative }]}>
                 {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
               </Text>
@@ -217,9 +232,10 @@ export function MarketScreen({ sounds }: Props) {
         />
         <View style={styles.chartHeaderRow}>
           <View>
-            <Text style={styles.chartTitle}>
-              {selected.icon} {t(selected.nameKey)}
-            </Text>
+            <View style={styles.chartTitleRow}>
+              <GoodIcon id={selected.id} fallback={selected.icon} size={TYPE.heading} />
+              <Text style={styles.chartTitle}>{t(selected.nameKey)}</Text>
+            </View>
             <Text style={styles.chartSubtitle}>{t(selected.producerKey)}</Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>
@@ -295,7 +311,7 @@ export function MarketScreen({ sounds }: Props) {
                 {/* The good's own icon, full size and in its own color
                     rather than greyed out — this is a preview of a reward,
                     not a dead slot, so it should look like one. */}
-                <Text style={styles.lockedIcon}>{g.icon}</Text>
+                <GoodIcon id={g.id} fallback={g.icon} size={TYPE.heading} style={styles.lockedIcon} />
                 <Text style={styles.lockedName} numberOfLines={1}>
                   {t(g.nameKey)}
                 </Text>
@@ -436,7 +452,7 @@ export function MarketScreen({ sounds }: Props) {
           <View key={rule.id} style={styles.autoTradeRow}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
             <View style={[styles.autoTradeAccent, { backgroundColor: ruleGood.color }]} />
-            <Text style={styles.autoTradeRowIcon}>{ruleGood.icon}</Text>
+            <GoodIcon id={ruleGood.id} fallback={ruleGood.icon} size={22} style={styles.autoTradeRowIcon} />
             <View style={{ flex: 1 }}>
               <Text style={styles.autoTradeRowTitle}>
                 {rule.side === "buy" ? "📉" : "📈"} {t(ruleGood.nameKey)}
@@ -506,11 +522,13 @@ const styles = StyleSheet.create({
   pulseMover: { flex: 1 },
   pulseMoverDivider: { width: 1, alignSelf: "stretch", backgroundColor: "#3a2d1e", marginHorizontal: SPACING.md },
   pulseMoverLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 3 },
+  pulseMoverRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   pulseMoverGood: {
     color: COLORS.textPrimary,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
+    flexShrink: 1,
   },
   pulseMoverPct: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginTop: 2 },
   seasonalCard: {
@@ -556,6 +574,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: SPACING.sm,
   },
+  chartTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   chartTitle: {
     color: COLORS.textPrimary,
     fontSize: TYPE.title,
@@ -606,7 +625,7 @@ const styles = StyleSheet.create({
   // Full size and full color — this is a preview of a reward waiting at a
   // rank, not a greyed-out dead slot, so only the icon gets a touch of
   // dimming rather than the whole card.
-  lockedIcon: { fontSize: TYPE.heading, opacity: 0.75 },
+  lockedIcon: { opacity: 0.75 },
   lockedName: {
     color: COLORS.textPrimary,
     fontSize: TYPE.label,
@@ -712,7 +731,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   autoTradeAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
-  autoTradeRowIcon: { fontSize: 22, marginRight: SPACING.sm + 2 },
+  autoTradeRowIcon: { marginRight: SPACING.sm + 2 },
   autoTradeRowTitle: {
     color: COLORS.textPrimary,
     fontWeight: WEIGHT.bold,

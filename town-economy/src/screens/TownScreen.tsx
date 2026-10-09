@@ -28,6 +28,7 @@ import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townR
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "../economy/workers";
+import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
@@ -606,7 +607,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
             <View key={g.id} style={styles.workerCard}>
               <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
               <View style={[styles.workerAccent, { backgroundColor: g.color }]} />
-              <Text style={styles.workerIcon}>{g.icon}</Text>
+              <GoodIcon id={g.id} fallback={g.icon} size={22} style={styles.workerIcon} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.workerName}>{t(g.nameKey)}</Text>
                 {count > 0 && (
@@ -954,7 +955,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   workerAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
-  workerIcon: { fontSize: 22, marginRight: SPACING.md },
+  workerIcon: { marginRight: SPACING.md },
   workerName: {
     color: COLORS.textPrimary,
     fontWeight: WEIGHT.bold,
