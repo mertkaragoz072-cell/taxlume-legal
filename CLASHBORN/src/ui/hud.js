@@ -63,7 +63,7 @@ export function hideGameOver() { el.gameover.classList.add('hidden'); }
 export function drawAvatar() {
   const cv = document.getElementById('avatar'); if (!cv) return;
   const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height);
-  const bigPortrait = { female: 'female_portrait', heroine: 'heroine_portrait' }[HERO.id];
+  const bigPortrait = { male: 'male_portrait', female: 'female_portrait', heroine: 'heroine_portrait' }[HERO.id];
   if (bigPortrait) {                                 // büyük portre: kare kırp, daire içine sığdır
     const img = Assets.get(bigPortrait); if (!img) return;
     const s = Math.min(img.width, img.height); ctx.drawImage(img, (img.width - s) / 2, 0, s, s, 0, 0, cv.width, cv.height); return;

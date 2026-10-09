@@ -36,7 +36,7 @@ function restart() {
 }
 
 // Karakter seçim ekranı: kartlara dokununca o kahraman seçilir, oyun başlar. Seçim bir sonraki açılış için hatırlanır (vurgulanır).
-const PORTRAITS = { male: () => ({ img: 'male_idle_01', crop: CONFIG.hud.avatar.crop }), heroine: () => ({ img: 'heroine_portrait', crop: null }) };
+const PORTRAITS = { male: () => ({ img: 'male_portrait', crop: null }), heroine: () => ({ img: 'heroine_portrait', crop: null }) };
 function chooseHero() {
   return new Promise((resolve) => {
     const last = Save.lastHero();

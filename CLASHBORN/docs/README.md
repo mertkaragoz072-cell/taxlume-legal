@@ -395,3 +395,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - **Yeni `--anchor label`:** gövdenin havaya fırlayıp yere yattığı animasyonlar için. x = karenin numara etiketinin ortası (karakterin hücre içindeki kayışı korunur); zemin = etiket üstü − sabit boşluk (havadaki kareler); `--land` karesinden itibaren (yatış) zemin = kendi en alt satırı. Etiket = hücrenin en alttaki küçük bileşenleri (eldiven/kabza etiket sanılmaz).
 - Oyunda kare 3–24 (22 kare; 1–2 ayakta, 25–30 yatış tekrarı silindi), süre 0.84 sn: savrulma hızlı (0.034), yere çarpma/seken 0.04, yatış 0.045; son kare tutulur. Yere çarpış (kare 13 → indeks 10): iki toz patlaması + sarsıntı (`dust`, `shake`; artık kare tabanlı erkek de bunları kullanır, `systems.js`).
 - Eski düşük çözünürlüklü `death_01..09` kareleri silindi. Sıradaki (erkek): portre.
+
+## Faz 64 — Erkek kahraman portresi (erkek seti tamamlandı)
+- Kaynak: `references/nexora_male_portrait_source.webp` (1254², siyah zeminli). Siyah zemin kenardan taşırma (yalnız üst/yan kenarlardan, `mx<16`) + opening ile ince köprüler kesilerek alfaya çevrildi; koyu zırh kapalı kalır. 512² RGBA → `assets/characters/male/portraits/male_portrait.png` (manifest `male_portrait`).
+- Seçim kartı ve HUD avatarı artık bu portreyi kullanır (`main.js` PORTRAITS, `hud.js` bigPortrait). Eski idle-kare baş kırpması kullanılmıyor.
+- **Erkek kahraman tamam:** bekleme, koşu, saldırı, hasar, ölüm (hepsi 30 karelik HD) + portre. Sıradaki: dünya 1 üç ayrı boss, isteğe bağlı özel goblinler.
