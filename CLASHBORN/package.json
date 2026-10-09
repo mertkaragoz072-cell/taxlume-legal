@@ -1,0 +1,18 @@
+{
+  "name": "clashborn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CLASHBORN — mobil yatay 2D aksiyon RPG (HTML5 Canvas, motorsuz)",
+  "scripts": {
+    "serve": "python3 -m http.server 8123",
+    "test": "node tools/tests/run_all.js",
+    "test:offline": "node tools/tests/offline_sw.js",
+    "balance": "node tools/tests/balance_sim.js",
+    "build:sw": "python3 tools/build_sw.py",
+    "build:www": "python3 tools/build_sw.py && python3 tools/build_www.py",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npm run build:www && npx cap sync",
+    "cap:open:android": "npx cap open android"
+  },
+  "devDependencies": { "@capacitor/cli": "^6.0.0", "@capacitor/core": "^6.0.0", "@capacitor/android": "^6.0.0", "@capacitor/ios": "^6.0.0", "playwright": "^1.45.0" }
+}

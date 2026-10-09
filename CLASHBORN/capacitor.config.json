@@ -1,0 +1,9 @@
+{
+  "appId": "com.nexora.game",
+  "appName": "CLASHBORN",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#2f86e6",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}
