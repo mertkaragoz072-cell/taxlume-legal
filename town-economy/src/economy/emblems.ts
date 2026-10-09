@@ -61,6 +61,10 @@ export const TOWN_EMBLEMS: TownEmblemDef[] = [
     unlockedBy: (s) => s.workersUnlocked && Object.values(s.workers).reduce((sum, n) => sum + n, 0) >= 10,
   },
   { id: "hourglass", icon: "⏳", hintKey: "emblem.hourglass.hint", unlockedBy: (s) => s.prestigeLevel >= 3 },
+  // The only emblem that isn't a milestone read off existing lifetime
+  // progress — it requires actually catching the festival window (see
+  // townFestival.ts), so it's backed by its own sticky flag instead.
+  { id: "festival", icon: "🎪", hintKey: "emblem.festival.hint", unlockedBy: (s) => s.festivalEmblemEarned },
 ];
 
 export const TOWN_EMBLEMS_BY_ID: Record<string, TownEmblemDef> = Object.fromEntries(

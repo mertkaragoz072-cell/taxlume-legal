@@ -457,6 +457,12 @@ export interface EconomyState {
   rivalActivities: RivalTraderActivity[];
   /** whether the player has sent their first caravan; triggers tutorial on initial send */
   firstCaravanSent: boolean;
+  /** this month's festival goal while its window is open; null otherwise —
+   * see ensureFestivalProgress in useEconomy.ts */
+  festivalProgress: FestivalProgress | null;
+  /** set for good once a festival goal is ever cleared; sticky, never
+   * re-locks, and the only way to unlock the "festival" emblem */
+  festivalEmblemEarned: boolean;
 }
 
 export interface WeeklyChallenge {
@@ -469,6 +475,22 @@ export interface WeeklyChallenge {
   /** the template's target/reward, scaled by rank at assignment time (see
    * scaledGoalTarget/scaledGoalReward) and snapshotted here — like a daily
    * quest's own target/reward, so a mid-week rank-up can't move the goal. */
+  target: number;
+  reward: number;
+}
+
+/** this real calendar month's festival goal — only assigned while the
+ * window is open (see isFestivalWindowOpen in townFestival.ts); null the
+ * rest of the month. Clearing it before the window closes sets
+ * festivalEmblemEarned, a separate lifetime flag, since this itself gets
+ * replaced (and the un-claimed state lost) once the window reopens next month. */
+export interface FestivalProgress {
+  monthKey: string;
+  /** festivalMetric(stats) read when the window opened — progress is the
+   * current value of that same metric minus this baseline */
+  startValue: number;
+  claimed: boolean;
+  /** scaled by rank at assignment time, like WeeklyChallenge's own target/reward */
   target: number;
   reward: number;
 }

@@ -33,6 +33,7 @@ import {
   TICKS_PER_GAME_DAY,
   addAutoTradeRule,
   applyAutoTradeRules,
+  applyFestivalClaim,
   applyMythicUnlock,
   applyWeeklyChallengeClaim,
   chooseDoctrine,
@@ -1049,6 +1050,91 @@ describe("applyWeeklyChallengeClaim", () => {
     const claimed = applyWeeklyChallengeClaim(withProgress);
     const next = applyWeeklyChallengeClaim(claimed);
     expect(next).toBe(claimed);
+  });
+});
+
+describe("dailyCheckIn / festival assignment", () => {
+  it("assigns a festival goal on a check-in inside the window", () => {
+    const next = dailyCheckIn(initialState(), "2026-03-02");
+    expect(next.festivalProgress).not.toBeNull();
+    expect(next.festivalProgress!.claimed).toBe(false);
+    expect(next.festivalProgress!.monthKey).toBe("2026-03");
+  });
+
+  it("assigns nothing outside the window", () => {
+    const next = dailyCheckIn(initialState(), "2026-03-10");
+    expect(next.festivalProgress).toBeNull();
+  });
+
+  it("keeps the same festival goal across check-ins within the window", () => {
+    const first = dailyCheckIn(initialState(), "2026-03-01");
+    const second = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-03-01" } },
+      "2026-03-02"
+    );
+    expect(second.festivalProgress!.startValue).toBe(first.festivalProgress!.startValue);
+  });
+
+  it("clears the festival goal once the window closes", () => {
+    const first = dailyCheckIn(initialState(), "2026-03-02");
+    const after = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-03-02" } },
+      "2026-03-10"
+    );
+    expect(after.festivalProgress).toBeNull();
+  });
+
+  it("assigns a fresh festival goal once next month's window opens", () => {
+    const first = dailyCheckIn(initialState(), "2026-03-01");
+    const nextMonth = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-03-01" } },
+      "2026-04-01"
+    );
+    expect(nextMonth.festivalProgress).not.toBeNull();
+    expect(nextMonth.festivalProgress!.monthKey).toBe("2026-04");
+    expect(nextMonth.festivalProgress!.claimed).toBe(false);
+  });
+});
+
+describe("applyFestivalClaim", () => {
+  it("does nothing before the target is reached", () => {
+    const state = dailyCheckIn(initialState(), "2026-03-02");
+    const next = applyFestivalClaim(state);
+    expect(next.festivalProgress!.claimed).toBe(false);
+    expect(next.festivalEmblemEarned).toBe(false);
+    expect(next.cash).toBe(state.cash);
+  });
+
+  it("pays out the reward and unlocks the emblem once trades cross the target", () => {
+    const checkedIn = dailyCheckIn(initialState(), "2026-03-02");
+    const target = checkedIn.festivalProgress!.target;
+    const state = {
+      ...checkedIn,
+      stats: { ...checkedIn.stats, totalTrades: checkedIn.festivalProgress!.startValue + target },
+    };
+    const next = applyFestivalClaim(state);
+    expect(next.festivalProgress!.claimed).toBe(true);
+    expect(next.festivalEmblemEarned).toBe(true);
+    expect(next.cash).toBeCloseTo(state.cash + checkedIn.festivalProgress!.reward, 6);
+  });
+
+  it("is a no-op once already claimed", () => {
+    const checkedIn = dailyCheckIn(initialState(), "2026-03-02");
+    const target = checkedIn.festivalProgress!.target;
+    const withProgress = {
+      ...checkedIn,
+      stats: { ...checkedIn.stats, totalTrades: checkedIn.festivalProgress!.startValue + target },
+    };
+    const claimed = applyFestivalClaim(withProgress);
+    const next = applyFestivalClaim(claimed);
+    expect(next).toBe(claimed);
+  });
+
+  it("does nothing while no festival is active", () => {
+    const state = dailyCheckIn(initialState(), "2026-03-10");
+    expect(state.festivalProgress).toBeNull();
+    const next = applyFestivalClaim(state);
+    expect(next).toBe(state);
   });
 });
 

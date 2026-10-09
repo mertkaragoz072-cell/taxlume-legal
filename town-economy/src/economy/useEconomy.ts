@@ -22,6 +22,13 @@ import {
   WEEKLY_CHALLENGE_TEMPLATES_BY_ID,
   weeklyChallengeTemplateForWeek,
 } from "./weeklyChallenges";
+import {
+  FESTIVAL_GOAL_TRADES,
+  FESTIVAL_REWARD_CASH,
+  festivalMetric,
+  festivalMonthKey,
+  isFestivalWindowOpen,
+} from "./townFestival";
 import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
@@ -40,6 +47,7 @@ import {
   ContractDirection,
   EconomyEvent,
   EconomyState,
+  FestivalProgress,
   ForeignTownState,
   ForwardContract,
   Good,
@@ -422,6 +430,8 @@ export function initialState(
     // from the beginning rather than only later, see rivals.ts.
     rivalActivities: RIVAL_TRADERS.map((r) => rollRivalActivity(r.id, 0, TICKS_PER_GAME_DAY, day1GoodIds)),
     firstCaravanSent: false,
+    festivalProgress: null,
+    festivalEmblemEarned: false,
   };
 }
 export function todayString(): string {
@@ -914,6 +924,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
       productionQuotas: generateDailyQuotas(),
       productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
       weeklyChallenge: ensureWeeklyChallenge(state, today),
+      festivalProgress: ensureFestivalProgress(state, today),
     };
   }
 
@@ -946,6 +957,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     productionQuotas: generateDailyQuotas(),
     productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     weeklyChallenge: ensureWeeklyChallenge(state, today),
+    festivalProgress: ensureFestivalProgress(state, today),
   };
 }
 // Deterministic on the ISO week number, not RNG — every player sees the same
@@ -990,6 +1002,48 @@ export function applyWeeklyChallengeClaim(state: EconomyState): EconomyState {
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
     weeklyChallenge: { ...wc, claimed: true },
+  };
+}
+// Checked on every check-in, same as ensureWeeklyChallenge — only assigns a
+// goal while the window is open, and clears it the moment the window closes
+// so a stale, un-claimable goal never lingers on screen the other 27+ days
+// of the month.
+function ensureFestivalProgress(state: EconomyState, today: string): FestivalProgress | null {
+  if (!isFestivalWindowOpen(today)) return null;
+  const monthKey = festivalMonthKey(today);
+  if (state.festivalProgress && state.festivalProgress.monthKey === monthKey) return state.festivalProgress;
+  return {
+    monthKey,
+    startValue: festivalMetric(state.stats),
+    claimed: false,
+    target: scaledGoalTarget(FESTIVAL_GOAL_TRADES, state.townRankIndex),
+    reward: scaledGoalReward(FESTIVAL_REWARD_CASH, state.townRankIndex),
+  };
+}
+// Runs once per tick, right after tick() — auto-claims the moment progress
+// reaches the target, same as applyWeeklyChallengeClaim. Also sets the
+// sticky festivalEmblemEarned flag, since festivalProgress itself gets
+// replaced with null once the window closes.
+export function applyFestivalClaim(state: EconomyState): EconomyState {
+  const fp = state.festivalProgress;
+  if (!fp || fp.claimed) return state;
+  const progress = festivalMetric(state.stats) - fp.startValue;
+  if (progress < fp.target) return state;
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...eventFields(state.language, "msg.festivalComplete", {
+      amount: formatNumberUtil(fp.reward, state.language),
+    }),
+    tone: "good",
+  };
+  return {
+    ...state,
+    cash: state.cash + fp.reward,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    festivalProgress: { ...fp, claimed: true },
+    festivalEmblemEarned: true,
   };
 }
 function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
@@ -1348,7 +1402,7 @@ function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
-      return applyWeeklyChallengeClaim(applyAutoTradeRules(tick(state)));
+      return applyFestivalClaim(applyWeeklyChallengeClaim(applyAutoTradeRules(tick(state))));
     case "SELECT_GOOD":
       return { ...state, selectedGood: action.goodId };
     case "TRADE":

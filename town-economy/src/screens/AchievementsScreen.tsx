@@ -24,6 +24,7 @@ import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
 import { RESEARCH_NODES } from "../economy/research";
 import { decodeSaveCode, encodeSaveCode } from "../economy/saveCode";
 import { TOWNS } from "../economy/towns";
+import { festivalMetric } from "../economy/townFestival";
 import { gameDayFromTick, isGoodUnlocked, RIVAL_TOWN_GRACE_DAYS, TICK_MS } from "../economy/useEconomy";
 import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../economy/weeklyChallenges";
 import {
@@ -60,6 +61,7 @@ export function AchievementsScreen() {
   const weeklyChallengeTemplate = weeklyChallenge
     ? WEEKLY_CHALLENGE_TEMPLATES_BY_ID[weeklyChallenge.templateId]
     : null;
+  const festivalProgress = state.festivalProgress;
 
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [importText, setImportText] = useState("");
@@ -268,7 +270,10 @@ export function AchievementsScreen() {
           {(() => {
             const current = Math.max(
               0,
-              Math.min(weeklyChallengeTemplate.metric(state.stats) - weeklyChallenge.startValue, weeklyChallenge.target)
+              Math.min(
+                weeklyChallengeTemplate.metric(state.stats) - weeklyChallenge.startValue,
+                weeklyChallenge.target
+              )
             );
             const pct = weeklyChallenge.target > 0 ? current / weeklyChallenge.target : 0;
             return (
@@ -298,6 +303,51 @@ export function AchievementsScreen() {
                       : t("achievements.weeklyChallengeProgress", {
                           current: Math.floor(current),
                           target: weeklyChallenge.target,
+                        })}
+                  </Text>
+                </View>
+              </View>
+            );
+          })()}
+        </>
+      )}
+
+      {festivalProgress && (
+        <>
+          <SectionLabel text={t("achievements.festivalSectionLabel")} color="#e8c777" />
+          {(() => {
+            const current = Math.max(
+              0,
+              Math.min(festivalMetric(state.stats) - festivalProgress.startValue, festivalProgress.target)
+            );
+            const pct = festivalProgress.target > 0 ? current / festivalProgress.target : 0;
+            return (
+              <View style={styles.miniQuestCard}>
+                <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.icon}>🎪</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.title, styles.titleUnlocked]}>
+                      {t("achievements.festivalTitle")}
+                    </Text>
+                    <Text style={styles.reward}>
+                      {t("achievements.festivalReward", { amount: festivalProgress.reward })}
+                    </Text>
+                  </View>
+                  <Text style={styles.description}>
+                    {t("achievements.festivalDescription", { target: festivalProgress.target })}
+                  </Text>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
+                    />
+                  </View>
+                  <Text style={styles.progressText}>
+                    {festivalProgress.claimed
+                      ? t("achievements.festivalClaimed")
+                      : t("achievements.festivalProgress", {
+                          current: Math.floor(current),
+                          target: festivalProgress.target,
                         })}
                   </Text>
                 </View>
