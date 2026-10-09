@@ -21,4 +21,6 @@ export const Assets = {
     })));
   },
   get(key) { return this.images[key] || null; },
+  // Bellek: seçilmeyen kahramanın kare setleri (HD karelerde onlarca MB) çözülmüş bitmap olarak tutulmaz; `keep` listesindekiler (portre) kalır.
+  release(prefixes, keep = []) { let n = 0; for (const k of Object.keys(this.images)) if (prefixes.some((p) => k.startsWith(p)) && !keep.includes(k)) { delete this.images[k]; n++; } return n; },
 };

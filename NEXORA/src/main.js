@@ -77,6 +77,7 @@ async function boot() {
   initMeta(); Settings.apply();
 
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
+  Assets.release(HERO.id === 'male' ? ['heroine_', 'female_'] : ['male_', 'female_'], ['heroine_portrait', 'female_portrait']);        // seçilmeyen kahramanın kareleri bellekten atılır
   initHud();
   initWaveHud();
   initBuffs();

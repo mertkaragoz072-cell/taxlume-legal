@@ -365,3 +365,9 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 
 ## Faz 58 — Erkek kahraman koşu animasyonu (30 kare)
 - `extract_enemy_sheet.py male run references/nexora_male_run_source.png --fps 30 --loop --anchor torso --dark --stride 66 --ref-frames 1-30`: yeni `--anchor torso` (koşuda ayaklar açıldığı için x = gövde merkezi; yer = ayakların en alt noktası). Boy 97 birim (ölçek 0.581). Oyunda koşu karesi kat edilen mesafeye bağlı (`strideUnits` 2.7; erkek de artık ayak kaydırmaz). Sıradaki: saldırı, hasar, ölüm, portre.
+
+## Faz 59 — Bütünlük denetimi (HD kare setleri sonrası)
+- **Bulgu (bellek):** HD kareler yüklenince çözülmüş bitmap toplamı ≈ 204 MB (düşman HD 92, kadın 55, erkek 32…) + sınırsız renk-kaydırma/beyaz-parlama önbellekleri (en kötü durumda yüzlerce MB) → telefonda çökme riski.
+- **Düzeltmeler:** `Assets.release()` ile seçilmeyen kahramanın kare setleri seçimden sonra bellekten atılır (erkek seçilince 142 MB, kadın seçilince 172 MB; portre korunur); renk-kaydırma önbelleği LRU (160), beyaz silüet önbelleği LRU (220).
+- Denetim: ESLint 0 hata, 19 test, çevrimdışı test, her iki kahramanla gerçek akış (seçim ekranından kart tıklama → 150 sn oyun: istisna yok), erkek durum geçişleri (boy 92–98 birim, ayak çizgisi ±6 birim içinde), tüm düşman/boss/evren akışı (önceki soak).
+- Bilinen: kadın seçiliyken ≈ 172 MB hâlâ yüksek (düşman HD kareleri 92 MB); gerekirse HD kareleri ekran çözünürlüğüne (≈ %70) küçültüp yeniden üretmek veya evren başına tembel yükleme eklenebilir. Gerçek cihaz bellek ölçümü yapılmadı.

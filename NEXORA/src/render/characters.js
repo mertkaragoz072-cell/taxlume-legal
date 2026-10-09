@@ -287,7 +287,7 @@ function whiteSilhouette(img, key, color = '#fff') {
   if (whiteCache.has(id)) return whiteCache.get(id);
   const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
   const g = cv.getContext('2d'); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, cv.width, cv.height);
-  whiteCache.set(id, cv); return cv;
+  whiteCache.set(id, cv); if (whiteCache.size > 220) whiteCache.delete(whiteCache.keys().next().value); return cv;
 }
 
 // Güneşten düşen gölge: sprite silüeti ayaklardan yere yatırılır (dikey çevrilip 0.2'ye ezilir, güneş solda → sağa doğru uzar).
@@ -316,9 +316,9 @@ function enemyFrame(en, meta) {
 }
 
 // Düşman renk kaydırma (enemies.json → tint {hue,sat,light}): evrene özel düşman varyantları için; kare başına bir kez hesaplanıp önbelleğe alınır (özel sprite gelince kaldırılır).
-const tintCache = new Map();
+const tintCache = new Map(), TINT_MAX = 160;                        // LRU: yüksek çözünürlüklü karelerde sınırsız önbellek yüzlerce MB tutardı
 function tintedFrame(img, key, t) {
-  const k = key + '|' + t.hue + '|' + (t.sat ?? 1) + '|' + (t.light ?? 1); let cv = tintCache.get(k); if (cv) return cv;
+  const k = key + '|' + t.hue + '|' + (t.sat ?? 1) + '|' + (t.light ?? 1); let cv = tintCache.get(k); if (cv) { tintCache.delete(k); tintCache.set(k, cv); return cv; }
   cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
   const d = g.getImageData(0, 0, cv.width, cv.height), px = d.data, a = t.hue * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), S = t.sat ?? 1, L = t.light ?? 1;
   const m = [0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928, 0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283, 0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072];
@@ -331,7 +331,7 @@ function tintedFrame(img, key, t) {
     let R = r + (m[0] * r + m[1] * gg + m[2] * b - r) * w, G = gg + (m[3] * r + m[4] * gg + m[5] * b - gg) * w, B = b + (m[6] * r + m[7] * gg + m[8] * b - b) * w; const y = 0.3 * R + 0.59 * G + 0.11 * B, ww = Math.max(w, 0.35);
     px[i] = Math.max(0, Math.min(255, (y + (R - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww))); px[i + 1] = Math.max(0, Math.min(255, (y + (G - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww))); px[i + 2] = Math.max(0, Math.min(255, (y + (B - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww)));
   }
-  g.putImageData(d, 0, 0); tintCache.set(k, cv); return cv;
+  g.putImageData(d, 0, 0); tintCache.set(k, cv); if (tintCache.size > TINT_MAX) tintCache.delete(tintCache.keys().next().value); return cv;
 }
 
 export function drawEnemy(ctx, en) {
