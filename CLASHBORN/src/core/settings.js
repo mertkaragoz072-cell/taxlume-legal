@@ -18,7 +18,7 @@ export const Settings = {
     const g = document.getElementById('game'); if (g) { g.classList.toggle('lefty', S.lefty); g.classList.toggle('big', S.bigButtons); g.classList.toggle('cb', S.colorblind); g.classList.toggle('lowfx', S.lowFx); }
     const fp = document.getElementById('fps'); if (fp) fp.classList.toggle('hidden', !S.showFps);
     Audio.setChannels?.(S.music, S.sfx);
-    const cap = S.lowFx ? Math.min(View.dprCap, 1.5) : Math.max(View.dprCap, 2);        // düşük efekt: çözünürlük ≤ 1.5×; kapanınca üst sınır geri (yavaş cihazda uyarlanabilir çözünürlük yine düşürür)
+    const cap = S.lowFx ? Math.min(View.dprCap, 1.5) : View.tierCap;        // düşük efekt: çözünürlük ≤ 1.5×; kapanınca üst sınır geri (yavaş cihazda uyarlanabilir çözünürlük yine düşürür)
     if (cap !== View.dprCap) { View.dprCap = cap; window.dispatchEvent(new Event('resize')); }
   },
 };

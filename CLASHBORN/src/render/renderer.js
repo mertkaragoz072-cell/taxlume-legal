@@ -19,7 +19,7 @@ function actorsLayer() {
 // Çizim sırası: gökyüzü/parallax → gezegen+arka dekor → coin → düşman → oyuncu → slash → ön plan dekoru → yazılar
 export function render(ctx) {
   ctx.setTransform(View.dpr, 0, 0, View.dpr, 0, 0);
-  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';    // resize sonrası canvas durumu sıfırlanır; her karede garanti et
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = View.smooth;    // resize sonrası canvas durumu sıfırlanır; her karede garanti et
   ctx.save();
   const q = (v) => Math.round(v * View.dpr) / View.dpr, shk = state.shake * shakeScale(), sh = shk > 0 ? [q(rand(-shk, shk) * 0.5), q(rand(-shk, shk) * 0.5)] : [0, 0];   // sarsıntı cihaz pikseline yuvarlanır (zemin keskin kalsın)
   ctx.translate(sh[0], sh[1]);
@@ -32,7 +32,7 @@ export function render(ctx) {
   const lc = actorsLayer(), lg = lc.g;
   const by0 = Math.max(0, Math.floor(View.heroY - 340 * View.scale)), bh = Math.min(View.h, Math.ceil(View.heroY + 140 * View.scale)) - by0;   // yalnız aktörlerin bulunduğu yatay bant temizlenir/bindirilir (performans)
   lg.setTransform(View.dpr, 0, 0, View.dpr, 0, 0); lg.clearRect(0, by0 - 8, View.w, bh + 16);
-  lg.imageSmoothingEnabled = true; lg.imageSmoothingQuality = 'high';
+  lg.imageSmoothingEnabled = true; lg.imageSmoothingQuality = View.smooth;
   for (const en of state.enemies.slice().sort((p, q) => q.a - p.a)) if (visible(en.a)) { drawEnemy(lg, en); if (!en.dead) groundBounce(lg, en.a, (en.def.width || 80) * 0.8, en.def.boss ? 120 : 70); }
   drawPlayer(lg); groundBounce(lg, state.player.a, 70, 80);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); { const d = View.dpr, y = Math.max(0, Math.round((by0 - 8) * d)), hh = Math.min(lc.height - y, Math.round((bh + 16) * d)); ctx.drawImage(lc, 0, y, lc.width, hh, sh[0] * d, y + sh[1] * d, lc.width, hh); } ctx.restore();

@@ -11,22 +11,27 @@ export function initHud() {
 }
 
 const skillEls = {};
+// Her karede DOM'a yazmak (stil/metin) iOS'ta her seferinde stil + boyama tetikler; değer değişmediyse yazılmaz.
+const memo = new WeakMap();
+const same = (e, k, v) => { let m = memo.get(e); if (!m) memo.set(e, m = {}); if (m[k] === v) return true; m[k] = v; return false; };
+const setText = (e, v) => { if (!same(e, 't', v)) e.textContent = v; };
+const setVar = (e, name, v) => { if (!same(e, name, v)) e.style.setProperty(name, v); };
 // Yetenek düğmeleri: bekleme süresi daire dilimi (--cd), hazırken parlama, seviye açılmamışsa gri
 function updateDodgeButton() {
   const b = skillEls.dodge || (skillEls.dodge = document.getElementById('btn-dodge')); if (!b) return;
   const cd = state.player.dodgeCd / CONFIG.dodge.cooldown;
-  b.style.setProperty('--cd', cd.toFixed(3)); b.classList.toggle('ready', cd <= 0); b.classList.toggle('cooling', cd > 0);
-  const tx = b.querySelector('.cdtxt'); if (tx) tx.textContent = state.player.dodgeCd > 0 ? (state.player.dodgeCd >= 1 ? Math.ceil(state.player.dodgeCd) : state.player.dodgeCd.toFixed(1)) : '';
+  setVar(b, '--cd', cd.toFixed(2)); b.classList.toggle('ready', cd <= 0); b.classList.toggle('cooling', cd > 0);
+  const tx = b.querySelector('.cdtxt'); if (tx) setText(tx, state.player.dodgeCd > 0 ? (state.player.dodgeCd >= 1 ? Math.ceil(state.player.dodgeCd) : state.player.dodgeCd.toFixed(1)) : '');
 }
 function updateSkillButtons() {
   updateDodgeButton();
   for (const id of Object.keys(SKILLS)) {
     const b = skillEls[id] || (skillEls[id] = document.getElementById('btn-' + id)); if (!b) continue;
     const sk = SKILLS[id], locked = state.player.level < sk.unlockLevel, cd = locked ? 1 : state.skillCd[id] / sk.cooldown;
-    b.style.setProperty('--cd', cd.toFixed(3)); b.classList.toggle('locked', locked); b.classList.toggle('ready', !locked && cd <= 0);
+    setVar(b, '--cd', cd.toFixed(2)); b.classList.toggle('locked', locked); b.classList.toggle('ready', !locked && cd <= 0);
     const tx = b.querySelector('.cdtxt'); const rem = locked ? 0 : state.skillCd[id];
-    b.classList.toggle('cooling', rem > 0); if (tx) tx.textContent = rem > 0 ? (rem >= 1 ? Math.ceil(rem) : rem.toFixed(1)) : '';
-    b.title = locked ? `${sk.name} — Seviye ${sk.unlockLevel}'de açılır` : sk.name;
+    b.classList.toggle('cooling', rem > 0); if (tx) setText(tx, rem > 0 ? (rem >= 1 ? Math.ceil(rem) : rem.toFixed(1)) : '');
+    const ttl = locked ? `${sk.name} — Seviye ${sk.unlockLevel}'de açılır` : sk.name; if (!same(b, 'title', ttl)) b.title = ttl;
   }
 }
 
@@ -36,18 +41,18 @@ function updateCombo() {
   const c = state.combo, n = c.n; let bonus = 0; for (const [at, v] of CONFIG.combo.tiers) if (n >= at) bonus = v;
   const txt = n >= 3 ? `🔥 ×${n} KOMBO${bonus ? ` · +%${Math.round(bonus * 100)}` : ''}` : '';
   if (txt !== comboLast) { comboLast = txt; comboEl.textContent = txt; comboEl.classList.toggle('on', !!txt); if (txt) { comboEl.classList.remove('bump'); void comboEl.offsetWidth; comboEl.classList.add('bump'); } }
-  comboEl.style.setProperty('--t', Math.max(0, c.t / CONFIG.combo.window).toFixed(2));
+  setVar(comboEl, '--t', Math.max(0, c.t / CONFIG.combo.window).toFixed(2));
 }
 
 export function updateHud() {
   updateSkillButtons(); updateCombo();
   const p = state.player;
-  el['hud-level'].textContent = p.level;
-  el['hp-fill'].style.width = (p.hp / p.maxHp * 100) + '%';
-  el['hp-text'].textContent = `${Math.ceil(p.hp)} / ${p.maxHp}`;
-  el['xp-fill'].style.width = (p.xp / p.xpNext * 100) + '%';
-  el['hud-coins'].textContent = p.coins;
-  el['hud-gems'].textContent = p.gems;
+  setText(el['hud-level'], p.level);
+  const hw = (p.hp / p.maxHp * 100).toFixed(1) + '%'; if (!same(el['hp-fill'], 'w', hw)) el['hp-fill'].style.width = hw;
+  setText(el['hp-text'], `${Math.ceil(p.hp)} / ${p.maxHp}`);
+  const xw = (p.xp / p.xpNext * 100).toFixed(1) + '%'; if (!same(el['xp-fill'], 'w', xw)) el['xp-fill'].style.width = xw;
+  setText(el['hud-coins'], p.coins);
+  setText(el['hud-gems'], p.gems);
 }
 
 export function showGameOver() {

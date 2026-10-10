@@ -317,10 +317,13 @@ function enemyFrame(en, meta) {
   else if (en.attackT >= 0 && A.attack) { an = 'attack'; t = en.attackT; }
   else { an = 'walk'; t = en.bob / 8; }
   const L = A[an], n = L.frames.length;
-  const idx = an === 'walk' && L.strideUnits ? Math.floor((en.walkD || 0) / L.strideUnits) % n    // yürüme: kat edilen mesafeye bağlı kare (ayak kaymaz)
+  // Hızlı düşmanlar (nominal hız ÷ strideUnits > 52 kare/sn) 60 Hz'de kare atlatır → her ikinci kare kullanılır (aynı mesafede yarım kare sayısı: ayak oturması korunur, atlama yok)
+  const K = an === 'walk' && L.strideUnits && en.def.speed * (en.speedMul || 1) / L.strideUnits > 52 ? 2 : 1;
+  const ph = an === 'walk' && L.strideUnits ? (en.walkD || 0) / (L.strideUnits * K) : 0;
+  const idx = an === 'walk' && L.strideUnits ? (Math.floor(ph) * K) % n     // yürüme: kat edilen mesafeye bağlı kare (ayak kaymaz)
     : L.loop ? Math.floor(t * L.fps) % n : Math.min(n - 1, Math.floor(t * L.fps));
   enemyFrame.nxt = null;
-  if (an === 'walk' && L.strideUnits) { const ph = (en.walkD || 0) / L.strideUnits; enemyFrame.nxt = { key: L.frames[(Math.floor(ph) + 1) % n], f: ph - Math.floor(ph) }; }   // yürüme: ardışık kareler arası çapraz geçiş (döngü dikişi dahil) → kare atlaması/yürüme sıçraması görünmez
+  if (an === 'walk' && L.strideUnits) enemyFrame.nxt = { key: L.frames[(Math.floor(ph) * K + K) % n], f: ph - Math.floor(ph) };   // yürüme: ardışık kareler arası çapraz geçiş (döngü dikişi dahil) → kare atlaması/yürüme sıçraması görünmez
   enemyFrame.anim = L;                                                // animasyon düzeyi pivot/ölçek (yüksek çözünürlüklü kareler tür tuvalinden farklı olabilir)
   return L.frames[idx];
 }

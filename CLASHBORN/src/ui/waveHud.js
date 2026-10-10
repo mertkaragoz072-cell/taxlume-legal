@@ -10,16 +10,16 @@ let bar, fill, trail, hpTxt, disp = 1, dispTrail = 1, wasBoss = false;
 function updateBossBar() {
   bar ||= document.getElementById('boss-bar'); fill ||= document.getElementById('bb-fill'); trail ||= document.getElementById('bb-trail');
   const b = state.enemies.find((e) => e.def.boss && !e.dead);
-  bar.classList.toggle('hidden', !b);
+  if (bar._h !== !b) { bar._h = !b; bar.classList.toggle('hidden', !b); }
   if (!b) { wasBoss = false; return; }
   const k = Math.max(0, b.hp / b.maxHp);
   const nm = b.def.title || 'BOSS'; if (bar.dataset.nm !== nm) { bar.dataset.nm = nm; bar.querySelector('.bb-name').textContent = nm; }
   if (!wasBoss) { disp = dispTrail = k; wasBoss = true; }
   disp += (k - disp) * 0.22;                                    // ana çubuk yumuşak iner
   dispTrail += (k - dispTrail) * 0.05;                          // arkadaki açık "hasar izi" daha yavaş
-  fill.style.width = (disp * 100).toFixed(2) + '%'; trail.style.width = (Math.max(dispTrail, disp) * 100).toFixed(2) + '%';
+  const fw = (disp * 100).toFixed(1) + '%', tw = (Math.max(dispTrail, disp) * 100).toFixed(1) + '%'; if (fill._w !== fw) { fill._w = fw; fill.style.width = fw; } if (trail._w !== tw) { trail._w = tw; trail.style.width = tw; }
   bar.classList.toggle('rage', k <= 0.5 && k > 0.2); bar.classList.toggle('enrage', k <= 0.2);
-  (hpTxt ||= document.getElementById('bb-hp')).textContent = Math.max(0, Math.ceil(b.hp)) + ' / ' + Math.round(b.maxHp);
+  const ht = Math.max(0, Math.ceil(b.hp)) + ' / ' + Math.round(b.maxHp); hpTxt ||= document.getElementById('bb-hp'); if (hpTxt._t !== ht) { hpTxt._t = ht; hpTxt.textContent = ht; }
 }
 export function updateWaveHud() {
   updateBossBar();

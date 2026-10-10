@@ -168,29 +168,39 @@ async function boot() {
   const lvl = events.onLevelUp; events.onLevelUp = (l) => { lvl?.(l); saveNow(); };
   const over = events.onGameOver; events.onGameOver = (st) => { over?.(st); saveNow(); };
 
-  // Uyarlanabilir çözünürlük: kare süresi sürekli >26 ms ise (yavaş cihaz) canvas çözünürlüğü kademeli düşürülür (3 → 2.5 → … → 1.25); geri artmaz.
-  // ?hq=1 ile kapatılır (ekran görüntüsü/test).
-  let slowSum = 0, slowN = 0; const hq = new URLSearchParams(location.search).has('hq');
-  function adaptResolution(raw) {
-    if (hq || raw > 200 || document.hidden) return;                 // sekme dönüşü/duraklama sayılmaz
-    slowSum += raw; if (++slowN < 90) return;
-    const avg = slowSum / slowN; slowSum = 0; slowN = 0;
-    if (avg > 22 && View.dprCap > 1.25 && View.dpr > 1.25) { View.dprCap = Math.max(1.25, View.dprCap - 0.5); View.resize(canvas); }
+  // Uyarlanabilir kalite (yavaş cihaz): ölçülen kare süresi / iş süresi yüksekse kademe artar, geri dönmez. ?hq=1 ile kapatılır (ekran görüntüsü/test).
+  //   0: çözünürlük ≤2×, yüksek kalite yumuşatma   1: orta kalite yumuşatma (CPU tabanlı tuvalde ucuz)   2: ≤1.5×   3: ≤1.25×   4: 30 FPS sabit tempo (düzensiz 35–50 FPS yerine eşit aralık, takılma hissi azalır)
+  // İşletim sistemi 30 FPS'e kısıyorsa (Düşük Güç Modu: aralık ≈33 ms ama iş süresi kısa) kalite düşürülmez.
+  const TIERS = [{ cap: 2, q: 'high' }, { cap: 2, q: 'medium' }, { cap: 1.5, q: 'medium' }, { cap: 1.25, q: 'medium' }, { cap: 1.25, q: 'medium', half: true }];
+  let slowSum = 0, workSum = 0, slowN = 0; const hq = new URLSearchParams(location.search).has('hq');
+  function applyTier() {
+    const T = TIERS[View.tier]; View.tierCap = T.cap; View.smooth = T.q; View.halfRate = !!T.half;
+    View.dprCap = Settings.get('lowFx') ? Math.min(T.cap, 1.5) : T.cap; View.resize(canvas);
+  }
+  function adaptResolution(raw, work) {
+    if (hq || raw > 200 || document.hidden || state.paused) return;                 // sekme dönüşü/duraklama sayılmaz
+    slowSum += raw; workSum += work; if (++slowN < 90) return;
+    const avg = slowSum / slowN, avgWork = workSum / slowN; slowSum = workSum = slowN = 0;
+    const osCapped = Math.abs(avg - 33.3) < 3 && avgWork < 10;
+    if (!osCapped && (avg > 22 || avgWork > 13) && View.tier < TIERS.length - 1) { View.tier++; applyTier(); }
   }
   let fAcc = 0, fN = 0, fWorst = 0; const fpsEl = document.getElementById('fps');            // ayarlardan açılan FPS göstergesi (gerçek cihaz ölçümü için)
-  function fpsTick(raw) { if (!fpsEl || fpsEl.classList.contains('hidden') || raw > 200) return; fAcc += raw; fN++; fWorst = Math.max(fWorst, raw); if (fAcc >= 500) { fpsEl.textContent = `${Math.round(fN * 1000 / fAcc)} FPS · ${(fAcc / fN).toFixed(1)} ms (en kötü ${Math.round(fWorst)}) · çöz. ${View.dpr}×`; fAcc = fN = fWorst = 0; } }
+  function fpsTick(raw) { if (!fpsEl || fpsEl.classList.contains('hidden') || raw > 200) return; fAcc += raw; fN++; fWorst = Math.max(fWorst, raw); if (fAcc >= 500) { fpsEl.textContent = `${Math.round(fN * 1000 / fAcc)} FPS · ${(fAcc / fN).toFixed(1)} ms (en kötü ${Math.round(fWorst)}) · çöz. ${View.dpr}× · kademe ${View.tier}`; fAcc = fN = fWorst = 0; } }
   let lowT = 0;
   function lowHpTick(dt) {                                         // can düşük: kalp atışı sesi + hafif titreşim
     const p = state.player; if (state.over || state.paused || p.hp / p.maxHp > CONFIG.lowHp.frac) { lowT = 0; return; }
     if ((lowT -= dt) <= 0) { lowT = 0.95; Audio.play('heartbeat'); haptic(20); }
   }
   let last = performance.now();
+  let halfFlip = false;
   function frame(now) {
+    if (View.halfRate && (halfFlip = !halfFlip)) { requestAnimationFrame(frame); return; }   // 30 FPS tempo: aradaki kare atlanır, süre bir sonrakine eklenir (last güncellenmez)
     const raw = now - last; let dt = Math.min(raw / 1000, 0.05); // sekme dönüşünde sıçramayı önle
     if (state.slowT > 0) { state.slowT -= dt; dt *= 0.3; }          // boss ölümü: kısa slow motion (gerçek süreyle ~1 sn)
-    adaptResolution(raw); fpsTick(raw);
+    fpsTick(raw);
     last = now;
     if (window.innerHeight > window.innerWidth) { requestAnimationFrame(frame); return; }   // dikeyde duraklat (yatay uyarısı gösterilir)
+    const w0 = performance.now();
     Input.update();
     update(dt);
     lowHpTick(dt);
@@ -199,6 +209,7 @@ async function boot() {
     updateBuffs();
     prewarmTints(state.wave.stage, 3);
     render(ctx);
+    adaptResolution(raw, performance.now() - w0);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
