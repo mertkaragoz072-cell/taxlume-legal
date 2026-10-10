@@ -100,8 +100,6 @@
   },
   "goblin_warlord": {
     "name": "Goblin Savaş Lordu",
-    "animFrom": "goblin_brute",
-    "spriteMul": 1.38,
     "heightUnits": 149,
     "width": 103,
     "barWidth": 103,
@@ -130,11 +128,6 @@
     "hitPad": 90,
     "minGap": 150,
     "title": "GOBLIN SAVAŞ LORDU",
-    "tint": {
-      "hue": -18,
-      "sat": 0.85,
-      "light": 0.78
-    },
     "bossCfg": {
       "baseCd": [
         2.0,
