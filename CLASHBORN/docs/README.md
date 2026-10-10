@@ -422,3 +422,4 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Tasarım: yeşil/zeytin deri, altın taç, kürk yakalı mor pelerin, altın zırh, yeşil mücevherli altın asa-gürz.
 - `extract_enemy_sheet.py goblin_king walk references/nexora_goblin_king_walk_source.png --fps 30 --loop --stride 66 --target 165 --anchor torso` → 30 kare (`assets/enemies/goblin_king/hd/`), ölçek 1.003, `strideUnits` 2.2, hedef boy 165 birim. `goblin_king` girdisi eklendi (yalnız `walk`).
 - **`data/enemies.json` goblin_king `animFrom` + `spriteMul` + `tint` HÂLÂ AÇIK**; saldırı/hasar/ölüm gelince kaldırılır.
+- **Goblin Kralı saldırı** (hazırlık): `extract_enemy_sheet.py goblin_king attack references/nexora_goblin_king_attack_source.png --fps 36 --impact 0.43 --anchor torso --scale 1.003` (30 kare, vuruş kare 13, yeşil büyü patlaması karelerde gömülü). Not: `--anchor feet` bu sayfada yere inen asa/kıvılcım en alt noktayı sağa çekip gövdeyi sola kaydırdı; `--anchor torso` tutarlı.
