@@ -26,6 +26,7 @@ import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { AmbientGlow } from "./src/components/AmbientGlow";
+import { BirthdayComicModal } from "./src/components/BirthdayComicModal";
 import { GoodMomModal } from "./src/components/GoodMomModal";
 import { ProposalModal } from "./src/components/ProposalModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
@@ -118,6 +119,9 @@ function Game() {
   // Follows straight on from accepting the proposal, before the game opens
   // — see GoodMomModal.
   const [goodMomModalVisible, setGoodMomModalVisible] = useState(false);
+  // The last beat of the same chain, right before the game opens — see
+  // BirthdayComicModal.
+  const [birthdayComicVisible, setBirthdayComicVisible] = useState(false);
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
@@ -313,6 +317,13 @@ function Game() {
             visible={goodMomModalVisible}
             onDismiss={() => {
               setGoodMomModalVisible(false);
+              setBirthdayComicVisible(true);
+            }}
+          />
+          <BirthdayComicModal
+            visible={birthdayComicVisible}
+            onFinish={() => {
+              setBirthdayComicVisible(false);
               start();
               sounds.startMusic();
               setTitleVisible(false);
