@@ -11,6 +11,7 @@ export type UpgradeTier = 1 | 2 | 3;
 export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTier, number>>>> = {
   market: {
     1: require("../../assets/upgrades/market-1.png"),
+    2: require("../../assets/upgrades/market-2.png"),
   },
 };
 
