@@ -13,7 +13,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 ap = argparse.ArgumentParser(); ap.add_argument('type'); ap.add_argument('anim'); ap.add_argument('src')
 ap.add_argument('--cols', type=int, default=6); ap.add_argument('--rows', type=int, default=5); ap.add_argument('--fps', type=float, default=30)
-ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--anchor', default='auto'); ap.add_argument('--dark', action='store_true'); ap.add_argument('--land', type=int, default=0); ap.add_argument('--fxsplit', default='')
+ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--anchor', default='auto'); ap.add_argument('--dark', action='store_true'); ap.add_argument('--land', type=int, default=0); ap.add_argument('--fxsplit', default=''); ap.add_argument('--scale', type=float, default=0)
 a = ap.parse_args(); N = a.cols * a.rows
 HERO = a.type == 'male'                                       # kahraman modu: data/male_animations.json (animations.<anim>), kareler assets/characters/male/hd/, anahtar male_hd_<anim>_NN, referans animasyon idle
 ROOT = os.path.join(os.path.dirname(__file__), '..')
@@ -128,6 +128,7 @@ if a.anim != REF and walk.get('frames') and str(walk['frames'][0]).startswith('h
     else:                                                       # bandanasız: aynı duruştaki (ref-frames) gövde boyu yürüme gövde boyuyla eşitlenir
         wh = float(np.median([np.ptp(np.where((w[..., 3] > 150).any(1))[0]) + 1 for w in wk])); rh = float(np.median([np.ptp(np.where((r['img'][..., 3] > 150).any(1))[0]) + 1 for r in recs[rs - 1:re_]]))   # walk ile aynı ölçüt: alfa>150 satır genişliği
         scale = walk['scale'] * wh / rh
+if a.scale: scale = a.scale                                     # elle ölçek (otomatik bandana/boy eşlemesi güvenilmezse: aynı karakter, aynı çizim boyu → yürüme ölçeğiyle aynı)
 L = max(r['ax'] for r in recs); R = max(r['img'].shape[1] - r['ax'] for r in recs); Hh = max(r['bot'] for r in recs) + max(r['img'].shape[0] - r['bot'] for r in recs)
 above = max(r['bot'] for r in recs); below = max(r['img'].shape[0] - r['bot'] for r in recs)          # yer çizgisi altında kalan kısım (sarkan kılıç/pelerin) tuvale dahil
 Wc = int(2 * max(L, R) + 8); Hc = int(above + below + 16); PXc, PYc = Wc // 2, int(above + 8)
