@@ -417,3 +417,8 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - **Savaş Lordu saldırı** (hazırlık): `extract_enemy_sheet.py goblin_warlord attack references/nexora_goblin_warlord_attack_source.png --fps 36 --impact 0.45 --anchor feet --scale 0.7968` (30 kare, 0.83 sn, balta yere iniş kare 13 ≈ 0.45). Ölçek yürümeyle aynı (el ile).
 - **Savaş Lordu hasar** (hazırlık): `extract_enemy_sheet.py goblin_warlord hurt references/nexora_goblin_warlord_hurt_source.png --fps 30 --vis 0.45 --anchor feet --scale 0.7968` (30 kare; boss sersemlemediği için oyunda görünmez). Kalan: ölüm → `animFrom/spriteMul/tint` kaldırılır.
 - **Savaş Lordu ölüm + oyuna bağlandı (Faz 66 tamam):** `extract_enemy_sheet.py goblin_warlord death references/nexora_goblin_warlord_death_source.png --fps 30 --anchor label --land 13 --scale 0.7968`; komşu hücreden kalan 1–30 px kırıntılar temizlendi, yatış tekrarı kareleri 23–30 silindi (22 kare). `data/enemies.json` goblin_warlord'dan `animFrom`, `spriteMul` ve brute renk kaydırması `tint` kaldırıldı → kendi 30 karelik setini kullanır (149 birim). **Kalan brute-türevi boss: goblin_king** (`animFrom` açık).
+
+## Faz 67 — Goblin Kralı (goblin_king) yeni yürüme (hazırlık aşaması)
+- Tasarım: yeşil/zeytin deri, altın taç, kürk yakalı mor pelerin, altın zırh, yeşil mücevherli altın asa-gürz.
+- `extract_enemy_sheet.py goblin_king walk references/nexora_goblin_king_walk_source.png --fps 30 --loop --stride 66 --target 165 --anchor torso` → 30 kare (`assets/enemies/goblin_king/hd/`), ölçek 1.003, `strideUnits` 2.2, hedef boy 165 birim. `goblin_king` girdisi eklendi (yalnız `walk`).
+- **`data/enemies.json` goblin_king `animFrom` + `spriteMul` + `tint` HÂLÂ AÇIK**; saldırı/hasar/ölüm gelince kaldırılır.
