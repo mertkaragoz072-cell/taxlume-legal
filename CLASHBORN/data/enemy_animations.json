@@ -904,6 +904,52 @@
         ],
         "scale": 0.7968,
         "impact": 0.45
+      },
+      "hurt": {
+        "frames": [
+          "enemy_goblin_warlord_hd_hurt_01",
+          "enemy_goblin_warlord_hd_hurt_02",
+          "enemy_goblin_warlord_hd_hurt_03",
+          "enemy_goblin_warlord_hd_hurt_04",
+          "enemy_goblin_warlord_hd_hurt_05",
+          "enemy_goblin_warlord_hd_hurt_06",
+          "enemy_goblin_warlord_hd_hurt_07",
+          "enemy_goblin_warlord_hd_hurt_08",
+          "enemy_goblin_warlord_hd_hurt_09",
+          "enemy_goblin_warlord_hd_hurt_10",
+          "enemy_goblin_warlord_hd_hurt_11",
+          "enemy_goblin_warlord_hd_hurt_12",
+          "enemy_goblin_warlord_hd_hurt_13",
+          "enemy_goblin_warlord_hd_hurt_14",
+          "enemy_goblin_warlord_hd_hurt_15",
+          "enemy_goblin_warlord_hd_hurt_16",
+          "enemy_goblin_warlord_hd_hurt_17",
+          "enemy_goblin_warlord_hd_hurt_18",
+          "enemy_goblin_warlord_hd_hurt_19",
+          "enemy_goblin_warlord_hd_hurt_20",
+          "enemy_goblin_warlord_hd_hurt_21",
+          "enemy_goblin_warlord_hd_hurt_22",
+          "enemy_goblin_warlord_hd_hurt_23",
+          "enemy_goblin_warlord_hd_hurt_24",
+          "enemy_goblin_warlord_hd_hurt_25",
+          "enemy_goblin_warlord_hd_hurt_26",
+          "enemy_goblin_warlord_hd_hurt_27",
+          "enemy_goblin_warlord_hd_hurt_28",
+          "enemy_goblin_warlord_hd_hurt_29",
+          "enemy_goblin_warlord_hd_hurt_30"
+        ],
+        "fps": 30.0,
+        "loop": false,
+        "canvas": [
+          356,
+          217
+        ],
+        "pivot": [
+          178,
+          207
+        ],
+        "scale": 0.7968,
+        "visDur": 0.45
       }
     },
     "hdTarget": 113.2
