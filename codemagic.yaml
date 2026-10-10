@@ -40,6 +40,8 @@ workflows:
           done
           # şifreleme beyanı (TestFlight "Missing Compliance" sormasın)
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $PLIST || true
+          # iPad yalnızca yatay: App Store, çoklu görev için dört yönü ister; tam ekran bayrağı bunu kaldırır (ITMS-90474)
+          /usr/libexec/PlistBuddy -c "Add :UIRequiresFullScreen bool true" $PLIST || true
           # uygulama ikonu (1024, alfasız)
           cp assets/app_icon/app_icon_1024_opaque.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
 
