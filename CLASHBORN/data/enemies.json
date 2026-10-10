@@ -144,8 +144,6 @@
   },
   "goblin_king": {
     "name": "Goblin Kralı",
-    "animFrom": "goblin_brute",
-    "spriteMul": 1.52,
     "heightUnits": 165,
     "width": 114,
     "barWidth": 114,
@@ -174,11 +172,6 @@
     "hitPad": 90,
     "minGap": 150,
     "title": "GOBLIN KRALI",
-    "tint": {
-      "hue": -55,
-      "sat": 1.2,
-      "light": 1.05
-    },
     "bossCfg": {
       "combo": {
         "minRage": 0,
