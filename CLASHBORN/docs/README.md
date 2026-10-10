@@ -400,3 +400,9 @@ Kapsam: yalnız ilk yeşil dünya (Meadowlands; tüm bölümler aynı dünyada �
 - Kaynak: `references/nexora_male_portrait_source.webp` (1254², siyah zeminli). Siyah zemin kenardan taşırma (yalnız üst/yan kenarlardan, `mx<16`) + opening ile ince köprüler kesilerek alfaya çevrildi; koyu zırh kapalı kalır. 512² RGBA → `assets/characters/male/portraits/male_portrait.png` (manifest `male_portrait`).
 - Seçim kartı ve HUD avatarı artık bu portreyi kullanır (`main.js` PORTRAITS, `hud.js` bigPortrait). Eski idle-kare baş kırpması kullanılmıyor.
 - **Erkek kahraman tamam:** bekleme, koşu, saldırı, hasar, ölüm (hepsi 30 karelik HD) + portre. Sıradaki: dünya 1 üç ayrı boss, isteğe bağlı özel goblinler.
+
+## Faz 65 — Goblin Lordu (goblin_boss) yeni yürüme (hazırlık aşaması)
+- Tasarım: yağlı yeşil şef, kafatası/kemik süslü kürk omuzluk, kırmızı savaş boyası, boynuzlu bayrak, dikenli ahşap çekiç.
+- `extract_enemy_sheet.py goblin_boss walk references/nexora_goblin_boss_walk_source.png --fps 30 --loop --stride 60 --target 149 --anchor torso` → 30 kare (`assets/enemies/goblin_boss/hd/`, anahtar `enemy_goblin_boss_hd_walk_NN`), ölçek 0.8255, `strideUnits` 2.0, hedef boy 149 birim (boss `heightUnits`).
+- `data/enemy_animations.json` → `goblin_boss` girdisi eklendi (yalnız `walk`). **`data/enemies.json` goblin_boss `animFrom: goblin_brute` HÂLÂ AÇIK**: saldırı/hasar/ölüm sayfaları gelene kadar oyun brute karelerini kullanır (karma görünüm olmasın). Dört durum bitince `animFrom` ve `spriteMul` kaldırılır.
+- Sıradaki: saldırı, hasar, ölüm (goblin_boss); sonra goblin_warlord, goblin_king.
