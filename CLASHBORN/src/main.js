@@ -7,6 +7,7 @@ import { View } from './core/view.js';
 import { state, resetState } from './game/state.js';
 import { update, spawnEnemy } from './game/systems.js';
 import { render } from './render/renderer.js';
+import { prewarmTints } from './render/characters.js';
 import { initHud, updateHud, showGameOver, hideGameOver, drawAvatar, pulse } from './ui/hud.js';
 import { initBuffs, updateBuffs, popBuffs } from './ui/buffs.js';
 import { initWaveHud, updateWaveHud, showBanner } from './ui/waveHud.js';
@@ -72,12 +73,17 @@ async function boot() {
     box.classList.remove('hidden');
     throw err;
   }
-  await Assets.load(manifest.images);
+  await Assets.load(manifest.images, manifest.trim);
   Save.load();
   initMeta(); Settings.apply();
 
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   Assets.release(HERO.id === 'male' ? ['heroine_', 'female_'] : ['male_', 'female_'], ['heroine_portrait', 'female_portrait']);        // seçilmeyen kahramanın kareleri bellekten atılır
+  {                                                           // kare setlerini oyun başlamadan çöz (ilk çizimde takılma olmasın): önce kahraman + temel düşmanlar, bosslar arka planda
+    const mine = HERO.id === 'male' ? 'male_' : 'heroine_', base = /^enemy_goblin_(scout|warrior|brute)_/;
+    await Assets.warm((k) => k.startsWith(mine) || base.test(k));
+    setTimeout(() => Assets.warm((k) => /^enemy_goblin_(boss|warlord|king)_/.test(k), 2), 1500);
+  }
   initHud();
   initWaveHud();
   initBuffs();
@@ -169,8 +175,10 @@ async function boot() {
     if (hq || raw > 200 || document.hidden) return;                 // sekme dönüşü/duraklama sayılmaz
     slowSum += raw; if (++slowN < 90) return;
     const avg = slowSum / slowN; slowSum = 0; slowN = 0;
-    if (avg > 26 && View.dprCap > 1.25 && View.dpr > 1.25) { View.dprCap = Math.max(1.25, View.dprCap - 0.5); View.resize(canvas); }
+    if (avg > 22 && View.dprCap > 1.25 && View.dpr > 1.25) { View.dprCap = Math.max(1.25, View.dprCap - 0.5); View.resize(canvas); }
   }
+  let fAcc = 0, fN = 0, fWorst = 0; const fpsEl = document.getElementById('fps');            // ayarlardan açılan FPS göstergesi (gerçek cihaz ölçümü için)
+  function fpsTick(raw) { if (!fpsEl || fpsEl.classList.contains('hidden') || raw > 200) return; fAcc += raw; fN++; fWorst = Math.max(fWorst, raw); if (fAcc >= 500) { fpsEl.textContent = `${Math.round(fN * 1000 / fAcc)} FPS · ${(fAcc / fN).toFixed(1)} ms (en kötü ${Math.round(fWorst)}) · çöz. ${View.dpr}×`; fAcc = fN = fWorst = 0; } }
   let lowT = 0;
   function lowHpTick(dt) {                                         // can düşük: kalp atışı sesi + hafif titreşim
     const p = state.player; if (state.over || state.paused || p.hp / p.maxHp > CONFIG.lowHp.frac) { lowT = 0; return; }
@@ -180,7 +188,7 @@ async function boot() {
   function frame(now) {
     const raw = now - last; let dt = Math.min(raw / 1000, 0.05); // sekme dönüşünde sıçramayı önle
     if (state.slowT > 0) { state.slowT -= dt; dt *= 0.3; }          // boss ölümü: kısa slow motion (gerçek süreyle ~1 sn)
-    adaptResolution(raw);
+    adaptResolution(raw); fpsTick(raw);
     last = now;
     if (window.innerHeight > window.innerWidth) { requestAnimationFrame(frame); return; }   // dikeyde duraklat (yatay uyarısı gösterilir)
     Input.update();
@@ -189,6 +197,7 @@ async function boot() {
     updateHud();
     updateWaveHud();
     updateBuffs();
+    prewarmTints(state.wave.stage, 3);
     render(ctx);
     requestAnimationFrame(frame);
   }

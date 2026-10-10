@@ -1163,5 +1163,6391 @@
     "prop_rock_small_01": "assets/environment/props/rock_small_01.png",
     "prop_rock_small_02": "assets/environment/props/rock_small_02.png",
     "prop_signpost": "assets/environment/props/signpost.png"
+  },
+  "trim": {
+    "enemy_goblin_boss_hd_attack_01": [
+      340,
+      221,
+      14,
+      66,
+      200,
+      146
+    ],
+    "enemy_goblin_boss_hd_attack_02": [
+      340,
+      221,
+      49,
+      41,
+      180,
+      170
+    ],
+    "enemy_goblin_boss_hd_attack_03": [
+      340,
+      221,
+      33,
+      27,
+      189,
+      184
+    ],
+    "enemy_goblin_boss_hd_attack_04": [
+      340,
+      221,
+      41,
+      25,
+      192,
+      184
+    ],
+    "enemy_goblin_boss_hd_attack_05": [
+      340,
+      221,
+      36,
+      29,
+      191,
+      180
+    ],
+    "enemy_goblin_boss_hd_attack_06": [
+      340,
+      221,
+      40,
+      29,
+      187,
+      181
+    ],
+    "enemy_goblin_boss_hd_attack_07": [
+      340,
+      221,
+      38,
+      10,
+      189,
+      200
+    ],
+    "enemy_goblin_boss_hd_attack_08": [
+      340,
+      221,
+      42,
+      8,
+      184,
+      202
+    ],
+    "enemy_goblin_boss_hd_attack_09": [
+      340,
+      221,
+      40,
+      24,
+      174,
+      188
+    ],
+    "enemy_goblin_boss_hd_attack_10": [
+      340,
+      221,
+      30,
+      17,
+      188,
+      192
+    ],
+    "enemy_goblin_boss_hd_attack_11": [
+      340,
+      221,
+      44,
+      25,
+      170,
+      185
+    ],
+    "enemy_goblin_boss_hd_attack_12": [
+      340,
+      221,
+      50,
+      56,
+      167,
+      153
+    ],
+    "enemy_goblin_boss_hd_attack_13": [
+      340,
+      221,
+      17,
+      77,
+      199,
+      134
+    ],
+    "enemy_goblin_boss_hd_attack_14": [
+      340,
+      221,
+      10,
+      79,
+      205,
+      131
+    ],
+    "enemy_goblin_boss_hd_attack_15": [
+      340,
+      221,
+      10,
+      70,
+      224,
+      139
+    ],
+    "enemy_goblin_boss_hd_attack_16": [
+      340,
+      221,
+      18,
+      78,
+      228,
+      131
+    ],
+    "enemy_goblin_boss_hd_attack_17": [
+      340,
+      221,
+      4,
+      77,
+      232,
+      132
+    ],
+    "enemy_goblin_boss_hd_attack_18": [
+      340,
+      221,
+      25,
+      73,
+      205,
+      137
+    ],
+    "enemy_goblin_boss_hd_attack_19": [
+      340,
+      221,
+      34,
+      73,
+      204,
+      138
+    ],
+    "enemy_goblin_boss_hd_attack_20": [
+      340,
+      221,
+      30,
+      75,
+      211,
+      137
+    ],
+    "enemy_goblin_boss_hd_attack_21": [
+      340,
+      221,
+      36,
+      71,
+      198,
+      141
+    ],
+    "enemy_goblin_boss_hd_attack_22": [
+      340,
+      221,
+      38,
+      70,
+      189,
+      140
+    ],
+    "enemy_goblin_boss_hd_attack_23": [
+      340,
+      221,
+      31,
+      69,
+      205,
+      144
+    ],
+    "enemy_goblin_boss_hd_attack_24": [
+      340,
+      221,
+      34,
+      68,
+      199,
+      144
+    ],
+    "enemy_goblin_boss_hd_attack_25": [
+      340,
+      221,
+      48,
+      34,
+      193,
+      178
+    ],
+    "enemy_goblin_boss_hd_attack_26": [
+      340,
+      221,
+      45,
+      33,
+      189,
+      178
+    ],
+    "enemy_goblin_boss_hd_attack_27": [
+      340,
+      221,
+      46,
+      35,
+      193,
+      175
+    ],
+    "enemy_goblin_boss_hd_attack_28": [
+      340,
+      221,
+      46,
+      34,
+      189,
+      177
+    ],
+    "enemy_goblin_boss_hd_attack_29": [
+      340,
+      221,
+      47,
+      36,
+      188,
+      175
+    ],
+    "enemy_goblin_boss_hd_attack_30": [
+      340,
+      221,
+      42,
+      37,
+      188,
+      174
+    ],
+    "enemy_goblin_boss_hd_death_01": [
+      300,
+      205,
+      66,
+      8,
+      192,
+      177
+    ],
+    "enemy_goblin_boss_hd_death_02": [
+      300,
+      205,
+      64,
+      12,
+      194,
+      172
+    ],
+    "enemy_goblin_boss_hd_death_03": [
+      300,
+      205,
+      54,
+      14,
+      203,
+      169
+    ],
+    "enemy_goblin_boss_hd_death_04": [
+      300,
+      205,
+      44,
+      23,
+      219,
+      160
+    ],
+    "enemy_goblin_boss_hd_death_05": [
+      300,
+      205,
+      38,
+      10,
+      252,
+      169
+    ],
+    "enemy_goblin_boss_hd_death_06": [
+      300,
+      205,
+      72,
+      16,
+      169,
+      167
+    ],
+    "enemy_goblin_boss_hd_death_07": [
+      300,
+      205,
+      51,
+      35,
+      245,
+      143
+    ],
+    "enemy_goblin_boss_hd_death_08": [
+      300,
+      205,
+      46,
+      23,
+      228,
+      159
+    ],
+    "enemy_goblin_boss_hd_death_09": [
+      300,
+      205,
+      35,
+      22,
+      246,
+      154
+    ],
+    "enemy_goblin_boss_hd_death_10": [
+      300,
+      205,
+      34,
+      14,
+      235,
+      183
+    ],
+    "enemy_goblin_boss_hd_death_11": [
+      300,
+      205,
+      17,
+      22,
+      265,
+      161
+    ],
+    "enemy_goblin_boss_hd_death_12": [
+      300,
+      205,
+      32,
+      38,
+      229,
+      143
+    ],
+    "enemy_goblin_boss_hd_death_13": [
+      300,
+      205,
+      30,
+      24,
+      225,
+      160
+    ],
+    "enemy_goblin_boss_hd_death_14": [
+      300,
+      205,
+      16,
+      18,
+      246,
+      174
+    ],
+    "enemy_goblin_boss_hd_death_15": [
+      300,
+      205,
+      30,
+      34,
+      234,
+      153
+    ],
+    "enemy_goblin_boss_hd_death_16": [
+      300,
+      205,
+      38,
+      43,
+      231,
+      144
+    ],
+    "enemy_goblin_boss_hd_death_17": [
+      300,
+      205,
+      16,
+      77,
+      253,
+      111
+    ],
+    "enemy_goblin_boss_hd_death_18": [
+      300,
+      205,
+      28,
+      78,
+      235,
+      109
+    ],
+    "enemy_goblin_boss_hd_death_19": [
+      300,
+      205,
+      28,
+      71,
+      232,
+      116
+    ],
+    "enemy_goblin_boss_hd_death_20": [
+      300,
+      205,
+      25,
+      77,
+      233,
+      110
+    ],
+    "enemy_goblin_boss_hd_death_21": [
+      300,
+      205,
+      30,
+      81,
+      230,
+      107
+    ],
+    "enemy_goblin_boss_hd_death_22": [
+      300,
+      205,
+      32,
+      81,
+      232,
+      106
+    ],
+    "enemy_goblin_boss_hd_death_23": [
+      300,
+      205,
+      29,
+      82,
+      233,
+      105
+    ],
+    "enemy_goblin_boss_hd_death_24": [
+      300,
+      205,
+      26,
+      82,
+      234,
+      105
+    ],
+    "enemy_goblin_boss_hd_death_25": [
+      300,
+      205,
+      30,
+      78,
+      234,
+      109
+    ],
+    "enemy_goblin_boss_hd_death_26": [
+      300,
+      205,
+      26,
+      83,
+      237,
+      104
+    ],
+    "enemy_goblin_boss_hd_hurt_01": [
+      367,
+      201,
+      53,
+      8,
+      208,
+      184
+    ],
+    "enemy_goblin_boss_hd_hurt_02": [
+      367,
+      201,
+      58,
+      12,
+      199,
+      180
+    ],
+    "enemy_goblin_boss_hd_hurt_03": [
+      367,
+      201,
+      56,
+      8,
+      204,
+      184
+    ],
+    "enemy_goblin_boss_hd_hurt_04": [
+      367,
+      201,
+      31,
+      32,
+      229,
+      160
+    ],
+    "enemy_goblin_boss_hd_hurt_05": [
+      367,
+      201,
+      31,
+      30,
+      229,
+      162
+    ],
+    "enemy_goblin_boss_hd_hurt_06": [
+      367,
+      201,
+      37,
+      25,
+      223,
+      166
+    ],
+    "enemy_goblin_boss_hd_hurt_07": [
+      367,
+      201,
+      30,
+      26,
+      229,
+      165
+    ],
+    "enemy_goblin_boss_hd_hurt_08": [
+      367,
+      201,
+      27,
+      27,
+      228,
+      164
+    ],
+    "enemy_goblin_boss_hd_hurt_09": [
+      367,
+      201,
+      12,
+      29,
+      244,
+      162
+    ],
+    "enemy_goblin_boss_hd_hurt_10": [
+      367,
+      201,
+      14,
+      35,
+      242,
+      157
+    ],
+    "enemy_goblin_boss_hd_hurt_11": [
+      367,
+      201,
+      19,
+      36,
+      235,
+      156
+    ],
+    "enemy_goblin_boss_hd_hurt_12": [
+      367,
+      201,
+      4,
+      30,
+      257,
+      162
+    ],
+    "enemy_goblin_boss_hd_hurt_13": [
+      367,
+      201,
+      23,
+      18,
+      229,
+      174
+    ],
+    "enemy_goblin_boss_hd_hurt_14": [
+      367,
+      201,
+      24,
+      26,
+      227,
+      166
+    ],
+    "enemy_goblin_boss_hd_hurt_15": [
+      367,
+      201,
+      17,
+      25,
+      237,
+      166
+    ],
+    "enemy_goblin_boss_hd_hurt_16": [
+      367,
+      201,
+      8,
+      27,
+      246,
+      165
+    ],
+    "enemy_goblin_boss_hd_hurt_17": [
+      367,
+      201,
+      17,
+      40,
+      237,
+      151
+    ],
+    "enemy_goblin_boss_hd_hurt_18": [
+      367,
+      201,
+      12,
+      46,
+      243,
+      145
+    ],
+    "enemy_goblin_boss_hd_hurt_19": [
+      367,
+      201,
+      66,
+      22,
+      190,
+      170
+    ],
+    "enemy_goblin_boss_hd_hurt_20": [
+      367,
+      201,
+      66,
+      24,
+      191,
+      168
+    ],
+    "enemy_goblin_boss_hd_hurt_21": [
+      367,
+      201,
+      66,
+      22,
+      191,
+      170
+    ],
+    "enemy_goblin_boss_hd_hurt_22": [
+      367,
+      201,
+      66,
+      22,
+      190,
+      170
+    ],
+    "enemy_goblin_boss_hd_hurt_23": [
+      367,
+      201,
+      67,
+      24,
+      189,
+      168
+    ],
+    "enemy_goblin_boss_hd_hurt_24": [
+      367,
+      201,
+      66,
+      21,
+      191,
+      170
+    ],
+    "enemy_goblin_boss_hd_hurt_25": [
+      367,
+      201,
+      64,
+      19,
+      194,
+      174
+    ],
+    "enemy_goblin_boss_hd_hurt_26": [
+      367,
+      201,
+      65,
+      20,
+      191,
+      173
+    ],
+    "enemy_goblin_boss_hd_hurt_27": [
+      367,
+      201,
+      66,
+      22,
+      191,
+      171
+    ],
+    "enemy_goblin_boss_hd_hurt_28": [
+      367,
+      201,
+      66,
+      21,
+      191,
+      172
+    ],
+    "enemy_goblin_boss_hd_hurt_29": [
+      367,
+      201,
+      64,
+      17,
+      194,
+      174
+    ],
+    "enemy_goblin_boss_hd_hurt_30": [
+      367,
+      201,
+      64,
+      20,
+      193,
+      173
+    ],
+    "enemy_goblin_boss_hd_walk_01": [
+      265,
+      209,
+      3,
+      8,
+      199,
+      191
+    ],
+    "enemy_goblin_boss_hd_walk_02": [
+      265,
+      209,
+      6,
+      19,
+      193,
+      180
+    ],
+    "enemy_goblin_boss_hd_walk_03": [
+      265,
+      209,
+      8,
+      16,
+      191,
+      183
+    ],
+    "enemy_goblin_boss_hd_walk_04": [
+      265,
+      209,
+      12,
+      15,
+      187,
+      184
+    ],
+    "enemy_goblin_boss_hd_walk_05": [
+      265,
+      209,
+      11,
+      18,
+      188,
+      180
+    ],
+    "enemy_goblin_boss_hd_walk_06": [
+      265,
+      209,
+      13,
+      18,
+      184,
+      181
+    ],
+    "enemy_goblin_boss_hd_walk_07": [
+      265,
+      209,
+      13,
+      14,
+      187,
+      185
+    ],
+    "enemy_goblin_boss_hd_walk_08": [
+      265,
+      209,
+      13,
+      14,
+      187,
+      184
+    ],
+    "enemy_goblin_boss_hd_walk_09": [
+      265,
+      209,
+      7,
+      16,
+      193,
+      184
+    ],
+    "enemy_goblin_boss_hd_walk_10": [
+      265,
+      209,
+      8,
+      15,
+      193,
+      184
+    ],
+    "enemy_goblin_boss_hd_walk_11": [
+      265,
+      209,
+      10,
+      19,
+      189,
+      179
+    ],
+    "enemy_goblin_boss_hd_walk_12": [
+      265,
+      209,
+      10,
+      21,
+      190,
+      178
+    ],
+    "enemy_goblin_boss_hd_walk_13": [
+      265,
+      209,
+      8,
+      16,
+      192,
+      182
+    ],
+    "enemy_goblin_boss_hd_walk_14": [
+      265,
+      209,
+      8,
+      18,
+      194,
+      181
+    ],
+    "enemy_goblin_boss_hd_walk_15": [
+      265,
+      209,
+      8,
+      17,
+      193,
+      181
+    ],
+    "enemy_goblin_boss_hd_walk_16": [
+      265,
+      209,
+      7,
+      13,
+      194,
+      185
+    ],
+    "enemy_goblin_boss_hd_walk_17": [
+      265,
+      209,
+      7,
+      13,
+      195,
+      185
+    ],
+    "enemy_goblin_boss_hd_walk_18": [
+      265,
+      209,
+      7,
+      14,
+      194,
+      185
+    ],
+    "enemy_goblin_boss_hd_walk_19": [
+      265,
+      209,
+      9,
+      17,
+      191,
+      182
+    ],
+    "enemy_goblin_boss_hd_walk_20": [
+      265,
+      209,
+      12,
+      20,
+      187,
+      181
+    ],
+    "enemy_goblin_boss_hd_walk_21": [
+      265,
+      209,
+      11,
+      20,
+      188,
+      179
+    ],
+    "enemy_goblin_boss_hd_walk_22": [
+      265,
+      209,
+      10,
+      17,
+      189,
+      182
+    ],
+    "enemy_goblin_boss_hd_walk_23": [
+      265,
+      209,
+      12,
+      20,
+      185,
+      178
+    ],
+    "enemy_goblin_boss_hd_walk_24": [
+      265,
+      209,
+      12,
+      20,
+      187,
+      179
+    ],
+    "enemy_goblin_boss_hd_walk_25": [
+      265,
+      209,
+      7,
+      16,
+      193,
+      183
+    ],
+    "enemy_goblin_boss_hd_walk_26": [
+      265,
+      209,
+      11,
+      18,
+      187,
+      180
+    ],
+    "enemy_goblin_boss_hd_walk_27": [
+      265,
+      209,
+      10,
+      19,
+      190,
+      179
+    ],
+    "enemy_goblin_boss_hd_walk_28": [
+      265,
+      209,
+      13,
+      20,
+      185,
+      178
+    ],
+    "enemy_goblin_boss_hd_walk_29": [
+      265,
+      209,
+      9,
+      13,
+      190,
+      185
+    ],
+    "enemy_goblin_boss_hd_walk_30": [
+      265,
+      209,
+      8,
+      16,
+      192,
+      184
+    ],
+    "enemy_goblin_brute_hd_attack_01": [
+      415,
+      225,
+      85,
+      69,
+      243,
+      149
+    ],
+    "enemy_goblin_brute_hd_attack_02": [
+      415,
+      225,
+      93,
+      41,
+      206,
+      177
+    ],
+    "enemy_goblin_brute_hd_attack_03": [
+      415,
+      225,
+      100,
+      24,
+      196,
+      194
+    ],
+    "enemy_goblin_brute_hd_attack_04": [
+      415,
+      225,
+      92,
+      27,
+      214,
+      191
+    ],
+    "enemy_goblin_brute_hd_attack_05": [
+      415,
+      225,
+      89,
+      32,
+      221,
+      186
+    ],
+    "enemy_goblin_brute_hd_attack_06": [
+      415,
+      225,
+      88,
+      26,
+      223,
+      192
+    ],
+    "enemy_goblin_brute_hd_attack_07": [
+      415,
+      225,
+      97,
+      15,
+      208,
+      203
+    ],
+    "enemy_goblin_brute_hd_attack_08": [
+      415,
+      225,
+      92,
+      20,
+      220,
+      198
+    ],
+    "enemy_goblin_brute_hd_attack_09": [
+      415,
+      225,
+      95,
+      14,
+      214,
+      204
+    ],
+    "enemy_goblin_brute_hd_attack_10": [
+      415,
+      225,
+      87,
+      11,
+      223,
+      207
+    ],
+    "enemy_goblin_brute_hd_attack_11": [
+      415,
+      225,
+      89,
+      10,
+      224,
+      209
+    ],
+    "enemy_goblin_brute_hd_attack_12": [
+      415,
+      225,
+      103,
+      12,
+      198,
+      206
+    ],
+    "enemy_goblin_brute_hd_attack_13": [
+      415,
+      225,
+      32,
+      34,
+      246,
+      184
+    ],
+    "enemy_goblin_brute_hd_attack_14": [
+      415,
+      225,
+      77,
+      25,
+      256,
+      192
+    ],
+    "enemy_goblin_brute_hd_attack_15": [
+      415,
+      225,
+      76,
+      15,
+      259,
+      203
+    ],
+    "enemy_goblin_brute_hd_attack_16": [
+      415,
+      225,
+      74,
+      27,
+      250,
+      191
+    ],
+    "enemy_goblin_brute_hd_attack_17": [
+      415,
+      225,
+      41,
+      25,
+      259,
+      194
+    ],
+    "enemy_goblin_brute_hd_attack_18": [
+      415,
+      225,
+      101,
+      26,
+      235,
+      191
+    ],
+    "enemy_goblin_brute_hd_attack_19": [
+      415,
+      225,
+      138,
+      73,
+      270,
+      146
+    ],
+    "enemy_goblin_brute_hd_attack_20": [
+      415,
+      225,
+      144,
+      76,
+      254,
+      143
+    ],
+    "enemy_goblin_brute_hd_attack_21": [
+      415,
+      225,
+      60,
+      74,
+      279,
+      146
+    ],
+    "enemy_goblin_brute_hd_attack_22": [
+      415,
+      225,
+      146,
+      73,
+      265,
+      147
+    ],
+    "enemy_goblin_brute_hd_attack_23": [
+      415,
+      225,
+      137,
+      82,
+      261,
+      136
+    ],
+    "enemy_goblin_brute_hd_attack_24": [
+      415,
+      225,
+      77,
+      69,
+      243,
+      148
+    ],
+    "enemy_goblin_brute_hd_attack_25": [
+      415,
+      225,
+      111,
+      39,
+      216,
+      179
+    ],
+    "enemy_goblin_brute_hd_attack_26": [
+      415,
+      225,
+      116,
+      30,
+      200,
+      187
+    ],
+    "enemy_goblin_brute_hd_attack_27": [
+      415,
+      225,
+      104,
+      37,
+      210,
+      181
+    ],
+    "enemy_goblin_brute_hd_attack_28": [
+      415,
+      225,
+      96,
+      46,
+      224,
+      172
+    ],
+    "enemy_goblin_brute_hd_attack_29": [
+      415,
+      225,
+      99,
+      28,
+      228,
+      190
+    ],
+    "enemy_goblin_brute_hd_attack_30": [
+      415,
+      225,
+      96,
+      62,
+      227,
+      156
+    ],
+    "enemy_goblin_brute_hd_death_01": [
+      366,
+      201,
+      86,
+      12,
+      255,
+      182
+    ],
+    "enemy_goblin_brute_hd_death_02": [
+      366,
+      201,
+      88,
+      9,
+      240,
+      185
+    ],
+    "enemy_goblin_brute_hd_death_03": [
+      366,
+      201,
+      102,
+      15,
+      217,
+      179
+    ],
+    "enemy_goblin_brute_hd_death_04": [
+      366,
+      201,
+      105,
+      14,
+      228,
+      180
+    ],
+    "enemy_goblin_brute_hd_death_05": [
+      366,
+      201,
+      122,
+      28,
+      218,
+      166
+    ],
+    "enemy_goblin_brute_hd_death_06": [
+      366,
+      201,
+      111,
+      18,
+      200,
+      176
+    ],
+    "enemy_goblin_brute_hd_death_07": [
+      366,
+      201,
+      87,
+      19,
+      215,
+      169
+    ],
+    "enemy_goblin_brute_hd_death_08": [
+      366,
+      201,
+      78,
+      38,
+      209,
+      149
+    ],
+    "enemy_goblin_brute_hd_death_09": [
+      366,
+      201,
+      15,
+      19,
+      347,
+      167
+    ],
+    "enemy_goblin_brute_hd_death_10": [
+      366,
+      201,
+      106,
+      30,
+      237,
+      158
+    ],
+    "enemy_goblin_brute_hd_death_11": [
+      366,
+      201,
+      101,
+      33,
+      232,
+      154
+    ],
+    "enemy_goblin_brute_hd_death_12": [
+      366,
+      201,
+      87,
+      35,
+      212,
+      153
+    ],
+    "enemy_goblin_brute_hd_death_13": [
+      366,
+      201,
+      83,
+      43,
+      244,
+      141
+    ],
+    "enemy_goblin_brute_hd_death_14": [
+      366,
+      201,
+      105,
+      49,
+      234,
+      134
+    ],
+    "enemy_goblin_brute_hd_death_15": [
+      366,
+      201,
+      112,
+      57,
+      191,
+      128
+    ],
+    "enemy_goblin_brute_hd_death_16": [
+      366,
+      201,
+      27,
+      39,
+      311,
+      146
+    ],
+    "enemy_goblin_brute_hd_death_17": [
+      366,
+      201,
+      97,
+      52,
+      234,
+      133
+    ],
+    "enemy_goblin_brute_hd_death_18": [
+      366,
+      201,
+      99,
+      62,
+      203,
+      124
+    ],
+    "enemy_goblin_brute_hd_death_19": [
+      366,
+      201,
+      63,
+      42,
+      250,
+      132
+    ],
+    "enemy_goblin_brute_hd_death_20": [
+      366,
+      201,
+      65,
+      24,
+      262,
+      152
+    ],
+    "enemy_goblin_brute_hd_death_21": [
+      366,
+      201,
+      82,
+      81,
+      230,
+      82
+    ],
+    "enemy_goblin_brute_hd_death_22": [
+      366,
+      201,
+      76,
+      78,
+      235,
+      84
+    ],
+    "enemy_goblin_brute_hd_death_23": [
+      366,
+      201,
+      71,
+      79,
+      228,
+      83
+    ],
+    "enemy_goblin_brute_hd_death_24": [
+      366,
+      201,
+      68,
+      82,
+      231,
+      80
+    ],
+    "enemy_goblin_brute_hd_death_25": [
+      366,
+      201,
+      65,
+      53,
+      247,
+      86
+    ],
+    "enemy_goblin_brute_hd_death_26": [
+      366,
+      201,
+      72,
+      51,
+      243,
+      90
+    ],
+    "enemy_goblin_brute_hd_death_27": [
+      366,
+      201,
+      81,
+      53,
+      235,
+      88
+    ],
+    "enemy_goblin_brute_hd_death_28": [
+      366,
+      201,
+      83,
+      53,
+      236,
+      88
+    ],
+    "enemy_goblin_brute_hd_death_29": [
+      366,
+      201,
+      78,
+      53,
+      239,
+      89
+    ],
+    "enemy_goblin_brute_hd_death_30": [
+      366,
+      201,
+      81,
+      53,
+      230,
+      89
+    ],
+    "enemy_goblin_brute_hd_hurt_01": [
+      260,
+      201,
+      10,
+      14,
+      246,
+      180
+    ],
+    "enemy_goblin_brute_hd_hurt_02": [
+      260,
+      201,
+      20,
+      14,
+      224,
+      180
+    ],
+    "enemy_goblin_brute_hd_hurt_03": [
+      260,
+      201,
+      17,
+      9,
+      233,
+      185
+    ],
+    "enemy_goblin_brute_hd_hurt_04": [
+      260,
+      201,
+      4,
+      14,
+      252,
+      180
+    ],
+    "enemy_goblin_brute_hd_hurt_05": [
+      260,
+      201,
+      20,
+      18,
+      220,
+      175
+    ],
+    "enemy_goblin_brute_hd_hurt_06": [
+      260,
+      201,
+      30,
+      21,
+      207,
+      173
+    ],
+    "enemy_goblin_brute_hd_hurt_07": [
+      260,
+      201,
+      17,
+      20,
+      230,
+      174
+    ],
+    "enemy_goblin_brute_hd_hurt_08": [
+      260,
+      201,
+      20,
+      19,
+      227,
+      175
+    ],
+    "enemy_goblin_brute_hd_hurt_09": [
+      260,
+      201,
+      22,
+      19,
+      224,
+      176
+    ],
+    "enemy_goblin_brute_hd_hurt_10": [
+      260,
+      201,
+      17,
+      19,
+      225,
+      176
+    ],
+    "enemy_goblin_brute_hd_hurt_11": [
+      260,
+      201,
+      17,
+      21,
+      216,
+      173
+    ],
+    "enemy_goblin_brute_hd_hurt_12": [
+      260,
+      201,
+      13,
+      22,
+      225,
+      172
+    ],
+    "enemy_goblin_brute_hd_hurt_13": [
+      260,
+      201,
+      20,
+      22,
+      224,
+      172
+    ],
+    "enemy_goblin_brute_hd_hurt_14": [
+      260,
+      201,
+      20,
+      20,
+      224,
+      175
+    ],
+    "enemy_goblin_brute_hd_hurt_15": [
+      260,
+      201,
+      19,
+      21,
+      226,
+      173
+    ],
+    "enemy_goblin_brute_hd_hurt_16": [
+      260,
+      201,
+      21,
+      21,
+      223,
+      175
+    ],
+    "enemy_goblin_brute_hd_hurt_17": [
+      260,
+      201,
+      22,
+      23,
+      222,
+      172
+    ],
+    "enemy_goblin_brute_hd_hurt_18": [
+      260,
+      201,
+      26,
+      21,
+      214,
+      173
+    ],
+    "enemy_goblin_brute_hd_hurt_19": [
+      260,
+      201,
+      16,
+      15,
+      235,
+      180
+    ],
+    "enemy_goblin_brute_hd_hurt_20": [
+      260,
+      201,
+      19,
+      17,
+      231,
+      178
+    ],
+    "enemy_goblin_brute_hd_hurt_21": [
+      260,
+      201,
+      18,
+      16,
+      228,
+      178
+    ],
+    "enemy_goblin_brute_hd_hurt_22": [
+      260,
+      201,
+      20,
+      16,
+      230,
+      178
+    ],
+    "enemy_goblin_brute_hd_hurt_23": [
+      260,
+      201,
+      22,
+      20,
+      224,
+      175
+    ],
+    "enemy_goblin_brute_hd_hurt_24": [
+      260,
+      201,
+      18,
+      19,
+      228,
+      175
+    ],
+    "enemy_goblin_brute_hd_hurt_25": [
+      260,
+      201,
+      18,
+      19,
+      234,
+      174
+    ],
+    "enemy_goblin_brute_hd_hurt_26": [
+      260,
+      201,
+      20,
+      19,
+      229,
+      174
+    ],
+    "enemy_goblin_brute_hd_hurt_27": [
+      260,
+      201,
+      18,
+      15,
+      230,
+      179
+    ],
+    "enemy_goblin_brute_hd_hurt_28": [
+      260,
+      201,
+      20,
+      20,
+      226,
+      174
+    ],
+    "enemy_goblin_brute_hd_hurt_29": [
+      260,
+      201,
+      21,
+      19,
+      225,
+      176
+    ],
+    "enemy_goblin_brute_hd_hurt_30": [
+      260,
+      201,
+      21,
+      19,
+      227,
+      174
+    ],
+    "enemy_goblin_brute_hd_walk_01": [
+      260,
+      204,
+      17,
+      11,
+      233,
+      186
+    ],
+    "enemy_goblin_brute_hd_walk_02": [
+      260,
+      204,
+      24,
+      15,
+      222,
+      181
+    ],
+    "enemy_goblin_brute_hd_walk_03": [
+      260,
+      204,
+      25,
+      15,
+      217,
+      181
+    ],
+    "enemy_goblin_brute_hd_walk_04": [
+      260,
+      204,
+      24,
+      14,
+      220,
+      183
+    ],
+    "enemy_goblin_brute_hd_walk_05": [
+      260,
+      204,
+      19,
+      11,
+      222,
+      186
+    ],
+    "enemy_goblin_brute_hd_walk_06": [
+      260,
+      204,
+      23,
+      14,
+      222,
+      182
+    ],
+    "enemy_goblin_brute_hd_walk_07": [
+      260,
+      204,
+      15,
+      16,
+      238,
+      181
+    ],
+    "enemy_goblin_brute_hd_walk_08": [
+      260,
+      204,
+      16,
+      16,
+      238,
+      181
+    ],
+    "enemy_goblin_brute_hd_walk_09": [
+      260,
+      204,
+      16,
+      19,
+      240,
+      178
+    ],
+    "enemy_goblin_brute_hd_walk_10": [
+      260,
+      204,
+      20,
+      16,
+      232,
+      181
+    ],
+    "enemy_goblin_brute_hd_walk_11": [
+      260,
+      204,
+      21,
+      9,
+      230,
+      188
+    ],
+    "enemy_goblin_brute_hd_walk_12": [
+      260,
+      204,
+      21,
+      16,
+      227,
+      181
+    ],
+    "enemy_goblin_brute_hd_walk_13": [
+      260,
+      204,
+      16,
+      20,
+      233,
+      177
+    ],
+    "enemy_goblin_brute_hd_walk_14": [
+      260,
+      204,
+      19,
+      19,
+      233,
+      177
+    ],
+    "enemy_goblin_brute_hd_walk_15": [
+      260,
+      204,
+      19,
+      20,
+      231,
+      177
+    ],
+    "enemy_goblin_brute_hd_walk_16": [
+      260,
+      204,
+      17,
+      20,
+      233,
+      177
+    ],
+    "enemy_goblin_brute_hd_walk_17": [
+      260,
+      204,
+      19,
+      17,
+      229,
+      180
+    ],
+    "enemy_goblin_brute_hd_walk_18": [
+      260,
+      204,
+      18,
+      19,
+      232,
+      178
+    ],
+    "enemy_goblin_brute_hd_walk_19": [
+      260,
+      204,
+      16,
+      14,
+      233,
+      182
+    ],
+    "enemy_goblin_brute_hd_walk_20": [
+      260,
+      204,
+      20,
+      17,
+      229,
+      179
+    ],
+    "enemy_goblin_brute_hd_walk_21": [
+      260,
+      204,
+      20,
+      14,
+      229,
+      183
+    ],
+    "enemy_goblin_brute_hd_walk_22": [
+      260,
+      204,
+      20,
+      17,
+      231,
+      179
+    ],
+    "enemy_goblin_brute_hd_walk_23": [
+      260,
+      204,
+      19,
+      17,
+      228,
+      180
+    ],
+    "enemy_goblin_brute_hd_walk_24": [
+      260,
+      204,
+      22,
+      13,
+      225,
+      183
+    ],
+    "enemy_goblin_brute_hd_walk_25": [
+      260,
+      204,
+      18,
+      18,
+      230,
+      180
+    ],
+    "enemy_goblin_brute_hd_walk_26": [
+      260,
+      204,
+      20,
+      18,
+      229,
+      179
+    ],
+    "enemy_goblin_brute_hd_walk_27": [
+      260,
+      204,
+      19,
+      18,
+      229,
+      179
+    ],
+    "enemy_goblin_brute_hd_walk_28": [
+      260,
+      204,
+      20,
+      18,
+      229,
+      180
+    ],
+    "enemy_goblin_brute_hd_walk_29": [
+      260,
+      204,
+      20,
+      18,
+      230,
+      179
+    ],
+    "enemy_goblin_brute_hd_walk_30": [
+      260,
+      204,
+      20,
+      18,
+      227,
+      179
+    ],
+    "enemy_goblin_king_hd_attack_01": [
+      343,
+      239,
+      38,
+      58,
+      207,
+      171
+    ],
+    "enemy_goblin_king_hd_attack_02": [
+      343,
+      239,
+      41,
+      56,
+      205,
+      172
+    ],
+    "enemy_goblin_king_hd_attack_03": [
+      343,
+      239,
+      23,
+      49,
+      224,
+      179
+    ],
+    "enemy_goblin_king_hd_attack_04": [
+      343,
+      239,
+      41,
+      30,
+      206,
+      199
+    ],
+    "enemy_goblin_king_hd_attack_05": [
+      343,
+      239,
+      40,
+      30,
+      213,
+      199
+    ],
+    "enemy_goblin_king_hd_attack_06": [
+      343,
+      239,
+      30,
+      31,
+      223,
+      199
+    ],
+    "enemy_goblin_king_hd_attack_07": [
+      343,
+      239,
+      49,
+      8,
+      197,
+      221
+    ],
+    "enemy_goblin_king_hd_attack_08": [
+      343,
+      239,
+      47,
+      12,
+      201,
+      219
+    ],
+    "enemy_goblin_king_hd_attack_09": [
+      343,
+      239,
+      23,
+      36,
+      220,
+      195
+    ],
+    "enemy_goblin_king_hd_attack_10": [
+      343,
+      239,
+      29,
+      32,
+      208,
+      196
+    ],
+    "enemy_goblin_king_hd_attack_11": [
+      343,
+      239,
+      27,
+      26,
+      211,
+      203
+    ],
+    "enemy_goblin_king_hd_attack_12": [
+      343,
+      239,
+      20,
+      59,
+      233,
+      169
+    ],
+    "enemy_goblin_king_hd_attack_13": [
+      343,
+      239,
+      33,
+      106,
+      241,
+      125
+    ],
+    "enemy_goblin_king_hd_attack_14": [
+      343,
+      239,
+      18,
+      101,
+      254,
+      130
+    ],
+    "enemy_goblin_king_hd_attack_15": [
+      343,
+      239,
+      25,
+      119,
+      251,
+      112
+    ],
+    "enemy_goblin_king_hd_attack_16": [
+      343,
+      239,
+      38,
+      100,
+      240,
+      131
+    ],
+    "enemy_goblin_king_hd_attack_17": [
+      343,
+      239,
+      31,
+      88,
+      260,
+      140
+    ],
+    "enemy_goblin_king_hd_attack_18": [
+      343,
+      239,
+      32,
+      88,
+      253,
+      141
+    ],
+    "enemy_goblin_king_hd_attack_19": [
+      343,
+      239,
+      10,
+      79,
+      253,
+      152
+    ],
+    "enemy_goblin_king_hd_attack_20": [
+      343,
+      239,
+      3,
+      81,
+      247,
+      148
+    ],
+    "enemy_goblin_king_hd_attack_21": [
+      343,
+      239,
+      38,
+      75,
+      205,
+      154
+    ],
+    "enemy_goblin_king_hd_attack_22": [
+      343,
+      239,
+      34,
+      62,
+      213,
+      167
+    ],
+    "enemy_goblin_king_hd_attack_23": [
+      343,
+      239,
+      38,
+      64,
+      207,
+      165
+    ],
+    "enemy_goblin_king_hd_attack_24": [
+      343,
+      239,
+      39,
+      64,
+      209,
+      165
+    ],
+    "enemy_goblin_king_hd_attack_25": [
+      343,
+      239,
+      36,
+      60,
+      210,
+      169
+    ],
+    "enemy_goblin_king_hd_attack_26": [
+      343,
+      239,
+      36,
+      59,
+      210,
+      170
+    ],
+    "enemy_goblin_king_hd_attack_27": [
+      343,
+      239,
+      34,
+      58,
+      214,
+      170
+    ],
+    "enemy_goblin_king_hd_attack_28": [
+      343,
+      239,
+      36,
+      63,
+      211,
+      166
+    ],
+    "enemy_goblin_king_hd_attack_29": [
+      343,
+      239,
+      35,
+      61,
+      211,
+      168
+    ],
+    "enemy_goblin_king_hd_attack_30": [
+      343,
+      239,
+      36,
+      62,
+      209,
+      166
+    ],
+    "enemy_goblin_king_hd_death_01": [
+      300,
+      233,
+      36,
+      24,
+      208,
+      190
+    ],
+    "enemy_goblin_king_hd_death_02": [
+      300,
+      233,
+      36,
+      28,
+      217,
+      189
+    ],
+    "enemy_goblin_king_hd_death_03": [
+      300,
+      233,
+      32,
+      28,
+      224,
+      187
+    ],
+    "enemy_goblin_king_hd_death_04": [
+      300,
+      233,
+      26,
+      36,
+      226,
+      180
+    ],
+    "enemy_goblin_king_hd_death_05": [
+      300,
+      233,
+      30,
+      32,
+      232,
+      184
+    ],
+    "enemy_goblin_king_hd_death_06": [
+      300,
+      233,
+      24,
+      32,
+      228,
+      184
+    ],
+    "enemy_goblin_king_hd_death_07": [
+      300,
+      233,
+      34,
+      8,
+      226,
+      201
+    ],
+    "enemy_goblin_king_hd_death_08": [
+      300,
+      233,
+      36,
+      33,
+      241,
+      183
+    ],
+    "enemy_goblin_king_hd_death_09": [
+      300,
+      233,
+      28,
+      43,
+      224,
+      175
+    ],
+    "enemy_goblin_king_hd_death_10": [
+      300,
+      233,
+      27,
+      38,
+      224,
+      180
+    ],
+    "enemy_goblin_king_hd_death_11": [
+      300,
+      233,
+      26,
+      22,
+      223,
+      194
+    ],
+    "enemy_goblin_king_hd_death_12": [
+      300,
+      233,
+      34,
+      73,
+      243,
+      152
+    ],
+    "enemy_goblin_king_hd_death_13": [
+      300,
+      233,
+      27,
+      88,
+      244,
+      125
+    ],
+    "enemy_goblin_king_hd_death_14": [
+      300,
+      233,
+      32,
+      99,
+      249,
+      114
+    ],
+    "enemy_goblin_king_hd_death_15": [
+      300,
+      233,
+      45,
+      133,
+      242,
+      80
+    ],
+    "enemy_goblin_king_hd_death_16": [
+      300,
+      233,
+      35,
+      135,
+      255,
+      78
+    ],
+    "enemy_goblin_king_hd_death_17": [
+      300,
+      233,
+      33,
+      136,
+      246,
+      77
+    ],
+    "enemy_goblin_king_hd_death_18": [
+      300,
+      233,
+      36,
+      135,
+      239,
+      77
+    ],
+    "enemy_goblin_king_hd_death_19": [
+      300,
+      233,
+      33,
+      135,
+      249,
+      77
+    ],
+    "enemy_goblin_king_hd_death_20": [
+      300,
+      233,
+      47,
+      134,
+      249,
+      78
+    ],
+    "enemy_goblin_king_hd_death_21": [
+      300,
+      233,
+      40,
+      134,
+      247,
+      78
+    ],
+    "enemy_goblin_king_hd_death_22": [
+      300,
+      233,
+      36,
+      135,
+      251,
+      78
+    ],
+    "enemy_goblin_king_hd_death_23": [
+      300,
+      233,
+      29,
+      135,
+      247,
+      78
+    ],
+    "enemy_goblin_king_hd_walk_01": [
+      282,
+      203,
+      10,
+      14,
+      203,
+      179
+    ],
+    "enemy_goblin_king_hd_walk_02": [
+      282,
+      203,
+      4,
+      12,
+      215,
+      180
+    ],
+    "enemy_goblin_king_hd_walk_03": [
+      282,
+      203,
+      7,
+      13,
+      208,
+      180
+    ],
+    "enemy_goblin_king_hd_walk_04": [
+      282,
+      203,
+      10,
+      11,
+      206,
+      182
+    ],
+    "enemy_goblin_king_hd_walk_05": [
+      282,
+      203,
+      13,
+      8,
+      201,
+      184
+    ],
+    "enemy_goblin_king_hd_walk_06": [
+      282,
+      203,
+      9,
+      9,
+      203,
+      184
+    ],
+    "enemy_goblin_king_hd_walk_07": [
+      282,
+      203,
+      15,
+      19,
+      198,
+      174
+    ],
+    "enemy_goblin_king_hd_walk_08": [
+      282,
+      203,
+      14,
+      20,
+      199,
+      173
+    ],
+    "enemy_goblin_king_hd_walk_09": [
+      282,
+      203,
+      14,
+      18,
+      198,
+      175
+    ],
+    "enemy_goblin_king_hd_walk_10": [
+      282,
+      203,
+      15,
+      18,
+      197,
+      175
+    ],
+    "enemy_goblin_king_hd_walk_11": [
+      282,
+      203,
+      15,
+      23,
+      197,
+      171
+    ],
+    "enemy_goblin_king_hd_walk_12": [
+      282,
+      203,
+      18,
+      25,
+      191,
+      168
+    ],
+    "enemy_goblin_king_hd_walk_13": [
+      282,
+      203,
+      13,
+      24,
+      200,
+      169
+    ],
+    "enemy_goblin_king_hd_walk_14": [
+      282,
+      203,
+      10,
+      22,
+      205,
+      171
+    ],
+    "enemy_goblin_king_hd_walk_15": [
+      282,
+      203,
+      10,
+      22,
+      203,
+      171
+    ],
+    "enemy_goblin_king_hd_walk_16": [
+      282,
+      203,
+      16,
+      25,
+      196,
+      168
+    ],
+    "enemy_goblin_king_hd_walk_17": [
+      282,
+      203,
+      13,
+      30,
+      201,
+      165
+    ],
+    "enemy_goblin_king_hd_walk_18": [
+      282,
+      203,
+      17,
+      30,
+      192,
+      162
+    ],
+    "enemy_goblin_king_hd_walk_19": [
+      282,
+      203,
+      15,
+      23,
+      197,
+      170
+    ],
+    "enemy_goblin_king_hd_walk_20": [
+      282,
+      203,
+      14,
+      28,
+      195,
+      164
+    ],
+    "enemy_goblin_king_hd_walk_21": [
+      282,
+      203,
+      9,
+      25,
+      204,
+      168
+    ],
+    "enemy_goblin_king_hd_walk_22": [
+      282,
+      203,
+      12,
+      29,
+      201,
+      164
+    ],
+    "enemy_goblin_king_hd_walk_23": [
+      282,
+      203,
+      15,
+      31,
+      197,
+      161
+    ],
+    "enemy_goblin_king_hd_walk_24": [
+      282,
+      203,
+      18,
+      35,
+      190,
+      158
+    ],
+    "enemy_goblin_king_hd_walk_25": [
+      282,
+      203,
+      16,
+      39,
+      195,
+      154
+    ],
+    "enemy_goblin_king_hd_walk_26": [
+      282,
+      203,
+      16,
+      39,
+      193,
+      154
+    ],
+    "enemy_goblin_king_hd_walk_27": [
+      282,
+      203,
+      14,
+      38,
+      198,
+      155
+    ],
+    "enemy_goblin_king_hd_walk_28": [
+      282,
+      203,
+      14,
+      40,
+      199,
+      152
+    ],
+    "enemy_goblin_king_hd_walk_29": [
+      282,
+      203,
+      16,
+      41,
+      195,
+      151
+    ],
+    "enemy_goblin_king_hd_walk_30": [
+      282,
+      203,
+      19,
+      42,
+      188,
+      150
+    ],
+    "enemy_goblin_scout_hd_attack_01": [
+      349,
+      195,
+      69,
+      21,
+      188,
+      166
+    ],
+    "enemy_goblin_scout_hd_attack_02": [
+      349,
+      195,
+      68,
+      44,
+      176,
+      143
+    ],
+    "enemy_goblin_scout_hd_attack_03": [
+      349,
+      195,
+      65,
+      27,
+      177,
+      160
+    ],
+    "enemy_goblin_scout_hd_attack_04": [
+      349,
+      195,
+      73,
+      11,
+      168,
+      176
+    ],
+    "enemy_goblin_scout_hd_attack_05": [
+      349,
+      195,
+      73,
+      11,
+      165,
+      176
+    ],
+    "enemy_goblin_scout_hd_attack_06": [
+      349,
+      195,
+      75,
+      30,
+      164,
+      157
+    ],
+    "enemy_goblin_scout_hd_attack_07": [
+      349,
+      195,
+      42,
+      8,
+      198,
+      179
+    ],
+    "enemy_goblin_scout_hd_attack_08": [
+      349,
+      195,
+      35,
+      32,
+      213,
+      155
+    ],
+    "enemy_goblin_scout_hd_attack_09": [
+      349,
+      195,
+      61,
+      36,
+      247,
+      151
+    ],
+    "enemy_goblin_scout_hd_attack_10": [
+      349,
+      195,
+      71,
+      32,
+      244,
+      155
+    ],
+    "enemy_goblin_scout_hd_attack_11": [
+      349,
+      195,
+      73,
+      29,
+      241,
+      158
+    ],
+    "enemy_goblin_scout_hd_attack_12": [
+      349,
+      195,
+      70,
+      29,
+      213,
+      158
+    ],
+    "enemy_goblin_scout_hd_attack_13": [
+      349,
+      195,
+      82,
+      35,
+      263,
+      153
+    ],
+    "enemy_goblin_scout_hd_attack_14": [
+      349,
+      195,
+      58,
+      32,
+      262,
+      155
+    ],
+    "enemy_goblin_scout_hd_attack_15": [
+      349,
+      195,
+      66,
+      28,
+      251,
+      159
+    ],
+    "enemy_goblin_scout_hd_attack_16": [
+      349,
+      195,
+      74,
+      24,
+      248,
+      163
+    ],
+    "enemy_goblin_scout_hd_attack_17": [
+      349,
+      195,
+      66,
+      42,
+      245,
+      146
+    ],
+    "enemy_goblin_scout_hd_attack_18": [
+      349,
+      195,
+      66,
+      48,
+      218,
+      139
+    ],
+    "enemy_goblin_scout_hd_attack_19": [
+      349,
+      195,
+      62,
+      36,
+      220,
+      152
+    ],
+    "enemy_goblin_scout_hd_attack_20": [
+      349,
+      195,
+      77,
+      35,
+      219,
+      153
+    ],
+    "enemy_goblin_scout_hd_attack_21": [
+      349,
+      195,
+      84,
+      40,
+      211,
+      148
+    ],
+    "enemy_goblin_scout_hd_attack_22": [
+      349,
+      195,
+      80,
+      41,
+      176,
+      146
+    ],
+    "enemy_goblin_scout_hd_attack_23": [
+      349,
+      195,
+      78,
+      38,
+      174,
+      149
+    ],
+    "enemy_goblin_scout_hd_attack_24": [
+      349,
+      195,
+      73,
+      40,
+      181,
+      147
+    ],
+    "enemy_goblin_scout_hd_attack_25": [
+      349,
+      195,
+      73,
+      26,
+      186,
+      161
+    ],
+    "enemy_goblin_scout_hd_attack_26": [
+      349,
+      195,
+      75,
+      28,
+      186,
+      160
+    ],
+    "enemy_goblin_scout_hd_attack_27": [
+      349,
+      195,
+      82,
+      30,
+      176,
+      157
+    ],
+    "enemy_goblin_scout_hd_attack_28": [
+      349,
+      195,
+      78,
+      28,
+      181,
+      159
+    ],
+    "enemy_goblin_scout_hd_attack_29": [
+      349,
+      195,
+      74,
+      29,
+      184,
+      158
+    ],
+    "enemy_goblin_scout_hd_attack_30": [
+      349,
+      195,
+      75,
+      31,
+      180,
+      156
+    ],
+    "enemy_goblin_scout_hd_death_01": [
+      280,
+      203,
+      42,
+      31,
+      223,
+      164
+    ],
+    "enemy_goblin_scout_hd_death_02": [
+      280,
+      203,
+      30,
+      29,
+      220,
+      166
+    ],
+    "enemy_goblin_scout_hd_death_03": [
+      280,
+      203,
+      28,
+      28,
+      221,
+      167
+    ],
+    "enemy_goblin_scout_hd_death_04": [
+      280,
+      203,
+      17,
+      37,
+      216,
+      158
+    ],
+    "enemy_goblin_scout_hd_death_05": [
+      280,
+      203,
+      4,
+      29,
+      225,
+      166
+    ],
+    "enemy_goblin_scout_hd_death_06": [
+      280,
+      203,
+      5,
+      41,
+      234,
+      154
+    ],
+    "enemy_goblin_scout_hd_death_07": [
+      280,
+      203,
+      21,
+      29,
+      236,
+      169
+    ],
+    "enemy_goblin_scout_hd_death_08": [
+      280,
+      203,
+      37,
+      35,
+      213,
+      167
+    ],
+    "enemy_goblin_scout_hd_death_09": [
+      280,
+      203,
+      35,
+      27,
+      214,
+      176
+    ],
+    "enemy_goblin_scout_hd_death_10": [
+      280,
+      203,
+      18,
+      45,
+      220,
+      158
+    ],
+    "enemy_goblin_scout_hd_death_11": [
+      280,
+      203,
+      42,
+      45,
+      187,
+      158
+    ],
+    "enemy_goblin_scout_hd_death_12": [
+      280,
+      203,
+      34,
+      37,
+      170,
+      166
+    ],
+    "enemy_goblin_scout_hd_death_13": [
+      280,
+      203,
+      37,
+      60,
+      205,
+      143
+    ],
+    "enemy_goblin_scout_hd_death_14": [
+      280,
+      203,
+      26,
+      57,
+      242,
+      146
+    ],
+    "enemy_goblin_scout_hd_death_15": [
+      280,
+      203,
+      27,
+      71,
+      224,
+      132
+    ],
+    "enemy_goblin_scout_hd_death_16": [
+      280,
+      203,
+      24,
+      87,
+      228,
+      116
+    ],
+    "enemy_goblin_scout_hd_death_17": [
+      280,
+      203,
+      25,
+      99,
+      227,
+      104
+    ],
+    "enemy_goblin_scout_hd_death_18": [
+      280,
+      203,
+      26,
+      96,
+      228,
+      107
+    ],
+    "enemy_goblin_scout_hd_death_19": [
+      280,
+      203,
+      34,
+      68,
+      228,
+      118
+    ],
+    "enemy_goblin_scout_hd_death_20": [
+      280,
+      203,
+      30,
+      72,
+      233,
+      115
+    ],
+    "enemy_goblin_scout_hd_death_21": [
+      280,
+      203,
+      32,
+      88,
+      226,
+      102
+    ],
+    "enemy_goblin_scout_hd_death_22": [
+      280,
+      203,
+      21,
+      88,
+      237,
+      102
+    ],
+    "enemy_goblin_scout_hd_death_23": [
+      280,
+      203,
+      21,
+      88,
+      237,
+      102
+    ],
+    "enemy_goblin_scout_hd_death_24": [
+      280,
+      203,
+      21,
+      88,
+      237,
+      102
+    ],
+    "enemy_goblin_scout_hd_death_25": [
+      280,
+      203,
+      21,
+      68,
+      238,
+      99
+    ],
+    "enemy_goblin_scout_hd_death_26": [
+      280,
+      203,
+      21,
+      68,
+      237,
+      99
+    ],
+    "enemy_goblin_scout_hd_death_27": [
+      280,
+      203,
+      21,
+      68,
+      237,
+      99
+    ],
+    "enemy_goblin_scout_hd_death_28": [
+      280,
+      203,
+      21,
+      68,
+      238,
+      99
+    ],
+    "enemy_goblin_scout_hd_death_29": [
+      280,
+      203,
+      21,
+      68,
+      237,
+      99
+    ],
+    "enemy_goblin_scout_hd_death_30": [
+      280,
+      203,
+      21,
+      68,
+      237,
+      99
+    ],
+    "enemy_goblin_scout_hd_hurt_01": [
+      369,
+      193,
+      82,
+      28,
+      221,
+      157
+    ],
+    "enemy_goblin_scout_hd_hurt_02": [
+      369,
+      193,
+      103,
+      28,
+      212,
+      157
+    ],
+    "enemy_goblin_scout_hd_hurt_03": [
+      369,
+      193,
+      109,
+      10,
+      220,
+      175
+    ],
+    "enemy_goblin_scout_hd_hurt_04": [
+      369,
+      193,
+      114,
+      13,
+      213,
+      172
+    ],
+    "enemy_goblin_scout_hd_hurt_05": [
+      369,
+      193,
+      136,
+      12,
+      208,
+      173
+    ],
+    "enemy_goblin_scout_hd_hurt_06": [
+      369,
+      193,
+      141,
+      11,
+      205,
+      174
+    ],
+    "enemy_goblin_scout_hd_hurt_07": [
+      369,
+      193,
+      146,
+      8,
+      211,
+      177
+    ],
+    "enemy_goblin_scout_hd_hurt_08": [
+      369,
+      193,
+      137,
+      9,
+      222,
+      176
+    ],
+    "enemy_goblin_scout_hd_hurt_09": [
+      369,
+      193,
+      130,
+      10,
+      234,
+      176
+    ],
+    "enemy_goblin_scout_hd_hurt_10": [
+      369,
+      193,
+      137,
+      14,
+      228,
+      171
+    ],
+    "enemy_goblin_scout_hd_hurt_11": [
+      369,
+      193,
+      140,
+      16,
+      210,
+      169
+    ],
+    "enemy_goblin_scout_hd_hurt_12": [
+      369,
+      193,
+      139,
+      18,
+      208,
+      168
+    ],
+    "enemy_goblin_scout_hd_hurt_13": [
+      369,
+      193,
+      112,
+      10,
+      215,
+      176
+    ],
+    "enemy_goblin_scout_hd_hurt_14": [
+      369,
+      193,
+      97,
+      22,
+      208,
+      164
+    ],
+    "enemy_goblin_scout_hd_hurt_15": [
+      369,
+      193,
+      88,
+      22,
+      200,
+      164
+    ],
+    "enemy_goblin_scout_hd_hurt_16": [
+      369,
+      193,
+      82,
+      23,
+      213,
+      162
+    ],
+    "enemy_goblin_scout_hd_hurt_17": [
+      369,
+      193,
+      87,
+      26,
+      217,
+      160
+    ],
+    "enemy_goblin_scout_hd_hurt_18": [
+      369,
+      193,
+      86,
+      25,
+      221,
+      160
+    ],
+    "enemy_goblin_scout_hd_hurt_19": [
+      369,
+      193,
+      82,
+      29,
+      216,
+      156
+    ],
+    "enemy_goblin_scout_hd_hurt_20": [
+      369,
+      193,
+      80,
+      26,
+      219,
+      159
+    ],
+    "enemy_goblin_scout_hd_hurt_21": [
+      369,
+      193,
+      79,
+      28,
+      215,
+      158
+    ],
+    "enemy_goblin_scout_hd_hurt_22": [
+      369,
+      193,
+      83,
+      27,
+      195,
+      158
+    ],
+    "enemy_goblin_scout_hd_hurt_23": [
+      369,
+      193,
+      79,
+      26,
+      198,
+      159
+    ],
+    "enemy_goblin_scout_hd_hurt_24": [
+      369,
+      193,
+      79,
+      27,
+      197,
+      158
+    ],
+    "enemy_goblin_scout_hd_hurt_25": [
+      369,
+      193,
+      79,
+      29,
+      194,
+      157
+    ],
+    "enemy_goblin_scout_hd_hurt_26": [
+      369,
+      193,
+      78,
+      29,
+      190,
+      157
+    ],
+    "enemy_goblin_scout_hd_hurt_27": [
+      369,
+      193,
+      78,
+      27,
+      199,
+      158
+    ],
+    "enemy_goblin_scout_hd_hurt_28": [
+      369,
+      193,
+      78,
+      27,
+      196,
+      158
+    ],
+    "enemy_goblin_scout_hd_hurt_29": [
+      369,
+      193,
+      81,
+      27,
+      187,
+      158
+    ],
+    "enemy_goblin_scout_hd_hurt_30": [
+      369,
+      193,
+      77,
+      26,
+      191,
+      159
+    ],
+    "enemy_goblin_scout_hd_walk_01": [
+      217,
+      181,
+      6,
+      8,
+      187,
+      165
+    ],
+    "enemy_goblin_scout_hd_walk_02": [
+      217,
+      181,
+      4,
+      9,
+      185,
+      164
+    ],
+    "enemy_goblin_scout_hd_walk_03": [
+      217,
+      181,
+      6,
+      8,
+      188,
+      165
+    ],
+    "enemy_goblin_scout_hd_walk_04": [
+      217,
+      181,
+      8,
+      9,
+      186,
+      165
+    ],
+    "enemy_goblin_scout_hd_walk_05": [
+      217,
+      181,
+      13,
+      9,
+      184,
+      165
+    ],
+    "enemy_goblin_scout_hd_walk_06": [
+      217,
+      181,
+      8,
+      9,
+      182,
+      164
+    ],
+    "enemy_goblin_scout_hd_walk_07": [
+      217,
+      181,
+      3,
+      11,
+      192,
+      162
+    ],
+    "enemy_goblin_scout_hd_walk_08": [
+      217,
+      181,
+      10,
+      13,
+      191,
+      161
+    ],
+    "enemy_goblin_scout_hd_walk_09": [
+      217,
+      181,
+      11,
+      13,
+      189,
+      160
+    ],
+    "enemy_goblin_scout_hd_walk_10": [
+      217,
+      181,
+      13,
+      13,
+      185,
+      160
+    ],
+    "enemy_goblin_scout_hd_walk_11": [
+      217,
+      181,
+      12,
+      13,
+      191,
+      160
+    ],
+    "enemy_goblin_scout_hd_walk_12": [
+      217,
+      181,
+      14,
+      12,
+      186,
+      161
+    ],
+    "enemy_goblin_scout_hd_walk_13": [
+      217,
+      181,
+      12,
+      12,
+      180,
+      161
+    ],
+    "enemy_goblin_scout_hd_walk_14": [
+      217,
+      181,
+      13,
+      11,
+      179,
+      162
+    ],
+    "enemy_goblin_scout_hd_walk_15": [
+      217,
+      181,
+      8,
+      13,
+      187,
+      161
+    ],
+    "enemy_goblin_scout_hd_walk_16": [
+      217,
+      181,
+      8,
+      13,
+      185,
+      160
+    ],
+    "enemy_goblin_scout_hd_walk_17": [
+      217,
+      181,
+      8,
+      14,
+      185,
+      160
+    ],
+    "enemy_goblin_scout_hd_walk_18": [
+      217,
+      181,
+      8,
+      14,
+      183,
+      160
+    ],
+    "enemy_goblin_scout_hd_walk_19": [
+      217,
+      181,
+      7,
+      16,
+      185,
+      157
+    ],
+    "enemy_goblin_scout_hd_walk_20": [
+      217,
+      181,
+      10,
+      15,
+      183,
+      158
+    ],
+    "enemy_goblin_scout_hd_walk_21": [
+      217,
+      181,
+      6,
+      17,
+      183,
+      157
+    ],
+    "enemy_goblin_scout_hd_walk_22": [
+      217,
+      181,
+      13,
+      16,
+      185,
+      157
+    ],
+    "enemy_goblin_scout_hd_walk_23": [
+      217,
+      181,
+      19,
+      17,
+      179,
+      156
+    ],
+    "enemy_goblin_scout_hd_walk_24": [
+      217,
+      181,
+      8,
+      17,
+      185,
+      157
+    ],
+    "enemy_goblin_scout_hd_walk_25": [
+      217,
+      181,
+      9,
+      18,
+      185,
+      155
+    ],
+    "enemy_goblin_scout_hd_walk_26": [
+      217,
+      181,
+      10,
+      18,
+      186,
+      155
+    ],
+    "enemy_goblin_scout_hd_walk_27": [
+      217,
+      181,
+      11,
+      18,
+      185,
+      155
+    ],
+    "enemy_goblin_scout_hd_walk_28": [
+      217,
+      181,
+      8,
+      18,
+      184,
+      155
+    ],
+    "enemy_goblin_scout_hd_walk_29": [
+      217,
+      181,
+      7,
+      18,
+      185,
+      155
+    ],
+    "enemy_goblin_scout_hd_walk_30": [
+      217,
+      181,
+      8,
+      18,
+      184,
+      155
+    ],
+    "enemy_goblin_warlord_hd_attack_01": [
+      371,
+      221,
+      56,
+      58,
+      204,
+      153
+    ],
+    "enemy_goblin_warlord_hd_attack_02": [
+      371,
+      221,
+      51,
+      28,
+      193,
+      183
+    ],
+    "enemy_goblin_warlord_hd_attack_03": [
+      371,
+      221,
+      50,
+      19,
+      195,
+      192
+    ],
+    "enemy_goblin_warlord_hd_attack_04": [
+      371,
+      221,
+      56,
+      19,
+      186,
+      192
+    ],
+    "enemy_goblin_warlord_hd_attack_05": [
+      371,
+      221,
+      48,
+      30,
+      196,
+      180
+    ],
+    "enemy_goblin_warlord_hd_attack_06": [
+      371,
+      221,
+      54,
+      21,
+      188,
+      189
+    ],
+    "enemy_goblin_warlord_hd_attack_07": [
+      371,
+      221,
+      42,
+      30,
+      205,
+      181
+    ],
+    "enemy_goblin_warlord_hd_attack_08": [
+      371,
+      221,
+      46,
+      30,
+      201,
+      180
+    ],
+    "enemy_goblin_warlord_hd_attack_09": [
+      371,
+      221,
+      54,
+      17,
+      189,
+      194
+    ],
+    "enemy_goblin_warlord_hd_attack_10": [
+      371,
+      221,
+      56,
+      12,
+      184,
+      199
+    ],
+    "enemy_goblin_warlord_hd_attack_11": [
+      371,
+      221,
+      60,
+      8,
+      183,
+      203
+    ],
+    "enemy_goblin_warlord_hd_attack_12": [
+      371,
+      221,
+      59,
+      11,
+      189,
+      200
+    ],
+    "enemy_goblin_warlord_hd_attack_13": [
+      371,
+      221,
+      11,
+      79,
+      246,
+      132
+    ],
+    "enemy_goblin_warlord_hd_attack_14": [
+      371,
+      221,
+      18,
+      64,
+      236,
+      149
+    ],
+    "enemy_goblin_warlord_hd_attack_15": [
+      371,
+      221,
+      20,
+      59,
+      235,
+      153
+    ],
+    "enemy_goblin_warlord_hd_attack_16": [
+      371,
+      221,
+      15,
+      67,
+      227,
+      144
+    ],
+    "enemy_goblin_warlord_hd_attack_17": [
+      371,
+      221,
+      4,
+      72,
+      253,
+      139
+    ],
+    "enemy_goblin_warlord_hd_attack_18": [
+      371,
+      221,
+      60,
+      43,
+      189,
+      167
+    ],
+    "enemy_goblin_warlord_hd_attack_19": [
+      371,
+      221,
+      55,
+      30,
+      202,
+      180
+    ],
+    "enemy_goblin_warlord_hd_attack_20": [
+      371,
+      221,
+      62,
+      39,
+      190,
+      172
+    ],
+    "enemy_goblin_warlord_hd_attack_21": [
+      371,
+      221,
+      60,
+      26,
+      196,
+      184
+    ],
+    "enemy_goblin_warlord_hd_attack_22": [
+      371,
+      221,
+      67,
+      33,
+      185,
+      178
+    ],
+    "enemy_goblin_warlord_hd_attack_23": [
+      371,
+      221,
+      65,
+      36,
+      189,
+      175
+    ],
+    "enemy_goblin_warlord_hd_attack_24": [
+      371,
+      221,
+      64,
+      41,
+      192,
+      170
+    ],
+    "enemy_goblin_warlord_hd_attack_25": [
+      371,
+      221,
+      59,
+      43,
+      200,
+      168
+    ],
+    "enemy_goblin_warlord_hd_attack_26": [
+      371,
+      221,
+      60,
+      44,
+      196,
+      167
+    ],
+    "enemy_goblin_warlord_hd_attack_27": [
+      371,
+      221,
+      66,
+      42,
+      187,
+      169
+    ],
+    "enemy_goblin_warlord_hd_attack_28": [
+      371,
+      221,
+      60,
+      44,
+      200,
+      166
+    ],
+    "enemy_goblin_warlord_hd_attack_29": [
+      371,
+      221,
+      62,
+      44,
+      195,
+      166
+    ],
+    "enemy_goblin_warlord_hd_attack_30": [
+      371,
+      221,
+      64,
+      45,
+      194,
+      166
+    ],
+    "enemy_goblin_warlord_hd_death_01": [
+      384,
+      214,
+      80,
+      10,
+      218,
+      187
+    ],
+    "enemy_goblin_warlord_hd_death_02": [
+      384,
+      214,
+      79,
+      10,
+      222,
+      187
+    ],
+    "enemy_goblin_warlord_hd_death_03": [
+      384,
+      214,
+      78,
+      10,
+      220,
+      188
+    ],
+    "enemy_goblin_warlord_hd_death_04": [
+      384,
+      214,
+      51,
+      18,
+      223,
+      179
+    ],
+    "enemy_goblin_warlord_hd_death_05": [
+      384,
+      214,
+      40,
+      25,
+      263,
+      173
+    ],
+    "enemy_goblin_warlord_hd_death_06": [
+      384,
+      214,
+      42,
+      21,
+      249,
+      177
+    ],
+    "enemy_goblin_warlord_hd_death_07": [
+      384,
+      214,
+      64,
+      19,
+      230,
+      176
+    ],
+    "enemy_goblin_warlord_hd_death_08": [
+      384,
+      214,
+      52,
+      8,
+      252,
+      184
+    ],
+    "enemy_goblin_warlord_hd_death_09": [
+      384,
+      214,
+      38,
+      20,
+      248,
+      176
+    ],
+    "enemy_goblin_warlord_hd_death_10": [
+      384,
+      214,
+      60,
+      15,
+      240,
+      178
+    ],
+    "enemy_goblin_warlord_hd_death_11": [
+      384,
+      214,
+      75,
+      15,
+      236,
+      175
+    ],
+    "enemy_goblin_warlord_hd_death_12": [
+      384,
+      214,
+      70,
+      37,
+      224,
+      169
+    ],
+    "enemy_goblin_warlord_hd_death_13": [
+      384,
+      214,
+      123,
+      36,
+      238,
+      160
+    ],
+    "enemy_goblin_warlord_hd_death_14": [
+      384,
+      214,
+      114,
+      44,
+      263,
+      153
+    ],
+    "enemy_goblin_warlord_hd_death_15": [
+      384,
+      214,
+      120,
+      74,
+      260,
+      122
+    ],
+    "enemy_goblin_warlord_hd_death_16": [
+      384,
+      214,
+      63,
+      63,
+      253,
+      133
+    ],
+    "enemy_goblin_warlord_hd_death_17": [
+      384,
+      214,
+      58,
+      77,
+      245,
+      119
+    ],
+    "enemy_goblin_warlord_hd_death_18": [
+      384,
+      214,
+      114,
+      76,
+      244,
+      120
+    ],
+    "enemy_goblin_warlord_hd_death_19": [
+      384,
+      214,
+      67,
+      77,
+      252,
+      120
+    ],
+    "enemy_goblin_warlord_hd_death_20": [
+      384,
+      214,
+      73,
+      82,
+      251,
+      114
+    ],
+    "enemy_goblin_warlord_hd_death_21": [
+      384,
+      214,
+      115,
+      84,
+      254,
+      113
+    ],
+    "enemy_goblin_warlord_hd_death_22": [
+      384,
+      214,
+      70,
+      81,
+      257,
+      115
+    ],
+    "enemy_goblin_warlord_hd_hurt_01": [
+      356,
+      217,
+      40,
+      21,
+      220,
+      187
+    ],
+    "enemy_goblin_warlord_hd_hurt_02": [
+      356,
+      217,
+      41,
+      21,
+      221,
+      187
+    ],
+    "enemy_goblin_warlord_hd_hurt_03": [
+      356,
+      217,
+      42,
+      21,
+      220,
+      187
+    ],
+    "enemy_goblin_warlord_hd_hurt_04": [
+      356,
+      217,
+      16,
+      29,
+      241,
+      179
+    ],
+    "enemy_goblin_warlord_hd_hurt_05": [
+      356,
+      217,
+      18,
+      28,
+      239,
+      180
+    ],
+    "enemy_goblin_warlord_hd_hurt_06": [
+      356,
+      217,
+      27,
+      20,
+      240,
+      187
+    ],
+    "enemy_goblin_warlord_hd_hurt_07": [
+      356,
+      217,
+      38,
+      17,
+      219,
+      191
+    ],
+    "enemy_goblin_warlord_hd_hurt_08": [
+      356,
+      217,
+      44,
+      11,
+      213,
+      197
+    ],
+    "enemy_goblin_warlord_hd_hurt_09": [
+      356,
+      217,
+      43,
+      8,
+      217,
+      199
+    ],
+    "enemy_goblin_warlord_hd_hurt_10": [
+      356,
+      217,
+      24,
+      10,
+      242,
+      198
+    ],
+    "enemy_goblin_warlord_hd_hurt_11": [
+      356,
+      217,
+      4,
+      12,
+      247,
+      196
+    ],
+    "enemy_goblin_warlord_hd_hurt_12": [
+      356,
+      217,
+      35,
+      22,
+      224,
+      185
+    ],
+    "enemy_goblin_warlord_hd_hurt_13": [
+      356,
+      217,
+      17,
+      29,
+      239,
+      178
+    ],
+    "enemy_goblin_warlord_hd_hurt_14": [
+      356,
+      217,
+      20,
+      34,
+      244,
+      174
+    ],
+    "enemy_goblin_warlord_hd_hurt_15": [
+      356,
+      217,
+      12,
+      28,
+      246,
+      179
+    ],
+    "enemy_goblin_warlord_hd_hurt_16": [
+      356,
+      217,
+      31,
+      27,
+      228,
+      180
+    ],
+    "enemy_goblin_warlord_hd_hurt_17": [
+      356,
+      217,
+      20,
+      47,
+      258,
+      161
+    ],
+    "enemy_goblin_warlord_hd_hurt_18": [
+      356,
+      217,
+      30,
+      39,
+      237,
+      168
+    ],
+    "enemy_goblin_warlord_hd_hurt_19": [
+      356,
+      217,
+      46,
+      29,
+      213,
+      178
+    ],
+    "enemy_goblin_warlord_hd_hurt_20": [
+      356,
+      217,
+      48,
+      33,
+      211,
+      176
+    ],
+    "enemy_goblin_warlord_hd_hurt_21": [
+      356,
+      217,
+      46,
+      32,
+      212,
+      175
+    ],
+    "enemy_goblin_warlord_hd_hurt_22": [
+      356,
+      217,
+      45,
+      30,
+      213,
+      179
+    ],
+    "enemy_goblin_warlord_hd_hurt_23": [
+      356,
+      217,
+      46,
+      32,
+      213,
+      176
+    ],
+    "enemy_goblin_warlord_hd_hurt_24": [
+      356,
+      217,
+      43,
+      32,
+      214,
+      176
+    ],
+    "enemy_goblin_warlord_hd_hurt_25": [
+      356,
+      217,
+      44,
+      31,
+      212,
+      177
+    ],
+    "enemy_goblin_warlord_hd_hurt_26": [
+      356,
+      217,
+      44,
+      30,
+      212,
+      177
+    ],
+    "enemy_goblin_warlord_hd_hurt_27": [
+      356,
+      217,
+      42,
+      28,
+      217,
+      180
+    ],
+    "enemy_goblin_warlord_hd_hurt_28": [
+      356,
+      217,
+      42,
+      27,
+      218,
+      180
+    ],
+    "enemy_goblin_warlord_hd_hurt_29": [
+      356,
+      217,
+      44,
+      27,
+      217,
+      180
+    ],
+    "enemy_goblin_warlord_hd_hurt_30": [
+      356,
+      217,
+      42,
+      28,
+      217,
+      180
+    ],
+    "enemy_goblin_warlord_hd_walk_01": [
+      291,
+      221,
+      4,
+      21,
+      222,
+      190
+    ],
+    "enemy_goblin_warlord_hd_walk_02": [
+      291,
+      221,
+      5,
+      21,
+      221,
+      190
+    ],
+    "enemy_goblin_warlord_hd_walk_03": [
+      291,
+      221,
+      6,
+      20,
+      219,
+      190
+    ],
+    "enemy_goblin_warlord_hd_walk_04": [
+      291,
+      221,
+      3,
+      19,
+      224,
+      192
+    ],
+    "enemy_goblin_warlord_hd_walk_05": [
+      291,
+      221,
+      6,
+      23,
+      217,
+      188
+    ],
+    "enemy_goblin_warlord_hd_walk_06": [
+      291,
+      221,
+      11,
+      23,
+      205,
+      187
+    ],
+    "enemy_goblin_warlord_hd_walk_07": [
+      291,
+      221,
+      5,
+      14,
+      220,
+      197
+    ],
+    "enemy_goblin_warlord_hd_walk_08": [
+      291,
+      221,
+      6,
+      15,
+      216,
+      196
+    ],
+    "enemy_goblin_warlord_hd_walk_09": [
+      291,
+      221,
+      4,
+      14,
+      219,
+      197
+    ],
+    "enemy_goblin_warlord_hd_walk_10": [
+      291,
+      221,
+      6,
+      16,
+      217,
+      195
+    ],
+    "enemy_goblin_warlord_hd_walk_11": [
+      291,
+      221,
+      10,
+      16,
+      211,
+      195
+    ],
+    "enemy_goblin_warlord_hd_walk_12": [
+      291,
+      221,
+      11,
+      16,
+      211,
+      195
+    ],
+    "enemy_goblin_warlord_hd_walk_13": [
+      291,
+      221,
+      7,
+      10,
+      218,
+      201
+    ],
+    "enemy_goblin_warlord_hd_walk_14": [
+      291,
+      221,
+      5,
+      10,
+      220,
+      201
+    ],
+    "enemy_goblin_warlord_hd_walk_15": [
+      291,
+      221,
+      9,
+      8,
+      213,
+      205
+    ],
+    "enemy_goblin_warlord_hd_walk_16": [
+      291,
+      221,
+      9,
+      9,
+      214,
+      202
+    ],
+    "enemy_goblin_warlord_hd_walk_17": [
+      291,
+      221,
+      11,
+      13,
+      211,
+      198
+    ],
+    "enemy_goblin_warlord_hd_walk_18": [
+      291,
+      221,
+      12,
+      16,
+      209,
+      196
+    ],
+    "enemy_goblin_warlord_hd_walk_19": [
+      291,
+      221,
+      13,
+      22,
+      207,
+      189
+    ],
+    "enemy_goblin_warlord_hd_walk_20": [
+      291,
+      221,
+      12,
+      23,
+      211,
+      188
+    ],
+    "enemy_goblin_warlord_hd_walk_21": [
+      291,
+      221,
+      8,
+      22,
+      214,
+      188
+    ],
+    "enemy_goblin_warlord_hd_walk_22": [
+      291,
+      221,
+      10,
+      22,
+      212,
+      189
+    ],
+    "enemy_goblin_warlord_hd_walk_23": [
+      291,
+      221,
+      13,
+      23,
+      208,
+      188
+    ],
+    "enemy_goblin_warlord_hd_walk_24": [
+      291,
+      221,
+      15,
+      24,
+      204,
+      187
+    ],
+    "enemy_goblin_warlord_hd_walk_25": [
+      291,
+      221,
+      17,
+      41,
+      200,
+      170
+    ],
+    "enemy_goblin_warlord_hd_walk_26": [
+      291,
+      221,
+      19,
+      42,
+      198,
+      169
+    ],
+    "enemy_goblin_warlord_hd_walk_27": [
+      291,
+      221,
+      20,
+      41,
+      196,
+      171
+    ],
+    "enemy_goblin_warlord_hd_walk_28": [
+      291,
+      221,
+      18,
+      41,
+      199,
+      170
+    ],
+    "enemy_goblin_warlord_hd_walk_29": [
+      291,
+      221,
+      11,
+      41,
+      210,
+      170
+    ],
+    "enemy_goblin_warlord_hd_walk_30": [
+      291,
+      221,
+      23,
+      41,
+      192,
+      171
+    ],
+    "enemy_goblin_warrior_hd_attack_01": [
+      327,
+      211,
+      52,
+      43,
+      229,
+      161
+    ],
+    "enemy_goblin_warrior_hd_attack_02": [
+      327,
+      211,
+      35,
+      49,
+      194,
+      154
+    ],
+    "enemy_goblin_warrior_hd_attack_03": [
+      327,
+      211,
+      39,
+      12,
+      190,
+      191
+    ],
+    "enemy_goblin_warrior_hd_attack_04": [
+      327,
+      211,
+      37,
+      8,
+      193,
+      195
+    ],
+    "enemy_goblin_warrior_hd_attack_05": [
+      327,
+      211,
+      44,
+      9,
+      173,
+      194
+    ],
+    "enemy_goblin_warrior_hd_attack_06": [
+      327,
+      211,
+      21,
+      10,
+      195,
+      193
+    ],
+    "enemy_goblin_warrior_hd_attack_07": [
+      327,
+      211,
+      35,
+      10,
+      235,
+      194
+    ],
+    "enemy_goblin_warrior_hd_attack_08": [
+      327,
+      211,
+      32,
+      25,
+      246,
+      182
+    ],
+    "enemy_goblin_warrior_hd_attack_09": [
+      327,
+      211,
+      20,
+      9,
+      263,
+      195
+    ],
+    "enemy_goblin_warrior_hd_attack_10": [
+      327,
+      211,
+      33,
+      16,
+      265,
+      188
+    ],
+    "enemy_goblin_warrior_hd_attack_11": [
+      327,
+      211,
+      66,
+      41,
+      233,
+      164
+    ],
+    "enemy_goblin_warrior_hd_attack_12": [
+      327,
+      211,
+      49,
+      55,
+      250,
+      151
+    ],
+    "enemy_goblin_warrior_hd_attack_13": [
+      327,
+      211,
+      65,
+      51,
+      258,
+      152
+    ],
+    "enemy_goblin_warrior_hd_attack_14": [
+      327,
+      211,
+      48,
+      56,
+      266,
+      147
+    ],
+    "enemy_goblin_warrior_hd_attack_15": [
+      327,
+      211,
+      45,
+      68,
+      251,
+      137
+    ],
+    "enemy_goblin_warrior_hd_attack_16": [
+      327,
+      211,
+      47,
+      68,
+      260,
+      136
+    ],
+    "enemy_goblin_warrior_hd_attack_17": [
+      327,
+      211,
+      64,
+      68,
+      245,
+      135
+    ],
+    "enemy_goblin_warrior_hd_attack_18": [
+      327,
+      211,
+      61,
+      69,
+      236,
+      134
+    ],
+    "enemy_goblin_warrior_hd_attack_19": [
+      327,
+      211,
+      69,
+      65,
+      232,
+      138
+    ],
+    "enemy_goblin_warrior_hd_attack_20": [
+      327,
+      211,
+      48,
+      58,
+      257,
+      146
+    ],
+    "enemy_goblin_warrior_hd_attack_21": [
+      327,
+      211,
+      58,
+      59,
+      232,
+      144
+    ],
+    "enemy_goblin_warrior_hd_attack_22": [
+      327,
+      211,
+      58,
+      62,
+      230,
+      142
+    ],
+    "enemy_goblin_warrior_hd_attack_23": [
+      327,
+      211,
+      60,
+      59,
+      224,
+      144
+    ],
+    "enemy_goblin_warrior_hd_attack_24": [
+      327,
+      211,
+      57,
+      52,
+      222,
+      152
+    ],
+    "enemy_goblin_warrior_hd_attack_25": [
+      327,
+      211,
+      63,
+      41,
+      228,
+      162
+    ],
+    "enemy_goblin_warrior_hd_attack_26": [
+      327,
+      211,
+      63,
+      39,
+      224,
+      164
+    ],
+    "enemy_goblin_warrior_hd_attack_27": [
+      327,
+      211,
+      56,
+      49,
+      227,
+      154
+    ],
+    "enemy_goblin_warrior_hd_attack_28": [
+      327,
+      211,
+      59,
+      51,
+      232,
+      152
+    ],
+    "enemy_goblin_warrior_hd_attack_29": [
+      327,
+      211,
+      58,
+      50,
+      227,
+      153
+    ],
+    "enemy_goblin_warrior_hd_attack_30": [
+      327,
+      211,
+      57,
+      46,
+      225,
+      157
+    ],
+    "enemy_goblin_warrior_hd_death_01": [
+      294,
+      195,
+      42,
+      18,
+      229,
+      170
+    ],
+    "enemy_goblin_warrior_hd_death_02": [
+      294,
+      195,
+      32,
+      33,
+      236,
+      157
+    ],
+    "enemy_goblin_warrior_hd_death_03": [
+      294,
+      195,
+      40,
+      12,
+      223,
+      179
+    ],
+    "enemy_goblin_warrior_hd_death_04": [
+      294,
+      195,
+      51,
+      22,
+      216,
+      170
+    ],
+    "enemy_goblin_warrior_hd_death_05": [
+      294,
+      195,
+      57,
+      29,
+      216,
+      162
+    ],
+    "enemy_goblin_warrior_hd_death_06": [
+      294,
+      195,
+      55,
+      26,
+      208,
+      165
+    ],
+    "enemy_goblin_warrior_hd_death_07": [
+      294,
+      195,
+      43,
+      26,
+      215,
+      169
+    ],
+    "enemy_goblin_warrior_hd_death_08": [
+      294,
+      195,
+      43,
+      27,
+      213,
+      168
+    ],
+    "enemy_goblin_warrior_hd_death_09": [
+      294,
+      195,
+      44,
+      29,
+      215,
+      166
+    ],
+    "enemy_goblin_warrior_hd_death_10": [
+      294,
+      195,
+      43,
+      42,
+      214,
+      153
+    ],
+    "enemy_goblin_warrior_hd_death_11": [
+      294,
+      195,
+      31,
+      58,
+      259,
+      137
+    ],
+    "enemy_goblin_warrior_hd_death_12": [
+      294,
+      195,
+      53,
+      63,
+      214,
+      132
+    ],
+    "enemy_goblin_warrior_hd_death_13": [
+      294,
+      195,
+      38,
+      43,
+      243,
+      152
+    ],
+    "enemy_goblin_warrior_hd_death_14": [
+      294,
+      195,
+      69,
+      42,
+      215,
+      153
+    ],
+    "enemy_goblin_warrior_hd_death_15": [
+      294,
+      195,
+      58,
+      44,
+      222,
+      151
+    ],
+    "enemy_goblin_warrior_hd_death_16": [
+      294,
+      195,
+      61,
+      48,
+      224,
+      147
+    ],
+    "enemy_goblin_warrior_hd_death_17": [
+      294,
+      195,
+      68,
+      59,
+      222,
+      136
+    ],
+    "enemy_goblin_warrior_hd_death_18": [
+      294,
+      195,
+      67,
+      61,
+      200,
+      134
+    ],
+    "enemy_goblin_warrior_hd_death_19": [
+      294,
+      195,
+      34,
+      56,
+      245,
+      134
+    ],
+    "enemy_goblin_warrior_hd_death_20": [
+      294,
+      195,
+      37,
+      85,
+      241,
+      105
+    ],
+    "enemy_goblin_warrior_hd_death_21": [
+      294,
+      195,
+      37,
+      97,
+      242,
+      93
+    ],
+    "enemy_goblin_warrior_hd_death_22": [
+      294,
+      195,
+      38,
+      98,
+      241,
+      93
+    ],
+    "enemy_goblin_warrior_hd_death_23": [
+      294,
+      195,
+      37,
+      97,
+      237,
+      93
+    ],
+    "enemy_goblin_warrior_hd_death_24": [
+      294,
+      195,
+      30,
+      96,
+      238,
+      93
+    ],
+    "enemy_goblin_warrior_hd_death_25": [
+      294,
+      195,
+      38,
+      54,
+      238,
+      100
+    ],
+    "enemy_goblin_warrior_hd_death_26": [
+      294,
+      195,
+      34,
+      53,
+      236,
+      102
+    ],
+    "enemy_goblin_warrior_hd_death_27": [
+      294,
+      195,
+      37,
+      54,
+      238,
+      101
+    ],
+    "enemy_goblin_warrior_hd_death_28": [
+      294,
+      195,
+      36,
+      54,
+      238,
+      101
+    ],
+    "enemy_goblin_warrior_hd_death_29": [
+      294,
+      195,
+      35,
+      53,
+      237,
+      102
+    ],
+    "enemy_goblin_warrior_hd_death_30": [
+      294,
+      195,
+      33,
+      53,
+      235,
+      102
+    ],
+    "enemy_goblin_warrior_hd_hurt_01": [
+      375,
+      199,
+      84,
+      21,
+      230,
+      171
+    ],
+    "enemy_goblin_warrior_hd_hurt_02": [
+      375,
+      199,
+      102,
+      26,
+      233,
+      165
+    ],
+    "enemy_goblin_warrior_hd_hurt_03": [
+      375,
+      199,
+      112,
+      10,
+      223,
+      181
+    ],
+    "enemy_goblin_warrior_hd_hurt_04": [
+      375,
+      199,
+      111,
+      10,
+      246,
+      181
+    ],
+    "enemy_goblin_warrior_hd_hurt_05": [
+      375,
+      199,
+      129,
+      8,
+      211,
+      183
+    ],
+    "enemy_goblin_warrior_hd_hurt_06": [
+      375,
+      199,
+      135,
+      9,
+      221,
+      182
+    ],
+    "enemy_goblin_warrior_hd_hurt_07": [
+      375,
+      199,
+      144,
+      23,
+      211,
+      169
+    ],
+    "enemy_goblin_warrior_hd_hurt_08": [
+      375,
+      199,
+      148,
+      21,
+      221,
+      170
+    ],
+    "enemy_goblin_warrior_hd_hurt_09": [
+      375,
+      199,
+      143,
+      22,
+      227,
+      169
+    ],
+    "enemy_goblin_warrior_hd_hurt_10": [
+      375,
+      199,
+      147,
+      22,
+      221,
+      169
+    ],
+    "enemy_goblin_warrior_hd_hurt_11": [
+      375,
+      199,
+      141,
+      20,
+      226,
+      171
+    ],
+    "enemy_goblin_warrior_hd_hurt_12": [
+      375,
+      199,
+      145,
+      19,
+      226,
+      174
+    ],
+    "enemy_goblin_warrior_hd_hurt_13": [
+      375,
+      199,
+      79,
+      42,
+      228,
+      149
+    ],
+    "enemy_goblin_warrior_hd_hurt_14": [
+      375,
+      199,
+      76,
+      39,
+      229,
+      153
+    ],
+    "enemy_goblin_warrior_hd_hurt_15": [
+      375,
+      199,
+      76,
+      38,
+      225,
+      153
+    ],
+    "enemy_goblin_warrior_hd_hurt_16": [
+      375,
+      199,
+      76,
+      40,
+      230,
+      152
+    ],
+    "enemy_goblin_warrior_hd_hurt_17": [
+      375,
+      199,
+      77,
+      41,
+      227,
+      151
+    ],
+    "enemy_goblin_warrior_hd_hurt_18": [
+      375,
+      199,
+      76,
+      42,
+      227,
+      150
+    ],
+    "enemy_goblin_warrior_hd_hurt_19": [
+      375,
+      199,
+      77,
+      37,
+      232,
+      154
+    ],
+    "enemy_goblin_warrior_hd_hurt_20": [
+      375,
+      199,
+      76,
+      37,
+      231,
+      154
+    ],
+    "enemy_goblin_warrior_hd_hurt_21": [
+      375,
+      199,
+      77,
+      37,
+      227,
+      154
+    ],
+    "enemy_goblin_warrior_hd_hurt_22": [
+      375,
+      199,
+      82,
+      39,
+      229,
+      153
+    ],
+    "enemy_goblin_warrior_hd_hurt_23": [
+      375,
+      199,
+      83,
+      41,
+      223,
+      150
+    ],
+    "enemy_goblin_warrior_hd_hurt_24": [
+      375,
+      199,
+      78,
+      40,
+      225,
+      151
+    ],
+    "enemy_goblin_warrior_hd_hurt_25": [
+      375,
+      199,
+      78,
+      36,
+      228,
+      155
+    ],
+    "enemy_goblin_warrior_hd_hurt_26": [
+      375,
+      199,
+      74,
+      35,
+      230,
+      156
+    ],
+    "enemy_goblin_warrior_hd_hurt_27": [
+      375,
+      199,
+      74,
+      35,
+      229,
+      156
+    ],
+    "enemy_goblin_warrior_hd_hurt_28": [
+      375,
+      199,
+      76,
+      36,
+      226,
+      155
+    ],
+    "enemy_goblin_warrior_hd_hurt_29": [
+      375,
+      199,
+      77,
+      36,
+      225,
+      155
+    ],
+    "enemy_goblin_warrior_hd_hurt_30": [
+      375,
+      199,
+      75,
+      36,
+      230,
+      155
+    ],
+    "enemy_goblin_warrior_hd_walk_01": [
+      291,
+      188,
+      39,
+      8,
+      247,
+      172
+    ],
+    "enemy_goblin_warrior_hd_walk_02": [
+      291,
+      188,
+      37,
+      9,
+      238,
+      171
+    ],
+    "enemy_goblin_warrior_hd_walk_03": [
+      291,
+      188,
+      44,
+      9,
+      233,
+      171
+    ],
+    "enemy_goblin_warrior_hd_walk_04": [
+      291,
+      188,
+      41,
+      8,
+      234,
+      172
+    ],
+    "enemy_goblin_warrior_hd_walk_05": [
+      291,
+      188,
+      35,
+      9,
+      233,
+      171
+    ],
+    "enemy_goblin_warrior_hd_walk_06": [
+      291,
+      188,
+      36,
+      9,
+      215,
+      171
+    ],
+    "enemy_goblin_warrior_hd_walk_07": [
+      291,
+      188,
+      34,
+      8,
+      246,
+      172
+    ],
+    "enemy_goblin_warrior_hd_walk_08": [
+      291,
+      188,
+      38,
+      10,
+      235,
+      170
+    ],
+    "enemy_goblin_warrior_hd_walk_09": [
+      291,
+      188,
+      40,
+      12,
+      241,
+      169
+    ],
+    "enemy_goblin_warrior_hd_walk_10": [
+      291,
+      188,
+      37,
+      11,
+      248,
+      170
+    ],
+    "enemy_goblin_warrior_hd_walk_11": [
+      291,
+      188,
+      42,
+      12,
+      242,
+      168
+    ],
+    "enemy_goblin_warrior_hd_walk_12": [
+      291,
+      188,
+      40,
+      13,
+      211,
+      168
+    ],
+    "enemy_goblin_warrior_hd_walk_13": [
+      291,
+      188,
+      36,
+      11,
+      251,
+      169
+    ],
+    "enemy_goblin_warrior_hd_walk_14": [
+      291,
+      188,
+      42,
+      10,
+      235,
+      170
+    ],
+    "enemy_goblin_warrior_hd_walk_15": [
+      291,
+      188,
+      42,
+      11,
+      234,
+      169
+    ],
+    "enemy_goblin_warrior_hd_walk_16": [
+      291,
+      188,
+      38,
+      11,
+      242,
+      170
+    ],
+    "enemy_goblin_warrior_hd_walk_17": [
+      291,
+      188,
+      40,
+      11,
+      242,
+      170
+    ],
+    "enemy_goblin_warrior_hd_walk_18": [
+      291,
+      188,
+      40,
+      11,
+      221,
+      170
+    ],
+    "enemy_goblin_warrior_hd_walk_19": [
+      291,
+      188,
+      35,
+      17,
+      243,
+      163
+    ],
+    "enemy_goblin_warrior_hd_walk_20": [
+      291,
+      188,
+      33,
+      17,
+      243,
+      163
+    ],
+    "enemy_goblin_warrior_hd_walk_21": [
+      291,
+      188,
+      36,
+      18,
+      232,
+      162
+    ],
+    "enemy_goblin_warrior_hd_walk_22": [
+      291,
+      188,
+      39,
+      18,
+      240,
+      162
+    ],
+    "enemy_goblin_warrior_hd_walk_23": [
+      291,
+      188,
+      35,
+      20,
+      241,
+      160
+    ],
+    "enemy_goblin_warrior_hd_walk_24": [
+      291,
+      188,
+      37,
+      21,
+      221,
+      159
+    ],
+    "enemy_goblin_warrior_hd_walk_25": [
+      291,
+      188,
+      33,
+      16,
+      250,
+      164
+    ],
+    "enemy_goblin_warrior_hd_walk_26": [
+      291,
+      188,
+      34,
+      22,
+      236,
+      158
+    ],
+    "enemy_goblin_warrior_hd_walk_27": [
+      291,
+      188,
+      37,
+      22,
+      237,
+      158
+    ],
+    "enemy_goblin_warrior_hd_walk_28": [
+      291,
+      188,
+      34,
+      23,
+      236,
+      157
+    ],
+    "enemy_goblin_warrior_hd_walk_29": [
+      291,
+      188,
+      36,
+      22,
+      239,
+      158
+    ],
+    "enemy_goblin_warrior_hd_walk_30": [
+      291,
+      188,
+      38,
+      19,
+      223,
+      161
+    ],
+    "male_hd_attack_01": [
+      290,
+      152,
+      48,
+      21,
+      121,
+      120
+    ],
+    "male_hd_attack_02": [
+      290,
+      152,
+      68,
+      18,
+      113,
+      123
+    ],
+    "male_hd_attack_03": [
+      290,
+      152,
+      44,
+      18,
+      117,
+      123
+    ],
+    "male_hd_attack_04": [
+      290,
+      152,
+      48,
+      20,
+      119,
+      121
+    ],
+    "male_hd_attack_05": [
+      290,
+      152,
+      21,
+      19,
+      161,
+      122
+    ],
+    "male_hd_attack_06": [
+      290,
+      152,
+      58,
+      23,
+      171,
+      118
+    ],
+    "male_hd_attack_07": [
+      290,
+      152,
+      48,
+      30,
+      172,
+      112
+    ],
+    "male_hd_attack_08": [
+      290,
+      152,
+      45,
+      29,
+      185,
+      113
+    ],
+    "male_hd_attack_09": [
+      290,
+      152,
+      38,
+      27,
+      194,
+      115
+    ],
+    "male_hd_attack_10": [
+      290,
+      152,
+      41,
+      30,
+      205,
+      111
+    ],
+    "male_hd_attack_11": [
+      290,
+      152,
+      38,
+      10,
+      177,
+      131
+    ],
+    "male_hd_attack_12": [
+      290,
+      152,
+      57,
+      8,
+      166,
+      134
+    ],
+    "male_hd_attack_13": [
+      290,
+      152,
+      40,
+      31,
+      216,
+      110
+    ],
+    "male_hd_attack_14": [
+      290,
+      152,
+      13,
+      31,
+      225,
+      110
+    ],
+    "male_hd_attack_15": [
+      290,
+      152,
+      8,
+      31,
+      231,
+      110
+    ],
+    "male_hd_attack_16": [
+      290,
+      152,
+      4,
+      34,
+      235,
+      108
+    ],
+    "male_hd_attack_17": [
+      290,
+      152,
+      48,
+      36,
+      192,
+      105
+    ],
+    "male_hd_attack_18": [
+      290,
+      152,
+      60,
+      23,
+      129,
+      118
+    ],
+    "male_hd_attack_19": [
+      290,
+      152,
+      64,
+      18,
+      122,
+      124
+    ],
+    "male_hd_attack_20": [
+      290,
+      152,
+      62,
+      20,
+      125,
+      121
+    ],
+    "male_hd_attack_21": [
+      290,
+      152,
+      62,
+      19,
+      126,
+      122
+    ],
+    "male_hd_attack_22": [
+      290,
+      152,
+      62,
+      20,
+      126,
+      121
+    ],
+    "male_hd_death_03": [
+      278,
+      207,
+      52,
+      13,
+      155,
+      165
+    ],
+    "male_hd_death_04": [
+      278,
+      207,
+      62,
+      15,
+      161,
+      166
+    ],
+    "male_hd_death_05": [
+      278,
+      207,
+      45,
+      39,
+      187,
+      142
+    ],
+    "male_hd_death_06": [
+      278,
+      207,
+      37,
+      55,
+      227,
+      126
+    ],
+    "male_hd_death_07": [
+      278,
+      207,
+      40,
+      18,
+      196,
+      155
+    ],
+    "male_hd_death_08": [
+      278,
+      207,
+      50,
+      22,
+      224,
+      157
+    ],
+    "male_hd_death_09": [
+      278,
+      207,
+      60,
+      28,
+      191,
+      171
+    ],
+    "male_hd_death_10": [
+      278,
+      207,
+      46,
+      14,
+      212,
+      175
+    ],
+    "male_hd_death_11": [
+      278,
+      207,
+      29,
+      23,
+      228,
+      164
+    ],
+    "male_hd_death_12": [
+      278,
+      207,
+      28,
+      24,
+      218,
+      159
+    ],
+    "male_hd_death_13": [
+      278,
+      207,
+      38,
+      70,
+      226,
+      109
+    ],
+    "male_hd_death_14": [
+      278,
+      207,
+      42,
+      77,
+      217,
+      103
+    ],
+    "male_hd_death_15": [
+      278,
+      207,
+      42,
+      88,
+      216,
+      92
+    ],
+    "male_hd_death_16": [
+      278,
+      207,
+      42,
+      91,
+      218,
+      88
+    ],
+    "male_hd_death_17": [
+      278,
+      207,
+      44,
+      96,
+      217,
+      83
+    ],
+    "male_hd_death_18": [
+      278,
+      207,
+      42,
+      105,
+      216,
+      76
+    ],
+    "male_hd_death_19": [
+      278,
+      207,
+      42,
+      95,
+      221,
+      85
+    ],
+    "male_hd_death_20": [
+      278,
+      207,
+      41,
+      101,
+      220,
+      78
+    ],
+    "male_hd_death_21": [
+      278,
+      207,
+      38,
+      103,
+      221,
+      77
+    ],
+    "male_hd_death_22": [
+      278,
+      207,
+      38,
+      103,
+      222,
+      76
+    ],
+    "male_hd_death_23": [
+      278,
+      207,
+      40,
+      104,
+      220,
+      75
+    ],
+    "male_hd_death_24": [
+      278,
+      207,
+      40,
+      105,
+      219,
+      74
+    ],
+    "male_hd_hurt_02": [
+      272,
+      183,
+      32,
+      12,
+      154,
+      162
+    ],
+    "male_hd_hurt_03": [
+      272,
+      183,
+      33,
+      13,
+      152,
+      160
+    ],
+    "male_hd_hurt_04": [
+      272,
+      183,
+      20,
+      8,
+      169,
+      165
+    ],
+    "male_hd_hurt_05": [
+      272,
+      183,
+      12,
+      15,
+      177,
+      158
+    ],
+    "male_hd_hurt_06": [
+      272,
+      183,
+      8,
+      15,
+      182,
+      159
+    ],
+    "male_hd_hurt_07": [
+      272,
+      183,
+      10,
+      15,
+      180,
+      159
+    ],
+    "male_hd_hurt_08": [
+      272,
+      183,
+      8,
+      18,
+      184,
+      155
+    ],
+    "male_hd_hurt_09": [
+      272,
+      183,
+      8,
+      21,
+      182,
+      153
+    ],
+    "male_hd_hurt_10": [
+      272,
+      183,
+      4,
+      23,
+      200,
+      150
+    ],
+    "male_hd_hurt_11": [
+      272,
+      183,
+      4,
+      20,
+      201,
+      153
+    ],
+    "male_hd_hurt_12": [
+      272,
+      183,
+      8,
+      20,
+      197,
+      153
+    ],
+    "male_hd_hurt_13": [
+      272,
+      183,
+      5,
+      23,
+      201,
+      152
+    ],
+    "male_hd_hurt_14": [
+      272,
+      183,
+      12,
+      21,
+      185,
+      154
+    ],
+    "male_hd_hurt_15": [
+      272,
+      183,
+      16,
+      23,
+      182,
+      151
+    ],
+    "male_hd_hurt_16": [
+      272,
+      183,
+      30,
+      14,
+      153,
+      159
+    ],
+    "male_hd_hurt_17": [
+      272,
+      183,
+      29,
+      12,
+      153,
+      163
+    ],
+    "male_hd_hurt_18": [
+      272,
+      183,
+      30,
+      16,
+      153,
+      157
+    ],
+    "male_hd_hurt_19": [
+      272,
+      183,
+      29,
+      22,
+      163,
+      152
+    ],
+    "male_hd_hurt_20": [
+      272,
+      183,
+      30,
+      21,
+      164,
+      152
+    ],
+    "male_hd_hurt_21": [
+      272,
+      183,
+      29,
+      22,
+      161,
+      152
+    ],
+    "male_hd_hurt_22": [
+      272,
+      183,
+      30,
+      21,
+      159,
+      152
+    ],
+    "male_hd_hurt_23": [
+      272,
+      183,
+      33,
+      20,
+      157,
+      154
+    ],
+    "male_hd_hurt_24": [
+      272,
+      183,
+      34,
+      21,
+      154,
+      153
+    ],
+    "male_hd_idle_01": [
+      230,
+      193,
+      18,
+      15,
+      121,
+      169
+    ],
+    "male_hd_idle_02": [
+      230,
+      193,
+      13,
+      16,
+      125,
+      169
+    ],
+    "male_hd_idle_03": [
+      230,
+      193,
+      24,
+      10,
+      137,
+      174
+    ],
+    "male_hd_idle_04": [
+      230,
+      193,
+      31,
+      9,
+      125,
+      174
+    ],
+    "male_hd_idle_05": [
+      230,
+      193,
+      25,
+      10,
+      136,
+      174
+    ],
+    "male_hd_idle_06": [
+      230,
+      193,
+      24,
+      10,
+      136,
+      174
+    ],
+    "male_hd_idle_07": [
+      230,
+      193,
+      26,
+      11,
+      133,
+      173
+    ],
+    "male_hd_idle_08": [
+      230,
+      193,
+      26,
+      10,
+      131,
+      173
+    ],
+    "male_hd_idle_09": [
+      230,
+      193,
+      25,
+      11,
+      135,
+      173
+    ],
+    "male_hd_idle_10": [
+      230,
+      193,
+      32,
+      11,
+      122,
+      173
+    ],
+    "male_hd_idle_11": [
+      230,
+      193,
+      4,
+      16,
+      134,
+      168
+    ],
+    "male_hd_idle_12": [
+      230,
+      193,
+      24,
+      11,
+      136,
+      173
+    ],
+    "male_hd_idle_13": [
+      230,
+      193,
+      34,
+      10,
+      119,
+      173
+    ],
+    "male_hd_idle_14": [
+      230,
+      193,
+      34,
+      10,
+      120,
+      173
+    ],
+    "male_hd_idle_15": [
+      230,
+      193,
+      51,
+      8,
+      135,
+      175
+    ],
+    "male_hd_idle_16": [
+      230,
+      193,
+      60,
+      10,
+      121,
+      173
+    ],
+    "male_hd_idle_17": [
+      230,
+      193,
+      32,
+      10,
+      124,
+      174
+    ],
+    "male_hd_idle_18": [
+      230,
+      193,
+      25,
+      8,
+      136,
+      175
+    ],
+    "male_hd_idle_19": [
+      230,
+      193,
+      24,
+      13,
+      135,
+      170
+    ],
+    "male_hd_idle_20": [
+      230,
+      193,
+      9,
+      19,
+      128,
+      166
+    ],
+    "male_hd_idle_21": [
+      230,
+      193,
+      26,
+      14,
+      132,
+      169
+    ],
+    "male_hd_idle_22": [
+      230,
+      193,
+      26,
+      12,
+      133,
+      171
+    ],
+    "male_hd_idle_23": [
+      230,
+      193,
+      24,
+      12,
+      135,
+      171
+    ],
+    "male_hd_idle_24": [
+      230,
+      193,
+      27,
+      13,
+      131,
+      170
+    ],
+    "male_hd_idle_25": [
+      230,
+      193,
+      32,
+      12,
+      124,
+      171
+    ],
+    "male_hd_idle_26": [
+      230,
+      193,
+      24,
+      12,
+      135,
+      171
+    ],
+    "male_hd_idle_27": [
+      230,
+      193,
+      25,
+      12,
+      134,
+      172
+    ],
+    "male_hd_idle_28": [
+      230,
+      193,
+      26,
+      12,
+      134,
+      171
+    ],
+    "male_hd_idle_29": [
+      230,
+      193,
+      30,
+      12,
+      127,
+      171
+    ],
+    "male_hd_idle_30": [
+      230,
+      193,
+      24,
+      12,
+      136,
+      171
+    ],
+    "male_hd_run_01": [
+      256,
+      201,
+      18,
+      8,
+      168,
+      173
+    ],
+    "male_hd_run_02": [
+      256,
+      201,
+      22,
+      9,
+      163,
+      172
+    ],
+    "male_hd_run_03": [
+      256,
+      201,
+      15,
+      9,
+      170,
+      172
+    ],
+    "male_hd_run_04": [
+      256,
+      201,
+      14,
+      10,
+      175,
+      171
+    ],
+    "male_hd_run_05": [
+      256,
+      201,
+      17,
+      9,
+      168,
+      172
+    ],
+    "male_hd_run_06": [
+      256,
+      201,
+      14,
+      10,
+      172,
+      172
+    ],
+    "male_hd_run_07": [
+      256,
+      201,
+      12,
+      15,
+      173,
+      166
+    ],
+    "male_hd_run_08": [
+      256,
+      201,
+      17,
+      14,
+      172,
+      168
+    ],
+    "male_hd_run_09": [
+      256,
+      201,
+      11,
+      11,
+      179,
+      170
+    ],
+    "male_hd_run_10": [
+      256,
+      201,
+      11,
+      14,
+      182,
+      167
+    ],
+    "male_hd_run_11": [
+      256,
+      201,
+      10,
+      9,
+      179,
+      172
+    ],
+    "male_hd_run_12": [
+      256,
+      201,
+      13,
+      13,
+      177,
+      168
+    ],
+    "male_hd_run_13": [
+      256,
+      201,
+      8,
+      16,
+      182,
+      165
+    ],
+    "male_hd_run_14": [
+      256,
+      201,
+      12,
+      21,
+      176,
+      160
+    ],
+    "male_hd_run_15": [
+      256,
+      201,
+      14,
+      14,
+      175,
+      168
+    ],
+    "male_hd_run_16": [
+      256,
+      201,
+      4,
+      14,
+      186,
+      167
+    ],
+    "male_hd_run_17": [
+      256,
+      201,
+      7,
+      13,
+      187,
+      168
+    ],
+    "male_hd_run_18": [
+      256,
+      201,
+      9,
+      13,
+      184,
+      168
+    ],
+    "male_hd_run_19": [
+      256,
+      201,
+      10,
+      16,
+      182,
+      166
+    ],
+    "male_hd_run_20": [
+      256,
+      201,
+      12,
+      32,
+      177,
+      161
+    ],
+    "male_hd_run_21": [
+      256,
+      201,
+      7,
+      14,
+      183,
+      167
+    ],
+    "male_hd_run_22": [
+      256,
+      201,
+      9,
+      14,
+      182,
+      167
+    ],
+    "male_hd_run_23": [
+      256,
+      201,
+      10,
+      13,
+      182,
+      168
+    ],
+    "male_hd_run_24": [
+      256,
+      201,
+      9,
+      13,
+      182,
+      168
+    ],
+    "male_hd_run_25": [
+      256,
+      201,
+      11,
+      15,
+      180,
+      167
+    ],
+    "male_hd_run_26": [
+      256,
+      201,
+      11,
+      10,
+      179,
+      172
+    ],
+    "male_hd_run_27": [
+      256,
+      201,
+      9,
+      17,
+      182,
+      165
+    ],
+    "male_hd_run_28": [
+      256,
+      201,
+      8,
+      13,
+      184,
+      169
+    ],
+    "male_hd_run_29": [
+      256,
+      201,
+      13,
+      15,
+      176,
+      166
+    ],
+    "male_hd_run_30": [
+      256,
+      201,
+      11,
+      14,
+      178,
+      168
+    ]
   }
 }

@@ -1,8 +1,9 @@
-import { CONFIG, ANIMS, HERO } from '../core/config.js';
-import { Assets } from '../core/assets.js';
+import { CONFIG, ANIMS, HERO, ENEMY_TYPES } from '../core/config.js';
+import { Assets, rawDraw } from '../core/assets.js';
 import { TAU, clamp, frameAt } from '../core/util.js';
 import { state } from '../game/state.js';
 import { enemyMeta } from '../game/EnemySpawner.js';
+import { worldExtras, rosterType } from '../game/chapters.js';
 import { onLane, groundShadow, outlined, outline } from './draw.js';
 import { setHull } from '../game/ragdoll.js';
 
@@ -292,9 +293,18 @@ function whiteSilhouette(img, key, color = '#fff') {
 
 // Güneşten düşen gölge: sprite silüeti ayaklardan yere yatırılır (dikey çevrilip 0.2'ye ezilir, güneş solda → sağa doğru uzar).
 // Matris yerel koordinatta (ayak = orijin); sign = ekranda sağa uzama yönü düzeltmesi (yatay çevrili çizimlerde -1).
+// Gölge siluetleri önbelleğe ALINMAZ: kare sayısı (kahraman + düşmanlar ≈ yüzlerce) önbelleğe sığmayıp her karede yeni tuval yaratıyordu (iOS'ta tuval ayırma pahalı → takılma).
+// Tek bir yeniden kullanılan tuval: kare buraya çizilir, siluet rengine boyanır, sonra eğik/ezik olarak ana tuvale basılır (ayırma yok).
+const shCv = document.createElement('canvas'), shG = shCv.getContext('2d');
 function castShadow(ctx, img, key, x, y, w, h, sign = 1, alpha = 0.42) {
+  const T = img.__t, tw = T ? T[4] : img.width, th = T ? T[5] : img.height; if (!tw || !th) return;
+  if (shCv.width < tw) shCv.width = tw; if (shCv.height < th) shCv.height = th;
+  shG.globalCompositeOperation = 'source-over'; shG.clearRect(0, 0, tw, th);
+  if (T) rawDraw(shG, img, 0, 0); else shG.drawImage(img, 0, 0);
+  shG.globalCompositeOperation = 'source-in'; shG.fillStyle = '#0e1406'; shG.fillRect(0, 0, tw, th); shG.globalCompositeOperation = 'source-over';
+  const kx = T ? w / T[0] : w / tw, ky = T ? h / T[1] : h / th, ox = T ? T[2] * kx : 0, oy = T ? T[3] * ky : 0;
   ctx.save(); ctx.globalAlpha = alpha; ctx.transform(1, 0, -0.62 * sign, -0.2, 0, 0);
-  ctx.drawImage(whiteSilhouette(img, key, '#0e1406'), x, y, w, h); ctx.restore();
+  ctx.drawImage(shCv, 0, 0, tw, th, x + ox, y + oy, tw * kx, th * ky); ctx.restore();
 }
 
 // Düşman animasyonu: durum → kare. death > hurt > attack > walk. Kareler data/enemy_animations.json'dan (goblin sheet'i).
@@ -315,11 +325,25 @@ function enemyFrame(en, meta) {
   return L.frames[idx];
 }
 
+// Renk kaydırmalı düşman karelerini oyun sırasında ÖNCEDEN hesaplar (ilk görünüşte kare başına ~ms'lik piksel döngüsü takılma yapıyordu): bölümün düşman türleri için yürüme + saldırı kareleri,
+// kare başına küçük süre bütçesiyle (ms) arka planda sıraya konur.
+let tintQ = [], tintQStage = -1;
+export function prewarmTints(stage, ms = 3) {
+  if (stage !== tintQStage) {
+    tintQStage = stage; tintQ = []; const seen = new Set();
+    for (const ty of [...worldExtras(stage), ...['goblin_scout', 'goblin_warrior', 'goblin_brute'].map((t) => rosterType(t, stage))]) {
+      const def = ENEMY_TYPES[ty]; if (!def?.tint || seen.has(ty)) continue; seen.add(ty);
+      const m = ANIMS.enemies?.[def.animFrom || ty]; for (const an of ['walk', 'attack']) for (const f of (m?.anims[an]?.frames || [])) tintQ.push([f, def.tint]);
+    }
+  }
+  const t0 = performance.now();
+  while (tintQ.length && performance.now() - t0 < ms) { const [f, t] = tintQ.shift(), im = Assets.get(f); if (im) tintedFrame(im, f, t); }
+}
 // Düşman renk kaydırma (enemies.json → tint {hue,sat,light}): evrene özel düşman varyantları için; kare başına bir kez hesaplanıp önbelleğe alınır (özel sprite gelince kaldırılır).
-const tintCache = new Map(), TINT_MAX = 160;                        // LRU: yüksek çözünürlüklü karelerde sınırsız önbellek yüzlerce MB tutardı
+const tintCache = new Map(), TINT_MAX = 480;                        // LRU: kırpılmış (opak kutu boyutunda) tuvaller ≈ 0.1 MB → en kötü ≈ 50 MB. 160'ta 6 renkli varyant × 30 yürüme/saldırı karesi sığmayıp her karede yeniden hesaplanıyordu (takılma)
 function tintedFrame(img, key, t) {
   const k = key + '|' + t.hue + '|' + (t.sat ?? 1) + '|' + (t.light ?? 1); let cv = tintCache.get(k); if (cv) { tintCache.delete(k); tintCache.set(k, cv); return cv; }
-  cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
+  const T = img.__t; cv = document.createElement('canvas'); cv.width = T ? T[4] : img.width; cv.height = T ? T[5] : img.height; const g = cv.getContext('2d'); if (T) rawDraw(g, img, 0, 0); else g.drawImage(img, 0, 0);       // kırpılmış kare: yalnız opak kutu işlenir (≈ yarı maliyet), özgün tuval bilgisi tuvale taşınır
   const d = g.getImageData(0, 0, cv.width, cv.height), px = d.data, a = t.hue * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), S = t.sat ?? 1, L = t.light ?? 1;
   const m = [0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928, 0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283, 0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072];
   const sm = (x, a0, a1) => { const t = Math.max(0, Math.min(1, (x - a0) / (a1 - a0))); return t * t * (3 - 2 * t); };
@@ -331,7 +355,8 @@ function tintedFrame(img, key, t) {
     let R = r + (m[0] * r + m[1] * gg + m[2] * b - r) * w, G = gg + (m[3] * r + m[4] * gg + m[5] * b - gg) * w, B = b + (m[6] * r + m[7] * gg + m[8] * b - b) * w; const y = 0.3 * R + 0.59 * G + 0.11 * B, ww = Math.max(w, 0.35);
     px[i] = Math.max(0, Math.min(255, (y + (R - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww))); px[i + 1] = Math.max(0, Math.min(255, (y + (G - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww))); px[i + 2] = Math.max(0, Math.min(255, (y + (B - y) * (1 + (S - 1) * ww)) * (1 + (L - 1) * ww)));
   }
-  g.putImageData(d, 0, 0); tintCache.set(k, cv); if (tintCache.size > TINT_MAX) tintCache.delete(tintCache.keys().next().value); return cv;
+  g.putImageData(d, 0, 0); if (T) { cv.__t = T; Object.defineProperty(cv, 'width', { get: () => T[0], configurable: true }); Object.defineProperty(cv, 'height', { get: () => T[1], configurable: true }); }
+  tintCache.set(k, cv); if (tintCache.size > TINT_MAX) tintCache.delete(tintCache.keys().next().value); return cv;
 }
 
 export function drawEnemy(ctx, en) {

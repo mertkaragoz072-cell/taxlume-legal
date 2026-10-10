@@ -13,7 +13,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 ap = argparse.ArgumentParser(); ap.add_argument('type'); ap.add_argument('anim'); ap.add_argument('src')
 ap.add_argument('--cols', type=int, default=6); ap.add_argument('--rows', type=int, default=5); ap.add_argument('--fps', type=float, default=30)
-ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--anchor', default='auto'); ap.add_argument('--dark', action='store_true'); ap.add_argument('--land', type=int, default=0); ap.add_argument('--fxsplit', default=''); ap.add_argument('--scale', type=float, default=0)
+ap.add_argument('--stride', type=float, default=0); ap.add_argument('--loop', action='store_true'); ap.add_argument('--target', type=float, default=0); ap.add_argument('--impact', type=float, default=0); ap.add_argument('--vis', type=float, default=0); ap.add_argument('--ref-frames', default=''); ap.add_argument('--grid', action='store_true'); ap.add_argument('--anchor', default='auto'); ap.add_argument('--dark', action='store_true'); ap.add_argument('--land', type=int, default=0); ap.add_argument('--fxsplit', default=''); ap.add_argument('--scale', type=float, default=0); ap.add_argument('--fx', default='')
 a = ap.parse_args(); N = a.cols * a.rows
 HERO = a.type == 'male'                                       # kahraman modu: data/male_animations.json (animations.<anim>), kareler assets/characters/male/hd/, anahtar male_hd_<anim>_NN, referans animasyon idle
 ROOT = os.path.join(os.path.dirname(__file__), '..')
@@ -71,7 +71,15 @@ for k, _o in enumerate(order, 1):
         solid = ndi.binary_opening(solid, iterations=1) | (keep & (mx >= 45))
     else:
         solid = ndi.binary_fill_holes(keep & (mx >= 45)); solid = ndi.binary_dilation(solid, iterations=1) & (mx >= 22) | solid
-    soft = np.clip((mx - 8) / 40.0, 0, 1); alpha = np.where(solid, 1.0, soft) * ndi.binary_dilation(keep, iterations=4)
+    if a.fx:                                                       # parlak efekt (mavi yay / yeşil patlama) kenarındaki koyu parıltı opak 'katı' sayılırsa kalın siyah/lacivert halka olur → o bölgede yumuşak alfa (rengi alfaya bölünür = üst üste binince halka kalmaz)
+        r_, g_, b_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+        seed = keep & (((b_ - r_) >= 40) & (b_ >= 150) if a.fx == 'blue' else ((g_ - r_) >= 60) & (g_ >= 190))
+        zone = ndi.binary_dilation(seed, iterations=7) & (mx < 95)
+        tinted = ((b_ > r_ + 4) & (b_ >= g_) if a.fx == 'blue' else (g_ > r_ + 4) & (g_ >= b_))
+        solid = solid & ~(zone & tinted)
+    soft = np.clip((mx - 8) / 40.0, 0, 1)
+    if a.fx: soft = np.where(zone & tinted, np.clip((mx - 10) / 75.0, 0, 1), soft)
+    alpha = np.where(solid, 1.0, soft) * ndi.binary_dilation(keep, iterations=4)
     col = np.where((alpha[..., None] > 0.02) & (~solid[..., None]), np.clip(rgb / np.maximum(alpha[..., None], 0.06), 0, 255), rgb)
     ys, xs = np.where(alpha > 0.02); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
     sc_ = ndi.binary_erosion(alpha > 0.6, iterations=3); bl, bn = ndi.label(sc_)                  # gövde = erozyonla ince efektlerden (yay, kıvılcım) ayrılan en büyük bileşen

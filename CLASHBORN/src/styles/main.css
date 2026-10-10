@@ -374,3 +374,5 @@ html, body {
 
 /* Faz 60 — CLASHBORN yazı logosu (geçici: resmî logo görseli gelene kadar; eski NEXORA logosu kaldırıldı) */
 div.sel-logo { height: auto; font: 900 clamp(26px, 10vh, 56px)/1 "Trebuchet MS", "Arial Black", sans-serif; letter-spacing: .06em; text-align: center; color: #ffcf3f; background: linear-gradient(#fff2a8 0%, #ffcf3f 45%, #f08a14 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; -webkit-text-stroke: 3px #1f2a44; paint-order: stroke fill; filter: drop-shadow(0 4px 0 rgba(20,30,60,.65)); }
+#fps { position: fixed; left: 6px; bottom: 6px; z-index: 60; padding: 2px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: #9dff9d; font: 700 11px/1.4 ui-monospace, Menlo, monospace; pointer-events: none; }
+#fps.hidden { display: none; }

@@ -1,7 +1,7 @@
 /* CLASHBORN service worker — çevrimdışı oynama.
  * Strateji: kabuk (index, css, js, json) AĞ ÖNCELİKLİ (güncelleme hemen gelir, ağ yoksa önbellek); görseller/yazı tipi/ses ÖNBELLEK ÖNCELİKLİ (bir kez indirilir).
  * Sürüm: VERSION değişince eski önbellek silinir (tools/build_sw.py her yayın öncesi günceller). */
-const VERSION = 'clashborn-f5c901bb84';
+const VERSION = 'clashborn-80820d27a4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './src/main.js', './src/styles/main.css', './data/asset_manifest.json'];
 const isAsset = (u) => /\.(png|jpg|jpeg|webp|gif|svg|woff2?|ttf|mp3|ogg|wav)$/i.test(u.pathname);
 

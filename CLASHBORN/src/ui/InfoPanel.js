@@ -66,7 +66,7 @@ function settingsHtml() {
     ${sw('music', '🎵 Müzik')}${sw('sfx', '🔔 Efektler')}${sw('vibration', '📳 Titreşim')}
     <div class="ip-set"><span>💢 Ekran sarsıntısı</span><div class="seg">${[[0, 'YOK'], [0.5, 'AZ'], [1, 'TAM']].map(([v, l]) => `<button class="${sh === v ? 'on' : ''}" data-seg="shake:${v}">${l}</button>`).join('')}</div></div>
   </div><div class="ip-col">
-    ${sw('lefty', '🖐️ Sol el düzeni')}${sw('bigButtons', '🔘 Büyük düğmeler')}${sw('colorblind', '👁️ Renk körü modu')}${sw('lowFx', '🔋 Düşük efekt (yavaş cihaz)')}
+    ${sw('lefty', '🖐️ Sol el düzeni')}${sw('bigButtons', '🔘 Büyük düğmeler')}${sw('colorblind', '👁️ Renk körü modu')}${sw('lowFx', '🔋 Düşük efekt (yavaş cihaz)')}${sw('showFps', '📈 FPS göstergesi')}
     <div class="ip-set"><span>❓ Öğretici</span><button class="ip-btn" data-act="tutorial">YENİDEN GÖSTER</button></div>
     <div class="ip-set"><span>🐞 Hata günlüğü (${errorCount()})</span><span class="seg"><button class="ip-switch" data-act="copylog">KOPYALA</button><button class="ip-switch" data-act="clearlog">SİL</button></span></div>
   </div></div>`;
