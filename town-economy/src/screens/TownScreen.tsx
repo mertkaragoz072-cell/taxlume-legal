@@ -34,6 +34,7 @@ import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
 import { TownChatterTicker } from "../components/TownChatterTicker";
+import { UpgradeIcon } from "../components/UpgradeIcon";
 import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
 import {
   CARD_GRADIENT,
@@ -520,7 +521,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         return (
           <View key={u.id} style={styles.upgradeCard}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.upgradeIcon}>{u.icon}</Text>
+            <UpgradeIcon id={u.id} level={level} fallback={u.icon} size={30} style={styles.upgradeIconImg} />
             <View style={{ flex: 1 }}>
               <View style={styles.upgradeTitleRow}>
                 <Text style={styles.upgradeName}>{t(u.nameKey)}</Text>
@@ -1063,6 +1064,11 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   upgradeIcon: { fontSize: 24, marginRight: SPACING.md },
+  // UpgradeIcon's own size prop controls the box; this only carries the
+  // layout bit upgradeIcon above also has, since folding fontSize in would
+  // win over that size prop in the fallback-emoji case (style arrays apply
+  // later entries last) — see GoodIcon's own equivalent conversions.
+  upgradeIconImg: { marginRight: SPACING.md },
   upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   upgradeName: {
     color: COLORS.textPrimary,

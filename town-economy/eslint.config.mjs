@@ -81,7 +81,12 @@ export default tseslint.config(
   // which requires a literal `require()` — an ESM import does not produce an
   // asset reference. This is the framework's contract, not a style choice.
   {
-    files: ["src/audio/**/*.ts", "src/economy/goodImages.ts", "src/economy/achievementImages.ts"],
+    files: [
+      "src/audio/**/*.ts",
+      "src/economy/goodImages.ts",
+      "src/economy/achievementImages.ts",
+      "src/economy/upgradeImages.ts",
+    ],
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
 
