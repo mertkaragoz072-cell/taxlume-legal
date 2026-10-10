@@ -753,6 +753,48 @@
         ],
         "scale": 0.8255,
         "visDur": 0.45
+      },
+      "death": {
+        "frames": [
+          "enemy_goblin_boss_hd_death_01",
+          "enemy_goblin_boss_hd_death_02",
+          "enemy_goblin_boss_hd_death_03",
+          "enemy_goblin_boss_hd_death_04",
+          "enemy_goblin_boss_hd_death_05",
+          "enemy_goblin_boss_hd_death_06",
+          "enemy_goblin_boss_hd_death_07",
+          "enemy_goblin_boss_hd_death_08",
+          "enemy_goblin_boss_hd_death_09",
+          "enemy_goblin_boss_hd_death_10",
+          "enemy_goblin_boss_hd_death_11",
+          "enemy_goblin_boss_hd_death_12",
+          "enemy_goblin_boss_hd_death_13",
+          "enemy_goblin_boss_hd_death_14",
+          "enemy_goblin_boss_hd_death_15",
+          "enemy_goblin_boss_hd_death_16",
+          "enemy_goblin_boss_hd_death_17",
+          "enemy_goblin_boss_hd_death_18",
+          "enemy_goblin_boss_hd_death_19",
+          "enemy_goblin_boss_hd_death_20",
+          "enemy_goblin_boss_hd_death_21",
+          "enemy_goblin_boss_hd_death_22",
+          "enemy_goblin_boss_hd_death_23",
+          "enemy_goblin_boss_hd_death_24",
+          "enemy_goblin_boss_hd_death_25",
+          "enemy_goblin_boss_hd_death_26"
+        ],
+        "fps": 30.0,
+        "loop": false,
+        "canvas": [
+          300,
+          205
+        ],
+        "pivot": [
+          150,
+          187
+        ],
+        "scale": 0.8255,
+        "landFrame": 15
       }
     },
     "hdTarget": 113.2

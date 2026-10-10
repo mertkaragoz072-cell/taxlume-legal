@@ -69,8 +69,6 @@
   },
   "goblin_boss": {
     "name": "Goblin Boss",
-    "animFrom": "goblin_brute",
-    "spriteMul": 1.3,
     "heightUnits": 149,
     "width": 103,
     "barWidth": 103,
