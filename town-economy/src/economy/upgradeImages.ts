@@ -22,6 +22,7 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
   townhall: {
     1: require("../../assets/upgrades/townhall-1.png"),
     2: require("../../assets/upgrades/townhall-2.png"),
+    3: require("../../assets/upgrades/townhall-3.png"),
   },
 };
 
