@@ -27,7 +27,6 @@ import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { AmbientGlow } from "./src/components/AmbientGlow";
 import { BirthdayComicModal } from "./src/components/BirthdayComicModal";
-import { GoodMomModal } from "./src/components/GoodMomModal";
 import { ProposalModal } from "./src/components/ProposalModal";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { CARAVAN_STEPS, CaravanTutorialModal } from "./src/components/CaravanTutorialModal";
@@ -114,14 +113,11 @@ function Game() {
   // pressed the save has usually loaded, and "Continue" is the true label.
   const [titleVisible, setTitleVisible] = useState(true);
   // Shown every time "Başla" is pressed, before the title hands off to the
-  // game — see ProposalModal.
-  const [proposalVisible, setProposalVisible] = useState(false);
-  // Follows straight on from accepting the proposal, before the game opens
-  // — see GoodMomModal.
-  const [goodMomModalVisible, setGoodMomModalVisible] = useState(false);
-  // The last beat of the same chain, right before the game opens — see
-  // BirthdayComicModal.
+  // game — see BirthdayComicModal.
   const [birthdayComicVisible, setBirthdayComicVisible] = useState(false);
+  // Follows straight on from the comic, before the game opens — see
+  // ProposalModal.
+  const [proposalVisible, setProposalVisible] = useState(false);
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
@@ -305,25 +301,18 @@ function Game() {
       <SafeAreaView style={styles.safe}>
         <StatusBar style="light" />
         <View style={styles.content}>
-          <TitleScreen onStart={() => setProposalVisible(true)} />
-          <ProposalModal
-            visible={proposalVisible}
-            onAccept={() => {
-              setProposalVisible(false);
-              setGoodMomModalVisible(true);
-            }}
-          />
-          <GoodMomModal
-            visible={goodMomModalVisible}
-            onDismiss={() => {
-              setGoodMomModalVisible(false);
-              setBirthdayComicVisible(true);
-            }}
-          />
+          <TitleScreen onStart={() => setBirthdayComicVisible(true)} />
           <BirthdayComicModal
             visible={birthdayComicVisible}
             onFinish={() => {
               setBirthdayComicVisible(false);
+              setProposalVisible(true);
+            }}
+          />
+          <ProposalModal
+            visible={proposalVisible}
+            onAccept={() => {
+              setProposalVisible(false);
               start();
               sounds.startMusic();
               setTitleVisible(false);

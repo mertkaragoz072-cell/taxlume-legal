@@ -30,10 +30,10 @@ interface Props {
 }
 
 /** A one-off, non-translated easter egg in the same spirit as ProposalModal
- * and GoodMomModal — a 6-panel birthday comic, each panel's own text baked
- * into the art, shown right after GoodMomModal and before the game itself
- * opens. Paginated the same way TutorialModal is (tap through, dots track
- * progress) since that is the one multi-step modal already in the app. */
+ * — a 6-panel birthday comic, each panel's own text baked into the art,
+ * shown right after "Başla" and before the marriage proposal. Paginated the
+ * same way TutorialModal is (tap through, dots track progress) since that
+ * is the one multi-step modal already in the app. */
 export function BirthdayComicModal({ visible, onFinish }: Props) {
   const [index, setIndex] = useState(0);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
@@ -69,10 +69,7 @@ export function BirthdayComicModal({ visible, onFinish }: Props) {
       <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View
-            style={styles.imageWrap}
-            onLayout={(e) => setBoxSize(e.nativeEvent.layout.width)}
-          >
+          <View style={styles.imageWrap} onLayout={(e) => setBoxSize(e.nativeEvent.layout.width)}>
             <Image
               source={PANELS[index]}
               style={{ width: boxSize, height: boxSize, borderRadius: RADIUS.card }}
