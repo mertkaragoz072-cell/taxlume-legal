@@ -17,6 +17,7 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
   caravanserai: {
     1: require("../../assets/upgrades/caravanserai-1.png"),
     2: require("../../assets/upgrades/caravanserai-2.png"),
+    3: require("../../assets/upgrades/caravanserai-3.png"),
   },
 };
 
