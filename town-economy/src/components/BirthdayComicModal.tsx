@@ -37,6 +37,14 @@ interface Props {
 export function BirthdayComicModal({ visible, onFinish }: Props) {
   const [index, setIndex] = useState(0);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+  // react-native-web's Image doesn't size itself by aspectRatio (see
+  // ProposalModal's identical note) — measuring the rendered width and
+  // feeding it back as an explicit height is what AmbientGlow does for the
+  // same reason. These panels were cropped square with no margin to spare,
+  // so a true square box matters here: anything off-square crops baked-in
+  // text right off the edge, which a wider photo like ProposalModal's own
+  // can shrug off but these panels can't.
+  const [boxSize, setBoxSize] = useState(280);
   if (!visible) return null;
 
   const isLast = index === PANELS.length - 1;
@@ -61,12 +69,17 @@ export function BirthdayComicModal({ visible, onFinish }: Props) {
       <ModalBackdrop>
         <View style={styles.card}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Image
-            source={PANELS[index]}
-            style={styles.image}
-            resizeMode="cover"
-            accessibilityIgnoresInvertColors
-          />
+          <View
+            style={styles.imageWrap}
+            onLayout={(e) => setBoxSize(e.nativeEvent.layout.width)}
+          >
+            <Image
+              source={PANELS[index]}
+              style={{ width: boxSize, height: boxSize, borderRadius: RADIUS.card }}
+              resizeMode="cover"
+              accessibilityIgnoresInvertColors
+            />
+          </View>
 
           <View style={styles.dots}>
             {PANELS.map((_, i) => (
@@ -104,15 +117,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...cardShadow,
   },
-  // Square, not a fixed height like ProposalModal/GoodMomModal's own
-  // rectangular photos — these panels were cropped square to begin with, so
-  // "cover" on a 1:1 box shows each one whole instead of re-cropping it.
-  image: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: RADIUS.card,
-    marginBottom: SPACING.lg,
-  },
+  imageWrap: { width: "100%", marginBottom: SPACING.lg },
   dots: { flexDirection: "row", gap: 6, marginBottom: SPACING.lg },
   dot: {
     width: 7,
