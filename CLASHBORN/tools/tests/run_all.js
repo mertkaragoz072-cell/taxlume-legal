@@ -176,6 +176,19 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
     }
   });
 
+  await test('audio_files_pipeline', async () => {                 // gerçek ses dosyası hattı: manifest → müzik <audio> + çapraz geçiş + SFX AudioBuffer + yedek ses (sahte WAV, yalnız test)
+    const wav = (() => { const n = 4410, b = Buffer.alloc(44 + n * 2); b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22); b.writeUInt32LE(44100, 24); b.writeUInt32LE(88200, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40); for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin(i / 20) * 3000), 44 + i * 2); return b; })();
+    const pg = await browser.newPage({ viewport: { width: 844, height: 390 } }); const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
+    await pg.route('**/data/audio_manifest.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ music: { battle: 'audio/music/battle.wav', boss_meadowlands: 'audio/music/boss_meadowlands.wav' }, sfx: { slash: ['audio/sfx/slash_1.wav', 'audio/sfx/slash_2.wav'] } }) }));
+    await pg.route('**/audio/**/*.wav', (r) => r.fulfill({ contentType: 'audio/wav', body: wav }));
+    await pg.goto(`${base}/index.html?hq=1&nosw&hero=male`); await pg.waitForFunction(() => window.__game && window.__game.state.player, null, { timeout: 30000 });
+    await pg.mouse.click(300, 200); await pg.waitForTimeout(600);                                  // ilk dokunuş: kilit açılır, SFX decode + müzik başlar
+    const a = await pg.evaluate(async () => { const { Audio } = await import('/src/core/audio.js'); Audio.music('battle', 'meadowlands'); await new Promise((r) => setTimeout(r, 300)); const d1 = Audio.debug(); Audio.music('boss', 'meadowlands'); await new Promise((r) => setTimeout(r, 300)); const d2 = Audio.debug(); Audio.music('boss', 'emberfall'); const d3 = Audio.debug(); Audio.play('slash'); Audio.play('yok_boyle_bir_ses', 'click'); return { d1, d2, d3 }; });
+    ok(a.d1.fileMusic && a.d1.cur === 'battle', 'genel müzik dosyası seçilmedi ' + JSON.stringify(a.d1)); ok(a.d2.cur === 'boss_meadowlands', 'evrene özel boss müziği seçilmedi ' + JSON.stringify(a.d2));
+    ok(a.d3.cur === 'boss_meadowlands', 'evrene özel dosya yokken mevcut müzik korunmalı (genel boss yok) ' + JSON.stringify(a.d3)); ok(a.d1.sfx.slash === 2, 'SFX varyantları yüklenmedi ' + JSON.stringify(a.d1.sfx));
+    ok(errs.length === 0, 'ses hattı hata verdi: ' + errs.join('; ')); await pg.close();
+  });
+
   await test('death_and_restart', async () => {
     const pg = await page('heroine'); const r = await pg.evaluate(async () => {
       const g = window.__game, st = g.state, p = st.player, c = await import('/src/game/combat.js'); st.enemies.length = 0; st.wave.phase = 'x'; p.invuln = 0; p.hp = 1; c.hurtPlayer(50);

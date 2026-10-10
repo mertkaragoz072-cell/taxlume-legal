@@ -73,6 +73,8 @@ async function boot() {
     box.classList.remove('hidden');
     throw err;
   }
+  try { const r = await fetch('data/audio_manifest.json'); if (r.ok) Audio.init(await r.json()); } catch (_) { /* ses dosyası yok: sentez sesi */ }
+  Audio.music('menu');
   await Assets.load(manifest.images, manifest.trim);
   Save.load();
   initMeta(); Settings.apply();
@@ -108,12 +110,13 @@ async function boot() {
   events.onKill = (en) => { Audio.play('kill'); if (en?.def?.boss) haptic([80, 40, 80]); };
   events.onHurt = () => { Audio.play('hurt'); haptic(45); };
   events.onSkill = (id) => Audio.play(id);
-  events.onDodge = (perfect) => { Audio.play(perfect ? 'levelup' : 'click'); haptic(perfect ? [25, 30, 25] : 12); tutorialDodgeUsed(); };
+  events.onDodge = (perfect) => { Audio.play(perfect ? 'perfect_dodge' : 'dodge', perfect ? 'levelup' : 'click'); haptic(perfect ? [25, 30, 25] : 12); tutorialDodgeUsed(); };
   events.onCrit = () => haptic(10);
-  events.onChest = () => { Audio.play('gem'); haptic(30); };
+  events.onChest = () => { Audio.play('chest', 'gem'); haptic(30); };
   const showOver = showGameOver;
   let bossIntroTimer = 0;
   events.onWaveStart = (n, info) => {
+    Audio.music(info.boss ? 'boss' : 'battle', chapterInfo(info.stage).id);
     state.hitsWave = 0; maybeSpawnChest(info.boss); if (n === 1 && info.stage === 1) startTutorial();
     const bi = document.getElementById('boss-intro');
     if (info.boss) {                                                  // boss girişi: ekran kararır, ortada BOSS WAVE / <BOSS ADI> GELİYOR!
@@ -123,7 +126,7 @@ async function boot() {
     } else { bi.classList.add('hidden'); showBanner(`WAVE ${n} / 5`, '', n === 1 ? (chapterInfo(info.stage).isWorldStart ? `✦ EVREN ${chapterInfo(info.stage).universeNo} · ${chapterInfo(info.stage).name} ✦` : chapterInfo(info.stage).label) : ''); Audio.play('click'); }
   };
   events.onWaveComplete = (n, i) => {
-    if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('levelup'); }
+    if (!i?.boss) { showBanner('WAVE CLEARED!', 'complete'); Audio.play('wave_clear', 'levelup'); }
     if (state.hitsWave === 0 && !state.over) {                                  // KUSURSUZ: dalga boyunca hiç hasar alınmadı
       const F = CONFIG.flawless, p = state.player, coins = (i?.boss ? F.bossBase : F.base) + F.perStage * i.stage, gems = i?.boss ? F.bossGems : 0;
       p.coins += coins; p.gems += gems; metaAdd('flawless'); events.onCoin?.(); if (gems) events.onGem?.();
@@ -134,22 +137,22 @@ async function boot() {
     const p = state.player, R = CHAPTERS.reward; let xp = gainXp(R.xp * cleared); metaAdd('chapters'); const ci = chapterInfo(cleared), WR = CHAPTERS.worldReward; if (ci.isWorldEnd) { metaAdd('worlds'); p.coins += WR.coins; p.gems += WR.gems; xp += gainXp(WR.xp); }
     p.coins += R.coins; p.gems += R.gems; events.onCoin?.(); events.onGem?.();
     saveNowRef?.();                                                   // ilerleme (yeni bölüm, dalga 1) + ödüller hemen kaydedilir
-    Audio.play('levelup');
+    Audio.play('chapter_clear', 'levelup'); Audio.music('victory', ci.id);
     const nx = chapterInfo(cleared + 1), cr = ci.isWorldEnd ? { coins: R.coins + WR.coins, gems: R.gems + WR.gems, xp } : { coins: R.coins, gems: R.gems, xp };
     showChapterClear({ name: ci.isWorldEnd ? `Evren ${ci.universeNo} · ${ci.name}` : ci.label, rewards: cr, world: ci.isWorldEnd, next: ci.isWorldEnd ? `Yeni evren: Evren ${nx.universeNo} · ${nx.name}` : `Sıradaki bölüm: ${nx.label}` }, () => { continueChapter(); saveNowRef?.(); });
   };
-  events.onBoss = (k, amount, xp) => { if (k === 'slam' || k === 'charge') Audio.play('skill2'); else if (k === 'telegraph') Audio.play('click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN · +${xp} XP`); Audio.play('levelup'); } };
+  events.onBoss = (k, amount, xp) => { if (k === 'slam' || k === 'charge') Audio.play(k === 'slam' ? 'boss_slam' : 'boss_charge', 'skill2'); else if (k === 'telegraph') Audio.play('boss_telegraph', 'click'); else if (k === 'dead') { showBanner('BOSS YENİLDİ!', 'bossdead', `+${amount} COIN · +${xp} XP`); Audio.play('boss_death', 'levelup'); } };
   events.onUpgrade = (cards, boss) => {
-    Audio.play('gem');
+    Audio.play('card_show', 'gem');
     showUpgrade(cards, boss, (card) => {
       applyUpgrade(card);
       const p = state.player;
       addText(p.a, 150, `${card.icon} ${card.bonus} ${card.desc}`, '#ffd23f', 1.1); addText(p.a, 125, 'GÜÇ UYGULANDI!', '#ffffff', 0.8);
       state.rings.push({ a: p.a, t: 0, life: 0.9 }); state.rings.push({ a: p.a, t: 0, life: 1.3, color: '#ffd23f' });
-      updateBuffs(); popBuffs(); Audio.play('levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
+      updateBuffs(); popBuffs(); Audio.play('card_pick', 'levelup'); pulse('avatar-ring'); resumeAfterUpgrade(); saveNowRef?.();
     });
   };
-  events.onGameOver = (st) => { Audio.play('gameover'); haptic([120, 60, 120]); const rr = recordRun({ kills: state.kills, bosses: state.runBosses, stage: state.wave.stage, wave: state.wave.n }); const gs = document.getElementById('go-score'); if (gs && rr) gs.textContent = `Skor ${rr.score}  ·  ${rr.isBest ? '🏆 YENİ REKOR!' : 'En iyi ' + rr.best}`; setTimeout(() => { if (state.over) showOver(st); }, 1400); };   // düşme animasyonu görünsün diye panel gecikmeli
+  events.onGameOver = (st) => { Audio.play('gameover'); Audio.music('gameover', chapterInfo(state.wave.stage).id); haptic([120, 60, 120]); const rr = recordRun({ kills: state.kills, bosses: state.runBosses, stage: state.wave.stage, wave: state.wave.n }); const gs = document.getElementById('go-score'); if (gs && rr) gs.textContent = `Skor ${rr.score}  ·  ${rr.isBest ? '🏆 YENİ REKOR!' : 'En iyi ' + rr.best}`; setTimeout(() => { if (state.over) showOver(st); }, 1400); };   // düşme animasyonu görünsün diye panel gecikmeli
   events.onCoin = () => { pulse('pill-coin'); Audio.play('coin'); };
   events.onGem = () => { pulse('pill-gem'); Audio.play('gem'); };
   events.onLevelUp = () => { pulse('avatar-ring'); pulse('level-pulse'); Audio.play('levelup'); haptic([40, 30, 40]); };
