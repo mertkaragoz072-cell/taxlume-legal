@@ -448,3 +448,10 @@ Bildirim: "karakterler yürümüyor, takıla takıla süzülüyor; saldırıdaki
 - **SFX:** `ad_1.ext`, `ad_2.ext` varyantları AudioBuffer olarak yüklenir, rastgele seçilir (±%4 perde). Yeni yuvalar (`dodge`, `perfect_dodge`, `boss_telegraph/slam/charge/death`, `wave_clear`, `chapter_clear`, `card_show/pick`, `chest`) dosya yoksa eski sesle çalar (`Audio.play(ad, yedek)`).
 - Test: `audio_files_pipeline` (sahte WAV'larla manifest → müzik seçimi, evren yedeği, SFX varyantı, bilinmeyen ses yedeği). 20/20.
 - `audio/README.md`: dosya adları, biçim önerisi, Suno/ElevenLabs istek örnekleri.
+
+## Faz 71 — Tam görsel denetim (kare kare)
+Her HD kare seti (erkek, 6 düşman/boss) otomatik tarandı (`kenara değen`, serseri parça, zemin çizgisi, boy) ve oyun ölçeğinde temas sayfalarıyla göz kontrolünden geçirildi. Düzeltmeler:
+- **Gözcü ve Savaşçı ölüm kareleri alttan kesikti** (yatan gövde tuvalin tabanını aşıyordu; 10 + 12 kare, en çok 120 px genişlik): `--anchor label` ile yeniden üretildi, kesik yok.
+- **Efekt kenarındaki kalın koyu halka:** Gözcü (mavi yay) ve Savaşçı (turuncu yay) saldırıları `--fx blue|orange` ile yeniden üretildi (`--fx orange` yeni).
+- **Boşluklardaki siyah dolgu:** kolların/çekicin arasındaki boşluklar siyah piksellerle doluydu (Brute saldırı kare 5, Lordu ölüm 15–22, Savaş Lordu pelerin altı, Kral yürüme…). Altı: opak + max kanal ≤ 16 + bağlı alan ≥ 60 px olan koyu kütleler şeffaflaştırıldı (düşman setleri; ~76 bin piksel). **Erkek karakter hariç**: koyu kıyafeti bu kuralla delindi (denendi, geri alındı); erkekte yalnız <14 px kırıntılar silinir.
+- **Kırıntılar:** gerçek parçalara bağlı olmayan <14 px alfa kırıntıları (2600+ adet) silindi (saldırı setleri hariç: kıvılcım/toz parçacıkları kasıtlı).
