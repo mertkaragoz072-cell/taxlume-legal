@@ -752,7 +752,16 @@ describe("personal net-worth record", () => {
   });
 
   it("fires a new-record event once net worth crosses priorBestNetWorth, and stays quiet after", () => {
-    const state = { ...initialState(), cash: 1000, priorBestNetWorth: 500, paused: false };
+    // productionQuotas cleared for the same reason "lost treasure" clears it
+    // above: an unrelated quota bonus landing in this same tick can win the
+    // race for lastEvent over the record-break celebration this test checks.
+    const state = {
+      ...initialState(),
+      cash: 1000,
+      priorBestNetWorth: 500,
+      paused: false,
+      productionQuotas: [],
+    };
     const next = tick(state);
     expect(next.recordBrokenThisRun).toBe(true);
     expect(next.lastEvent?.message).toMatch(/record|rekor/i);
@@ -793,6 +802,9 @@ describe("ghost rival town", () => {
       paused: false,
       rivalNetWorth: 999,
       rivalCurrentlyAhead: false,
+      // See "personal net-worth record" above: an unrelated quota bonus
+      // landing in this same tick can win the race for lastEvent.
+      productionQuotas: [],
     };
     const next = tick(state);
 
@@ -812,6 +824,7 @@ describe("ghost rival town", () => {
       paused: false,
       rivalNetWorth: 500,
       rivalCurrentlyAhead: true,
+      productionQuotas: [],
     };
     const next = tick(state);
 
@@ -830,6 +843,7 @@ describe("ghost rival town", () => {
       paused: false,
       rivalNetWorth: 999,
       rivalCurrentlyAhead: false,
+      productionQuotas: [],
     };
     const next = tick(state);
     expect(next.rivalCurrentlyAhead).toBe(true);
@@ -850,6 +864,7 @@ describe("ghost rival town", () => {
       paused: false,
       rivalNetWorth: 500,
       rivalCurrentlyAhead: true,
+      productionQuotas: [],
     };
     const next = tick(state);
     expect(next.rivalCurrentlyAhead).toBe(false);
