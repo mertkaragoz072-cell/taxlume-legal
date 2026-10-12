@@ -25,14 +25,15 @@ CanvasRenderingContext2D.prototype.drawImage = function (img, a, b, c, d, e, f, 
 export const rawDraw = (g, img, x, y) => _draw.call(g, img, x, y);        // kırpma telafisi OLMADAN çizer (kırpılmış karenin ham bitmap'ini küçük tuvale kopyalamak için)
 export const Assets = {
   images: {},
-  async load(images = {}, trim = {}) {
+  async load(images = {}, trim = {}, onProgress) {
+    const total = Object.keys(images).length; let done = 0;
     await Promise.all(Object.entries(images).map(([key, src]) => new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
         const t = trim[key]; if (t && img.naturalWidth === t[4] && img.naturalHeight === t[5]) { img.__t = t; Object.defineProperty(img, 'width', { value: t[0] }); Object.defineProperty(img, 'height', { value: t[1] }); }
-        this.images[key] = /^prop_rock/.test(key) ? warmRock(img) : img; resolve();
+        this.images[key] = /^prop_rock/.test(key) ? warmRock(img) : img; onProgress?.(++done / total); resolve();
       };
-      img.onerror = () => { console.warn('Asset yüklenemedi:', src); resolve(); };
+      img.onerror = () => { console.warn('Asset yüklenemedi:', src); onProgress?.(++done / total); resolve(); };
       img.src = src;
     })));
   },

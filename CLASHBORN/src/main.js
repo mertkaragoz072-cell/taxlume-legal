@@ -75,15 +75,20 @@ async function boot() {
   }
   try { const r = await fetch('data/audio_manifest.json'); if (r.ok) Audio.init(await r.json()); } catch (_) { /* ses dosyası yok: sentez sesi */ }
   Audio.music('menu');
-  await Assets.load(manifest.images, manifest.trim);
+  const ldEl = document.getElementById('loading'), ldFill = document.getElementById('ld-fill'), ldText = document.getElementById('ld-text');
+  const setLoad = (k, t) => { if (ldFill) ldFill.style.width = Math.round(k * 100) + '%'; if (t && ldText) ldText.textContent = t; };
+  await Assets.load(manifest.images, manifest.trim, (k) => setLoad(k * 0.8, 'Yükleniyor…'));
   Save.load();
   initMeta(); Settings.apply();
 
+  ldEl?.classList.add('hidden');                                            // karakter seçim ekranı hazır → yükleme ekranı kapanır
   if (!HERO.fromUrl) await chooseHero();      // URL'de ?hero= yoksa karakter seçim ekranı
   Assets.release(HERO.id === 'male' ? ['heroine_', 'female_'] : ['male_', 'female_'], ['heroine_portrait', 'female_portrait']);        // seçilmeyen kahramanın kareleri bellekten atılır
   {                                                           // kare setlerini oyun başlamadan çöz (ilk çizimde takılma olmasın): önce kahraman + temel düşmanlar, bosslar arka planda
     const mine = HERO.id === 'male' ? 'male_' : 'heroine_', base = /^enemy_goblin_(scout|warrior|brute)_/;
+    ldEl?.classList.remove('hidden'); setLoad(0.8, 'Hazırlanıyor…');
     await Assets.warm((k) => k.startsWith(mine) || base.test(k));
+    setLoad(1); ldEl?.classList.add('hidden');
     setTimeout(() => Assets.warm((k) => /^enemy_goblin_(boss|warlord|king)_/.test(k), 2), 1500);
   }
   initHud();
