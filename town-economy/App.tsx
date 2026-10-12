@@ -198,9 +198,10 @@ function Game() {
   // be walked around their own town again.
   const [mentorAllowed, setMentorAllowed] = useState(false);
   useEffect(() => {
-    let cancelled = false;
-    hasSeenTutorial().then((seen) => {
-      if (cancelled) return;
+    let settled = false;
+    const resolve = (seen: boolean) => {
+      if (settled) return;
+      settled = true;
       if (!seen) {
         setMentorAllowed(true);
         return;
@@ -211,9 +212,20 @@ function Game() {
       // fresh town (mentorStep starts at 0 again on RESET) would sit
       // frozen forever with nothing on screen to advance it.
       advanceMentor(MENTOR_STEPS.length);
-    });
+    };
+    hasSeenTutorial()
+      .then(resolve)
+      .catch(() => resolve(true));
+    // A local storage read is not supposed to take anywhere near this long,
+    // but this whole screen depends on it answering: until it does, the
+    // economy sits paused with nothing on screen to explain why (see above).
+    // If it has not settled shortly, treat it as "already seen" and let the
+    // game start anyway — a skipped first-run tour is a far smaller loss
+    // than a town that never starts ticking.
+    const timer = setTimeout(() => resolve(true), 3000);
     return () => {
-      cancelled = true;
+      settled = true;
+      clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
