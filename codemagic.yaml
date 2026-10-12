@@ -43,6 +43,20 @@ workflows:
     max_build_duration: 60
     working_directory: town-economy
 
+    # Codemagic persists these paths between builds on its own storage, separate
+    # from the fresh checkout each run starts from. None of them are project
+    # output — expo prebuild --clean below wipes android/ every run regardless,
+    # on purpose (see the top-of-file note) — these are the *download* caches
+    # npm and Gradle keep elsewhere on disk, so a second build with an
+    # unchanged lockfile reuses already-fetched packages instead of pulling
+    # them over the network again. First build after adding this is not
+    # faster (nothing cached yet); every one after it should be.
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+
     environment:
       java: 17
       node: 22
@@ -106,6 +120,16 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     working_directory: town-economy
+
+    # Same reasoning as android-release's own cache block. CocoaPods' cache is
+    # its global download cache (~/Library/Caches/CocoaPods) — not ios/Pods,
+    # the per-project folder expo prebuild --clean deletes every run, which
+    # would make caching it pointless. Caching the global one still lets `pod
+    # install` skip re-downloading each pod's source after the first build.
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/Library/Caches/CocoaPods
 
     integrations:
       app_store_connect: taxlume-admin
