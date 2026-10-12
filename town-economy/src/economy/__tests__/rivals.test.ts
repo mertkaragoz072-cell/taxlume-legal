@@ -1,4 +1,10 @@
-import { RIVAL_TRADERS, RIVAL_TRADERS_BY_ID, rollRivalActivity, rivalSupplyDelta, isRivalId } from "../rivals";
+import {
+  RIVAL_TRADERS,
+  RIVAL_TRADERS_BY_ID,
+  rollRivalActivity,
+  rivalSupplyDelta,
+  isRivalId,
+} from "../rivals";
 import { GOODS } from "../goods";
 
 describe("rivals on home market", () => {

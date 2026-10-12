@@ -520,7 +520,12 @@ const styles = StyleSheet.create({
     borderTopColor: "#3a2d1e",
   },
   pulseMover: { flex: 1 },
-  pulseMoverDivider: { width: 1, alignSelf: "stretch", backgroundColor: "#3a2d1e", marginHorizontal: SPACING.md },
+  pulseMoverDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: "#3a2d1e",
+    marginHorizontal: SPACING.md,
+  },
   pulseMoverLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 3 },
   pulseMoverRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   pulseMoverGood: {
@@ -646,7 +651,12 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
   lockedRankIcon: { fontSize: TYPE.micro },
-  lockedRankText: { color: COLORS.textMuted, fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  lockedRankText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   gameOverBox: {
     marginTop: SPACING.lg + 2,
     backgroundColor: "#3a1f1a",

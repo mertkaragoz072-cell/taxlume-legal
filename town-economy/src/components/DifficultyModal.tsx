@@ -198,7 +198,12 @@ const styles = StyleSheet.create({
   },
   ngPlusOptionActive: { borderColor: COLORS.accent, backgroundColor: "rgba(232,199,119,0.16)" },
   ngPlusIcon: { fontSize: 20, marginRight: 10 },
-  ngPlusLabel: { color: COLORS.textPrimary, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
+  ngPlusLabel: {
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+    fontSize: TYPE.body,
+  },
   ngPlusDesc: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2 },
   ngPlusBonus: {
     color: COLORS.accent,
@@ -241,7 +246,12 @@ const styles = StyleSheet.create({
   },
   optionDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 3 },
   cancelBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
-  cancelText: { color: COLORS.textMuted, fontSize: TYPE.body, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  cancelText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.body,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
   confirmBtn: {
     borderRadius: RADIUS.card - 2,
     paddingVertical: SPACING.md,

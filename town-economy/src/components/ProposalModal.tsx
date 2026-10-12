@@ -1,7 +1,17 @@
 import React, { useRef, useState } from "react";
 import { Animated, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import proposalSource from "../../assets/proposal-photo.png";
-import { CARD_GRADIENT, COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, WEIGHT, cardShadow } from "../theme";
+import {
+  CARD_GRADIENT,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  cardShadow,
+} from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
 import { GradientFill } from "./GradientFill";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -79,10 +89,7 @@ export function ProposalModal({ visible, onAccept }: Props) {
                 <Text style={styles.yesBtnText}>EVET 💖</Text>
               </ScalePressable>
               <Animated.View
-                style={[
-                  styles.noBtnWrap,
-                  dodged && { position: "absolute", left: noLeft, top: noTop },
-                ]}
+                style={[styles.noBtnWrap, dodged && { position: "absolute", left: noLeft, top: noTop }]}
               >
                 <Pressable
                   onHoverIn={dodge}

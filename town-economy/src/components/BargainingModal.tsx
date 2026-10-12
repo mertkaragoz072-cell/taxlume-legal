@@ -253,7 +253,12 @@ const styles = StyleSheet.create({
   },
   stopBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 16 },
   skipBtn: { alignItems: "center", paddingVertical: 8 },
-  skipBtnText: { color: COLORS.textMuted, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  skipBtnText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
   continueBtn: {
     width: "100%",
     borderRadius: RADIUS.card,

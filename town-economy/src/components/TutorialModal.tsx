@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, GOLD_GRADIENT, RADIUS, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  GOLD_GRADIENT,
+  RADIUS,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 import { IconBadge } from "./IconBadge";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -113,7 +123,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
-  body: { color: COLORS.textMuted, fontSize: TYPE.body, textAlign: "center", lineHeight: 19, marginBottom: 18 },
+  body: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.body,
+    textAlign: "center",
+    lineHeight: 19,
+    marginBottom: 18,
+  },
   dots: { flexDirection: "row", gap: 6, marginBottom: 18 },
   dot: {
     width: 7,
@@ -138,5 +154,10 @@ const styles = StyleSheet.create({
   // taller than the space the button had reserved for it.
   nextBtnText: { color: COLORS.onLight, fontFamily: FONT.black, fontSize: 14, lineHeight: 20 },
   skipBtn: { marginTop: 10, paddingVertical: 6 },
-  skipBtnText: { color: COLORS.textMuted, fontSize: TYPE.label, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  skipBtnText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
 });

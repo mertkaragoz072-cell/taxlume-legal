@@ -58,9 +58,7 @@ export const TRADERS: Trader[] = [
   },
 ];
 
-export const TRADERS_BY_ID: Record<string, Trader> = Object.fromEntries(
-  TRADERS.map((t) => [t.id, t])
-);
+export const TRADERS_BY_ID: Record<string, Trader> = Object.fromEntries(TRADERS.map((t) => [t.id, t]));
 
 const TRADER_IDS: ReadonlySet<string> = new Set(TRADERS.map((t) => t.id));
 
@@ -109,17 +107,16 @@ export function getTraderReputation(
  * - Buying what they want to sell: +1 per unit (good for them)
  * - Other direction: -0.5 per unit (bad for them)
  * - Neutral good: 0 change (no opinion) */
-export function reputationDelta(
-  good: GoodId,
-  side: "buy" | "sell",
-  qty: number,
-  trader: Trader
-): number {
+export function reputationDelta(good: GoodId, side: "buy" | "sell", qty: number, trader: Trader): number {
   if (trader.buyPreferences.includes(good)) {
-    return side === "sell" ? REPUTATION_PER_UNIT.sellingTheyLove * qty : REPUTATION_PER_UNIT.buyingTheyHate * qty;
+    return side === "sell"
+      ? REPUTATION_PER_UNIT.sellingTheyLove * qty
+      : REPUTATION_PER_UNIT.buyingTheyHate * qty;
   }
   if (trader.sellPreferences.includes(good)) {
-    return side === "buy" ? REPUTATION_PER_UNIT.buyingTheyLove * qty : REPUTATION_PER_UNIT.buyingTheyHate * qty;
+    return side === "buy"
+      ? REPUTATION_PER_UNIT.buyingTheyLove * qty
+      : REPUTATION_PER_UNIT.buyingTheyHate * qty;
   }
   return REPUTATION_PER_UNIT.neutral * qty;
 }

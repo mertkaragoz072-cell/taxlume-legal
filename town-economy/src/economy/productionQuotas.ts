@@ -21,7 +21,11 @@ export function generateDailyQuotas(): ProductionQuota[] {
   });
 }
 
-export function getQuotaProgress(goodId: GoodId, produced: number, quotas: ProductionQuota[]): { target: number; produced: number; pct: number } {
+export function getQuotaProgress(
+  goodId: GoodId,
+  produced: number,
+  quotas: ProductionQuota[]
+): { target: number; produced: number; pct: number } {
   const quota = quotas.find((q) => q.goodId === goodId);
   if (!quota) return { target: 0, produced: 0, pct: 0 };
   return { target: quota.target, produced, pct: Math.min(1, produced / quota.target) };

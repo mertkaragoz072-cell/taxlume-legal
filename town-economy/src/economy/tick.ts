@@ -550,7 +550,9 @@ export function tick(state: EconomyState): EconomyState {
         ? seasonalTemplate.priceMultiplier
         : 1;
     const flashMult =
-      activeFlashDeal && activeFlashDeal.goodId === good.id ? flashDealMultiplier(activeFlashDeal.direction) : 1;
+      activeFlashDeal && activeFlashDeal.goodId === good.id
+        ? flashDealMultiplier(activeFlashDeal.direction)
+        : 1;
     // A demand cycle bites twice: once directly on the price, and once through
     // supply below, which the scarcity curve then prices in again. Neither half
     // alone reads as a real shortage.

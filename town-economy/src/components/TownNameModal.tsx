@@ -195,5 +195,10 @@ const styles = StyleSheet.create({
   saveBtnDisabled: { opacity: 0.4 },
   saveBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 14 },
   cancelBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
-  cancelBtnText: { color: COLORS.textMuted, fontSize: TYPE.body, fontWeight: WEIGHT.medium, fontFamily: FONT.medium },
+  cancelBtnText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.body,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
 });
