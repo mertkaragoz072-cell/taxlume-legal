@@ -51,7 +51,12 @@ interface Props {
 
 export function MarketScreen({ sounds }: Props) {
   const scroller = useRef<ScrollView>(null);
-  const panelY = useRef(0);
+  const panelRef = useRef<View>(null);
+  // Kept in sync via the ScrollView's own onScroll below — measureInWindow
+  // only ever reports an on-screen position, not a place inside the
+  // scrollable content, so turning that into a scrollTo target needs the
+  // current offset added back in (see the mentorStep effect below).
+  const scrollOffsetRef = useRef(0);
   const {
     state,
     selectGood,
@@ -128,17 +133,42 @@ export function MarketScreen({ sounds }: Props) {
   // beat that asks the player to press it, dimming the screen around a
   // control they cannot see would be a puzzle, not a lesson — so the list
   // brings it into view first.
+  //
+  // measureInWindow, not onLayout: layout.y is only ever relative to a
+  // view's immediate parent, and this panel sits several Views deep inside
+  // the ScrollView's content — an earlier version read that straight as a
+  // scroll target and always landed short of it, often short enough to
+  // clamp to 0 and not scroll at all. measureInWindow instead reports where
+  // each view actually sits on screen, the same call Spotlight.tsx's own
+  // ring placement already relies on; subtracting the two and adding back
+  // the current scroll offset gives a real target scrollTo can use.
   useEffect(() => {
     if (currentMentorStep(state.mentorStep)?.spotlight !== "buy") return;
-    const timer = setTimeout(
-      () => scroller.current?.scrollTo({ y: Math.max(0, panelY.current - 120), animated: true }),
-      350
-    );
+    const timer = setTimeout(() => {
+      const panel = panelRef.current;
+      const scrollView = scroller.current as unknown as {
+        measureInWindow?: (cb: (x: number, y: number, width: number, height: number) => void) => void;
+        scrollTo: (opts: { y: number; animated: boolean }) => void;
+      } | null;
+      if (!panel || !scrollView?.measureInWindow) return;
+      panel.measureInWindow((_panelX, panelY) => {
+        scrollView.measureInWindow!((_viewportX, viewportY) => {
+          const target = Math.max(0, scrollOffsetRef.current + (panelY - viewportY) - 120);
+          scrollView.scrollTo({ y: target, animated: true });
+        });
+      });
+    }, 350);
     return () => clearTimeout(timer);
   }, [state.mentorStep]);
 
   return (
-    <ScrollView ref={scroller} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      ref={scroller}
+      contentContainerStyle={styles.body}
+      showsVerticalScrollIndicator={false}
+      onScroll={(e) => (scrollOffsetRef.current = e.nativeEvent.contentOffset.y)}
+      scrollEventThrottle={16}
+    >
       {/* Market Pulse: the town square image used to open this screen, but
           it said nothing about the market and only lived here because the
           game had no Town tab yet to send it to. This says something —
@@ -338,7 +368,7 @@ export function MarketScreen({ sounds }: Props) {
       )}
 
       <SpotlightTarget id="buy">
-        <View onLayout={(e) => (panelY.current = e.nativeEvent.layout.y)}>
+        <View ref={panelRef} collapsable={false}>
           <BuySellPanel
             good={selected}
             state={selectedState}
