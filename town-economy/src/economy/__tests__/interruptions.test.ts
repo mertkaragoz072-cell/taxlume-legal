@@ -218,10 +218,15 @@ describe("mentor script", () => {
     // while it waited for a measurement it never got. Between them there
     // was a state with no hole to press and no button to press, and the
     // tour simply stopped. Both halves are guarded here.
-    expect(shouldRenderOverlay("buy", null)).toBe(false);
-    expect(shouldRenderOverlay("buy", { width: 0 })).toBe(false);
-    expect(shouldRenderOverlay("buy", { width: 120 })).toBe(true);
-    expect(shouldRenderOverlay(null, { width: 120 })).toBe(false);
+    expect(shouldRenderOverlay("buy", null, 800)).toBe(false);
+    expect(shouldRenderOverlay("buy", { y: 100, height: 60, width: 0 }, 800)).toBe(false);
+    expect(shouldRenderOverlay("buy", { y: 100, height: 60, width: 120 }, 800)).toBe(true);
+    expect(shouldRenderOverlay(null, { y: 100, height: 60, width: 120 }, 800)).toBe(false);
+    // A target measured mid-scroll (or wherever scrollIntoView never ran at
+    // all, as on native) lands outside the viewport — the same dead end as
+    // a missing rect, just with one that technically exists.
+    expect(shouldRenderOverlay("buy", { y: -200, height: 60, width: 120 }, 800)).toBe(false);
+    expect(shouldRenderOverlay("buy", { y: 900, height: 60, width: 120 }, 800)).toBe(false);
 
     const buy = MENTOR_STEPS.find((s) => s.id === "buy")!;
     const fresh = initialState();

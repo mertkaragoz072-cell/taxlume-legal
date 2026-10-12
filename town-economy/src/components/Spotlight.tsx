@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleProp,
   StyleSheet,
+  useWindowDimensions,
   View,
   ViewStyle,
 } from "react-native";
@@ -223,9 +224,21 @@ const HOLE_PAD = 8;
  * overlay with no hole on a beat that waits for the player to press
  * something is a dead end — which is exactly what it was. Losing the
  * highlight is a cosmetic failure; losing the only pressable control is not.
- */
-export function shouldRenderOverlay(target: SpotlightId | null, rect: { width: number } | null) {
-  return Boolean(target) && rect !== null && rect.width > 0;
+ *
+ * A rect measured off-screen — mid-scroll, or wherever scrollIntoView
+ * either hasn't finished or (as on native, see its own comment) never ran
+ * at all — is the same dead end wearing a different face: the hole lands
+ * outside the viewport, so the four panels around it cover the entire
+ * visible screen with nothing showing through anywhere. Requiring the rect
+ * to actually overlap the viewport catches that the same way a missing
+ * rect already does. */
+export function shouldRenderOverlay(
+  target: SpotlightId | null,
+  rect: { y: number; height: number; width: number } | null,
+  viewportHeight: number
+) {
+  if (!target || !rect || rect.width <= 0) return false;
+  return rect.y + rect.height > 0 && rect.y < viewportHeight;
 }
 
 /** Dims the whole screen except one control, which stays live.
@@ -244,6 +257,7 @@ export function shouldRenderOverlay(target: SpotlightId | null, rect: { width: n
 export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
   const ctx = useContext(SpotlightContext);
   const [rect, setRect] = useState<Rect | null>(null);
+  const { height: viewportHeight } = useWindowDimensions();
 
   useEffect(() => {
     if (!ctx || !target) {
@@ -277,7 +291,7 @@ export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
     };
   }, [ctx, target]);
 
-  if (!rect || !shouldRenderOverlay(target, rect)) return null;
+  if (!rect || !shouldRenderOverlay(target, rect, viewportHeight)) return null;
 
   // No measurement, no overlay — fail open, never closed.
   // (see shouldRenderOverlay)
