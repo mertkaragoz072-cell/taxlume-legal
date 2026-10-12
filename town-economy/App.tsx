@@ -208,11 +208,22 @@ function Game() {
   useEffect(() => {
     let cancelled = false;
     hasSeenTutorial().then((seen) => {
-      if (!cancelled && !seen) setMentorAllowed(true);
+      if (cancelled) return;
+      if (!seen) {
+        setMentorAllowed(true);
+        return;
+      }
+      // She won't run for this player (see above), but the economy's own
+      // tick loop gates on mentorStep reaching the end regardless of
+      // whether her UI ever shows it — without this, a returning player's
+      // fresh town (mentorStep starts at 0 again on RESET) would sit
+      // frozen forever with nothing on screen to advance it.
+      advanceMentor(MENTOR_STEPS.length);
     });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const mentorActive = mentorAllowed && state.mentorStep < MENTOR_STEPS.length;
