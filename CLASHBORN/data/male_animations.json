@@ -290,21 +290,6 @@
       "hitDelay": 0.2,
       "fx": "baked"
     },
-    "jump": {
-      "frames": [
-        "jump_01",
-        "jump_02",
-        "jump_03",
-        "jump_04",
-        "jump_05",
-        "jump_06",
-        "jump_07",
-        "jump_08",
-        "jump_09"
-      ],
-      "fps": 10,
-      "loop": false
-    },
     "hurt": {
       "frames": [
         "hd_hurt_02",
@@ -446,25 +431,6 @@
         ]
       ],
       "shake": 10
-    },
-    "turn": {
-      "frames": [
-        "turn_01",
-        "turn_02",
-        "turn_03",
-        "turn_04",
-        "turn_05",
-        "turn_06",
-        "turn_07",
-        "turn_08",
-        "turn_09",
-        "turn_10",
-        "turn_11",
-        "turn_12",
-        "turn_13"
-      ],
-      "fps": 10,
-      "loop": false
     }
   },
   "fxAnchor": {},
