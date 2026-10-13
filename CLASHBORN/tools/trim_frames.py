@@ -1,6 +1,6 @@
 """HD kare setlerinde saydam kenar boşluğunu kırpar (bellek ~yarıya iner: çözülmüş bitmap = genişlik×yükseklik×4 bayt).
 Kullanım: python3 tools/trim_frames.py            (extract_enemy_sheet.py ile yeni kare üretildikten sonra yeniden çalıştırılabilir; idempotent)
-Kapsam: assets/characters/male/hd, assets/enemies/*/hd  (kadın kareleri build_female_animations.py aynı tuval boyutu bekler → kapsam dışı)
+Kapsam: assets/characters/male/hd, assets/characters/female/*, assets/enemies/*/hd. Kadın için SIRA: önce build_female_animations.py (tam tuval boyutu ister), SONRA bu araç (yeniden build kırpılmış dosyalarda boyut uyarısı verir ama çalışır; kayıt yeni boyutla eşleşmezse çalışma zamanı yok sayar)
 Kayıt: data/asset_manifest.json → "trim": { anahtar: [W, H, ox, oy, tw, th] }  (W×H = özgün tuval, ox/oy = kırpılmış karenin tuvaldeki yeri, tw×th = dosyadaki boyut).
 Çalışma zamanı (src/core/assets.js): görsel boyutu kayıttaki tw×th ile eşleşirse `width/height` özgün tuvali bildirir ve ctx.drawImage kırpmayı geri koyar → çizim kodu değişmez.
 Boyut eşleşmezse (dosya yeniden üretilmiş, kayıt eski) kayıt yok sayılır, tam kare çizilir. Piksel kaybı yok (alfa>0 sınır kutusu)."""
@@ -9,7 +9,7 @@ from PIL import Image
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 mp = os.path.join(ROOT, 'data/asset_manifest.json'); man = json.load(open(mp)); trim = man.get('trim', {})
 path2key = {v: k for k, v in man['images'].items()}
-dirs = ['assets/characters/male/hd'] + [f'assets/enemies/{d}/hd' for d in sorted(os.listdir(os.path.join(ROOT, 'assets/enemies'))) if os.path.isdir(os.path.join(ROOT, f'assets/enemies/{d}/hd'))]
+dirs = ['assets/characters/male/hd'] + [f'assets/characters/female/{a}' for a in ('idle', 'run', 'attack', 'hurt', 'death')] + [f'assets/enemies/{d}/hd' for d in sorted(os.listdir(os.path.join(ROOT, 'assets/enemies'))) if os.path.isdir(os.path.join(ROOT, f'assets/enemies/{d}/hd'))]
 saved = 0; n = 0
 for d in dirs:
     for f in sorted(os.listdir(os.path.join(ROOT, d))):

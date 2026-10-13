@@ -1,7 +1,7 @@
 {
- "_comment": "idle/ (30 kare, tools/extract_heroine_idle.py) ve death/ (29 kare, tools/extract_heroine_death.py) dolu; run/ (30 kare, tools/extract_heroine_run.py) dolu; attack/ (30 kare, tools/extract_heroine_attack.py; efekt karelerde gömülü: attackFx baked) dolu; hurt/ (30 kare, tools/extract_heroine_hurt.py) dolu — tüm kadın durumları artık kare tabanlı. durations: kare başına süre (sn). fps 30. scale: 0.455 birim/px ortak (ayakta ≈ 91-96 birim); tuval 380x235 (tools/widen_heroine_canvas.py: sağa genişletildi), pivot (170,225). dx: ölümde gövdenin geriye kayışı (birim). dust: [kare, parçacık, yayılma]; shake: sarsıntı karesi.",
+ "_comment": "idle/ (30 kare, tools/extract_heroine_idle.py) ve death/ (29 kare, tools/extract_heroine_death.py) dolu; run/ (30 kare, tools/extract_heroine_run.py) dolu; attack/ (30 kare, tools/extract_heroine_attack.py; efekt karelerde g\u00f6m\u00fcl\u00fc: attackFx baked) dolu; hurt/ (30 kare, tools/extract_heroine_hurt.py) dolu \u2014 t\u00fcm kad\u0131n durumlar\u0131 art\u0131k kare tabanl\u0131. durations: kare ba\u015f\u0131na s\u00fcre (sn). fps 30. scale: 0.455 birim/px ortak (ayakta \u2248 91-96 birim); tuval 520x235 (tools/widen_heroine_canvas.py: sa\u011fa geni\u015fletildi), pivot (250,225). dx: \u00f6l\u00fcmde g\u00f6vdenin geriye kay\u0131\u015f\u0131 (birim). dust: [kare, par\u00e7ac\u0131k, yay\u0131lma]; shake: sars\u0131nt\u0131 karesi.",
  "pivot": [
-  170,
+  250,
   225
  ],
  "scale": 0.455,
@@ -23,26 +23,19 @@
    0.0,
    0.0,
    0.0,
-   -1.6,
-   -4.4,
-   -6.0,
-   -8.6,
-   -13.4,
-   -16.0,
-   -18.6,
-   -23.4,
-   -26.0,
-   -27.2,
-   -30.0,
-   -32.8,
-   -34.0,
-   -34.8,
-   -36.5,
-   -38.2,
-   -39.0,
-   -39.5,
-   -40.5,
-   -41.0
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
   ]
  },
  "dust": {
@@ -54,18 +47,13 @@
    ],
    [
     13,
-    16,
-    140
-   ],
-   [
-    16,
-    12,
-    120
+    10,
+    110
    ]
   ]
  },
  "shake": {
-  "death": 13
+  "death": 10
  },
  "strideUnits": 2.7,
  "durations": {
@@ -132,6 +120,30 @@
    0.012,
    0.012,
    0.012
+  ],
+  "death": [
+   0.035,
+   0.035,
+   0.035,
+   0.035,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.04,
+   0.05,
+   0.05,
+   0.05,
+   0.05,
+   0.05,
+   0.05,
+   0.05,
+   0.05
   ]
  },
  "attackFx": "baked",
