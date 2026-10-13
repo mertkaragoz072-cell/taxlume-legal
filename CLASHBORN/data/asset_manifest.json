@@ -485,6 +485,30 @@
     "enemy_goblin_warlock_hd_attack_28": "assets/enemies/goblin_warlock/hd/attack_28.png",
     "enemy_goblin_warlock_hd_attack_29": "assets/enemies/goblin_warlock/hd/attack_29.png",
     "enemy_goblin_warlock_hd_attack_30": "assets/enemies/goblin_warlock/hd/attack_30.png",
+    "enemy_goblin_warlock_hd_death_01": "assets/enemies/goblin_warlock/hd/death_01.png",
+    "enemy_goblin_warlock_hd_death_02": "assets/enemies/goblin_warlock/hd/death_02.png",
+    "enemy_goblin_warlock_hd_death_03": "assets/enemies/goblin_warlock/hd/death_03.png",
+    "enemy_goblin_warlock_hd_death_04": "assets/enemies/goblin_warlock/hd/death_04.png",
+    "enemy_goblin_warlock_hd_death_05": "assets/enemies/goblin_warlock/hd/death_05.png",
+    "enemy_goblin_warlock_hd_death_06": "assets/enemies/goblin_warlock/hd/death_06.png",
+    "enemy_goblin_warlock_hd_death_07": "assets/enemies/goblin_warlock/hd/death_07.png",
+    "enemy_goblin_warlock_hd_death_08": "assets/enemies/goblin_warlock/hd/death_08.png",
+    "enemy_goblin_warlock_hd_death_09": "assets/enemies/goblin_warlock/hd/death_09.png",
+    "enemy_goblin_warlock_hd_death_10": "assets/enemies/goblin_warlock/hd/death_10.png",
+    "enemy_goblin_warlock_hd_death_11": "assets/enemies/goblin_warlock/hd/death_11.png",
+    "enemy_goblin_warlock_hd_death_12": "assets/enemies/goblin_warlock/hd/death_12.png",
+    "enemy_goblin_warlock_hd_death_13": "assets/enemies/goblin_warlock/hd/death_13.png",
+    "enemy_goblin_warlock_hd_death_14": "assets/enemies/goblin_warlock/hd/death_14.png",
+    "enemy_goblin_warlock_hd_death_15": "assets/enemies/goblin_warlock/hd/death_15.png",
+    "enemy_goblin_warlock_hd_death_16": "assets/enemies/goblin_warlock/hd/death_16.png",
+    "enemy_goblin_warlock_hd_death_17": "assets/enemies/goblin_warlock/hd/death_17.png",
+    "enemy_goblin_warlock_hd_death_18": "assets/enemies/goblin_warlock/hd/death_18.png",
+    "enemy_goblin_warlock_hd_death_19": "assets/enemies/goblin_warlock/hd/death_19.png",
+    "enemy_goblin_warlock_hd_death_20": "assets/enemies/goblin_warlock/hd/death_20.png",
+    "enemy_goblin_warlock_hd_death_21": "assets/enemies/goblin_warlock/hd/death_21.png",
+    "enemy_goblin_warlock_hd_death_22": "assets/enemies/goblin_warlock/hd/death_22.png",
+    "enemy_goblin_warlock_hd_death_23": "assets/enemies/goblin_warlock/hd/death_23.png",
+    "enemy_goblin_warlock_hd_death_24": "assets/enemies/goblin_warlock/hd/death_24.png",
     "enemy_goblin_warlock_hd_walk_01": "assets/enemies/goblin_warlock/hd/walk_01.png",
     "enemy_goblin_warlock_hd_walk_02": "assets/enemies/goblin_warlock/hd/walk_02.png",
     "enemy_goblin_warlock_hd_walk_03": "assets/enemies/goblin_warlock/hd/walk_03.png",
@@ -4924,6 +4948,198 @@
       41,
       233,
       162
+    ],
+    "enemy_goblin_warlock_hd_death_01": [
+      332,
+      266,
+      4,
+      57,
+      236,
+      198
+    ],
+    "enemy_goblin_warlock_hd_death_02": [
+      332,
+      266,
+      18,
+      41,
+      224,
+      203
+    ],
+    "enemy_goblin_warlock_hd_death_03": [
+      332,
+      266,
+      80,
+      14,
+      229,
+      200
+    ],
+    "enemy_goblin_warlock_hd_death_04": [
+      332,
+      266,
+      44,
+      8,
+      216,
+      208
+    ],
+    "enemy_goblin_warlock_hd_death_05": [
+      332,
+      266,
+      24,
+      58,
+      244,
+      197
+    ],
+    "enemy_goblin_warlock_hd_death_06": [
+      332,
+      266,
+      35,
+      57,
+      257,
+      201
+    ],
+    "enemy_goblin_warlock_hd_death_07": [
+      332,
+      266,
+      44,
+      56,
+      260,
+      193
+    ],
+    "enemy_goblin_warlock_hd_death_08": [
+      332,
+      266,
+      58,
+      65,
+      248,
+      189
+    ],
+    "enemy_goblin_warlock_hd_death_09": [
+      332,
+      266,
+      50,
+      82,
+      233,
+      170
+    ],
+    "enemy_goblin_warlock_hd_death_10": [
+      332,
+      266,
+      62,
+      69,
+      238,
+      185
+    ],
+    "enemy_goblin_warlock_hd_death_11": [
+      332,
+      266,
+      30,
+      83,
+      258,
+      171
+    ],
+    "enemy_goblin_warlock_hd_death_12": [
+      332,
+      266,
+      38,
+      89,
+      252,
+      167
+    ],
+    "enemy_goblin_warlock_hd_death_13": [
+      332,
+      266,
+      41,
+      116,
+      265,
+      137
+    ],
+    "enemy_goblin_warlock_hd_death_14": [
+      332,
+      266,
+      54,
+      106,
+      255,
+      146
+    ],
+    "enemy_goblin_warlock_hd_death_15": [
+      332,
+      266,
+      52,
+      115,
+      255,
+      136
+    ],
+    "enemy_goblin_warlock_hd_death_16": [
+      332,
+      266,
+      53,
+      125,
+      255,
+      127
+    ],
+    "enemy_goblin_warlock_hd_death_17": [
+      332,
+      266,
+      38,
+      131,
+      264,
+      121
+    ],
+    "enemy_goblin_warlock_hd_death_18": [
+      332,
+      266,
+      46,
+      133,
+      248,
+      119
+    ],
+    "enemy_goblin_warlock_hd_death_19": [
+      332,
+      266,
+      44,
+      141,
+      258,
+      111
+    ],
+    "enemy_goblin_warlock_hd_death_20": [
+      332,
+      266,
+      42,
+      139,
+      262,
+      113
+    ],
+    "enemy_goblin_warlock_hd_death_21": [
+      332,
+      266,
+      46,
+      144,
+      251,
+      109
+    ],
+    "enemy_goblin_warlock_hd_death_22": [
+      332,
+      266,
+      41,
+      145,
+      262,
+      108
+    ],
+    "enemy_goblin_warlock_hd_death_23": [
+      332,
+      266,
+      66,
+      145,
+      256,
+      108
+    ],
+    "enemy_goblin_warlock_hd_death_24": [
+      332,
+      266,
+      42,
+      144,
+      249,
+      108
     ],
     "enemy_goblin_warlock_hd_walk_01": [
       315,

@@ -904,5 +904,49 @@
       "light": 1.1
     },
     "animFrom": "goblin_scout"
+  },
+  "goblin_warlock": {
+    "name": "Goblin Büyücü Lordu",
+    "heightUnits": 140,
+    "width": 96,
+    "barWidth": 96,
+    "hp": 950,
+    "damage": 23,
+    "speed": 42,
+    "xp": 330,
+    "coins": [
+      44,
+      54
+    ],
+    "coinValue": 1,
+    "gems": [
+      5,
+      6
+    ],
+    "contactRange": 230,
+    "attackCooldown": 2.0,
+    "minLevel": 1,
+    "weight": 0,
+    "knockResist": 0.95,
+    "boss": true,
+    "elite": true,
+    "engage": 210,
+    "hitRange": 200,
+    "hitPad": 90,
+    "minGap": 150,
+    "title": "GOBLİN BÜYÜCÜ LORDU",
+    "bossCfg": {
+      "baseCd": [
+        2.2,
+        3.2
+      ],
+      "charge": {
+        "minDist": 220,
+        "speed": 480
+      },
+      "smash": {
+        "radius": 260
+      }
+    }
   }
 }
