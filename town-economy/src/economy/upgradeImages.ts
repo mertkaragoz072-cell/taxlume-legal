@@ -31,6 +31,7 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
   },
   guardTower: {
     1: require("../../assets/upgrades/guardTower-1.png"),
+    2: require("../../assets/upgrades/guardTower-2.png"),
   },
 };
 
