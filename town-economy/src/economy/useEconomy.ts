@@ -1590,9 +1590,18 @@ export function useEconomy() {
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
+    // Gated on `started`, not just `hydrated`: without it, a player who
+    // never gets past the title screen still gets a save written — the
+    // untouched default state (Day 1, the starting cash) — the moment load
+    // finishes. Their next launch would then show "Continue · Day 1" for a
+    // town they never actually played, exactly what hasSave's own comment
+    // above says this screen should avoid. A returning player with real
+    // history is unaffected: that save already exists from a previous
+    // session where they did press the button, so hasSave is already true
+    // from the load itself, before this effect ever runs again.
+    if (!hydrated || !started) return;
     saveEconomyState(state);
-  }, [state, hydrated]);
+  }, [state, hydrated, started]);
 
   const selectGood = useCallback((goodId: GoodId) => dispatch({ type: "SELECT_GOOD", goodId }), []);
   const trade_ = useCallback(
