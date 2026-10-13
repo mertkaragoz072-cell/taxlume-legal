@@ -38,6 +38,9 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
     1: require("../../assets/upgrades/earthquakeFund-1.png"),
     2: require("../../assets/upgrades/earthquakeFund-2.png"),
   },
+  storageYard: {
+    1: require("../../assets/upgrades/storageYard-1.png"),
+  },
 };
 
 /** Level 0 has no art (nothing built yet — the emoji fallback covers it).
