@@ -44,6 +44,28 @@
     "enemy_goblin_bomber_boss_hd_attack_28": "assets/enemies/goblin_bomber_boss/hd/attack_28.png",
     "enemy_goblin_bomber_boss_hd_attack_29": "assets/enemies/goblin_bomber_boss/hd/attack_29.png",
     "enemy_goblin_bomber_boss_hd_attack_30": "assets/enemies/goblin_bomber_boss/hd/attack_30.png",
+    "enemy_goblin_bomber_boss_hd_death_01": "assets/enemies/goblin_bomber_boss/hd/death_01.png",
+    "enemy_goblin_bomber_boss_hd_death_02": "assets/enemies/goblin_bomber_boss/hd/death_02.png",
+    "enemy_goblin_bomber_boss_hd_death_03": "assets/enemies/goblin_bomber_boss/hd/death_03.png",
+    "enemy_goblin_bomber_boss_hd_death_04": "assets/enemies/goblin_bomber_boss/hd/death_04.png",
+    "enemy_goblin_bomber_boss_hd_death_05": "assets/enemies/goblin_bomber_boss/hd/death_05.png",
+    "enemy_goblin_bomber_boss_hd_death_06": "assets/enemies/goblin_bomber_boss/hd/death_06.png",
+    "enemy_goblin_bomber_boss_hd_death_07": "assets/enemies/goblin_bomber_boss/hd/death_07.png",
+    "enemy_goblin_bomber_boss_hd_death_08": "assets/enemies/goblin_bomber_boss/hd/death_08.png",
+    "enemy_goblin_bomber_boss_hd_death_09": "assets/enemies/goblin_bomber_boss/hd/death_09.png",
+    "enemy_goblin_bomber_boss_hd_death_10": "assets/enemies/goblin_bomber_boss/hd/death_10.png",
+    "enemy_goblin_bomber_boss_hd_death_11": "assets/enemies/goblin_bomber_boss/hd/death_11.png",
+    "enemy_goblin_bomber_boss_hd_death_12": "assets/enemies/goblin_bomber_boss/hd/death_12.png",
+    "enemy_goblin_bomber_boss_hd_death_13": "assets/enemies/goblin_bomber_boss/hd/death_13.png",
+    "enemy_goblin_bomber_boss_hd_death_14": "assets/enemies/goblin_bomber_boss/hd/death_14.png",
+    "enemy_goblin_bomber_boss_hd_death_15": "assets/enemies/goblin_bomber_boss/hd/death_15.png",
+    "enemy_goblin_bomber_boss_hd_death_16": "assets/enemies/goblin_bomber_boss/hd/death_16.png",
+    "enemy_goblin_bomber_boss_hd_death_17": "assets/enemies/goblin_bomber_boss/hd/death_17.png",
+    "enemy_goblin_bomber_boss_hd_death_18": "assets/enemies/goblin_bomber_boss/hd/death_18.png",
+    "enemy_goblin_bomber_boss_hd_death_19": "assets/enemies/goblin_bomber_boss/hd/death_19.png",
+    "enemy_goblin_bomber_boss_hd_death_20": "assets/enemies/goblin_bomber_boss/hd/death_20.png",
+    "enemy_goblin_bomber_boss_hd_death_21": "assets/enemies/goblin_bomber_boss/hd/death_21.png",
+    "enemy_goblin_bomber_boss_hd_death_22": "assets/enemies/goblin_bomber_boss/hd/death_22.png",
     "enemy_goblin_bomber_boss_hd_walk_01": "assets/enemies/goblin_bomber_boss/hd/walk_01.png",
     "enemy_goblin_bomber_boss_hd_walk_02": "assets/enemies/goblin_bomber_boss/hd/walk_02.png",
     "enemy_goblin_bomber_boss_hd_walk_03": "assets/enemies/goblin_bomber_boss/hd/walk_03.png",
@@ -1496,6 +1518,182 @@
       20,
       222,
       187
+    ],
+    "enemy_goblin_bomber_boss_hd_death_01": [
+      409,
+      222,
+      99,
+      16,
+      239,
+      175
+    ],
+    "enemy_goblin_bomber_boss_hd_death_02": [
+      409,
+      222,
+      103,
+      20,
+      232,
+      171
+    ],
+    "enemy_goblin_bomber_boss_hd_death_03": [
+      409,
+      222,
+      104,
+      30,
+      227,
+      162
+    ],
+    "enemy_goblin_bomber_boss_hd_death_04": [
+      409,
+      222,
+      110,
+      24,
+      213,
+      166
+    ],
+    "enemy_goblin_bomber_boss_hd_death_05": [
+      409,
+      222,
+      101,
+      54,
+      241,
+      152
+    ],
+    "enemy_goblin_bomber_boss_hd_death_06": [
+      409,
+      222,
+      90,
+      18,
+      231,
+      179
+    ],
+    "enemy_goblin_bomber_boss_hd_death_07": [
+      409,
+      222,
+      98,
+      8,
+      220,
+      188
+    ],
+    "enemy_goblin_bomber_boss_hd_death_08": [
+      409,
+      222,
+      92,
+      24,
+      232,
+      169
+    ],
+    "enemy_goblin_bomber_boss_hd_death_09": [
+      409,
+      222,
+      97,
+      24,
+      223,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_death_10": [
+      409,
+      222,
+      94,
+      46,
+      234,
+      152
+    ],
+    "enemy_goblin_bomber_boss_hd_death_11": [
+      409,
+      222,
+      65,
+      28,
+      252,
+      170
+    ],
+    "enemy_goblin_bomber_boss_hd_death_12": [
+      409,
+      222,
+      4,
+      50,
+      256,
+      164
+    ],
+    "enemy_goblin_bomber_boss_hd_death_13": [
+      409,
+      222,
+      30,
+      66,
+      232,
+      140
+    ],
+    "enemy_goblin_bomber_boss_hd_death_14": [
+      409,
+      222,
+      27,
+      66,
+      229,
+      141
+    ],
+    "enemy_goblin_bomber_boss_hd_death_15": [
+      409,
+      222,
+      77,
+      38,
+      255,
+      151
+    ],
+    "enemy_goblin_bomber_boss_hd_death_16": [
+      409,
+      222,
+      82,
+      43,
+      250,
+      146
+    ],
+    "enemy_goblin_bomber_boss_hd_death_17": [
+      409,
+      222,
+      78,
+      78,
+      245,
+      110
+    ],
+    "enemy_goblin_bomber_boss_hd_death_18": [
+      409,
+      222,
+      69,
+      78,
+      256,
+      110
+    ],
+    "enemy_goblin_bomber_boss_hd_death_19": [
+      409,
+      222,
+      88,
+      81,
+      248,
+      108
+    ],
+    "enemy_goblin_bomber_boss_hd_death_20": [
+      409,
+      222,
+      88,
+      82,
+      248,
+      108
+    ],
+    "enemy_goblin_bomber_boss_hd_death_21": [
+      409,
+      222,
+      78,
+      83,
+      254,
+      106
+    ],
+    "enemy_goblin_bomber_boss_hd_death_22": [
+      409,
+      222,
+      78,
+      84,
+      251,
+      105
     ],
     "enemy_goblin_bomber_boss_hd_walk_01": [
       339,
