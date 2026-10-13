@@ -27,6 +27,7 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
   bank: {
     1: require("../../assets/upgrades/bank-1.png"),
     2: require("../../assets/upgrades/bank-2.png"),
+    3: require("../../assets/upgrades/bank-3.png"),
   },
 };
 
