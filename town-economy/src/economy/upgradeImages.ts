@@ -24,6 +24,9 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
     2: require("../../assets/upgrades/townhall-2.png"),
     3: require("../../assets/upgrades/townhall-3.png"),
   },
+  bank: {
+    1: require("../../assets/upgrades/bank-1.png"),
+  },
 };
 
 /** Level 0 has no art (nothing built yet — the emoji fallback covers it).
