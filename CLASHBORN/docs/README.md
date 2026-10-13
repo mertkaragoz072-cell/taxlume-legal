@@ -458,3 +458,7 @@ Her HD kare seti (erkek, 6 düşman/boss) otomatik tarandı (`kenara değen`, se
 - **Yükleme ekranı:** ~1000 kare yüklenirken (özellikle yavaş cihazda) oyun arayüzü boş mavi ekran olarak görünüyordu → CLASHBORN yazısı + ilerleme çubuğu (`#loading`); karakter seçilince "Hazırlanıyor…" (kare çözme) aşaması.
 - **Ölü asset temizliği:** kullanılmayan erkek `jump`/`turn` (22 düşük çözünürlüklü kare) ve eski düşük çözünürlüklü Gözcü/Savaşçı/Brute kareleri (30; yerlerini HD setler aldı) silindi; yükleme ve bellek azaldı.
 - **Bilinen, çözülemeyen stil farkları (kullanıcı sayfaları):** kadın ölüm sayfasının saçı/kıyafeti diğer kadın durumlarından farklı; Goblin Kralı ölüm sayfası diğer durumlardan daha parlak/çizgi film; erkek idle/koşu/saldırı/hasar çizimleri arasında küçük boy farkları (baş boyuna göre ölçeklendi). Düzeltme yolu: sayfanın aynı karakter referansıyla yeniden ürettirilmesi.
+
+## Faz 72 — Goblin Büyücü Lordu (goblin_warlock, 3. bölüm bossu) yürüme (hazırlık)
+- Tasarım: tüy + kemik başlıklı, mor gözlü, kafatası süslü cüppeli, mor alevli asalı goblin büyücü. `extract_enemy_sheet.py goblin_warlock walk references/nexora_goblin_warlock_walk_source.png --fps 30 --loop --stride 54 --target 140 --anchor torso` → 30 kare, ölçek 0.8358, `strideUnits` 1.8. Boşluk siyah dolgu + kırıntılar temizlendi.
+- `data/enemy_animations.json → goblin_warlock` eklendi (yalnız `walk`); **`data/enemies.json`'da henüz tanımlı değil, oyuna bağlı değil** (saldırı/ölüm sayfaları gelince boss olarak eklenecek: `world_roster.json` meadowlands bosses 3. sıra).
