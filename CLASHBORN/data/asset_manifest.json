@@ -385,7 +385,6 @@
     "enemy_goblin_king_hd_death_20": "assets/enemies/goblin_king/hd/death_20.png",
     "enemy_goblin_king_hd_death_21": "assets/enemies/goblin_king/hd/death_21.png",
     "enemy_goblin_king_hd_death_22": "assets/enemies/goblin_king/hd/death_22.png",
-    "enemy_goblin_king_hd_death_23": "assets/enemies/goblin_king/hd/death_23.png",
     "enemy_goblin_king_hd_walk_01": "assets/enemies/goblin_king/hd/walk_01.png",
     "enemy_goblin_king_hd_walk_02": "assets/enemies/goblin_king/hd/walk_02.png",
     "enemy_goblin_king_hd_walk_03": "assets/enemies/goblin_king/hd/walk_03.png",
@@ -4057,180 +4056,180 @@
       166
     ],
     "enemy_goblin_king_hd_death_01": [
-      300,
-      233,
-      36,
-      24,
-      208,
-      190
+      341,
+      217,
+      58,
+      40,
+      227,
+      167
     ],
     "enemy_goblin_king_hd_death_02": [
-      300,
-      233,
-      36,
-      28,
+      341,
       217,
-      189
+      56,
+      41,
+      223,
+      166
     ],
     "enemy_goblin_king_hd_death_03": [
-      300,
-      233,
-      32,
-      28,
-      224,
-      187
+      341,
+      217,
+      52,
+      43,
+      253,
+      165
     ],
     "enemy_goblin_king_hd_death_04": [
-      300,
-      233,
-      26,
-      36,
-      226,
-      180
+      341,
+      217,
+      66,
+      39,
+      235,
+      168
     ],
     "enemy_goblin_king_hd_death_05": [
-      300,
-      233,
-      30,
-      32,
-      232,
-      184
+      341,
+      217,
+      115,
+      41,
+      202,
+      167
     ],
     "enemy_goblin_king_hd_death_06": [
-      300,
-      233,
-      24,
-      32,
-      228,
-      184
+      341,
+      217,
+      60,
+      45,
+      224,
+      163
     ],
     "enemy_goblin_king_hd_death_07": [
-      300,
-      233,
-      34,
-      8,
-      226,
-      201
+      341,
+      217,
+      75,
+      28,
+      213,
+      180
     ],
     "enemy_goblin_king_hd_death_08": [
-      300,
-      233,
-      36,
-      33,
-      241,
-      183
+      341,
+      217,
+      65,
+      48,
+      228,
+      159
     ],
     "enemy_goblin_king_hd_death_09": [
-      300,
-      233,
-      28,
-      43,
-      224,
-      175
+      341,
+      217,
+      52,
+      29,
+      253,
+      178
     ],
     "enemy_goblin_king_hd_death_10": [
-      300,
-      233,
-      27,
-      38,
-      224,
+      341,
+      217,
+      53,
+      28,
+      250,
       180
     ],
     "enemy_goblin_king_hd_death_11": [
-      300,
-      233,
-      26,
-      22,
-      223,
+      341,
+      217,
+      61,
+      13,
+      203,
       194
     ],
     "enemy_goblin_king_hd_death_12": [
-      300,
-      233,
-      34,
-      73,
-      243,
-      152
+      341,
+      217,
+      16,
+      33,
+      265,
+      175
     ],
     "enemy_goblin_king_hd_death_13": [
-      300,
-      233,
-      27,
-      88,
-      244,
-      125
+      341,
+      217,
+      66,
+      69,
+      270,
+      138
     ],
     "enemy_goblin_king_hd_death_14": [
-      300,
-      233,
-      32,
-      99,
-      249,
-      114
+      341,
+      217,
+      60,
+      59,
+      263,
+      148
     ],
     "enemy_goblin_king_hd_death_15": [
-      300,
-      233,
-      45,
-      133,
-      242,
-      80
+      341,
+      217,
+      70,
+      83,
+      248,
+      124
     ],
     "enemy_goblin_king_hd_death_16": [
-      300,
-      233,
-      35,
-      135,
-      255,
-      78
+      341,
+      217,
+      61,
+      87,
+      258,
+      120
     ],
     "enemy_goblin_king_hd_death_17": [
-      300,
-      233,
-      33,
-      136,
-      246,
-      77
+      341,
+      217,
+      62,
+      103,
+      247,
+      105
     ],
     "enemy_goblin_king_hd_death_18": [
-      300,
-      233,
-      36,
-      135,
-      239,
-      77
+      341,
+      217,
+      60,
+      107,
+      229,
+      100
     ],
     "enemy_goblin_king_hd_death_19": [
-      300,
-      233,
-      33,
-      135,
-      249,
-      77
+      341,
+      217,
+      56,
+      107,
+      246,
+      101
     ],
     "enemy_goblin_king_hd_death_20": [
-      300,
-      233,
-      47,
-      134,
-      249,
-      78
+      341,
+      217,
+      60,
+      109,
+      243,
+      98
     ],
     "enemy_goblin_king_hd_death_21": [
-      300,
-      233,
-      40,
-      134,
-      247,
-      78
+      341,
+      217,
+      60,
+      107,
+      248,
+      100
     ],
     "enemy_goblin_king_hd_death_22": [
-      300,
-      233,
-      36,
-      135,
-      251,
-      78
+      341,
+      217,
+      52,
+      105,
+      252,
+      102
     ],
     "enemy_goblin_king_hd_death_23": [
       300,

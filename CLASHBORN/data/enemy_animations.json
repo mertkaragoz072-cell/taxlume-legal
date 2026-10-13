@@ -1121,21 +1121,20 @@
           "enemy_goblin_king_hd_death_19",
           "enemy_goblin_king_hd_death_20",
           "enemy_goblin_king_hd_death_21",
-          "enemy_goblin_king_hd_death_22",
-          "enemy_goblin_king_hd_death_23"
+          "enemy_goblin_king_hd_death_22"
         ],
         "fps": 30.0,
         "loop": false,
         "canvas": [
-          300,
-          233
+          341,
+          217
         ],
         "pivot": [
-          150,
-          212
+          170,
+          207
         ],
-        "scale": 1.145,
-        "landFrame": 13
+        "scale": 1.04,
+        "landFrame": 15
       }
     },
     "hdTarget": 113.2
