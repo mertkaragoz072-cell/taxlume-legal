@@ -36,6 +36,7 @@ export const UPGRADE_IMAGES: Partial<Record<UpgradeId, Partial<Record<UpgradeTie
   },
   earthquakeFund: {
     1: require("../../assets/upgrades/earthquakeFund-1.png"),
+    2: require("../../assets/upgrades/earthquakeFund-2.png"),
   },
 };
 
