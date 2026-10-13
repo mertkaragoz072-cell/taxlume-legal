@@ -455,6 +455,36 @@
     "enemy_goblin_scout_hd_walk_29": "assets/enemies/goblin_scout/hd/walk_29.png",
     "enemy_goblin_scout_hd_walk_30": "assets/enemies/goblin_scout/hd/walk_30.png",
     "enemy_goblin_scout_portrait": "assets/enemies/goblin_scout/portrait.png",
+    "enemy_goblin_warlock_hd_attack_01": "assets/enemies/goblin_warlock/hd/attack_01.png",
+    "enemy_goblin_warlock_hd_attack_02": "assets/enemies/goblin_warlock/hd/attack_02.png",
+    "enemy_goblin_warlock_hd_attack_03": "assets/enemies/goblin_warlock/hd/attack_03.png",
+    "enemy_goblin_warlock_hd_attack_04": "assets/enemies/goblin_warlock/hd/attack_04.png",
+    "enemy_goblin_warlock_hd_attack_05": "assets/enemies/goblin_warlock/hd/attack_05.png",
+    "enemy_goblin_warlock_hd_attack_06": "assets/enemies/goblin_warlock/hd/attack_06.png",
+    "enemy_goblin_warlock_hd_attack_07": "assets/enemies/goblin_warlock/hd/attack_07.png",
+    "enemy_goblin_warlock_hd_attack_08": "assets/enemies/goblin_warlock/hd/attack_08.png",
+    "enemy_goblin_warlock_hd_attack_09": "assets/enemies/goblin_warlock/hd/attack_09.png",
+    "enemy_goblin_warlock_hd_attack_10": "assets/enemies/goblin_warlock/hd/attack_10.png",
+    "enemy_goblin_warlock_hd_attack_11": "assets/enemies/goblin_warlock/hd/attack_11.png",
+    "enemy_goblin_warlock_hd_attack_12": "assets/enemies/goblin_warlock/hd/attack_12.png",
+    "enemy_goblin_warlock_hd_attack_13": "assets/enemies/goblin_warlock/hd/attack_13.png",
+    "enemy_goblin_warlock_hd_attack_14": "assets/enemies/goblin_warlock/hd/attack_14.png",
+    "enemy_goblin_warlock_hd_attack_15": "assets/enemies/goblin_warlock/hd/attack_15.png",
+    "enemy_goblin_warlock_hd_attack_16": "assets/enemies/goblin_warlock/hd/attack_16.png",
+    "enemy_goblin_warlock_hd_attack_17": "assets/enemies/goblin_warlock/hd/attack_17.png",
+    "enemy_goblin_warlock_hd_attack_18": "assets/enemies/goblin_warlock/hd/attack_18.png",
+    "enemy_goblin_warlock_hd_attack_19": "assets/enemies/goblin_warlock/hd/attack_19.png",
+    "enemy_goblin_warlock_hd_attack_20": "assets/enemies/goblin_warlock/hd/attack_20.png",
+    "enemy_goblin_warlock_hd_attack_21": "assets/enemies/goblin_warlock/hd/attack_21.png",
+    "enemy_goblin_warlock_hd_attack_22": "assets/enemies/goblin_warlock/hd/attack_22.png",
+    "enemy_goblin_warlock_hd_attack_23": "assets/enemies/goblin_warlock/hd/attack_23.png",
+    "enemy_goblin_warlock_hd_attack_24": "assets/enemies/goblin_warlock/hd/attack_24.png",
+    "enemy_goblin_warlock_hd_attack_25": "assets/enemies/goblin_warlock/hd/attack_25.png",
+    "enemy_goblin_warlock_hd_attack_26": "assets/enemies/goblin_warlock/hd/attack_26.png",
+    "enemy_goblin_warlock_hd_attack_27": "assets/enemies/goblin_warlock/hd/attack_27.png",
+    "enemy_goblin_warlock_hd_attack_28": "assets/enemies/goblin_warlock/hd/attack_28.png",
+    "enemy_goblin_warlock_hd_attack_29": "assets/enemies/goblin_warlock/hd/attack_29.png",
+    "enemy_goblin_warlock_hd_attack_30": "assets/enemies/goblin_warlock/hd/attack_30.png",
     "enemy_goblin_warlock_hd_walk_01": "assets/enemies/goblin_warlock/hd/walk_01.png",
     "enemy_goblin_warlock_hd_walk_02": "assets/enemies/goblin_warlock/hd/walk_02.png",
     "enemy_goblin_warlock_hd_walk_03": "assets/enemies/goblin_warlock/hd/walk_03.png",
@@ -4654,6 +4684,246 @@
       18,
       184,
       155
+    ],
+    "enemy_goblin_warlock_hd_attack_01": [
+      334,
+      216,
+      28,
+      10,
+      209,
+      191
+    ],
+    "enemy_goblin_warlock_hd_attack_02": [
+      334,
+      216,
+      37,
+      10,
+      209,
+      192
+    ],
+    "enemy_goblin_warlock_hd_attack_03": [
+      334,
+      216,
+      32,
+      9,
+      218,
+      192
+    ],
+    "enemy_goblin_warlock_hd_attack_04": [
+      334,
+      216,
+      34,
+      9,
+      218,
+      191
+    ],
+    "enemy_goblin_warlock_hd_attack_05": [
+      334,
+      216,
+      46,
+      8,
+      203,
+      194
+    ],
+    "enemy_goblin_warlock_hd_attack_06": [
+      334,
+      216,
+      54,
+      8,
+      191,
+      193
+    ],
+    "enemy_goblin_warlock_hd_attack_07": [
+      334,
+      216,
+      36,
+      10,
+      210,
+      191
+    ],
+    "enemy_goblin_warlock_hd_attack_08": [
+      334,
+      216,
+      33,
+      18,
+      214,
+      183
+    ],
+    "enemy_goblin_warlock_hd_attack_09": [
+      334,
+      216,
+      30,
+      36,
+      254,
+      165
+    ],
+    "enemy_goblin_warlock_hd_attack_10": [
+      334,
+      216,
+      39,
+      34,
+      237,
+      167
+    ],
+    "enemy_goblin_warlock_hd_attack_11": [
+      334,
+      216,
+      38,
+      47,
+      238,
+      154
+    ],
+    "enemy_goblin_warlock_hd_attack_12": [
+      334,
+      216,
+      45,
+      46,
+      226,
+      156
+    ],
+    "enemy_goblin_warlock_hd_attack_13": [
+      334,
+      216,
+      42,
+      47,
+      249,
+      154
+    ],
+    "enemy_goblin_warlock_hd_attack_14": [
+      334,
+      216,
+      36,
+      66,
+      241,
+      137
+    ],
+    "enemy_goblin_warlock_hd_attack_15": [
+      334,
+      216,
+      22,
+      32,
+      256,
+      173
+    ],
+    "enemy_goblin_warlock_hd_attack_16": [
+      334,
+      216,
+      24,
+      46,
+      243,
+      158
+    ],
+    "enemy_goblin_warlock_hd_attack_17": [
+      334,
+      216,
+      38,
+      49,
+      237,
+      153
+    ],
+    "enemy_goblin_warlock_hd_attack_18": [
+      334,
+      216,
+      41,
+      46,
+      237,
+      154
+    ],
+    "enemy_goblin_warlock_hd_attack_19": [
+      334,
+      216,
+      35,
+      48,
+      240,
+      151
+    ],
+    "enemy_goblin_warlock_hd_attack_20": [
+      334,
+      216,
+      15,
+      42,
+      233,
+      157
+    ],
+    "enemy_goblin_warlock_hd_attack_21": [
+      334,
+      216,
+      11,
+      50,
+      236,
+      151
+    ],
+    "enemy_goblin_warlock_hd_attack_22": [
+      334,
+      216,
+      8,
+      49,
+      235,
+      151
+    ],
+    "enemy_goblin_warlock_hd_attack_23": [
+      334,
+      216,
+      4,
+      48,
+      243,
+      155
+    ],
+    "enemy_goblin_warlock_hd_attack_24": [
+      334,
+      216,
+      8,
+      45,
+      237,
+      163
+    ],
+    "enemy_goblin_warlock_hd_attack_25": [
+      334,
+      216,
+      9,
+      40,
+      240,
+      163
+    ],
+    "enemy_goblin_warlock_hd_attack_26": [
+      334,
+      216,
+      10,
+      40,
+      237,
+      162
+    ],
+    "enemy_goblin_warlock_hd_attack_27": [
+      334,
+      216,
+      8,
+      41,
+      242,
+      162
+    ],
+    "enemy_goblin_warlock_hd_attack_28": [
+      334,
+      216,
+      10,
+      41,
+      237,
+      162
+    ],
+    "enemy_goblin_warlock_hd_attack_29": [
+      334,
+      216,
+      4,
+      40,
+      246,
+      162
+    ],
+    "enemy_goblin_warlock_hd_attack_30": [
+      334,
+      216,
+      14,
+      41,
+      233,
+      162
     ],
     "enemy_goblin_warlock_hd_walk_01": [
       315,
