@@ -14,6 +14,36 @@
     "bg_island_05": "assets/environment/background/islands/island_05.png",
     "bg_island_06": "assets/environment/background/islands/island_06.png",
     "bg_island_07": "assets/environment/background/islands/island_07.png",
+    "enemy_goblin_bomber_boss_hd_walk_01": "assets/enemies/goblin_bomber_boss/hd/walk_01.png",
+    "enemy_goblin_bomber_boss_hd_walk_02": "assets/enemies/goblin_bomber_boss/hd/walk_02.png",
+    "enemy_goblin_bomber_boss_hd_walk_03": "assets/enemies/goblin_bomber_boss/hd/walk_03.png",
+    "enemy_goblin_bomber_boss_hd_walk_04": "assets/enemies/goblin_bomber_boss/hd/walk_04.png",
+    "enemy_goblin_bomber_boss_hd_walk_05": "assets/enemies/goblin_bomber_boss/hd/walk_05.png",
+    "enemy_goblin_bomber_boss_hd_walk_06": "assets/enemies/goblin_bomber_boss/hd/walk_06.png",
+    "enemy_goblin_bomber_boss_hd_walk_07": "assets/enemies/goblin_bomber_boss/hd/walk_07.png",
+    "enemy_goblin_bomber_boss_hd_walk_08": "assets/enemies/goblin_bomber_boss/hd/walk_08.png",
+    "enemy_goblin_bomber_boss_hd_walk_09": "assets/enemies/goblin_bomber_boss/hd/walk_09.png",
+    "enemy_goblin_bomber_boss_hd_walk_10": "assets/enemies/goblin_bomber_boss/hd/walk_10.png",
+    "enemy_goblin_bomber_boss_hd_walk_11": "assets/enemies/goblin_bomber_boss/hd/walk_11.png",
+    "enemy_goblin_bomber_boss_hd_walk_12": "assets/enemies/goblin_bomber_boss/hd/walk_12.png",
+    "enemy_goblin_bomber_boss_hd_walk_13": "assets/enemies/goblin_bomber_boss/hd/walk_13.png",
+    "enemy_goblin_bomber_boss_hd_walk_14": "assets/enemies/goblin_bomber_boss/hd/walk_14.png",
+    "enemy_goblin_bomber_boss_hd_walk_15": "assets/enemies/goblin_bomber_boss/hd/walk_15.png",
+    "enemy_goblin_bomber_boss_hd_walk_16": "assets/enemies/goblin_bomber_boss/hd/walk_16.png",
+    "enemy_goblin_bomber_boss_hd_walk_17": "assets/enemies/goblin_bomber_boss/hd/walk_17.png",
+    "enemy_goblin_bomber_boss_hd_walk_18": "assets/enemies/goblin_bomber_boss/hd/walk_18.png",
+    "enemy_goblin_bomber_boss_hd_walk_19": "assets/enemies/goblin_bomber_boss/hd/walk_19.png",
+    "enemy_goblin_bomber_boss_hd_walk_20": "assets/enemies/goblin_bomber_boss/hd/walk_20.png",
+    "enemy_goblin_bomber_boss_hd_walk_21": "assets/enemies/goblin_bomber_boss/hd/walk_21.png",
+    "enemy_goblin_bomber_boss_hd_walk_22": "assets/enemies/goblin_bomber_boss/hd/walk_22.png",
+    "enemy_goblin_bomber_boss_hd_walk_23": "assets/enemies/goblin_bomber_boss/hd/walk_23.png",
+    "enemy_goblin_bomber_boss_hd_walk_24": "assets/enemies/goblin_bomber_boss/hd/walk_24.png",
+    "enemy_goblin_bomber_boss_hd_walk_25": "assets/enemies/goblin_bomber_boss/hd/walk_25.png",
+    "enemy_goblin_bomber_boss_hd_walk_26": "assets/enemies/goblin_bomber_boss/hd/walk_26.png",
+    "enemy_goblin_bomber_boss_hd_walk_27": "assets/enemies/goblin_bomber_boss/hd/walk_27.png",
+    "enemy_goblin_bomber_boss_hd_walk_28": "assets/enemies/goblin_bomber_boss/hd/walk_28.png",
+    "enemy_goblin_bomber_boss_hd_walk_29": "assets/enemies/goblin_bomber_boss/hd/walk_29.png",
+    "enemy_goblin_bomber_boss_hd_walk_30": "assets/enemies/goblin_bomber_boss/hd/walk_30.png",
     "enemy_goblin_boss_hd_attack_01": "assets/enemies/goblin_boss/hd/attack_01.png",
     "enemy_goblin_boss_hd_attack_02": "assets/enemies/goblin_boss/hd/attack_02.png",
     "enemy_goblin_boss_hd_attack_03": "assets/enemies/goblin_boss/hd/attack_03.png",
@@ -1197,6 +1227,246 @@
     "prop_signpost": "assets/environment/props/signpost.png"
   },
   "trim": {
+    "enemy_goblin_bomber_boss_hd_walk_01": [
+      339,
+      198,
+      3,
+      15,
+      243,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_02": [
+      339,
+      198,
+      7,
+      17,
+      240,
+      170
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_03": [
+      339,
+      198,
+      10,
+      15,
+      232,
+      171
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_04": [
+      339,
+      198,
+      8,
+      13,
+      237,
+      175
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_05": [
+      339,
+      198,
+      7,
+      13,
+      240,
+      175
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_06": [
+      339,
+      198,
+      9,
+      13,
+      237,
+      174
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_07": [
+      339,
+      198,
+      7,
+      11,
+      241,
+      177
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_08": [
+      339,
+      198,
+      8,
+      12,
+      241,
+      177
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_09": [
+      339,
+      198,
+      10,
+      12,
+      238,
+      177
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_10": [
+      339,
+      198,
+      9,
+      12,
+      241,
+      176
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_11": [
+      339,
+      198,
+      11,
+      11,
+      232,
+      175
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_12": [
+      339,
+      198,
+      9,
+      8,
+      236,
+      176
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_13": [
+      339,
+      198,
+      9,
+      12,
+      239,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_14": [
+      339,
+      198,
+      6,
+      14,
+      243,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_15": [
+      339,
+      198,
+      9,
+      13,
+      240,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_16": [
+      339,
+      198,
+      7,
+      13,
+      241,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_17": [
+      339,
+      198,
+      7,
+      11,
+      241,
+      173
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_18": [
+      339,
+      198,
+      11,
+      13,
+      237,
+      174
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_19": [
+      339,
+      198,
+      8,
+      9,
+      240,
+      177
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_20": [
+      339,
+      198,
+      12,
+      8,
+      237,
+      176
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_21": [
+      339,
+      198,
+      10,
+      12,
+      240,
+      177
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_22": [
+      339,
+      198,
+      10,
+      10,
+      239,
+      180
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_23": [
+      339,
+      198,
+      10,
+      10,
+      240,
+      175
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_24": [
+      339,
+      198,
+      16,
+      11,
+      234,
+      175
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_25": [
+      339,
+      198,
+      6,
+      13,
+      241,
+      174
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_26": [
+      339,
+      198,
+      9,
+      10,
+      236,
+      176
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_27": [
+      339,
+      198,
+      14,
+      13,
+      230,
+      172
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_28": [
+      339,
+      198,
+      8,
+      12,
+      239,
+      174
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_29": [
+      339,
+      198,
+      7,
+      9,
+      238,
+      181
+    ],
+    "enemy_goblin_bomber_boss_hd_walk_30": [
+      339,
+      198,
+      8,
+      12,
+      238,
+      174
+    ],
     "enemy_goblin_boss_hd_attack_01": [
       340,
       221,
