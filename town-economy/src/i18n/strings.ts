@@ -1971,7 +1971,7 @@ export const STRINGS = {
     merveRankUp: {
       eyebrow: "MERVE",
       title: "Congratulations, Mayor!",
-      body: "{icon} We're a {title} now! We got here under your lead — the town keeps growing.",
+      body: "{icon} We just reached {title} status! We got here under your lead — the town keeps growing.",
       confirmBtn: "Thanks, Merve!",
     },
     villagerRequest: {
