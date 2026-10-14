@@ -496,3 +496,6 @@ Bildirim (TestFlight, ekran görüntüsü): vuruş yayının kenarında siyah/la
 
 ## Faz 79 — Karakter seçim ekranı
 - Tasarım görselinden: koyu mavi sahne, iki geniş kart (sol sanat `assets/ui/menus/select_*_art.png`, sağda ad/rol/artı-eksi satırları `config.json → heroes` verisinden üretilir, yetenek ikonları `select_skill_*`).
+
+## Faz 80 — Yükleme ekranı
+- Arka plan `assets/ui/menus/loading_bg.jpg` (tasarım görseli; çubuk/yazı bölgesi temizlendi, logo görselde hazır). İlerleme çubuğu ve "Yükleniyor…" yazısı canlı CSS ile üstüne çizilir.
