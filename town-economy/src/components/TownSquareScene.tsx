@@ -20,6 +20,7 @@ import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.w
 import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
 import winterMixedMarketplaceImage from "../../assets/winter-mixed-marketplace.webp";
 import tier2HappyMarketplaceImage from "../../assets/tier2-happy-marketplace.webp";
+import tier3HappyMarketplaceImage from "../../assets/tier3-happy-marketplace.webp";
 import { seasonFromTick, SeasonId } from "../economy/seasons";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
@@ -90,6 +91,9 @@ export type SceneTier = 1 | 2 | 3 | 4;
 const TIER_SCENE_IMAGES: Partial<Record<SceneTier, Partial<Record<MoodTier, ImageSourcePropType>>>> = {
   2: {
     happy: tier2HappyMarketplaceImage,
+  },
+  3: {
+    happy: tier3HappyMarketplaceImage,
   },
 };
 
