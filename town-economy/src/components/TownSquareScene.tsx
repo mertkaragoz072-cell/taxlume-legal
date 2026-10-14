@@ -23,6 +23,7 @@ import tier2HappyMarketplaceImage from "../../assets/tier2-happy-marketplace.web
 import tier3HappyMarketplaceImage from "../../assets/tier3-happy-marketplace.webp";
 import tier3MixedMarketplaceImage from "../../assets/tier3-mixed-marketplace.webp";
 import tier3AngryMarketplaceImage from "../../assets/tier3-angry-marketplace.webp";
+import tier4HappyMarketplaceImage from "../../assets/tier4-happy-marketplace.webp";
 import { seasonFromTick, SeasonId } from "../economy/seasons";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
@@ -98,6 +99,9 @@ const TIER_SCENE_IMAGES: Partial<Record<SceneTier, Partial<Record<MoodTier, Imag
     happy: tier3HappyMarketplaceImage,
     mixed: tier3MixedMarketplaceImage,
     angry: tier3AngryMarketplaceImage,
+  },
+  4: {
+    happy: tier4HappyMarketplaceImage,
   },
 };
 
