@@ -3,7 +3,7 @@
 import hashlib, os, re
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 h = hashlib.sha1()
-for base in ('src', 'data'):
+for base in ('src', 'data', 'assets/ui/menus'):
     for d, _, fs in sorted(os.walk(os.path.join(ROOT, base))):
         for f in sorted(fs): h.update(open(os.path.join(d, f), 'rb').read())
 h.update(open(os.path.join(ROOT, 'index.html'), 'rb').read())
