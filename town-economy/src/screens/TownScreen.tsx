@@ -96,8 +96,16 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   // nothing to a player, "+2.1%/day" does.
   const dailyPct = (rate: number) => (Math.pow(1 + rate, TICKS_PER_GAME_DAY) - 1) * 100;
   const rankTitle = townRankTitle(state.townRankIndex, t);
+  const rankCurrentThreshold = townRankThreshold(state.townRankIndex);
   const rankNextThreshold = townRankThreshold(state.townRankIndex + 1);
-  const rankPct = Math.max(0, Math.min(1, netWorth / rankNextThreshold));
+  // Progress *within* the current tier, not of net worth against the next
+  // tier's absolute threshold — the latter left the bar already a third (or
+  // more) full the instant a rank was reached, since each tier's threshold
+  // is itself a sizeable fraction of the next one's.
+  const rankPct = Math.max(
+    0,
+    Math.min(1, (netWorth - rankCurrentThreshold) / (rankNextThreshold - rankCurrentThreshold))
+  );
   const taxIncomePerTick = estimateTaxIncomePerTick(state);
   const [prestigeArmed, setPrestigeArmed] = useState(false);
   const prestigeReady = netWorth >= PRESTIGE_UNLOCK_NET_WORTH;
