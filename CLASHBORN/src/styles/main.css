@@ -96,6 +96,10 @@ html, body {
 .lvbar .xpfill { transition: width .25s ease-out; }
 
 .sel-info { font-size: 12px; font-weight: 700; color: #5b6a8f; margin-top: 2px; }
+.sel-traits { font-size: 11px; font-weight: 700; line-height: 1.35; margin-top: 4px; text-align: left; }
+.sel-traits b { display: block; text-align: center; color: #2b3a67; font-size: 12px; margin-bottom: 2px; }
+.sel-traits .pro { display: block; color: #1f9d55; }
+.sel-traits .con { display: block; color: #d1453b; margin-top: 2px; }
 .sel-wipe { margin-top: 10px; background: transparent; border: 2px solid rgba(255,255,255,.55); color: #fff; font: inherit; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 12px; cursor: pointer; }
 
 /* Yetenek bekleme süresi: düğme kararır, kalan saniye ortada görünür */

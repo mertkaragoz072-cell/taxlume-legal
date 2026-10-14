@@ -215,5 +215,49 @@
   "lowHp": {
     "_comment": "Can düşük uyarısı: can oranı ≤ frac iken kırmızı nabız + kalp atışı sesi + titreşim.",
     "frac": 0.3
+  },
+  "heroes": {
+    "male": {
+      "role": "Ağır Savaşçı",
+      "pros": [
+        "+%20 can",
+        "+%10 hasar",
+        "+%10 savunma"
+      ],
+      "cons": [
+        "−%8 hareket hızı",
+        "−%8 saldırı hızı"
+      ],
+      "mods": {
+        "maxHpMul": 0.2,
+        "damageMul": 0.1,
+        "defense": 0.1,
+        "moveMul": -0.08,
+        "attackSpeedMul": -0.08
+      }
+    },
+    "heroine": {
+      "role": "Hızlı Savaşçı",
+      "pros": [
+        "+%18 saldırı hızı",
+        "+%12 hareket hızı",
+        "+%10 kritik şansı",
+        "+0.25 kritik hasar"
+      ],
+      "cons": [
+        "−%18 can",
+        "−%6 hasar",
+        "−%5 savunma"
+      ],
+      "mods": {
+        "attackSpeedMul": 0.18,
+        "moveMul": 0.12,
+        "critChance": 0.1,
+        "critDamage": 0.25,
+        "maxHpMul": -0.18,
+        "damageMul": -0.06,
+        "defense": -0.05
+      }
+    }
   }
 }

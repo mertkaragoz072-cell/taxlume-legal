@@ -72,7 +72,7 @@ export function update(dt) {
   const p = state.player, C = CONFIG, r = R(), S = derived(p);
   // HP bütünlüğü: maks can her zaman seviye + güçlendirme formülünden gelir (hatalı/eski değer kendiliğinden düzelir), can maks'ı aşmaz
   const expMax = Math.round((C.player.maxHp + C.leveling.maxHpPerLevel * (p.level - 1)) * S.maxHpMul);
-  if (p.maxHp !== expMax) p.maxHp = expMax;
+  if (p.maxHp !== expMax) { if (expMax > p.maxHp) p.hp += expMax - p.maxHp; p.maxHp = expMax; }   // artan azami can kadar can da artar (kahraman çarpanı)
   if (p.hp > p.maxHp) p.hp = p.maxHp;
 
   // Hareket: tamamen OTOMATİK. Kahraman sürekli sağa koşar; önünde (engageRange içinde) canlı düşman varsa durup savaşır,

@@ -490,3 +490,6 @@ Bildirim (TestFlight, ekran görüntüsü): vuruş yayının kenarında siyah/la
 - Ekran tonu (soft-light/overlay tam ekran) artık önbellekli katmanın içinde; `groundBounce` gradyanı önbellekli (aktör başına her kare yaratılmıyordu).
 - Vuruş/kesme/ölüm/hasar sesleri sine/triangle tabanlı yumuşak darbeye çevrildi (testere dişi/kare dalga cızırtısı kaldırıldı).
 - Telefon ölçümü yok: Ayarlar → "FPS göstergesi" değerleri bekleniyor.
+
+## Faz 78 — Kahramanlara özgü artı/eksiler
+- `data/config.json → heroes`: erkek = Ağır Savaşçı (+can, +hasar, +savunma / −hız), kadın = Hızlı Savaşçı (+saldırı/hareket hızı, +kritik / −can, −hasar, −savunma). Etkiler `derived()` içinde eklenir; kahraman seçim kartında listelenir.

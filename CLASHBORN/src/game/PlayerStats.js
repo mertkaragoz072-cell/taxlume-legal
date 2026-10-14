@@ -1,6 +1,6 @@
 // PlayerStats: kalıcı güçlendirmelerden türetilen oyuncu statları. Veri: data/upgrades.json (base + her güçlendirmenin stat/per/cap).
 // p.upgrades = { upgradeId: seviye }. Türetilmiş değerler her çağrıda hesaplanır (basit, hızlı: ≤ 10 kayıt).
-import { CONFIG, UPGRADES } from '../core/config.js';
+import { CONFIG, UPGRADES, HERO } from '../core/config.js';
 import { equippedBonus, EFFECTS } from './CardSystem.js';
 import { shopBonus } from './Meta.js';
 
@@ -36,6 +36,7 @@ export function derived(p) {
   for (const [k, v] of Object.entries(shopBonus())) s[k] = (s[k] ?? 0) + v;                // mağaza: kalıcı hesap geneli güçlendirmeler
   const cb = equippedBonus(p);                                 // kuşanılmış kartlar: taban + kart bonusu (CardSystem)
   for (const [type, v] of Object.entries(cb)) { const k = EFFECTS[type]; if (k) s[k] = (s[k] ?? 0) + v; }
+  for (const [k, v] of Object.entries(CONFIG.heroes?.[HERO.id]?.mods || {})) s[k] = (s[k] ?? 0) + v;   // kahramana özgü artı/eksi (data/config.json → heroes)
   for (const u of UPGRADES.list) if (u.floor != null) s[u.stat] = Math.max(u.floor, s[u.stat]);   // alt sınır (ör. cooldown ≥ ×0.4)
   return s;
 }

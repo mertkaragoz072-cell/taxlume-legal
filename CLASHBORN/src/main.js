@@ -48,6 +48,7 @@ function chooseHero() {
       const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
       const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
       const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · ${chapterInfo(sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1).short}` : 'Yeni oyun'; b.appendChild(info);
+      const hc = CONFIG.heroes?.[h.id]; if (hc) { const d = document.createElement('div'); d.className = 'sel-traits'; d.innerHTML = `<b>${hc.role}</b><span class="pro">${hc.pros.map((x) => '▲ ' + x).join('<br>')}</span><span class="con">${hc.cons.map((x) => '▼ ' + x).join('<br>')}</span>`; b.appendChild(d); }
       const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
       if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
       b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
