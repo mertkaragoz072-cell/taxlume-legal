@@ -385,7 +385,7 @@ div.sel-logo { height: auto; font: 900 clamp(26px, 10vh, 56px)/1 "Trebuchet MS",
 #loading p { margin: 0; color: #fff; font: 800 13px/1 "Trebuchet MS", Arial, sans-serif; text-shadow: 0 2px 0 rgba(10,20,50,.6); letter-spacing: .5px; }
 
 /* Karakter seçim ekranı (tasarım görselinden): koyu mavi sahne, iki geniş kart — sol sanat, sağ ad/rol/artı-eksi/yetenek ikonları */
-#select { background: radial-gradient(120% 90% at 50% 0%, #2a62b8 0%, #14305f 55%, #0b1630 100%); }
+#select { background: #14305f url(../../assets/ui/menus/select_bg.jpg) center / cover no-repeat; }
 .sel-box { width: min(100%, 880px); }
 .sel-box h2 { color: #fff3c4; letter-spacing: .04em; }
 .sel-cards { gap: clamp(10px, 2.4vw, 22px); align-items: stretch; }
