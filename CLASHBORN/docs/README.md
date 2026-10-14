@@ -499,3 +499,6 @@ Bildirim (TestFlight, ekran görüntüsü): vuruş yayının kenarında siyah/la
 
 ## Faz 80 — Yükleme ekranı
 - Arka plan `assets/ui/menus/loading_bg.jpg` (tasarım görseli; çubuk/yazı bölgesi temizlendi, logo görselde hazır). İlerleme çubuğu ve "Yükleniyor…" yazısı canlı CSS ile üstüne çizilir.
+
+## Faz 81 — Seçimde karakter öne çıkar
+- Kart sanatı şeffaf kesim (`select_*_art.png`); üzerine gelince/dokununca karakter büyür ve kartın üstüne taşar, seçilen kart altın parlar, diğeri kararır; 0,55 sn sonra oyun başlar.

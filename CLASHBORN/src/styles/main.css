@@ -417,3 +417,15 @@ div.sel-logo { height: auto; font: 900 clamp(26px, 10vh, 56px)/1 "Trebuchet MS",
 #loading p { position: absolute; left: 0; right: 0; top: calc(66% + clamp(22px, 7.5vh, 40px)); text-align: center; font-size: clamp(11px, 3.4vh, 16px); }
 
 img.sel-logo { height: clamp(52px, 22vh, 120px); width: auto; max-width: 70vw; margin: 0 auto 2px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); }
+
+/* Karakter öne çıkma: sanat şeffaf kesim; kartın alt kenarına sabit, üst/yanlara taşabilir */
+.sel-card { overflow: visible; position: relative; transition: transform .22s ease, box-shadow .22s ease, filter .3s ease; -webkit-tap-highlight-color: transparent; }
+.sel-card .sc-art { overflow: visible; z-index: 2; pointer-events: none; }
+.sc-art img { -webkit-mask-image: none; mask-image: none; inset: auto; left: 0; bottom: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; transform-origin: 40% 100%; transition: transform .28s cubic-bezier(.2,.9,.3,1.2), filter .28s ease; clip-path: inset(-200px -60px 0 0 round 0 0 0 16px); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+.sc-body { position: relative; z-index: 1; }
+.sel-card:hover, .sel-card:focus-visible { transform: translateY(-3px); }
+.sel-card:hover .sc-art img, .sel-card:focus-visible .sc-art img { transform: scale(1.12); filter: drop-shadow(0 6px 10px rgba(0,0,0,.55)); }
+.sel-card.picked { transform: translateY(-6px) scale(1.04); z-index: 5; box-shadow: 0 0 0 3px #ffd75a, 0 0 34px rgba(255,215,90,.75), 0 10px 24px rgba(0,0,0,.5); }
+.sel-card.picked .sc-art img { transform: scale(1.2) translateY(-1%); filter: drop-shadow(0 0 14px rgba(255,220,120,.85)) drop-shadow(0 8px 12px rgba(0,0,0,.6)); }
+.sel-cards.picking .sel-card:not(.picked) { filter: brightness(.45) saturate(.6); transform: scale(.96); }
+.sel-cards { padding-top: clamp(6px, 3vh, 18px); }

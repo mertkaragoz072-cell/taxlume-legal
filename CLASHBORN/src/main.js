@@ -54,7 +54,11 @@ function chooseHero() {
       const sv = Save.of(h.id), info = sv ? `Lv. ${sv.level} · ${chapterInfo(sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1).short}` : 'Yeni oyun';
       const sk = (SKILLS[h.id] || []).map((id) => { const im = Assets.get('select_skill_' + id); return im ? `<img src="${im.src}" alt="">` : ''; }).join('');
       b.innerHTML = `<div class="sc-art">${art ? `<img src="${art.src}" alt="">` : ''}</div><div class="sc-body"><div class="sc-name">${h.name}</div><div class="sc-role">${hc.role}</div><ul class="sc-stats">${rows.map((k) => rowHtml(k, mods[k])).join('')}</ul><div class="sc-skills">${sk}</div><div class="sc-info">${info}</div></div>`;
-      b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
+      let busy = false;
+      b.addEventListener('click', () => {                         // seçilen karakter öne çıkar (büyür, kartın dışına taşar), diğeri kararır; kısa animasyondan sonra oyun başlar
+        if (busy) return; busy = true; cards.classList.add('picking'); b.classList.add('picked');
+        setTimeout(() => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); cards.classList.remove('picking'); resolve(h.id); }, 550);
+      });
       cards.appendChild(b);
     }
     const wipe = document.getElementById('sel-wipe'); let armed = false;
