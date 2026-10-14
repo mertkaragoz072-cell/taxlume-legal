@@ -421,7 +421,7 @@ img.sel-logo { height: clamp(52px, 22vh, 120px); width: auto; max-width: 70vw; m
 /* Karakter öne çıkma: sanat şeffaf kesim; kartın alt kenarına sabit, üst/yanlara taşabilir */
 .sel-card { overflow: visible; position: relative; transition: transform .22s ease, box-shadow .22s ease, filter .3s ease; -webkit-tap-highlight-color: transparent; }
 .sel-card .sc-art { overflow: visible; z-index: 2; pointer-events: none; }
-.sc-art img { -webkit-mask-image: none; mask-image: none; inset: auto; left: 0; bottom: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; transform-origin: 40% 100%; transition: transform .28s cubic-bezier(.2,.9,.3,1.2), filter .28s ease; clip-path: inset(-200px -60px 0 0 round 0 0 0 16px); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+.sc-art img { -webkit-mask-image: none; mask-image: none; inset: auto; left: 0; bottom: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; transform-origin: 40% 100%; transition: transform .28s cubic-bezier(.2,.9,.3,1.2), filter .28s ease; clip-path: inset(-200px 0 0 -60px round 0 0 0 16px); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
 .sc-body { position: relative; z-index: 1; }
 .sel-card:hover, .sel-card:focus-visible { transform: translateY(-3px); }
 .sel-card:hover .sc-art img, .sel-card:focus-visible .sc-art img { transform: scale(1.12); filter: drop-shadow(0 6px 10px rgba(0,0,0,.55)); }
