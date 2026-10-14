@@ -22,6 +22,9 @@ const VARIANT_COUNTS: Record<string, number> = {
   loanActive: 2,
   prestige: 2,
   workers: 1,
+  "rank.low": 2,
+  "rank.mid": 2,
+  "rank.high": 2,
   general: 3,
 };
 
@@ -40,6 +43,17 @@ function moodTier(inflationRate: number): string {
   return "cooling";
 }
 
+// A village's own chatter about itself, so day 1 and day 30 don't just play
+// the same ambient lines over a different number in the header — Village/
+// Town still sounds like a handful of neighbors, Kingdom-and-up sounds like
+// envoys and foreign money, independent of whatever mood/tax/caravan state
+// happens to apply right now.
+function rankTier(townRankIndex: number): string {
+  if (townRankIndex <= 1) return "low"; // Village, Town
+  if (townRankIndex <= 5) return "mid"; // City..Capital
+  return "high"; // Kingdom and beyond
+}
+
 function poolKeys(base: string): string[] {
   const count = VARIANT_COUNTS[base] ?? 1;
   return Array.from({ length: count }, (_, i) => `townChatter.${base}.v${i}`);
@@ -55,6 +69,7 @@ export function pickTownChatterKey(state: EconomyState, rng: () => number = Math
   if (state.loan) pool.push(...poolKeys("loanActive"));
   if (state.prestigeLevel > 0) pool.push(...poolKeys("prestige"));
   if (Object.values(state.workers).some((count: number) => count > 0)) pool.push(...poolKeys("workers"));
+  pool.push(...poolKeys(`rank.${rankTier(state.townRankIndex)}`));
   pool.push(...poolKeys("general"));
   return pool[Math.floor(rng() * pool.length)];
 }

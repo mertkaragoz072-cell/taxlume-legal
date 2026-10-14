@@ -6,6 +6,7 @@ const buySource = require("../../assets/sounds/buy.wav");
 const sellSource = require("../../assets/sounds/sell.wav");
 const eventSource = require("../../assets/sounds/event.wav");
 const crashSource = require("../../assets/sounds/crash.wav");
+const fanfareSource = require("../../assets/sounds/fanfare.wav");
 // Two different loops (see scripts/gen-music.js) — one is picked at random
 // per session in startMusic() rather than loading both, so a replay doesn't
 // always open on the identical tune, without doubling the audio the app
@@ -31,6 +32,7 @@ export function useSoundEffects() {
   const sellPlayer = useAudioPlayer(sellSource);
   const eventPlayer = useAudioPlayer(eventSource);
   const crashPlayer = useAudioPlayer(crashSource);
+  const fanfarePlayer = useAudioPlayer(fanfareSource);
   // No initial source: which of the two tracks plays is chosen (and loaded
   // via .replace()) inside startMusic(), not here, so only the one actually
   // used gets fetched.
@@ -127,5 +129,12 @@ export function useSoundEffects() {
       haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
     },
     playSuccess: () => haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
+    // Reserved for a town rank-up — separate from playEvent so the one
+    // moment that says "you've genuinely grown" doesn't sound like every
+    // other notification blip.
+    playFanfare: () => {
+      play(fanfarePlayer);
+      haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+    },
   };
 }

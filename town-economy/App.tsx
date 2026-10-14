@@ -132,6 +132,7 @@ function Game() {
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
+  const hadMerveRankUp = useRef(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   // Set alongside confettiTrigger, read by ConfettiBurst at the same trigger
   // — see the effect below and the "big is read at the moment" note on
@@ -296,16 +297,24 @@ function Game() {
   const skipCaravanTutorial = () => setCaravanTutorialSkipped(true);
 
   useEffect(() => {
+    // A rank-up just landing (merveRankUp going null -> set) is the one
+    // event that gets its own sound instead of the generic blip every other
+    // notification shares — see playFanfare's own comment.
+    const isNewRankUp = Boolean(state.merveRankUp) && !hadMerveRankUp.current;
     if (state.lastEvent && state.lastEvent.id !== lastEventId.current) {
       lastEventId.current = state.lastEvent.id;
-      if (!wasGameOver.current) sounds.playEvent();
+      if (!wasGameOver.current) {
+        if (isNewRankUp) sounds.playFanfare();
+        else sounds.playEvent();
+      }
     }
     if (state.gameOver && !wasGameOver.current) {
       sounds.playCrash();
     }
     wasGameOver.current = state.gameOver;
+    hadMerveRankUp.current = Boolean(state.merveRankUp);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.lastEvent, state.gameOver]);
+  }, [state.lastEvent, state.gameOver, state.merveRankUp]);
 
   // Returned before the game's own tree so nothing behind the title can
   // claim the screen first — the offline summary and the tutorial both open

@@ -151,6 +151,16 @@ export const STRINGS = {
         warningTitle: "Meydanda Homurtu",
         advice: "Kalabalık toplanmaya başladı. Üretim düşecek; vergiyi şimdi indirmek işe yarar.",
       },
+      tradeWar: {
+        title: "ticaret savaşı",
+        warningTitle: "Sınırda Gerginlik",
+        advice: "Komşu krallıklar gümrükleri sıkılaştırıyor. Baharat, ipek ve mücevherini şimdi sat ya da sakla.",
+      },
+      royalDecree: {
+        title: "kraliyet vergisi",
+        warningTitle: "Saraydan Haberciler",
+        advice: "Kraliyet, başarının payını istiyor. Halk bu haberi iyi karşılamayacak; vergiyi düşürmek yardımcı olabilir.",
+      },
     },
     flashDeal: {
       crashTitle: "⚡ {good} %{pct} ucuzladı!",
@@ -477,6 +487,20 @@ export const STRINGS = {
       },
       workers: {
         v0: "İşçiler sabah erkenden atölyelere doğru yürüyor.",
+      },
+      rank: {
+        low: {
+          v0: "Meydan küçük ama herkes birbirini tanıyor.",
+          v1: "Birkaç ev, bir çeşme, bir pazar yeri — daha yeni başlıyoruz.",
+        },
+        mid: {
+          v0: "Sokaklar kalabalıklaşıyor, yeni dükkanlar birer birer açılıyor.",
+          v1: "Şehir büyüyor; artık her köşede tanımadığın bir yüz var.",
+        },
+        high: {
+          v0: "Uzak diyarlardan elçiler ve tüccarlar akın ediyor.",
+          v1: "Meydandan altın yaldızlı arabalar geçiyor, kasabanın adı her yerde anılıyor.",
+        },
       },
       general: {
         v0: "Pazar yerinde her zamanki gevezelik sürüyor.",
@@ -1390,6 +1414,7 @@ export const STRINGS = {
       mythicUnlocked:
         "🌌 Mitik Tüccar açıldı! Oyundaki en iyi fiyatlar artık her yeni kasabada da açık kalacak.",
       townRankUp: "🎖️ Kasaba unvanı yükseldi: {icon} {title} (+{reward} 🪙)",
+      newGoodUnlocked: "🆕 Yeni ürün: {icon} {good}! Artık pazarda satılıyor.",
       investSoldProfit: "📈 {qty} {asset} sattın, +{amount} 🪙 kâr ettin!",
       investSoldLoss: "📉 {qty} {asset} sattın, -{amount} 🪙 zarar ettin.",
       investSoldProfitStreak:
@@ -1562,6 +1587,16 @@ export const STRINGS = {
         title: "civil unrest",
         warningTitle: "A Crowd In The Square",
         advice: "People are starting to gather. Production will drop — cutting tax now helps.",
+      },
+      tradeWar: {
+        title: "a trade war",
+        warningTitle: "Tension at the Border",
+        advice: "Neighboring kingdoms are tightening customs. Sell or stockpile your spice, silk and jewelry now.",
+      },
+      royalDecree: {
+        title: "a royal levy",
+        warningTitle: "Messengers from the Palace",
+        advice: "The crown wants its share of your success. The people won't take this well — cutting tax now might help.",
       },
     },
     flashDeal: {
@@ -1889,6 +1924,20 @@ export const STRINGS = {
       },
       workers: {
         v0: "Workers head out to the workshops early in the morning.",
+      },
+      rank: {
+        low: {
+          v0: "The square is small, but everyone here knows everyone.",
+          v1: "A few houses, a well, a market stall — we're just getting started.",
+        },
+        mid: {
+          v0: "The streets are getting busier, new shops keep opening up.",
+          v1: "The city is growing — there's an unfamiliar face on every corner now.",
+        },
+        high: {
+          v0: "Envoys and merchants pour in from distant lands.",
+          v1: "Gilded carriages cross the square — this town's name travels far now.",
+        },
       },
       general: {
         v0: "The usual market chatter carries on as always.",
@@ -2784,6 +2833,7 @@ export const STRINGS = {
       mythicUnlocked:
         "🌌 Mythic Trader unlocked! The best prices in the game stay open in every future town too.",
       townRankUp: "🎖️ Town rank up: {icon} {title} (+{reward} 🪙)",
+      newGoodUnlocked: "🆕 New good: {icon} {good}! It's on the market now.",
       investSoldProfit: "📈 Sold {qty} {asset}, +{amount} 🪙 profit!",
       investSoldLoss: "📉 Sold {qty} {asset}, -{amount} 🪙 loss.",
       investSoldProfitStreak:

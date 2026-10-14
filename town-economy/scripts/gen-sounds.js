@@ -61,10 +61,23 @@ const event = tone(440, 520, 0.14, 0.4);
 // Crash: low descending doom tone for hyperinflation game over
 const crash = concat(tone(300, 120, 0.35, 0.55), tone(160, 60, 0.45, 0.5));
 
+// Fanfare: a triumphant four-note ascending arpeggio (C5-E5-G5-C6), reserved
+// for a town rank-up — distinct from the plain neutral blip every other
+// event uses, so the one moment that says "you've genuinely grown" actually
+// sounds like it, rather than blending into the same notification tone as
+// a daily quest completing.
+const fanfare = concat(
+  tone(523, 523, 0.09, 0.45),
+  tone(659, 659, 0.09, 0.45),
+  tone(784, 784, 0.09, 0.45),
+  tone(1047, 1047, 0.24, 0.55)
+);
+
 const outDir = path.join(__dirname, "..", "assets", "sounds");
 writeWav(path.join(outDir, "buy.wav"), buy);
 writeWav(path.join(outDir, "sell.wav"), sell);
 writeWav(path.join(outDir, "event.wav"), event);
 writeWav(path.join(outDir, "crash.wav"), crash);
+writeWav(path.join(outDir, "fanfare.wav"), fanfare);
 
 console.log("Wrote sound effects to", outDir);

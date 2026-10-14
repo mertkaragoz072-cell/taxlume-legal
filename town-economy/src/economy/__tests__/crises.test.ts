@@ -41,6 +41,20 @@ describe("crisis templates", () => {
   it("warns at least a day ahead, or the warning would be pointless", () => {
     expect(CRISIS_WARNING_DAYS).toBeGreaterThanOrEqual(1);
   });
+
+  it("never rolls a rank-gated crisis for a town too young to have it", () => {
+    for (let i = 0; i < 100; i++) {
+      expect(rollCrisisTemplate(0).id).not.toBe("tradeWar");
+      expect(rollCrisisTemplate(0).id).not.toBe("royalDecree");
+    }
+  });
+
+  it("opens a rank-gated crisis up once the town reaches its minRank", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 500; i++) seen.add(rollCrisisTemplate(7).id);
+    expect(seen.has("tradeWar")).toBe(true);
+    expect(seen.has("royalDecree")).toBe(true);
+  });
 });
 
 describe("crisisAffectedGoodIds", () => {

@@ -7,6 +7,7 @@
  * reducer can chain them without caring which one fired. */
 
 import { ACHIEVEMENTS } from "./achievements";
+import { GOODS } from "./goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
 import { ONBOARDING_STEPS } from "./onboarding";
 import { QUEST_TEMPLATES_BY_ID } from "./quests";
@@ -195,6 +196,22 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
       }),
       tone: "good",
     });
+
+    // A tier this jump passed through can unlock a good (see goods.ts'
+    // unlockRank) — called out as its own event, separate from the rank-up
+    // line itself, so a new product actually register as a new thing
+    // rather than disappearing into the reward number.
+    for (const good of GOODS) {
+      if (good.unlockRank !== index) continue;
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(state.language, "msg.newGoodUnlocked", {
+          icon: good.icon,
+          good: { key: good.nameKey },
+        }),
+        tone: "good",
+      });
+    }
   }
 
   return {

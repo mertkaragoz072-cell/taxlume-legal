@@ -250,7 +250,7 @@ export function tick(state: EconomyState): EconomyState {
     pendingCrisis = null;
   }
   if (!pendingCrisis && Math.random() < CRISIS_CHANCE) {
-    const template = rollCrisisTemplate();
+    const template = rollCrisisTemplate(state.townRankIndex);
     pendingCrisis = {
       id: nextId,
       templateId: template.id,
