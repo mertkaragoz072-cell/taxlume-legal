@@ -502,3 +502,7 @@ Bildirim (TestFlight, ekran görüntüsü): vuruş yayının kenarında siyah/la
 
 ## Faz 81 — Seçimde karakter öne çıkar
 - Kart sanatı şeffaf kesim (`select_*_art.png`); üzerine gelince/dokununca karakter büyür ve kartın üstüne taşar, seçilen kart altın parlar, diğeri kararır; 0,55 sn sonra oyun başlar.
+
+## Faz 82 — Kahramana özgü özel yetenekler
+- `data/config.json → heroes.<id>.skills` data/skills.json üzerine biner (`setHero` içinde). Erkek: **Yer Sarsıntısı** (geniş alan + fırlatma), **Demir Siper** (2,2 sn dokunulmazlık + %8 can). Kadın: **Kılıç Fırtınası** (5 vuruşluk dönüş, yavaşlatır), **Gölge Atılışı** (ileri atılış, yoldakileri keser, 0,5 sn dokunulmazlık).
+- Yeni yetenek tipleri `src/game/skills.js` (guard/dash/flurry), efektleri `src/render/effects.js`; düğme ikonu/etiketi, öğretici ve çanta paneli seçilen kahramana göre değişir.

@@ -77,6 +77,33 @@ export function drawHitFx(ctx, f) {
 // Yetenek efektleri: wave = ileri giden mavi hilal (dünya açısında ilerler), burst = yerde patlama kareleri
 export function drawSkillFx(ctx, f) {
   const sk = SKILLS[f.id], R = CONFIG.planet.radius;
+  if (f.type === 'guard') {                                          // Demir Siper: altın kubbe, bitimine doğru yanıp sönüp söner
+    const left = f.life - f.t, fade = left < 0.4 ? left / 0.4 : Math.min(1, f.t / 0.12), pu = 0.5 + 0.5 * Math.sin(f.t * 10);
+    onLane(ctx, f.a, 55, 0, () => {
+      ctx.globalAlpha = fade * (0.55 + 0.25 * pu); const g = ctx.createRadialGradient(0, 0, 18, 0, 0, 92);
+      g.addColorStop(0, 'rgba(255,225,120,0)'); g.addColorStop(0.75, 'rgba(255,210,90,.35)'); g.addColorStop(1, 'rgba(255,240,170,.85)');
+      ctx.beginPath(); ctx.ellipse(0, 0, 70, 92, 0, 0, TAU); ctx.fillStyle = g; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = `rgba(255,236,160,${0.7 + 0.3 * pu})`; ctx.stroke(); ctx.globalAlpha = 1;
+    });
+    return;
+  }
+  if (f.type === 'dash') {                                           // Gölge Atılışı: arkada solan ışık izi
+    const L = Math.abs(wrapAngle(f.a - f.a0)) * R, fade = Math.max(0, 1 - f.t / f.life);
+    onLane(ctx, f.a, 0, 0, () => {
+      ctx.scale(f.dir, 1);
+      for (let i = 0; i < 6; i++) { const h = 22 + i * 15, w = L * (0.7 + 0.3 * ((i * 37) % 5) / 5); const g = ctx.createLinearGradient(-w, 0, 0, 0); g.addColorStop(0, 'rgba(160,220,255,0)'); g.addColorStop(1, `rgba(220,245,255,${0.75 * fade})`); ctx.fillStyle = g; ctx.fillRect(-w, -h, w, 5 * (1 - i * 0.08)); }
+    });
+    return;
+  }
+  if (f.type === 'flurry') {                                         // Kılıç Fırtınası: etrafında dönen kesik halkaları
+    const u = Math.min(1, f.t / f.life), fade = u > 0.8 ? (1 - u) / 0.2 : 1, rad = sk.radius * (0.55 + 0.45 * Math.min(1, u * 3));
+    onLane(ctx, f.a, 52, 0, () => {
+      ctx.globalAlpha = fade; ctx.lineCap = 'round';
+      for (let i = 0; i < 3; i++) { const st = f.t * 16 + i * 2.09; ctx.beginPath(); ctx.ellipse(0, 0, rad, rad * 0.55, 0, st, st + 1.5); ctx.lineWidth = 7 - i * 1.5; ctx.strokeStyle = i === 0 ? 'rgba(235,250,255,.95)' : 'rgba(150,215,255,.75)'; ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    });
+    return;
+  }
   if (f.type === 'wave') {
     const img = Assets.get(sk.fx); if (!img) return;
     const a = f.a + f.dir * f.x / R, k = sk.fxHeight / img.height, fade = 1 - Math.pow(Math.min(1, f.t / f.life), 3);

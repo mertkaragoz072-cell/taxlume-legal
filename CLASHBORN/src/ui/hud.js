@@ -23,7 +23,16 @@ function updateDodgeButton() {
   setVar(b, '--cd', cd.toFixed(2)); b.classList.toggle('ready', cd <= 0); b.classList.toggle('cooling', cd > 0);
   const tx = b.querySelector('.cdtxt'); if (tx) setText(tx, state.player.dodgeCd > 0 ? (state.player.dodgeCd >= 1 ? Math.ceil(state.player.dodgeCd) : state.player.dodgeCd.toFixed(1)) : '');
 }
+let skUi = '';
+function applyHeroSkillUi() {                                    // düğme ikonu/etiketi seçilen kahramanın yeteneğine göre
+  skUi = HERO.id; const keys = { skill1: 'Q', skill2: 'E' };
+  for (const id of Object.keys(SKILLS)) {
+    const b = document.getElementById('btn-' + id); if (!b) continue; const sk = SKILLS[id];
+    b.setAttribute('aria-label', `${sk.name} (${keys[id] || ''})`); const path = b.querySelector('svg path'); if (path && sk.icon) path.setAttribute('d', sk.icon);
+  }
+}
 function updateSkillButtons() {
+  if (skUi !== HERO.id) applyHeroSkillUi();
   updateDodgeButton();
   for (const id of Object.keys(SKILLS)) {
     const b = skillEls[id] || (skillEls[id] = document.getElementById('btn-' + id)); if (!b) continue;

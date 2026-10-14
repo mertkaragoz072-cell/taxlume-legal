@@ -1,5 +1,5 @@
 // Panel (HUD 🎒): sekmeler — KARAKTER (statlar + güçler), GÖREVLER (günlük görevler + başarımlar), MAĞAZA (kalıcı güçlendirmeler). Açıkken oyun durur (state.userPause).
-import { UPGRADES, META } from '../core/config.js';
+import { UPGRADES, META, SKILLS } from '../core/config.js';
 import { Save } from '../core/save.js';
 import { state } from '../game/state.js';
 import { derived, buildLevels, upgradeValue } from '../game/PlayerStats.js';
@@ -49,9 +49,8 @@ function shopHtml() {
   return `<div class="ip-sub">Cüzdan: 🪙 ${p.coins} &nbsp; 💎 ${p.gems} — satın alınanlar kalıcıdır ve tüm kahramanlarda geçerlidir.</div>${items}`;
 }
 
-const SK = [['skill1', '⭐ Yıldız Patlaması'], ['skill2', '⚡ Mavi Dalga']];
 function skillsHtml() {
-  const p = state.player;
+  const p = state.player, SK = [['skill1', `${SKILLS.skill1.emoji || '⭐'} ${SKILLS.skill1.name}`], ['skill2', `${SKILLS.skill2.emoji || '⚡'} ${SKILLS.skill2.name}`]];
   return `<div class="ip-sub">Yetenekleri kristalle geliştir (kalıcı, tüm kahramanlarda geçerli). Cüzdan: 💎 ${p.gems}</div><div class="ip-cols">` + SK.map(([id, name]) => `<div class="ip-col"><h4>${name}</h4>` + META.skills.filter((k) => k.skill === id).map((k) => {
     const lv = skillLevel(k.id), maxed = lv >= k.max, cost = k.cost[lv], can = !maxed && p.gems >= cost;
     return `<div class="ip-item ${maxed ? 'done' : ''}"><i>${k.icon}</i><div class="t"><b>${k.name.split(': ')[1]}</b> <em>${'●'.repeat(lv)}${'○'.repeat(k.max - lv)}</em><small>${k.desc}</small></div>${maxed ? 'MAKS' : `<button class="ip-btn" data-buy="${k.id}" ${can ? '' : 'disabled'}>💎${cost}</button>`}</div>`;

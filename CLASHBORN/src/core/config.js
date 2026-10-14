@@ -12,7 +12,13 @@ export const META = { achievements: [], dailyPool: [], dailyCount: 3, shop: [], 
 export const SKILLS = {};      // data/skills.json: yetenek tanımları (buton id → ayarlar)
 export const ANIMS = {};
 export const HERO = { id: 'male', fromUrl: false };
-export function setHero(id) { HERO.id = ANIMS[id] ? id : 'male'; ANIMS.hero = ANIMS[HERO.id]; }
+export const SKILLS_BASE = {};
+export function setHero(id) {
+  HERO.id = ANIMS[id] ? id : 'male'; ANIMS.hero = ANIMS[HERO.id];
+  const ov = CONFIG.heroes?.[HERO.id]?.skills || {};                        // kahramana özgü yetenekler (config.json → heroes.<id>.skills), data/skills.json üzerine biner
+  for (const k of Object.keys(SKILLS_BASE)) SKILLS[k] = { ...SKILLS_BASE[k], ...(ov[k] || {}) };
+  document.dispatchEvent?.(new CustomEvent('herochange', { detail: HERO.id }));
+}
 // Oynanabilir kahramanlar (seçim ekranı): id → görünen ad. 'female' (animasyonlu sheet) yalnız ?hero=female ile açılan geliştirme alternatifidir.
 export const HEROES = [{ id: 'male', name: 'Erkek Savaşçı' }, { id: 'heroine', name: 'Kadın Savaşçı' }];   // aktif kahraman: data/config.json → player.character veya URL ?hero=female      // ANIMS.male = data/male_animations.json (kare listesi, fps, pivot, ölçek)
 
@@ -29,7 +35,7 @@ export async function loadData(base = 'data/') {
   Object.assign(ENEMY_TYPES, enemies);
   ANIMS.male = male; ANIMS.female = female;
   ANIMS.heroine = heroine;
-  Object.assign(SKILLS, skills);
+  Object.assign(SKILLS, skills); Object.assign(SKILLS_BASE, JSON.parse(JSON.stringify(skills)));
   Object.assign(CARDS, cards);
   Object.assign(ROSTER, roster); Object.assign(CHAPTERS, chapters); Object.assign(META, meta);
   Object.assign(WAVES, waves);

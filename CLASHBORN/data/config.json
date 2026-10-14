@@ -234,6 +234,34 @@
         "defense": 0.1,
         "moveMul": -0.08,
         "attackSpeedMul": -0.08
+      },
+      "skills": {
+        "skill1": {
+          "name": "Yer Sarsıntısı",
+          "icon": "M12 2l2.6 6.3L21 9l-5 4.4L17.5 20 12 16.6 6.5 20 8 13.4 3 9l6.4-.7z",
+          "emoji": "💥",
+          "tip": "Yere vurup <b>geniş alanda</b> düşmanları <b>fırlatır</b> ve sersemletir. Ağır hasar verir.",
+          "cooldown": 6,
+          "damageMul": 3.4,
+          "radius": 230,
+          "ahead": 0,
+          "knockback": 2.2,
+          "shake": 9,
+          "element": "fire",
+          "fxDuration": 0.6
+        },
+        "skill2": {
+          "name": "Demir Siper",
+          "icon": "M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z",
+          "emoji": "🛡️",
+          "tip": "Kısa süre <b>hasar almazsın</b> ve biraz can yenilersin. Tehlikeli anlarda kurtarıcı.",
+          "type": "guard",
+          "cooldown": 12,
+          "invuln": 2.2,
+          "heal": 0.08,
+          "damageMul": 0,
+          "castAnim": "attack"
+        }
       }
     },
     "heroine": {
@@ -257,6 +285,39 @@
         "maxHpMul": -0.18,
         "damageMul": -0.06,
         "defense": -0.05
+      },
+      "skills": {
+        "skill1": {
+          "name": "Kılıç Fırtınası",
+          "icon": "M4 20L14 10l2 2L6 22zM20 4l-8 8-2-2 8-8z",
+          "emoji": "🌀",
+          "tip": "Etrafında dönerek <b>art arda 5 kez</b> kesip yakındaki düşmanları yavaşlatır.",
+          "type": "flurry",
+          "cooldown": 5,
+          "damageMul": 1.0,
+          "radius": 165,
+          "ahead": 0,
+          "ticks": 5,
+          "fxDuration": 0.7,
+          "knockback": 0.2,
+          "element": "ice",
+          "shake": 3
+        },
+        "skill2": {
+          "name": "Gölge Atılışı",
+          "icon": "M4 5l8 7-8 7zM12 5l8 7-8 7z",
+          "emoji": "💨",
+          "tip": "İleri <b>atılırken</b> yoldaki herkesi keser; atılış sırasında <b>hasar almazsın</b>.",
+          "type": "dash",
+          "cooldown": 7,
+          "damageMul": 2.3,
+          "dist": 330,
+          "width": 70,
+          "dashTime": 0.16,
+          "invuln": 0.5,
+          "element": "lightning",
+          "castAnim": "attack"
+        }
       }
     }
   }

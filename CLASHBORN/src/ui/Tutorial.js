@@ -2,6 +2,7 @@
 // Adımlar oyunu durdurur (state.userPause); KAÇIN adımı canlıdır — oyuncu düğmeye gerçekten basınca ilerler. Bittiğinde Settings.tutorialDone = true (Ayarlar'dan yeniden gösterilebilir).
 import { Settings } from '../core/settings.js';
 import { state } from '../game/state.js';
+import { SKILLS } from '../core/config.js';
 
 const STEPS = [
   { ic: '🌍', title: 'CLASHBORN\'a hoş geldin!', text: 'Savaşçın <b>kendiliğinden koşar ve yakındaki düşmanlara saldırır</b>. Sen düğmelerle onu yönetirsin. Amaç: <b>5 dalgayı</b> geçip <b>Goblin Lordu</b>\'nu yenmek.' },
@@ -68,7 +69,11 @@ function words(el, html) {
 }
 function next() { i++; show(); }
 function finish() { running = false; clearInterval(poll); root?.classList.add('hidden'); state.userPause = prevPause; Settings.set('tutorialDone', true); }
+function syncSkillSteps() {                                  // yetenek adımları seçilen kahramanın yeteneklerini anlatır
+  for (const [idx, id] of [[5, 'skill1'], [6, 'skill2']]) { const sk = SKILLS[id]; if (sk) Object.assign(STEPS[idx], { ic: sk.emoji || STEPS[idx].ic, title: sk.name, text: (sk.tip || STEPS[idx].text) + ' Kullandıktan sonra düğme üzerindeki sayaç dolana kadar <b>bekleme süresi</b> vardır.' }); }
+}
 export function startTutorial() {
+  syncSkillSteps();
   if (Settings.get('tutorialDone') || running) return; build(); running = true; i = 0; prevPause = false;
   card.onpointerdown = (e) => e.stopPropagation();
   card.onclick = (e) => { const a = e.target.closest('button')?.dataset.a; if (a === 'next') next(); else if (a === 'skip') finish(); };
