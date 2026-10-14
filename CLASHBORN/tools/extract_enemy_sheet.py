@@ -74,11 +74,12 @@ for k, _o in enumerate(order, 1):
     if a.fx:                                                       # parlak efekt (mavi yay / yeşil patlama) kenarındaki koyu parıltı opak 'katı' sayılırsa kalın siyah/lacivert halka olur → o bölgede yumuşak alfa (rengi alfaya bölünür = üst üste binince halka kalmaz)
         r_, g_, b_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
         seed = keep & (((b_ - r_) >= 40) & (b_ >= 150) if a.fx == 'blue' else (((r_ - b_) >= 120) & (r_ >= 215) & (g_ >= 110) if a.fx in ('orange', 'fire') else ((b_ >= 200) & (r_ >= 140) & (g_ < 150) & (b_ - g_ >= 70) if a.fx == 'purple' else ((g_ - r_) >= 60) & (g_ >= 190))))
-        zone = ndi.binary_dilation(seed, iterations=7) & (mx < 95)
+        near = ndi.binary_dilation(seed, iterations=4); zone = ndi.binary_dilation(seed, iterations=10) & (mx < 170)
         tinted = ((b_ > r_ + 4) & (b_ >= g_) if a.fx == 'blue' else ((r_ > b_ + 8) & (r_ >= g_) & (b_ < 60) if a.fx in ('orange', 'fire') else ((r_ > g_ + 10) & (b_ > g_ + 10) if a.fx == 'purple' else (g_ > r_ + 4) & (g_ >= b_))))
-        solid = solid & ~(zone & tinted)
+        solid = solid & ~(zone & tinted) & ~(near & (mx < 45) & ~((r_ > b_ + 10) & (r_ > 60)))
     soft = np.clip((mx - 8) / 40.0, 0, 1)
-    if a.fx: soft = np.where(zone & tinted, np.clip((mx - 10) / 75.0, 0, 1), soft)
+    if a.fx:                                                       # efekt kenarı: koyu lacivert/koyu renk halka (mx 40–90) opak kalmasın → alfa ancak parlaklık 70'i aşınca doğar (renk alfaya bölünür, açık parıltı olur); yayın hemen yanındaki saf siyah şeritler tamamen silinir
+        soft = np.where(zone & tinted, np.clip((mx - 70) / 100.0, 0, 1), soft); soft = np.where(near & (mx < 45) & ~((r_ > b_ + 10) & (r_ > 60)), 0, soft)
     alpha = np.where(solid, 1.0, soft) * ndi.binary_dilation(keep, iterations=4)
     col = np.where((alpha[..., None] > 0.02) & (~solid[..., None]), np.clip(rgb / np.maximum(alpha[..., None], 0.06), 0, 255), rgb)
     ys, xs = np.where(alpha > 0.02); y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
