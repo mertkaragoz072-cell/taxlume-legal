@@ -19,6 +19,7 @@ import summerMixedMarketplaceImage from "../../assets/summer-mixed-marketplace.w
 import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
 import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
 import winterMixedMarketplaceImage from "../../assets/winter-mixed-marketplace.webp";
+import tier2HappyMarketplaceImage from "../../assets/tier2-happy-marketplace.webp";
 import { seasonFromTick, SeasonId } from "../economy/seasons";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
@@ -28,6 +29,9 @@ interface Props {
    * happiness tier when the current season has one; every other season/tier
    * combination falls back to the three plain scenes. */
   tick: number;
+  /** how far the town has grown (see townRankIndex) — picks which *size* of
+   * square (see sceneTierForRank) is shown, independent of mood/season. */
+  townRankIndex: number;
   label: string;
   moodLabel: string;
   moodColor: string;
@@ -73,6 +77,31 @@ const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, Ima
     happy: summerHappyMarketplaceImage,
   },
 };
+
+// The same square, redrawn bigger and busier as the town actually grows —
+// day 1 and day 30 are supposed to look different, not just say a bigger
+// number in the header. Tier 1 is the original three-mood/seasonal set
+// above; 2-4 live here, filled in incrementally as each mood's art arrives
+// (same partial-coverage pattern as UPGRADE_IMAGES) — a tier/mood not
+// illustrated yet falls back to tier 1's plain scene for that mood rather
+// than a broken image.
+export type SceneTier = 1 | 2 | 3 | 4;
+
+const TIER_SCENE_IMAGES: Partial<Record<SceneTier, Partial<Record<MoodTier, ImageSourcePropType>>>> = {
+  2: {
+    happy: tier2HappyMarketplaceImage,
+  },
+};
+
+/** Level 0/1 (Village, Town) keeps the original art; each further band
+ * covers a few more rank tiers — see townRanks.ts for what's actually in
+ * each band (2: City..Trade Hub, 3: Capital..Empire, 4: Golden Age+). */
+export function sceneTierForRank(townRankIndex: number): SceneTier {
+  if (townRankIndex >= 8) return 4;
+  if (townRankIndex >= 5) return 3;
+  if (townRankIndex >= 2) return 2;
+  return 1;
+}
 
 // A few flakes falling straight through the frame, winter only. Unlike a
 // mote's drift-and-fade (removed — read as sparkles/glimmer over the art
@@ -154,7 +183,7 @@ export function happinessFor(h: number): { labelKey: string; emoji: string; colo
  * (happiness) göre değişir: mutlu, karışık, sinirli. Kart arka planı/
  * çerçevesi yok: resim kendi başına duruyor, etiket ve ruh hali onun
  * üzerine yazılıyor. */
-export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }: Props) {
+export function TownSquareScene({ happiness, tick, townRankIndex, label, moodLabel, moodColor }: Props) {
   const [width, setWidth] = useState(0);
   // Rounded rather than the raw float onLayout reports — a fractional
   // target size (e.g. 379.33px) means the native Image has to resample to a
@@ -165,9 +194,18 @@ export function TownSquareScene({ happiness, tick, label, moodLabel, moodColor }
   // native Image view doesn't necessarily redo that work once it has a
   // bitmap for the size it was first asked to render at.
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
-  const tier = moodTierFor(happiness);
+  const mood = moodTierFor(happiness);
   const season = seasonFromTick(tick).id;
-  const image = SEASON_SCENE_IMAGES[season]?.[tier] ?? SCENE_IMAGES[tier];
+  const sceneTier = sceneTierForRank(townRankIndex);
+  // Seasonal art only exists for tier 1's square — once the town has
+  // grown into a later tier, which size of square it is outweighs which
+  // season it is, so seasonal variants don't apply there (see
+  // TIER_SCENE_IMAGES' own comment on why a later tier can still be
+  // missing a mood and fall back to tier 1's plain scene for it).
+  const image =
+    sceneTier === 1
+      ? (SEASON_SCENE_IMAGES[season]?.[mood] ?? SCENE_IMAGES[mood])
+      : (TIER_SCENE_IMAGES[sceneTier]?.[mood] ?? SCENE_IMAGES[mood]);
   const height = Math.round(width / IMAGE_RATIO);
 
   return (

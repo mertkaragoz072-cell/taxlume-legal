@@ -138,6 +138,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       <TownSquareScene
         happiness={state.happiness}
         tick={state.tick}
+        townRankIndex={state.townRankIndex}
         label={t("town.squareLabel")}
         moodLabel={t(happy.labelKey)}
         moodColor={happy.color}
