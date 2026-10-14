@@ -493,3 +493,6 @@ Bildirim (TestFlight, ekran görüntüsü): vuruş yayının kenarında siyah/la
 
 ## Faz 78 — Kahramanlara özgü artı/eksiler
 - `data/config.json → heroes`: erkek = Ağır Savaşçı (+can, +hasar, +savunma / −hız), kadın = Hızlı Savaşçı (+saldırı/hareket hızı, +kritik / −can, −hasar, −savunma). Etkiler `derived()` içinde eklenir; kahraman seçim kartında listelenir.
+
+## Faz 79 — Karakter seçim ekranı
+- Tasarım görselinden: koyu mavi sahne, iki geniş kart (sol sanat `assets/ui/menus/select_*_art.png`, sağda ad/rol/artı-eksi satırları `config.json → heroes` verisinden üretilir, yetenek ikonları `select_skill_*`).

@@ -43,14 +43,17 @@ function chooseHero() {
     const last = Save.lastHero();
     const box = document.getElementById('select'), cards = document.getElementById('sel-cards');
     cards.innerHTML = '';
+    const SKILLS = { male: ['m1', 'm2', 'm3', 'm4'], heroine: ['h1', 'h2', 'h3', 'h4'] };
+    const ROWS = { maxHpMul: ['❤️', 'can', 1], damageMul: ['⚔️', 'hasar', 1], defense: ['🛡️', 'savunma', 1], moveMul: ['👢', 'Hareket hızı'], attackSpeedMul: ['🗡️', 'Saldırı hızı'], critChance: ['🎯', 'Kritik şansı'], critDamage: ['💥', 'Kritik hasarı', 0, 1] };
+    const ORDER = ['maxHpMul', 'damageMul', 'defense', 'attackSpeedMul', 'moveMul', 'critChance', 'critDamage'];
+    const rowHtml = (k, v) => { const [ic, nm, more, plain] = ROWS[k], up = v > 0, lab = more ? `Daha ${up ? 'fazla' : 'az'} ${nm}` : nm, val = plain ? Math.abs(v).toFixed(2).replace('.', ',') : '%' + Math.round(Math.abs(v) * 100); return `<li><span class="ic">${ic}</span><span class="nm">${lab}</span><span class="${up ? 'up' : 'dn'}">${up ? '▲' : '▼'} ${val}</span></li>`; };
     for (const h of HEROES) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'sel-card' + (h.id === last ? ' last' : '');
-      const cv = document.createElement('canvas'); cv.width = cv.height = 160; b.appendChild(cv);
-      const t = document.createElement('div'); t.textContent = h.name; b.appendChild(t);
-      const sv = Save.of(h.id), info = document.createElement('div'); info.className = 'sel-info'; info.textContent = sv ? `Lv. ${sv.level} · ${chapterInfo(sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1).short}` : 'Yeni oyun'; b.appendChild(info);
-      const hc = CONFIG.heroes?.[h.id]; if (hc) { const d = document.createElement('div'); d.className = 'sel-traits'; d.innerHTML = `<b>${hc.role}</b><span class="pro">${hc.pros.map((x) => '▲ ' + x).join('<br>')}</span><span class="con">${hc.cons.map((x) => '▼ ' + x).join('<br>')}</span>`; b.appendChild(d); }
-      const { img, crop } = PORTRAITS[h.id](), im = Assets.get(img);
-      if (im) { const g = cv.getContext('2d'); if (crop) { g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(im, crop[0], crop[1], crop[2], crop[3], 0, 0, 160, 160); } else { const s = Math.min(im.width, im.height); g.drawImage(im, 0, 0, s, s, 0, 0, 160, 160); } }
+      const hc = CONFIG.heroes?.[h.id] || { role: '', mods: {} }, mods = hc.mods, keys = ORDER.filter((k) => mods[k]), rows = [...keys.filter((k) => mods[k] > 0), ...keys.filter((k) => mods[k] < 0)];
+      const b = document.createElement('button'); b.type = 'button'; b.className = `sel-card ${h.id}` + (h.id === last ? ' last' : '');
+      const art = Assets.get(h.id === 'male' ? 'select_male_art' : 'select_heroine_art');
+      const sv = Save.of(h.id), info = sv ? `Lv. ${sv.level} · ${chapterInfo(sv.stage || Math.floor(((sv.wave || 1) - 1) / 5) + 1).short}` : 'Yeni oyun';
+      const sk = (SKILLS[h.id] || []).map((id) => { const im = Assets.get('select_skill_' + id); return im ? `<img src="${im.src}" alt="">` : ''; }).join('');
+      b.innerHTML = `<div class="sc-art">${art ? `<img src="${art.src}" alt="">` : ''}</div><div class="sc-body"><div class="sc-name">${h.name}</div><div class="sc-role">${hc.role}</div><ul class="sc-stats">${rows.map((k) => rowHtml(k, mods[k])).join('')}</ul><div class="sc-skills">${sk}</div><div class="sc-info">${info}</div></div>`;
       b.addEventListener('click', () => { setHero(h.id); Save.setLast(h.id); box.classList.add('hidden'); resolve(h.id); });
       cards.appendChild(b);
     }

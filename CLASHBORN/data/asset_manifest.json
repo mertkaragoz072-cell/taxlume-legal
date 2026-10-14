@@ -1268,7 +1268,17 @@
     "prop_rock_medium_02": "assets/environment/props/rock_medium_02.png",
     "prop_rock_small_01": "assets/environment/props/rock_small_01.png",
     "prop_rock_small_02": "assets/environment/props/rock_small_02.png",
-    "prop_signpost": "assets/environment/props/signpost.png"
+    "prop_signpost": "assets/environment/props/signpost.png",
+    "select_heroine_art": "assets/ui/menus/select_heroine_art.png",
+    "select_male_art": "assets/ui/menus/select_male_art.png",
+    "select_skill_h1": "assets/ui/menus/select_skill_h1.png",
+    "select_skill_h2": "assets/ui/menus/select_skill_h2.png",
+    "select_skill_h3": "assets/ui/menus/select_skill_h3.png",
+    "select_skill_h4": "assets/ui/menus/select_skill_h4.png",
+    "select_skill_m1": "assets/ui/menus/select_skill_m1.png",
+    "select_skill_m2": "assets/ui/menus/select_skill_m2.png",
+    "select_skill_m3": "assets/ui/menus/select_skill_m3.png",
+    "select_skill_m4": "assets/ui/menus/select_skill_m4.png"
   },
   "trim": {
     "enemy_goblin_bomber_boss_hd_attack_01": [
