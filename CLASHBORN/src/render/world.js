@@ -118,8 +118,8 @@ function drawTileGround(ctx, tg, deepColor) {
 const gradeLayer = makeLayer();
 export function drawGrade(ctx) {
   const tint = chapterInfo(state.wave.stage).tint;       // evren renk tonu (data/chapters.json → tint): sahneyi tek renge doğru derecelendirir
-  if (tint) { ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = Math.min(1, tint[3] * 4); ctx.fillStyle = `rgb(${tint[0]},${tint[1]},${tint[2]})`; ctx.fillRect(0, 0, View.w, View.h); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = Math.min(1, tint[3] * 2.2); ctx.fillRect(0, 0, View.w, View.h); ctx.restore(); }   // soft-light + overlay: parlaklığı koruyup tonu evrene kaydırır
-  gradeLayer(ctx, 'grade', (g) => {
+  gradeLayer(ctx, 'grade' + (tint ? tint.join(',') : ''), (g) => {   // ton + vinyet tek önbellekli katman (tam ekran soft-light/overlay her kare pahalıydı)
+    if (tint) { g.fillStyle = `rgba(${tint[0]},${tint[1]},${tint[2]},${Math.min(0.5, tint[3] * 1.6)})`; g.fillRect(0, 0, View.w, View.h); }
     const A = g.createLinearGradient(0, 0, View.w * 0.7, View.h * 0.9); A.addColorStop(0, 'rgba(255,230,170,.13)'); A.addColorStop(0.5, 'rgba(255,230,170,0)');
     const B = g.createRadialGradient(View.w / 2, View.h * 0.55, Math.min(View.w, View.h) * 0.45, View.w / 2, View.h * 0.55, Math.max(View.w, View.h) * 0.75);
     B.addColorStop(0, 'rgba(12,22,48,0)'); B.addColorStop(1, 'rgba(12,22,48,.34)');

@@ -33,11 +33,11 @@ function noise(dur, f0, f1, vol = 0.3, delay = 0, q = 1.2) {
 const N = (semi) => 261.63 * Math.pow(2, semi / 12);      // C4 = 0
 
 const SFX = {
-  slash: () => { noise(0.14, 1800, 500, 0.32, 0, 0.8); tone('triangle', 520, 260, 0.1, 0.12); },
-  hit: () => { tone('square', 180 + Math.random() * 40, 70, 0.09, 0.3); noise(0.07, 2500, 800, 0.28); },
-  kill: () => { tone('sawtooth', 220, 60, 0.22, 0.28); noise(0.16, 1200, 200, 0.3); },
+  slash: () => { const r = Math.random() * 0.2; noise(0.11, 3200 + r * 2000, 900, 0.26, 0, 0.9); tone('sine', 700 + r * 300, 320, 0.08, 0.07); },   // hafif hışırtı (testere/vızıltı değil)
+  hit: () => { const r = Math.random() * 0.15; tone('sine', 190 * (1 + r), 60, 0.12, 0.5); noise(0.05, 4200, 1500, 0.2, 0, 0.7); tone('triangle', 880 * (1 + r), 520, 0.05, 0.06); },   // yumuşak darbe: gövde + kısa çıtırtı
+  kill: () => { tone('sine', 150, 42, 0.26, 0.55); noise(0.18, 2600, 250, 0.26, 0, 0.8); tone('triangle', 420, 160, 0.14, 0.12, 0.02); },
   heartbeat: () => { tone('sine', 70, 45, 0.16, 0.5); tone('sine', 62, 40, 0.18, 0.4, 0.2); },
-  hurt: () => { tone('sawtooth', 320, 110, 0.24, 0.32); noise(0.1, 900, 300, 0.2); },
+  hurt: () => { tone('sine', 240, 80, 0.2, 0.5); tone('triangle', 330, 150, 0.16, 0.14); noise(0.09, 1400, 350, 0.16); },
   coin: () => { tone('sine', 988, 988, 0.07, 0.3); tone('sine', 1319, 1319, 0.14, 0.3, 0.06); },
   gem: () => { [0, 4, 7, 12].forEach((s, i) => tone('sine', N(s + 12), N(s + 12), 0.16, 0.26, i * 0.07)); },
   levelup: () => { [0, 4, 7, 12, 16].forEach((s, i) => { tone('triangle', N(s), N(s), 0.22, 0.3, i * 0.09); tone('sine', N(s + 12), N(s + 12), 0.22, 0.14, i * 0.09); }); },

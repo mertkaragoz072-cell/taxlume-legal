@@ -484,3 +484,9 @@ Bildirim (TestFlight, ekran görüntüsü): vuruş yayının kenarında siyah/la
 - **Titreme:** hareket kodu titremiyor (simülasyon: yön değişimi %1.4, knockback kaynaklı), titreme **karelerin kendisinden**: yapay zekâ sayfalarında her kare baştan çizildiğinden gövde merkezi kareden kareye 3–15 birim zıplıyordu (Kral yürüme 14, erkek bekleme 15, Savaş Lordu baş 12). Yeni `tools/stabilize_loops.py`: yürüme/bekleme/koşu karelerinin gövde merkezi döngüsel hareketli ortalamayla (pencere 9) düzleştirilir, fark kadar kare kaydırılır (`asset_manifest.json → trim.ox`, `stab` kaydı idempotansı sağlar; ≤14 px). Sonuç (kare başına en büyük gövde kayması, birim): Gözcü 5.8→0.9, Savaşçı 3.5→0.7, Kral 14→2.2, Büyücü 7.5→0.9, erkek koşu 5.2→0.8, erkek bekleme 15→5.7.
 - **Sıra (kare yeniden üretilirse):** `extract_enemy_sheet.py` → (düşmanlar için siyah dolgu temizliği) → `clean_fx_fragments.py` → `trim_frames.py` → `stabilize_loops.py`.
 - **Çözülemeyen:** kahramanın "pikselli" görünümü kaynak sayfaların çözünürlüğü (erkek ≈160 px boy) — telefonda ≈1.3× büyütülüyor; ancak daha yüksek çözünürlüklü sayfalarla düzelir.
+
+## Faz 77 — Akıcılık + vuruş sesleri
+- Varsayılan çözünürlük ≤1.5×, yumuşatma 'low'; kademeler 1.5 → 1.25 → 1 → 30 FPS sabit. Uyarlama 45 karede karar verir, çok yavaşsa 2 kademe atlar.
+- Ekran tonu (soft-light/overlay tam ekran) artık önbellekli katmanın içinde; `groundBounce` gradyanı önbellekli (aktör başına her kare yaratılmıyordu).
+- Vuruş/kesme/ölüm/hasar sesleri sine/triangle tabanlı yumuşak darbeye çevrildi (testere dişi/kare dalga cızırtısı kaldırıldı).
+- Telefon ölçümü yok: Ayarlar → "FPS göstergesi" değerleri bekleniyor.

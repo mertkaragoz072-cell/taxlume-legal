@@ -37,11 +37,12 @@ export function groundShadow(ctx, w, alpha = 0.28) {
 
 // Zemin yansıması: karakterin alt kısmına zeminin yeşil/toprak tonunu "source-atop" ile karıştırır (karakter zemine ait görünür).
 // Yalnızca ayrı katmana (renderer.js actors layer) çizilmiş aktörlerin piksellerine işler.
+const BOUNCE_G = new Map();   // rise → gradyan (her aktör için her karede yeniden yaratılmaz)
 export function groundBounce(ctx, a, halfW = 80, rise = 70) {
   onLane(ctx, a, 0, 0, () => {
     ctx.globalCompositeOperation = 'source-atop';
-    const g = ctx.createLinearGradient(0, -rise, 0, 6);
-    g.addColorStop(0, 'rgba(120,150,50,0)'); g.addColorStop(0.55, 'rgba(120,150,50,.10)'); g.addColorStop(1, 'rgba(96,112,36,.34)');
+    let g = BOUNCE_G.get(rise);
+    if (!g) { g = ctx.createLinearGradient(0, -rise, 0, 6); g.addColorStop(0, 'rgba(120,150,50,0)'); g.addColorStop(0.55, 'rgba(120,150,50,.10)'); g.addColorStop(1, 'rgba(96,112,36,.34)'); BOUNCE_G.set(rise, g); }
     ctx.fillStyle = g; ctx.fillRect(-halfW, -rise, halfW * 2, rise + 6);
     ctx.globalCompositeOperation = 'source-over';
   });

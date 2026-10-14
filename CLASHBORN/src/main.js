@@ -179,7 +179,7 @@ async function boot() {
   // Uyarlanabilir kalite (yavaş cihaz): ölçülen kare süresi / iş süresi yüksekse kademe artar, geri dönmez. ?hq=1 ile kapatılır (ekran görüntüsü/test).
   //   0: çözünürlük ≤2×, yüksek kalite yumuşatma   1: orta kalite yumuşatma (CPU tabanlı tuvalde ucuz)   2: ≤1.5×   3: ≤1.25×   4: 30 FPS sabit tempo (düzensiz 35–50 FPS yerine eşit aralık, takılma hissi azalır)
   // İşletim sistemi 30 FPS'e kısıyorsa (Düşük Güç Modu: aralık ≈33 ms ama iş süresi kısa) kalite düşürülmez.
-  const TIERS = [{ cap: 2, q: 'high' }, { cap: 2, q: 'medium' }, { cap: 1.5, q: 'medium' }, { cap: 1.25, q: 'medium' }, { cap: 1.25, q: 'medium', half: true }];
+  const TIERS = [{ cap: 1.5, q: 'low' }, { cap: 1.25, q: 'low' }, { cap: 1, q: 'low' }, { cap: 1, q: 'low', half: true }];
   let slowSum = 0, workSum = 0, slowN = 0; const hq = new URLSearchParams(location.search).has('hq');
   function applyTier() {
     const T = TIERS[View.tier]; View.tierCap = T.cap; View.smooth = T.q; View.halfRate = !!T.half;
@@ -187,10 +187,10 @@ async function boot() {
   }
   function adaptResolution(raw, work) {
     if (hq || raw > 200 || document.hidden || state.paused) return;                 // sekme dönüşü/duraklama sayılmaz
-    slowSum += raw; workSum += work; if (++slowN < 90) return;
+    slowSum += raw; workSum += work; if (++slowN < 45) return;
     const avg = slowSum / slowN, avgWork = workSum / slowN; slowSum = workSum = slowN = 0;
     const osCapped = Math.abs(avg - 33.3) < 3 && avgWork < 10;
-    if (!osCapped && (avg > 22 || avgWork > 13) && View.tier < TIERS.length - 1) { View.tier++; applyTier(); }
+    if (!osCapped && (avg > 20 || avgWork > 11) && View.tier < TIERS.length - 1) { View.tier = Math.min(TIERS.length - 1, View.tier + (avg > 27 ? 2 : 1)); applyTier(); }
   }
   let fAcc = 0, fN = 0, fWorst = 0; const fpsEl = document.getElementById('fps');            // ayarlardan açılan FPS göstergesi (gerçek cihaz ölçümü için)
   function fpsTick(raw) { if (!fpsEl || fpsEl.classList.contains('hidden') || raw > 200) return; fAcc += raw; fN++; fWorst = Math.max(fWorst, raw); if (fAcc >= 500) { fpsEl.textContent = `${Math.round(fN * 1000 / fAcc)} FPS · ${(fAcc / fN).toFixed(1)} ms (en kötü ${Math.round(fWorst)}) · çöz. ${View.dpr}× · kademe ${View.tier}`; fAcc = fN = fWorst = 0; } }
