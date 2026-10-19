@@ -153,3 +153,31 @@ Test: `npm test` (126 test).
 - **İlerlemeyi sıfırla** her zaman iki adımlı onay ister ("Emin misin?" → "Evet, sıfırla" / "Vazgeç"); eski kayıt `bakery-street:save.before-reset` anahtarına yedeklenir, yedek yazılamazsa sıfırlama yapılmaz. Ayarlara dokunmaz.
 
 Test: `npm test` (162 test; tarih testleri UTC, İstanbul, New York, Auckland, Lord Howe saat dilimlerinde de çalıştırıldı).
+
+## Adım 8: oyuncu seviyesi ve XP
+
+Ayarlar `src/data/economy.js` (`XP`, `LEVELS`, `LEVEL_REWARD`), mantık `src/game/progression.js`.
+- **XP kaynakları:** üretim tamamlanınca (ekmek 5, kruvasan 8, pasta 20, kahve 4), her başarılı satışta adet başına (3 / 5 / 12 / 3; vitrin ve müşteri teslimi), görev ödülü alınınca (40; "10 ürün üret" 80), yükseltme satın alınca (50 + 25 × alınan seviye). Başarısız / reddedilen işlem XP vermez.
+- **Gereken XP:** seviye L → L+1 için `100 + 50·(L−1) + 10·(L−1)²`. Maksimum seviye 30; orada XP durur. Tek eylemle birden çok seviye atlanabilir, her seviye ödülü ayrı ayrı verilir.
+- **Seviye ödülü** (bir kez): `100 + 50·(seviye−1)` altın; her 3. seviyede ayrıca 4 un + 2 süt + 2 yumurta. Ödül `rewardedLevel` ile korunur, aynı seviye ikinci kez ödeme yapmaz. Birden çok seviye tek bildirimde özetlenir.
+- Üst çubukta "Lv. N", XP çubuğu ve "xp / gereken" yazısı bulunur.
+- Kayıt sürümü 6: `progression {level, xp, rewardedLevel}`. Eski kayıtlar 1. seviye, 0 XP ile açılır (mevcut ilerleme silinmez). Geçersiz değerlerde kayıt bozuk sayılır ve yedeklenir.
+
+| Seviye | Sonraki için XP | Toplam XP |
+|---|---|---|
+| 1→2 | 100 | 100 |
+| 2→3 | 160 | 260 |
+| 3→4 | 240 | 500 |
+| 4→5 | 340 | 840 |
+| 5→6 | 460 | 1300 |
+| 6→7 | 600 | 1900 |
+| 7→8 | 760 | 2660 |
+| 8→9 | 940 | 3600 |
+| 9→10 | 1140 | 4740 |
+| 10→11 | 1360 | 6100 |
+| 15→16 | 2760 | 16900 |
+| 20→21 | 4660 | 36200 |
+| 25→26 | 7060 | 66500 |
+| 29→30 | 9340 | 100340 |
+
+Test: `npm test` (191 test).

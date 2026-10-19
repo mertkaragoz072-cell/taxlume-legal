@@ -8,7 +8,7 @@ export function createHud(root, { onButton, onAdd }) {
   root.innerHTML = `
     <div class="pill player">
       <div class="avatar">${ICONS.avatar}</div>
-      <div class="level"><b>Lv. ${PLAYER.level}</b><div class="xp"><i style="width:${PLAYER.xp * 100}%"></i></div></div>
+      <div class="level"><div class="lvrow"><b id="levelText">Lv. 1</b><small id="xpText"></small></div><div class="xp"><i id="xpFill" style="width:0%"></i></div></div>
     </div>
     ${res('coin', fmt(PLAYER.gold), 'gold', '', 'goldText')}
     ${res('gem', fmt(PLAYER.gems), 'gems', '', 'gemsText')}
@@ -24,6 +24,12 @@ export function createHud(root, { onButton, onAdd }) {
   const goldEl = root.querySelector('#goldText');
   return {
     setGold: (n) => { goldEl.textContent = fmt(n); },
+    /** Level, XP bar and a small "xp / needed" caption (shows MAX at the top level). */
+    setLevel: ({ level, xp, need, fraction, isMax }) => {
+      root.querySelector('#levelText').textContent = `Lv. ${level}`;
+      root.querySelector('#xpFill').style.width = `${Math.round(fraction * 100)}%`;
+      root.querySelector('#xpText').textContent = isMax ? 'MAX' : `${fmt(xp)} / ${fmt(need)} XP`;
+    },
     setGems: (n) => { root.querySelector('#gemsText').textContent = fmt(n); },
     /** Red dot on the Görevler button while a reward is waiting. */
     setQuestBadge: (n) => { const el = root.querySelector('[data-badge=quests]'); if (el) el.hidden = n < 1; },

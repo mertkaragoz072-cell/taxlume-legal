@@ -105,3 +105,21 @@ export const DAILY = [
   { gold: 500 },
   { gems: 20, gold: 1000 },
 ];
+
+/**
+ * Player level and XP. All numbers are tunable here.
+ *  - XP.* : XP earned per successful action (only when the action really happens, never for refused ones)
+ *  - LEVELS: XP needed to go from level L to L+1 = base + linear*(L-1) + quad*(L-1)^2 (strictly rising); maxLevel stops levelling
+ *  - LEVEL_REWARD: given automatically once for every level reached (gold each level, ingredients every Nth level)
+ */
+export const XP = {
+  produce: { bread: 5, croissant: 8, cake: 20, coffee: 4 },     // per finished unit
+  sale: { bread: 3, croissant: 5, cake: 12, coffee: 3 },        // per unit sold (showcase or customer)
+  upgrade: { base: 50, perLevel: 25 },                           // base + perLevel * (new upgrade level)
+  quest: { default: 40, byId: { produceTen: 80 } },              // per quest reward collected
+};
+export const LEVELS = { base: 100, linear: 50, quad: 10, maxLevel: 30 };
+export const LEVEL_REWARD = {
+  gold: { base: 100, perLevel: 50 },                             // gold = base + perLevel * (level - 1)
+  ingredientsEvery: 3, ingredients: { flour: 4, milk: 2, egg: 2 },   // also every 3rd level (3, 6, 9, ...)
+};

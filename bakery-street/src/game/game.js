@@ -139,6 +139,7 @@ export class Game {
         this.products[job.product] += 1;
         this.stats.produced[job.product] += 1;
         this.stats.producedTotal += 1;
+        this.progression?.award('produce', job.product);
         this.emit('complete', { station, product: job.product });
         this.emit('change', { type: 'complete', product: job.product });
       }
@@ -167,6 +168,7 @@ export class Game {
     this.player.gold -= cost;
     this.upgrades[id] = level + 1;
     this.stats.upgradesBought += 1;
+    this.progression?.award('upgrade', level + 1);   // XP grows with the upgrade level bought
     if (requestId != null) this.handledRequests.add(requestId);
     this.emit('change', { type: 'upgrade', upgrade: id, level: level + 1 });
     return { ok: true, level: level + 1, cost };
@@ -186,6 +188,7 @@ export class Game {
       stats: JSON.parse(JSON.stringify(this.stats)),
       ...(this.quests ? { quests: this.quests.exportState() } : {}),
       ...(this.daily ? { daily: this.daily.exportState() } : {}),
+      ...(this.progression ? { progression: this.progression.exportState() } : {}),
     };
   }
 
@@ -200,6 +203,7 @@ export class Game {
     this.stats = JSON.parse(JSON.stringify(state.stats));
     this.quests?.importState(state.quests);
     this.daily?.importState(state.daily);
+    this.progression?.importState(state.progression);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -216,6 +220,7 @@ export class Game {
       stats: blankStats(this.productsDef),
       quests: { claimed: [] },
       daily: { lastDate: null, day: 0 },
+      progression: { level: 1, xp: 0, rewardedLevel: 1 },
     };
   }
 
@@ -262,6 +267,7 @@ export class Game {
   recordSold(id, qty) {
     this.stats.sold[id] += qty;
     this.stats.soldTotal += qty;
+    this.progression?.award('sale', id, qty);
   }
 
   /** Sells `qty` units of a product from the showcase for its sale price. */

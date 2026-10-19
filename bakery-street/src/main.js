@@ -21,6 +21,7 @@ import { StreetScene } from './scene/street-scene.js';
 import { bakery } from './buildings/bakery.js';
 import { bookshop } from './buildings/bookshop.js';
 import { market } from './buildings/market.js';
+import { Progression } from './game/progression.js';
 import { createHud } from './ui/hud.js';
 import { createNav } from './ui/nav.js';
 import { AREAS } from './scene/interior-layout.js';
@@ -42,6 +43,7 @@ const unlockAudio = () => { if (audio.unlock()) unlockEvents.forEach((ev) => win
 unlockEvents.forEach((ev) => window.addEventListener(ev, unlockAudio));
 
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
+const progression = new Progression(game);        // player level and XP (src/game/progression.js)
 const quests = new Quests(game);
 const daily = new DailyReward(game);              // daily reward cycle (src/game/daily.js)                    // quest progress comes from game.stats (src/game/quests.js)
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
@@ -208,7 +210,24 @@ const orderBar = createOrderBar(document.getElementById('orderBar'), game, cafe,
   onWarn: (msg) => warn(msg, 2400),
   onSale: (r) => showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400),
 });
-game.on('change', () => { hud.setGold(game.gold); hud.setGems(game.player.gems ?? 0); });
+const refreshLevel = () => hud.setLevel({ level: progression.level, xp: progression.xp, need: progression.xpToNext(progression.level), fraction: progression.fraction(), isMax: progression.isMax });
+game.on('change', () => { hud.setGold(game.gold); hud.setGems(game.player.gems ?? 0); refreshLevel(); });
+let levelUps = [];                                    // one action can pass several levels: show a single summary
+game.on('levelUp', (e) => {
+  refreshLevel();
+  if (!levelUps.length) queueMicrotask(() => {
+    const list = levelUps; levelUps = [];
+    const reward = { gold: 0, ingredients: {} };
+    for (const l of list) { reward.gold += l.reward.gold ?? 0; for (const [k, v] of Object.entries(l.reward.ingredients ?? {})) reward.ingredients[k] = (reward.ingredients[k] ?? 0) + v; }
+    const parts = [];
+    if (reward.gold) parts.push(`+${reward.gold} altın`);
+    for (const [k, v] of Object.entries(reward.ingredients)) parts.push(`${game.ingredientsDef[k]?.icon ?? ''} ×${v}`);
+    const title = list.length > 1 ? `Seviye ${list[0].level}–${list[list.length - 1].level}` : `Seviye ${list[0].level}`;
+    showToast(toast, `⭐ ${title}! Ödül: ${parts.join('  ')}`, 3800);
+    audio.sfx('claim'); buzz([40, 40, 80]);
+  });
+  levelUps.push(e);
+});
 saves.attach(window);
 saveWarn.addEventListener('click', () => { saveWarn.hidden = true; });   // tap to dismiss; it returns if a save fails again
 game.on('complete', ({ product }) => showToast(toast, `${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600));
@@ -233,6 +252,7 @@ loadAssets().then(() => {
   const loaded = saves.load();
   hud.setGold(game.gold);
   hud.setGems(game.player.gems ?? 0);
+  refreshLevel();
   refreshBadge();
   if (daily.status().canClaim) openOverlay(dailyPanel);   // first visit of the day: offer the daily reward
   const finished = {};
@@ -248,5 +268,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
 });

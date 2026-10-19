@@ -44,6 +44,7 @@ export class Quests {
     this.claimed.add(id);
     if (r.gold) this.game.player.gold += r.gold;
     for (const [ing, n] of Object.entries(r.ingredients ?? {})) this.game.ingredients[ing] += n;
+    this.game.progression?.award('quest', id);       // XP for turning the quest in, in the same step as the reward
     this.game.emit('change', { type: 'quest', quest: id });
     return { ok: true, reward: r, quest: q };
   }

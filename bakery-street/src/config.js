@@ -17,8 +17,6 @@ export const TEXT = {
 
 // Placeholder player state; a real save system can replace this later.
 export const PLAYER = {
-  level: 12,
-  xp: 0.55,
   gold: 54320,
   gems: 865,
   energy: 120,
