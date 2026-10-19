@@ -1,10 +1,12 @@
+import { validateCafe } from './customers.js';
+
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock and running production jobs (product + real start time).
 // A job's duration is not stored; it comes from the product table, so rebalancing applies to running jobs too.
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;   // v2 adds the cafe section (customers, tables, orders); v1 saves load with an empty cafe
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -35,7 +37,8 @@ export function validate(raw, game) {
     if (!Number.isFinite(job.startedAt) || job.startedAt <= 0) throw new Error(`üretim zamanı geçersiz (${station})`);
     jobs[station] = { product: job.product, startedAt: job.startedAt };
   }
-  return { gold: raw.gold, ingredients, products, jobs };
+  const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks) : null;
+  return { gold: raw.gold, ingredients, products, jobs, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {
@@ -70,7 +73,8 @@ export class SaveManager {
       try { raw = JSON.parse(text); } catch { throw new Error('dosya okunamadı'); }
       const state = validate(raw, this.game);
       this.apply(state);
-      return { status: 'loaded' };
+      if (state.cafeRepaired) this.problem('repair', `Kafe kaydında ${state.cafeRepaired} tutarsızlık düzeltildi (eksik/geçersiz sipariş veya masa).`);
+      return { status: 'loaded', repaired: state.cafeRepaired };
     } catch (err) {
       if (err.future) {
         this.enabled = false;   // never overwrite a save written by a newer version

@@ -81,6 +81,7 @@ export class Game {
 
   /** Completes every finished job. Call regularly (each frame); also catches up after a long pause. */
   tick() {
+    this.cafe?.tick();
     const now = this.clock();
     for (const [station, job] of Object.entries(this.jobs)) {
       if (job.startedAt > now) job.startedAt = now;   // device clock moved backwards: restart the countdown from now, never stall
@@ -96,6 +97,7 @@ export class Game {
   /** Plain snapshot of everything that must survive a reload. */
   exportState() {
     return {
+      ...(this.cafe ? { cafe: this.cafe.exportState() } : {}),
       gold: this.player.gold,
       ingredients: { ...this.ingredients },
       products: { ...this.products },
@@ -109,6 +111,7 @@ export class Game {
     this.ingredients = { ...state.ingredients };
     this.products = { ...state.products };
     this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, j]) => [st, { product: j.product, startedAt: j.startedAt, duration: this.productsDef[j.product].time }]));
+    this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
 

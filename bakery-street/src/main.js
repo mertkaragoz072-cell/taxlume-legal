@@ -1,6 +1,8 @@
 // Bootstrap: canvas sizing, main loop, pointer input and UI wiring.
 import { DESIGN, PLAYER } from './config.js';
 import { Game } from './game/game.js';
+import { Cafe } from './game/customers.js';
+import { createOrderBar } from './ui/orders.js';
 import { SaveManager, safeStorage } from './game/save.js';
 import { InteriorScene } from './scene/interior-scene.js';
 import { createPanels } from './ui/panels.js';
@@ -19,6 +21,7 @@ const ctx = canvas.getContext('2d');
 const toast = document.getElementById('toast');
 
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
+const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
 const saveWarn = document.getElementById('saveWarn');
@@ -55,6 +58,7 @@ function go(id) {
     scene = target;
     stage.classList.toggle('in-interior', id === 'interior');
     scene.resize(view);
+    if (id === 'interior') interior.snap();   // the interior is not updated while hidden: place customers where they should be
     fade.classList.remove('on');
     switching = false;
   }, 240);
@@ -95,6 +99,10 @@ canvas.addEventListener('pointerup', (e) => {
     if (hit === 'bakery') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('interior'), 260); }
   } else if (!hit) {
     panels.close();
+  } else if (hit.startsWith('customer:')) {
+    const r = cafe.deliverToCustomer(+hit.slice(9));
+    if (r.ok) showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400);
+    else showToast(toast, r.message, 2400);
   } else {
     const area = AREAS.find((a) => a.id === hit);
     if (area.panel) { interior.select(area.id); panels.open(area.panel, area.x + area.w / 2 > 700 ? 'left' : 'right'); }
@@ -117,6 +125,10 @@ createNav(document.getElementById('nav'), {
   },
 });
 document.getElementById('back').addEventListener('click', () => go('street'));
+const orderBar = createOrderBar(document.getElementById('orderBar'), game, cafe, {
+  onWarn: (msg) => showToast(toast, msg, 2400),
+  onSale: (r) => showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400),
+});
 game.on('change', () => hud.setGold(game.gold));
 saves.attach(window);
 saveWarn.addEventListener('click', () => { saveWarn.hidden = true; });   // tap to dismiss; it returns if a save fails again
@@ -128,6 +140,7 @@ function frame(now) {
   game.tick();
   scene.update(dt);
   panels.tick(dt);
+  orderBar.tick(dt);
   scene.render(ctx);
   requestAnimationFrame(frame);
 }
@@ -153,5 +166,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, game, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, game, cafe, go }; // handy for debugging / tests
 });

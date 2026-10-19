@@ -185,3 +185,20 @@ body {
   padding: calc(var(--u) * 1.2) calc(var(--u) * 2.6); border-radius: calc(var(--u) * 3); background: #fde0dc; color: #8a1f1a; border: calc(var(--u) * .4) solid #c9594a;
   font-size: calc(var(--u) * 2.6); box-shadow: 0 calc(var(--u) * .5) 0 #7a2a20; }
 #saveWarn[hidden] { display: none; }
+
+/* ---------- Customers: order strip ---------- */
+#orderBar { position: absolute; left: calc(var(--u) * 21 + var(--safe-l)); bottom: calc(var(--u) * 1.4 + var(--safe-b)); z-index: 19; display: none;
+  align-items: flex-end; flex-wrap: wrap-reverse; gap: calc(var(--u) * 1); max-width: calc(52vw - var(--u) * 22); pointer-events: none; }
+.in-interior #orderBar { display: flex; }
+#orderBar > * { pointer-events: auto; }
+.ostat { display: flex; gap: calc(var(--u) * 1.2); align-items: center; height: calc(var(--u) * 7.6); padding: 0 calc(var(--u) * 2); border-radius: calc(var(--u) * 3.8);
+  background: linear-gradient(var(--cream-a), var(--cream-b)); border: calc(var(--u) * .4) solid var(--edge); box-shadow: 0 calc(var(--u) * .4) 0 var(--shadow); font-size: calc(var(--u) * 2.8); white-space: nowrap; }
+.ochip { appearance: none; cursor: pointer; font: inherit; color: var(--ink); position: relative; display: flex; align-items: center; gap: calc(var(--u) * .8);
+  height: calc(var(--u) * 7.6); padding: 0 calc(var(--u) * 1.6) calc(var(--u) * .8); border-radius: calc(var(--u) * 2.2);
+  background: linear-gradient(#f2ffe4, #cfeeb0); border: calc(var(--u) * .4) solid #3fa63a; box-shadow: 0 calc(var(--u) * .4) 0 #1f6a25; font-size: calc(var(--u) * 2.8); overflow: hidden; }
+.ochip:active { transform: translateY(calc(var(--u) * .3)); }
+.ochip .oi { font-size: calc(var(--u) * 4); line-height: 1; }
+.ochip.lack { background: linear-gradient(#ffeceb, #f6c6c0); border-color: #d9665a; box-shadow: 0 calc(var(--u) * .4) 0 #8a2f26; }
+.ochip .pb { position: absolute; left: calc(var(--u) * .6); right: calc(var(--u) * .6); bottom: calc(var(--u) * .3); height: calc(var(--u) * .7); background: rgba(60,40,20,.25); border-radius: 99px; overflow: hidden; }
+.ochip .pb u { display: block; height: 100%; background: #3fa63a; text-decoration: none; }
+.ochip.lack .pb u { background: #d9665a; }

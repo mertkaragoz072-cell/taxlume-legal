@@ -3,6 +3,7 @@ import { DESIGN } from '../config.js';
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp } from '../util.js';
 import { AREAS, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
 import { formatTime } from '../game/game.js';
+import { CustomerLayer } from './interior-customers.js';
 
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
@@ -16,6 +17,7 @@ export class InteriorScene {
     this.selected = null;       // area id whose panel is open
     this.pops = [];             // floating "+1 Ekmek" texts
     this.view = null;
+    this.customers = new CustomerLayer(game, game.cafe);
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: `+1 ${game.productsDef[product].icon}`, life: 1 });
@@ -24,12 +26,15 @@ export class InteriorScene {
 
   resize(view) { this.view = view; }
 
-  hitTest(x, y) { return areaAt(x, y)?.id ?? null; }
+  /** Customers (their order bubbles) take priority over the tables and machines they stand in front of. */
+  hitTest(x, y) { return this.customers.hitTest(x, y) ?? areaAt(x, y)?.id ?? null; }
+  snap() { this.customers.snap(); }
   press(on, x, y) { this.pressedId = on ? this.hitTest(x, y) : null; }
   select(id) { this.selected = id; }
 
   update(dt) {
     this.t += dt;
+    this.customers.update(dt);
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
   }
@@ -50,6 +55,7 @@ export class InteriorScene {
       ctx.restore();
     }
     for (const a of AREAS) this.overlay(ctx, a);
+    this.customers.draw(ctx, t);
 
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
@@ -89,12 +95,16 @@ export class InteriorScene {
     ctx.strokeStyle = 'rgba(60,28,6,.35)'; ctx.lineWidth = 2;
     for (let y = FLOOR_Y + 36; y < yBot; y += 44 + (y - FLOOR_Y) * 0.05) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke(); }
     for (let y = FLOOR_Y, row = 0; y < yBot; y += 44, row++) for (let x = x0 - (x0 % 180) + (row % 2) * 90; x < x0 + w; x += 180) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 44); ctx.stroke(); }
+    // entrance mat on the right: customers walk in from here
+    rrect(ctx, 1235, 692, 200, 52, 10); paint(ctx, vgrad(ctx, 692, 744, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
+    label(ctx, '▶ Giriş', 1335, 735, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#f6dd9a', lw: 3 });
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, FLOOR_Y + 40, [[0, 'rgba(40,16,4,.4)'], [1, 'rgba(40,16,4,0)']]);
     ctx.fillRect(x0, FLOOR_Y, w, 40);
   }
 
   /** Name tag + progress bar over each area. */
   overlay(ctx, a) {
+    if (a.id.startsWith('table') && this.game.cafe?.tableOwner(+a.id.slice(5) - 1)) return;   // the order bubble takes the label's place
     const cx = a.x + a.w / 2;
     const sel = this.selected === a.id;
     const text = a.label;

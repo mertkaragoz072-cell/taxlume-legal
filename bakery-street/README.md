@@ -32,6 +32,9 @@ Telefonu yatay tutun (dikeyde "yatay çevirin" uyarısı görünür).
 | `src/game/game.js` | Üretim / stok / altın mantığı (DOM'suz, Node'da test edilir) |
 | `src/scene/interior-scene.js` · `interior-layout.js` | Fırın & Kafe iç mekânı ve alan yerleşimi |
 | `src/ui/panels.js` | Üretim, vitrin (satış) ve depo (malzeme alma) paneli |
+| `src/game/customers.js` | Müşteri, masa ve sipariş mantığı (DOM'suz, testli) |
+| `src/scene/interior-customers.js` | Müşterilerin sahnedeki görünümü (yürüme, balon) |
+| `src/ui/orders.js` | Sol alttaki sipariş çubuğu (sayaçlar + teslim butonları) |
 | `tests/game.test.js` | Mantık testleri (`npm test`) |
 
 ## Çalışan özellikler
@@ -83,3 +86,14 @@ Her işlemden sonra (üretim başlatma, tamamlama, satın alma, satış) otomati
 Güvenlik: kayıt anlık bir görüntüdür (malzeme düşme + üretim aynı anda yazılır), bu yüzden bir üretim iki kez tamamlanamaz ve malzeme iki kez düşmez. Yazma hatasında oyun devam eder, kırmızı bir uyarı gösterilir ve sonraki işlemde yeniden denenir. Bozuk kayıt `bakery-street:save.corrupt` anahtarına yedeklenir ve oyuncuya bildirilir; yedeklenemezse veya kayıt daha yeni sürümdense üzerine yazılmaz. Başka sekmede yapılan kayıt otomatik alınır.
 
 Bilinen sınır: cihaz saati ileri alınırsa üretim hızlanır (sunucu olmadığı için engellenemez). Saat geri alınırsa üretim durmaz, geri sayım şimdiden yeniden başlar.
+
+## Adım 3: müşteri, sipariş ve satış
+
+- **Müşteriler** `src/data/economy.js` içindeki `CAFE` ayarına göre 14–26 sn arayla gelir (ilk müşteri ~4 sn sonra). 3 masa vardır; boş masa yoksa en fazla 3 kişi girişte sırada bekler (⏳), masa boşalınca sırayla oturur. Sabırları biterse (kuyrukta 45 sn, sipariş için 100 sn) ödemeden ayrılır, siparişi iptal olur, masa boşalır.
+- **Sipariş:** oturan müşteri ekmek, kruvasan, pasta veya kahveden birini ister (ağırlıklar ayarlanabilir). Her siparişte ürün, o anki fiyat ve durum (`open` / `paid` / `cancelled`) tutulur. Müşterinin üstünde ürün + fiyat + sabır çubuğu balonu görünür; stokta yoksa kırmızı ve "stok yok" yazar.
+- **Satış:** müşteriye (veya sol alttaki sipariş çubuğundaki düğmeye) dokununca teslim edilir: stok −1, altın +fiyat, sipariş `paid`, müşteri ayrılır, masa boşalır. Stok yoksa satış olmaz ("Stokta Ekmek yok. Önce üret."). Bu tek adımda yapılır; aynı sipariş ikinci kez satılamaz/ödenmez.
+- **Görünürlük:** sol altta `👥 müşteri · ⏳ bekleyen · 🧾 açık sipariş` sayaçları ve her sipariş için bir düğme (açık yeşil = stok var, kırmızı = stok yok). Bu çubuk yan panellerin dışında olduğu için üretim paneli açıkken de kullanılabilir.
+- **Kayıt (sürüm 2):** müşteriler, masalar ve siparişler de kaydedilir. Uygulama kapalıyken müşteri simülasyonu çalışmaz ve beklerken geçen süre sabra yazılmaz; açılışta tutarsız kayıtlar (geçersiz ürün, aynı masada iki kişi, ödenmiş siparişi bekleyen müşteri, sahipsiz sipariş…) onarılır ve oyuncuya bildirilir. Sürüm 1 kayıtları boş kafe ile yüklenir.
+- **Geçici görseller:** müşteriler mevcut yürüme sprite'larıdır (oturma karesi yok, masanın yanında ayakta dururlar).
+
+Test: `npm test` (50 test).

@@ -8,6 +8,10 @@ export const MANIFEST = {
   bakery: 'assets/bakery.webp',   // final art (transparent WebP); the procedural drawing is the fallback
   bookshop: 'assets/bookshop.webp',
   market: 'assets/market.webp',
+  'char-girl_basket': 'assets/characters/girl_basket.webp',
+  'char-boy_cap': 'assets/characters/boy_cap.webp',
+  'char-girl_red': 'assets/characters/girl_red.webp',
+  'char-grandma': 'assets/characters/grandma.webp',
   'char-boy_backpack': 'assets/characters/boy_backpack.webp',   // walk-cycle strips
   'char-girl_hat': 'assets/characters/girl_hat.webp',
   'char-oldman': 'assets/characters/oldman.webp',
