@@ -86,6 +86,7 @@ export class InteriorScene {
     ctx.drawImage(img, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
     if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
+    if (a.id === 'upgrades') upgradeCount(ctx, this, dx + w * 0.58, dy + h * 0.775);   // the sign's empty lower panel
     return true;
   }
 
@@ -222,13 +223,18 @@ const ART = {
     rrect(ctx, x + 4, y + 26, w - 8, h - 40, 10); paint(ctx, vgrad(ctx, y + 26, y + h, [[0, '#d9a05a'], [1, '#8a5a2c']]), 3.5);
     rrect(ctx, x + 12, y + 34, w - 24, h - 56, 6); paint(ctx, '#fff3d0', 2);
     label(ctx, '⬆', cx, y + 66, { font: '700 44px sans-serif', fill: '#3fa63a', lw: 4 });
-    const total = Object.values(scene.game.upgrades).reduce((s, n) => s + n, 0), max = Object.keys(scene.game.upgrades).reduce((s, id) => s + scene.game.maxLevel(id), 0);
-    label(ctx, `${total}/${max}`, cx, y + 104, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#6a3a14', lw: 0 });
+    upgradeCount(ctx, scene, cx, y + 104);
   },
   table1: (ctx, a) => drawTable(ctx, a),
   table2: (ctx, a) => drawTable(ctx, a),
   table3: (ctx, a) => drawTable(ctx, a),
 };
+
+/** "bought / total" upgrade levels as small dark text. */
+function upgradeCount(ctx, scene, x, y) {
+  const total = Object.values(scene.game.upgrades).reduce((s, n) => s + n, 0), max = Object.keys(scene.game.upgrades).reduce((s, id) => s + scene.game.maxLevel(id), 0);
+  label(ctx, `${total}/${max}`, x, y, { font: '700 17px "Trebuchet MS", sans-serif', fill: '#6a3a14', lw: 0 });
+}
 
 /** Stock icons in the showcase glass: one small pile per product in stock. */
 function showcaseStock(ctx, a, scene, art = null) {

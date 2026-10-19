@@ -29,7 +29,7 @@ for (const name of PROPS) MANIFEST[`prop-${name}`] = `assets/props/${name}.webp`
 // Cafe interior art is drop-in: a name listed in INTERIOR_ART is loaded from assets/interior/<name>.webp and used by the scene instead of
 // its own drawing. Names that are not listed are never requested (no 404 noise). Possible names: wall, floor, oven, counter, showcase,
 // coffee, storage, upgrades, table, chair (see assets/interior/README.md).
-export const INTERIOR_ART = ['oven', 'counter', 'showcase', 'coffee', 'storage'];
+export const INTERIOR_ART = ['oven', 'counter', 'showcase', 'coffee', 'storage', 'upgrades'];
 for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`;
 
 const images = {};
