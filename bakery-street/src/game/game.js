@@ -6,7 +6,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, buildingsOpened: 0, buildingUpgrades: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, buildingsOpened: 0, buildingUpgrades: 0 };
 }
 
 export class Game {
@@ -81,7 +81,20 @@ export class Game {
     return up ? this.effect(up) : 1;
   }
   /** Production time of a product with the current speed upgrade (seconds). */
-  duration(id) { return Math.max(1, Math.round(this.productsDef[id].time * this.effect('productionSpeed') * 10) / 10); }
+  duration(id) { return Math.max(1, Math.round(this.productsDef[id].time * this.effect('productionSpeed') * (1 - this.bonus('productionTime')) * 10) / 10); }
+
+  // ---- research bonuses (src/game/research.js): each one is applied in exactly one place below -------------------
+  /** Current bonus fraction of a research effect (0 when there is no research system or nothing bought). */
+  bonus(effect) { return this.research?.bonus(effect) ?? 0; }
+  /** Gold earned by selling one unit whose base price is `base` (Usta Satıcı). */
+  saleIncome(base) { return Math.round(base * (1 + this.bonus('saleIncome'))); }
+  /** Gold refunded when starting `id`: a share of the consumed ingredients' value (Verimli Üretim). */
+  ingredientRebate(id) {
+    const b = this.bonus('ingredientCost');
+    if (!b) return 0;
+    const value = Object.entries(this.productsDef[id].ingredients).reduce((sum, [ing, n]) => sum + n * this.ingredientsDef[ing].price, 0);
+    return Math.ceil(value * b);
+  }
   /** How many finished units of each product the showcase can hold. */
   showcaseLimit() { return this.effect('showcaseCapacity'); }
   /** Units of `id` in stock plus units still being made (these will land in the showcase). */
@@ -116,9 +129,11 @@ export class Game {
     if (block) return { ok: false, ...block };
     const def = this.productsDef[id];
     for (const [ing, need] of Object.entries(def.ingredients)) this.ingredients[ing] -= need;
+    const rebate = this.ingredientRebate(id);
+    this.player.gold += rebate;
     (this.jobs[def.station] ??= []).push({ product: id, startedAt: this.clock(), duration: this.duration(id) });
-    this.emit('change', { type: 'start', product: id });
-    return { ok: true };
+    this.emit('change', { type: 'start', product: id, rebate });
+    return rebate ? { ok: true, rebate } : { ok: true };
   }
 
   /** Completes every finished job. Call regularly (each frame); also catches up after a long pause. */
@@ -148,7 +163,10 @@ export class Game {
 
   // ---- upgrades: buying -------------------------------------------------------------------------
   /** Gold price of the next level, or null at the maximum level. */
-  nextCost(id) { const l = this.upgrades[id]; return l >= this.maxLevel(id) ? null : this.upgradesDef[id].costs[l]; }
+  nextCost(id) {
+    const l = this.upgrades[id];
+    return l >= this.maxLevel(id) ? null : Math.round(this.upgradesDef[id].costs[l] * (1 - this.bonus('upgradeCost')));   // Usta Ekipmanları
+  }
 
   /**
    * Buys the next level of an upgrade. `expectedLevel` is the level the player saw when pressing the button: if the level
@@ -163,7 +181,7 @@ export class Game {
     if (requestId != null && this.handledRequests.has(requestId)) return bad('duplicate', 'Bu satın alma zaten uygulandı.');
     if (expectedLevel != null && expectedLevel !== level) return bad('stale', `${def.name} zaten seviye ${level}. Satın alma tekrarlanmadı.`);
     if (level >= this.maxLevel(id)) return bad('max', `${def.name} en yüksek seviyede.`);
-    const cost = def.costs[level];
+    const cost = this.nextCost(id);
     if (this.player.gold < cost) return bad('gold', `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.`);
     this.player.gold -= cost;
     this.upgrades[id] = level + 1;
@@ -190,6 +208,7 @@ export class Game {
       ...(this.daily ? { daily: this.daily.exportState() } : {}),
       ...(this.progression ? { progression: this.progression.exportState() } : {}),
       ...(this.town ? { town: this.town.exportState() } : {}),
+      ...(this.research ? { research: this.research.exportState() } : {}),
     };
   }
 
@@ -206,6 +225,7 @@ export class Game {
     this.daily?.importState(state.daily);
     this.progression?.importState(state.progression);
     this.town?.importState(state.town);
+    this.research?.importState(state.research);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -224,6 +244,7 @@ export class Game {
       daily: { lastDate: null, day: 0 },
       progression: { level: 1, xp: 0, rewardedLevel: 1 },
       town: { opened: [], levels: {} },
+      research: { levels: {} },
     };
   }
 
@@ -278,7 +299,7 @@ export class Game {
     const def = this.productsDef[id];
     if (!def || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satış.' };
     if (this.products[id] < qty) return { ok: false, reason: 'stock', message: `Stokta yeterli ${def.name} yok.` };
-    const income = def.price * qty;
+    const income = this.saleIncome(def.price) * qty;
     this.products[id] -= qty;
     this.player.gold += income;
     this.recordSold(id, qty);

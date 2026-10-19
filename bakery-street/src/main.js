@@ -21,6 +21,8 @@ import { StreetScene } from './scene/street-scene.js';
 import { bakery } from './buildings/bakery.js';
 import { bookshop } from './buildings/bookshop.js';
 import { market } from './buildings/market.js';
+import { Research } from './game/research.js';
+import { createResearchPanel } from './ui/research.js';
 import { Town } from './game/town.js';
 import { createTownPanel } from './ui/town.js';
 import { Progression } from './game/progression.js';
@@ -46,13 +48,15 @@ unlockEvents.forEach((ev) => window.addEventListener(ev, unlockAudio));
 
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
 const progression = new Progression(game);        // player level and XP (src/game/progression.js)
-const town = new Town(game);                       // building states (src/game/town.js)
+const town = new Town(game);
+const research = new Research(game);              // Bookshop research bonuses (src/game/research.js)                       // building states (src/game/town.js)
 const quests = new Quests(game);
 const daily = new DailyReward(game);              // daily reward cycle (src/game/daily.js)                    // quest progress comes from game.stats (src/game/quests.js)
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
 const marketScene = new MarketScene();
+const bookshopScene = new MarketScene('bookshop', 'bookshop');   // same landscape layout as the Market screen
 const saveWarn = document.getElementById('saveWarn');
 const saves = new SaveManager(game, safeStorage(window), {
   onProblem: ({ kind, message }) => {
@@ -81,6 +85,11 @@ const marketPanel = createMarketPanel(document.getElementById('marketPanel'), ga
   onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${cost} altın`, 1600),
 });
 const backBtn = document.getElementById('back');
+const researchPanel = createResearchPanel(document.getElementById('researchPanel'), game, research, town, {
+  onBought: ({ def, level, cost }) => { showToast(toast, `${def.icon} ${def.name} seviye ${level} · ${def.describe(def.values[level])} · −${cost} altın`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onWarn: (msg) => warn(msg, 3200),
+});
 const questPanel = createQuestPanel(document.getElementById('questPanel'), game, quests, {
   onClaimed: ({ quest, reward }) => showToast(toast, `🎁 ${quest.name}: ödül alındı${reward.gold ? ` · +${reward.gold} altın` : ''}`, 2200),
   onWarn: (msg) => warn(msg, 2400),
@@ -125,7 +134,7 @@ game.on('change', (e) => {                            // sounds and vibration fo
   switch (e?.type) {
     case 'sell': case 'sale': audio.sfx('coin'); buzz(25); break;
     case 'buy': audio.sfx('buy'); break;
-    case 'town': case 'townLevel': break;       // announced by the town panel's own toast and sound
+    case 'town': case 'townLevel': case 'research': break;       // announced by the town panel's own toast and sound
     case 'upgrade': audio.sfx('claim'); buzz([30, 40, 30]); break;
     case 'quest': case 'daily': audio.sfx('claim'); buzz(40); break;
     case 'complete': audio.sfx('done'); buzz(20); break;
@@ -136,10 +145,10 @@ game.on('change', (e) => {                            // sounds and vibration fo
 game.on('change', refreshBadge);
 game.on('questComplete', ({ quest }) => showToast(toast, `🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000));
 
-/** Scene switch with a short fade. `id` is 'street', 'interior' or 'market'. */
+/** Scene switch with a short fade. `id` is 'street', 'interior', 'market' or 'bookshop'. */
 let switching = false;
 function go(id) {
-  const target = { street, interior, market: marketScene }[id];
+  const target = { street, interior, market: marketScene, bookshop: bookshopScene }[id];
   if (switching || scene === target) return;
   switching = true;
   fade.classList.add('on');
@@ -149,7 +158,9 @@ function go(id) {
     cafe.setActive(id === 'interior');          // customers only run while the cafe is open
     stage.classList.toggle('in-interior', id === 'interior');
     stage.classList.toggle('in-market', id === 'market');
-    backBtn.textContent = id === 'market' ? '◀ Marketten Çık' : '◀ Sokak';
+    stage.classList.toggle('in-bookshop', id === 'bookshop');
+    backBtn.textContent = id === 'market' ? '◀ Marketten Çık' : id === 'bookshop' ? '◀ Kitapçıdan Çık' : '◀ Sokak';
+    if (id === 'bookshop') researchPanel.show(); else researchPanel.hide();
     if (id === 'market') marketPanel.show(); else marketPanel.hide();
     scene.resize(view);
     if (id === 'interior') interior.snap();   // the interior is not updated while hidden: place customers where they should be
@@ -192,12 +203,8 @@ canvas.addEventListener('pointerup', (e) => {
   if (scene === street) {
     if (hit === 'bakery') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('interior'), 260); }
     else if (hit === 'market') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('market'), 260); }
-    else if (hit === 'bookshop') {
-      street.tapBuilding(hit, p.x, p.y);
-      if (town.isOpen('bookshop')) showToast(toast, '📚 Kitapçı açık — ürünler ve gelir yakında', 2200);
-      else openOverlay(townPanel);                        // closed: show what it takes to open it
-    }
-  } else if (scene === marketScene) {
+    else if (hit === 'bookshop') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('bookshop'), 260); }   // closed: the screen shows the opening conditions
+  } else if (scene === marketScene || scene === bookshopScene) {
     // nothing to tap on the Market backdrop; the shopping list is a DOM panel
   } else if (!hit) {
     panels.close();
@@ -290,5 +297,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, research, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
 });

@@ -5,7 +5,8 @@ import { getImage } from '../assets.js';
 import { vgrad, shadow, glowAt, rrect, paint } from '../util.js';
 
 export class MarketScene {
-  constructor() { this.id = 'market'; this.t = 0; this.view = null; }
+  /** `id` is the scene id and `imageKey` the building art drawn on the left (the Bookshop reuses this layout). */
+  constructor(id = 'market', imageKey = 'market') { this.id = id; this.imageKey = imageKey; this.t = 0; this.view = null; }
   resize(view) { this.view = view; }
   hitTest() { return null; }
   press() {}
@@ -24,7 +25,7 @@ export class MarketScene {
     ctx.strokeStyle = 'rgba(60,28,6,.35)'; ctx.lineWidth = 2;
     for (let y = floor + 40; y < yBot; y += 48) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke(); }
     // the Market building, big on the left
-    const img = getImage('market');
+    const img = getImage(this.imageKey);
     if (img) {
       const h = 520, iw = (img.naturalWidth / img.naturalHeight) * h, x = 250 - iw / 2, y = floor + 70 - h;
       shadow(ctx, x + iw / 2, floor + 62, iw * 0.42, 14, 0.32);

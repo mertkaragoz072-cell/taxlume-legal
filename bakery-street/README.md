@@ -190,3 +190,21 @@ Test: `npm test` (191 test).
 - Yetersiz altın/seviyede işlem engellenir, eksik koşul yazılır, altın düşmez. Açma tek adımdır; açık bina ikinci kez alınamaz, tekrar eden geliştirme dokunuşu reddedilir.
 - Görev "Kasaba büyüyor" (bir bina aç) eklendi; XP, `Progression` üzerinden verilir (seviye atlama ödülleri dahil).
 - Kayıt sürümü 7: `town {opened, levels}`. Eski kayıtlarda yalnızca Fırın ve Market açıktır. Fırın & Kafe ve Market ekonomisi değişmedi.
+
+## Adım 10: Kitapçı araştırma merkezi
+
+Kitapçı kitap satmaz; kalıcı bonus veren bir **araştırma merkezidir** (kitap satışı / stoğu / satın alması yoktur). Sokaktaki Kitapçı'ya dokununca veya Kasaba ekranındaki Kitapçı kartından ("Git" / "Görüntüle") Kitapçı ekranı açılır (Market ile aynı yatay düzen, "◀ Kitapçıdan Çık" ile geri dönülür). Kitapçı kapalıysa ekran açılma koşullarını (seviye, altın) ve "Kitapçı'yı Aç" butonunu gösterir.
+
+Tüm sayılar `src/data/economy.js` → `RESEARCH` tablosundadır (maliyetler `costs`, bonuslar `values`; hepsi 5 seviye). Mantık `src/game/research.js`.
+
+| Araştırma | Etki (5. seviyede) | Nerede uygulanır (tek yer) | Gereken Kitapçı gelişimi |
+|---|---|---|---|
+| Fırıncılık Bilgisi | üretim süresi −%25 | `Game.duration()` (hız yükseltmesiyle çarpılır) | – |
+| Verimli Üretim | malzeme maliyeti −%25 | `Game.startProduction()`: tüketilen malzemelerin altın değerinin payı iade edilir (tarifler tam sayı kalır) | – |
+| Usta Satıcı | satış geliri +%25 | `Game.saleIncome()` (vitrin ve müşteri teslimi; siparişte saklanan fiyat taban fiyat kalır) | – |
+| Kasaba Kültürü | görev XP'si +%50 | `Progression.award('quest')` | 1 |
+| Usta Ekipmanları | Fırın & Kafe yükseltmeleri −%25 | `Game.nextCost()` / `buyUpgrade()` (Kitapçı ve Market fiyatları etkilenmez) | 2 |
+
+Maliyetler: 1.500–30.000 (Fırıncılık), 1.200–26.000 (Verimli Üretim), 2.000–40.000 (Usta Satıcı), 1.800–36.000 (Kasaba Kültürü), 2.500–48.000 (Usta Ekipmanları). Her satın alma XP verir (40 + 20 × seviye). Altın yalnızca başarılı satın almada düşer; tekrar dokunuş ve maksimum seviye reddedilir.
+
+Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0. seviyedir. Açılma durumu Kitapçı'nın (kayıtlı) açık/gelişim seviyesinden türetilir.

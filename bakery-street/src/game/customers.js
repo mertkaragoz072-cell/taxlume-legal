@@ -144,14 +144,15 @@ export class Cafe {
     const def = this.game.productsDef[order.product];
     if (this.game.products[order.product] < 1) return fail('stock', `Stokta ${def.name} yok. Önce üret.`);
     this.game.products[order.product] -= 1;
-    this.game.player.gold += order.price;
+    const income = this.game.saleIncome(order.price);        // order.price stays the base price; the research bonus is applied once, here
+    this.game.player.gold += income;
     this.game.recordSold(order.product, 1);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);
-    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income: order.price, product: order.product });
+    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income, product: order.product });
     this.seatQueued();
-    this.game.emit('change', { type: 'sale', product: order.product, price: order.price });
-    return { ok: true, income: order.price, product: order.product, orderId: order.id, customerId: c.id };
+    this.game.emit('change', { type: 'sale', product: order.product, price: income });
+    return { ok: true, income, product: order.product, orderId: order.id, customerId: c.id };
   }
 
   deliverToCustomer(customerId) {

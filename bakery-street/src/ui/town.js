@@ -27,6 +27,7 @@ export function createTownPanel(root, game, town, { onVisit, onOpened, onDevelop
           body += `<div class="reqs">${reqs(s.next)}</div>`;
           btn = `<button class="go buy${lack ? ' lack' : ' alt'}" data-develop="${id}" data-lv="${lv}">Geliştir<small>${d.levels[lv]}</small></button>`;
         } else btn = '<button class="go" disabled>✓ Tamamlandı</button>';
+        btn = `<div class="btns col"><button class="go" data-visit="${d.scene ?? id}">Git</button>${btn}</div>`;
       }
     } else if (d.comingSoon) {
       body = `<div class="meta">${d.note}</div>`;
@@ -39,6 +40,7 @@ export function createTownPanel(root, game, town, { onVisit, onOpened, onDevelop
       btn = s.status === 'locked'
         ? `<button class="go lack" data-open="${id}">🔒 Kilitli</button>`
         : `<button class="go buy${n.missingGold ? ' lack' : ' alt'}" data-open="${id}">Aç<small>💰 ${fmt(n.gold)}</small></button>`;
+      if (id === 'bookshop') btn = `<div class="btns col"><button class="go" data-visit="bookshop">Görüntüle</button>${btn}</div>`;
     }
     return `<div class="card town ${s.status}" data-b="${id}">
       <div class="ci">${d.icon}</div>

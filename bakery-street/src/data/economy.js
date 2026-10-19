@@ -118,6 +118,7 @@ export const XP = {
   sale: { bread: 3, croissant: 5, cake: 12, coffee: 3 },        // per unit sold (showcase or customer)
   upgrade: { base: 50, perLevel: 25 },                           // base + perLevel * (new upgrade level)
   quest: { default: 40, byId: { produceTen: 80 } },              // per quest reward collected
+  research: { base: 40, perLevel: 20 },                          // base + perLevel * (new research level)
 };
 export const LEVELS = { base: 100, linear: 50, quad: 10, maxLevel: 30 };
 export const LEVEL_REWARD = {
@@ -135,7 +136,7 @@ export const LEVEL_REWARD = {
 export const TOWN = [
   { id: 'bakery', name: 'Fırın & Kafe', icon: '🥐', starter: true, scene: 'interior', note: 'Üretim, müşteriler ve satış' },
   { id: 'market', name: 'Market', icon: '🛒', starter: true, scene: 'market', note: 'Malzeme alışverişi' },
-  { id: 'bookshop', name: 'Kitapçı', icon: '📚', note: 'Gelir ve ürünler yakında', levels: ['Raflar', 'Okuma Köşesi'] },
+  { id: 'bookshop', name: 'Kitapçı', icon: '📚', note: 'Araştırma merkezi: kalıcı bonuslar', levels: ['Raflar', 'Okuma Köşesi'] },
   { id: 'plot', name: 'Boş Arsa', icon: '🏗️', note: 'Yeni işletme yakında', comingSoon: true },
 ];
 export const TOWN_UNLOCKS = {
@@ -144,4 +145,43 @@ export const TOWN_UNLOCKS = {
 };
 export const TOWN_REWARDS = {
   bookshop: { open: { xp: 150 }, levels: [{ xp: 100 }, { xp: 200 }] },
+};
+
+/**
+ * Bookshop research centre: permanent bonuses bought with gold. Everything tunable lives here.
+ *  - costs[i]  : price of level i+1;  values[i]: bonus fraction at level i (values[0] = 0, so values.length = costs.length + 1)
+ *  - effect    : which system reads it (each effect belongs to exactly one research, and is applied in exactly one place):
+ *      productionTime  -> Game.duration()        production time is shortened by this fraction
+ *      ingredientCost  -> Game.startProduction() this fraction of the ingredients' gold value is refunded (recipes stay whole units)
+ *      saleIncome      -> Game.saleIncome()      gold from every sale (showcase and customers) is increased by this fraction
+ *      questXp         -> Progression.award()    XP from quest rewards is increased by this fraction
+ *      upgradeCost     -> Game.nextCost()        café upgrade prices are reduced by this fraction
+ *  - bookshopLevel: Bookshop development level (Town) needed before this research can be bought (0 = as soon as the Bookshop is open)
+ */
+export const RESEARCH = {
+  bakingKnowledge: {
+    name: 'Fırıncılık Bilgisi', icon: '📖', effect: 'productionTime', bookshopLevel: 0,
+    costs: [1500, 3500, 7500, 15000, 30000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],
+    describe: (v) => (v ? `Üretim süresi %${Math.round(v * 100)} kısalır` : 'Bonus yok'),
+  },
+  efficientProduction: {
+    name: 'Verimli Üretim', icon: '🧺', effect: 'ingredientCost', bookshopLevel: 0,
+    costs: [1200, 3000, 6500, 13000, 26000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],
+    describe: (v) => (v ? `Malzeme maliyeti %${Math.round(v * 100)} azalır` : 'Bonus yok'),
+  },
+  masterSeller: {
+    name: 'Usta Satıcı', icon: '🏷️', effect: 'saleIncome', bookshopLevel: 0,
+    costs: [2000, 5000, 10000, 20000, 40000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],
+    describe: (v) => (v ? `Satış geliri %${Math.round(v * 100)} artar` : 'Bonus yok'),
+  },
+  townCulture: {
+    name: 'Kasaba Kültürü', icon: '🎭', effect: 'questXp', bookshopLevel: 1,
+    costs: [1800, 4500, 9000, 18000, 36000], values: [0, 0.10, 0.20, 0.30, 0.40, 0.50],
+    describe: (v) => (v ? `Görev XP'si %${Math.round(v * 100)} artar` : 'Bonus yok'),
+  },
+  masterEquipment: {
+    name: 'Usta Ekipmanları', icon: '🛠️', effect: 'upgradeCost', bookshopLevel: 2,
+    costs: [2500, 6000, 12000, 24000, 48000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],
+    describe: (v) => (v ? `Fırın & Kafe geliştirmeleri %${Math.round(v * 100)} ucuzlar` : 'Bonus yok'),
+  },
 };

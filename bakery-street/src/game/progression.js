@@ -40,12 +40,17 @@ export class Progression {
       case 'sale': return d.sale[key] ?? 0;
       case 'upgrade': return d.upgrade.base + d.upgrade.perLevel * key;
       case 'quest': return d.quest.byId?.[key] ?? d.quest.default;
+      case 'research': return d.research ? d.research.base + d.research.perLevel * key : 0;
       default: return 0;
     }
   }
 
   /** Convenience used by the game: award the configured XP for an action (qty = number of units). */
-  award(kind, key, qty = 1) { return this.gain(this.xpFor(kind, key) * qty); }
+  award(kind, key, qty = 1) {
+    let xp = this.xpFor(kind, key) * qty;
+    if (kind === 'quest') xp = Math.round(xp * (1 + this.game.bonus('questXp')));   // Kasaba Kültürü research
+    return this.gain(xp);
+  }
 
   /**
    * Adds XP and levels up as often as needed (several levels in one go are supported). Every newly reached level pays its

@@ -9,7 +9,7 @@ export function createOrderBar(root, game, cafe, { onWarn, onSale }) {
     const n = cafe.counts();
     const chips = cafe.customers.filter((c) => c.state === 'seated').map((c) => {
       const o = cafe.orderOf(c), d = game.productsDef[o.product];
-      return `<button class="ochip" data-order="${o.id}" data-p="${o.product}" title="${d.name} · ${o.price} altın"><span class="oi">${d.icon}</span><b>${o.price}</b><i class="pb"><u></u></i></button>`;
+      return `<button class="ochip" data-order="${o.id}" data-p="${o.product}" title="${d.name} · ${game.saleIncome(o.price)} altın"><span class="oi">${d.icon}</span><b>${game.saleIncome(o.price)}</b><i class="pb"><u></u></i></button>`;
     }).join('');
     root.innerHTML = `<div class="ostat" title="Müşteri · bekleyen · açık sipariş" aria-label="${n.customers} müşteri, ${n.queued} bekleyen, ${n.openOrders} sipariş"><span>👥 ${n.customers}</span><span>⏳ ${n.queued}</span><span>🧾 ${n.openOrders}</span></div>${chips}`;
     update();
