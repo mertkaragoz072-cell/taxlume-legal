@@ -124,7 +124,7 @@ export class StreetScene {
     return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h ? 'bakery' : null;
   }
 
-  press(on) { this.pressed = on; }
+  press(on, x, y) { this.pressed = on && this.hitTest(x, y) === 'bakery'; }
 
   /** Visual feedback for a building tap. A cafe-interior scene can be hooked in via the `onEnter` callback. */
   tapBuilding(id, x, y) {

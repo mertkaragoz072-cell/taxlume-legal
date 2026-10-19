@@ -28,6 +28,11 @@ Telefonu yatay tutun (dikeyde "yatay çevirin" uyarısı görünür).
 | `src/buildings/bakery.js` · `bookshop.js` · `market.js` | Üç bina (her biri kendi `draw`, `bounds`, `lights`) |
 | `src/characters/person.js` · `crowd.js` | Karakter çizimi, yürüyenler, garson, masadaki müşteriler |
 | `src/ui/hud.js` · `nav.js` · `icons.js` · `toast.js` | Üst arayüz, 4 butonlu alt menü, SVG ikonlar, bildirim |
+| `src/data/economy.js` | **Tüm denge sayıları**: malzemeler, ürünler (süre, tarif, fiyat), istasyonlar, başlangıç stoğu |
+| `src/game/game.js` | Üretim / stok / altın mantığı (DOM'suz, Node'da test edilir) |
+| `src/scene/interior-scene.js` · `interior-layout.js` | Fırın & Kafe iç mekânı ve alan yerleşimi |
+| `src/ui/panels.js` | Üretim, vitrin (satış) ve depo (malzeme alma) paneli |
+| `tests/game.test.js` | Mantık testleri (`npm test`) |
 
 ## Çalışan özellikler
 
@@ -52,3 +57,15 @@ Kafe iç mekânı, üretim sistemi, market satın alma ve şehir geliştirme bu 
 - Kaldırım taşları eğimli/lekeli, ağaç gölgeleri, çiçekler gerçek taç yapraklı, ayrıntılı saksı/bank/lamba.
 - Alt menü ~%15 alçaltıldı, üst çubuk sıkılaştırıldı (667×375 … 2400×1080 ve 1024×768'de hiçbir öğe taşmıyor).
 - Fırın & Kafe dokunma geri bildirimi: yaylanma + parlama + genişleyen halka + kıvılcım + bildirim.
+
+## Adım 2: iç mekân ve üretim
+
+- Sokakta Fırın & Kafe'ye (veya alt menüdeki Fırın & Kafe'ye) dokununca kısa bir geçişle iç mekân açılır; sol altta **◀ Sokak** ile dönülür. Diğer binalar değişmedi.
+- İç mekânda ayrı alanlar: **Fırın**, **Üretim Tezgâhı**, **Satış Vitrini**, **Kahve Makinesi**, **Depo** ve 3 **Masa** (masalar yalnızca yerleşim; müşteri sistemi sonraki adım).
+- Ürünler: Ekmek, Kruvasan, Pasta (fırın), Kahve (kahve makinesi). Her makine aynı anda tek iş yapar. Üretim başlarken malzeme düşer, süre bitince ürün stoğa girer; kalan süre hem panelde hem makinenin üstünde görünür.
+- Malzeme yetmezse veya makine meşgulse üretim başlamaz, açık bir uyarı çıkar. Depo'dan malzeme altınla alınır; vitrinden ürün satılınca altın artar. Altın üst çubukta anlık güncellenir.
+- Sayıları değiştirmek için yalnızca `src/data/economy.js`.
+
+Test: `npm test` (14 mantık testi, bağımlılık yok). Oynanış akışı tarayıcıda Playwright ile de denendi.
+
+Henüz yok (bilerek): müşteri yapay zekâsı, otomatik satış, kasaba genişletme, yükseltmeler, kayıt/yükleme (ilerleme sayfa yenilenince sıfırlanır). İç mekân görselleri geçici, kodla çizilmiştir.

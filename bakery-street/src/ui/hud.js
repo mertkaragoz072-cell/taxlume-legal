@@ -10,7 +10,7 @@ export function createHud(root, { onButton, onAdd }) {
       <div class="avatar">${ICONS.avatar}</div>
       <div class="level"><b>Lv. ${PLAYER.level}</b><div class="xp"><i style="width:${PLAYER.xp * 100}%"></i></div></div>
     </div>
-    ${res('coin', fmt(PLAYER.gold), 'gold')}
+    ${res('coin', fmt(PLAYER.gold), 'gold', '', 'goldText')}
     ${res('gem', fmt(PLAYER.gems), 'gems')}
     ${res('bolt', `${PLAYER.energy}/${PLAYER.maxEnergy}`, 'energy', 'energy')}
     <div class="spacer"></div>
@@ -21,8 +21,10 @@ export function createHud(root, { onButton, onAdd }) {
     const tile = e.target.closest('.tile'); if (tile) onButton(tile.dataset.id);
     const plus = e.target.closest('.plus'); if (plus) onAdd(plus.dataset.res);
   });
+  const goldEl = root.querySelector('#goldText');
+  return { setGold: (n) => { goldEl.textContent = fmt(n); } };
 }
 
-function res(icon, value, id, cls = '') {
-  return `<div class="pill res ${cls}">${ICONS[icon]}<span>${value}</span><button class="plus" data-res="${id}" aria-label="Ekle">+</button></div>`;
+function res(icon, value, id, cls = '', spanId = '') {
+  return `<div class="pill res ${cls}">${ICONS[icon]}<span${spanId ? ` id="${spanId}"` : ''}>${value}</span><button class="plus" data-res="${id}" aria-label="Ekle">+</button></div>`;
 }
