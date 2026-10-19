@@ -4,6 +4,7 @@ import { loadAssets } from './assets.js';
 import { StreetScene } from './scene/street-scene.js';
 import { bakery } from './buildings/bakery.js';
 import { bookshop } from './buildings/bookshop.js';
+import { market } from './buildings/market.js';
 import { createHud } from './ui/hud.js';
 import { createNav } from './ui/nav.js';
 import { showToast } from './ui/toast.js';
@@ -83,6 +84,7 @@ try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* only
 loadAssets().then(() => {
   bakery.configure();
   bookshop.configure();
+  market.configure();
   scene = street;
   layout();
   requestAnimationFrame(frame);

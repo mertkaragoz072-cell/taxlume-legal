@@ -3,6 +3,7 @@ import { DESIGN } from '../config.js';
 import { rng } from '../util.js';
 import { bakery } from '../buildings/bakery.js';
 import { bookshop } from '../buildings/bookshop.js';
+import { market } from '../buildings/market.js';
 import {
   planter, lampPost, chalkboard, crate, sack, milkBottle, eggCrate, barrel, bush, tiledRoof, brickWall, awning, shopWindow, beam,
 } from './parts.js';
@@ -13,7 +14,7 @@ const B = DESIGN.baseY;
 /** Street lamps flanking the bakery; with the final art they sit behind its umbrellas. */
 export function drawLamps(ctx) {
   const art = bakery.usesAsset;
-  return [lampPost(ctx, art ? 374 : 392, B + 24, 290), lampPost(ctx, art ? 1078 : 1020, B + 24, 290)];
+  return [lampPost(ctx, art ? 374 : 392, B + 24, 290), lampPost(ctx, art ? 1030 : 1020, B + 24, 290)];
 }
 
 export function drawMidground(ctx, v) {
@@ -33,19 +34,21 @@ export function drawMidground(ctx, v) {
     planter(ctx, 250, B + 20, 44, 26, { seed: 306, kind: 'pot', bushH: 38 });
   }
 
-  // market goods
-  const my = B + 14;
-  barrel(ctx, 1072, my + 6, 40, 46);
-  crate(ctx, 1066, my - 46, 52, 24, 'greens', 311);
-  crate(ctx, 1118, my, 54, 26, 'oranges', 312);
-  crate(ctx, 1176, my, 54, 26, 'apples', 313);
-  crate(ctx, 1234, my, 54, 26, 'tomato', 314);
-  crate(ctx, 1290, my + 4, 50, 22, 'pears', 315);
-  crate(ctx, 1176, my - 26, 50, 22, 'lemons', 316);
-  eggCrate(ctx, 1122, my - 26, 46, 18, 317);
-  for (const [x, s] of [[1106, 1], [1120, 1.05], [1134, 1]]) milkBottle(ctx, x, my - 44, s);
-  sack(ctx, 1338, my + 10, 58, 62);
-  sack(ctx, 1368, my + 12, 48, 50);
-  planter(ctx, 1244, my + 30, 32, 24, { seed: 318, kind: 'pot', bushH: 30 });
+  if (!market.usesAsset) { // the final market art already includes its crates, sacks and barrel
+    // market goods
+    const my = B + 14;
+    barrel(ctx, 1072, my + 6, 40, 46);
+    crate(ctx, 1066, my - 46, 52, 24, 'greens', 311);
+    crate(ctx, 1118, my, 54, 26, 'oranges', 312);
+    crate(ctx, 1176, my, 54, 26, 'apples', 313);
+    crate(ctx, 1234, my, 54, 26, 'tomato', 314);
+    crate(ctx, 1290, my + 4, 50, 22, 'pears', 315);
+    crate(ctx, 1176, my - 26, 50, 22, 'lemons', 316);
+    eggCrate(ctx, 1122, my - 26, 46, 18, 317);
+    for (const [x, s] of [[1106, 1], [1120, 1.05], [1134, 1]]) milkBottle(ctx, x, my - 44, s);
+    sack(ctx, 1338, my + 10, 58, 62);
+    sack(ctx, 1368, my + 12, 48, 50);
+    planter(ctx, 1244, my + 30, 32, 24, { seed: 318, kind: 'pot', bushH: 30 });
+  }
   return lamps;
 }

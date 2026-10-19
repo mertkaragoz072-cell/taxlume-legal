@@ -1,6 +1,6 @@
 // Market — right of the bakery. Counter goods live in market-front.js so they draw in front of the walkway props.
 import { DESIGN, TEXT } from '../config.js';
-import { drawAsset } from '../assets.js';
+import { drawAsset, getImage } from '../assets.js';
 import { rrect, paint, vgrad, hgrad, shadow, INK } from '../util.js';
 import { tiledRoof, plasterWall, beam, awning, signBoard, shopWindow, garland, bush, hangingLamp, iconBasket } from '../scene/parts.js';
 import { drawPerson } from '../characters/person.js';
@@ -12,6 +12,17 @@ export const market = {
   id: 'market',
   bounds: { x: 1030, y: 236, w: 352, h: B - 236 },
   lights: [[1090, 468, 46], [1210, 468, 46], [1330, 468, 46]],
+  usesAsset: false,
+
+  /** Call after assets load: size/position the building from the final art's aspect ratio. */
+  configure() {
+    const img = getImage('market');
+    if (!img) return;
+    const w = 415, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 600;
+    this.usesAsset = true;
+    this.bounds = { x: 1245 - w / 2, y: bottom - h, w, h };
+    this.lights = []; // lamps and shelves are already lit in the art
+  },
 
   draw(ctx) {
     const b = this.bounds;
