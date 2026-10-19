@@ -10,7 +10,6 @@ export const MANIFEST = {
   market: 'assets/market.webp',
   'ground-walk-a': 'assets/ground-walk-a.webp',   // sidewalk slab strips (tile left-to-right)
   'ground-walk-b': 'assets/ground-walk-b.webp',
-  'ground-plaza': 'assets/ground-plaza.webp',     // flat paving for the plaza
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha
 };
 

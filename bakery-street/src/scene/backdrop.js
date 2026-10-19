@@ -191,7 +191,7 @@ function panorama(ctx, v, img) {
   // dark hedge / shadow band between the backdrop and the pavement
   const g = ctx.createLinearGradient(x, 0, x + W, 0);
   foot.forEach((c, i) => g.addColorStop(i / (foot.length - 1), `rgb(${Math.round(c[0] * 0.78)},${Math.round(c[1] * 0.82)},${Math.round(c[2] * 0.72)})`));
-  ctx.fillStyle = g; ctx.fillRect(x, bottom - 2, W, DESIGN.baseY + 10 - bottom + 2);
+  ctx.fillStyle = g; ctx.fillRect(x, bottom - 2, W, DESIGN.groundY + 8 - bottom + 2);
   const fade = ctx.createLinearGradient(0, bottom - 2, 0, bottom + 18);
   fade.addColorStop(0, 'rgba(10,35,20,0.28)'); fade.addColorStop(1, 'rgba(10,35,20,0.05)');
   ctx.fillStyle = fade; ctx.fillRect(x, bottom - 2, W, 20);

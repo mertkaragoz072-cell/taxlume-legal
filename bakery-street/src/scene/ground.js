@@ -1,38 +1,45 @@
-// Ground built from the supplied stone-slab art: a raised sidewalk (paving + curb blocks + brick face), then plaza paving.
+// Flat, front-on ground built from the supplied stone-slab art: curb blocks on top, brick face below,
+// then repeating brick courses down to the bottom of the screen. No perspective plane, so it reads as ground level.
 import { DESIGN } from '../config.js';
 import { getImage } from '../assets.js';
-import { rng, softBand } from '../util.js';
+import { softBand } from '../util.js';
 
-const WALK_S = 0.845;   // scales the slab so its paving + curb lip fill the sidewalk band (baseY .. curbY)
-const SLAB_TOP = 5;      // native y of the paving's back edge inside the slab sprite
+const S = 1.25;          // art scale
+const LIP_Y = 60;        // native y where the front row of curb blocks begins (just under the paving plane)
+const COURSE_Y = 143, COURSE_H = 33; // a plain brick course used to extend the wall downward
 
 /** Returns false when the art is missing so the procedural pavement can take over. */
 export function drawGround(ctx, v) {
-  const A = getImage('ground-walk-a'), B = getImage('ground-walk-b'), P = getImage('ground-plaza');
-  if (!A || !B || !P) return false;
-  const xmin = -v.ox - 20, xmax = DESIGN.w + v.ox + 20;
-  const y0 = DESIGN.baseY - SLAB_TOP * WALK_S;
-  const faceBottom = y0 + A.naturalHeight * WALK_S;
+  const A = getImage('ground-walk-a'), B = getImage('ground-walk-b');
+  if (!A || !B) return false;
+  const xmin = -v.ox - 20, xmax = DESIGN.w + v.ox + 20, W = xmax - xmin;
+  const imgs = [A, B], gy = DESIGN.groundY;
 
-  // plaza under the curb: tiled paving rows, darkened a little so the sidewalk reads as raised
-  ctx.fillStyle = '#7a5a30';
-  ctx.fillRect(xmin, faceBottom - 4, xmax - xmin, DESIGN.h - faceBottom + 8);
-  const ps = 0.95, pw = P.naturalWidth * ps, ph = P.naturalHeight * ps - 2;
-  const r = rng(12);
-  for (let y = faceBottom - 2, row = 0; y < DESIGN.h + 4; y += ph, row++) {
-    for (let x = xmin - r() * pw; x < xmax; x += pw - 1) ctx.drawImage(P, x, y, pw, ph + 3);
-  }
-  ctx.fillStyle = 'rgba(50,25,5,0.2)';
-  ctx.fillRect(xmin, faceBottom - 4, xmax - xmin, DESIGN.h - faceBottom + 8);
+  // backing colour so no gaps show between strips
+  ctx.fillStyle = '#5a3a20';
+  ctx.fillRect(xmin, gy, W, DESIGN.h - gy + 8);
 
-  // sidewalk slab: alternating strips cut from the supplied pieces
-  const imgs = [A, B];
-  for (let x = xmin, i = 0; x < xmax; i++) {
-    const im = imgs[i % 2], w = im.naturalWidth * WALK_S;
-    ctx.drawImage(im, x, y0, w + 1, im.naturalHeight * WALK_S);
-    x += w;
+  const rowFrom = (y, sy, sh, shift) => {
+    let x = xmin - shift;
+    for (let i = 0; x < xmax; i++) {
+      const im = imgs[i % 2], w = im.naturalWidth * S;
+      ctx.drawImage(im, 0, sy, im.naturalWidth, sh, x, y, w + 1, sh * S);
+      x += w;
+    }
+  };
+  // curb blocks + first brick face (native y LIP_Y .. bottom)
+  const topH = (A.naturalHeight - LIP_Y);
+  rowFrom(gy, LIP_Y, topH, 0);
+  // brick courses down to the bottom of the screen, offset each row like a running bond
+  let y = gy + topH * S - 2, row = 1;
+  while (y < DESIGN.h + 12) {
+    rowFrom(y, COURSE_Y, COURSE_H, (row % 2) * 150 + row * 37);
+    y += COURSE_H * S - 1; row++;
   }
-  softBand(ctx, xmin, faceBottom, xmax - xmin, 22, 0.38);               // shade under the curb
-  softBand(ctx, xmin, DESIGN.baseY, xmax - xmin, 22, 0.3);              // shade from the shop fronts
+  // depth shading: darker toward the bottom of the screen
+  const g = ctx.createLinearGradient(0, gy, 0, DESIGN.h);
+  g.addColorStop(0, 'rgba(30,15,5,0)'); g.addColorStop(1, 'rgba(25,12,4,0.38)');
+  ctx.fillStyle = g; ctx.fillRect(xmin, gy, W, DESIGN.h - gy + 8);
+  softBand(ctx, xmin, gy - 14, W, 14, 0.18, true); // faint grounding shadow where the shops meet the ground
   return true;
 }

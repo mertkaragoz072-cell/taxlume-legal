@@ -8,13 +8,15 @@ export function drawForeground(ctx, v) {
   const xmin = -v.ox, xmax = DESIGN.w + v.ox;
   const y = DESIGN.curbY;
 
-  bench(ctx, 310, y + 78, 190);
-  bench(ctx, 1090, y + 78, 190);
-  for (const x of [170, 222, 520, 880, 1180, 1232]) bollard(ctx, x, y + 70);
-  // flowery beds
-  bush(ctx, 680, y + 104, 360, 44, 401);
-  planter(ctx, 410, y + 112, 150, 30, { seed: 402, kind: 'box', bushH: 40 });
-  planter(ctx, 990, y + 112, 150, 30, { seed: 403, kind: 'box', bushH: 40 });
+  if (!getImage('ground-walk-a')) { // oblique plaza props only with the procedural pavement
+    bench(ctx, 310, y + 78, 190);
+    bench(ctx, 1090, y + 78, 190);
+    for (const x of [170, 222, 520, 880, 1180, 1232]) bollard(ctx, x, y + 70);
+    // flowery beds
+    bush(ctx, 680, y + 104, 360, 44, 401);
+    planter(ctx, 410, y + 112, 150, 30, { seed: 402, kind: 'box', bushH: 40 });
+    planter(ctx, 990, y + 112, 150, 30, { seed: 403, kind: 'box', bushH: 40 });
+  }
   // corner shrubs
   bush(ctx, xmin + 70, DESIGN.h + 14, 240, 110, 411);
   bush(ctx, xmax - 70, DESIGN.h + 14, 240, 110, 412);

@@ -7,14 +7,14 @@ const GROUND = 610; // table-set feet line
 
 export const WALKERS = () => [
   // schoolboy: tall, backpack, blue jacket, sneakers
-  { x: 120, dir: 1, speed: 34, y: DESIGN.walkY + 8, step: 8.2, phase: 0, skin: SKINS[0], hair: '#4a2a14', hairStyle: 'short', top: '#3f7fc9', under: '#f4f0e6', zip: true, pants: '#39435c', shoe: '#e8e2d6', backpack: '#2e8a5a', scale: 1.04 },
+  { x: 120, dir: 1, speed: 34, y: DESIGN.walkY + 5, step: 8.2, phase: 0, skin: SKINS[0], hair: '#4a2a14', hairStyle: 'short', top: '#3f7fc9', under: '#f4f0e6', zip: true, pants: '#39435c', shoe: '#e8e2d6', backpack: '#2e8a5a', scale: 1.04 },
   // girl in a straw hat and sundress with a flower basket
-  { x: 980, dir: -1, speed: 29, y: DESIGN.walkY - 2, step: 7.6, phase: 2, skin: SKINS[1], hair: '#6a3418', hairStyle: 'hat', top: '#fff7ea', dress: '#3f86d6', pants: '#e8d2b0', shoe: '#a8683a', lashes: true, bag: true, scale: 0.98, eye: '#5a3a1e' },
+  { x: 980, dir: -1, speed: 29, y: DESIGN.walkY - 3, step: 7.6, phase: 2, skin: SKINS[1], hair: '#6a3418', hairStyle: 'hat', top: '#fff7ea', dress: '#3f86d6', pants: '#e8d2b0', shoe: '#a8683a', lashes: true, bag: true, scale: 0.98, eye: '#5a3a1e' },
   // elderly gentleman: flat cap, vest, white moustache, baguettes in a paper bag
-  { x: 1290, dir: 1, speed: 24, y: DESIGN.walkY + 4, step: 6.6, phase: 4, skin: SKINS[2], hair: '#d8d4cc', mustache: true, hairStyle: 'cap', cap: '#7a5a3a', top: '#7a8a5a', under: '#f4efe2', buttons: '#e8d8a0', pants: '#5a4a3a', shoe: '#3a2a20', paperBag: true, scale: 1.0, glasses: true },
+  { x: 1290, dir: 1, speed: 24, y: DESIGN.walkY + 1, step: 6.6, phase: 4, skin: SKINS[2], hair: '#d8d4cc', mustache: true, hairStyle: 'cap', cap: '#7a5a3a', top: '#7a8a5a', under: '#f4efe2', buttons: '#e8d8a0', pants: '#5a4a3a', shoe: '#3a2a20', paperBag: true, scale: 1.0, glasses: true },
 ];
 
-export const WAITRESS = { x: 700, y: DESIGN.baseY + 22, skin: SKINS[0], hair: '#6a3420', hairStyle: 'maid', top: '#2f3a4e', pants: '#2f3a4e', apron: true, tray: true, lashes: true, collar: '#fffaf0', shoe: '#1f1a18', eye: '#3a6a4a' };
+export const WAITRESS = { x: 700, y: DESIGN.groundY - 2, skin: SKINS[0], hair: '#6a3420', hairStyle: 'maid', top: '#2f3a4e', pants: '#2f3a4e', apron: true, tray: true, lashes: true, collar: '#fffaf0', shoe: '#1f1a18', eye: '#3a6a4a' };
 
 export const SHOPKEEPER = { skin: SKINS[1], hair: '#2a1a12', hairStyle: 'short', mustache: true, top: '#f4f0e6', apron: '#7a4a2a', rolled: true, pants: '#5a4a3a', seatedBehind: true, scale: 0.92, browC: '#2a1a12' };
 
