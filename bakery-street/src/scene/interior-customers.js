@@ -1,19 +1,12 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { AREAS } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 
 const ENTRY = { x: 1520, y: 716 };
-const QUEUE_SPOTS = [{ x: 1352, y: 708 }, { x: 1262, y: 734 }, { x: 1176, y: 708 }];   // staggered so waiting customers do not overlap
 const SPEED = 210;                 // design px per second
-const TABLES = AREAS.filter((a) => a.id.startsWith('table'));
 const BODY_H = 130;                // approximate sprite height at the interior scale (for bubbles and hit-testing)
-
-export const chairSpot = (index) => {
-  const a = TABLES[index];
-  return { x: a.x + a.w / 2 + 95, y: a.y + a.h - 6 };
-};
 
 export class CustomerLayer {
   constructor(game, cafe) {
@@ -40,7 +33,7 @@ export class CustomerLayer {
     this.v.clear();
     for (const c of this.cafe.customers) {
       const t = this.targetFor(c);
-      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? -1 : -1, moving: false, leaving: false, look: c.look });
+      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? 1 : -1, moving: false, leaving: false, look: c.look });
     }
   }
 
@@ -51,6 +44,7 @@ export class CustomerLayer {
       let v = this.v.get(c.id);
       if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look }; this.v.set(c.id, v); }
       this.step(v, this.targetFor(c), dt);
+      if (!v.moving && c.state === 'seated') v.dir = 1;   // once at the table, face it
     }
     for (const [id, v] of this.v) {
       if (live.has(id)) continue;

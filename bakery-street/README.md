@@ -89,7 +89,7 @@ Bilinen sınır: cihaz saati ileri alınırsa üretim hızlanır (sunucu olmadı
 
 ## Adım 3: müşteri, sipariş ve satış
 
-- **Müşteriler** `src/data/economy.js` içindeki `CAFE` ayarına göre 14–26 sn arayla gelir (ilk müşteri ~4 sn sonra). 3 masa vardır; boş masa yoksa en fazla 3 kişi girişte sırada bekler (⏳), masa boşalınca sırayla oturur. Sabırları biterse (kuyrukta 45 sn, sipariş için 100 sn) ödemeden ayrılır, siparişi iptal olur, masa boşalır.
+- **Müşteriler** (yalnızca iç mekân açıkken; ayrıntı aşağıda 3.1) `src/data/economy.js` içindeki `CAFE` ayarına göre 14–26 sn arayla gelir (ilk müşteri ~4 sn sonra). 3 masa vardır; boş masa yoksa en fazla 3 kişi girişte sırada bekler (⏳), masa boşalınca sırayla oturur. Sabırları biterse (kuyrukta 45 sn, sipariş için 100 sn) ödemeden ayrılır, siparişi iptal olur, masa boşalır.
 - **Sipariş:** oturan müşteri ekmek, kruvasan, pasta veya kahveden birini ister (ağırlıklar ayarlanabilir). Her siparişte ürün, o anki fiyat ve durum (`open` / `paid` / `cancelled`) tutulur. Müşterinin üstünde ürün + fiyat + sabır çubuğu balonu görünür; stokta yoksa kırmızı ve "stok yok" yazar.
 - **Satış:** müşteriye (veya sol alttaki sipariş çubuğundaki düğmeye) dokununca teslim edilir: stok −1, altın +fiyat, sipariş `paid`, müşteri ayrılır, masa boşalır. Stok yoksa satış olmaz ("Stokta Ekmek yok. Önce üret."). Bu tek adımda yapılır; aynı sipariş ikinci kez satılamaz/ödenmez.
 - **Görünürlük:** sol altta `👥 müşteri · ⏳ bekleyen · 🧾 açık sipariş` sayaçları ve her sipariş için bir düğme (açık yeşil = stok var, kırmızı = stok yok). Bu çubuk yan panellerin dışında olduğu için üretim paneli açıkken de kullanılabilir.
@@ -97,3 +97,10 @@ Bilinen sınır: cihaz saati ileri alınırsa üretim hızlanır (sunucu olmadı
 - **Geçici görseller:** müşteriler mevcut yürüme sprite'larıdır (oturma karesi yok, masanın yanında ayakta dururlar).
 
 Test: `npm test` (50 test).
+
+## Adım 3.1: müşteri döngüsü düzeltmeleri
+
+- Müşteri gelişleri, sipariş süreleri ve sabır sayaçları **yalnızca iç mekân açıkken** ilerler (`Cafe.setActive`). Sokağa dönünce her şey donar; geri girince kaldığı yerden devam eder (geçen süre için toplu müşteri üretilmez, sabır azalmaz). Uygulama sokak ekranında açılır ve kafe duraklıdır; duraklama durumu kaydedilmez.
+- Masa doluluğu müşterilerden türetilir: bir masada en fazla bir müşteri olur ve ayrılınca masa hemen boşalır (rastgele 900 adımlık benzetim testi bunu her adımda doğrular).
+- Görsel: oturan müşteri masanın solunda durur, kuyruk girişte (sağda) ayrı noktalardadır; konumlar `interior-layout.js` içinde testlidir.
+- Satış, stok ve altın mantığına dokunulmadı.

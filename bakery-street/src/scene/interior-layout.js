@@ -15,3 +15,14 @@ export const WALL_Y = 96;     // top of the back wall (below the HUD)
 export const FLOOR_Y = 480;   // where the back wall meets the floor
 
 export const areaAt = (x, y) => AREAS.find((a) => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h) ?? null;
+
+const TABLES = AREAS.filter((a) => a.id.startsWith('table'));
+
+/** Where a seated customer stands: beside the table on its left, so neighbours and the entrance queue never overlap. */
+export const chairSpot = (index) => {
+  const a = TABLES[index];
+  return { x: a.x + a.w / 2 - 95, y: a.y + a.h - 6 };
+};
+
+/** Waiting spots by the entrance (right side), staggered in depth so the queue does not pile up. */
+export const QUEUE_SPOTS = [{ x: 1352, y: 708 }, { x: 1262, y: 734 }, { x: 1176, y: 708 }];

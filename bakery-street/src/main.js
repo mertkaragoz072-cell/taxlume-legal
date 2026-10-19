@@ -56,6 +56,7 @@ function go(id) {
   setTimeout(() => {
     panels.close();
     scene = target;
+    cafe.setActive(id === 'interior');          // customers only run while the cafe is open
     stage.classList.toggle('in-interior', id === 'interior');
     scene.resize(view);
     if (id === 'interior') interior.snap();   // the interior is not updated while hidden: place customers where they should be

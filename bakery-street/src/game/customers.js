@@ -20,6 +20,7 @@ export class Cafe {
     this.rng = rng;
     this.looks = looks;
     this.last = null;
+    this.active = false;        // the cafe only runs while the interior is open (see setActive)
     game.cafe = this;
     this.reset();
   }
@@ -48,8 +49,19 @@ export class Cafe {
   }
 
   // ---- simulation -----------------------------------------------------------------------------
+  /**
+   * Customers only arrive, wait and lose patience while the player is inside the cafe. Pausing freezes every timer
+   * (arrivals, order patience); resuming continues from exactly where it stopped, with no catch-up and no burst of customers.
+   */
+  setActive(on) {
+    if (this.active === !!on) return;
+    this.active = !!on;
+    this.last = null;           // the next tick starts a fresh interval, so time spent away is never counted
+  }
+
   /** Advance the cafe by real elapsed time (capped per step). Call every frame; cheap when nothing happens. */
   tick() {
+    if (!this.active) { this.last = null; return; }
     const now = this.game.clock();
     const dt = this.last == null ? 0 : Math.min(Math.max(0, now - this.last), ms(this.cfg.maxStepSec));
     this.last = now;

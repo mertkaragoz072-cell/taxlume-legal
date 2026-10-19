@@ -4,6 +4,7 @@ import { Game } from '../src/game/game.js';
 import { Cafe, validateCafe, LOOKS } from '../src/game/customers.js';
 import { SaveManager, SAVE_KEY } from '../src/game/save.js';
 import { CAFE, PRODUCTS } from '../src/data/economy.js';
+import { AREAS, chairSpot, QUEUE_SPOTS } from '../src/scene/interior-layout.js';
 
 /** Deterministic rng so tests are repeatable. */
 const seeded = (seed = 1) => () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
@@ -14,6 +15,7 @@ function make({ gold = 1000, config = {}, seed = 7 } = {}) {
   const game = new Game(player, {}, () => clock.now);
   const cfg = { ...CAFE, firstSpawnSec: 1, spawnEverySec: [5, 5], ...config };
   const cafe = new Cafe(game, { rng: seeded(seed), config: cfg });
+  cafe.setActive(true);   // customers only run while the interior is open
   /** advance fake time in 1 s steps, ticking each step */
   const run = (sec) => { for (let i = 0; i < sec; i++) { clock.now += 1000; game.tick(); } };
   game.tick();   // establishes the cafe's time reference
@@ -177,6 +179,7 @@ class FakeStorage { constructor() { this.m = new Map(); } getItem(k) { return th
 function session(storage, clock, seed = 3) {
   const player = { gold: 54320 }, game = new Game(player, {}, () => clock.now);
   const cafe = new Cafe(game, { rng: seeded(seed), config: { ...CAFE, firstSpawnSec: 999, spawnEverySec: [999, 999] } });
+  cafe.setActive(true);
   const problems = [];
   const mgr = new SaveManager(game, storage, { onProblem: (p) => problems.push(p) });
   return { game, cafe, mgr, problems, player };
@@ -290,4 +293,104 @@ test('importing a snapshot does not age waiting customers while the app was clos
   const same = s.cafe.customers.find((x) => x.id === c.id);
   assert.ok(same, 'customer is still there');
   assert.ok(same.patience >= c.patience - 1, 'patience was not consumed by the offline day');
+});
+
+// ------------------------------------------------------------------------------ 3.1: pause outside the cafe
+test('a new cafe is paused until the interior opens (app starts on the street)', () => {
+  const clock = { now: 1_700_000_000_000 };
+  const game = new Game({ gold: 0 }, {}, () => clock.now);
+  const cafe = new Cafe(game, { rng: seeded(1), config: { ...CAFE, firstSpawnSec: 1, spawnEverySec: [1, 1] } });
+  assert.equal(cafe.active, false);
+  game.tick();
+  for (let i = 0; i < 60; i++) { clock.now += 1000; game.tick(); }
+  assert.equal(cafe.customers.length, 0);                          // nobody arrives while paused
+});
+
+test('while paused no customer arrives and no patience is consumed', () => {
+  const { cafe, clock, game, run } = make({ config: { orderPatienceSec: 20, queuePatienceSec: 20, spawnEverySec: [3, 3], firstSpawnSec: 1 } });
+  run(8);                                                          // let a few customers in
+  const snapshot = JSON.stringify(cafe.exportState());
+  const spawnIn = cafe.spawnIn;
+  cafe.setActive(false);
+  for (let i = 0; i < 300; i++) { clock.now += 1000; game.tick(); }   // five minutes on the street
+  assert.equal(JSON.stringify(cafe.exportState()), snapshot);      // customers, tables, orders and patience are untouched
+  assert.equal(cafe.spawnIn, spawnIn);                             // arrival timer frozen too
+});
+
+test('resuming continues where it stopped: no catch-up and no burst of new customers', () => {
+  const { cafe, clock, game, run } = make({ config: { spawnEverySec: [5, 5], firstSpawnSec: 1, orderPatienceSec: 500, queuePatienceSec: 500, tables: 3, queueMax: 3 } });
+  run(2);
+  const before = cafe.customers.length, patience = cafe.customers.map((c) => c.patience);
+  cafe.setActive(false);
+  clock.now += 3 * 3600 * 1000;                                    // three hours later
+  cafe.setActive(true);
+  game.tick();
+  assert.equal(cafe.customers.length, before);                     // nothing was created for the time away
+  assert.deepEqual(cafe.customers.map((c) => c.patience), patience);
+  clock.now += 1000; game.tick();
+  assert.ok(cafe.customers.length - before <= 1);                  // at most the normal single arrival afterwards
+});
+
+test('open orders survive leaving and re-entering and can still be sold afterwards', () => {
+  const { cafe, game, player, clock } = make({ gold: 10 });
+  const { c, order } = seatWith(cafe, 'bread');
+  game.products.bread = 2;
+  cafe.setActive(false); clock.now += 600_000; game.tick(); cafe.setActive(true);
+  assert.equal(order.status, 'open');
+  assert.ok(cafe.customers.includes(c));
+  assert.equal(cafe.deliver(order.id).ok, true);
+  assert.equal(player.gold, 10 + PRODUCTS.bread.price);
+});
+
+test('the pause state is not saved: a reloaded app starts paused and keeps customers and orders', () => {
+  const st = new FakeStorage(), clock = { now: 1_700_000_000_000 };
+  const a = session(st, clock); a.mgr.load(); a.mgr.attach();
+  const { order } = seatWith(a.cafe, 'coffee'); a.game.emit('change', { type: 'cafe' });
+  const b = new Game({ gold: 0 }, {}, () => clock.now);
+  const cafeB = new Cafe(b, { rng: seeded(1), config: { ...CAFE, firstSpawnSec: 1, spawnEverySec: [1, 1] } });
+  new SaveManager(b, st).load();
+  assert.equal(cafeB.active, false);
+  assert.ok(cafeB.orders.find((o) => o.id === order.id && o.status === 'open'));
+  assert.equal(cafeB.customers.length, 1);
+  clock.now += 1000; b.tick(); clock.now += 1000; b.tick();
+  assert.equal(cafeB.customers.length, 1);                         // still paused
+});
+
+test('a table never holds two customers and is free again after the customer leaves (randomised simulation)', () => {
+  const { cafe, game, clock } = make({ config: { spawnEverySec: [1, 3], firstSpawnSec: 1, queueMax: 3, orderPatienceSec: 15, queuePatienceSec: 10 }, seed: 99 });
+  for (const k of Object.keys(game.products)) game.products[k] = 3;
+  const rnd = seeded(5);
+  for (let step = 0; step < 900; step++) {
+    clock.now += 1000; game.tick();
+    if (rnd() < 0.25) { const open = cafe.openOrders(); if (open.length) { for (const k of Object.keys(game.products)) game.products[k] = 3; cafe.deliver(open[Math.floor(rnd() * open.length)].id); } }
+    const seated = cafe.customers.filter((c) => c.state === 'seated');
+    const tables = seated.map((c) => c.table);
+    assert.equal(new Set(tables).size, tables.length, `step ${step}: two customers share a table`);
+    assert.ok(tables.every((t) => t >= 0 && t < cafe.cfg.tables));
+    assert.equal(cafe.freeTables().length, cafe.cfg.tables - seated.length, 'free tables must equal tables minus seated customers');
+    assert.equal(cafe.openOrders().length, seated.length, 'every seated customer has exactly one open order');
+    assert.ok(cafe.customers.length <= cafe.cfg.tables + cafe.cfg.queueMax);
+  }
+});
+
+test('a freed table can be taken at once by a waiting customer, and never by two', () => {
+  const { cafe, game } = make({ config: { tables: 1, queueMax: 3 } });
+  const a = cafe.arrive(), b = cafe.arrive(), c = cafe.arrive();
+  cafe.seatQueued();
+  game.products[cafe.orderOf(a).product] = 1;
+  cafe.deliver(a.orderId);
+  assert.equal(cafe.customers.filter((x) => x.state === 'seated').length, 1);
+  assert.equal(b.state, 'seated'); assert.equal(c.state, 'queued');
+});
+
+test('visual layout: every seated spot is apart from the other tables, the queue and the entrance', () => {
+  const spots = AREAS.filter((a) => a.id.startsWith('table')).map((_, i) => chairSpot(i));
+  assert.equal(spots.length, CAFE.tables);
+  const dist = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+  for (let i = 0; i < spots.length; i++) {
+    for (let j = i + 1; j < spots.length; j++) assert.ok(dist(spots[i], spots[j]) > 200, `table spots ${i} and ${j} overlap`);
+    for (const q of QUEUE_SPOTS) assert.ok(dist(spots[i], q) > 130, `table ${i} overlaps a queue spot`);
+  }
+  for (let i = 0; i < QUEUE_SPOTS.length; i++) for (let j = i + 1; j < QUEUE_SPOTS.length; j++) assert.ok(dist(QUEUE_SPOTS[i], QUEUE_SPOTS[j]) > 85, 'queue spots too close');
+  assert.ok(QUEUE_SPOTS.length >= CAFE.queueMax);
 });
