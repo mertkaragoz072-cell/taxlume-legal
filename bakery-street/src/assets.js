@@ -1,0 +1,34 @@
+// Placeholder-art registry.
+//
+// Everything on the street is currently drawn procedurally by its own module.
+// To swap in real artwork, drop a PNG/WebP into ./assets and set its path here.
+// A module that calls drawAsset(key, ...) will use the image when present and
+// fall back to its procedural drawing when the path is null.
+export const MANIFEST = {
+  bakery: null,      // e.g. 'assets/bakery.png'  (drawn over the bakery's design box)
+  bookshop: null,
+  market: null,
+  'town-backdrop': null,
+};
+
+const images = {};
+
+export function loadAssets() {
+  const jobs = Object.entries(MANIFEST)
+    .filter(([, src]) => src)
+    .map(([key, src]) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => { images[key] = img; resolve(); };
+      img.onerror = () => resolve();
+      img.src = src;
+    }));
+  return Promise.all(jobs);
+}
+
+/** Draw the registered image for `key`; returns false when none is available. */
+export function drawAsset(ctx, key, x, y, w, h) {
+  const img = images[key];
+  if (!img) return false;
+  ctx.drawImage(img, x, y, w, h);
+  return true;
+}

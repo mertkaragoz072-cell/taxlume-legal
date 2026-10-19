@@ -1,0 +1,78 @@
+// Small canvas + math helpers shared by every drawing module.
+export const INK = '#3a2213';
+
+export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+export const lerp = (a, b, t) => a + (b - a) * t;
+
+/** Deterministic PRNG so cached art looks identical on every resize. */
+export function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+  else ctx.rect(x, y, w, h);
+}
+
+export function poly(ctx, pts) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+}
+
+export function vgrad(ctx, y0, y1, stops) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  for (const [o, c] of stops) g.addColorStop(o, c);
+  return g;
+}
+export function hgrad(ctx, x0, x1, stops) {
+  const g = ctx.createLinearGradient(x0, 0, x1, 0);
+  for (const [o, c] of stops) g.addColorStop(o, c);
+  return g;
+}
+
+/** Fill (optional) + consistent dark contour on the current path. */
+export function paint(ctx, fill, lw = 2.5, stroke = INK) {
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (lw) { ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.lineJoin = 'round'; ctx.stroke(); }
+}
+
+export function shadow(ctx, x, y, rx, ry, a = 0.28) {
+  ctx.fillStyle = `rgba(40,22,10,${a})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+export function glowAt(ctx, x, y, r, rgb, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${a})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
+export function label(ctx, str, x, y, { font, fill = '#fff', stroke = INK, lw = 4, align = 'center' } = {}) {
+  ctx.font = font;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  if (lw) { ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.lineJoin = 'round'; ctx.strokeText(str, x, y); }
+  ctx.fillStyle = fill;
+  ctx.fillText(str, x, y);
+}
+
+const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+/** Blend two #rrggbb colours (used for atmospheric haze on the far town). */
+export function mix(a, b, f) {
+  const [r1, g1, b1] = hex(a), [r2, g2, b2] = hex(b);
+  const h = (v) => Math.round(v).toString(16).padStart(2, '0');
+  return `#${h(lerp(r1, r2, f))}${h(lerp(g1, g2, f))}${h(lerp(b1, b2, f))}`;
+}
