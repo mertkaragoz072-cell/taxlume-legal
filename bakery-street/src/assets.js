@@ -8,7 +8,7 @@ export const MANIFEST = {
   bakery: 'assets/bakery.webp',   // final art (transparent WebP); the procedural drawing is the fallback
   bookshop: 'assets/bookshop.webp',
   market: 'assets/market.webp',
-  'town-backdrop': null,
+  'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha
 };
 
 const images = {};

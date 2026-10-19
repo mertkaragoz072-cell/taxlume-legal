@@ -1,5 +1,6 @@
 // The main street scene: owns the cached layers, per-frame animation and input hit-testing.
 import { DESIGN, TEXT } from '../config.js';
+import { getImage } from '../assets.js';
 import { glowAt, clamp, INK, applyGrain } from '../util.js';
 import { drawSky, makeClouds, drawCloud, drawBackdrop } from './backdrop.js';
 import { drawPavement } from './pavement.js';
@@ -104,7 +105,7 @@ export class StreetScene {
 
     blit(this.layers.sky);
     design();
-    for (const c of this.clouds) drawCloud(ctx, c);
+    if (!getImage('town-backdrop')) for (const c of this.clouds) drawCloud(ctx, c);
     blit(this.layers.back);
 
     // bakery sprite with press / tap squash

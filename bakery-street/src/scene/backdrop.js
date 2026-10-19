@@ -1,7 +1,7 @@
 // Sky, mountains, the terraced European hill-town and the leafy mass behind the shops.
 import { DESIGN } from '../config.js';
 import { rng, vgrad, poly, mix, rrect } from '../util.js';
-import { drawAsset } from '../assets.js';
+import { drawAsset, getImage } from '../assets.js';
 import { tiledRoof } from './parts.js';
 
 const HAZE = '#a9cdee';
@@ -32,7 +32,8 @@ export function drawCloud(ctx, c) {
 
 export function drawBackdrop(ctx, v) {
   const xmin = -v.ox - 20, xmax = DESIGN.w + v.ox + 20;
-  if (drawAsset(ctx, 'town-backdrop', xmin, 0, xmax - xmin, 340)) { treeMass(ctx, xmin, xmax); return; }
+  const pano = getImage('town-backdrop');
+  if (pano) { panorama(ctx, v, pano); return; }
   mountains(ctx, xmin, xmax);
   hillTown(ctx, xmin, xmax);
   treeMass(ctx, xmin, xmax);
@@ -116,4 +117,50 @@ function treeMass(ctx, xmin, xmax) {
   ctx.fillStyle = '#2f7a30'; ctx.fillRect(xmin, 380, xmax - xmin, 200);
   ctx.fillStyle = 'rgba(160,220,90,.5)';
   for (let i = 0; i < 160; i++) { ctx.beginPath(); ctx.arc(xmin + r() * (xmax - xmin), 280 + r() * 240, 3 + r() * 5, 0, 7); ctx.fill(); }
+}
+
+let topColors = null;
+/** Average colour of the panorama's top edge, sampled left-to-right, used to extend the sky upward on tall screens. */
+function sampleTop(img) {
+  if (topColors) return topColors;
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = 8;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0);
+  const n = 8, step = Math.floor(c.width / n);
+  topColors = Array.from({ length: n }, (_, i) => {
+    const d = g.getImageData(i * step, 0, step, 4).data;
+    let r = 0, gg = 0, b = 0;
+    for (let k = 0; k < d.length; k += 4) { r += d[k]; gg += d[k + 1]; b += d[k + 2]; }
+    const m = d.length / 4;
+    return `${Math.round(r / m)},${Math.round(gg / m)},${Math.round(b / m)}`;
+  });
+  return topColors;
+}
+
+/** Painted panorama: bottom edge tucks under the pavement; its top fades into a matching flat sky. */
+function panorama(ctx, v, img) {
+  const W = Math.max(v.vw + 60, 1500), H = (W * img.naturalHeight) / img.naturalWidth;
+  const x = DESIGN.w / 2 - W / 2, y = DESIGN.baseY + 8 - H;
+  const cols = sampleTop(img);
+  const grad = (a) => {
+    const g = ctx.createLinearGradient(x, 0, x + W, 0);
+    cols.forEach((c, i) => g.addColorStop(i / (cols.length - 1), `rgba(${c},${a})`));
+    return g;
+  };
+  const top = -v.oy - 12;
+  if (y > top) { ctx.fillStyle = grad(1); ctx.fillRect(x, top, W, y - top + 2); }
+  ctx.drawImage(img, x, y, W, H);
+  // blend the top edge into the extended sky colour via an offscreen strip with a vertical alpha ramp
+  const strip = document.createElement('canvas');
+  strip.width = 64; strip.height = 46;
+  const sg = strip.getContext('2d');
+  const gx = sg.createLinearGradient(0, 0, 64, 0);
+  cols.forEach((c, i) => gx.addColorStop(i / (cols.length - 1), `rgb(${c})`));
+  sg.fillStyle = gx; sg.fillRect(0, 0, 64, 46);
+  sg.globalCompositeOperation = 'destination-in';
+  const ga = sg.createLinearGradient(0, 0, 0, 46);
+  ga.addColorStop(0, 'rgba(0,0,0,1)'); ga.addColorStop(1, 'rgba(0,0,0,0)');
+  sg.fillStyle = ga; sg.fillRect(0, 0, 64, 46);
+  ctx.drawImage(strip, x, y, W, 46);
 }
