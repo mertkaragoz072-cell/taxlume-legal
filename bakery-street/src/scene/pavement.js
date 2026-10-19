@@ -1,11 +1,13 @@
 // Hand-laid cobblestone sidewalk, stone curb and the lower plaza.
 import { DESIGN } from '../config.js';
+import { drawGround } from './ground.js';
 import { rng, rrect, vgrad, hgrad, mix, lighten, darken, softBand } from '../util.js';
 
 const WARM = ['#ecd8a8', '#e0c48e', '#f2e0b4', '#d6b880', '#e8cf9a', '#dcc08a'];
 const PLAZA = ['#d8b680', '#cba570', '#e0c08c', '#c29c64', '#d2ae78'];
 
 export function drawPavement(ctx, v) {
+  if (drawGround(ctx, v)) return;
   const xmin = -v.ox - 20, xmax = DESIGN.w + v.ox + 20, W = xmax - xmin;
   const { baseY, curbY } = DESIGN;
   ctx.fillStyle = '#9a7646'; ctx.fillRect(xmin, baseY, W, curbY - baseY);
