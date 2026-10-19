@@ -69,3 +69,17 @@ Kafe iç mekânı, üretim sistemi, market satın alma ve şehir geliştirme bu 
 Test: `npm test` (14 mantık testi, bağımlılık yok). Oynanış akışı tarayıcıda Playwright ile de denendi.
 
 Henüz yok (bilerek): müşteri yapay zekâsı, otomatik satış, kasaba genişletme, yükseltmeler, kayıt/yükleme (ilerleme sayfa yenilenince sıfırlanır). İç mekân görselleri geçici, kodla çizilmiştir.
+
+## Adım 2.1: kayıt sistemi
+
+Kalıcı kaydedilenler (tarayıcı `localStorage`, anahtar `bakery-street:save`, sürüm 1):
+- altın,
+- tüm malzeme stokları,
+- tüm ürün stokları,
+- devam eden üretimler (hangi ürün + **gerçek başlangıç zamanı**).
+
+Her işlemden sonra (üretim başlatma, tamamlama, satın alma, satış) otomatik kaydedilir; sayfa gizlenince/kapanınca ayrıca kaydedilir. Zaman `Date.now()` ile hesaplanır: uygulama kapalıyken de üretim ilerler, açılınca biten ürünler stoğa eklenir ve "Sen yokken hazırlananlar" bildirimi çıkar. Üretim süresi kayda yazılmaz, ürün tablosundan okunur.
+
+Güvenlik: kayıt anlık bir görüntüdür (malzeme düşme + üretim aynı anda yazılır), bu yüzden bir üretim iki kez tamamlanamaz ve malzeme iki kez düşmez. Yazma hatasında oyun devam eder, kırmızı bir uyarı gösterilir ve sonraki işlemde yeniden denenir. Bozuk kayıt `bakery-street:save.corrupt` anahtarına yedeklenir ve oyuncuya bildirilir; yedeklenemezse veya kayıt daha yeni sürümdense üzerine yazılmaz. Başka sekmede yapılan kayıt otomatik alınır.
+
+Bilinen sınır: cihaz saati ileri alınırsa üretim hızlanır (sunucu olmadığı için engellenemez). Saat geri alınırsa üretim durmaz, geri sayım şimdiden yeniden başlar.

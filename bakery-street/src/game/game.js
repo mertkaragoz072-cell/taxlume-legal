@@ -7,9 +7,9 @@ export class Game {
   /**
    * @param {{gold:number}} player   shared player object (its `gold` is read and written here)
    * @param {{ingredients?:object, products?:object, stations?:object}} [data]  override tables (used by tests)
-   * @param {() => number} [clock]   millisecond clock; inject a fake one in tests
+   * @param {() => number} [clock]   wall-clock milliseconds (Date.now) so progress survives reloads and time away; inject a fake one in tests
    */
-  constructor(player, data = {}, clock = () => performance.now()) {
+  constructor(player, data = {}, clock = () => Date.now()) {
     this.player = player;
     this.ingredientsDef = data.ingredients ?? INGREDIENTS;
     this.productsDef = data.products ?? PRODUCTS;
@@ -41,7 +41,8 @@ export class Game {
   remaining(station) {
     const job = this.jobs[station];
     if (!job) return 0;
-    return Math.max(0, job.duration - (this.clock() - job.startedAt) / 1000);
+    const elapsed = Math.max(0, (this.clock() - job.startedAt) / 1000);   // a clock set backwards never adds time
+    return Math.max(0, job.duration - elapsed);
   }
 
   /** 0..1 progress of the job at `station` (0 when idle). */
@@ -80,13 +81,35 @@ export class Game {
 
   /** Completes every finished job. Call regularly (each frame); also catches up after a long pause. */
   tick() {
+    const now = this.clock();
     for (const [station, job] of Object.entries(this.jobs)) {
+      if (job.startedAt > now) job.startedAt = now;   // device clock moved backwards: restart the countdown from now, never stall
       if (this.remaining(station) > 0) continue;
-      delete this.jobs[station];
+      delete this.jobs[station];   // removed in the same step as the stock is added, so a job can only complete once
       this.products[job.product] += 1;
       this.emit('complete', { station, product: job.product });
       this.emit('change', { type: 'complete', product: job.product });
     }
+  }
+
+  // ---- persistence ----------------------------------------------------------------------------
+  /** Plain snapshot of everything that must survive a reload. */
+  exportState() {
+    return {
+      gold: this.player.gold,
+      ingredients: { ...this.ingredients },
+      products: { ...this.products },
+      jobs: Object.fromEntries(Object.entries(this.jobs).map(([st, j]) => [st, { product: j.product, startedAt: j.startedAt }])),
+    };
+  }
+
+  /** Replaces the current state with an already-validated snapshot (see save.js). */
+  importState(state) {
+    this.player.gold = state.gold;
+    this.ingredients = { ...state.ingredients };
+    this.products = { ...state.products };
+    this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, j]) => [st, { product: j.product, startedAt: j.startedAt, duration: this.productsDef[j.product].time }]));
+    this.emit('change', { type: 'load' });
   }
 
   // ---- economy --------------------------------------------------------------------------------

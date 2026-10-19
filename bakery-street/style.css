@@ -180,3 +180,8 @@ body {
 #toast { z-index: 50; }
 #fade { position: absolute; inset: 0; background: #2b1a0e; opacity: 0; pointer-events: none; transition: opacity .22s ease; z-index: 40; }
 #fade.on { opacity: 1; pointer-events: auto; }
+
+#saveWarn { position: absolute; left: 50%; bottom: calc(var(--u) * 1.4 + var(--safe-b)); transform: translateX(-50%); z-index: 45; max-width: 70vw; text-align: center;
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 2.6); border-radius: calc(var(--u) * 3); background: #fde0dc; color: #8a1f1a; border: calc(var(--u) * .4) solid #c9594a;
+  font-size: calc(var(--u) * 2.6); box-shadow: 0 calc(var(--u) * .5) 0 #7a2a20; }
+#saveWarn[hidden] { display: none; }

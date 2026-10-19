@@ -1,6 +1,7 @@
 // Bootstrap: canvas sizing, main loop, pointer input and UI wiring.
 import { DESIGN, PLAYER } from './config.js';
 import { Game } from './game/game.js';
+import { SaveManager, safeStorage } from './game/save.js';
 import { InteriorScene } from './scene/interior-scene.js';
 import { createPanels } from './ui/panels.js';
 import { loadAssets } from './assets.js';
@@ -20,6 +21,15 @@ const toast = document.getElementById('toast');
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
+const saveWarn = document.getElementById('saveWarn');
+const saves = new SaveManager(game, safeStorage(window), {
+  onProblem: ({ kind, message }) => {
+    saveWarn.textContent = `⚠ ${message}`; saveWarn.hidden = false;
+    showToast(toast, message, 5000);
+    console.warn('[save]', kind, message);
+  },
+  onRecover: () => { saveWarn.hidden = true; showToast(toast, 'Kayıt yeniden çalışıyor.', 2000); },
+});
 let scene = null;                                  // active scene: street or interior
 const view = { W: 0, H: 0, dpr: 1, scale: 1, vw: 0, vh: 0, ox: 0, oy: 0 };
 const stage = document.getElementById('stage');
@@ -108,6 +118,8 @@ createNav(document.getElementById('nav'), {
 });
 document.getElementById('back').addEventListener('click', () => go('street'));
 game.on('change', () => hud.setGold(game.gold));
+saves.attach(window);
+saveWarn.addEventListener('click', () => { saveWarn.hidden = true; });   // tap to dismiss; it returns if a save fails again
 game.on('complete', ({ product }) => showToast(toast, `${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600));
 
 let last = performance.now();
@@ -125,6 +137,16 @@ window.addEventListener('orientationchange', scheduleLayout);
 try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* only works in fullscreen / installed mode */ }
 
 loadAssets().then(() => {
+  // restore the save, then credit production that finished while the app was closed
+  const loaded = saves.load();
+  hud.setGold(game.gold);
+  const finished = {};
+  const off = game.on('complete', ({ product }) => { finished[product] = (finished[product] ?? 0) + 1; });
+  game.tick();
+  off();
+  const summary = Object.entries(finished).map(([id, n]) => `${game.productsDef[id].icon} ×${n}`).join('  ');
+  if (summary && loaded.status === 'loaded') showToast(toast, `Sen yokken hazırlananlar: ${summary}`, 4200);
+
   bakery.configure();
   bookshop.configure();
   market.configure();
