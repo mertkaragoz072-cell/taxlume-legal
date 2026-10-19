@@ -1,6 +1,7 @@
 // Foreground: benches, bollards, flower beds and the framing tree canopies.
 import { DESIGN } from '../config.js';
 import { rng } from '../util.js';
+import { getImage } from '../assets.js';
 import { bench, bollard, bush, planter } from './parts.js';
 
 export function drawForeground(ctx, v) {
@@ -20,8 +21,10 @@ export function drawForeground(ctx, v) {
   planter(ctx, xmin + 50, DESIGN.h - 36, 80, 40, { seed: 413, kind: 'box', bushH: 50 });
   planter(ctx, xmax - 50, DESIGN.h - 36, 80, 40, { seed: 414, kind: 'box', bushH: 50 });
 
-  canopy(ctx, xmin, -v.oy, 1, 601);
-  canopy(ctx, xmax, -v.oy, -1, 602);
+  if (!getImage('town-backdrop')) { // framing trees only when there is no painted backdrop
+    canopy(ctx, xmin, -v.oy, 1, 601);
+    canopy(ctx, xmax, -v.oy, -1, 602);
+  }
 }
 
 function canopy(ctx, x, top, d, seed) {

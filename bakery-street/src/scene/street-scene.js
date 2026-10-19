@@ -46,7 +46,7 @@ export class StreetScene {
       sky: make((g) => drawSky(g, view)),
       back: make((g) => {
         drawBackdrop(g, view);
-        drawSides(g, view);
+        if (!getImage('town-backdrop')) drawSides(g, view); // filler houses only as a fallback
         drawPavement(g, view);
         bookshop.draw(g);
         market.draw(g);
