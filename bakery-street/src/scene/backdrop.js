@@ -119,48 +119,80 @@ function treeMass(ctx, xmin, xmax) {
   for (let i = 0; i < 160; i++) { ctx.beginPath(); ctx.arc(xmin + r() * (xmax - xmin), 280 + r() * 240, 3 + r() * 5, 0, 7); ctx.fill(); }
 }
 
-let topColors = null;
-/** Average colour of the panorama's top edge, sampled left-to-right, used to extend the sky upward on tall screens. */
-function sampleTop(img) {
-  if (topColors) return topColors;
+const edgeCache = {};
+/** Average colours along the panorama's top or bottom edge, sampled left-to-right. */
+function sampleEdge(img, which) {
+  if (edgeCache[which]) return edgeCache[which];
   const c = document.createElement('canvas');
-  c.width = img.naturalWidth; c.height = 8;
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
   const g = c.getContext('2d', { willReadFrequently: true });
   g.drawImage(img, 0, 0);
-  const n = 8, step = Math.floor(c.width / n);
-  topColors = Array.from({ length: n }, (_, i) => {
-    const d = g.getImageData(i * step, 0, step, 4).data;
+  const n = 8, step = Math.floor(c.width / n), y0 = which === 'top' ? 0 : c.height - 6;
+  edgeCache[which] = Array.from({ length: n }, (_, i) => {
+    const d = g.getImageData(i * step, y0, step, 6).data;
     let r = 0, gg = 0, b = 0;
     for (let k = 0; k < d.length; k += 4) { r += d[k]; gg += d[k + 1]; b += d[k + 2]; }
     const m = d.length / 4;
-    return `${Math.round(r / m)},${Math.round(gg / m)},${Math.round(b / m)}`;
+    return [Math.round(r / m), Math.round(gg / m), Math.round(b / m)];
   });
-  return topColors;
+  return edgeCache[which];
 }
 
-/** Painted panorama: bottom edge tucks under the pavement; its top fades into a matching flat sky. */
+let softImg = null;
+/** Slightly softened copy of the panorama (cheap blur: down- then up-scale) so the far town reads as distant. */
+function soften(img) {
+  if (softImg) return softImg;
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.naturalWidth * 0.55); c.height = Math.round(img.naturalHeight * 0.55);
+  const g = c.getContext('2d');
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return (softImg = c);
+}
+
+function hGrad(ctx, x, W, cols, a, k = 1) {
+  const g = ctx.createLinearGradient(x, 0, x + W, 0);
+  cols.forEach((c, i) => g.addColorStop(i / (cols.length - 1), `rgba(${Math.round(c[0] * k)},${Math.round(c[1] * k)},${Math.round(c[2] * k)},${a})`));
+  return g;
+}
+
+/**
+ * Painted panorama pushed into the distance: it is drawn larger and higher, softened and hazed, with a shaded
+ * hedge-coloured band at its foot, so a clear gap of depth separates it from the shop fronts.
+ */
 function panorama(ctx, v, img) {
-  const W = Math.max(v.vw + 60, 1500), H = (W * img.naturalHeight) / img.naturalWidth;
-  const x = DESIGN.w / 2 - W / 2, y = DESIGN.baseY + 8 - H;
-  const cols = sampleTop(img);
-  const grad = (a) => {
-    const g = ctx.createLinearGradient(x, 0, x + W, 0);
-    cols.forEach((c, i) => g.addColorStop(i / (cols.length - 1), `rgba(${c},${a})`));
-    return g;
-  };
-  const top = -v.oy - 12;
-  if (y > top) { ctx.fillStyle = grad(1); ctx.fillRect(x, top, W, y - top + 2); }
-  ctx.drawImage(img, x, y, W, H);
-  // blend the top edge into the extended sky colour via an offscreen strip with a vertical alpha ramp
+  const W = Math.max(v.vw + 60, 1500) * 1.1, H = (W * img.naturalHeight) / img.naturalWidth;
+  const x = DESIGN.w / 2 - W / 2, bottom = DESIGN.baseY - 34, y = bottom - H;
+  const top = sampleEdge(img, 'top'), foot = sampleEdge(img, 'bottom');
+  const topY = -v.oy - 12;
+  if (y > topY) { ctx.fillStyle = hGrad(ctx, x, W, top, 1); ctx.fillRect(x, topY, W, y - topY + 2); }
+  ctx.drawImage(soften(img), x, y, W, H);
+
+  // atmospheric haze: light blue veil, strongest near the horizon band
+  const haze = ctx.createLinearGradient(0, y, 0, bottom);
+  haze.addColorStop(0, 'rgba(170,205,240,0.10)'); haze.addColorStop(0.55, 'rgba(185,215,238,0.26)'); haze.addColorStop(1, 'rgba(150,190,200,0.34)');
+  ctx.fillStyle = haze; ctx.fillRect(x, y, W, H);
+  // darkened foot: shade falling from the shops onto the hedge behind them
+  const shade = ctx.createLinearGradient(0, bottom - 120, 0, bottom);
+  shade.addColorStop(0, 'rgba(10,35,20,0)'); shade.addColorStop(1, 'rgba(10,35,20,0.4)');
+  ctx.fillStyle = shade; ctx.fillRect(x, bottom - 120, W, 120);
+
+  // soft top edge into the extended sky
   const strip = document.createElement('canvas');
   strip.width = 64; strip.height = 46;
   const sg = strip.getContext('2d');
-  const gx = sg.createLinearGradient(0, 0, 64, 0);
-  cols.forEach((c, i) => gx.addColorStop(i / (cols.length - 1), `rgb(${c})`));
-  sg.fillStyle = gx; sg.fillRect(0, 0, 64, 46);
+  sg.fillStyle = hGrad(sg, 0, 64, top, 1); sg.fillRect(0, 0, 64, 46);
   sg.globalCompositeOperation = 'destination-in';
   const ga = sg.createLinearGradient(0, 0, 0, 46);
   ga.addColorStop(0, 'rgba(0,0,0,1)'); ga.addColorStop(1, 'rgba(0,0,0,0)');
   sg.fillStyle = ga; sg.fillRect(0, 0, 64, 46);
   ctx.drawImage(strip, x, y, W, 46);
+
+  // dark hedge / shadow band between the backdrop and the pavement
+  const g = ctx.createLinearGradient(x, 0, x + W, 0);
+  foot.forEach((c, i) => g.addColorStop(i / (foot.length - 1), `rgb(${Math.round(c[0] * 0.78)},${Math.round(c[1] * 0.82)},${Math.round(c[2] * 0.72)})`));
+  ctx.fillStyle = g; ctx.fillRect(x, bottom - 2, W, DESIGN.baseY + 10 - bottom + 2);
+  const fade = ctx.createLinearGradient(0, bottom - 2, 0, bottom + 18);
+  fade.addColorStop(0, 'rgba(10,35,20,0.28)'); fade.addColorStop(1, 'rgba(10,35,20,0.05)');
+  ctx.fillStyle = fade; ctx.fillRect(x, bottom - 2, W, 20);
 }
