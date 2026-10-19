@@ -3,10 +3,11 @@
 import { DESIGN } from '../config.js';
 import { getImage } from '../assets.js';
 import { vgrad, shadow, glowAt, rrect, paint } from '../util.js';
+import { drawProp } from './props.js';
 
 export class MarketScene {
   /** `id` is the scene id and `imageKey` the building art drawn on the left (the Bookshop reuses this layout). */
-  constructor(id = 'market', imageKey = 'market') { this.id = id; this.imageKey = imageKey; this.t = 0; this.view = null; }
+  constructor(id = 'market', imageKey = 'market', props = { back: [], front: [] }) { this.id = id; this.imageKey = imageKey; this.props = props; this.t = 0; this.view = null; }
   resize(view) { this.view = view; }
   hitTest() { return null; }
   press() {}
@@ -24,6 +25,7 @@ export class MarketScene {
     ctx.fillStyle = vgrad(ctx, floor, yBot, [[0, '#c9955c'], [1, '#97642f']]); ctx.fillRect(x0, floor, w, yBot - floor);
     ctx.strokeStyle = 'rgba(60,28,6,.35)'; ctx.lineWidth = 2;
     for (let y = floor + 40; y < yBot; y += 48) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke(); }
+    for (const p of this.props.back) drawProp(ctx, p.name, p.x, p.y, p.h, { flip: p.flip });
     // the Market building, big on the left
     const img = getImage(this.imageKey);
     if (img) {
@@ -36,6 +38,7 @@ export class MarketScene {
       glowAt(ctx, x + iw * 0.84, y + h * 0.56, 70, '255,190,80', 0.3 * flick);
       ctx.globalCompositeOperation = 'source-over';
     } else { rrect(ctx, 80, 160, 340, 400, 12); paint(ctx, '#c08648', 3); }
+    for (const p of this.props.front) drawProp(ctx, p.name, p.x, p.y, p.h, { flip: p.flip });
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     const W = ctx.canvas.width, H = ctx.canvas.height;
     const g = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.45, W / 2, H * 0.5, Math.max(W, H) * 0.75);

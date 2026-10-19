@@ -258,3 +258,8 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 - **Birim testleri:** `npm test` — oyun mantığı, ekonomi, kayıt, sekme koruması, varlık yükleme (DOM gerektirmez, saniyeler içinde biter).
 - **Tarayıcı testleri:** `npm run test:e2e` — gerçek tarayıcıda tüm ekranlar × 4 telefon boyutu (taşma, ≥ 40 px düğme, ≥ 12 px yazı, konsol hatası), çekirdek oyun döngüsü, ilerleme sistemleri ve dayanıklılık senaryoları. Proje bağımlılığı eklenmez; Playwright ve Chromium yolu ortam değişkenleriyle verilir. Ayrıntı: `tests/e2e/README.md`.
 - Her kalite turu sonunda ikisi de çalıştırılır; ekran boyutu/okunabilirlik regresyonlarını yalnızca e2e yakalar.
+
+## Asset turu: kullanılmayan prop'lar ve kafe iç mekânı hazırlığı
+
+- `assets/props/` içindeki 26 prop'un tamamı artık yüklenir (`PROPS` listesi, `src/assets.js`). Sokakta: taş ve altın bariyerler, saksılar, fıçılı çiçek, orta plandaki bina diplerinde (`midground.js` → `STREET_PROPS`). Market ekranında: çeşme, kasalar, fıçılar, el arabası; Kitapçı ekranında: üçlü lamba, ahşap bank, mavi/yeşil saksılar, tahta, kovalar (`src/scene/scene-props.js`).
+- Kafe iç mekânı için "bırak ve çalışsın" altyapı: `assets/interior/README.md` ve `INTERIOR_ART`. Bir parça dosyası eklenip adı listeye yazılınca sahne kodla çizileni bırakır, görseli kutusuna oturtur; fırın ateşi ve vitrin stoğu üstüne çizilmeye devam eder.

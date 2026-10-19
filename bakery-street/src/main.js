@@ -16,6 +16,7 @@ import { TabGuard } from './game/tabguard.js';
 import { InteriorScene } from './scene/interior-scene.js';
 import { createPanels } from './ui/panels.js';
 import { MarketScene } from './scene/market-scene.js';
+import { MARKET_PROPS, BOOKSHOP_PROPS } from './scene/scene-props.js';
 import { createMarketPanel } from './ui/market.js';
 import { loadAssets } from './assets.js';
 import { StreetScene } from './scene/street-scene.js';
@@ -63,9 +64,9 @@ const daily = new DailyReward(game);              // daily reward cycle (src/gam
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
-const marketScene = new MarketScene();
+const marketScene = new MarketScene('market', 'market', MARKET_PROPS);
 const exploreScene = new ExploreScene(exploration);
-const bookshopScene = new MarketScene('bookshop', 'bookshop');   // same landscape layout as the Market screen
+const bookshopScene = new MarketScene('bookshop', 'bookshop', BOOKSHOP_PROPS);   // same landscape layout as the Market screen
 const saveWarn = document.getElementById('saveWarn');
 const tabLock = document.getElementById('tabLock');
 const store = safeStorage(window);

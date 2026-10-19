@@ -15,18 +15,22 @@ export const MANIFEST = {
   'char-girl_hat': 'assets/characters/girl_hat.webp',
   'char-oldman': 'assets/characters/oldman.webp',
   'char-chef': 'assets/characters/chef.webp',
-  'prop-bench_iron': 'assets/props/bench_iron.webp',
-  'prop-bollard_black': 'assets/props/bollard_black.webp',
-  'prop-bollard_stone': 'assets/props/bollard_stone.webp',
-  'prop-lamp': 'assets/props/lamp.webp',
-  'prop-planter_flowers': 'assets/props/planter_flowers.webp',
-  'prop-planter_flowers2': 'assets/props/planter_flowers2.webp',
-  'prop-pot_topiary': 'assets/props/pot_topiary.webp',
-  'prop-urn': 'assets/props/urn.webp',
   'ground-walk-a': 'assets/ground-walk-a.webp',   // sidewalk slab strips (tile left-to-right)
   'ground-walk-b': 'assets/ground-walk-b.webp',
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha
 };
+
+// Street / scene props (assets/props/<name>.webp), registered under the key 'prop-<name>'.
+export const PROPS = ['barrel', 'barrel2', 'barrel_flowers', 'bench_iron', 'bench_wood', 'bollard_black', 'bollard_gold', 'bollard_stone', 'cart',
+  'chalkboard', 'crates', 'fountain', 'lamp', 'lamp_triple', 'planter_blue', 'planter_blue2', 'planter_box', 'planter_flowers', 'planter_flowers2',
+  'planter_green', 'planter_wood', 'pot_flowers', 'pot_small', 'pot_topiary', 'pot_topiary2', 'urn'];
+for (const name of PROPS) MANIFEST[`prop-${name}`] = `assets/props/${name}.webp`;
+
+// Cafe interior art is drop-in: a name listed in INTERIOR_ART is loaded from assets/interior/<name>.webp and used by the scene instead of
+// its own drawing. Names that are not listed are never requested (no 404 noise). Possible names: wall, floor, oven, counter, showcase,
+// coffee, storage, upgrades, table, chair (see assets/interior/README.md).
+export const INTERIOR_ART = [];
+for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`;
 
 const images = {};
 

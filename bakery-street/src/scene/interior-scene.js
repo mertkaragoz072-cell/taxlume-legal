@@ -3,6 +3,7 @@ import { DESIGN } from '../config.js';
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor } from '../util.js';
 import { AREAS, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
 import { formatTime } from '../game/game.js';
+import { getImage } from '../assets.js';
 import { CustomerLayer } from './interior-customers.js';
 
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
@@ -51,7 +52,7 @@ export class InteriorScene {
       const press = this.pressedId === a.id ? 1.5 : 0;
       ctx.save();
       if (press) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
-      ART[a.id]?.(ctx, a, this);
+      if (!this.areaAsset(ctx, a)) ART[a.id]?.(ctx, a, this);
       ctx.restore();
     }
     for (const a of AREAS) this.overlay(ctx, a);
@@ -70,8 +71,30 @@ export class InteriorScene {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 
+  /**
+   * Draws the supplied art for an area (assets/interior/<id>.webp; the three tables share 'table') fitted inside the area's box,
+   * standing on its bottom edge. Returns false when there is no art, so the procedural drawing is used. Live details (oven fire,
+   * showcase stock) are drawn on top so the machines still show what they are doing.
+   */
+  areaAsset(ctx, a) {
+    const img = getImage(`int-${a.id.startsWith('table') ? 'table' : a.id}`);
+    if (!img) return false;
+    const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s, h = img.naturalHeight * s;
+    shadow(ctx, a.x + a.w / 2, a.y + a.h + 4, w * 0.5, 10, 0.28);
+    ctx.drawImage(img, a.x + (a.w - w) / 2, a.y + a.h - h, w, h);
+    if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
+    if (a.id === 'showcase') showcaseStock(ctx, a, this);
+    return true;
+  }
+
   /** Wall, wainscot, window, floor. */
   room(ctx, x0, w, yTop, yBot) {
+    const wall = getImage('int-wall'), floor = getImage('int-floor');
+    if (wall && floor) { // supplied wall and floor art, tiled sideways
+      const tile = (img, y, h) => { const tw = (img.naturalWidth / img.naturalHeight) * h; for (let x = x0 - (((x0 % tw) + tw) % tw); x < x0 + w; x += tw) ctx.drawImage(img, x, y, tw + 1, h); };
+      tile(wall, yTop, FLOOR_Y - yTop); tile(floor, FLOOR_Y, yBot - FLOOR_Y);
+      return;
+    }
     ctx.fillStyle = vgrad(ctx, yTop, FLOOR_Y, [[0, '#f6e2b4'], [1, '#e8c98c']]);
     ctx.fillRect(x0, yTop, w, FLOOR_Y - yTop);
     // wallpaper stripes
@@ -167,13 +190,7 @@ const ART = {
     rrect(ctx, x, y + 120, w, h - 120, 10); paint(ctx, vgrad(ctx, y + 120, y + h, [[0, '#b27a44'], [1, '#6a3d1c']]), 3.5);
     rrect(ctx, x + 6, y + 30, w - 12, 94, 8); paint(ctx, vgrad(ctx, y + 30, y + 124, [[0, '#d6efff'], [1, '#fff1cc']]), 3);   // glass case
     ctx.fillStyle = 'rgba(255,255,255,.28)'; poly(ctx, [[x + 20, y + 32], [x + 70, y + 32], [x + 30, y + 122], [x + 14, y + 122]]); ctx.fill();
-    // stock icons: one tiny pile per product in stock
-    let ix = x + 28;
-    for (const [id, def] of Object.entries(scene.game.productsDef)) {
-      const n = scene.game.products[id];
-      if (n > 0) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(def.icon, ix, y + 78); label(ctx, `×${n}`, ix, y + 110, { font: '700 17px sans-serif', fill: '#fff', lw: 4 }); }
-      ix += 76;
-    }
+    showcaseStock(ctx, a, scene);
     rrect(ctx, x - 6, y + 14, w + 12, 18, 6); paint(ctx, '#c93a2e', 3);   // canopy
   },
   coffee(ctx, a, scene) {
@@ -210,6 +227,17 @@ const ART = {
   table2: (ctx, a) => drawTable(ctx, a),
   table3: (ctx, a) => drawTable(ctx, a),
 };
+
+/** Stock icons in the showcase glass: one small pile per product in stock. */
+function showcaseStock(ctx, a, scene) {
+  const { x, y } = a;
+    let ix = x + 28;
+    for (const [id, def] of Object.entries(scene.game.productsDef)) {
+      const n = scene.game.products[id];
+      if (n > 0) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(def.icon, ix, y + 78); label(ctx, `×${n}`, ix, y + 110, { font: '700 17px sans-serif', fill: '#fff', lw: 4 }); }
+      ix += 76;
+    }
+}
 
 function drawTable(ctx, a) {
   const cx = a.x + a.w / 2, y = a.y + a.h;

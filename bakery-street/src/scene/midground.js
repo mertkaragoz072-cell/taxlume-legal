@@ -10,6 +10,11 @@ import {
 } from './parts.js';
 
 const B = DESIGN.baseY;
+/** [prop, x, height, flip] standing at the foot of the shop fronts. */
+const STREET_PROPS = [
+  ['planter_wood', 56, 74], ['planter_flowers', 232, 64], ['pot_topiary', 384, 112], ['pot_small', 424, 56],
+  ['pot_small', 984, 56, true], ['pot_topiary2', 1022, 112], ['pot_flowers', 1060, 70], ['planter_flowers2', 1226, 66, true], ['barrel_flowers', 1352, 66],
+];
 
 /** Returns lamp-top positions so the scene can add animated glow. */
 /** Street lamps flanking the bakery; with the final art they sit behind its umbrellas. */
@@ -25,6 +30,10 @@ export function drawMidground(ctx, v) {
   const art = bakery.usesAsset;
   const lamps = art ? [] : drawLamps(ctx);
 
+  if (hasProps()) { // supplied prop art along the building feet (behind the walkers)
+    const fy = DESIGN.groundY + 26;
+    for (const [name, x, h, flip] of STREET_PROPS) drawProp(ctx, name, x, fy, h, { flip });
+  }
   if (!art) { // the final bakery art already includes its own chalkboard, planters and tables
     chalkboard(ctx, 572, B + 22, 64, 92, 'cup');
     chalkboard(ctx, 830, B + 22, 64, 92, 'bread');

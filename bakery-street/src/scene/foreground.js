@@ -14,7 +14,9 @@ export function drawForeground(ctx, v) {
     for (const x of [96, 1304]) drawProp(ctx, 'lamp', x, gy + 128, 250);
     drawProp(ctx, 'bench_iron', 300, gy + 140, 112);
     drawProp(ctx, 'bench_iron', 1100, gy + 140, 112, { flip: true });
-    for (const x of [180, 450, 950, 1220]) drawProp(ctx, 'bollard_black', x, gy + 134, 62);
+    for (const x of [450, 950]) drawProp(ctx, 'bollard_black', x, gy + 134, 62);
+    for (const x of [180, 1220]) drawProp(ctx, 'bollard_stone', x, gy + 134, 62);
+    for (const x of [600, 800]) drawProp(ctx, 'bollard_gold', x, gy + 138, 66);
   } else {
     bench(ctx, 310, y + 78, 190);
     bench(ctx, 1090, y + 78, 190);
