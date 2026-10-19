@@ -16,9 +16,9 @@ export const bookshop = {
   configure() {
     const img = getImage('bookshop');
     if (!img) return;
-    const w = 415, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 600;
+    const w = 470, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 600;
     this.usesAsset = true;
-    this.bounds = { x: 170 - w / 2, y: bottom - h, w, h };
+    this.bounds = { x: 160 - w / 2, y: bottom - h, w, h };
     this.lights = []; // lamps and windows are already lit in the art
   },
 

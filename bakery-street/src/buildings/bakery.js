@@ -23,7 +23,7 @@ export const bakery = {
   configure() {
     const img = getImage('bakery');
     if (!img) return;
-    const w = 790, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 612;
+    const w = 730, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 612;
     this.usesAsset = true;
     this.bounds = { x: 700 - w / 2, y: bottom - h, w, h };
     this.pivot = { x: 700, y: bottom - 6 };
