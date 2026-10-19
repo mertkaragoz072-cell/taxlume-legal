@@ -21,7 +21,7 @@ export function createSettingsPanel(root, settings, { onReset, onChanged }) {
         ${row('vibration', '📳', 'Titreşim', supportsVibration, supportsVibration ? '' : 'Bu cihaz titreşimi desteklemiyor')}
         <div class="card danger">
           ${confirming
-            ? `<div class="cm"><div class="ct"><b>Emin misin?</b></div><div class="meta">Tüm ilerleme (altın, elmas, stok, görevler, geliştirmeler, günlük ödül) silinir. Eski kayıt yedeklenir. Ayarların değişmez.</div></div>
+            ? `<div class="cm"><div class="ct"><b>Emin misin?</b></div><div class="meta">Tüm ilerleme (altın, stok, görevler, geliştirmeler, araştırmalar, keşif, günlük ödül) silinir. Eski kayıt yedeklenir. Ses ve titreşim ayarların korunur.</div></div>
                <div class="btns"><button class="go lack" data-reset-confirm>Evet, sıfırla</button><button class="go alt" data-reset-cancel>Vazgeç</button></div>`
             : `<div class="cm"><div class="ct"><b>İlerlemeyi sıfırla</b></div><div class="meta muted">Oyuna baştan başlar. Önce onay istenir.</div></div>
                <button class="go lack" data-reset-ask>Sıfırla…</button>`}

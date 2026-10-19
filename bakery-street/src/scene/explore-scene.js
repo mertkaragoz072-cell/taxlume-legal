@@ -1,6 +1,6 @@
 // Exploration map: a warm, hand-painted-style parchment map drawn with canvas shapes (no image assets).
 // Each region is a marker on the left half; the details and buttons are a DOM panel (ui/explore.js) on the right.
-import { rng, vgrad, shadow, glowAt, paint, poly } from '../util.js';
+import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor } from '../util.js';
 
 const R = 62;                                              // tap radius of a marker (design px)
 
@@ -71,11 +71,11 @@ export class ExploreScene {
     this.badge(ctx, r, st, t);
     ctx.restore();
     // name plate
-    ctx.font = '700 22px "Trebuchet MS", system-ui, sans-serif'; ctx.textAlign = 'center';
-    const tw = ctx.measureText(r.name).width + 26;
-    ctx.beginPath(); ctx.roundRect(x - tw / 2, y + 74, tw, 34, 12);
+    ctx.font = fontCss('700 22px "Trebuchet MS", system-ui, sans-serif'); ctx.textAlign = 'center';
+    const tw = ctx.measureText(r.name).width + 26, th = Math.max(34, textFloor.px * 1.5);
+    ctx.beginPath(); ctx.roundRect(x - tw / 2, y + 74, tw, th, 12);
     paint(ctx, '#fff3d0', 3, '#7a4a1c');
-    ctx.fillStyle = locked ? '#7a6a52' : '#4a2a10'; ctx.fillText(r.name, x, y + 98);
+    ctx.fillStyle = locked ? '#7a6a52' : '#4a2a10'; ctx.textBaseline = 'middle'; ctx.fillText(r.name, x, y + 74 + th / 2 + 1);
   }
 
   badge(ctx, r, st, t) {
@@ -84,10 +84,10 @@ export class ExploreScene {
     else if (st === 'ready') { label = '🎁'; col = '#3fa63a'; }
     else if (st === 'active') { label = formatShort(this.ex.remaining()); col = '#3a7bd5'; }
     if (!label) return;
-    ctx.font = '700 22px "Trebuchet MS", system-ui, sans-serif'; ctx.textAlign = 'center';
-    const w = Math.max(44, ctx.measureText(label).width + 22);
-    ctx.beginPath(); ctx.roundRect(-w / 2, -92, w, 36, 18); paint(ctx, col, 3, '#3a2213');
-    ctx.fillStyle = '#fff'; ctx.fillText(label, 0, -67);
+    ctx.font = fontCss('700 22px "Trebuchet MS", system-ui, sans-serif'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = Math.max(44, ctx.measureText(label).width + 22), h = Math.max(36, textFloor.px * 1.5);
+    ctx.beginPath(); ctx.roundRect(-w / 2, -92, w, h, h / 2); paint(ctx, col, 3, '#3a2213');
+    ctx.fillStyle = '#fff'; ctx.fillText(label, 0, -92 + h / 2 + 1);
   }
 
   meadow(ctx) {

@@ -153,11 +153,11 @@ test('Usta Satıcı raises showcase income', () => {
   const { game, research, player } = make();
   game.products.bread = 4;
   game.sellProduct('bread', 1);
-  assert.equal(player.gold, 1_000_000 + PRODUCTS.bread.price);
+  assert.equal(player.gold, 1_000_000 + game.showcaseIncome(PRODUCTS.bread.price));
   research.levels.masterSeller = 5;
   const g = player.gold;
   const r = game.sellProduct('bread', 2);
-  const unit = Math.round(PRODUCTS.bread.price * (1 + R.masterSeller.values[5]));
+  const unit = Math.round(PRODUCTS.bread.price * game.sales.showcaseRate * (1 + R.masterSeller.values[5]));
   assert.equal(r.income, unit * 2);
   assert.equal(player.gold, g + unit * 2);
 });

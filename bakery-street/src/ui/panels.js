@@ -15,7 +15,7 @@ export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
     oven: 'Hamur işlerini fırında pişir.',
     coffee: 'Kahveyi makinede hazırla.',
     counter: 'Tüm ürünlerin tarifleri. Üretim ilgili makinede başlar.',
-    showcase: 'Hazır ürünlerini satarak altın kazan.',
+    showcase: 'Vitrinden satış, müşteri siparişinden daha az kazandırır. Müşteriye vermek daha kârlı.',
     storage: 'Üretim için malzeme satın al.',
     upgrades: 'Fırın & Kafe için kalıcı geliştirmeler. Etkiler üretim ve vitrine hemen uygulanır.',
   };
@@ -36,7 +36,7 @@ export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
         <div class="cm">
           <div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${game.products[pid]}</i>/${game.showcaseLimit()}</span></div>
           <div class="ing">${chips}</div>
-          <div class="meta">⏱ ${formatTime(game.duration(pid))}${game.duration(pid) < d.time ? ` <s class="muted">${formatTime(d.time)}</s>` : ''} · 💰 ${fmt(game.saleIncome(d.price))} · <span class="muted">${game.stationsDef[d.station].name}</span></div>
+          <div class="meta">⏱ ${formatTime(game.duration(pid))}${game.duration(pid) < d.time ? ` <s class="muted">${formatTime(d.time)}</s>` : ''} · 💰 ${fmt(game.saleIncome(d.price))} müşteri · <span class="muted">${game.stationsDef[d.station].name}</span></div>
           <div class="bar" data-bar="${pid}" hidden><i></i><em></em></div>
         </div>
         <button class="go" data-make="${pid}">Üret</button>
@@ -49,7 +49,7 @@ export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
       const n = game.products[pid];
       return `<div class="card" data-p="${pid}">
         <div class="ci">${d.icon}</div>
-        <div class="cm"><div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${n}</i>/${game.showcaseLimit()}</span></div><div class="meta">💰 ${fmt(game.saleIncome(d.price))} / adet</div></div>
+        <div class="cm"><div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${n}</i>/${game.showcaseLimit()}</span></div><div class="meta">💰 ${fmt(game.showcaseIncome(d.price))} / adet</div></div>
         <div class="btns"><button class="go sm" data-sell="${pid}" data-qty="1">Sat</button><button class="go sm alt" data-sell="${pid}" data-qty="all">Hepsi</button></div>
       </div>`;
     }).join('');

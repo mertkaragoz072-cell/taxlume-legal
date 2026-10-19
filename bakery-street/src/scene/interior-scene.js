@@ -1,6 +1,6 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { DESIGN } from '../config.js';
-import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp } from '../util.js';
+import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor } from '../util.js';
 import { AREAS, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
 import { formatTime } from '../game/game.js';
 import { CustomerLayer } from './interior-customers.js';
@@ -108,16 +108,17 @@ export class InteriorScene {
     const cx = a.x + a.w / 2;
     const sel = this.selected === a.id;
     const text = a.label;
-    ctx.font = FONT;
-    const tw = ctx.measureText(text).width + 28, ty = a.y - 22;
-    rrect(ctx, cx - tw / 2, ty - 17, tw, 34, 17);
-    paint(ctx, sel ? vgrad(ctx, ty - 17, ty + 17, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - 17, ty + 17, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');
-    label(ctx, text, cx, ty + 1, { font: FONT, fill: '#4a2a12', lw: 0 });
+    ctx.font = fontCss(FONT);
+    const tw = ctx.measureText(text).width + 28, ty = a.y - 22, th = Math.max(34, textFloor.px * 1.5);
+    const lx = clamp(cx, tw / 2 + 8, DESIGN.w - tw / 2 - 8);          // keep the tag inside the screen (e.g. "Geliştirmeler" at the right edge)
+    rrect(ctx, lx - tw / 2, ty - th / 2, tw, th, th / 2);
+    paint(ctx, sel ? vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');
+    label(ctx, text, lx, ty + 1, { font: FONT, fill: '#4a2a12', lw: 0 });
     if (!a.station) return;
     const jobs = [...this.game.jobsOf(a.station)].sort((p, q) => this.game.remainingOf(p) - this.game.remainingOf(q));
-    const bw = Math.min(a.w - 30, 220), many = jobs.length > 1, bh = many ? 18 : 24, step = bh + 4;
+    const bw = Math.min(a.w - 30, 220), many = jobs.length > 1, bh = Math.max(many ? 18 : 24, textFloor.px * 1.25), step = bh + 4;
     jobs.forEach((job, i) => {
-      const by = ty + 34 + i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
+      const by = ty + th / 2 + 17 + i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
       rrect(ctx, cx - bw / 2, by, bw, bh, bh / 2); paint(ctx, '#4a3a2a', 2.5);
       ctx.save(); rrect(ctx, cx - bw / 2 + 2, by + 2, bw - 4, bh - 4, bh / 2 - 2); ctx.clip();
       ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, '#9be86a'], [1, '#3fa63a']]); ctx.fillRect(cx - bw / 2, by, bw * prog, bh);

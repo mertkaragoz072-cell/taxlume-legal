@@ -18,7 +18,7 @@ export function createQuestPanel(root, game, quests, { onClaimed, onWarn }) {
     return `<div class="card quest ${state}" data-q="${q.id}">
       <div class="ci">${q.icon}</div>
       <div class="cm">
-        <div class="ct"><b>${q.name}</b><span class="muted">${s.progress}/${q.target}</span></div>
+        <div class="ct"><b>${q.name}</b></div>
         <div class="meta">${q.condition}</div>
         <div class="bar"><i style="width:${pct}%"></i><em>${s.progress}/${q.target}</em></div>
         <div class="meta reward">Ödül: ${rewardText(q.reward)}</div>

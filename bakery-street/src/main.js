@@ -32,6 +32,7 @@ import { Progression } from './game/progression.js';
 import { createHud } from './ui/hud.js';
 import { createNav } from './ui/nav.js';
 import { AREAS } from './scene/interior-layout.js';
+import { textFloor } from './util.js';
 import { showToast } from './ui/toast.js';
 
 const canvas = document.getElementById('game');
@@ -76,8 +77,7 @@ const view = { W: 0, H: 0, dpr: 1, scale: 1, vw: 0, vh: 0, ox: 0, oy: 0 };
 const stage = document.getElementById('stage');
 const fade = document.getElementById('fade');
 const hud = createHud(document.getElementById('hud'), {
-  onButton: (id) => { const panel = { quests: questPanel, events: dailyPanel, settings: settingsPanel }[id]; if (panel) openOverlay(panel); else showToast(toast, 'Yakında'); },
-  onAdd: () => showToast(toast, 'Yakında'),
+  onButton: (id) => { const panel = { quests: questPanel, events: dailyPanel, settings: settingsPanel }[id]; if (panel) openOverlay(panel); },
 });
 const panels = createPanels(document.getElementById('panel'), game, {
   onWarn: (msg) => warn(msg, 2600),
@@ -191,6 +191,7 @@ function layout() {
   view.W = W; view.H = H; view.dpr = Math.max(1, dpr);
   view.scale = Math.min(W / DESIGN.w, H / DESIGN.h);
   view.vw = W / view.scale; view.vh = H / view.scale;
+  textFloor.px = 12 / view.scale;                  // canvas labels never render below ~12 screen px
   view.ox = (view.vw - DESIGN.w) / 2;
   view.oy = view.vh - DESIGN.h;
   canvas.width = Math.ceil(W * view.dpr);
@@ -249,7 +250,6 @@ createNav(document.getElementById('nav'), {
     if (id === 'cafe') { townPanel.close(); street.tapBuilding('bakery', DESIGN.w / 2, 400); setTimeout(() => go('interior'), 260); }
     else if (id === 'town') openOverlay(townPanel);
     else if (id === 'explore') { for (const p of [townPanel, questPanel, dailyPanel, settingsPanel]) p.close(); go('explore'); }
-    else showToast(toast, 'Yakında');
   },
 });
 backBtn.addEventListener('click', () => go('street'));

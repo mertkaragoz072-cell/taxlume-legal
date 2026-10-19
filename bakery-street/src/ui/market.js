@@ -18,7 +18,7 @@ export function createMarketPanel(root, game, { onWarn, onBought }) {
       <div class="ci">${d.icon}</div>
       <div class="cm">
         <div class="ct"><b>${d.name}</b><span class="muted">Stok: <i data-stock>${game.ingredients[id]}</i></span></div>
-        <div class="meta">💰 ${fmt(d.price)} / adet · Alınabilir: <i data-afford>${fmt(Math.min(max, game.maxAffordable(id)))}</i></div>
+        <div class="meta">💰 ${fmt(d.price)} / adet</div>
         <div class="meta muted">Tarif: ${usedBy(id)}</div>
         <div class="qty">
           <button class="qb" data-act="dec" aria-label="Azalt">−</button>

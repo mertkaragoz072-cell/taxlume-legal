@@ -1,9 +1,8 @@
-// Placeholder-art registry.
+// Artwork registry: every image the game draws, keyed by name.
 //
-// Everything on the street is currently drawn procedurally by its own module.
-// To swap in real artwork, drop a PNG/WebP into ./assets and set its path here.
-// A module that calls drawAsset(key, ...) will use the image when present and
-// fall back to its procedural drawing when the path is null.
+// To replace artwork, drop a WebP/PNG into ./assets and change its path here.
+// A module that calls drawAsset(key, ...) uses the image when it is loaded and
+// falls back to its own procedural drawing when the image is missing.
 export const MANIFEST = {
   bakery: 'assets/bakery.webp',   // final art (transparent WebP); the procedural drawing is the fallback
   bookshop: 'assets/bookshop.webp',

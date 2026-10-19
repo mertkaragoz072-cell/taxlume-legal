@@ -1,5 +1,5 @@
 // Pure game logic for production, stock and gold. No DOM or canvas here, so it can be unit-tested in Node.
-import { INGREDIENTS, PRODUCTS, STATIONS, MARKET, UPGRADES } from '../data/economy.js';
+import { INGREDIENTS, PRODUCTS, STATIONS, MARKET, UPGRADES, SALES } from '../data/economy.js';
 
 const fmtGold = (n) => n.toLocaleString('tr-TR');
 
@@ -23,6 +23,7 @@ export class Game {
     this.stationsDef = data.stations ?? STATIONS;
     this.marketDef = data.market ?? MARKET;
     this.upgradesDef = data.upgrades ?? UPGRADES;
+    this.sales = data.sales ?? SALES;
     this.stats = blankStats(this.productsDef);
     this.upgrades = Object.fromEntries(Object.keys(this.upgradesDef).map((id) => [id, 0]));   // current level of each upgrade
     this.handledRequests = new Set();   // purchase request ids already applied (guards against a replayed click)
@@ -86,8 +87,10 @@ export class Game {
   // ---- research bonuses (src/game/research.js): each one is applied in exactly one place below -------------------
   /** Current bonus fraction of a research effect (0 when there is no research system or nothing bought). */
   bonus(effect) { return this.research?.bonus(effect) ?? 0; }
-  /** Gold earned by selling one unit whose base price is `base` (Usta Satıcı). */
+  /** Gold earned by one customer order whose base price is `base` (Usta Satıcı). */
   saleIncome(base) { return Math.round(base * (1 + this.bonus('saleIncome'))); }
+  /** Gold earned by selling one unit straight from the showcase: the central SALES.showcaseRate share of the order price. */
+  showcaseIncome(base) { return Math.round(base * this.sales.showcaseRate * (1 + this.bonus('saleIncome'))); }
   /** Gold refunded when starting `id`: a share of the consumed ingredients' value (Verimli Üretim). */
   ingredientRebate(id) {
     const b = this.bonus('ingredientCost');
@@ -303,7 +306,7 @@ export class Game {
     const def = this.productsDef[id];
     if (!def || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satış.' };
     if (this.products[id] < qty) return { ok: false, reason: 'stock', message: `Stokta yeterli ${def.name} yok.` };
-    const income = this.saleIncome(def.price) * qty;
+    const income = this.showcaseIncome(def.price) * qty;
     this.products[id] -= qty;
     this.player.gold += income;
     this.recordSold(id, qty);

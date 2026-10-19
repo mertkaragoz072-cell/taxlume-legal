@@ -240,6 +240,8 @@ test('progress, claimed rewards, gold and granted ingredients survive a reload; 
   assert.equal(b.quests.claim('sellFive').ok, true);            // unclaimed completed quests stay claimable
 });
 
+const c_showcase = (a) => a.game.showcaseIncome(PRODUCTS.bread.price);
+
 test('collecting a reward is saved in one snapshot (flag, gold and ingredients together)', () => {
   const st = new FakeStorage(), clock = { now: T0 };
   const a = session(st, clock, 0); a.mgr.load(); a.mgr.attach();
@@ -249,7 +251,7 @@ test('collecting a reward is saved in one snapshot (flag, gold and ingredients t
   assert.equal(saved.version, SAVE_VERSION);
   assert.deepEqual(saved.quests.claimed, ['firstSale']);
   const reward = QUESTS.find((q) => q.id === 'firstSale').reward;
-  assert.equal(saved.gold, PRODUCTS.bread.price + reward.gold);
+  assert.equal(saved.gold, c_showcase(a) + reward.gold);
   assert.equal(saved.ingredients.flour, INGREDIENTS.flour.start + reward.ingredients.flour);
   assert.equal(saved.stats.soldTotal, 1);
 });

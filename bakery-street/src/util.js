@@ -60,8 +60,13 @@ export function glowAt(ctx, x, y, r, rgb, a) {
   ctx.fillRect(x - r, y - r, r * 2, r * 2);
 }
 
+/** Smallest canvas font size (in design pixels) that still renders at ~12 screen pixels. main.js updates it on every layout. */
+export const textFloor = { px: 0 };
+/** Raises the first `NNpx` size in a CSS font string to the readable floor. */
+export const fontCss = (font) => font.replace(/(\d+(?:\.\d+)?)px/, (_, n) => `${Math.max(+n, textFloor.px).toFixed(1)}px`);
+
 export function label(ctx, str, x, y, { font, fill = '#fff', stroke = INK, lw = 4, align = 'center' } = {}) {
-  ctx.font = font;
+  ctx.font = fontCss(font);
   ctx.textAlign = align;
   ctx.textBaseline = 'middle';
   if (lw) { ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.lineJoin = 'round'; ctx.strokeText(str, x, y); }

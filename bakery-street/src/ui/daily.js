@@ -30,7 +30,7 @@ export function createDailyPanel(root, game, daily, { onClaimed, onWarn }) {
       : `Bugünün ödülü: Gün ${s.nextDay}/${n}.`;
     root.hidden = false;
     root.innerHTML = `<div class="panel-head"><b>Günlük Ödül</b><button class="x" aria-label="Kapat">✕</button></div>
-      <p class="hint">${info}<br>Her gün gir, seri sürsün. Bir günü kaçırırsan seri 1. günden başlar.</p>
+      <p class="hint keep">${info}<br>Her gün gir, seri sürsün. Bir günü kaçırırsan seri 1. günden başlar.</p>
       <div class="panel-body">
         <button class="go claim-day" data-daily ${s.canClaim ? '' : 'disabled'}>${s.canClaim ? `Ödülü Al · Gün ${s.nextDay}` : 'Bugün alındı'}</button>
         ${cards}

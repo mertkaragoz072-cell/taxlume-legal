@@ -54,7 +54,7 @@ export function createExplorePanel(root, game, ex, { onStarted, onClaimed, onWar
     const list = ex.list();
     root.hidden = false;
     root.innerHTML = `<div class="panel-head"><b>🧭 Keşif</b></div>
-      <p class="hint">Aynı anda bir keşif · süre gerçek zamanlı, oyun kapalıyken de ilerler</p>
+      <p class="hint keep">Aynı anda bir keşif · süre gerçek zamanlı, oyun kapalıyken de ilerler</p>
       <div class="panel-body">${list.map(card).join('')}</div>`;
     root.querySelector('.panel-body').scrollTop = prev;
     if (selected) root.querySelector(`[data-r=${selected}]`)?.scrollIntoView({ block: 'nearest' });

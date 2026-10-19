@@ -43,7 +43,7 @@ Telefonu yatay tutun (dikeyde "yatay çevirin" uyarısı görünür).
 - Sahne açılır açılmaz canlı: bulutlar, 3 yürüyen karakter, garson, kahve buharı, titreyen lamba ışıkları.
 - Ölçekleme: 1400×800 tasarım alanı ekrana sığdırılır; uzun telefonlarda yan taraflar ek dükkânlarla, tabletlerde üst taraf gökyüzüyle dolar. 667×375, 844×390, 915×412, 1180×820 ve 2400×1080'de test edildi (taşma ve konsol hatası yok).
 - Fırın & Kafe'nin **tamamı** (çatıdan basamağa) dokunulabilir: basılınca hafif küçülür, bırakınca yaylanır, parlar, kıvılcım çıkar ve "Kafe iç mekânı yakında!" bildirimi görünür. Alt menüdeki "Fırın & Kafe" aynı geri bildirimi verir.
-- Üst arayüz: avatar + seviye/XP, altın, elmas, enerji (+ butonlarıyla), Görevler/Posta/Etkinlik/Ayarlar. Alt menü: yalnızca Fırın & Kafe, Kasaba, Keşif, Mağaza; diğer üçü şimdilik "Yakında" der.
+- Üst arayüz: avatar + seviye/XP, altın, Görevler / Günlük Ödül / Ayarlar. Alt menü: Fırın & Kafe, Kasaba, Keşif. Henüz çalışmayan Posta, Mağaza, + butonları, elmas ve enerji göstergeleri gizlidir (`src/config.js` → `NAV`, `HUD_BUTTONS`, `HUD_SHOW`; elmas verisi ve kayıtlar korunur).
 - Kafe iç mekânına geçiş için `main.js` içindeki `enterScene('cafe')` kancası hazır (sahne arayüzü: `resize / update / render / hitTest`).
 
 ## Geçici (placeholder) görseller
@@ -143,7 +143,7 @@ Test: `npm test` (126 test).
 ## Adım 7: günlük ödül ve ayarlar
 
 **Günlük ödül** (`src/data/economy.js` → `DAILY`, mantık `src/game/daily.js`):
-- Her gün ilk girişte panel kendiliğinden açılır; **Etkinlik** butonuyla da açılır (butonda ödül hazırken kırmızı nokta). Ödül alınınca bildirim çıkar.
+- Her gün ilk girişte panel kendiliğinden açılır; **Günlük Ödül** butonuyla da açılır (butonda ödül hazırken kırmızı nokta). Ödül alınınca bildirim çıkar.
 - 7 günlük döngü: 1) 200 altın · 2) 6 un + 3 süt · 3) 300 altın · 4) 5 elmas · 5) 3 tereyağı + 3 şeker + 4 yumurta · 6) 500 altın · 7) 20 elmas + 1000 altın. Altın, elmas ve malzeme mevcut altın / elmas / envanter verisine eklenir (elmas artık kalıcıdır ve üst çubuktaki sayıyı günceller).
 - **Aynı gün ikinci kez alınamaz.** Gün, cihazın yerel takvim tarihidir (gece yarısı değişir; yaz saati uygulaması gün hesabını bozmaz).
 - **Kaçırılan gün kuralı:** son ödülden ertesi gün gelirsen döngü bir sonraki güne geçer (7. günden sonra 1. gün); bir veya daha fazla takvim günü atlarsan döngü **1. günden yeniden başlar** (panel bunu açıkça yazar). Tarih bir gün geri giderse (saat dilimi) bugün alınmış sayılır; birden fazla gün geri giderse (saat elle değiştirildi) oyuncu kilitlenmesin diye ödül yeniden açılır ve döngü 1. günden başlar.
@@ -224,3 +224,9 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 - Ödül keşif **başlarken** bir kez çekilir ve keşifle birlikte kaydedilir (yenilemek yeniden çekmez). Alma tek adımdır: altın / elmas / malzeme / XP mevcut oyuncu, envanter ve seviye sistemine eklenir, keşif silinir; ikinci dokunuş veya eski kimlikli istek reddedilir.
 - Görev "Kaşif" (bir keşfi tamamla ve ödülü al) eklendi; görev XP'si Kasaba Kültürü araştırmasından yararlanır. Diğer araştırmalar (satış geliri, üretim süresi, yükseltme fiyatı) keşif ödülüne uygulanmaz çünkü keşif bunlarla ilgili bir sistem değildir.
 - Kayıt sürümü 9: `exploration {active, done, nextId}`; eski kayıtlarda keşif yoktur.
+
+## Kalite turu: Grup A + B
+
+- Çalışmayan arayüz (Posta, Mağaza, `+`, enerji, elmas göstergesi) gizlendi; sahte kırmızı noktalar kaldırıldı. Kırmızı nokta yalnızca bekleyen görev ödülü / günlük ödül varken çıkar. "Etkinlik" düğmesi **Günlük Ödül** oldu.
+- **Vitrin satışı** `src/data/economy.js` → `SALES.showcaseRate` (0.7) kadar öder; müşteri siparişi tam fiyat öder (müşteri ≈ %43 daha kârlı). Usta Satıcı bonusu ikisine de uygulanır.
+- Okunabilirlik: arayüz yazıları ≥ 12 px, dokunma alanları ≥ 40 px; tuval etiketleri (kafe isim levhaları, sipariş balonları, harita) de ≥ 12 px ekran pikseli. Kısa yatay ekranlarda ikincil ipucu satırları gizlenir. Kafede sağ kenardaki "Geliştirmeler" gibi etiketler ekran içine alınır.

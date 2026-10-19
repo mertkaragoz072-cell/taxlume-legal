@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, formatTime } from '../src/game/game.js';
-import { INGREDIENTS, PRODUCTS } from '../src/data/economy.js';
+import { INGREDIENTS, PRODUCTS, SALES } from '../src/data/economy.js';
 
 const make = (gold = 1000) => {
   let now = 0;
@@ -108,9 +108,20 @@ test('buying is refused without enough gold and changes nothing', () => {
 test('selling removes stock and pays the sale price', () => {
   const { game, player } = make(0);
   const r = game.sellProduct('bread', 2);
-  assert.deepEqual(r, { ok: true, income: PRODUCTS.bread.price * 2 });
-  assert.equal(player.gold, PRODUCTS.bread.price * 2);
+  const unit = Math.round(PRODUCTS.bread.price * SALES.showcaseRate);
+  assert.deepEqual(r, { ok: true, income: unit * 2 });
+  assert.equal(player.gold, unit * 2);
   assert.equal(game.products.bread, PRODUCTS.bread.start - 2);
+});
+
+test('showcase sales pay less than customer orders, yet every product stays profitable', () => {
+  const { game } = make(0);
+  assert.ok(SALES.showcaseRate > 0 && SALES.showcaseRate < 1);
+  for (const [id, p] of Object.entries(PRODUCTS)) {
+    const cost = Object.entries(p.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0);
+    assert.ok(game.showcaseIncome(p.price) < game.saleIncome(p.price), `${id}: showcase must pay less than a customer`);
+    assert.ok(game.showcaseIncome(p.price) > cost, `${id}: showcase sale must still beat the ingredient cost`);
+  }
 });
 
 test('selling more than the stock is refused', () => {
@@ -126,8 +137,8 @@ test('a full produce-and-sell round trip balances the economy', () => {
   const cost = Object.entries(PRODUCTS.coffee.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0);
   game.startProduction('coffee'); advance(PRODUCTS.coffee.time);
   game.sellProduct('coffee', 1);
-  assert.equal(player.gold, 500 + PRODUCTS.coffee.price);   // ingredients were already owned
-  assert.ok(PRODUCTS.coffee.price > cost, 'coffee must be profitable');
+  assert.equal(player.gold, 500 + game.showcaseIncome(PRODUCTS.coffee.price));   // ingredients were already owned
+  assert.ok(game.showcaseIncome(PRODUCTS.coffee.price) > cost, 'coffee must stay profitable even when sold from the showcase');
 });
 
 test('change and complete events fire', () => {

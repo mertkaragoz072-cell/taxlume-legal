@@ -32,6 +32,13 @@ export const PRODUCTS = {
 /** Quantities offered by the "buy" buttons in the storeroom panel. */
 export const BUY_AMOUNTS = [1, 5];
 
+/**
+ * Sales tuning. Customers pay the full price of their order; selling straight from the showcase pays `showcaseRate` of it
+ * (all the Usta Satıcı research bonus still applies on top). 0.7 keeps every product profitable after ingredient cost
+ * (bread 21 vs 16, croissant 42 vs 31, cake 84 vs 60, coffee 28 vs 17) while serving customers earns ~43% more.
+ */
+export const SALES = { showcaseRate: 0.7 };
+
 /** Customer / order tuning. Times are seconds, converted to milliseconds by the code. */
 export const CAFE = {
   tables: 3,                    // seats available for customers (matches the 3 tables in the interior)
@@ -51,7 +58,7 @@ export const CAFE = {
  */
 export const MARKET = {
   items: ['flour', 'milk', 'egg', 'sugar', 'beans', 'butter'],
-  quantities: [1, 5, 10],      // quick-pick amounts next to the +/- stepper
+  quantities: [5, 10],         // quick-pick amounts next to the +/- stepper (1 is reached with the stepper)
   maxPerPurchase: 99,
 };
 
