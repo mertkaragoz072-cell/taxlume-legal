@@ -252,3 +252,9 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 - **Yükleme ekranı:** görseller yüklenirken ilerleme çubuğu görünür. Görsel eksik/yavaşsa (12 sn) oyun yedek çizimlerle başlar ve bildirim gösterir. Açılış hatasında boş ekran yerine "Yeniden yükle" mesajı çıkar; kayıt silinmez.
 - **Beklenmeyen hatalar** sessizce bırakılmaz: 15 sn'de bir "ilerleme kayıtlı" bildirimi gösterilir.
 - **Hata ayıklama kancası** (`window.__street`) yalnızca `localhost`/`127.0.0.1` üzerinde veya `?debug` ile açılır; yayında kapalıdır.
+
+## Testler (Grup E)
+
+- **Birim testleri:** `npm test` — oyun mantığı, ekonomi, kayıt, sekme koruması, varlık yükleme (DOM gerektirmez, saniyeler içinde biter).
+- **Tarayıcı testleri:** `npm run test:e2e` — gerçek tarayıcıda tüm ekranlar × 4 telefon boyutu (taşma, ≥ 40 px düğme, ≥ 12 px yazı, konsol hatası), çekirdek oyun döngüsü, ilerleme sistemleri ve dayanıklılık senaryoları. Proje bağımlılığı eklenmez; Playwright ve Chromium yolu ortam değişkenleriyle verilir. Ayrıntı: `tests/e2e/README.md`.
+- Her kalite turu sonunda ikisi de çalıştırılır; ekran boyutu/okunabilirlik regresyonlarını yalnızca e2e yakalar.
