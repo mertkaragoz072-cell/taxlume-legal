@@ -79,7 +79,8 @@ export class InteriorScene {
   areaAsset(ctx, a) {
     const img = getImage(`int-${a.id.startsWith('table') ? 'table' : a.id}`);
     if (!img) return false;
-    const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s, h = img.naturalHeight * s;
+    const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s;
+    const h = Math.min(img.naturalHeight * s * 1.18, a.h);       // a very flat piece may be stretched up to 18% taller to fill its box
     shadow(ctx, a.x + a.w / 2, a.y + a.h + 4, w * 0.5, 10, 0.28);
     ctx.drawImage(img, a.x + (a.w - w) / 2, a.y + a.h - h, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }

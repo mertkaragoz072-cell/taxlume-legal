@@ -2,7 +2,7 @@
 // `panel` names the UI opened by the area; `station` ties a machine to the production jobs it runs.
 export const AREAS = [
   { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 40, y: 170, w: 310, h: 310 },
-  { id: 'counter', label: 'Üretim Tezgâhı', panel: 'counter', x: 370, y: 330, w: 330, h: 150 },
+  { id: 'counter', label: 'Üretim Tezgâhı', panel: 'counter', x: 358, y: 330, w: 362, h: 150 },
   { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 725, y: 250, w: 330, h: 230 },
   { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1085, y: 230, w: 175, h: 250 },
   { id: 'storage', label: 'Depo', panel: 'storage', x: 1285, y: 330, w: 95, h: 150 },
