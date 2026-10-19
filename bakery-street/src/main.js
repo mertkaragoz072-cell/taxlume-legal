@@ -47,6 +47,7 @@ const hud = createHud(document.getElementById('hud'), {
 const panels = createPanels(document.getElementById('panel'), game, {
   onWarn: (msg) => showToast(toast, msg, 2600),
   onClose: () => interior.select(null),
+  onUpgraded: (id, r) => showToast(toast, `${game.upgradesDef[id].icon} ${game.upgradesDef[id].name} seviye ${r.level} · −${r.cost} altın`, 2200),
 });
 
 const marketPanel = createMarketPanel(document.getElementById('marketPanel'), game, {

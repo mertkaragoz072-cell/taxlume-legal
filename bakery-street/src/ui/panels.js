@@ -6,17 +6,18 @@ import { formatTime } from '../game/game.js';
 
 const fmt = (n) => n.toLocaleString('tr-TR');
 
-export function createPanels(root, game, { onWarn, onClose }) {
+export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
   let current = null;          // panel id currently shown
   let acc = 0;
 
-  const title = { oven: 'Fırın', coffee: 'Kahve Makinesi', counter: 'Üretim Tezgâhı', showcase: 'Satış Vitrini', storage: 'Depo · Malzeme Al' };
+  const title = { oven: 'Fırın', coffee: 'Kahve Makinesi', counter: 'Üretim Tezgâhı', showcase: 'Satış Vitrini', storage: 'Depo · Malzeme Al', upgrades: 'Geliştirmeler' };
   const hint = {
-    oven: 'Hamur işlerini fırında pişir. Fırın aynı anda tek ürün hazırlar.',
-    coffee: 'Kahve makinesi aynı anda tek kahve hazırlar.',
+    oven: 'Hamur işlerini fırında pişir.',
+    coffee: 'Kahveyi makinede hazırla.',
     counter: 'Tüm ürünlerin tarifleri. Üretim ilgili makinede başlar.',
     showcase: 'Hazır ürünlerini satarak altın kazan.',
     storage: 'Üretim için malzeme satın al.',
+    upgrades: 'Fırın & Kafe için kalıcı geliştirmeler. Etkiler üretim ve vitrine hemen uygulanır.',
   };
 
   function productsFor(id) {
@@ -33,9 +34,9 @@ export function createPanels(root, game, { onWarn, onClose }) {
       return `<div class="card" data-p="${pid}">
         <div class="ci">${d.icon}</div>
         <div class="cm">
-          <div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${game.products[pid]}</i></span></div>
+          <div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${game.products[pid]}</i>/${game.showcaseLimit()}</span></div>
           <div class="ing">${chips}</div>
-          <div class="meta">⏱ ${formatTime(d.time)} · 💰 ${fmt(d.price)} · <span class="muted">${game.stationsDef[d.station].name}</span></div>
+          <div class="meta">⏱ ${formatTime(game.duration(pid))}${game.duration(pid) < d.time ? ` <s class="muted">${formatTime(d.time)}</s>` : ''} · 💰 ${fmt(d.price)} · <span class="muted">${game.stationsDef[d.station].name}</span></div>
           <div class="bar" data-bar="${pid}" hidden><i></i><em></em></div>
         </div>
         <button class="go" data-make="${pid}">Üret</button>
@@ -48,7 +49,7 @@ export function createPanels(root, game, { onWarn, onClose }) {
       const n = game.products[pid];
       return `<div class="card" data-p="${pid}">
         <div class="ci">${d.icon}</div>
-        <div class="cm"><div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${n}</i></span></div><div class="meta">💰 ${fmt(d.price)} / adet</div></div>
+        <div class="cm"><div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${n}</i>/${game.showcaseLimit()}</span></div><div class="meta">💰 ${fmt(d.price)} / adet</div></div>
         <div class="btns"><button class="go sm" data-sell="${pid}" data-qty="1">Sat</button><button class="go sm alt" data-sell="${pid}" data-qty="all">Hepsi</button></div>
       </div>`;
     }).join('');
@@ -63,12 +64,29 @@ export function createPanels(root, game, { onWarn, onClose }) {
     </div>`).join('');
   }
 
+  function renderUpgrades() {
+    return Object.entries(game.upgradesDef).map(([id, u]) => {
+      const lvl = game.upgrades[id], max = game.maxLevel(id), cost = game.nextCost(id), maxed = cost === null;
+      const pips = Array.from({ length: max }, (_, i) => `<i class="pip ${i < lvl ? 'on' : ''}"></i>`).join('');
+      return `<div class="card up" data-u="${id}" data-level="${lvl}">
+        <div class="ci">${u.icon}</div>
+        <div class="cm">
+          <div class="ct"><b>${u.name}</b><span class="muted">Seviye ${lvl}/${max}</span></div>
+          <div class="pips">${pips}</div>
+          <div class="meta">Şu an: ${u.describe(u.values[lvl])}</div>
+          <div class="meta next">${maxed ? 'Maksimum seviye' : `Sonraki: ${u.describe(u.values[lvl + 1])}`}</div>
+        </div>
+        <button class="go buy" data-upgrade="${id}" ${maxed ? 'disabled' : ''}><span>${maxed ? 'Maksimum' : 'Geliştir'}</span>${maxed ? '' : `<small>💰 ${fmt(cost)}</small>`}</button>
+      </div>`;
+    }).join('') + '<button class="go back-in" data-close>◀ Geri</button>';
+  }
+
   function render() {
     if (!current) { root.hidden = true; root.innerHTML = ''; return; }
-    const body = current === 'showcase' ? renderShowcase() : current === 'storage' ? renderStorage() : renderProducts(current);
+    const body = current === 'showcase' ? renderShowcase() : current === 'storage' ? renderStorage() : current === 'upgrades' ? renderUpgrades() : renderProducts(current);
     root.hidden = false;
     root.innerHTML = `<div class="panel-head"><b>${title[current]}</b><button class="x" aria-label="Kapat">✕</button></div>
-      <p class="hint">${hint[current]}</p><div class="panel-body">${body}</div>`;
+      <p class="hint">${hint[current]}${game.stationsDef[current] ? ` Aynı anda en fazla ${game.capacity(current)} ürün hazırlanır.` : ''}</p><div class="panel-body">${body}</div>`;
     update(true);
   }
 
@@ -79,17 +97,31 @@ export function createPanels(root, game, { onWarn, onClose }) {
       const pid = card.dataset.p, d = game.productsDef[pid];
       const bar = card.querySelector('.bar'), btn = card.querySelector('.go[data-make]');
       if (!bar || !btn) continue;
-      const job = game.jobs[d.station], mine = job?.product === pid;
-      bar.hidden = !mine;
-      if (mine) { bar.firstElementChild.style.width = `${game.progress(d.station) * 100}%`; bar.lastElementChild.textContent = `Kalan: ${formatTime(game.remaining(d.station))}`; }
-      btn.classList.toggle('busy', !!job);
-      btn.classList.toggle('lack', !job && game.missingFor(pid).length > 0);
-      btn.textContent = mine ? 'Hazırlanıyor' : job ? 'Meşgul' : 'Üret';
+      const jobs = game.jobsOf(d.station), mine = jobs.filter((j) => j.product === pid);
+      const cap = game.capacity(d.station), full = jobs.length >= cap;
+      bar.hidden = !mine.length;
+      if (mine.length) {
+        const soon = mine.reduce((a, b) => (game.remainingOf(a) <= game.remainingOf(b) ? a : b));
+        bar.firstElementChild.style.width = `${(1 - game.remainingOf(soon) / soon.duration) * 100}%`;
+        bar.lastElementChild.textContent = `Kalan: ${formatTime(game.remainingOf(soon))}${mine.length > 1 ? ` (×${mine.length})` : ''}`;
+      }
+      btn.classList.toggle('busy', full);
+      btn.classList.toggle('lack', !full && (game.missingFor(pid).length > 0 || game.committed(pid) >= game.showcaseLimit()));
+      btn.textContent = full ? (cap > 1 ? 'Dolu' : mine.length ? 'Hazırlanıyor' : 'Meşgul') : 'Üret';
     }
   }
 
   root.addEventListener('click', (e) => {
     if (e.target.closest('.x')) { close(); return; }
+    if (e.target.closest('[data-close]')) { close(); return; }
+    const upg = e.target.closest('[data-upgrade]');
+    if (upg) {                                         // pass the level the player saw: a double tap cannot buy two levels
+      if (upg.disabled) return;
+      const id = upg.dataset.upgrade, seen = +upg.closest('.card').dataset.level;
+      const r = game.buyUpgrade(id, seen);
+      if (r.ok) onUpgraded?.(id, r); else onWarn(r.message);
+      return;
+    }
     const make = e.target.closest('[data-make]');
     if (make) { const r = game.startProduction(make.dataset.make); if (!r.ok) onWarn(r.message); return; }
     const buy = e.target.closest('[data-buy]');

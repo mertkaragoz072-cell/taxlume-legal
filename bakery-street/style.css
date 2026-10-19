@@ -213,3 +213,12 @@ body {
 .qv { min-width: calc(var(--u) * 6); text-align: center; font-weight: 800; font-size: calc(var(--u) * 3.4); }
 .go.buy { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .2); min-width: calc(var(--u) * 17); }
 .go.buy small { font-size: calc(var(--u) * 2.3); font-weight: 700; }
+
+/* ---------- Upgrades panel ---------- */
+.pips { display: flex; gap: calc(var(--u) * .6); }
+.pip { width: calc(var(--u) * 3); height: calc(var(--u) * 1.6); border-radius: 99px; background: #d8cbb0; border: calc(var(--u) * .25) solid #8a6a4a; }
+.pip.on { background: linear-gradient(#9be86a, #3fa63a); border-color: #1f6a25; }
+.card.up .next { color: #2f7a30; font-weight: 700; }
+.go[disabled] { background: linear-gradient(#cfc7b8, #9a917f); border-color: #5e5648; box-shadow: 0 calc(var(--u) * .5) 0 #4a4438; cursor: default; text-shadow: none; }
+.go.back-in { align-self: stretch; background: linear-gradient(#ffd45a, #e0951f); border-color: #8a5a12; box-shadow: 0 calc(var(--u) * .5) 0 #6a420a; }
+s.muted { text-decoration: line-through; }

@@ -1,12 +1,12 @@
 import { validateCafe } from './customers.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
-// Saved: gold, ingredient stock, product stock and running production jobs (product + real start time).
-// A job's duration is not stored; it comes from the product table, so rebalancing applies to running jobs too.
+// Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
+// (product + real start time + duration, so a speed upgrade bought later does not change a job already running).
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 2;   // v2 adds the cafe section (customers, tables, orders); v1 saves load with an empty cafe
+export const SAVE_VERSION = 3;   // v2 added the cafe section; v3 adds upgrade levels and several jobs per station (older saves migrate)
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -29,16 +29,30 @@ export function validate(raw, game) {
     else if (isCount(v)) products[id] = v;
     else throw new Error(`ürün stoğu geçersiz (${id})`);
   }
-  for (const [station, job] of Object.entries(raw.jobs ?? {})) {
+  const upgrades = {};
+  for (const [id, def] of Object.entries(game.upgradesDef)) {
+    const v = raw.upgrades?.[id];
+    if (v === undefined) upgrades[id] = 0;                       // saves from before upgrades existed
+    else if (Number.isInteger(v) && v >= 0 && v <= def.costs.length) upgrades[id] = v;
+    else throw new Error(`geliştirme seviyesi geçersiz (${id})`);
+  }
+  for (const [station, entry] of Object.entries(raw.jobs ?? {})) {
     if (!game.stationsDef[station]) continue;                    // station removed from the data: drop silently
-    const def = game.productsDef[job?.product];
-    if (!def) throw new Error(`üretim kaydı geçersiz (${station})`);
-    if (def.station !== station) throw new Error(`üretim kaydı yanlış makinede (${station})`);
-    if (!Number.isFinite(job.startedAt) || job.startedAt <= 0) throw new Error(`üretim zamanı geçersiz (${station})`);
-    jobs[station] = { product: job.product, startedAt: job.startedAt };
+    const list = (Array.isArray(entry) ? entry : [entry]).map((job) => {   // v1/v2 saves stored a single job object
+      const def = game.productsDef[job?.product];
+      if (!def) throw new Error(`üretim kaydı geçersiz (${station})`);
+      if (def.station !== station) throw new Error(`üretim kaydı yanlış makinede (${station})`);
+      if (!Number.isFinite(job.startedAt) || job.startedAt <= 0) throw new Error(`üretim zamanı geçersiz (${station})`);
+      const duration = job.duration === undefined ? def.time : job.duration;
+      if (!Number.isFinite(duration) || duration < 1 || duration > def.time * 2) throw new Error(`üretim süresi geçersiz (${station})`);
+      return { product: job.product, startedAt: job.startedAt, duration };
+    });
+    const cap = game.stationsDef[station].capacityUpgrade ? Math.max(...game.upgradesDef[game.stationsDef[station].capacityUpgrade].values) : 1;
+    if (list.length > cap) throw new Error(`fazla üretim kaydı (${station})`);
+    if (list.length) jobs[station] = list;
   }
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks) : null;
-  return { gold: raw.gold, ingredients, products, jobs, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, ingredients, products, jobs, upgrades, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {

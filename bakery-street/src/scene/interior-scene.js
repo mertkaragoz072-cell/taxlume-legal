@@ -114,16 +114,18 @@ export class InteriorScene {
     paint(ctx, sel ? vgrad(ctx, ty - 17, ty + 17, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - 17, ty + 17, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');
     label(ctx, text, cx, ty + 1, { font: FONT, fill: '#4a2a12', lw: 0 });
     if (!a.station) return;
-    const job = this.game.jobs[a.station];
-    if (!job) return;
-    const prog = this.game.progress(a.station), rem = this.game.remaining(a.station);
-    const bw = Math.min(a.w - 30, 220), by = ty + 34;
-    rrect(ctx, cx - bw / 2, by, bw, 24, 12); paint(ctx, '#4a3a2a', 2.5);
-    ctx.save(); rrect(ctx, cx - bw / 2 + 2, by + 2, bw - 4, 20, 10); ctx.clip();
-    ctx.fillStyle = vgrad(ctx, by, by + 24, [[0, '#9be86a'], [1, '#3fa63a']]); ctx.fillRect(cx - bw / 2, by, bw * prog, 24);
-    ctx.restore();
-    const def = this.game.productsDef[job.product];
-    label(ctx, `${def.icon} ${formatTime(rem)}`, cx, by + 13, { font: '700 17px sans-serif', fill: '#fff', lw: 4 });
+    const jobs = [...this.game.jobsOf(a.station)].sort((p, q) => this.game.remainingOf(p) - this.game.remainingOf(q));
+    const bw = Math.min(a.w - 30, 220), many = jobs.length > 1, bh = many ? 18 : 24, step = bh + 4;
+    jobs.forEach((job, i) => {
+      const by = ty + 34 + i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
+      rrect(ctx, cx - bw / 2, by, bw, bh, bh / 2); paint(ctx, '#4a3a2a', 2.5);
+      ctx.save(); rrect(ctx, cx - bw / 2 + 2, by + 2, bw - 4, bh - 4, bh / 2 - 2); ctx.clip();
+      ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, '#9be86a'], [1, '#3fa63a']]); ctx.fillRect(cx - bw / 2, by, bw * prog, bh);
+      ctx.restore();
+      const def = this.game.productsDef[job.product];
+      label(ctx, `${def.icon} ${formatTime(rem)}`, cx, by + bh / 2 + 1, { font: `700 ${many ? 14 : 17}px sans-serif`, fill: '#fff', lw: 4 });
+    });
+    if (a.station && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: '#fff6dc', lw: 4 });
   }
 }
 
@@ -192,6 +194,16 @@ const ART = {
       ctx.strokeStyle = 'rgba(40,16,4,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx, by + bh / 2); ctx.lineTo(bx + bw, by + bh / 2); ctx.stroke();
     }
     rrect(ctx, x + 40, y + 100, 52, 50, 8); paint(ctx, vgrad(ctx, y + 100, y + 150, [[0, '#fbf1d8'], [1, '#c9ac78']]), 3);   // flour sack
+  },
+  upgrades(ctx, a, scene) {
+    const { x, y, w, h } = a, cx = x + w / 2;
+    shadow(ctx, cx, y + h + 4, 40, 6, 0.2);
+    ctx.fillStyle = '#6a3d1c'; ctx.fillRect(cx - 4, y, 8, 26);                    // hanging bracket
+    rrect(ctx, x + 4, y + 26, w - 8, h - 40, 10); paint(ctx, vgrad(ctx, y + 26, y + h, [[0, '#d9a05a'], [1, '#8a5a2c']]), 3.5);
+    rrect(ctx, x + 12, y + 34, w - 24, h - 56, 6); paint(ctx, '#fff3d0', 2);
+    label(ctx, '⬆', cx, y + 66, { font: '700 44px sans-serif', fill: '#3fa63a', lw: 4 });
+    const total = Object.values(scene.game.upgrades).reduce((s, n) => s + n, 0), max = Object.keys(scene.game.upgrades).reduce((s, id) => s + scene.game.maxLevel(id), 0);
+    label(ctx, `${total}/${max}`, cx, y + 104, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#6a3a14', lw: 0 });
   },
   table1: (ctx, a) => drawTable(ctx, a),
   table2: (ctx, a) => drawTable(ctx, a),

@@ -116,3 +116,17 @@ Test: `npm test` (50 test).
 - Depo paneli (iç mekân) duruyor; aynı envantere bağlı olduğu için çakışma yoktur.
 
 Test: `npm test` (75 test).
+
+## Adım 5: Fırın & Kafe geliştirmeleri
+
+İç mekânda sağ üstteki **Geliştirmeler** tabelasına dokununca panel açılır (ad, seviye, şimdiki ve sonraki seviye etkisi, altın maliyeti, **Geliştir** ve **◀ Geri** düğmeleri). Üç geliştirme, her biri 5 satın alınabilir seviye (sayılar `src/data/economy.js` → `UPGRADES`):
+
+| Geliştirme | Seviye 0 → 5 etkisi | Maliyetler (altın) | Gerçek etkisi |
+| --- | --- | --- | --- |
+| 🔥 Fırın kapasitesi | aynı anda 1 → 2 → 3 → 4 → 5 → 6 ürün | 800 · 2.500 · 6.000 · 12.000 · 25.000 | Fırın aynı anda bu kadar iş yürütür (kahve makinesi 1 kalır); her iş kendi sayacı ve malzemesiyle |
+| ⚡ Üretim hızı | süre ×1 → .9 → .8 → .7 → .6 → .5 | 600 · 2.000 · 5.000 · 10.000 · 22.000 | Tüm ürünlerin hazırlanma süresi çarpılır; başlamış işler eski süresini korur |
+| 🗄️ Satış vitrini | her üründen 10 → 15 → 20 → 30 → 40 → 60 adet | 400 · 1.200 · 3.000 · 7.000 · 15.000 | Stok (+ hazırlanmakta olanlar) sınıra ulaşınca üretim başlamaz ("Vitrin dolu…"); sınırın üstündeki mevcut stok silinmez |
+
+Güvenlik: altın yalnızca başarılı satın almada düşer; yetmezse hiçbir şey değişmez; son seviyede düğme devre dışıdır; düğme gördüğü seviyeyi gönderir, seviye değiştiyse işlem reddedilir (çift dokunuş tek seviye alır) ve istek kimliği tekrarı yok sayılır. Seviyeler, altın, stok ve çok işli üretim kayıtla birlikte kalıcıdır (kayıt sürümü 3; eski kayıtlar otomatik taşınır).
+
+Test: `npm test` (103 test).

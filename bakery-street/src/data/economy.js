@@ -13,7 +13,7 @@ export const INGREDIENTS = {
 
 /** Machines that run one production job at a time. */
 export const STATIONS = {
-  oven: { name: 'Fırın' },
+  oven: { name: 'Fırın', capacityUpgrade: 'ovenCapacity' },   // number of simultaneous jobs comes from this upgrade (others: 1)
   coffee: { name: 'Kahve Makinesi' },
 };
 
@@ -53,4 +53,26 @@ export const MARKET = {
   items: ['flour', 'milk', 'egg', 'sugar', 'beans', 'butter'],
   quantities: [1, 5, 10],      // quick-pick amounts next to the +/- stepper
   maxPerPurchase: 99,
+};
+
+/**
+ * Upgrades for the bakery & cafe. `values[level]` is the effect at that level (index 0 = not upgraded);
+ * `costs[level - 1]` is the gold price to reach that level, so costs.length = number of purchasable levels (5).
+ *   ovenCapacity     -> how many items the oven can bake at the same time
+ *   productionSpeed  -> multiplier applied to every recipe's production time
+ *   showcaseCapacity -> how many finished units of each product can be kept (production refuses to start when full)
+ */
+export const UPGRADES = {
+  ovenCapacity: {
+    name: 'Fırın kapasitesi', icon: '🔥', costs: [800, 2500, 6000, 12000, 25000], values: [1, 2, 3, 4, 5, 6],
+    describe: (v) => `Fırın aynı anda ${v} ürün pişirir`,
+  },
+  productionSpeed: {
+    name: 'Üretim hızı', icon: '⚡', costs: [600, 2000, 5000, 10000, 22000], values: [1, 0.9, 0.8, 0.7, 0.6, 0.5],
+    describe: (v) => (v === 1 ? 'Normal hız' : `Hazırlanma süresi %${Math.round((1 - v) * 100)} kısalır`),
+  },
+  showcaseCapacity: {
+    name: 'Satış vitrini', icon: '🗄️', costs: [400, 1200, 3000, 7000, 15000], values: [10, 15, 20, 30, 40, 60],
+    describe: (v) => `Vitrin her üründen ${v} adet tutar`,
+  },
 };

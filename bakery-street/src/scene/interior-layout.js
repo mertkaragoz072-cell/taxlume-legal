@@ -6,6 +6,7 @@ export const AREAS = [
   { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 725, y: 250, w: 330, h: 230 },
   { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1085, y: 230, w: 175, h: 250 },
   { id: 'storage', label: 'Depo', panel: 'storage', x: 1285, y: 330, w: 95, h: 150 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1285, y: 140, w: 100, h: 140 },
   { id: 'table1', label: 'Masa 1', panel: null, x: 150, y: 560, w: 230, h: 170 },
   { id: 'table2', label: 'Masa 2', panel: null, x: 540, y: 575, w: 230, h: 170 },
   { id: 'table3', label: 'Masa 3', panel: null, x: 930, y: 560, w: 230, h: 170 },
