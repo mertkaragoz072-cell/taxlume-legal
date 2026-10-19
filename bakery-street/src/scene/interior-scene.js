@@ -82,9 +82,10 @@ export class InteriorScene {
     const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s;
     const h = Math.min(img.naturalHeight * s * 1.18, a.h);       // a very flat piece may be stretched up to 18% taller to fill its box
     shadow(ctx, a.x + a.w / 2, a.y + a.h + 4, w * 0.5, 10, 0.28);
-    ctx.drawImage(img, a.x + (a.w - w) / 2, a.y + a.h - h, w, h);
+    const dx = a.x + (a.w - w) / 2, dy = a.y + a.h - h;
+    ctx.drawImage(img, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
-    if (a.id === 'showcase') showcaseStock(ctx, a, this);
+    if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
     return true;
   }
 
@@ -230,13 +231,15 @@ const ART = {
 };
 
 /** Stock icons in the showcase glass: one small pile per product in stock. */
-function showcaseStock(ctx, a, scene) {
+function showcaseStock(ctx, a, scene, art = null) {
+  // `art` = where the supplied showcase image was drawn: the items then stand on its lower shelf, the counts on the wooden front
   const { x, y } = a;
-    let ix = x + 28;
+  const iy = art ? art.y + art.h * 0.55 : y + 78, ly = art ? art.y + art.h * 0.83 : y + 110, step = art ? art.w * 0.2 : 76;
+    let ix = art ? art.x + art.w * 0.17 : x + 28;
     for (const [id, def] of Object.entries(scene.game.productsDef)) {
       const n = scene.game.products[id];
-      if (n > 0) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(def.icon, ix, y + 78); label(ctx, `×${n}`, ix, y + 110, { font: '700 17px sans-serif', fill: '#fff', lw: 4 }); }
-      ix += 76;
+      if (n > 0) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(def.icon, ix, iy); label(ctx, `×${n}`, ix, ly, { font: '700 17px sans-serif', fill: '#fff', lw: 4 }); }
+      ix += step;
     }
 }
 
