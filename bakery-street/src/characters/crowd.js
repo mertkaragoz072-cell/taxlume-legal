@@ -2,16 +2,17 @@
 import { DESIGN } from '../config.js';
 import { INK, rrect, poly, paint, shadow, vgrad, hgrad, lighten, darken } from '../util.js';
 import { drawPerson, SKINS } from './person.js';
+import { drawSprite } from './sprites.js';
 
 const GROUND = 610; // table-set feet line
 
 export const WALKERS = () => [
   // schoolboy: tall, backpack, blue jacket, sneakers
-  { x: 120, dir: 1, speed: 34, y: DESIGN.walkY + 5, step: 8.2, phase: 0, skin: SKINS[0], hair: '#4a2a14', hairStyle: 'short', top: '#3f7fc9', under: '#f4f0e6', zip: true, pants: '#39435c', shoe: '#e8e2d6', backpack: '#2e8a5a', scale: 1.04 },
+  { sprite: 'boy_backpack', fps: 7, x: 120, dir: 1, speed: 38, y: DESIGN.walkY + 5, step: 8.2, phase: 0, skin: SKINS[0], hair: '#4a2a14', hairStyle: 'short', top: '#3f7fc9', under: '#f4f0e6', zip: true, pants: '#39435c', shoe: '#e8e2d6', backpack: '#2e8a5a', scale: 1.04 },
   // girl in a straw hat and sundress with a flower basket
-  { x: 980, dir: -1, speed: 29, y: DESIGN.walkY - 3, step: 7.6, phase: 2, skin: SKINS[1], hair: '#6a3418', hairStyle: 'hat', top: '#fff7ea', dress: '#3f86d6', pants: '#e8d2b0', shoe: '#a8683a', lashes: true, bag: true, scale: 0.98, eye: '#5a3a1e' },
+  { sprite: 'girl_hat', fps: 7, x: 980, dir: -1, speed: 34, y: DESIGN.walkY - 3, step: 7.6, phase: 2, skin: SKINS[1], hair: '#6a3418', hairStyle: 'hat', top: '#fff7ea', dress: '#3f86d6', pants: '#e8d2b0', shoe: '#a8683a', lashes: true, bag: true, scale: 0.98, eye: '#5a3a1e' },
   // elderly gentleman: flat cap, vest, white moustache, baguettes in a paper bag
-  { x: 1290, dir: 1, speed: 24, y: DESIGN.walkY + 1, step: 6.6, phase: 4, skin: SKINS[2], hair: '#d8d4cc', mustache: true, hairStyle: 'cap', cap: '#7a5a3a', top: '#7a8a5a', under: '#f4efe2', buttons: '#e8d8a0', pants: '#5a4a3a', shoe: '#3a2a20', paperBag: true, scale: 1.0, glasses: true },
+  { sprite: 'oldman', fps: 5, x: 1290, dir: 1, speed: 24, y: DESIGN.walkY + 1, step: 6.6, phase: 4, skin: SKINS[2], hair: '#d8d4cc', mustache: true, hairStyle: 'cap', cap: '#7a5a3a', top: '#7a8a5a', under: '#f4efe2', buttons: '#e8d8a0', pants: '#5a4a3a', shoe: '#3a2a20', paperBag: true, scale: 1.0, glasses: true },
 ];
 
 export const WAITRESS = { x: 700, y: DESIGN.groundY - 2, skin: SKINS[0], hair: '#6a3420', hairStyle: 'maid', top: '#2f3a4e', pants: '#2f3a4e', apron: true, tray: true, lashes: true, collar: '#fffaf0', shoe: '#1f1a18', eye: '#3a6a4a' };
@@ -37,8 +38,22 @@ export function updateWalkers(list, dt, xmin, xmax) {
   }
 }
 
-export function drawWalker(ctx, w, t) { drawPerson(ctx, w.x, w.y, { ...w, walking: true }, t); }
-export function drawWaitress(ctx, t) { drawPerson(ctx, WAITRESS.x, WAITRESS.y, WAITRESS, t); }
+export function drawWalker(ctx, w, t) {
+  if (w.sprite && drawSprite(ctx, w.sprite, w.x, w.y, t, { dir: w.dir, fps: w.fps, phase: w.phase })) return;
+  drawPerson(ctx, w.x, w.y, { ...w, walking: true }, t);
+}
+
+// The baker patrols slowly in front of the bakery door carrying a tray of bread.
+export const CHEF = { x: 700, dir: 1, speed: 20, min: 625, max: 775, y: DESIGN.groundY - 2 };
+export function updateChef(dt) {
+  CHEF.x += CHEF.dir * CHEF.speed * dt;
+  if (CHEF.x > CHEF.max) { CHEF.x = CHEF.max; CHEF.dir = -1; }
+  if (CHEF.x < CHEF.min) { CHEF.x = CHEF.min; CHEF.dir = 1; }
+}
+export function drawWaitress(ctx, t) {
+  if (drawSprite(ctx, 'chef', CHEF.x, CHEF.y, t, { dir: CHEF.dir, fps: 5 })) return;
+  drawPerson(ctx, WAITRESS.x, WAITRESS.y, WAITRESS, t);
+}
 
 export function drawCafeSet(ctx, set, t) {
   const x = set.x, y = GROUND;

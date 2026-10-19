@@ -10,7 +10,7 @@ import { drawForeground } from './foreground.js';
 import { bakery } from '../buildings/bakery.js';
 import { bookshop } from '../buildings/bookshop.js';
 import { market } from '../buildings/market.js';
-import { WALKERS, CAFE_SETS, updateWalkers, drawWalker, drawWaitress, drawCafeSet } from '../characters/crowd.js';
+import { WALKERS, CAFE_SETS, updateWalkers, updateChef, drawWalker, drawWaitress, drawCafeSet } from '../characters/crowd.js';
 
 const BUILDINGS = [bookshop, market, bakery];
 
@@ -89,6 +89,7 @@ export class StreetScene {
   update(dt) {
     this.t += dt;
     updateWalkers(this.walkers, dt, this.xmin - 40, this.xmax + 40);
+    updateChef(dt);
     for (const c of this.clouds) { c.x += c.v * dt; if (c.x > this.xmax + 120) c.x = this.xmin - 120; }
     this.pulse = Math.max(0, this.pulse - dt * 2.2);
     this.flash = Math.max(0, this.flash - dt * 2.6);
