@@ -13,7 +13,7 @@ export function createNav(root, { onSelect }) {
   root.innerHTML = NAV.map((n) => `
     <button class="nav-btn${n.active ? ' active' : ''}" data-id="${n.id}">
       <span class="icons">${ICON_FOR[n.id]}</span><span>${n.label}</span>
-      ${n.locked ? `<i class="lock">${ICONS.lock}</i>` : ''}${n.badge ? '<i class="badge"></i>' : ''}
+      ${n.locked ? `<i class="lock">${ICONS.lock}</i>` : ''}${n.badge ? '<i class="badge"></i>' : ''}${n.id === 'explore' ? '<i class="badge" data-badge="explore" hidden></i>' : ''}
     </button>`).join('');
   root.addEventListener('click', (e) => {
     const btn = e.target.closest('.nav-btn'); if (btn) onSelect(btn.dataset.id);

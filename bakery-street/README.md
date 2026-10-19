@@ -208,3 +208,19 @@ Tüm sayılar `src/data/economy.js` → `RESEARCH` tablosundadır (maliyetler `c
 Maliyetler: 1.500–30.000 (Fırıncılık), 1.200–26.000 (Verimli Üretim), 2.000–40.000 (Usta Satıcı), 1.800–36.000 (Kasaba Kültürü), 2.500–48.000 (Usta Ekipmanları). Her satın alma XP verir (40 + 20 × seviye). Altın yalnızca başarılı satın almada düşer; tekrar dokunuş ve maksimum seviye reddedilir.
 
 Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0. seviyedir. Açılma durumu Kitapçı'nın (kayıtlı) açık/gelişim seviyesinden türetilir.
+
+## Adım 11: Keşif sistemi
+
+- **Keşif** menü butonu (artık kilitsiz) harita ekranını açar: solda el çizimi tarzı parşömen harita (resim dosyası yok, canvas ile çizilir) ve bölge işaretleri, sağda her bölgenin açıklaması, gereken seviye/ilerleme, süresi ve olası ödüllerini gösteren panel. İşarete dokunmak ilgili kartı seçer. Geri butonu sokağa döner. Keşif ödülü hazırken menüdeki Keşif butonunda kırmızı nokta çıkar.
+- Ayarlar `src/data/economy.js` → `EXPLORE` (süre, seviye, "önce şu bölgeyi bitir" koşulu, ödül aralıkları ve olasılıkları). Mantık `src/game/exploration.js`.
+
+| Bölge | Seviye / koşul | Süre | Ödüller |
+|---|---|---|---|
+| Yeşil Çayırlar | 1 (başlangıçta açık) | 1 dk | 80–140 altın, 20–35 XP, un 2–4, yumurta (%50) |
+| Orman Yolu | 4 + Çayırlar 1× | 5 dk | 300–520 altın, 60–95 XP, süt, şeker (%70), tereyağı (%40) |
+| Eski Harabeler | 8 + Orman 1× | 15 dk | 900–1500 altın, 170–260 XP, tereyağı, çekirdek (%80), nadir 2–5 elmas (%40) |
+
+- Aynı anda tek keşif; bitmiş ama alınmamış keşif de yeni başlatmayı engeller. Süre sistem saatiyle (`Date.now`) hesaplanır, oyun kapalıyken de ilerler; dönüşte "tamamlandı" bildirimi ve ödül butonu çıkar. Saat geri alınırsa sayım bugünden devam eder.
+- Ödül keşif **başlarken** bir kez çekilir ve keşifle birlikte kaydedilir (yenilemek yeniden çekmez). Alma tek adımdır: altın / elmas / malzeme / XP mevcut oyuncu, envanter ve seviye sistemine eklenir, keşif silinir; ikinci dokunuş veya eski kimlikli istek reddedilir.
+- Görev "Kaşif" (bir keşfi tamamla ve ödülü al) eklendi; görev XP'si Kasaba Kültürü araştırmasından yararlanır. Diğer araştırmalar (satış geliri, üretim süresi, yükseltme fiyatı) keşif ödülüne uygulanmaz çünkü keşif bunlarla ilgili bir sistem değildir.
+- Kayıt sürümü 9: `exploration {active, done, nextId}`; eski kayıtlarda keşif yoktur.

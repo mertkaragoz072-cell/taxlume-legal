@@ -90,6 +90,7 @@ export const QUESTS = [
   { id: 'firstUpgrade', name: 'Büyüyen işletme', icon: '⬆️', condition: 'Bir geliştirme satın al', stat: 'upgradesBought', target: 1, reward: { gold: 250, ingredients: { sugar: 4 } } },
   { id: 'produceTen', name: 'Üretim hattı', icon: '🏭', condition: 'Toplam 10 ürün üret', stat: 'producedTotal', target: 10, reward: { gold: 400, ingredients: { beans: 4, milk: 2 } } },
   { id: 'openBookshop', name: 'Kasaba büyüyor', icon: '📚', condition: "Kasaba'da yeni bir bina aç", stat: 'buildingsOpened', target: 1, reward: { gold: 500, ingredients: { flour: 4 } } },
+  { id: 'firstExplore', name: 'Kaşif', icon: '🧭', condition: 'Bir keşfi tamamla ve ödülünü al', stat: 'explorationsDone', target: 1, reward: { gold: 300, ingredients: { egg: 4 } } },
 ];
 
 /**
@@ -185,3 +186,31 @@ export const RESEARCH = {
     describe: (v) => (v ? `Fırın & Kafe geliştirmeleri %${Math.round(v * 100)} ucuzlar` : 'Bonus yok'),
   },
 };
+
+/**
+ * Exploration regions (Keşif). Everything here is tunable; rewards are rolled once when an exploration STARTS and stored with it.
+ *  - minLevel : player level needed;  after: { region, times } optional progress condition (finish that region N times)
+ *  - duration : seconds (wall clock, also runs while the game is closed)
+ *  - rewards  : gold / xp are [min, max] ranges; ingredients are drops { id, amount: [min, max], chance }; gems is one optional rare drop
+ *  - map      : position of the region's marker on the map (design coordinates, left half of the screen)
+ */
+export const EXPLORE = [
+  {
+    id: 'meadow', name: 'Yeşil Çayırlar', icon: '🌿', map: { x: 190, y: 470 },
+    desc: 'Çiçekli, sakin otlaklar. Kısa bir yürüyüşle malzeme toplanır.',
+    minLevel: 1, duration: 60,
+    rewards: { gold: [80, 140], xp: [20, 35], ingredients: [{ id: 'flour', amount: [2, 4], chance: 1 }, { id: 'egg', amount: [1, 3], chance: 0.5 }] },
+  },
+  {
+    id: 'forest', name: 'Orman Yolu', icon: '🌲', map: { x: 400, y: 300 },
+    desc: 'Gölgeli patikalar; mantar, süt ve tatlı bulmak için iyi bir yer.',
+    minLevel: 4, after: { region: 'meadow', times: 1 }, duration: 300,
+    rewards: { gold: [300, 520], xp: [60, 95], ingredients: [{ id: 'milk', amount: [2, 4], chance: 1 }, { id: 'sugar', amount: [2, 4], chance: 0.7 }, { id: 'butter', amount: [1, 2], chance: 0.4 }] },
+  },
+  {
+    id: 'ruins', name: 'Eski Harabeler', icon: '🏛️', map: { x: 600, y: 440 },
+    desc: 'Unutulmuş taş kalıntılar. Tehlikeli ama nadir hazineler saklar.',
+    minLevel: 8, after: { region: 'forest', times: 1 }, duration: 900,
+    rewards: { gold: [900, 1500], xp: [170, 260], ingredients: [{ id: 'butter', amount: [3, 6], chance: 1 }, { id: 'beans', amount: [3, 6], chance: 0.8 }], gems: { amount: [2, 5], chance: 0.4 } },
+  },
+];

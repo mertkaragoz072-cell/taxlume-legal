@@ -21,6 +21,9 @@ import { StreetScene } from './scene/street-scene.js';
 import { bakery } from './buildings/bakery.js';
 import { bookshop } from './buildings/bookshop.js';
 import { market } from './buildings/market.js';
+import { Exploration } from './game/exploration.js';
+import { ExploreScene } from './scene/explore-scene.js';
+import { createExplorePanel } from './ui/explore.js';
 import { Research } from './game/research.js';
 import { createResearchPanel } from './ui/research.js';
 import { Town } from './game/town.js';
@@ -49,6 +52,7 @@ unlockEvents.forEach((ev) => window.addEventListener(ev, unlockAudio));
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
 const progression = new Progression(game);        // player level and XP (src/game/progression.js)
 const town = new Town(game);
+const exploration = new Exploration(game);          // timed expeditions (src/game/exploration.js)
 const research = new Research(game);              // Bookshop research bonuses (src/game/research.js)                       // building states (src/game/town.js)
 const quests = new Quests(game);
 const daily = new DailyReward(game);              // daily reward cycle (src/game/daily.js)                    // quest progress comes from game.stats (src/game/quests.js)
@@ -56,6 +60,7 @@ const cafe = new Cafe(game);                       // customers, tables and orde
 const street = new StreetScene();
 const interior = new InteriorScene(game);
 const marketScene = new MarketScene();
+const exploreScene = new ExploreScene(exploration);
 const bookshopScene = new MarketScene('bookshop', 'bookshop');   // same landscape layout as the Market screen
 const saveWarn = document.getElementById('saveWarn');
 const saves = new SaveManager(game, safeStorage(window), {
@@ -85,6 +90,14 @@ const marketPanel = createMarketPanel(document.getElementById('marketPanel'), ga
   onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${cost} altın`, 1600),
 });
 const backBtn = document.getElementById('back');
+const fmtReward = (r) => [r.gold && `+${r.gold} altın`, r.xp && `+${r.xp} XP`, ...Object.entries(r.ingredients).map(([id, n]) => `${game.ingredientsDef[id].icon} ×${n}`), r.gems && `💎 ×${r.gems}`].filter(Boolean).join('  ');
+const explorePanel = createExplorePanel(document.getElementById('explorePanel'), game, exploration, {
+  onStarted: ({ region }) => { showToast(toast, `${region.icon} ${region.name} keşfi başladı`, 2200); audio.sfx('tap'); },
+  onClaimed: ({ region, reward }) => { showToast(toast, `${region.icon} ${region.name}: ${fmtReward(reward)}`, 4200); audio.sfx('claim'); buzz([30, 40, 60]); },
+  onWarn: (msg) => warn(msg, 3000),
+  onSelect: (id) => { exploreScene.selected = id; },
+});
+game.on('exploreReady', ({ region }) => { showToast(toast, `🎁 ${region.name} keşfi tamamlandı — ödülünü al!`, 4000); audio.sfx('done'); buzz(40); refreshBadge(); });
 const researchPanel = createResearchPanel(document.getElementById('researchPanel'), game, research, town, {
   onBought: ({ def, level, cost }) => { showToast(toast, `${def.icon} ${def.name} seviye ${level} · ${def.describe(def.values[level])} · −${cost} altın`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
   onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
@@ -127,14 +140,14 @@ function openOverlay(panel) {
   for (const p of [townPanel, questPanel, dailyPanel, settingsPanel]) p.close();
   if (!wasOpen) { panel.open(); setNavTown(panel === townPanel); }
 }
-const refreshBadge = () => { hud.setQuestBadge(quests.claimable().length); hud.setDailyBadge(daily.status().canClaim); };
+const refreshBadge = () => { hud.setQuestBadge(quests.claimable().length); hud.setDailyBadge(daily.status().canClaim); const eb = document.querySelector('[data-badge=explore]'); if (eb) eb.hidden = !exploration.isReady(); };
 setInterval(() => { refreshBadge(); dailyPanel.refresh(); }, 20000);   // a new day can start while the game is open
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshBadge(); dailyPanel.refresh(); } });
 game.on('change', (e) => {                            // sounds and vibration for game events
   switch (e?.type) {
     case 'sell': case 'sale': audio.sfx('coin'); buzz(25); break;
     case 'buy': audio.sfx('buy'); break;
-    case 'town': case 'townLevel': case 'research': break;       // announced by the town panel's own toast and sound
+    case 'town': case 'townLevel': case 'research': case 'exploreStart': case 'explore': break;       // announced by the town panel's own toast and sound
     case 'upgrade': audio.sfx('claim'); buzz([30, 40, 30]); break;
     case 'quest': case 'daily': audio.sfx('claim'); buzz(40); break;
     case 'complete': audio.sfx('done'); buzz(20); break;
@@ -145,10 +158,10 @@ game.on('change', (e) => {                            // sounds and vibration fo
 game.on('change', refreshBadge);
 game.on('questComplete', ({ quest }) => showToast(toast, `🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000));
 
-/** Scene switch with a short fade. `id` is 'street', 'interior', 'market' or 'bookshop'. */
+/** Scene switch with a short fade. `id` is 'street', 'interior', 'market', 'bookshop' or 'explore'. */
 let switching = false;
 function go(id) {
-  const target = { street, interior, market: marketScene, bookshop: bookshopScene }[id];
+  const target = { street, interior, market: marketScene, bookshop: bookshopScene, explore: exploreScene }[id];
   if (switching || scene === target) return;
   switching = true;
   fade.classList.add('on');
@@ -159,6 +172,8 @@ function go(id) {
     stage.classList.toggle('in-interior', id === 'interior');
     stage.classList.toggle('in-market', id === 'market');
     stage.classList.toggle('in-bookshop', id === 'bookshop');
+    stage.classList.toggle('in-explore', id === 'explore');
+    if (id === 'explore') explorePanel.show(); else explorePanel.hide();
     backBtn.textContent = id === 'market' ? '◀ Marketten Çık' : id === 'bookshop' ? '◀ Kitapçıdan Çık' : '◀ Sokak';
     if (id === 'bookshop') researchPanel.show(); else researchPanel.hide();
     if (id === 'market') marketPanel.show(); else marketPanel.hide();
@@ -204,6 +219,8 @@ canvas.addEventListener('pointerup', (e) => {
     if (hit === 'bakery') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('interior'), 260); }
     else if (hit === 'market') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('market'), 260); }
     else if (hit === 'bookshop') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('bookshop'), 260); }   // closed: the screen shows the opening conditions
+  } else if (scene === exploreScene) {
+    if (hit) { exploreScene.selected = hit; explorePanel.select(hit); }
   } else if (scene === marketScene || scene === bookshopScene) {
     // nothing to tap on the Market backdrop; the shopping list is a DOM panel
   } else if (!hit) {
@@ -231,6 +248,7 @@ createNav(document.getElementById('nav'), {
   onSelect: (id) => {
     if (id === 'cafe') { townPanel.close(); street.tapBuilding('bakery', DESIGN.w / 2, 400); setTimeout(() => go('interior'), 260); }
     else if (id === 'town') openOverlay(townPanel);
+    else if (id === 'explore') { for (const p of [townPanel, questPanel, dailyPanel, settingsPanel]) p.close(); go('explore'); }
     else showToast(toast, 'Yakında');
   },
 });
@@ -267,6 +285,7 @@ function frame(now) {
   game.tick();
   scene.update(dt);
   panels.tick(dt);
+  explorePanel.tick();
   orderBar.tick(dt);
   scene.render(ctx);
   requestAnimationFrame(frame);
@@ -297,5 +316,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, research, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, research, exploration, exploreScene, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
 });

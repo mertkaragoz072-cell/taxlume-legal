@@ -26,7 +26,7 @@ export const PLAYER = {
 export const NAV = [
   { id: 'cafe', label: 'Fırın & Kafe', active: true },
   { id: 'town', label: 'Kasaba' },
-  { id: 'explore', label: 'Keşif', locked: true },
+  { id: 'explore', label: 'Keşif' },
   { id: 'shop', label: 'Mağaza', badge: true },
 ];
 

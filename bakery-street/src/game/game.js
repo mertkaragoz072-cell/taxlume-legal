@@ -6,7 +6,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, buildingsOpened: 0, buildingUpgrades: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0 };
 }
 
 export class Game {
@@ -139,6 +139,7 @@ export class Game {
   /** Completes every finished job. Call regularly (each frame); also catches up after a long pause. */
   tick() {
     this.cafe?.tick();
+    this.exploration?.tick();
     const now = this.clock();
     for (const station of Object.keys(this.jobs)) {
       const done = [];
@@ -209,6 +210,7 @@ export class Game {
       ...(this.progression ? { progression: this.progression.exportState() } : {}),
       ...(this.town ? { town: this.town.exportState() } : {}),
       ...(this.research ? { research: this.research.exportState() } : {}),
+      ...(this.exploration ? { exploration: this.exploration.exportState() } : {}),
     };
   }
 
@@ -226,6 +228,7 @@ export class Game {
     this.progression?.importState(state.progression);
     this.town?.importState(state.town);
     this.research?.importState(state.research);
+    this.exploration?.importState(state.exploration);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -245,6 +248,7 @@ export class Game {
       progression: { level: 1, xp: 0, rewardedLevel: 1 },
       town: { opened: [], levels: {} },
       research: { levels: {} },
+      exploration: { active: null, done: {} },
     };
   }
 
