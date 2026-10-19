@@ -76,3 +76,17 @@ export const UPGRADES = {
     describe: (v) => `Vitrin her üründen ${v} adet tutar`,
   },
 };
+
+/**
+ * Quests. `stat` names a lifetime counter kept by the game (see Game.stats); the quest is complete when it reaches `target`.
+ * Rewards may contain gold and/or ingredients (added to the same shared gold and inventory the rest of the game uses).
+ *   stats: produced.<product>, sold.<product>, producedTotal, soldTotal, marketPurchases, upgradesBought
+ */
+export const QUESTS = [
+  { id: 'firstBread', name: 'İlk ekmeğin', icon: '🍞', condition: 'Bir ekmek üret', stat: 'produced.bread', target: 1, reward: { gold: 100 } },
+  { id: 'firstSale', name: 'İlk satış', icon: '💰', condition: 'Bir ürün sat', stat: 'soldTotal', target: 1, reward: { gold: 150, ingredients: { flour: 4 } } },
+  { id: 'marketTrip', name: 'Market alışverişi', icon: '🛒', condition: "Market'ten malzeme satın al", stat: 'marketPurchases', target: 1, reward: { gold: 100, ingredients: { milk: 2 } } },
+  { id: 'sellFive', name: 'Tezgâh hareketleniyor', icon: '🧾', condition: 'Toplam 5 ürün sat', stat: 'soldTotal', target: 5, reward: { gold: 300, ingredients: { butter: 2 } } },
+  { id: 'firstUpgrade', name: 'Büyüyen işletme', icon: '⬆️', condition: 'Bir geliştirme satın al', stat: 'upgradesBought', target: 1, reward: { gold: 250, ingredients: { sugar: 4 } } },
+  { id: 'produceTen', name: 'Üretim hattı', icon: '🏭', condition: 'Toplam 10 ürün üret', stat: 'producedTotal', target: 10, reward: { gold: 400, ingredients: { beans: 4, milk: 2 } } },
+];

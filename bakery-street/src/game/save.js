@@ -1,4 +1,6 @@
 import { validateCafe } from './customers.js';
+import { validateQuests } from './quests.js';
+import { blankStats } from './game.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
@@ -6,7 +8,7 @@ import { validateCafe } from './customers.js';
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 3;   // v2 added the cafe section; v3 adds upgrade levels and several jobs per station (older saves migrate)
+export const SAVE_VERSION = 4;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards (older saves migrate)
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -29,6 +31,25 @@ export function validate(raw, game) {
     else if (isCount(v)) products[id] = v;
     else throw new Error(`ürün stoğu geçersiz (${id})`);
   }
+  const stats = blankStats(game.productsDef);
+  const rs = raw.stats;
+  if (rs !== undefined) {
+    if (!rs || typeof rs !== 'object') throw new Error('istatistikler geçersiz');
+    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought']) {
+      if (rs[k] === undefined) continue;
+      if (!isCount(rs[k])) throw new Error(`istatistik geçersiz (${k})`);
+      stats[k] = rs[k];
+    }
+    for (const group of ['produced', 'sold']) {
+      for (const id of Object.keys(game.productsDef)) {
+        const v = rs[group]?.[id];
+        if (v === undefined) continue;
+        if (!isCount(v)) throw new Error(`istatistik geçersiz (${group}.${id})`);
+        stats[group][id] = v;
+      }
+    }
+  }
+  const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
   const upgrades = {};
   for (const [id, def] of Object.entries(game.upgradesDef)) {
     const v = raw.upgrades?.[id];
@@ -52,7 +73,7 @@ export function validate(raw, game) {
     if (list.length) jobs[station] = list;
   }
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks) : null;
-  return { gold: raw.gold, ingredients, products, jobs, upgrades, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, ingredients, products, jobs, upgrades, stats, quests, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {

@@ -130,3 +130,12 @@ Test: `npm test` (75 test).
 Güvenlik: altın yalnızca başarılı satın almada düşer; yetmezse hiçbir şey değişmez; son seviyede düğme devre dışıdır; düğme gördüğü seviyeyi gönderir, seviye değiştiyse işlem reddedilir (çift dokunuş tek seviye alır) ve istek kimliği tekrarı yok sayılır. Seviyeler, altın, stok ve çok işli üretim kayıtla birlikte kalıcıdır (kayıt sürümü 3; eski kayıtlar otomatik taşınır).
 
 Test: `npm test` (103 test).
+
+## Adım 6: görevler ve ödüller
+
+- Üst menüdeki **Görevler** butonu her ekranda bir panel açar (görev adı, koşul, ilerleme çubuğu `n/hedef`, ödül). Tamamlanan görevde **Ödülü Al** çıkar; ödül alınınca düğme "✓ Alındı" olur ve görev listenin sonuna iner. Ödül bekleyen görev varken butonda kırmızı nokta görünür; görev tamamlanınca bildirim çıkar.
+- Görevler (`src/data/economy.js` → `QUESTS`): ilk ekmeği üret · ilk ürünü sat · Market'ten malzeme al · toplam 5 ürün sat · bir geliştirme al · toplam 10 ürün üret. Ödüller altın ve/veya malzemedir (ör. 100 altın; 150 altın + 4 un).
+- **Olaylara bağlı:** ilerleme, oyunun kalıcı ömür boyu sayaçlarından (`Game.stats`: üretilen/satılan ürün, Market alımı, geliştirme) hesaplanır. Üretim tamamlanması, vitrinden satış, müşteri teslimi, Market alımı ve başarılı geliştirme bu sayaçları kendi işlemiyle birlikte (aynı kayıtta) artırır; reddedilen işlem saymaz. Depo'dan alınan malzeme "Market" görevine sayılmaz.
+- **Ödül toplama** tek adımdır (işaret + altın + malzeme, aynı altın ve envanter); ikinci kez alınamaz, yenilemeden sonra da alınamaz. Sayaçlar ve alınan ödüller kayıt sürümü 4 ile kalıcıdır; eski kayıtlar sıfır sayaçla yüklenir.
+
+Test: `npm test` (126 test).

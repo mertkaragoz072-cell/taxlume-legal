@@ -145,6 +145,7 @@ export class Cafe {
     if (this.game.products[order.product] < 1) return fail('stock', `Stokta ${def.name} yok. Önce üret.`);
     this.game.products[order.product] -= 1;
     this.game.player.gold += order.price;
+    this.game.recordSold(order.product, 1);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);
     this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income: order.price, product: order.product });

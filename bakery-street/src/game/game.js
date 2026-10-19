@@ -3,6 +3,12 @@ import { INGREDIENTS, PRODUCTS, STATIONS, MARKET, UPGRADES } from '../data/econo
 
 const fmtGold = (n) => n.toLocaleString('tr-TR');
 
+/** Lifetime counters that quests read. Persisted with the rest of the game state. */
+export function blankStats(productsDef) {
+  const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0 };
+}
+
 export class Game {
   /**
    * @param {{gold:number}} player   shared player object (its `gold` is read and written here)
@@ -16,6 +22,7 @@ export class Game {
     this.stationsDef = data.stations ?? STATIONS;
     this.marketDef = data.market ?? MARKET;
     this.upgradesDef = data.upgrades ?? UPGRADES;
+    this.stats = blankStats(this.productsDef);
     this.upgrades = Object.fromEntries(Object.keys(this.upgradesDef).map((id) => [id, 0]));   // current level of each upgrade
     this.handledRequests = new Set();   // purchase request ids already applied (guards against a replayed click)
     this.clock = clock;
@@ -129,6 +136,8 @@ export class Game {
       if (!this.jobs[station].length) delete this.jobs[station];
       for (const job of done) {
         this.products[job.product] += 1;
+        this.stats.produced[job.product] += 1;
+        this.stats.producedTotal += 1;
         this.emit('complete', { station, product: job.product });
         this.emit('change', { type: 'complete', product: job.product });
       }
@@ -156,6 +165,7 @@ export class Game {
     if (this.player.gold < cost) return bad('gold', `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.`);
     this.player.gold -= cost;
     this.upgrades[id] = level + 1;
+    this.stats.upgradesBought += 1;
     if (requestId != null) this.handledRequests.add(requestId);
     this.emit('change', { type: 'upgrade', upgrade: id, level: level + 1 });
     return { ok: true, level: level + 1, cost };
@@ -171,6 +181,8 @@ export class Game {
       products: { ...this.products },
       jobs: Object.fromEntries(Object.entries(this.jobs).map(([st, list]) => [st, list.map((j) => ({ product: j.product, startedAt: j.startedAt, duration: j.duration }))])),
       upgrades: { ...this.upgrades },
+      stats: JSON.parse(JSON.stringify(this.stats)),
+      ...(this.quests ? { quests: this.quests.exportState() } : {}),
     };
   }
 
@@ -181,13 +193,15 @@ export class Game {
     this.products = { ...state.products };
     this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, list]) => [st, list.map((j) => ({ ...j }))]));
     this.upgrades = { ...state.upgrades };
+    this.stats = JSON.parse(JSON.stringify(state.stats));
+    this.quests?.importState(state.quests);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
 
   // ---- economy --------------------------------------------------------------------------------
   /** Buys `qty` units of an ingredient with gold. */
-  buyIngredient(id, qty = 1) {
+  buyIngredient(id, qty = 1, fromMarket = false) {
     const def = this.ingredientsDef[id];
     if (!def || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satın alma.' };
     const cost = def.price * qty;
@@ -196,6 +210,7 @@ export class Game {
     }
     this.player.gold -= cost;
     this.ingredients[id] += qty;
+    if (fromMarket) this.stats.marketPurchases += 1;   // counted before the change event, so the autosave includes it
     this.emit('change', { type: 'buy', ingredient: id, qty });
     return { ok: true, cost };
   }
@@ -218,9 +233,15 @@ export class Game {
       if (this.handledRequests.has(requestId)) return bad('duplicate', 'Bu satın alma zaten uygulandı.');
       if (this.handledRequests.size > 200) this.handledRequests.clear();
     }
-    const r = this.buyIngredient(id, qty);
+    const r = this.buyIngredient(id, qty, true);
     if (r.ok && requestId != null) this.handledRequests.add(requestId);
     return r;
+  }
+
+  /** Counts units sold (showcase sales and customer deliveries both call this before their change event). */
+  recordSold(id, qty) {
+    this.stats.sold[id] += qty;
+    this.stats.soldTotal += qty;
   }
 
   /** Sells `qty` units of a product from the showcase for its sale price. */
@@ -231,6 +252,7 @@ export class Game {
     const income = def.price * qty;
     this.products[id] -= qty;
     this.player.gold += income;
+    this.recordSold(id, qty);
     this.emit('change', { type: 'sell', product: id, qty });
     return { ok: true, income };
   }

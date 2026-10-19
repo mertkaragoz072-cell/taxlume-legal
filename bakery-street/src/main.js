@@ -2,6 +2,8 @@
 import { DESIGN, PLAYER } from './config.js';
 import { Game } from './game/game.js';
 import { Cafe } from './game/customers.js';
+import { Quests } from './game/quests.js';
+import { createQuestPanel } from './ui/quests.js';
 import { createOrderBar } from './ui/orders.js';
 import { SaveManager, safeStorage } from './game/save.js';
 import { InteriorScene } from './scene/interior-scene.js';
@@ -23,6 +25,7 @@ const ctx = canvas.getContext('2d');
 const toast = document.getElementById('toast');
 
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
+const quests = new Quests(game);                    // quest progress comes from game.stats (src/game/quests.js)
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
@@ -41,7 +44,7 @@ const view = { W: 0, H: 0, dpr: 1, scale: 1, vw: 0, vh: 0, ox: 0, oy: 0 };
 const stage = document.getElementById('stage');
 const fade = document.getElementById('fade');
 const hud = createHud(document.getElementById('hud'), {
-  onButton: () => showToast(toast, 'Yakında'),
+  onButton: (id) => { if (id === 'quests') questPanel.toggle(); else showToast(toast, 'Yakında'); },
   onAdd: () => showToast(toast, 'Yakında'),
 });
 const panels = createPanels(document.getElementById('panel'), game, {
@@ -55,6 +58,13 @@ const marketPanel = createMarketPanel(document.getElementById('marketPanel'), ga
   onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${cost} altın`, 1600),
 });
 const backBtn = document.getElementById('back');
+const questPanel = createQuestPanel(document.getElementById('questPanel'), game, quests, {
+  onClaimed: ({ quest, reward }) => showToast(toast, `🎁 ${quest.name}: ödül alındı${reward.gold ? ` · +${reward.gold} altın` : ''}`, 2200),
+  onWarn: (msg) => showToast(toast, msg, 2400),
+});
+const refreshBadge = () => hud.setQuestBadge(quests.claimable().length);
+game.on('change', refreshBadge);
+game.on('questComplete', ({ quest }) => showToast(toast, `🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000));
 
 /** Scene switch with a short fade. `id` is 'street', 'interior' or 'market'. */
 let switching = false;
@@ -170,6 +180,7 @@ loadAssets().then(() => {
   // restore the save, then credit production that finished while the app was closed
   const loaded = saves.load();
   hud.setGold(game.gold);
+  refreshBadge();
   const finished = {};
   const off = game.on('complete', ({ product }) => { finished[product] = (finished[product] ?? 0) + 1; });
   game.tick();
@@ -183,5 +194,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, quests, go }; // handy for debugging / tests
 });
