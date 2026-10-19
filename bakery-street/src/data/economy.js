@@ -90,3 +90,18 @@ export const QUESTS = [
   { id: 'firstUpgrade', name: 'Büyüyen işletme', icon: '⬆️', condition: 'Bir geliştirme satın al', stat: 'upgradesBought', target: 1, reward: { gold: 250, ingredients: { sugar: 4 } } },
   { id: 'produceTen', name: 'Üretim hattı', icon: '🏭', condition: 'Toplam 10 ürün üret', stat: 'producedTotal', target: 10, reward: { gold: 400, ingredients: { beans: 4, milk: 2 } } },
 ];
+
+/**
+ * Seven-day daily reward cycle (index 0 = day 1). Each reward may contain gold, gems and/or ingredients.
+ * Rule for missed days: claiming on the day after your last claim moves to the next day of the cycle (day 7 -> day 1);
+ * if one or more calendar days were skipped, the cycle restarts at day 1.
+ */
+export const DAILY = [
+  { gold: 200 },
+  { ingredients: { flour: 6, milk: 3 } },
+  { gold: 300 },
+  { gems: 5 },
+  { ingredients: { butter: 3, sugar: 3, egg: 4 } },
+  { gold: 500 },
+  { gems: 20, gold: 1000 },
+];

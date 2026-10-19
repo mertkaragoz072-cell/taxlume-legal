@@ -139,3 +139,17 @@ Test: `npm test` (103 test).
 - **Ödül toplama** tek adımdır (işaret + altın + malzeme, aynı altın ve envanter); ikinci kez alınamaz, yenilemeden sonra da alınamaz. Sayaçlar ve alınan ödüller kayıt sürümü 4 ile kalıcıdır; eski kayıtlar sıfır sayaçla yüklenir.
 
 Test: `npm test` (126 test).
+
+## Adım 7: günlük ödül ve ayarlar
+
+**Günlük ödül** (`src/data/economy.js` → `DAILY`, mantık `src/game/daily.js`):
+- Her gün ilk girişte panel kendiliğinden açılır; **Etkinlik** butonuyla da açılır (butonda ödül hazırken kırmızı nokta). Ödül alınınca bildirim çıkar.
+- 7 günlük döngü: 1) 200 altın · 2) 6 un + 3 süt · 3) 300 altın · 4) 5 elmas · 5) 3 tereyağı + 3 şeker + 4 yumurta · 6) 500 altın · 7) 20 elmas + 1000 altın. Altın, elmas ve malzeme mevcut altın / elmas / envanter verisine eklenir (elmas artık kalıcıdır ve üst çubuktaki sayıyı günceller).
+- **Aynı gün ikinci kez alınamaz.** Gün, cihazın yerel takvim tarihidir (gece yarısı değişir; yaz saati uygulaması gün hesabını bozmaz).
+- **Kaçırılan gün kuralı:** son ödülden ertesi gün gelirsen döngü bir sonraki güne geçer (7. günden sonra 1. gün); bir veya daha fazla takvim günü atlarsan döngü **1. günden yeniden başlar** (panel bunu açıkça yazar). Tarih bir gün geri giderse (saat dilimi) bugün alınmış sayılır; birden fazla gün geri giderse (saat elle değiştirildi) oyuncu kilitlenmesin diye ödül yeniden açılır ve döngü 1. günden başlar.
+- Son ödül tarihi ve döngü günü kayıtla (sürüm 5) birlikte tek anlık görüntüde saklanır.
+
+**Ayarlar** (Ayarlar butonu → panel, `src/game/settings.js`): ses efektleri, müzik, titreşim aç/kapat. Ayrı bir anahtarda (`bakery-street:settings`) saklanır; ilerleme sıfırlansa bile korunur. Ses, tarayıcıdaki WebAudio ile üretilir (dosya yok); tarayıcı kuralı gereği ilk dokunuştan sonra başlar. Titreşim desteklemeyen cihazda düğme devre dışıdır ve hata oluşmaz.
+- **İlerlemeyi sıfırla** her zaman iki adımlı onay ister ("Emin misin?" → "Evet, sıfırla" / "Vazgeç"); eski kayıt `bakery-street:save.before-reset` anahtarına yedeklenir, yedek yazılamazsa sıfırlama yapılmaz. Ayarlara dokunmaz.
+
+Test: `npm test` (162 test; tarih testleri UTC, İstanbul, New York, Auckland, Lord Howe saat dilimlerinde de çalıştırıldı).

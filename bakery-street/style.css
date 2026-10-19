@@ -140,14 +140,14 @@ body {
 .in-interior .back-btn, .in-market .back-btn { display: flex; }
 .in-interior #nav, .in-market #nav { display: none; }
 
-#panel, #marketPanel, #questPanel {
+#panel, #marketPanel, #questPanel, #dailyPanel, #settingsPanel {
   position: absolute; right: calc(var(--u) * 1.4 + var(--safe-r)); top: calc(var(--u) * 12.8 + var(--safe-t)); bottom: calc(var(--u) * 1.4 + var(--safe-b));
   width: min(calc(var(--u) * 78), 48vw); display: flex; flex-direction: column;
   border-radius: calc(var(--u) * 3); border: calc(var(--u) * .5) solid var(--edge);
   background: linear-gradient(#fff6dc, #f4e0b0); box-shadow: 0 calc(var(--u) * 1) 0 var(--shadow), 0 calc(var(--u) * 2) calc(var(--u) * 5) rgba(0,0,0,.35);
   font-size: calc(var(--u) * 3); z-index: 20;
 }
-#panel[hidden], #marketPanel[hidden], #questPanel[hidden] { display: none; }
+#panel[hidden], #marketPanel[hidden], #questPanel[hidden], #dailyPanel[hidden], #settingsPanel[hidden] { display: none; }
 /* panels for stations on the right half open on the left so the stations stay tappable; they leave room for the back button */
 #panel[data-side=left] { right: auto; left: calc(var(--u) * 1.4 + var(--safe-l)); bottom: calc(var(--u) * 11 + var(--safe-b)); }
 .panel-head { display: flex; align-items: center; justify-content: space-between; padding: calc(var(--u) * 1.6) calc(var(--u) * 2.2) calc(var(--u) * .6); font-size: calc(var(--u) * 4); }
@@ -232,3 +232,12 @@ s.muted { text-decoration: line-through; }
 .go[disabled].plain { opacity: .8; }
 
 .badge[hidden] { display: none; }
+
+/* ---------- Daily reward + settings ---------- */
+#dailyPanel, #settingsPanel { z-index: 30; }
+.go.claim-day { align-self: stretch; font-size: calc(var(--u) * 3.4); padding: calc(var(--u) * 1.8); }
+.card.day.done { opacity: .6; }
+.card.day.today { border-color: #3fa63a; background: #f4ffe8; box-shadow: 0 0 calc(var(--u) * 1.6) rgba(63,166,58,.45); }
+.card.day .reward { color: #8a5a12; font-weight: 700; }
+.go.toggle.off { background: linear-gradient(#cfc7b8, #9a917f); border-color: #5e5648; box-shadow: 0 calc(var(--u) * .5) 0 #4a4438; }
+.card.danger { border-color: #d9665a; }

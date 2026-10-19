@@ -4,6 +4,12 @@ import { Game } from './game/game.js';
 import { Cafe } from './game/customers.js';
 import { Quests } from './game/quests.js';
 import { createQuestPanel } from './ui/quests.js';
+import { DailyReward } from './game/daily.js';
+import { createDailyPanel, formatReward } from './ui/daily.js';
+import { createSettingsPanel } from './ui/settings.js';
+import { Settings } from './game/settings.js';
+import { AudioManager } from './audio/audio.js';
+import { vibrate } from './audio/haptics.js';
 import { createOrderBar } from './ui/orders.js';
 import { SaveManager, safeStorage } from './game/save.js';
 import { InteriorScene } from './scene/interior-scene.js';
@@ -24,8 +30,20 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const toast = document.getElementById('toast');
 
+// Settings are stored separately from the game save. Sound and vibration follow them everywhere.
+const settings = new Settings(safeStorage(window), { onProblem: ({ message }) => showToast(toast, message, 4500) });
+settings.load();
+const audio = new AudioManager(settings);
+const buzz = (pattern) => vibrate(settings, pattern);
+/** Shows a warning toast with an error sound and a short buzz. */
+const warn = (msg, ms = 2400) => { showToast(toast, msg, ms); audio.sfx('error'); buzz([40, 30, 40]); };
+const unlockEvents = ['pointerdown', 'keydown', 'touchstart'];
+const unlockAudio = () => { if (audio.unlock()) unlockEvents.forEach((ev) => window.removeEventListener(ev, unlockAudio)); };   // browsers allow audio only after a gesture
+unlockEvents.forEach((ev) => window.addEventListener(ev, unlockAudio));
+
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
-const quests = new Quests(game);                    // quest progress comes from game.stats (src/game/quests.js)
+const quests = new Quests(game);
+const daily = new DailyReward(game);              // daily reward cycle (src/game/daily.js)                    // quest progress comes from game.stats (src/game/quests.js)
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
@@ -44,25 +62,59 @@ const view = { W: 0, H: 0, dpr: 1, scale: 1, vw: 0, vh: 0, ox: 0, oy: 0 };
 const stage = document.getElementById('stage');
 const fade = document.getElementById('fade');
 const hud = createHud(document.getElementById('hud'), {
-  onButton: (id) => { if (id === 'quests') questPanel.toggle(); else showToast(toast, 'Yakında'); },
+  onButton: (id) => { const panel = { quests: questPanel, events: dailyPanel, settings: settingsPanel }[id]; if (panel) openOverlay(panel); else showToast(toast, 'Yakında'); },
   onAdd: () => showToast(toast, 'Yakında'),
 });
 const panels = createPanels(document.getElementById('panel'), game, {
-  onWarn: (msg) => showToast(toast, msg, 2600),
+  onWarn: (msg) => warn(msg, 2600),
   onClose: () => interior.select(null),
   onUpgraded: (id, r) => showToast(toast, `${game.upgradesDef[id].icon} ${game.upgradesDef[id].name} seviye ${r.level} · −${r.cost} altın`, 2200),
 });
 
 const marketPanel = createMarketPanel(document.getElementById('marketPanel'), game, {
-  onWarn: (msg) => showToast(toast, msg, 2600),
+  onWarn: (msg) => warn(msg, 2600),
   onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${cost} altın`, 1600),
 });
 const backBtn = document.getElementById('back');
 const questPanel = createQuestPanel(document.getElementById('questPanel'), game, quests, {
   onClaimed: ({ quest, reward }) => showToast(toast, `🎁 ${quest.name}: ödül alındı${reward.gold ? ` · +${reward.gold} altın` : ''}`, 2200),
-  onWarn: (msg) => showToast(toast, msg, 2400),
+  onWarn: (msg) => warn(msg, 2400),
 });
-const refreshBadge = () => hud.setQuestBadge(quests.claimable().length);
+const dailyPanel = createDailyPanel(document.getElementById('dailyPanel'), game, daily, {
+  onClaimed: ({ day, reward, streakBroken }) => showToast(toast, `🎁 Günlük ödül · Gün ${day}: ${formatReward(game, reward)}${streakBroken ? ' (seri yeniden başladı)' : ''}`, 3200),
+  onWarn: (msg) => warn(msg, 2400),
+});
+function doReset() {                                 // reached only through the settings panel's confirmation button
+  const r = saves.reset({ confirmed: true });
+  if (!r.ok) { warn(r.message, 4500); return; }
+  interior.snap();
+  settingsPanel.close();
+  showToast(toast, r.warning ? `İlerleme sıfırlandı. ${r.warning}` : 'İlerleme sıfırlandı. Eski kayıt yedeklendi.', 3800);
+}
+const settingsPanel = createSettingsPanel(document.getElementById('settingsPanel'), settings, {
+  onChanged: () => { audio.unlock(); audio.sfx('tap'); },
+  onReset: doReset,
+});
+/** Only one of the quest / daily / settings overlays is open at a time; pressing its button again closes it. */
+function openOverlay(panel) {
+  const wasOpen = panel.isOpen;
+  for (const p of [questPanel, dailyPanel, settingsPanel]) p.close();
+  if (!wasOpen) panel.open();
+}
+const refreshBadge = () => { hud.setQuestBadge(quests.claimable().length); hud.setDailyBadge(daily.status().canClaim); };
+setInterval(() => { refreshBadge(); dailyPanel.refresh(); }, 20000);   // a new day can start while the game is open
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshBadge(); dailyPanel.refresh(); } });
+game.on('change', (e) => {                            // sounds and vibration for game events
+  switch (e?.type) {
+    case 'sell': case 'sale': audio.sfx('coin'); buzz(25); break;
+    case 'buy': audio.sfx('buy'); break;
+    case 'upgrade': audio.sfx('claim'); buzz([30, 40, 30]); break;
+    case 'quest': case 'daily': audio.sfx('claim'); buzz(40); break;
+    case 'complete': audio.sfx('done'); buzz(20); break;
+    case 'start': audio.sfx('tap'); break;
+    default: break;
+  }
+});
 game.on('change', refreshBadge);
 game.on('questComplete', ({ quest }) => showToast(toast, `🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000));
 
@@ -153,10 +205,10 @@ createNav(document.getElementById('nav'), {
 });
 backBtn.addEventListener('click', () => go('street'));
 const orderBar = createOrderBar(document.getElementById('orderBar'), game, cafe, {
-  onWarn: (msg) => showToast(toast, msg, 2400),
+  onWarn: (msg) => warn(msg, 2400),
   onSale: (r) => showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400),
 });
-game.on('change', () => hud.setGold(game.gold));
+game.on('change', () => { hud.setGold(game.gold); hud.setGems(game.player.gems ?? 0); });
 saves.attach(window);
 saveWarn.addEventListener('click', () => { saveWarn.hidden = true; });   // tap to dismiss; it returns if a save fails again
 game.on('complete', ({ product }) => showToast(toast, `${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600));
@@ -180,7 +232,9 @@ loadAssets().then(() => {
   // restore the save, then credit production that finished while the app was closed
   const loaded = saves.load();
   hud.setGold(game.gold);
+  hud.setGems(game.player.gems ?? 0);
   refreshBadge();
+  if (daily.status().canClaim) openOverlay(dailyPanel);   // first visit of the day: offer the daily reward
   const finished = {};
   const off = game.on('complete', ({ product }) => { finished[product] = (finished[product] ?? 0) + 1; });
   game.tick();
@@ -194,5 +248,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, quests, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
 });

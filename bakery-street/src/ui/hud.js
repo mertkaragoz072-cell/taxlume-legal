@@ -11,11 +11,11 @@ export function createHud(root, { onButton, onAdd }) {
       <div class="level"><b>Lv. ${PLAYER.level}</b><div class="xp"><i style="width:${PLAYER.xp * 100}%"></i></div></div>
     </div>
     ${res('coin', fmt(PLAYER.gold), 'gold', '', 'goldText')}
-    ${res('gem', fmt(PLAYER.gems), 'gems')}
+    ${res('gem', fmt(PLAYER.gems), 'gems', '', 'gemsText')}
     ${res('bolt', `${PLAYER.energy}/${PLAYER.maxEnergy}`, 'energy', 'energy')}
     <div class="spacer"></div>
     <div class="tiles">
-      ${HUD_BUTTONS.map((b) => `<button class="tile" data-id="${b.id}" aria-label="${b.label}">${ICONS[b.id === 'events' ? 'events' : b.id]}<span>${b.label}</span>${b.id === 'quests' ? '<i class="badge" data-badge="quests" hidden></i>' : b.badge ? '<i class="badge"></i>' : ''}</button>`).join('')}
+      ${HUD_BUTTONS.map((b) => `<button class="tile" data-id="${b.id}" aria-label="${b.label}">${ICONS[b.id === 'events' ? 'events' : b.id]}<span>${b.label}</span>${b.id === 'quests' || b.id === 'events' ? `<i class="badge" data-badge="${b.id}" hidden></i>` : b.badge ? '<i class="badge"></i>' : ''}</button>`).join('')}
     </div>`;
   root.addEventListener('click', (e) => {
     const tile = e.target.closest('.tile'); if (tile) onButton(tile.dataset.id);
@@ -24,8 +24,11 @@ export function createHud(root, { onButton, onAdd }) {
   const goldEl = root.querySelector('#goldText');
   return {
     setGold: (n) => { goldEl.textContent = fmt(n); },
+    setGems: (n) => { root.querySelector('#gemsText').textContent = fmt(n); },
     /** Red dot on the Görevler button while a reward is waiting. */
     setQuestBadge: (n) => { const el = root.querySelector('[data-badge=quests]'); if (el) el.hidden = n < 1; },
+    /** Red dot on the Etkinlik button while today's daily reward can be collected. */
+    setDailyBadge: (on) => { const el = root.querySelector('[data-badge=events]'); if (el) el.hidden = !on; },
   };
 }
 

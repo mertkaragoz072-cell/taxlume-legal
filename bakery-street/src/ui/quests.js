@@ -49,6 +49,7 @@ export function createQuestPanel(root, game, quests, { onClaimed, onWarn }) {
   game.on('change', render);
 
   const api = {
+    get isOpen() { return open; },
     open() { open = true; render(); },
     close() { open = false; root.hidden = true; root.innerHTML = ''; },
     toggle() { open ? api.close() : api.open(); },

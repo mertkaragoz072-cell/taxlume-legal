@@ -1,6 +1,7 @@
 import { validateCafe } from './customers.js';
 import { validateQuests } from './quests.js';
 import { blankStats } from './game.js';
+import { validateDaily } from './daily.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
@@ -8,7 +9,7 @@ import { blankStats } from './game.js';
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 4;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards (older saves migrate)
+export const SAVE_VERSION = 5;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward (older saves migrate)
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -49,6 +50,9 @@ export function validate(raw, game) {
       }
     }
   }
+  if (raw.gems !== undefined && !isCount(raw.gems)) throw new Error('elmas değeri geçersiz');
+  const gems = raw.gems ?? game.initial.gems;
+  const daily = game.daily ? validateDaily(raw.daily, game.daily.defs) : undefined;
   const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
   const upgrades = {};
   for (const [id, def] of Object.entries(game.upgradesDef)) {
@@ -73,7 +77,7 @@ export function validate(raw, game) {
     if (list.length) jobs[station] = list;
   }
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks) : null;
-  return { gold: raw.gold, ingredients, products, jobs, upgrades, stats, quests, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, ingredients, products, jobs, upgrades, stats, quests, daily, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {
@@ -169,6 +173,23 @@ export class SaveManager {
       win.addEventListener('pagehide', flush);
       win.document?.addEventListener('visibilitychange', () => { if (win.document.hidden) flush(); });
     }
+  }
+
+  /**
+   * Resets all game progress to a fresh start. Never happens silently: the caller must pass { confirmed: true }
+   * (the UI asks the player first). The previous save is copied to a backup key before anything is replaced, and if that
+   * backup cannot be written the reset is refused. Settings are stored separately and are not touched.
+   */
+  reset({ confirmed = false } = {}) {
+    if (confirmed !== true) return { ok: false, reason: 'unconfirmed', message: 'Sıfırlama için onay gerekir.' };
+    if (!this.storage || !this.enabled) return { ok: false, reason: 'storage', message: 'Kayıt kapalı olduğu için sıfırlanamadı.' };
+    try {
+      const current = this.storage.getItem(this.key);
+      if (current != null) this.storage.setItem(this.backupKey.replace('.corrupt', '.before-reset'), current);
+    } catch { return { ok: false, reason: 'backup', message: 'Eski kayıt yedeklenemediği için ilerleme sıfırlanmadı.' }; }
+    this.apply(this.game.defaultState());
+    const saved = this.save();
+    return saved.ok ? { ok: true } : { ok: true, warning: saved.message };
   }
 
   problem(kind, message) { this.onProblem({ kind, message }); }

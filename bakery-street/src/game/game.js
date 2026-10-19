@@ -17,6 +17,7 @@ export class Game {
    */
   constructor(player, data = {}, clock = () => Date.now()) {
     this.player = player;
+    this.initial = { gold: player.gold, gems: player.gems ?? 0 };   // starting values, used by resetState()
     this.ingredientsDef = data.ingredients ?? INGREDIENTS;
     this.productsDef = data.products ?? PRODUCTS;
     this.stationsDef = data.stations ?? STATIONS;
@@ -177,26 +178,45 @@ export class Game {
     return {
       ...(this.cafe ? { cafe: this.cafe.exportState() } : {}),
       gold: this.player.gold,
+      gems: this.player.gems ?? 0,
       ingredients: { ...this.ingredients },
       products: { ...this.products },
       jobs: Object.fromEntries(Object.entries(this.jobs).map(([st, list]) => [st, list.map((j) => ({ product: j.product, startedAt: j.startedAt, duration: j.duration }))])),
       upgrades: { ...this.upgrades },
       stats: JSON.parse(JSON.stringify(this.stats)),
       ...(this.quests ? { quests: this.quests.exportState() } : {}),
+      ...(this.daily ? { daily: this.daily.exportState() } : {}),
     };
   }
 
   /** Replaces the current state with an already-validated snapshot (see save.js). */
   importState(state) {
     this.player.gold = state.gold;
+    this.player.gems = state.gems ?? this.initial.gems;
     this.ingredients = { ...state.ingredients };
     this.products = { ...state.products };
     this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, list]) => [st, list.map((j) => ({ ...j }))]));
     this.upgrades = { ...state.upgrades };
     this.stats = JSON.parse(JSON.stringify(state.stats));
     this.quests?.importState(state.quests);
+    this.daily?.importState(state.daily);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
+  }
+
+  /** A brand-new game state (same shape as a validated save). Used by the confirmed progress reset. */
+  defaultState() {
+    return {
+      gold: this.initial.gold,
+      gems: this.initial.gems,
+      ingredients: Object.fromEntries(Object.entries(this.ingredientsDef).map(([id, d]) => [id, d.start ?? 0])),
+      products: Object.fromEntries(Object.entries(this.productsDef).map(([id, d]) => [id, d.start ?? 0])),
+      jobs: {},
+      upgrades: Object.fromEntries(Object.keys(this.upgradesDef).map((id) => [id, 0])),
+      stats: blankStats(this.productsDef),
+      quests: { claimed: [] },
+      daily: { lastDate: null, day: 0 },
+    };
   }
 
   // ---- economy --------------------------------------------------------------------------------
