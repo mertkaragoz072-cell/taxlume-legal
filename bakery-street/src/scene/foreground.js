@@ -8,7 +8,7 @@ export function drawForeground(ctx, v) {
   const xmin = -v.ox, xmax = DESIGN.w + v.ox;
   const y = DESIGN.curbY;
 
-  if (!getImage('ground-walk-a')) { // oblique plaza props only with the procedural pavement
+  {
     bench(ctx, 310, y + 78, 190);
     bench(ctx, 1090, y + 78, 190);
     for (const x of [170, 222, 520, 880, 1180, 1232]) bollard(ctx, x, y + 70);

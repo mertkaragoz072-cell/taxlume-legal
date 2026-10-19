@@ -2,11 +2,11 @@
 // The renderer scales it to the screen and reveals extra sky / filler houses on wider phones.
 export const DESIGN = {
   w: 1400,
-  h: 730,
+  h: 790,
   baseY: 575,       // where building fronts meet the pavement
   curbY: 662,       // sidewalk / street edge
   groundY: 598,     // top edge of the flat, front-on ground band
-  walkY: 604,       // feet line of walking characters (stand on the ground's top edge)
+  walkY: 638,       // feet line of walking characters (stand on the ground's top edge)
 };
 
 export const TEXT = {
