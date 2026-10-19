@@ -238,3 +238,10 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 - **Keşif ödülleri:** süre arttıkça dakika başına ödül artar (altın ≈ 70 → 120 → 150, XP ≈ 18 → 24 → 30). Çayırlar 50–90 altın / 14–22 XP; Orman 450–750 / 100–140; Harabeler 1.800–2.700 / 400–500. Keşifte risk mekaniği yoktur; "risk" yalnızca uzun sürede başka keşif yapamamaktır.
 - **Yuvarlama:** Verimli Üretim iadesi artık en yakın tam altına yuvarlanır (eskiden yukarı) ve malzeme maliyetini aşmaz. Satış / satın alma miktarları tam sayı olmak zorundadır (NaN, küsurat, negatif reddedilir). Altın değerleri hep tam sayıdır ve bildirimlerde binlik ayraçla gösterilir.
 - **Boş Arsa** kartı Kasaba'dan gizlendi (veri duruyor, `hidden: true`).
+
+## Kalite turu: Grup C-2 (kalan ekonomi riskleri)
+
+- **Satış formülü** (`Game.unitEconomics`, tek hesap yeri): `müşteri = round(fiyat × (1 + Usta Satıcı))`, `maliyet = malzeme değeri − Verimli Üretim iadesi`, `müşteri net = müşteri − maliyet`, `vitrin = müşteri − round(müşteri net × (1 − 0,8))`. Yani vitrin, **araştırma bonusları uygulandıktan sonraki** net kârın %80'ini verir (her araştırma seviyesinde ±0,5 altın içinde). Vitrin satışı, müşteri teslimi, paneller ve sipariş çipleri aynı fonksiyonu kullanır; bonus yalnızca bir kez uygulanır.
+- **Vitrin kapasitesi:** stok + devam eden üretim hiçbir yoldan (çoklu üretim, çevrimdışı tamamlanma, müşteri/vitrin satışı) kapasiteyi aşmaz; testle doğrulandı. Bir saatlik simülasyonda gelir, satış kanalından çok **üretim kapasitesi** tarafından sınırlanır (başlangıç ≈ 5k, orta ≈ 11k, tam yükseltme ≈ 30k altın/saat; müşteriyi hiç görmemek yalnızca %2–6 kayıp).
+- **Araştırma geri ödemesi** (aktif üretimde, aşama başına ≈ 5 saat): Usta Satıcı 2.300 / 3.400 / 4.700 / 6.500 / 9.000 (eskiden 2.000–40.000), Verimli Üretim 1.300 / 2.000 / 2.800 / 3.900 / 5.400 (eskiden 1.200–26.000). Kayıtlı araştırma seviyeleri ve altın etkilenmez.
+- **Seviye 10–30:** XP, seviye ve ödül hesapları parçalara ayrılmış her XP akışında, kayıt/yükleme sonrası ve maksimum seviyede doğrulandı; her seviye ödülü yalnızca bir kez verilir. Yeni ödül veya içerik eklenmedi.

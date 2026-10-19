@@ -89,15 +89,26 @@ export class Game {
   bonus(effect) { return this.research?.bonus(effect) ?? 0; }
   /** Gold earned by one customer order whose base price is `base` (Usta Satıcı). */
   saleIncome(base) { return Math.round(base * (1 + this.bonus('saleIncome'))); }
-  /** Gold earned by selling one unit of `id` straight from the showcase: ingredient cost back + SALES.showcaseNetShare of the customer's net profit. */
-  showcaseIncome(id) {
-    const price = this.productsDef[id].price, cost = Math.min(price, this.ingredientCost(id));
-    return Math.round((cost + Math.round((price - cost) * this.sales.showcaseNetShare)) * (1 + this.bonus('saleIncome')));
-  }
   /** Gold value of the ingredients one unit of `id` consumes (from the single INGREDIENTS price list). */
   ingredientCost(id) {
     return Object.entries(this.productsDef[id].ingredients).reduce((sum, [ing, n]) => sum + n * this.ingredientsDef[ing].price, 0);
   }
+  /**
+   * The one place where price, ingredient cost and research bonuses meet for a product. Every number is a whole gold amount.
+   *  customer / showcase : gold from one sale (the Usta Satıcı bonus is applied once, inside saleIncome)
+   *  cost                : ingredient value after the Verimli Üretim refund (what one unit really costs)
+   *  customerNet / showcaseNet : income minus that cost; the showcase keeps SALES.showcaseNetShare of the customer's net
+   * `basePrice` lets a customer order keep the price it was created with.
+   */
+  unitEconomics(id, basePrice = this.productsDef[id].price) {
+    const cost = this.ingredientCost(id) - this.ingredientRebate(id);
+    const customer = this.saleIncome(basePrice), customerNet = customer - cost;
+    const showcase = customer - Math.max(0, Math.round(customerNet * (1 - this.sales.showcaseNetShare)));
+    return { cost, customer, customerNet, showcase, showcaseNet: showcase - cost };
+  }
+  /** Gold earned by selling one unit of `id` straight from the showcase. */
+  showcaseIncome(id) { return this.unitEconomics(id).showcase; }
+
   /** Gold refunded when starting `id`: the Verimli Üretim share of the ingredient value, rounded to the nearest gold (never above the cost). */
   ingredientRebate(id) {
     const b = this.bonus('ingredientCost'), value = this.ingredientCost(id);

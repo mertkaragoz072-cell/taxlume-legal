@@ -33,10 +33,11 @@ export const PRODUCTS = {
 export const BUY_AMOUNTS = [1, 5];
 
 /**
- * Sales tuning. A customer pays the full order price. Selling straight from the showcase pays the ingredient cost back plus
- * `showcaseNetShare` of the customer's NET profit (price - ingredient cost), so the showcase nets ~20% less than serving a customer
- * (bread 11 vs 14, croissant 23 vs 29, cake 48 vs 60, coffee 14 vs 17). Prices and costs are never repeated: both come from PRODUCTS and
- * INGREDIENTS. The Usta Satıcı research bonus multiplies both kinds of sale.
+ * Sales tuning. A customer pays the full order price (with the Usta Satıcı bonus). Selling straight from the showcase pays that
+ * minus 20% of the customer's NET profit, where net = income - ingredient cost + Verimli Üretim refund, all after research bonuses.
+ * `showcaseNetShare` is the share of the customer's net profit the showcase keeps: 0.8 -> the showcase nets ~20% less, whatever the
+ * research levels (bread 11 vs 14, croissant 23 vs 29, cake 48 vs 60, coffee 14 vs 17 at the start). Prices and costs come only from
+ * PRODUCTS and INGREDIENTS; Game.unitEconomics() is the single place that combines them.
  */
 export const SALES = { showcaseNetShare: 0.8 };
 
@@ -175,12 +176,12 @@ export const RESEARCH = {
   },
   efficientProduction: {
     name: 'Verimli Üretim', icon: '🧺', effect: 'ingredientCost', bookshopLevel: 0,
-    costs: [1200, 3000, 6500, 13000, 26000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],
+    costs: [1300, 2000, 2800, 3900, 5400], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],   // pays back in ~5 h of active production at each stage (see README)
     describe: (v) => (v ? `Malzeme maliyeti %${Math.round(v * 100)} azalır` : 'Bonus yok'),
   },
   masterSeller: {
     name: 'Usta Satıcı', icon: '🏷️', effect: 'saleIncome', bookshopLevel: 0,
-    costs: [2000, 5000, 10000, 20000, 40000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],
+    costs: [2300, 3400, 4700, 6500, 9000], values: [0, 0.05, 0.10, 0.15, 0.20, 0.25],   // pays back in ~5 h of active production at each stage (see README)
     describe: (v) => (v ? `Satış geliri %${Math.round(v * 100)} artar` : 'Bonus yok'),
   },
   townCulture: {

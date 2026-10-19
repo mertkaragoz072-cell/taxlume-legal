@@ -144,7 +144,7 @@ export class Cafe {
     const def = this.game.productsDef[order.product];
     if (this.game.products[order.product] < 1) return fail('stock', `Stokta ${def.name} yok. Önce üret.`);
     this.game.products[order.product] -= 1;
-    const income = this.game.saleIncome(order.price);        // order.price stays the base price; the research bonus is applied once, here
+    const income = this.game.unitEconomics(order.product, order.price).customer;   // order.price stays the base price; the research bonus is applied once, inside unitEconomics
     this.game.player.gold += income;
     this.game.recordSold(order.product, 1);
     order.status = 'paid';

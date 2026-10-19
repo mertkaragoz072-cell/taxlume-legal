@@ -130,10 +130,12 @@ test('showcase nets ~20% less than a customer order for every product, with cost
 test('with research bonuses both sale kinds get the same multiplier exactly once', () => {
   const { game } = make(0);
   game.research = { bonus: (e) => (e === 'saleIncome' ? 0.25 : 0) };
-  const base = game.showcaseIncome('cake');
+  const u = game.unitEconomics('cake');
+  assert.equal(u.customer, 150);                                 // 120 * 1.25, applied once
+  assert.equal(u.cost, 60);
+  assert.equal(u.showcase, 150 - Math.round((150 - 60) * 0.2));  // the showcase gives up 20% of the customer's net
+  assert.equal(game.saleIncome(120), 150);
   game.research = null;
-  const plain = game.showcaseIncome('cake');
-  assert.equal(base, Math.round(plain * 1.25));
   assert.equal(game.saleIncome(120), 120);
 });
 
