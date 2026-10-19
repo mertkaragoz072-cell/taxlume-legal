@@ -39,6 +39,7 @@ export default async function run({ browser, url }) {
   await page.click('.card[data-i=flour] [data-act=inc]'); await page.click('.card[data-i=flour] [data-act=buy]'); await page.waitForTimeout(300);
   c.ok('market buy: gold down, stock up, once', (await S(() => window.__street.game.ingredients.flour)) === fl + 2 && gm - (await S(() => window.__street.game.player.gold)) === 16);
   await S(() => window.__street.game.player.gold = 0); await S(() => window.__street.game.emit('change', { type: 't' }));
+  await page.waitForTimeout(500);                                   // the Market ignores a second buy tap within 450 ms (double-tap guard)
   await page.click('.card[data-i=flour] [data-act=buy]'); await page.waitForTimeout(250);
   c.ok('no gold: purchase refused with a warning', (await S(() => window.__street.game.ingredients.flour)) === fl + 2 && /Yetersiz/.test(await page.textContent('#toast')));
   await S(() => { window.__street.game.player.gold = 100000; window.__street.game.emit('change', { type: 't' }); });

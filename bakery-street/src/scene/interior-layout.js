@@ -7,9 +7,9 @@ export const AREAS = [
   { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1085, y: 230, w: 175, h: 250 },
   { id: 'storage', label: 'Depo', panel: 'storage', x: 1272, y: 322, w: 124, h: 158 },
   { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1272, y: 140, w: 124, h: 152 },
-  { id: 'table1', label: 'Masa 1', panel: null, x: 150, y: 560, w: 230, h: 170 },
-  { id: 'table2', label: 'Masa 2', panel: null, x: 540, y: 575, w: 230, h: 170 },
-  { id: 'table3', label: 'Masa 3', panel: null, x: 930, y: 560, w: 230, h: 170 },
+  { id: 'table1', label: 'Masa 1', panel: null, x: 120, y: 552, w: 290, h: 178 },
+  { id: 'table2', label: 'Masa 2', panel: null, x: 510, y: 567, w: 290, h: 178 },
+  { id: 'table3', label: 'Masa 3', panel: null, x: 900, y: 552, w: 290, h: 178 },
 ];
 
 export const WALL_Y = 96;     // top of the back wall (below the HUD)
