@@ -23,11 +23,13 @@ export function drawForeground(ctx, v) {
     planter(ctx, 410, y + 112, 150, 30, { seed: 402, kind: 'box', bushH: 40 });
     planter(ctx, 990, y + 112, 150, 30, { seed: 403, kind: 'box', bushH: 40 });
   }
+  if (!hasProps()) { // procedural corner shrubs only as a fallback
   // corner shrubs
   bush(ctx, xmin + 70, DESIGN.h + 14, 240, 110, 411);
   bush(ctx, xmax - 70, DESIGN.h + 14, 240, 110, 412);
   planter(ctx, xmin + 50, DESIGN.h - 36, 80, 40, { seed: 413, kind: 'box', bushH: 50 });
   planter(ctx, xmax - 50, DESIGN.h - 36, 80, 40, { seed: 414, kind: 'box', bushH: 50 });
+  }
 
   if (!getImage('town-backdrop')) { // framing trees only when there is no painted backdrop
     canopy(ctx, xmin, -v.oy, 1, 601);

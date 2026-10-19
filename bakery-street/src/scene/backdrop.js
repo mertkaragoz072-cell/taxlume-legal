@@ -162,7 +162,7 @@ function hGrad(ctx, x, W, cols, a, k = 1) {
  */
 function panorama(ctx, v, img) {
   const W = Math.max(v.vw + 60, 1500) * 1.1, H = (W * img.naturalHeight) / img.naturalWidth;
-  const x = DESIGN.w / 2 - W / 2, bottom = DESIGN.baseY - 34, y = bottom - H;
+  const x = DESIGN.w / 2 - W / 2, bottom = DESIGN.groundY + 6, y = bottom - H;
   const top = sampleEdge(img, 'top'), foot = sampleEdge(img, 'bottom');
   const topY = -v.oy - 12;
   if (y > topY) { ctx.fillStyle = hGrad(ctx, x, W, top, 1); ctx.fillRect(x, topY, W, y - topY + 2); }
@@ -172,11 +172,6 @@ function panorama(ctx, v, img) {
   const haze = ctx.createLinearGradient(0, y, 0, bottom);
   haze.addColorStop(0, 'rgba(170,205,240,0.10)'); haze.addColorStop(0.55, 'rgba(185,215,238,0.26)'); haze.addColorStop(1, 'rgba(150,190,200,0.34)');
   ctx.fillStyle = haze; ctx.fillRect(x, y, W, H);
-  // darkened foot: shade falling from the shops onto the hedge behind them
-  const shade = ctx.createLinearGradient(0, bottom - 120, 0, bottom);
-  shade.addColorStop(0, 'rgba(10,35,20,0)'); shade.addColorStop(1, 'rgba(10,35,20,0.4)');
-  ctx.fillStyle = shade; ctx.fillRect(x, bottom - 120, W, 120);
-
   // soft top edge into the extended sky
   const strip = document.createElement('canvas');
   strip.width = 64; strip.height = 46;
@@ -188,11 +183,4 @@ function panorama(ctx, v, img) {
   sg.fillStyle = ga; sg.fillRect(0, 0, 64, 46);
   ctx.drawImage(strip, x, y, W, 46);
 
-  // dark hedge / shadow band between the backdrop and the pavement
-  const g = ctx.createLinearGradient(x, 0, x + W, 0);
-  foot.forEach((c, i) => g.addColorStop(i / (foot.length - 1), `rgb(${Math.round(c[0] * 0.78)},${Math.round(c[1] * 0.82)},${Math.round(c[2] * 0.72)})`));
-  ctx.fillStyle = g; ctx.fillRect(x, bottom - 2, W, DESIGN.groundY + 8 - bottom + 2);
-  const fade = ctx.createLinearGradient(0, bottom - 2, 0, bottom + 18);
-  fade.addColorStop(0, 'rgba(10,35,20,0.28)'); fade.addColorStop(1, 'rgba(10,35,20,0.05)');
-  ctx.fillStyle = fade; ctx.fillRect(x, bottom - 2, W, 20);
 }
