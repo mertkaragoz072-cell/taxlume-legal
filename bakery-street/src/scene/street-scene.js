@@ -13,6 +13,9 @@ import { market } from '../buildings/market.js';
 import { WALKERS, CAFE_SETS, updateWalkers, updateChef, drawWalker, drawWaitress, drawCafeSet } from '../characters/crowd.js';
 
 const BUILDINGS = [bookshop, market, bakery];
+const MARGIN = 60;                 // design px of spare layer on each side (parallax headroom)
+const PAR = { far: 0.35, shops: 1, front: 1.8 };   // how far each depth plane moves with the camera
+const MOTES = Array.from({ length: 34 }, (_, i) => ({ x: Math.random(), y: Math.random(), z: Math.random(), s: 0.6 + Math.random() * 1.6, p: i }));
 
 export class StreetScene {
   constructor() {
@@ -26,34 +29,39 @@ export class StreetScene {
     this.t = 0;
     this.lampGlows = [];
     this.view = null;
+    this.look = 0;        // -1..1 from pointer / tilt
+    this.cam = 0;         // smoothed camera offset in design px
   }
 
-  /** Rebuild cached layers when the screen size changes. */
+  /** Steer the parallax camera (pointer position or device tilt), -1..1. */
+  setLook(n) { this.look = clamp(n, -1, 1); }
+
+  /** Rebuild cached layers when the screen size changes. Layers carry a margin so parallax shifts never expose an edge. */
   resize(view) {
     this.view = view;
-    const k = view.scale * view.dpr;
-    const make = (fn) => {
+    const k = view.scale * view.dpr, MG = MARGIN;
+    const v2 = { ...view, ox: view.ox + MG };
+    const make = (fn, grain = 0.022) => {
       const c = document.createElement('canvas');
-      c.width = Math.ceil(view.W * view.dpr);
+      c.width = Math.ceil((view.W + 2 * MG * view.scale) * view.dpr);
       c.height = Math.ceil(view.H * view.dpr);
       const g = c.getContext('2d');
-      g.setTransform(k, 0, 0, k, view.ox * k, view.oy * k);
+      g.setTransform(k, 0, 0, k, v2.ox * k, view.oy * k);
       fn(g);
-      applyGrain(g, c.width, c.height, 0.022);
+      applyGrain(g, c.width, c.height, grain);
       return c;
     };
     this.layers = {
-      sky: make((g) => drawSky(g, view)),
+      far: make((g) => { drawSky(g, v2); drawBackdrop(g, v2); if (!getImage('town-backdrop')) drawSides(g, v2); }),
       back: make((g) => {
-        drawBackdrop(g, view);
-        if (!getImage('town-backdrop')) drawSides(g, view); // filler houses only as a fallback
-        drawPavement(g, view);
+        drawPavement(g, v2);
+        contactShadows(g);
         bookshop.draw(g);
         market.draw(g);
         if (bakery.usesAsset) this.lampGlows = drawLamps(g);
       }),
-      mid: make((g) => { const l = drawMidground(g, view); if (l.length) this.lampGlows = l; }),
-      front: make((g) => drawForeground(g, view)),
+      mid: make((g) => { const l = drawMidground(g, v2); if (l.length) this.lampGlows = l; }),
+      front: make((g) => drawForeground(g, v2)),
     };
     // bakery gets its own sprite so it can squash / glow on tap
     const b = bakery.bounds, pad = 30;
@@ -69,7 +77,49 @@ export class StreetScene {
     this.xmin = -view.ox; this.xmax = DESIGN.w + view.ox;
   }
 
+  /** Slanted, slowly breathing sunbeams across the far plane. */
+  lightShafts(ctx, k, v) {
+    const t = this.t, W = ctx.canvas.width, H = ctx.canvas.height;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 4; i++) {
+      const cx = W * (0.15 + i * 0.24) + Math.sin(t * 0.12 + i) * W * 0.02 - this.cam * 0.6 * k;
+      const a = 0.05 + 0.025 * Math.sin(t * 0.4 + i * 1.9);
+      const g = ctx.createLinearGradient(cx, 0, cx - W * 0.16, H * 0.8);
+      g.addColorStop(0, `rgba(255,236,170,${a * 1.6})`); g.addColorStop(1, 'rgba(255,236,170,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(cx - W * 0.05, 0); ctx.lineTo(cx + W * 0.05, 0);
+      ctx.lineTo(cx - W * 0.16 + W * 0.08, H * 0.8); ctx.lineTo(cx - W * 0.16 - W * 0.08, H * 0.8);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /** Floating pollen / dust: small bright motes drift slowly behind the shops, big soft bokeh drifts fast in front. */
+  motes(ctx, k, v, t) {
+    const W = ctx.canvas.width, H = ctx.canvas.height;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const m of MOTES) {
+      const near = m.z > 0.82, f = near ? PAR.front : 0.6 + m.z * 0.5;
+      const sp = (near ? 0.012 : 0.006) * m.s;
+      const x = (((m.x + t * sp + Math.sin(t * 0.3 + m.p) * 0.01) % 1) + 1) % 1;
+      const y = (((m.y - t * 0.004 * m.s + Math.sin(t * 0.5 + m.p * 2) * 0.012) % 1) + 1) % 1;
+      const px = x * W - this.cam * f * k * 0.4, py = y * H;
+      const r = (near ? 16 + m.s * 9 : 1.6 + m.s * 1.4) * k;
+      const a = near ? 0.07 : 0.38 * (0.5 + 0.5 * Math.sin(t * 1.3 + m.p));
+      const g = ctx.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, `rgba(255,240,190,${a})`); g.addColorStop(1, 'rgba(255,240,190,0)');
+      ctx.fillStyle = g; ctx.fillRect(px - r, py - r, r * 2, r * 2);
+    }
+    ctx.restore();
+  }
+
   hitTest(x, y) {
+    x += this.cam;   // the shop plane moves with the camera
     const b = bakery.bounds;
     return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h ? 'bakery' : null;
   }
@@ -88,6 +138,8 @@ export class StreetScene {
 
   update(dt) {
     this.t += dt;
+    const target = Math.sin(this.t * 0.23) * 6 + this.look * 16;
+    this.cam += (target - this.cam) * Math.min(1, dt * 2.5);
     updateWalkers(this.walkers, dt, this.xmin - 40, this.xmax + 40);
     updateChef(dt);
     for (const c of this.clouds) { c.x += c.v * dt; if (c.x > this.xmax + 120) c.x = this.xmin - 120; }
@@ -100,14 +152,15 @@ export class StreetScene {
   }
 
   render(ctx) {
-    const v = this.view, t = this.t, k = v.scale * v.dpr;
-    const blit = (c) => { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(c, 0, 0); };
-    const design = () => ctx.setTransform(k, 0, 0, k, v.ox * k, v.oy * k);
+    const v = this.view, t = this.t, k = v.scale * v.dpr, cam = this.cam;
+    const shift = (f) => -cam * f;
+    // pre-rendered layer, shifted by its parallax factor (layers include a MARGIN on each side)
+    const blit = (c, f) => { ctx.setTransform(1, 0, 0, 1, (shift(f) - MARGIN) * v.scale * v.dpr, 0); ctx.drawImage(c, 0, 0); };
+    const design = (f = PAR.shops) => ctx.setTransform(k, 0, 0, k, (v.ox + shift(f)) * k, v.oy * k);
 
-    blit(this.layers.sky);
-    design();
-    if (!getImage('town-backdrop')) for (const c of this.clouds) drawCloud(ctx, c);
-    blit(this.layers.back);
+    blit(this.layers.far, PAR.far);
+    this.lightShafts(ctx, k, v);
+    blit(this.layers.back, PAR.shops);
 
     // bakery sprite with press / tap squash
     design();
@@ -126,12 +179,12 @@ export class StreetScene {
     }
     ctx.restore();
 
-    blit(this.layers.mid);
+    blit(this.layers.mid, PAR.shops);
     design();
     if (!bakery.usesAsset) for (const s of CAFE_SETS) drawCafeSet(ctx, s, t);
     drawWaitress(ctx, t);
     for (const w of this.walkers) drawWalker(ctx, w, t);
-    blit(this.layers.front);
+    blit(this.layers.front, PAR.front);
 
     // warm light: lamps, lanterns, windows
     design();
@@ -160,6 +213,8 @@ export class StreetScene {
     }
     ctx.globalAlpha = 1;
 
+    this.motes(ctx, k, v, t);
+
     // soft vignette
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     const W = ctx.canvas.width, H = ctx.canvas.height;
@@ -181,4 +236,16 @@ function star(ctx, x, y, r, c) {
   ctx.fillStyle = c; ctx.beginPath();
   for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4, rr = i % 2 ? r * 0.38 : r; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
   ctx.closePath(); ctx.fill();
+}
+
+/** Soft ground shadows under every shop so they sit on the street rather than float. */
+function contactShadows(ctx) {
+  for (const b of [bookshop, market, bakery]) {
+    const { x, w } = b.bounds, y = DESIGN.groundY;
+    const g = ctx.createRadialGradient(x + w / 2, y, 4, x + w / 2, y, w * 0.58);
+    g.addColorStop(0, 'rgba(30,14,4,0.45)'); g.addColorStop(1, 'rgba(30,14,4,0)');
+    ctx.save(); ctx.translate(0, y); ctx.scale(1, 0.14); ctx.translate(0, -y);
+    ctx.fillStyle = g; ctx.fillRect(x - w * 0.2, y - w * 0.6, w * 1.4, w * 1.2);
+    ctx.restore();
+  }
 }

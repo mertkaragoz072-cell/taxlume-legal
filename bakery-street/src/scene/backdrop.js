@@ -9,7 +9,7 @@ const HAZE = '#a9cdee';
 export function drawSky(ctx, v) {
   const y0 = -v.oy - 10;
   ctx.fillStyle = vgrad(ctx, y0, 420, [[0, '#4fa8ee'], [0.55, '#8ccaf6'], [1, '#d4eefc']]);
-  ctx.fillRect(-v.ox - 10, y0, v.vw + 20, 420 - y0 + 200);
+  ctx.fillRect(-v.ox - 120, y0, v.vw + 240, 420 - y0 + 200);
 }
 
 export function makeClouds(v) {
@@ -161,7 +161,7 @@ function hGrad(ctx, x, W, cols, a, k = 1) {
  * hedge-coloured band at its foot, so a clear gap of depth separates it from the shop fronts.
  */
 function panorama(ctx, v, img) {
-  const W = Math.max(v.vw + 60, 1500) * 1.1, H = (W * img.naturalHeight) / img.naturalWidth;
+  const W = Math.max(v.vw + 60, 1500) * 1.22, H = (W * img.naturalHeight) / img.naturalWidth;
   const x = DESIGN.w / 2 - W / 2, bottom = DESIGN.groundY + 6, y = bottom - H;
   const top = sampleEdge(img, 'top'), foot = sampleEdge(img, 'bottom');
   const topY = -v.oy - 12;
@@ -170,7 +170,7 @@ function panorama(ctx, v, img) {
 
   // atmospheric haze: light blue veil, strongest near the horizon band
   const haze = ctx.createLinearGradient(0, y, 0, bottom);
-  haze.addColorStop(0, 'rgba(170,205,240,0.10)'); haze.addColorStop(0.55, 'rgba(185,215,238,0.26)'); haze.addColorStop(1, 'rgba(150,190,200,0.34)');
+  haze.addColorStop(0, 'rgba(170,205,240,0.12)'); haze.addColorStop(0.55, 'rgba(185,215,238,0.28)'); haze.addColorStop(1, 'rgba(150,190,200,0.36)');
   ctx.fillStyle = haze; ctx.fillRect(x, y, W, H);
   // soft top edge into the extended sky
   const strip = document.createElement('canvas');

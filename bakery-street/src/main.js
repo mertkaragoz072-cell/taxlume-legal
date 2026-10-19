@@ -56,6 +56,12 @@ canvas.addEventListener('pointerup', (e) => {
   if (hit === 'bakery') { scene.tapBuilding(hit, p.x, p.y); enterScene('cafe'); }
 });
 canvas.addEventListener('pointercancel', () => scene.press(false));
+canvas.addEventListener('pointermove', (e) => scene.setLook(((e.clientX / view.W) - 0.5) * 2));
+window.addEventListener('deviceorientation', (e) => { if (e.gamma != null) scene.setLook(e.gamma / 25); });
+// iOS asks for tilt permission once, on the first touch
+canvas.addEventListener('pointerdown', () => {
+  try { window.DeviceOrientationEvent?.requestPermission?.().catch(() => {}); } catch { /* not required elsewhere */ }
+}, { once: true });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
 createHud(document.getElementById('hud'), {
