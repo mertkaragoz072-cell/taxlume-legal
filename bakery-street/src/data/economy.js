@@ -44,3 +44,13 @@ export const CAFE = {
   orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4 },   // how likely each product is ordered
   history: 20,                  // closed orders kept for reference
 };
+
+/**
+ * What the Market building sells. Prices come from INGREDIENTS (one price list for the whole game).
+ * Butter is included because croissant and cake recipes need it; without it those recipes could not be supplied.
+ */
+export const MARKET = {
+  items: ['flour', 'milk', 'egg', 'sugar', 'beans', 'butter'],
+  quantities: [1, 5, 10],      // quick-pick amounts next to the +/- stepper
+  maxPerPurchase: 99,
+};

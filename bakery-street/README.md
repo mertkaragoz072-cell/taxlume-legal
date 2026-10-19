@@ -35,6 +35,7 @@ Telefonu yatay tutun (dikeyde "yatay çevirin" uyarısı görünür).
 | `src/game/customers.js` | Müşteri, masa ve sipariş mantığı (DOM'suz, testli) |
 | `src/scene/interior-customers.js` | Müşterilerin sahnedeki görünümü (yürüme, balon) |
 | `src/ui/orders.js` | Sol alttaki sipariş çubuğu (sayaçlar + teslim butonları) |
+| `src/scene/market-scene.js` · `src/ui/market.js` | Market ekranı ve alışveriş listesi |
 | `tests/game.test.js` | Mantık testleri (`npm test`) |
 
 ## Çalışan özellikler
@@ -104,3 +105,14 @@ Test: `npm test` (50 test).
 - Masa doluluğu müşterilerden türetilir: bir masada en fazla bir müşteri olur ve ayrılınca masa hemen boşalır (rastgele 900 adımlık benzetim testi bunu her adımda doğrular).
 - Görsel: oturan müşteri masanın solunda durur, kuyruk girişte (sağda) ayrı noktalardadır; konumlar `interior-layout.js` içinde testlidir.
 - Satış, stok ve altın mantığına dokunulmadı.
+
+## Adım 4: Market ve malzeme envanteri
+
+- Sokakta **Market** binasına dokununca Market ekranı açılır (kısa geçişle); sol altta **◀ Marketten Çık** ile sokağa dönülür. Kitapçı hâlâ pasiftir.
+- Ürünler: un, süt, yumurta, şeker, kahve çekirdeği ve **tereyağı** (kruvasan ve pasta tarifleri tereyağı kullandığı için eklendi; listeden çıkarmak `src/data/economy.js` → `MARKET.items`). Her satırda fiyat, mevcut stok, alınabilir miktar, hangi tarifte kaç adet kullanıldığı, − / + miktar seçici, hazır 1·5·10 düğmeleri ve toplam fiyatlı **Satın Al** düğmesi vardır.
+- Satın alma `Game.purchase` ile tek adımda yapılır: altın −fiyat×miktar, stok +miktar. Altın yetmezse hiçbir şey değişmez ve "Yetersiz altın: X gerekli, Y var." çıkar; düğme kırmızıya döner. Hızlı çift/üçlü dokunuş tek satın alma sayılır (arayüz kilidi + tekrar edilen istek kimliği engeli).
+- **Tek envanter:** Market, Depo paneli ve üretim aynı `game.ingredients` nesnesini kullanır; ayrı stok yoktur. Tarifler Market'ten alınan malzemeyle çalışır, eksik malzemede üretim başlamaz ve hiçbir şey düşmez.
+- Altın ve stok, mevcut kayıt sistemiyle (her işlemde) kalıcıdır.
+- Depo paneli (iç mekân) duruyor; aynı envantere bağlı olduğu için çakışma yoktur.
+
+Test: `npm test` (75 test).

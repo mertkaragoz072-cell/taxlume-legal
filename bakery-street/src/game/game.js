@@ -1,5 +1,5 @@
 // Pure game logic for production, stock and gold. No DOM or canvas here, so it can be unit-tested in Node.
-import { INGREDIENTS, PRODUCTS, STATIONS } from '../data/economy.js';
+import { INGREDIENTS, PRODUCTS, STATIONS, MARKET } from '../data/economy.js';
 
 const fmtGold = (n) => n.toLocaleString('tr-TR');
 
@@ -14,6 +14,8 @@ export class Game {
     this.ingredientsDef = data.ingredients ?? INGREDIENTS;
     this.productsDef = data.products ?? PRODUCTS;
     this.stationsDef = data.stations ?? STATIONS;
+    this.marketDef = data.market ?? MARKET;
+    this.handledRequests = new Set();   // purchase request ids already applied (guards against a replayed click)
     this.clock = clock;
     this.ingredients = Object.fromEntries(Object.entries(this.ingredientsDef).map(([id, d]) => [id, d.start ?? 0]));
     this.products = Object.fromEntries(Object.entries(this.productsDef).map(([id, d]) => [id, d.start ?? 0]));
@@ -128,6 +130,29 @@ export class Game {
     this.ingredients[id] += qty;
     this.emit('change', { type: 'buy', ingredient: id, qty });
     return { ok: true, cost };
+  }
+
+  /** How many units of an ingredient the player can afford right now. */
+  maxAffordable(id) {
+    const def = this.ingredientsDef[id];
+    return def ? Math.floor(this.player.gold / def.price) : 0;
+  }
+
+  /**
+   * Market purchase: validates, then applies gold -cost and stock +qty in one step on the single shared inventory
+   * (`this.ingredients`, the same object production consumes from). `requestId` makes a replayed request a no-op.
+   */
+  purchase(id, qty, requestId = null) {
+    const bad = (reason, message) => ({ ok: false, reason, message });
+    if (!this.ingredientsDef[id] || !this.marketDef.items.includes(id)) return bad('notsold', 'Bu ürün Market\'te satılmıyor.');
+    if (!Number.isInteger(qty) || qty < 1 || qty > this.marketDef.maxPerPurchase) return bad('qty', `Miktar 1 ile ${this.marketDef.maxPerPurchase} arasında olmalı.`);
+    if (requestId != null) {
+      if (this.handledRequests.has(requestId)) return bad('duplicate', 'Bu satın alma zaten uygulandı.');
+      if (this.handledRequests.size > 200) this.handledRequests.clear();
+    }
+    const r = this.buyIngredient(id, qty);
+    if (r.ok && requestId != null) this.handledRequests.add(requestId);
+    return r;
   }
 
   /** Sells `qty` units of a product from the showcase for its sale price. */

@@ -6,6 +6,8 @@ import { createOrderBar } from './ui/orders.js';
 import { SaveManager, safeStorage } from './game/save.js';
 import { InteriorScene } from './scene/interior-scene.js';
 import { createPanels } from './ui/panels.js';
+import { MarketScene } from './scene/market-scene.js';
+import { createMarketPanel } from './ui/market.js';
 import { loadAssets } from './assets.js';
 import { StreetScene } from './scene/street-scene.js';
 import { bakery } from './buildings/bakery.js';
@@ -24,6 +26,7 @@ const game = new Game(PLAYER);              // production, stock and gold live h
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
 const street = new StreetScene();
 const interior = new InteriorScene(game);
+const marketScene = new MarketScene();
 const saveWarn = document.getElementById('saveWarn');
 const saves = new SaveManager(game, safeStorage(window), {
   onProblem: ({ kind, message }) => {
@@ -46,10 +49,16 @@ const panels = createPanels(document.getElementById('panel'), game, {
   onClose: () => interior.select(null),
 });
 
-/** Scene switch with a short fade. `id` is 'street' or 'interior'. */
+const marketPanel = createMarketPanel(document.getElementById('marketPanel'), game, {
+  onWarn: (msg) => showToast(toast, msg, 2600),
+  onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${cost} altın`, 1600),
+});
+const backBtn = document.getElementById('back');
+
+/** Scene switch with a short fade. `id` is 'street', 'interior' or 'market'. */
 let switching = false;
 function go(id) {
-  const target = id === 'interior' ? interior : street;
+  const target = { street, interior, market: marketScene }[id];
   if (switching || scene === target) return;
   switching = true;
   fade.classList.add('on');
@@ -58,6 +67,9 @@ function go(id) {
     scene = target;
     cafe.setActive(id === 'interior');          // customers only run while the cafe is open
     stage.classList.toggle('in-interior', id === 'interior');
+    stage.classList.toggle('in-market', id === 'market');
+    backBtn.textContent = id === 'market' ? '◀ Marketten Çık' : '◀ Sokak';
+    if (id === 'market') marketPanel.show(); else marketPanel.hide();
     scene.resize(view);
     if (id === 'interior') interior.snap();   // the interior is not updated while hidden: place customers where they should be
     fade.classList.remove('on');
@@ -98,6 +110,9 @@ canvas.addEventListener('pointerup', (e) => {
   const hit = scene.hitTest(p.x, p.y);
   if (scene === street) {
     if (hit === 'bakery') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('interior'), 260); }
+    else if (hit === 'market') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('market'), 260); }
+  } else if (scene === marketScene) {
+    // nothing to tap on the Market backdrop; the shopping list is a DOM panel
   } else if (!hit) {
     panels.close();
   } else if (hit.startsWith('customer:')) {
@@ -125,7 +140,7 @@ createNav(document.getElementById('nav'), {
     else showToast(toast, 'Yakında');
   },
 });
-document.getElementById('back').addEventListener('click', () => go('street'));
+backBtn.addEventListener('click', () => go('street'));
 const orderBar = createOrderBar(document.getElementById('orderBar'), game, cafe, {
   onWarn: (msg) => showToast(toast, msg, 2400),
   onSale: (r) => showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400),
@@ -167,5 +182,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, game, cafe, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, go }; // handy for debugging / tests
 });
