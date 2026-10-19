@@ -290,7 +290,7 @@ test('an action, its XP and the level-up reward are saved in one snapshot', () =
   const saved = JSON.parse(st.getItem(SAVE_KEY));
   assert.equal(saved.version, SAVE_VERSION);
   assert.deepEqual(saved.progression, { level: 2, xp: 1, rewardedLevel: 2 });
-  assert.equal(saved.gold, a.game.showcaseIncome(PRODUCTS.bread.price) + a.prog.rewardFor(2).gold);
+  assert.equal(saved.gold, a.game.showcaseIncome('bread') + a.prog.rewardFor(2).gold);
 });
 
 test('older saves (before levels existed) load safely as level 1 with 0 XP and keep everything else', () => {

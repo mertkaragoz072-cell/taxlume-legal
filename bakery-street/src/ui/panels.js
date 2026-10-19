@@ -15,7 +15,7 @@ export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
     oven: 'Hamur işlerini fırında pişir.',
     coffee: 'Kahveyi makinede hazırla.',
     counter: 'Tüm ürünlerin tarifleri. Üretim ilgili makinede başlar.',
-    showcase: 'Vitrinden satış, müşteri siparişinden daha az kazandırır. Müşteriye vermek daha kârlı.',
+    showcase: 'Vitrinden satış, müşteri siparişinden daha az net kazanç sağlar. Siparişleri teslim etmek daha kârlı.',
     storage: 'Üretim için malzeme satın al.',
     upgrades: 'Fırın & Kafe için kalıcı geliştirmeler. Etkiler üretim ve vitrine hemen uygulanır.',
   };
@@ -49,7 +49,7 @@ export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
       const n = game.products[pid];
       return `<div class="card" data-p="${pid}">
         <div class="ci">${d.icon}</div>
-        <div class="cm"><div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${n}</i>/${game.showcaseLimit()}</span></div><div class="meta">💰 ${fmt(game.showcaseIncome(d.price))} / adet</div></div>
+        <div class="cm"><div class="ct"><b>${d.name}</b><span class="muted">Stok: <i>${n}</i>/${game.showcaseLimit()}</span></div><div class="meta">💰 ${fmt(game.showcaseIncome(pid))} / adet</div></div>
         <div class="btns"><button class="go sm" data-sell="${pid}" data-qty="1">Sat</button><button class="go sm alt" data-sell="${pid}" data-qty="all">Hepsi</button></div>
       </div>`;
     }).join('');

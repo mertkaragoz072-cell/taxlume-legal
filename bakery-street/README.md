@@ -230,3 +230,11 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 - Çalışmayan arayüz (Posta, Mağaza, `+`, enerji, elmas göstergesi) gizlendi; sahte kırmızı noktalar kaldırıldı. Kırmızı nokta yalnızca bekleyen görev ödülü / günlük ödül varken çıkar. "Etkinlik" düğmesi **Günlük Ödül** oldu.
 - **Vitrin satışı** `src/data/economy.js` → `SALES.showcaseRate` (0.7) kadar öder; müşteri siparişi tam fiyat öder (müşteri ≈ %43 daha kârlı). Usta Satıcı bonusu ikisine de uygulanır.
 - Okunabilirlik: arayüz yazıları ≥ 12 px, dokunma alanları ≥ 40 px; tuval etiketleri (kafe isim levhaları, sipariş balonları, harita) de ≥ 12 px ekran pikseli. Kısa yatay ekranlarda ikincil ipucu satırları gizlenir. Kafede sağ kenardaki "Geliştirmeler" gibi etiketler ekran içine alınır.
+
+## Kalite turu: Grup C (ekonomi)
+
+- **Vitrin / müşteri dengesi** (`economy.js` → `SALES.showcaseNetShare = 0.8`): vitrinden satış, malzeme maliyetini geri öder ve müşteri siparişinin **net** kârının %80'ini verir (≈ %20 daha az net). Ekmek 27 (net 11 / müşteri 14), kruvasan 54 (23 / 29), pasta 108 (48 / 60), kahve 31 (14 / 17). Fiyatlar ve maliyetler tek yerden (`PRODUCTS`, `INGREDIENTS`) okunur; Usta Satıcı bonusu her iki satışa da bir kez uygulanır.
+- **Kahve** dengelendi: 16 sn, 34 altın (saniye başına net kâr 1,9 → 1,06; fırın ürünleri 0,70–0,80).
+- **Keşif ödülleri:** süre arttıkça dakika başına ödül artar (altın ≈ 70 → 120 → 150, XP ≈ 18 → 24 → 30). Çayırlar 50–90 altın / 14–22 XP; Orman 450–750 / 100–140; Harabeler 1.800–2.700 / 400–500. Keşifte risk mekaniği yoktur; "risk" yalnızca uzun sürede başka keşif yapamamaktır.
+- **Yuvarlama:** Verimli Üretim iadesi artık en yakın tam altına yuvarlanır (eskiden yukarı) ve malzeme maliyetini aşmaz. Satış / satın alma miktarları tam sayı olmak zorundadır (NaN, küsurat, negatif reddedilir). Altın değerleri hep tam sayıdır ve bildirimlerde binlik ayraçla gösterilir.
+- **Boş Arsa** kartı Kasaba'dan gizlendi (veri duruyor, `hidden: true`).

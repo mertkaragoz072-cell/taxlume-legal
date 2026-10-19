@@ -51,7 +51,7 @@ export function createTownPanel(root, game, town, { onVisit, onOpened, onDevelop
   function render() {
     if (!isOpen) return;
     const prev = root.querySelector('.panel-body')?.scrollTop ?? 0;
-    const list = town.list();
+    const list = town.list().filter((s) => !s.def.hidden);   // hidden entries (e.g. the empty plot) are not shown or counted
     const open = list.filter((s) => s.status === 'open').length;
     root.hidden = false;
     root.innerHTML = `<div class="panel-head"><b>Kasaba</b><button class="x" aria-label="Kapat">✕</button></div>

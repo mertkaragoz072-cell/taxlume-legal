@@ -108,20 +108,58 @@ test('buying is refused without enough gold and changes nothing', () => {
 test('selling removes stock and pays the sale price', () => {
   const { game, player } = make(0);
   const r = game.sellProduct('bread', 2);
-  const unit = Math.round(PRODUCTS.bread.price * SALES.showcaseRate);
+  const unit = game.showcaseIncome('bread');
   assert.deepEqual(r, { ok: true, income: unit * 2 });
   assert.equal(player.gold, unit * 2);
   assert.equal(game.products.bread, PRODUCTS.bread.start - 2);
 });
 
-test('showcase sales pay less than customer orders, yet every product stays profitable', () => {
+test('showcase nets ~20% less than a customer order for every product, with costs taken from the single ingredient list', () => {
   const { game } = make(0);
-  assert.ok(SALES.showcaseRate > 0 && SALES.showcaseRate < 1);
+  assert.equal(SALES.showcaseNetShare, 0.8);
   for (const [id, p] of Object.entries(PRODUCTS)) {
-    const cost = Object.entries(p.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0);
-    assert.ok(game.showcaseIncome(p.price) < game.saleIncome(p.price), `${id}: showcase must pay less than a customer`);
-    assert.ok(game.showcaseIncome(p.price) > cost, `${id}: showcase sale must still beat the ingredient cost`);
+    const cost = game.ingredientCost(id);
+    assert.equal(cost, Object.entries(p.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0));
+    const customerNet = game.saleIncome(p.price) - cost, showcaseNet = game.showcaseIncome(id) - cost;
+    assert.ok(showcaseNet > 0, `${id}: showcase must still be profitable`);
+    assert.ok(showcaseNet < customerNet, `${id}: showcase must net less`);
+    assert.ok(Math.abs(showcaseNet / customerNet - 0.8) < 0.06, `${id}: ratio ${(showcaseNet / customerNet).toFixed(2)}`);
   }
+});
+
+test('with research bonuses both sale kinds get the same multiplier exactly once', () => {
+  const { game } = make(0);
+  game.research = { bonus: (e) => (e === 'saleIncome' ? 0.25 : 0) };
+  const base = game.showcaseIncome('cake');
+  game.research = null;
+  const plain = game.showcaseIncome('cake');
+  assert.equal(base, Math.round(plain * 1.25));
+  assert.equal(game.saleIncome(120), 120);
+});
+
+test('invalid quantities cannot create gold, stock or NaN', () => {
+  const { game, player } = make(1000);
+  game.products.bread = 5;
+  for (const bad of [NaN, 1.5, -1, 0, Infinity, '2', null]) {
+    assert.equal(game.sellProduct('bread', bad).ok, false, String(bad));
+    assert.equal(game.buyIngredient('flour', bad).ok, false, String(bad));
+  }
+  assert.equal(game.products.bread, 5);
+  assert.equal(player.gold, 1000);
+});
+
+test('ingredient refund is rounded to the nearest gold and never exceeds the ingredient cost', () => {
+  const { game, player } = make(5000);
+  game.ingredients.flour = 100;
+  for (const lv of [0.05, 0.10, 0.15, 0.20, 0.25]) {
+    game.research = { bonus: (e) => (e === 'ingredientCost' ? lv : 0) };
+    for (const id of Object.keys(PRODUCTS)) {
+      const r = game.ingredientRebate(id), cost = game.ingredientCost(id);
+      assert.ok(Number.isInteger(r) && r >= 0 && r <= cost, `${id}@${lv}`);
+      assert.ok(Math.abs(r - cost * lv) <= 0.5, `${id}@${lv}: ${r} vs ${cost * lv}`);
+    }
+  }
+  assert.equal(player.gold, 5000);
 });
 
 test('selling more than the stock is refused', () => {
@@ -137,8 +175,8 @@ test('a full produce-and-sell round trip balances the economy', () => {
   const cost = Object.entries(PRODUCTS.coffee.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0);
   game.startProduction('coffee'); advance(PRODUCTS.coffee.time);
   game.sellProduct('coffee', 1);
-  assert.equal(player.gold, 500 + game.showcaseIncome(PRODUCTS.coffee.price));   // ingredients were already owned
-  assert.ok(game.showcaseIncome(PRODUCTS.coffee.price) > cost, 'coffee must stay profitable even when sold from the showcase');
+  assert.equal(player.gold, 500 + game.showcaseIncome('coffee'));   // ingredients were already owned
+  assert.ok(game.showcaseIncome('coffee') > cost, 'coffee must stay profitable even when sold from the showcase');
 });
 
 test('change and complete events fire', () => {

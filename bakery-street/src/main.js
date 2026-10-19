@@ -38,6 +38,7 @@ import { showToast } from './ui/toast.js';
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const toast = document.getElementById('toast');
+const fmt = (n) => n.toLocaleString('tr-TR');
 
 // Settings are stored separately from the game save. Sound and vibration follow them everywhere.
 const settings = new Settings(safeStorage(window), { onProblem: ({ message }) => showToast(toast, message, 4500) });
@@ -82,15 +83,15 @@ const hud = createHud(document.getElementById('hud'), {
 const panels = createPanels(document.getElementById('panel'), game, {
   onWarn: (msg) => warn(msg, 2600),
   onClose: () => interior.select(null),
-  onUpgraded: (id, r) => showToast(toast, `${game.upgradesDef[id].icon} ${game.upgradesDef[id].name} seviye ${r.level} · −${r.cost} altın`, 2200),
+  onUpgraded: (id, r) => showToast(toast, `${game.upgradesDef[id].icon} ${game.upgradesDef[id].name} seviye ${r.level} · −${fmt(r.cost)} altın`, 2200),
 });
 
 const marketPanel = createMarketPanel(document.getElementById('marketPanel'), game, {
   onWarn: (msg) => warn(msg, 2600),
-  onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${cost} altın`, 1600),
+  onBought: (id, qty, cost) => showToast(toast, `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${qty} alındı · −${fmt(cost)} altın`, 1600),
 });
 const backBtn = document.getElementById('back');
-const fmtReward = (r) => [r.gold && `+${r.gold} altın`, r.xp && `+${r.xp} XP`, ...Object.entries(r.ingredients).map(([id, n]) => `${game.ingredientsDef[id].icon} ×${n}`), r.gems && `💎 ×${r.gems}`].filter(Boolean).join('  ');
+const fmtReward = (r) => [r.gold && `+${fmt(r.gold)} altın`, r.xp && `+${fmt(r.xp)} XP`, ...Object.entries(r.ingredients).map(([id, n]) => `${game.ingredientsDef[id].icon} ×${n}`), r.gems && `💎 ×${r.gems}`].filter(Boolean).join('  ');
 const explorePanel = createExplorePanel(document.getElementById('explorePanel'), game, exploration, {
   onStarted: ({ region }) => { showToast(toast, `${region.icon} ${region.name} keşfi başladı`, 2200); audio.sfx('tap'); },
   onClaimed: ({ region, reward }) => { showToast(toast, `${region.icon} ${region.name}: ${fmtReward(reward)}`, 4200); audio.sfx('claim'); buzz([30, 40, 60]); },
@@ -99,12 +100,12 @@ const explorePanel = createExplorePanel(document.getElementById('explorePanel'),
 });
 game.on('exploreReady', ({ region }) => { showToast(toast, `🎁 ${region.name} keşfi tamamlandı — ödülünü al!`, 4000); audio.sfx('done'); buzz(40); refreshBadge(); });
 const researchPanel = createResearchPanel(document.getElementById('researchPanel'), game, research, town, {
-  onBought: ({ def, level, cost }) => { showToast(toast, `${def.icon} ${def.name} seviye ${level} · ${def.describe(def.values[level])} · −${cost} altın`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
-  onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onBought: ({ def, level, cost }) => { showToast(toast, `${def.icon} ${def.name} seviye ${level} · ${def.describe(def.values[level])} · −${fmt(cost)} altın`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${fmt(cost)} altın${xp ? ` · +${fmt(xp)} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
   onWarn: (msg) => warn(msg, 3200),
 });
 const questPanel = createQuestPanel(document.getElementById('questPanel'), game, quests, {
-  onClaimed: ({ quest, reward }) => showToast(toast, `🎁 ${quest.name}: ödül alındı${reward.gold ? ` · +${reward.gold} altın` : ''}`, 2200),
+  onClaimed: ({ quest, reward }) => showToast(toast, `🎁 ${quest.name}: ödül alındı${reward.gold ? ` · +${fmt(reward.gold)} altın` : ''}`, 2200),
   onWarn: (msg) => warn(msg, 2400),
 });
 const dailyPanel = createDailyPanel(document.getElementById('dailyPanel'), game, daily, {
@@ -118,8 +119,8 @@ const setNavTown = (on) => {                          // the Kasaba button is hi
 };
 const townPanel = createTownPanel(document.getElementById('townPanel'), game, town, {
   onVisit: (scene) => go(scene),
-  onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
-  onDeveloped: ({ building, cost, level, xp }) => { showToast(toast, `${building.icon} ${building.name} gelişti: seviye ${level} · −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3000); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${fmt(cost)} altın${xp ? ` · +${fmt(xp)} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onDeveloped: ({ building, cost, level, xp }) => { showToast(toast, `${building.icon} ${building.name} gelişti: seviye ${level} · −${fmt(cost)} altın${xp ? ` · +${fmt(xp)} XP` : ''}`, 3000); audio.sfx('claim'); buzz([30, 40, 30]); },
   onWarn: (msg) => warn(msg, 3200),
   onClose: () => setNavTown(false),
 });
@@ -228,7 +229,7 @@ canvas.addEventListener('pointerup', (e) => {
     panels.close();
   } else if (hit.startsWith('customer:')) {
     const r = cafe.deliverToCustomer(+hit.slice(9));
-    if (r.ok) showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400);
+    if (r.ok) showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${fmt(r.income)} altın`, 1400);
     else showToast(toast, r.message, 2400);
   } else {
     const area = AREAS.find((a) => a.id === hit);
@@ -255,7 +256,7 @@ createNav(document.getElementById('nav'), {
 backBtn.addEventListener('click', () => go('street'));
 const orderBar = createOrderBar(document.getElementById('orderBar'), game, cafe, {
   onWarn: (msg) => warn(msg, 2400),
-  onSale: (r) => showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${r.income} altın`, 1400),
+  onSale: (r) => showToast(toast, `${game.productsDef[r.product].icon} satıldı · +${fmt(r.income)} altın`, 1400),
 });
 const refreshLevel = () => hud.setLevel({ level: progression.level, xp: progression.xp, need: progression.xpToNext(progression.level), fraction: progression.fraction(), isMax: progression.isMax });
 game.on('change', () => { hud.setGold(game.gold); hud.setGems(game.player.gems ?? 0); refreshLevel(); });
@@ -267,7 +268,7 @@ game.on('levelUp', (e) => {
     const reward = { gold: 0, ingredients: {} };
     for (const l of list) { reward.gold += l.reward.gold ?? 0; for (const [k, v] of Object.entries(l.reward.ingredients ?? {})) reward.ingredients[k] = (reward.ingredients[k] ?? 0) + v; }
     const parts = [];
-    if (reward.gold) parts.push(`+${reward.gold} altın`);
+    if (reward.gold) parts.push(`+${fmt(reward.gold)} altın`);
     for (const [k, v] of Object.entries(reward.ingredients)) parts.push(`${game.ingredientsDef[k]?.icon ?? ''} ×${v}`);
     const title = list.length > 1 ? `Seviye ${list[0].level}–${list[list.length - 1].level}` : `Seviye ${list[0].level}`;
     showToast(toast, `⭐ ${title}! Ödül: ${parts.join('  ')}`, 3800);

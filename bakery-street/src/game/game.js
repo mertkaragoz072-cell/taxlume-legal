@@ -89,14 +89,19 @@ export class Game {
   bonus(effect) { return this.research?.bonus(effect) ?? 0; }
   /** Gold earned by one customer order whose base price is `base` (Usta Satıcı). */
   saleIncome(base) { return Math.round(base * (1 + this.bonus('saleIncome'))); }
-  /** Gold earned by selling one unit straight from the showcase: the central SALES.showcaseRate share of the order price. */
-  showcaseIncome(base) { return Math.round(base * this.sales.showcaseRate * (1 + this.bonus('saleIncome'))); }
-  /** Gold refunded when starting `id`: a share of the consumed ingredients' value (Verimli Üretim). */
+  /** Gold earned by selling one unit of `id` straight from the showcase: ingredient cost back + SALES.showcaseNetShare of the customer's net profit. */
+  showcaseIncome(id) {
+    const price = this.productsDef[id].price, cost = Math.min(price, this.ingredientCost(id));
+    return Math.round((cost + Math.round((price - cost) * this.sales.showcaseNetShare)) * (1 + this.bonus('saleIncome')));
+  }
+  /** Gold value of the ingredients one unit of `id` consumes (from the single INGREDIENTS price list). */
+  ingredientCost(id) {
+    return Object.entries(this.productsDef[id].ingredients).reduce((sum, [ing, n]) => sum + n * this.ingredientsDef[ing].price, 0);
+  }
+  /** Gold refunded when starting `id`: the Verimli Üretim share of the ingredient value, rounded to the nearest gold (never above the cost). */
   ingredientRebate(id) {
-    const b = this.bonus('ingredientCost');
-    if (!b) return 0;
-    const value = Object.entries(this.productsDef[id].ingredients).reduce((sum, [ing, n]) => sum + n * this.ingredientsDef[ing].price, 0);
-    return Math.ceil(value * b);
+    const b = this.bonus('ingredientCost'), value = this.ingredientCost(id);
+    return b ? Math.min(value, Math.round(value * b)) : 0;
   }
   /** How many finished units of each product the showcase can hold. */
   showcaseLimit() { return this.effect('showcaseCapacity'); }
@@ -259,7 +264,7 @@ export class Game {
   /** Buys `qty` units of an ingredient with gold. */
   buyIngredient(id, qty = 1, fromMarket = false) {
     const def = this.ingredientsDef[id];
-    if (!def || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satın alma.' };
+    if (!def || !Number.isSafeInteger(qty) || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satın alma.' };
     const cost = def.price * qty;
     if (this.player.gold < cost) {
       return { ok: false, reason: 'gold', message: `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.` };
@@ -304,9 +309,9 @@ export class Game {
   /** Sells `qty` units of a product from the showcase for its sale price. */
   sellProduct(id, qty = 1) {
     const def = this.productsDef[id];
-    if (!def || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satış.' };
+    if (!def || !Number.isSafeInteger(qty) || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satış.' };
     if (this.products[id] < qty) return { ok: false, reason: 'stock', message: `Stokta yeterli ${def.name} yok.` };
-    const income = this.showcaseIncome(def.price) * qty;
+    const income = this.showcaseIncome(id) * qty;
     this.products[id] -= qty;
     this.player.gold += income;
     this.recordSold(id, qty);

@@ -240,7 +240,7 @@ test('progress, claimed rewards, gold and granted ingredients survive a reload; 
   assert.equal(b.quests.claim('sellFive').ok, true);            // unclaimed completed quests stay claimable
 });
 
-const c_showcase = (a) => a.game.showcaseIncome(PRODUCTS.bread.price);
+const c_showcase = (a) => a.game.showcaseIncome('bread');
 
 test('collecting a reward is saved in one snapshot (flag, gold and ingredients together)', () => {
   const st = new FakeStorage(), clock = { now: T0 };
