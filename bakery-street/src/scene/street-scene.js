@@ -46,9 +46,9 @@ export class StreetScene {
       back: make((g) => {
         drawBackdrop(g, view);
         drawSides(g, view);
+        drawPavement(g, view);
         bookshop.draw(g);
         market.draw(g);
-        drawPavement(g, view);
         if (bakery.usesAsset) this.lampGlows = drawLamps(g);
       }),
       mid: make((g) => { const l = drawMidground(g, view); if (l.length) this.lampGlows = l; }),

@@ -6,7 +6,7 @@
 // fall back to its procedural drawing when the path is null.
 export const MANIFEST = {
   bakery: 'assets/bakery.webp',   // final art (transparent WebP); the procedural drawing is the fallback
-  bookshop: null,
+  bookshop: 'assets/bookshop.webp',
   market: null,
   'town-backdrop': null,
 };

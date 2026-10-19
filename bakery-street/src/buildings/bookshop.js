@@ -1,6 +1,6 @@
 // Kitapçı — left of the bakery.
 import { DESIGN, TEXT } from '../config.js';
-import { drawAsset } from '../assets.js';
+import { drawAsset, getImage } from '../assets.js';
 import { rrect, paint, vgrad } from '../util.js';
 import { tiledRoof, plankWall, doorway, beam, awning, signBoard, shopWindow, garland, bush, hangingLamp, iconBook } from '../scene/parts.js';
 
@@ -10,6 +10,17 @@ export const bookshop = {
   id: 'bookshop',
   bounds: { x: 26, y: 236, w: 352, h: B - 236 },
   lights: [[84, 468, 46], [180, 468, 46], [306, 468, 46]],
+  usesAsset: false,
+
+  /** Call after assets load: size/position the building from the final art's aspect ratio. */
+  configure() {
+    const img = getImage('bookshop');
+    if (!img) return;
+    const w = 415, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 600;
+    this.usesAsset = true;
+    this.bounds = { x: 170 - w / 2, y: bottom - h, w, h };
+    this.lights = []; // lamps and windows are already lit in the art
+  },
 
   draw(ctx) {
     const b = this.bounds;

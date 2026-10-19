@@ -2,6 +2,7 @@
 import { DESIGN } from '../config.js';
 import { rng } from '../util.js';
 import { bakery } from '../buildings/bakery.js';
+import { bookshop } from '../buildings/bookshop.js';
 import {
   planter, lampPost, chalkboard, crate, sack, milkBottle, eggCrate, barrel, bush, tiledRoof, brickWall, awning, shopWindow, beam,
 } from './parts.js';
@@ -12,7 +13,7 @@ const B = DESIGN.baseY;
 /** Street lamps flanking the bakery; with the final art they sit behind its umbrellas. */
 export function drawLamps(ctx) {
   const art = bakery.usesAsset;
-  return [lampPost(ctx, art ? 322 : 392, B + 24, 290), lampPost(ctx, art ? 1078 : 1020, B + 24, 290)];
+  return [lampPost(ctx, art ? 374 : 392, B + 24, 290), lampPost(ctx, art ? 1078 : 1020, B + 24, 290)];
 }
 
 export function drawMidground(ctx, v) {
@@ -27,8 +28,10 @@ export function drawMidground(ctx, v) {
     planter(ctx, 640, B + 20, 34, 26, { seed: 303, kind: 'pot', bushH: 34 });
     planter(ctx, 762, B + 20, 34, 26, { seed: 304, kind: 'pot', bushH: 34 });
   }
-  planter(ctx, 100, B + 20, 52, 28, { seed: 305, kind: 'box', bushH: 44 });
-  planter(ctx, 250, B + 20, 44, 26, { seed: 306, kind: 'pot', bushH: 38 });
+  if (!bookshop.usesAsset) {
+    planter(ctx, 100, B + 20, 52, 28, { seed: 305, kind: 'box', bushH: 44 });
+    planter(ctx, 250, B + 20, 44, 26, { seed: 306, kind: 'pot', bushH: 38 });
+  }
 
   // market goods
   const my = B + 14;
