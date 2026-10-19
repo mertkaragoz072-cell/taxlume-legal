@@ -1,6 +1,6 @@
 // The main street scene: owns the cached layers, per-frame animation and input hit-testing.
 import { DESIGN, TEXT } from '../config.js';
-import { glowAt, clamp, INK } from '../util.js';
+import { glowAt, clamp, INK, applyGrain } from '../util.js';
 import { drawSky, makeClouds, drawCloud, drawBackdrop } from './backdrop.js';
 import { drawPavement } from './pavement.js';
 import { drawSides } from './sides.js';
@@ -21,6 +21,7 @@ export class StreetScene {
     this.flash = 0;
     this.pressed = false;
     this.sparks = [];
+    this.rings = [];
     this.t = 0;
     this.lampGlows = [];
     this.view = null;
@@ -37,6 +38,7 @@ export class StreetScene {
       const g = c.getContext('2d');
       g.setTransform(k, 0, 0, k, view.ox * k, view.oy * k);
       fn(g);
+      applyGrain(g, c.width, c.height, 0.022);
       return c;
     };
     this.layers = {
@@ -75,7 +77,7 @@ export class StreetScene {
   /** Visual feedback for a building tap. A cafe-interior scene can be hooked in via the `onEnter` callback. */
   tapBuilding(id, x, y) {
     if (id !== 'bakery') return;
-    this.pulse = 1; this.flash = 1;
+    this.pulse = 1; this.flash = 1; this.rings.push({ x, y, life: 1 });
     for (let i = 0; i < 16; i++) {
       const a = Math.random() * Math.PI * 2, s = 40 + Math.random() * 110;
       this.sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: 1, size: 5 + Math.random() * 6, hue: Math.random() < 0.5 ? '#ffd34d' : '#fff6c0' });
@@ -90,6 +92,8 @@ export class StreetScene {
     this.flash = Math.max(0, this.flash - dt * 2.6);
     for (const s of this.sparks) { s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 220 * dt; s.life -= dt * 1.6; }
     this.sparks = this.sparks.filter((s) => s.life > 0);
+    for (const g of this.rings) g.life -= dt * 1.7;
+    this.rings = this.rings.filter((g) => g.life > 0);
   }
 
   render(ctx) {
@@ -138,6 +142,14 @@ export class StreetScene {
     // steam from the cups
     for (const s of CAFE_SETS) for (const dx of [-15, 13]) steam(ctx, s.x + dx, 610 - 60, t, dx);
 
+    // tap ripple + warm halo around the bakery
+    for (const g of this.rings) {
+      const p = 1 - g.life;
+      ctx.strokeStyle = `rgba(255,226,140,${g.life})`; ctx.lineWidth = 11 * g.life + 2;
+      ctx.beginPath(); ctx.arc(g.x, g.y, 20 + p * 120, 0, 7); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${g.life * 0.6})`; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(g.x, g.y, 10 + p * 80, 0, 7); ctx.stroke();
+    }
     // sparkles
     for (const s of this.sparks) {
       ctx.globalAlpha = clamp(s.life, 0, 1);

@@ -1,4 +1,4 @@
-# Fırın & Kafe — Ana Sokak (Adım 1)
+# Fırın & Kafe — Ana Sokak (Adım 1 / 1.1)
 
 Yatay (landscape) mobil oyunun ana sokak ekranı. HTML5 Canvas + vanilla JS (ES modules) + CSS; bağımlılık ve build adımı yok.
 
@@ -23,7 +23,8 @@ Telefonu yatay tutun (dikeyde "yatay çevirin" uyarısı görünür).
 | `src/config.js` | Tasarım ölçüleri (1400×800), metinler, geçici oyuncu verisi, menü tanımları |
 | `src/assets.js` | Görsel kaydı (`MANIFEST`); gerçek PNG yolu yazılınca prosedürel çizimin yerine geçer |
 | `src/scene/street-scene.js` | Katmanlı sahne, animasyon, bina hit-test ve dokunma efekti |
-| `src/scene/backdrop.js` · `pavement.js` · `midground.js` · `foreground.js` · `sides.js` · `parts.js` | Gökyüzü/kasaba, kaldırım, ön plan, yan binalar, ortak çizim parçaları |
+| `src/scene/backdrop.js` · `pavement.js` · `midground.js` · `foreground.js` · `sides.js` | Gökyüzü/kasaba, kaldırım, ön plan, yan binalar |
+| `src/scene/structure.js` · `plants.js` · `furniture.js` · `goods.js` · `signs.js` (`parts.js` hepsini toplar) | Çatı/duvar/vitrin/tente, çiçek-saksı, lamba-bank, market ürünleri, tabelalar |
 | `src/buildings/bakery.js` · `bookshop.js` · `market.js` | Üç bina (her biri kendi `draw`, `bounds`, `lights`) |
 | `src/characters/person.js` · `crowd.js` | Karakter çizimi, yürüyenler, garson, masadaki müşteriler |
 | `src/ui/hud.js` · `nav.js` · `icons.js` · `toast.js` | Üst arayüz, 4 butonlu alt menü, SVG ikonlar, bildirim |
@@ -43,3 +44,11 @@ Tamamı kodla çizilmiştir: binalar, çatılar, tabelalar, ürünler, karakterl
 ## Bilinçli olarak yapılmayanlar
 
 Kafe iç mekânı, üretim sistemi, market satın alma ve şehir geliştirme bu aşamada yok.
+
+## 1.1 görsel iyileştirmeler
+
+- Çatılarda kiremit başına gölge/ışık, sundurma tahtaları ve saçak gölgesi; taş duvarda tek tek eğimli tuğlalar, köşe taşları, ahşapta damar ve çivi; vitrinlerde cam yansıması, perde saçağı, pervaz; tentelerde kıvrım gölgesi; ayrıntılı kapılar ve tabelalar.
+- Karakterler yeniden çizildi (gözler, kaşlar, saç stilleri, gözlük, kıyafet detayları); yürüyenler, garson, dükkâncı ve masadaki müşteriler birbirinden ayırt edilir.
+- Kaldırım taşları eğimli/lekeli, ağaç gölgeleri, çiçekler gerçek taç yapraklı, ayrıntılı saksı/bank/lamba.
+- Alt menü ~%15 alçaltıldı, üst çubuk sıkılaştırıldı (667×375 … 2400×1080 ve 1024×768'de hiçbir öğe taşmıyor).
+- Fırın & Kafe dokunma geri bildirimi: yaylanma + parlama + genişleyen halka + kıvılcım + bildirim.

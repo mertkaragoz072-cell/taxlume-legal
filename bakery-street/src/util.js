@@ -76,3 +76,39 @@ export function mix(a, b, f) {
   const h = (v) => Math.round(v).toString(16).padStart(2, '0');
   return `#${h(lerp(r1, r2, f))}${h(lerp(g1, g2, f))}${h(lerp(b1, b2, f))}`;
 }
+
+export const lighten = (c, f) => mix(c, '#ffffff', f);
+export const darken = (c, f) => mix(c, '#000000', f);
+
+/** Soft vertical shadow strip (used under eaves, awnings and signs). */
+export function softBand(ctx, x, y, w, h, a = 0.3, up = false) {
+  const g = ctx.createLinearGradient(0, up ? y + h : y, 0, up ? y : y + h);
+  g.addColorStop(0, `rgba(45,20,5,${a})`);
+  g.addColorStop(1, 'rgba(45,20,5,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+}
+
+let grainTile = null;
+/** Fine paper-like noise, applied only over painted pixels so the art feels hand-painted rather than flat vector. */
+export function applyGrain(ctx, w, h, alpha = 0.07) {
+  if (!grainTile) {
+    grainTile = document.createElement('canvas');
+    grainTile.width = grainTile.height = 128;
+    const g = grainTile.getContext('2d');
+    const img = g.createImageData(128, 128), r = rng(77);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = r() < 0.5 ? 0 : 255;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = 18 + r() * 40;
+    }
+    g.putImageData(img, 0, 0);
+  }
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = alpha / 0.07;
+  ctx.fillStyle = ctx.createPattern(grainTile, 'repeat');
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+}

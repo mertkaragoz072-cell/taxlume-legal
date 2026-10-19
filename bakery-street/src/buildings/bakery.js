@@ -3,7 +3,7 @@ import { DESIGN, TEXT } from '../config.js';
 import { drawAsset } from '../assets.js';
 import { INK, rrect, poly, paint, vgrad, hgrad } from '../util.js';
 import {
-  tiledRoof, brickWall, beam, awning, signBoard, shopWindow, garland, bush, hangingLamp,
+  tiledRoof, brickWall, quoins, doorway, beam, awning, signBoard, shopWindow, garland, bush, hangingLamp,
   iconBread, iconCup,
 } from '../scene/parts.js';
 
@@ -39,6 +39,8 @@ export const bakery = {
 
     // stone wall + timber frame
     brickWall(ctx, 424, 372, 560, B - 372, { seed: 21 });
+    quoins(ctx, 424, 384, B - 384, 1);
+    quoins(ctx, 984, 384, B - 384, -1);
     beam(ctx, 418, 366, 572, 12);
     beam(ctx, 418, B - 10, 572, 12);
     for (const x of [418, 612, 786, 978]) beam(ctx, x, 366, 12, B - 366 + 2);
@@ -49,30 +51,19 @@ export const bakery = {
     }
 
     // upper-left small window on the stone wall (left of the shopfront)
-    rrect(ctx, 438, 408, 0, 0, 0);
 
     // sign + vines
     garland(ctx, 410, 990, 318, { sag: 16, hang: 14, seed: 31, thick: 1.3 });
     signBoard(ctx, 505, 330, 410, 72, TEXT.bakery, { size: 44, left: iconBread, right: iconCup });
 
     // shopfront
-    shopWindow(ctx, 466, 462, 150, 98, 'bread', 41);
-    shopWindow(ctx, 784, 462, 150, 98, 'bread', 43);
+    shopWindow(ctx, 466, 462, 150, 98, 'bread', 41, { valance: '#d6382e' });
+    shopWindow(ctx, 784, 462, 150, 98, 'bread', 43, { valance: '#d6382e' });
     // door
-    rrect(ctx, 636, 450, 128, 126, 6); paint(ctx, '#6a3d1c', 3);
-    rrect(ctx, 646, 460, 108, 106, 4); paint(ctx, vgrad(ctx, 460, 566, [[0, '#fff0b8'], [1, '#f6a940']]), 2.4);
-    ctx.fillStyle = '#6a3d1c'; ctx.fillRect(698, 460, 5, 106); ctx.fillRect(646, 490, 108, 5);
-    ctx.fillStyle = 'rgba(255,255,255,.2)'; poly(ctx, [[652, 460], [680, 460], [652, 540]]); ctx.fill();
-    // little shelves with pastries seen through the door glass
-    ctx.fillStyle = '#8a5530'; ctx.fillRect(646, 538, 108, 5);
-    ctx.beginPath(); ctx.arc(668, 531, 7, 0, 7); ctx.fillStyle = '#d98a2b'; ctx.fill();
-    ctx.beginPath(); ctx.arc(730, 531, 7, 0, 7); ctx.fill();
-    // door handle + OPEN plaque
-    ctx.beginPath(); ctx.arc(754, 520, 3.4, 0, 7); paint(ctx, '#e8b84a', 1.5);
-    rrect(ctx, 676, 476, 48, 16, 4); paint(ctx, '#c93a2e', 1.8);
-    ctx.fillStyle = '#fff'; ctx.font = '700 10px "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AÇIK', 700, 484.5);
-    // doorstep
-    rrect(ctx, 628, B - 4, 144, 14, 3); paint(ctx, '#c9ab76', 2);
+    doorway(ctx, 636, 450, 128, 126, { frame: '#6a3d1c', panel: '#8a5028' });
+    ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(0, 0, 0, 0);
+    rrect(ctx, 676, 470, 48, 16, 4); paint(ctx, vgrad(ctx, 470, 486, [[0, '#e0483a'], [1, '#a82a20']]), 1.8);
+    ctx.fillStyle = '#fff'; ctx.font = '700 10px "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AÇIK', 700, 478.5);
 
     // awning with lanterns underneath
     awning(ctx, 452, 406, 496, 46, '#d6382e', '#fff3d6', 16);

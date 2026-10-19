@@ -4,6 +4,7 @@ import { drawAsset } from '../assets.js';
 import { rrect, paint, vgrad, hgrad, shadow, INK } from '../util.js';
 import { tiledRoof, plasterWall, beam, awning, signBoard, shopWindow, garland, bush, hangingLamp, iconBasket } from '../scene/parts.js';
 import { drawPerson } from '../characters/person.js';
+import { SHOPKEEPER } from '../characters/crowd.js';
 
 const B = DESIGN.baseY;
 
@@ -23,9 +24,9 @@ export const market = {
     garland(ctx, 1046, 1366, 330, { sag: 12, hang: 12, seed: 83, thick: 1.2 });
     signBoard(ctx, 1088, 344, 240, 58, TEXT.market, { size: 36, left: iconBasket });
     // open storefront with shelves
-    shopWindow(ctx, 1068, 462, 276, 100, 'goods', 85);
+    shopWindow(ctx, 1068, 462, 276, 100, 'goods', 85, { valance: '#2f8a4a' });
     // shopkeeper behind the counter
-    drawPerson(ctx, 1210, 566, { top: '#f4f0e6', pants: '#6a5a4a', skin: '#e8b88a', hair: '#3a2416', hairStyle: 'short', mustache: true, apron: '#7a4a2a', scale: 0.92, seatedBehind: true }, 0);
+    drawPerson(ctx, 1210, 566, SHOPKEEPER, 0);
     awning(ctx, 1052, 410, 310, 44, '#2f8a4a', '#fff3d6', 12);
     for (const x of [1090, 1210, 1330]) hangingLamp(ctx, x, 462, 0.9);
     // counter
