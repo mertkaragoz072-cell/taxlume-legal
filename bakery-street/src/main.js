@@ -12,6 +12,7 @@ import { AudioManager } from './audio/audio.js';
 import { vibrate } from './audio/haptics.js';
 import { createOrderBar } from './ui/orders.js';
 import { SaveManager, safeStorage } from './game/save.js';
+import { TabGuard } from './game/tabguard.js';
 import { InteriorScene } from './scene/interior-scene.js';
 import { createPanels } from './ui/panels.js';
 import { MarketScene } from './scene/market-scene.js';
@@ -39,6 +40,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const toast = document.getElementById('toast');
 const fmt = (n) => n.toLocaleString('tr-TR');
+const DEBUG = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname) || new URLSearchParams(window.location.search).has('debug');
 
 // Settings are stored separately from the game save. Sound and vibration follow them everywhere.
 const settings = new Settings(safeStorage(window), { onProblem: ({ message }) => showToast(toast, message, 4500) });
@@ -65,7 +67,16 @@ const marketScene = new MarketScene();
 const exploreScene = new ExploreScene(exploration);
 const bookshopScene = new MarketScene('bookshop', 'bookshop');   // same landscape layout as the Market screen
 const saveWarn = document.getElementById('saveWarn');
-const saves = new SaveManager(game, safeStorage(window), {
+const tabLock = document.getElementById('tabLock');
+const store = safeStorage(window);
+const guard = new TabGuard(store, { onLost: () => { tabLock.hidden = false; } });   // another tab took over the game: this one stops saving
+document.getElementById('tabTake').addEventListener('click', () => {
+  saves.enabled = false;                           // this tab's old in-memory state must not be written on the way out (pagehide flush)
+  guard.claim(); window.location.reload();         // the reload loads the owner's latest save
+});
+guard.attach(window);
+const saves = new SaveManager(game, store, {
+  guard,
   onProblem: ({ kind, message }) => {
     saveWarn.textContent = `⚠ ${message}`; saveWarn.hidden = false;
     showToast(toast, message, 5000);
@@ -283,6 +294,7 @@ game.on('complete', ({ product }) => showToast(toast, `${game.productsDef[produc
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (guard.lost) { requestAnimationFrame(frame); return; }   // paused while another tab owns the game
   game.tick();
   scene.update(dt);
   panels.tick(dt);
@@ -296,7 +308,24 @@ window.addEventListener('resize', scheduleLayout);
 window.addEventListener('orientationchange', scheduleLayout);
 try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* only works in fullscreen / installed mode */ }
 
-loadAssets().then(() => {
+// ---- boot: loading screen, assets, save ----------------------------------------------------------
+const loadingEl = document.getElementById('loading'), ldFill = document.getElementById('ldFill'), ldText = document.getElementById('ldText'), ldRetry = document.getElementById('ldRetry');
+ldRetry.addEventListener('click', () => window.location.reload());
+function fatal(message) {                          // boot failed: say so instead of leaving a blank screen; the save is untouched
+  ldText.textContent = message; ldFill.style.width = '100%'; ldRetry.hidden = false;
+  loadingEl.classList.remove('done'); loadingEl.hidden = false;
+}
+let lastErrorToast = 0;
+const onUnexpected = (e) => {                      // a bug must not freeze the game silently: tell the player once in a while
+  console.error('[game]', e.error ?? e.reason ?? e.message);
+  const now = Date.now();
+  if (now - lastErrorToast > 15000) { lastErrorToast = now; showToast(toast, 'Beklenmeyen bir hata oldu. İlerleme kayıtlı; sorun sürerse sayfayı yenile.', 4500); }
+};
+window.addEventListener('error', onUnexpected);
+window.addEventListener('unhandledrejection', onUnexpected);
+
+loadAssets({ onProgress: (done, total) => { ldFill.style.width = `${Math.round((done / total) * 100)}%`; } }).then(({ failed, timedOut }) => {
+  guard.claim();                                   // this tab now owns the save; an older tab is told to stop
   // restore the save, then credit production that finished while the app was closed
   const loaded = saves.load();
   hud.setGold(game.gold);
@@ -317,5 +346,7 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, research, exploration, exploreScene, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
-});
+  loadingEl.classList.add('done'); setTimeout(() => { loadingEl.hidden = true; }, 350);
+  if (failed || timedOut) showToast(toast, 'Bazı görseller yüklenemedi; oyun yedek çizimlerle devam ediyor.', 4500);
+  if (DEBUG) window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, research, exploration, exploreScene, quests, daily, settings, audio, saves, go };   // debugging / tests hook, never exposed on the published site
+}).catch((err) => { console.error('[boot]', err); fatal('Oyun başlatılamadı. İlerlemen silinmedi; yeniden yüklemeyi dene.'); });

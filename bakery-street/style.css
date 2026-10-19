@@ -301,3 +301,14 @@ s.muted { text-decoration: line-through; }
 @media (max-height: 440px) { .hint:not(.keep) { display: none; } }
 
 .bar { height: max(18px, calc(var(--u) * 3.4)); }
+
+/* ---------- Loading, tab lock ---------- */
+#loading, #tabLock { position: absolute; inset: 0; z-index: 90; display: grid; place-items: center; background: #2b1a0e; color: #fff6dc; transition: opacity .3s ease; }
+#loading.done { opacity: 0; pointer-events: none; }
+#tabLock { z-index: 95; background: rgba(43,26,14,.94); }
+#tabLock[hidden], #loading[hidden], #ldRetry[hidden] { display: none; }
+.ld-card { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 2); text-align: center; max-width: min(86vw, 460px); font-size: max(14px, calc(var(--u) * 3.4)); }
+.ld-card b { font-size: max(20px, calc(var(--u) * 6)); }
+.ld-bar { width: min(60vw, 320px); height: max(12px, calc(var(--u) * 2.4)); border-radius: 99px; background: #5a4330; overflow: hidden; border: 2px solid #9a6431; }
+.ld-bar i { display: block; height: 100%; width: 0; background: linear-gradient(#ffd45a, #e0951f); transition: width .2s ease; }
+.ld-card button { appearance: none; cursor: pointer; font: inherit; font-weight: 800; color: #fff; min-height: 44px; padding: 0 20px; border-radius: 14px; border: 3px solid #1c5b22; background: linear-gradient(#7ae05a, #2f9a30); }

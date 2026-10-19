@@ -30,16 +30,22 @@ export const MANIFEST = {
 
 const images = {};
 
-export function loadAssets() {
-  const jobs = Object.entries(MANIFEST)
-    .filter(([, src]) => src)
-    .map(([key, src]) => new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => { images[key] = img; resolve(); };
-      img.onerror = () => resolve();
-      img.src = src;
-    }));
-  return Promise.all(jobs);
+/**
+ * Loads every registered image. Resolves with { failed, timedOut } when all are done or after `timeoutMs`, whichever comes first;
+ * a missing or slow image never blocks the game (modules fall back to their procedural drawing, late images appear when they arrive).
+ */
+export function loadAssets({ onProgress, timeoutMs = 12000 } = {}) {
+  const entries = Object.entries(MANIFEST).filter(([, src]) => src);
+  let done = 0, failed = 0;
+  const step = () => { done += 1; onProgress?.(done, entries.length); };
+  const jobs = entries.map(([key, src]) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { images[key] = img; step(); resolve(); };
+    img.onerror = () => { failed += 1; step(); resolve(); };
+    img.src = src;
+  }));
+  const timeout = new Promise((resolve) => setTimeout(() => resolve(true), timeoutMs));
+  return Promise.race([Promise.all(jobs).then(() => false), timeout]).then((timedOut) => ({ failed, timedOut }));
 }
 
 export const getImage = (key) => images[key] ?? null;

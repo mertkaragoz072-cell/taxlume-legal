@@ -245,3 +245,10 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 - **Vitrin kapasitesi:** stok + devam eden üretim hiçbir yoldan (çoklu üretim, çevrimdışı tamamlanma, müşteri/vitrin satışı) kapasiteyi aşmaz; testle doğrulandı. Bir saatlik simülasyonda gelir, satış kanalından çok **üretim kapasitesi** tarafından sınırlanır (başlangıç ≈ 5k, orta ≈ 11k, tam yükseltme ≈ 30k altın/saat; müşteriyi hiç görmemek yalnızca %2–6 kayıp).
 - **Araştırma geri ödemesi** (aktif üretimde, aşama başına ≈ 5 saat): Usta Satıcı 2.300 / 3.400 / 4.700 / 6.500 / 9.000 (eskiden 2.000–40.000), Verimli Üretim 1.300 / 2.000 / 2.800 / 3.900 / 5.400 (eskiden 1.200–26.000). Kayıtlı araştırma seviyeleri ve altın etkilenmez.
 - **Seviye 10–30:** XP, seviye ve ödül hesapları parçalara ayrılmış her XP akışında, kayıt/yükleme sonrası ve maksimum seviyede doğrulandı; her seviye ödülü yalnızca bir kez verilir. Yeni ödül veya içerik eklenmedi.
+
+## Kalite turu: Grup D (dayanıklılık)
+
+- **Çok sekme koruması** (`src/game/tabguard.js`): en yeni sekme oyunun sahibi olur. Eski sekme durdurulur, kayıt yazmaz ve "Oyun başka bir sekmede açık" uyarısı gösterir; **Bu sekmede devam et** sahipliği geri alır ve en son kaydı yeniden yükler. Eski "başka sekmenin kaydını canlı birleştirme" davranışı kaldırıldı (müşteri ve üretim durumlarını karıştırıyordu).
+- **Yükleme ekranı:** görseller yüklenirken ilerleme çubuğu görünür. Görsel eksik/yavaşsa (12 sn) oyun yedek çizimlerle başlar ve bildirim gösterir. Açılış hatasında boş ekran yerine "Yeniden yükle" mesajı çıkar; kayıt silinmez.
+- **Beklenmeyen hatalar** sessizce bırakılmaz: 15 sn'de bir "ilerleme kayıtlı" bildirimi gösterilir.
+- **Hata ayıklama kancası** (`window.__street`) yalnızca `localhost`/`127.0.0.1` üzerinde veya `?debug` ile açılır; yayında kapalıdır.

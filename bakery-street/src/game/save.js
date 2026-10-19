@@ -104,6 +104,7 @@ export class SaveManager {
     this.enabled = !!storage;     // when false, nothing is ever written (protects a save we could not read)
     this.failing = false;         // true while the last write failed
     this.restoring = false;
+    this.guard = opts.guard ?? null;   // TabGuard: only the tab that owns the game may write the save
   }
 
   snapshot() { return { version: SAVE_VERSION, savedAt: Date.now(), ...this.game.exportState() }; }
@@ -157,6 +158,7 @@ export class SaveManager {
   /** Writes the snapshot. Returns { ok, message? }; on failure the in-memory progress is kept and the player is told. */
   save() {
     if (!this.enabled || this.restoring) return { ok: false, message: 'kayıt kapalı' };
+    if (this.guard && !this.guard.isOwner()) return { ok: false, message: 'oyun başka sekmede açık' };
     try {
       this.storage.setItem(this.key, JSON.stringify(this.snapshot()));
     } catch (err) {
@@ -169,14 +171,10 @@ export class SaveManager {
     return { ok: true };
   }
 
-  /** Autosave after every state change; also reacts to saves written by another tab. */
+  /** Autosave after every state change. Another tab's writes are handled by TabGuard (only one tab owns the game). */
   attach(win) {
     this.game.on('change', () => { if (!this.restoring) this.save(); });
     if (win) {
-      win.addEventListener('storage', (e) => {
-        if (e.key !== this.key || e.newValue == null) return;
-        try { this.apply(validate(JSON.parse(e.newValue), this.game)); } catch { /* ignore an unreadable write from another tab */ }
-      });
       const flush = () => this.save();
       win.addEventListener('pagehide', flush);
       win.document?.addEventListener('visibilitychange', () => { if (win.document.hidden) flush(); });
