@@ -285,146 +285,165 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         </View>
       </View>
 
-      <View style={[styles.prestigeCard, prestigeReady && glowShadow(COLORS.accent)]}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        {prestigeReady && (
-          <View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(COLORS.accent, 0.08) }]}
-          />
-        )}
-        <View style={styles.taxHeaderRow}>
-          <Text style={styles.taxTitle}>{t("town.prestige.title")}</Text>
-          {state.prestigeLevel > 0 && (
-            <Text style={styles.prestigeLevel}>
-              {t("town.prestige.level", { level: state.prestigeLevel })}
-            </Text>
+      {/* A brand-new player's net worth is nowhere near these thresholds
+          (15,000+/5,000+/100,000+), so showing them from day one was just a
+          wall of "locked" teasers before anything else useful. Each section
+          now only appears once the player is in reach of it — halfway to
+          its own threshold — or has already engaged with it, rather than
+          the instant the town exists. */}
+      {(prestigeReady || state.prestigeLevel > 0 || netWorth >= PRESTIGE_UNLOCK_NET_WORTH * 0.5) && (
+        <View style={[styles.prestigeCard, prestigeReady && glowShadow(COLORS.accent)]}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          {prestigeReady && (
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(COLORS.accent, 0.08) }]}
+            />
           )}
-        </View>
-        <Text style={styles.taxDesc}>{t("town.prestige.description")}</Text>
-        {state.prestigeLevel > 0 && (
-          <Text style={styles.prestigeBonus}>
-            {t("town.prestige.bonus", {
-              pct: Math.round(state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL * 100),
-              cash: state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
-            })}
-          </Text>
-        )}
-        {prestigeReady ? (
-          <Animated.View style={{ transform: [{ scale: prestigeArmed ? 1 : pulseScale }] }}>
-            <ScalePressable
-              onPress={() => {
-                if (!prestigeArmed) {
-                  setPrestigeArmed(true);
-                  return;
-                }
-                prestige();
-                setPrestigeArmed(false);
-              }}
-              style={styles.prestigeBtn}
-              scaleTo={0.97}
-            >
-              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={styles.prestigeBtnText}>
-                {prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
+          <View style={styles.taxHeaderRow}>
+            <Text style={styles.taxTitle}>{t("town.prestige.title")}</Text>
+            {state.prestigeLevel > 0 && (
+              <Text style={styles.prestigeLevel}>
+                {t("town.prestige.level", { level: state.prestigeLevel })}
               </Text>
-            </ScalePressable>
-          </Animated.View>
-        ) : (
-          <>
-            <Text style={styles.prestigeLocked}>
-              {t("town.prestige.locked", { target: PRESTIGE_UNLOCK_NET_WORTH })}
-            </Text>
-            <View style={styles.lockedTrack}>
-              <View style={[styles.lockedFill, { width: `${prestigePct * 100}%` }]} />
-            </View>
-            <Text style={styles.prestigeProgress}>
-              {t("town.prestige.progress", {
-                current: Math.floor(netWorth),
-                target: PRESTIGE_UNLOCK_NET_WORTH,
+            )}
+          </View>
+          <Text style={styles.taxDesc}>{t("town.prestige.description")}</Text>
+          {state.prestigeLevel > 0 && (
+            <Text style={styles.prestigeBonus}>
+              {t("town.prestige.bonus", {
+                pct: Math.round(state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL * 100),
+                cash: state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
               })}
             </Text>
-          </>
-        )}
-      </View>
-
-      <SectionLabel text={t("doctrine.activeLabel")} color="#e8c777" />
-      <View style={styles.doctrineCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        {activeDoctrine ? (
-          <>
-            <View style={styles.doctrineHead}>
-              <Text aria-hidden style={styles.doctrineIcon}>
-                {activeDoctrine.icon}
-              </Text>
-              <Text style={styles.doctrineName}>{t(activeDoctrine.nameKey)}</Text>
-            </View>
-            <Text style={styles.doctrineBonus}>+ {t(activeDoctrine.bonusKey)}</Text>
-            <Text style={styles.doctrinePenalty}>− {t(activeDoctrine.penaltyKey)}</Text>
-          </>
-        ) : netWorth >= DOCTRINE_UNLOCK_NET_WORTH ? (
-          <>
-            <Text style={styles.doctrinePrompt}>{t("doctrine.choosePrompt")}</Text>
-            <ScalePressable onPress={onOpenDoctrine} style={styles.doctrineBtn} scaleTo={0.96}>
-              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={styles.doctrineBtnText}>{t("doctrine.chooseBtn")}</Text>
-            </ScalePressable>
-          </>
-        ) : (
-          <Text style={styles.doctrineLocked}>
-            🔒 {t("doctrine.lockedNote", { amount: DOCTRINE_UNLOCK_NET_WORTH })}
-          </Text>
-        )}
-      </View>
-
-      <SectionLabel text={t("town.prestige.perksSectionLabel")} color={COLORS.accent} />
-      <Text style={styles.prestigePointsLabel}>
-        {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
-      </Text>
-      {state.legendaryUnlocked && (
-        <Text style={styles.legendaryPointsLabel}>
-          {t("town.prestige.legendaryPointsLabel", { points: state.legendaryPoints })}
-        </Text>
-      )}
-      {PRESTIGE_PERKS.map((perk) => {
-        const unlocked = state.prestigePerks.includes(perk.id);
-        const requiresDef = perk.requires ? PRESTIGE_PERKS.find((p) => p.id === perk.requires) : null;
-        const requirementMet = !perk.requires || state.prestigePerks.includes(perk.requires);
-        const disabled = unlocked || !requirementMet || state.prestigePoints < perk.cost;
-        const effect = perk.effectLabel();
-        return (
-          <View key={perk.id} style={styles.upgradeCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.upgradeIcon}>{perk.icon}</Text>
-            <View style={{ flex: 1 }}>
-              <View style={styles.upgradeTitleRow}>
-                <Text style={styles.upgradeName}>{t(perk.nameKey)}</Text>
-                {unlocked && <Text style={styles.upgradeLevel}>{t("town.propertyOwnedLabel")}</Text>}
-              </View>
-              <Text style={styles.upgradeDesc}>{t(perk.descriptionKey)}</Text>
-              <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>
-              {!unlocked && !requirementMet && requiresDef && (
-                <Text style={styles.perkRequires}>
-                  {t("town.prestige.perkRequires", { name: t(requiresDef.nameKey) })}
+          )}
+          {prestigeReady ? (
+            <Animated.View style={{ transform: [{ scale: prestigeArmed ? 1 : pulseScale }] }}>
+              <ScalePressable
+                onPress={() => {
+                  if (!prestigeArmed) {
+                    setPrestigeArmed(true);
+                    return;
+                  }
+                  prestige();
+                  setPrestigeArmed(false);
+                }}
+                style={styles.prestigeBtn}
+                scaleTo={0.97}
+              >
+                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+                <Text style={styles.prestigeBtnText}>
+                  {prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
                 </Text>
-              )}
-            </View>
-            <ScalePressable
-              disabled={disabled}
-              onPress={() => unlockPrestigePerk(perk.id)}
-              style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
-              scaleTo={0.95}
-            >
-              {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-              <Text style={styles.upgradeBtnText}>
-                {unlocked
-                  ? t("town.prestige.perkUnlockedBtn")
-                  : t("town.prestige.perkUnlockBtn", { cost: perk.cost })}
+              </ScalePressable>
+            </Animated.View>
+          ) : (
+            <>
+              <Text style={styles.prestigeLocked}>
+                {t("town.prestige.locked", { target: PRESTIGE_UNLOCK_NET_WORTH })}
               </Text>
-            </ScalePressable>
+              <View style={styles.lockedTrack}>
+                <View style={[styles.lockedFill, { width: `${prestigePct * 100}%` }]} />
+              </View>
+              <Text style={styles.prestigeProgress}>
+                {t("town.prestige.progress", {
+                  current: Math.floor(netWorth),
+                  target: PRESTIGE_UNLOCK_NET_WORTH,
+                })}
+              </Text>
+            </>
+          )}
+        </View>
+      )}
+
+      {(activeDoctrine || netWorth >= DOCTRINE_UNLOCK_NET_WORTH * 0.5) && (
+        <>
+          <SectionLabel text={t("doctrine.activeLabel")} color="#e8c777" />
+          <View style={styles.doctrineCard}>
+            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            {activeDoctrine ? (
+              <>
+                <View style={styles.doctrineHead}>
+                  <Text aria-hidden style={styles.doctrineIcon}>
+                    {activeDoctrine.icon}
+                  </Text>
+                  <Text style={styles.doctrineName}>{t(activeDoctrine.nameKey)}</Text>
+                </View>
+                <Text style={styles.doctrineBonus}>+ {t(activeDoctrine.bonusKey)}</Text>
+                <Text style={styles.doctrinePenalty}>− {t(activeDoctrine.penaltyKey)}</Text>
+              </>
+            ) : netWorth >= DOCTRINE_UNLOCK_NET_WORTH ? (
+              <>
+                <Text style={styles.doctrinePrompt}>{t("doctrine.choosePrompt")}</Text>
+                <ScalePressable onPress={onOpenDoctrine} style={styles.doctrineBtn} scaleTo={0.96}>
+                  <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+                  <Text style={styles.doctrineBtnText}>{t("doctrine.chooseBtn")}</Text>
+                </ScalePressable>
+              </>
+            ) : (
+              <Text style={styles.doctrineLocked}>
+                🔒 {t("doctrine.lockedNote", { amount: DOCTRINE_UNLOCK_NET_WORTH })}
+              </Text>
+            )}
           </View>
-        );
-      })}
+        </>
+      )}
+
+      {/* Prestige perks are spent out of prestigePoints, which stay at 0
+          until the player has actually prestiged once — before that this
+          whole list (and its "0 points" label) has nothing to say. */}
+      {state.prestigeLevel > 0 && (
+        <>
+          <SectionLabel text={t("town.prestige.perksSectionLabel")} color={COLORS.accent} />
+          <Text style={styles.prestigePointsLabel}>
+            {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
+          </Text>
+          {state.legendaryUnlocked && (
+            <Text style={styles.legendaryPointsLabel}>
+              {t("town.prestige.legendaryPointsLabel", { points: state.legendaryPoints })}
+            </Text>
+          )}
+          {PRESTIGE_PERKS.map((perk) => {
+            const unlocked = state.prestigePerks.includes(perk.id);
+            const requiresDef = perk.requires ? PRESTIGE_PERKS.find((p) => p.id === perk.requires) : null;
+            const requirementMet = !perk.requires || state.prestigePerks.includes(perk.requires);
+            const disabled = unlocked || !requirementMet || state.prestigePoints < perk.cost;
+            const effect = perk.effectLabel();
+            return (
+              <View key={perk.id} style={styles.upgradeCard}>
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <Text style={styles.upgradeIcon}>{perk.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.upgradeTitleRow}>
+                    <Text style={styles.upgradeName}>{t(perk.nameKey)}</Text>
+                    {unlocked && <Text style={styles.upgradeLevel}>{t("town.propertyOwnedLabel")}</Text>}
+                  </View>
+                  <Text style={styles.upgradeDesc}>{t(perk.descriptionKey)}</Text>
+                  <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>
+                  {!unlocked && !requirementMet && requiresDef && (
+                    <Text style={styles.perkRequires}>
+                      {t("town.prestige.perkRequires", { name: t(requiresDef.nameKey) })}
+                    </Text>
+                  )}
+                </View>
+                <ScalePressable
+                  disabled={disabled}
+                  onPress={() => unlockPrestigePerk(perk.id)}
+                  style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
+                  scaleTo={0.95}
+                >
+                  {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
+                  <Text style={styles.upgradeBtnText}>
+                    {unlocked
+                      ? t("town.prestige.perkUnlockedBtn")
+                      : t("town.prestige.perkUnlockBtn", { cost: perk.cost })}
+                  </Text>
+                </ScalePressable>
+              </View>
+            );
+          })}
+        </>
+      )}
 
       <View style={styles.bankCard}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -591,24 +610,28 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         );
       })}
 
-      <SectionLabel text={t("town.workersSectionLabel")} color="#e0a13f" />
-      {!state.workersUnlocked ? (
-        <View style={styles.workersLockedCard}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.doctrineLocked}>
-            🔒 {t("town.workersLockedNote", { amount: WORKERS_UNLOCK_NET_WORTH })}
-          </Text>
-          <View style={styles.lockedTrack}>
-            <View
-              style={[
-                styles.lockedFill,
-                { width: `${Math.max(0, Math.min(1, netWorth / WORKERS_UNLOCK_NET_WORTH)) * 100}%` },
-              ]}
-            />
-          </View>
-        </View>
-      ) : (
-        <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
+      {(state.workersUnlocked || netWorth >= WORKERS_UNLOCK_NET_WORTH * 0.5) && (
+        <>
+          <SectionLabel text={t("town.workersSectionLabel")} color="#e0a13f" />
+          {!state.workersUnlocked ? (
+            <View style={styles.workersLockedCard}>
+              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+              <Text style={styles.doctrineLocked}>
+                🔒 {t("town.workersLockedNote", { amount: WORKERS_UNLOCK_NET_WORTH })}
+              </Text>
+              <View style={styles.lockedTrack}>
+                <View
+                  style={[
+                    styles.lockedFill,
+                    { width: `${Math.max(0, Math.min(1, netWorth / WORKERS_UNLOCK_NET_WORTH)) * 100}%` },
+                  ]}
+                />
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
+          )}
+        </>
       )}
       {state.workersUnlocked &&
         GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
