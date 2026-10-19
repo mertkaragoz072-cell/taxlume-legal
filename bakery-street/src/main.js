@@ -21,6 +21,8 @@ import { StreetScene } from './scene/street-scene.js';
 import { bakery } from './buildings/bakery.js';
 import { bookshop } from './buildings/bookshop.js';
 import { market } from './buildings/market.js';
+import { Town } from './game/town.js';
+import { createTownPanel } from './ui/town.js';
 import { Progression } from './game/progression.js';
 import { createHud } from './ui/hud.js';
 import { createNav } from './ui/nav.js';
@@ -44,6 +46,7 @@ unlockEvents.forEach((ev) => window.addEventListener(ev, unlockAudio));
 
 const game = new Game(PLAYER);              // production, stock and gold live here (src/game/game.js)
 const progression = new Progression(game);        // player level and XP (src/game/progression.js)
+const town = new Town(game);                       // building states (src/game/town.js)
 const quests = new Quests(game);
 const daily = new DailyReward(game);              // daily reward cycle (src/game/daily.js)                    // quest progress comes from game.stats (src/game/quests.js)
 const cafe = new Cafe(game);                       // customers, tables and orders (src/game/customers.js)
@@ -86,6 +89,18 @@ const dailyPanel = createDailyPanel(document.getElementById('dailyPanel'), game,
   onClaimed: ({ day, reward, streakBroken }) => showToast(toast, `🎁 Günlük ödül · Gün ${day}: ${formatReward(game, reward)}${streakBroken ? ' (seri yeniden başladı)' : ''}`, 3200),
   onWarn: (msg) => warn(msg, 2400),
 });
+const setNavTown = (on) => {                          // the Kasaba button is highlighted while the town screen is open
+  const nav = document.getElementById('nav');
+  nav.querySelector('[data-id=cafe]')?.classList.toggle('active', !on);
+  nav.querySelector('[data-id=town]')?.classList.toggle('active', on);
+};
+const townPanel = createTownPanel(document.getElementById('townPanel'), game, town, {
+  onVisit: (scene) => go(scene),
+  onOpened: ({ building, cost, xp }) => { showToast(toast, `${building.icon} ${building.name} açıldı! −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3200); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onDeveloped: ({ building, cost, level, xp }) => { showToast(toast, `${building.icon} ${building.name} gelişti: seviye ${level} · −${cost} altın${xp ? ` · +${xp} XP` : ''}`, 3000); audio.sfx('claim'); buzz([30, 40, 30]); },
+  onWarn: (msg) => warn(msg, 3200),
+  onClose: () => setNavTown(false),
+});
 function doReset() {                                 // reached only through the settings panel's confirmation button
   const r = saves.reset({ confirmed: true });
   if (!r.ok) { warn(r.message, 4500); return; }
@@ -100,8 +115,8 @@ const settingsPanel = createSettingsPanel(document.getElementById('settingsPanel
 /** Only one of the quest / daily / settings overlays is open at a time; pressing its button again closes it. */
 function openOverlay(panel) {
   const wasOpen = panel.isOpen;
-  for (const p of [questPanel, dailyPanel, settingsPanel]) p.close();
-  if (!wasOpen) panel.open();
+  for (const p of [townPanel, questPanel, dailyPanel, settingsPanel]) p.close();
+  if (!wasOpen) { panel.open(); setNavTown(panel === townPanel); }
 }
 const refreshBadge = () => { hud.setQuestBadge(quests.claimable().length); hud.setDailyBadge(daily.status().canClaim); };
 setInterval(() => { refreshBadge(); dailyPanel.refresh(); }, 20000);   // a new day can start while the game is open
@@ -110,6 +125,7 @@ game.on('change', (e) => {                            // sounds and vibration fo
   switch (e?.type) {
     case 'sell': case 'sale': audio.sfx('coin'); buzz(25); break;
     case 'buy': audio.sfx('buy'); break;
+    case 'town': case 'townLevel': break;       // announced by the town panel's own toast and sound
     case 'upgrade': audio.sfx('claim'); buzz([30, 40, 30]); break;
     case 'quest': case 'daily': audio.sfx('claim'); buzz(40); break;
     case 'complete': audio.sfx('done'); buzz(20); break;
@@ -176,6 +192,11 @@ canvas.addEventListener('pointerup', (e) => {
   if (scene === street) {
     if (hit === 'bakery') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('interior'), 260); }
     else if (hit === 'market') { street.tapBuilding(hit, p.x, p.y); setTimeout(() => go('market'), 260); }
+    else if (hit === 'bookshop') {
+      street.tapBuilding(hit, p.x, p.y);
+      if (town.isOpen('bookshop')) showToast(toast, '📚 Kitapçı açık — ürünler ve gelir yakında', 2200);
+      else openOverlay(townPanel);                        // closed: show what it takes to open it
+    }
   } else if (scene === marketScene) {
     // nothing to tap on the Market backdrop; the shopping list is a DOM panel
   } else if (!hit) {
@@ -201,7 +222,8 @@ canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
 createNav(document.getElementById('nav'), {
   onSelect: (id) => {
-    if (id === 'cafe') { street.tapBuilding('bakery', DESIGN.w / 2, 400); setTimeout(() => go('interior'), 260); }
+    if (id === 'cafe') { townPanel.close(); street.tapBuilding('bakery', DESIGN.w / 2, 400); setTimeout(() => go('interior'), 260); }
+    else if (id === 'town') openOverlay(townPanel);
     else showToast(toast, 'Yakında');
   },
 });
@@ -268,5 +290,5 @@ loadAssets().then(() => {
   scene = street;
   layout();
   requestAnimationFrame(frame);
-  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
+  window.__street = { scene, view, street, interior, market: marketScene, game, cafe, progression, town, quests, daily, settings, audio, saves, go }; // handy for debugging / tests
 });

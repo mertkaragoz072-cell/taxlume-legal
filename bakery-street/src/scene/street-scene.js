@@ -118,10 +118,10 @@ export class StreetScene {
     ctx.restore();
   }
 
-  /** 'bakery' | 'market' | null. Where the two buildings overlap, the nearer centre wins. */
+  /** 'bakery' | 'market' | 'bookshop' | null. Where the two buildings overlap, the nearer centre wins. */
   hitTest(x, y) {
     x += this.cam;   // the shop plane moves with the camera
-    const hits = [['bakery', bakery.bounds], ['market', market.bounds]].filter(([, b]) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
+    const hits = [['bakery', bakery.bounds], ['market', market.bounds], ['bookshop', bookshop.bounds]].filter(([, b]) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (!hits.length) return null;
     hits.sort((a, b) => Math.abs(x - (a[1].x + a[1].w / 2)) - Math.abs(x - (b[1].x + b[1].w / 2)));
     return hits[0][0];
@@ -131,7 +131,7 @@ export class StreetScene {
 
   /** Visual feedback for a building tap. A cafe-interior scene can be hooked in via the `onEnter` callback. */
   tapBuilding(id, x, y) {
-    if (id !== 'bakery' && id !== 'market') return;
+    if (id !== 'bakery' && id !== 'market' && id !== 'bookshop') return;
     if (id === 'bakery') { this.pulse = 1; this.flash = 1; }   // the bakery sprite squashes and glows; the market (static art) gets the ring and sparks
     this.rings.push({ x, y, life: 1 });
     for (let i = 0; i < 16; i++) {

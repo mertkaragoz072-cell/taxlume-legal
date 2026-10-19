@@ -89,6 +89,7 @@ export const QUESTS = [
   { id: 'sellFive', name: 'Tezgâh hareketleniyor', icon: '🧾', condition: 'Toplam 5 ürün sat', stat: 'soldTotal', target: 5, reward: { gold: 300, ingredients: { butter: 2 } } },
   { id: 'firstUpgrade', name: 'Büyüyen işletme', icon: '⬆️', condition: 'Bir geliştirme satın al', stat: 'upgradesBought', target: 1, reward: { gold: 250, ingredients: { sugar: 4 } } },
   { id: 'produceTen', name: 'Üretim hattı', icon: '🏭', condition: 'Toplam 10 ürün üret', stat: 'producedTotal', target: 10, reward: { gold: 400, ingredients: { beans: 4, milk: 2 } } },
+  { id: 'openBookshop', name: 'Kasaba büyüyor', icon: '📚', condition: "Kasaba'da yeni bir bina aç", stat: 'buildingsOpened', target: 1, reward: { gold: 500, ingredients: { flour: 4 } } },
 ];
 
 /**
@@ -122,4 +123,25 @@ export const LEVELS = { base: 100, linear: 50, quad: 10, maxLevel: 30 };
 export const LEVEL_REWARD = {
   gold: { base: 100, perLevel: 50 },                             // gold = base + perLevel * (level - 1)
   ingredientsEvery: 3, ingredients: { flour: 4, milk: 2, egg: 2 },   // also every 3rd level (3, 6, 9, ...)
+};
+
+/**
+ * Town buildings. Conditions (TOWN_UNLOCKS) and rewards (TOWN_REWARDS) live in separate tables so each can be tuned alone.
+ *  - starter buildings are always open and are the existing Bakery & Café and Market
+ *  - `levels` = paid development steps of an opened building (cost + minimum player level each)
+ *  - the Bookshop has no products or income yet: opening and developing it only unlocks progress, it never pays gold
+ *  - `comingSoon` plots are shown but cannot be bought yet
+ */
+export const TOWN = [
+  { id: 'bakery', name: 'Fırın & Kafe', icon: '🥐', starter: true, scene: 'interior', note: 'Üretim, müşteriler ve satış' },
+  { id: 'market', name: 'Market', icon: '🛒', starter: true, scene: 'market', note: 'Malzeme alışverişi' },
+  { id: 'bookshop', name: 'Kitapçı', icon: '📚', note: 'Gelir ve ürünler yakında', levels: ['Raflar', 'Okuma Köşesi'] },
+  { id: 'plot', name: 'Boş Arsa', icon: '🏗️', note: 'Yeni işletme yakında', comingSoon: true },
+];
+export const TOWN_UNLOCKS = {
+  bookshop: { gold: 5000, minLevel: 3, levels: [{ gold: 3000, minLevel: 5 }, { gold: 8000, minLevel: 8 }] },
+  plot: { gold: 25000, minLevel: 10 },
+};
+export const TOWN_REWARDS = {
+  bookshop: { open: { xp: 150 }, levels: [{ xp: 100 }, { xp: 200 }] },
 };

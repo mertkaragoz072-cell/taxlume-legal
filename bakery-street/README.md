@@ -181,3 +181,12 @@ Ayarlar `src/data/economy.js` (`XP`, `LEVELS`, `LEVEL_REWARD`), mantık `src/gam
 | 29→30 | 9340 | 100340 |
 
 Test: `npm test` (191 test).
+
+## Adım 9: Kasaba ve bina açma
+
+- **Kasaba** menü butonu (veya kapalı Kitapçı'ya dokunmak) Kasaba ekranını açar: Fırın & Kafe, Market, Kitapçı ve bir "Boş Arsa" (yakında). Durumlar: **Açık** (yeşil), **Açılabilir** (seviye yeterli) ve **Kilitli** (seviye yetersiz / henüz alınamaz). Her kartta koşullar ✓/✗ ile ve maliyet gösterilir. Fırın ve Market kartlarındaki "Git" mevcut ekranlara geçirir.
+- Veri: `src/data/economy.js` → `TOWN` (binalar), `TOWN_UNLOCKS` (altın + minimum seviye, geliştirme basamakları), `TOWN_REWARDS` (XP ödülleri) ayrı tablolardır. Mantık `src/game/town.js`.
+- **Kitapçı:** 5.000 altın + seviye 3 ile açılır (+150 XP). Açıldıktan sonra 2 geliştirme basamağı vardır: Raflar (3.000 altın, seviye 5, +100 XP), Okuma Köşesi (8.000 altın, seviye 8, +200 XP). Henüz ürün/gelir sistemi yoktur ve **hiç gelir üretmez**.
+- Yetersiz altın/seviyede işlem engellenir, eksik koşul yazılır, altın düşmez. Açma tek adımdır; açık bina ikinci kez alınamaz, tekrar eden geliştirme dokunuşu reddedilir.
+- Görev "Kasaba büyüyor" (bir bina aç) eklendi; XP, `Progression` üzerinden verilir (seviye atlama ödülleri dahil).
+- Kayıt sürümü 7: `town {opened, levels}`. Eski kayıtlarda yalnızca Fırın ve Market açıktır. Fırın & Kafe ve Market ekonomisi değişmedi.

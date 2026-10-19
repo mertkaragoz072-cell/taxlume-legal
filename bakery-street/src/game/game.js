@@ -6,7 +6,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, buildingsOpened: 0, buildingUpgrades: 0 };
 }
 
 export class Game {
@@ -189,6 +189,7 @@ export class Game {
       ...(this.quests ? { quests: this.quests.exportState() } : {}),
       ...(this.daily ? { daily: this.daily.exportState() } : {}),
       ...(this.progression ? { progression: this.progression.exportState() } : {}),
+      ...(this.town ? { town: this.town.exportState() } : {}),
     };
   }
 
@@ -204,6 +205,7 @@ export class Game {
     this.quests?.importState(state.quests);
     this.daily?.importState(state.daily);
     this.progression?.importState(state.progression);
+    this.town?.importState(state.town);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -221,6 +223,7 @@ export class Game {
       quests: { claimed: [] },
       daily: { lastDate: null, day: 0 },
       progression: { level: 1, xp: 0, rewardedLevel: 1 },
+      town: { opened: [], levels: {} },
     };
   }
 

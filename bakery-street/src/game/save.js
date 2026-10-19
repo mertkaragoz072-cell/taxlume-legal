@@ -2,6 +2,7 @@ import { validateCafe } from './customers.js';
 import { validateQuests } from './quests.js';
 import { blankStats } from './game.js';
 import { validateDaily } from './daily.js';
+import { validateTown } from './town.js';
 import { validateProgression } from './progression.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
@@ -10,7 +11,7 @@ import { validateProgression } from './progression.js';
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 6;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward, v6 player level / XP (older saves start at level 1)
+export const SAVE_VERSION = 7;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward, v6 player level / XP (older saves start at level 1), v7 town buildings (older saves: only the starter buildings are open)
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -37,7 +38,7 @@ export function validate(raw, game) {
   const rs = raw.stats;
   if (rs !== undefined) {
     if (!rs || typeof rs !== 'object') throw new Error('istatistikler geçersiz');
-    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought']) {
+    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades']) {
       if (rs[k] === undefined) continue;
       if (!isCount(rs[k])) throw new Error(`istatistik geçersiz (${k})`);
       stats[k] = rs[k];
@@ -55,6 +56,7 @@ export function validate(raw, game) {
   const gems = raw.gems ?? game.initial.gems;
   const daily = game.daily ? validateDaily(raw.daily, game.daily.defs) : undefined;
   const progression = game.progression ? validateProgression(raw.progression, game.progression) : undefined;
+  const town = game.town ? validateTown(raw.town, game.town) : undefined;
   const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
   const upgrades = {};
   for (const [id, def] of Object.entries(game.upgradesDef)) {
@@ -79,7 +81,7 @@ export function validate(raw, game) {
     if (list.length) jobs[station] = list;
   }
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks) : null;
-  return { gold: raw.gold, gems, ingredients, products, jobs, upgrades, stats, quests, daily, progression, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, ingredients, products, jobs, upgrades, stats, quests, daily, progression, town, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {
