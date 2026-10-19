@@ -4,7 +4,7 @@ import { glowAt, clamp, INK, applyGrain } from '../util.js';
 import { drawSky, makeClouds, drawCloud, drawBackdrop } from './backdrop.js';
 import { drawPavement } from './pavement.js';
 import { drawSides } from './sides.js';
-import { drawMidground } from './midground.js';
+import { drawMidground, drawLamps } from './midground.js';
 import { drawForeground } from './foreground.js';
 import { bakery } from '../buildings/bakery.js';
 import { bookshop } from '../buildings/bookshop.js';
@@ -49,8 +49,9 @@ export class StreetScene {
         bookshop.draw(g);
         market.draw(g);
         drawPavement(g, view);
+        if (bakery.usesAsset) this.lampGlows = drawLamps(g);
       }),
-      mid: make((g) => { this.lampGlows = drawMidground(g, view); }),
+      mid: make((g) => { const l = drawMidground(g, view); if (l.length) this.lampGlows = l; }),
       front: make((g) => drawForeground(g, view)),
     };
     // bakery gets its own sprite so it can squash / glow on tap
@@ -125,7 +126,7 @@ export class StreetScene {
 
     blit(this.layers.mid);
     design();
-    for (const s of CAFE_SETS) drawCafeSet(ctx, s, t);
+    if (!bakery.usesAsset) for (const s of CAFE_SETS) drawCafeSet(ctx, s, t);
     drawWaitress(ctx, t);
     for (const w of this.walkers) drawWalker(ctx, w, t);
     blit(this.layers.front);
@@ -140,7 +141,7 @@ export class StreetScene {
     ctx.globalCompositeOperation = 'source-over';
 
     // steam from the cups
-    for (const s of CAFE_SETS) for (const dx of [-15, 13]) steam(ctx, s.x + dx, 610 - 60, t, dx);
+    if (!bakery.usesAsset) for (const s of CAFE_SETS) for (const dx of [-15, 13]) steam(ctx, s.x + dx, 610 - 60, t, dx);
 
     // tap ripple + warm halo around the bakery
     for (const g of this.rings) {

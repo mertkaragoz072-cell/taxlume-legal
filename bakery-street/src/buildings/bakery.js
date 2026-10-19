@@ -1,6 +1,6 @@
 // Fırın & Kafe — the hero building. Drawn on its own so the scene can animate it as one sprite.
 import { DESIGN, TEXT } from '../config.js';
-import { drawAsset } from '../assets.js';
+import { drawAsset, getImage } from '../assets.js';
 import { INK, rrect, poly, paint, vgrad, hgrad } from '../util.js';
 import {
   tiledRoof, brickWall, quoins, doorway, beam, awning, signBoard, shopWindow, garland, bush, hangingLamp,
@@ -17,7 +17,18 @@ export const bakery = {
   doorX: 700,
   // lights: [x, y, radius]
   lights: [[497, 452, 50], [600, 452, 50], [700, 452, 50], [800, 452, 50], [905, 452, 50], [547, 505, 70], [852, 505, 70]],
-  steamCups: [],
+  usesAsset: false,
+
+  /** Call after assets load: when the final PNG exists, size/position the building from its aspect ratio. */
+  configure() {
+    const img = getImage('bakery');
+    if (!img) return;
+    const w = 790, h = Math.round((w * img.naturalHeight) / img.naturalWidth), bottom = 612;
+    this.usesAsset = true;
+    this.bounds = { x: 700 - w / 2, y: bottom - h, w, h };
+    this.pivot = { x: 700, y: bottom - 6 };
+    this.lights = [[700, 497, 60]];   // the art already glows; keep just a soft door light
+  },
 
   draw(ctx) {
     const b = this.bounds;

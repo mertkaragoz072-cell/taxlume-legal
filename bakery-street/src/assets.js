@@ -5,7 +5,7 @@
 // A module that calls drawAsset(key, ...) will use the image when present and
 // fall back to its procedural drawing when the path is null.
 export const MANIFEST = {
-  bakery: null,      // e.g. 'assets/bakery.png'  (drawn over the bakery's design box)
+  bakery: 'assets/bakery.webp',   // final art (transparent WebP); the procedural drawing is the fallback
   bookshop: null,
   market: null,
   'town-backdrop': null,
@@ -24,6 +24,8 @@ export function loadAssets() {
     }));
   return Promise.all(jobs);
 }
+
+export const getImage = (key) => images[key] ?? null;
 
 /** Draw the registered image for `key`; returns false when none is available. */
 export function drawAsset(ctx, key, x, y, w, h) {

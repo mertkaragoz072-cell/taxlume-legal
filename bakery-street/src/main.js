@@ -2,6 +2,7 @@
 import { DESIGN } from './config.js';
 import { loadAssets } from './assets.js';
 import { StreetScene } from './scene/street-scene.js';
+import { bakery } from './buildings/bakery.js';
 import { createHud } from './ui/hud.js';
 import { createNav } from './ui/nav.js';
 import { showToast } from './ui/toast.js';
@@ -79,6 +80,7 @@ window.addEventListener('orientationchange', scheduleLayout);
 try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* only works in fullscreen / installed mode */ }
 
 loadAssets().then(() => {
+  bakery.configure();
   scene = street;
   layout();
   requestAnimationFrame(frame);
