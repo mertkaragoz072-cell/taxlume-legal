@@ -1,6 +1,7 @@
 // Props that sit between the shop fronts and the walking lane (static, cached into one layer).
 import { DESIGN } from '../config.js';
 import { rng } from '../util.js';
+import { drawProp, hasProps } from './props.js';
 import { bakery } from '../buildings/bakery.js';
 import { bookshop } from '../buildings/bookshop.js';
 import { market } from '../buildings/market.js';
@@ -14,6 +15,9 @@ const B = DESIGN.baseY;
 /** Street lamps flanking the bakery; with the final art they sit behind its umbrellas. */
 export function drawLamps(ctx) {
   const art = bakery.usesAsset;
+  if (hasProps()) { // supplied lamp art; glow position follows the lantern at the top
+    return []; // lamps are drawn in the foreground (drawFrontLamps) so they stand on the ground plane
+  }
   return [lampPost(ctx, art ? 374 : 392, B + 24, 290), lampPost(ctx, art ? 1030 : 1020, B + 24, 290)];
 }
 

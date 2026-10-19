@@ -12,6 +12,14 @@ export const MANIFEST = {
   'char-girl_hat': 'assets/characters/girl_hat.webp',
   'char-oldman': 'assets/characters/oldman.webp',
   'char-chef': 'assets/characters/chef.webp',
+  'prop-bench_iron': 'assets/props/bench_iron.webp',
+  'prop-bollard_black': 'assets/props/bollard_black.webp',
+  'prop-bollard_stone': 'assets/props/bollard_stone.webp',
+  'prop-lamp': 'assets/props/lamp.webp',
+  'prop-planter_flowers': 'assets/props/planter_flowers.webp',
+  'prop-planter_flowers2': 'assets/props/planter_flowers2.webp',
+  'prop-pot_topiary': 'assets/props/pot_topiary.webp',
+  'prop-urn': 'assets/props/urn.webp',
   'ground-walk-a': 'assets/ground-walk-a.webp',   // sidewalk slab strips (tile left-to-right)
   'ground-walk-b': 'assets/ground-walk-b.webp',
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha

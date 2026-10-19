@@ -2,17 +2,23 @@
 import { DESIGN } from '../config.js';
 import { rng } from '../util.js';
 import { getImage } from '../assets.js';
+import { drawProp, hasProps } from './props.js';
 import { bench, bollard, bush, planter } from './parts.js';
 
 export function drawForeground(ctx, v) {
   const xmin = -v.ox, xmax = DESIGN.w + v.ox;
   const y = DESIGN.curbY;
 
-  {
+  if (hasProps()) {
+    const gy = DESIGN.groundY;
+    for (const x of [96, 1304]) drawProp(ctx, 'lamp', x, gy + 128, 250);
+    drawProp(ctx, 'bench_iron', 300, gy + 140, 112);
+    drawProp(ctx, 'bench_iron', 1100, gy + 140, 112, { flip: true });
+    for (const x of [180, 450, 950, 1220]) drawProp(ctx, 'bollard_black', x, gy + 134, 62);
+  } else {
     bench(ctx, 310, y + 78, 190);
     bench(ctx, 1090, y + 78, 190);
     for (const x of [170, 222, 520, 880, 1180, 1232]) bollard(ctx, x, y + 70);
-    // flowery beds
     bush(ctx, 680, y + 104, 360, 44, 401);
     planter(ctx, 410, y + 112, 150, 30, { seed: 402, kind: 'box', bushH: 40 });
     planter(ctx, 990, y + 112, 150, 30, { seed: 403, kind: 'box', bushH: 40 });
