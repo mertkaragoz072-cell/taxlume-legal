@@ -305,3 +305,7 @@ Name tags appear only for the selected/pressed area; machine progress bars are s
 `src/palette.js` is the single source: six base colours (cream #F5E6C8, vanilla #E8D2A8, honey #C99A61, terracotta #B85F3B, dark brown #795238, soft green #7D9855) plus tones mixed from them (`paper`, `creamLight`, `honeyLight/Dark`, `terracottaLight/Pale/Dark`, `brownDark` = text/outline ink, `greenLight/Pale/Dark/Deep`).
 Canvas code uses `PAL.<token>`; CSS uses `var(--<token>)` (the palette block in the `:root` of style.css is generated from the file and `tests/palette.test.js` fails if they drift).
 Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta, progress and positive buttons soft green, text and outlines dark brown. Characters, food, item icons and the supplied art keep their natural colours; the scene only grades them (cream wall wash, vanilla/honey floor wash, softer vignette, brown shadows).
+
+### Upgrade, research and quest icons
+
+`u-oven, u-speed, u-showcase, u-tables` (🔥 ⚡ 🗄️ 🪑), `r-knowledge, r-efficient, r-seller, r-culture, r-equipment` (📖 🧺 🏷️ 🎭 🛠️) and `q-target, q-line, q-explorer` (🎯 🏭 🧭) are swapped in by `icon-swap.js` wherever those emoji appear (matching ignores the U+FE0F variation selector).

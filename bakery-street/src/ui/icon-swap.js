@@ -3,18 +3,20 @@
 import { PRODUCTS, INGREDIENTS } from '../data/economy.js';
 import { ICON_IDS } from '../assets.js';
 
-const EMOJI = { '💰': 'coin', '✨': 'xp', '💎': 'gem', '🎁': 'gift', '🔒': 'lock', '⏱': 'timer', '✅': 'check', '⬆️': 'arrow', '🛒': 'basket', '🧾': 'receipt' };
-for (const [id, d] of Object.entries({ ...PRODUCTS, ...INGREDIENTS })) if (ICON_IDS.includes(id) && d.icon) EMOJI[d.icon] = id;
-const RE = new RegExp(`(${Object.keys(EMOJI).map((e) => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'u');
+const EMOJI = { '💰': 'coin', '✨': 'xp', '💎': 'gem', '🎁': 'gift', '🔒': 'lock', '⏱': 'timer', '✅': 'check', '⬆': 'arrow', '🛒': 'basket', '🧾': 'receipt',
+  '🔥': 'u-oven', '⚡': 'u-speed', '🗄': 'u-showcase', '🪑': 'u-tables', '📖': 'r-knowledge', '🧺': 'r-efficient', '🏷': 'r-seller', '🎭': 'r-culture', '🛠': 'r-equipment', '🎯': 'q-target', '🏭': 'q-line', '🧭': 'q-explorer' };   // keys without the emoji variation selector (U+FE0F)
+const bare = (e) => e.replace(/\uFE0F/g, '');
+for (const [id, d] of Object.entries({ ...PRODUCTS, ...INGREDIENTS })) if (ICON_IDS.includes(id) && d.icon) EMOJI[bare(d.icon)] = id;
+const RE = new RegExp(`((?:${Object.keys(EMOJI).join('|')})\\uFE0F?)`, 'u');
 
 function swap(node) {
   const text = node.nodeValue;
   if (!RE.test(text)) return;
   const frag = document.createDocumentFragment();
   for (const part of text.split(new RegExp(RE.source, 'gu'))) {
-    if (EMOJI[part]) {
+    if (EMOJI[bare(part)]) {
       const img = document.createElement('img');
-      img.className = 'gi'; img.alt = part; img.src = `assets/icons/${EMOJI[part]}.webp`; img.draggable = false;
+      img.className = 'gi'; img.alt = part; img.src = `assets/icons/${EMOJI[bare(part)]}.webp`; img.draggable = false;
       frag.append(img);
     } else if (part) frag.append(document.createTextNode(part));
   }

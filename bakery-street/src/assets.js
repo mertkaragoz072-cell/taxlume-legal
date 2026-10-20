@@ -36,8 +36,9 @@ for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${na
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
 // fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().
 export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butter', 'sugar', 'egg', 'milk', 'beans'];
-/** Currency / status pictures (coin, XP star, gem, gift, lock, stopwatch, check, up-arrow, basket, receipt). */
-export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket', 'receipt'];
+/** Currency / status pictures (coin, XP star, gem, gift, lock, stopwatch, check, up-arrow, basket, receipt) and the upgrade (u-), research (r-) and quest (q-) pictures. */
+export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket', 'receipt',
+  'u-oven', 'u-speed', 'u-showcase', 'u-tables', 'r-knowledge', 'r-efficient', 'r-seller', 'r-culture', 'r-equipment', 'q-target', 'q-line', 'q-explorer'];
 for (const id of UI_ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 for (const id of ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 
