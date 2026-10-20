@@ -57,14 +57,18 @@ export class ExploreScene {
     const bob = st === 'ready' ? Math.sin(t * 5) * 4 : 0, s = (press ? 0.94 : 1) * (sel ? 1.06 : 1);
     ctx.save(); ctx.translate(x, y + bob); ctx.scale(s, s);
     shadow(ctx, 0, 52, 78, 16, 0.3);
-    // island base
-    ctx.beginPath(); ctx.ellipse(0, 20, 84, 52, 0, 0, Math.PI * 2);
-    paint(ctx, locked ? PAL.honeyLight : PAL.greenLight, 3.5, locked ? PAL.brown : PAL.greenDark);
-    if (sel || st === 'ready') { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, 0, 10, 110, st === 'ready' ? '255,230,90' : '255,210,120', 0.35 + 0.1 * Math.sin(t * 4)); ctx.globalCompositeOperation = 'source-over'; }
+    const glow = () => { if (sel || st === 'ready') { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, 0, 10, 110, st === 'ready' ? '255,230,90' : '255,210,120', 0.35 + 0.1 * Math.sin(t * 4)); ctx.globalCompositeOperation = 'source-over'; } };
+    glow();
     ctx.globalAlpha = locked ? 0.6 : 1;
-    if (r.id === 'meadow') this.meadow(ctx);
-    else if (r.id === 'forest') this.forest(ctx);
-    else this.ruins(ctx);
+    if (locked && 'filter' in ctx) ctx.filter = 'grayscale(.7)';
+    if (!drawIcon(ctx, `r-${r.id}`, 0, 12, 170)) {              // fallback: the island drawn in code
+      ctx.beginPath(); ctx.ellipse(0, 20, 84, 52, 0, 0, Math.PI * 2);
+      paint(ctx, locked ? PAL.honeyLight : PAL.greenLight, 3.5, locked ? PAL.brown : PAL.greenDark);
+      if (r.id === 'meadow') this.meadow(ctx);
+      else if (r.id === 'forest') this.forest(ctx);
+      else this.ruins(ctx);
+    }
+    if ('filter' in ctx) ctx.filter = 'none';
     ctx.globalAlpha = 1;
     this.badge(ctx, r, st, t);
     ctx.restore();

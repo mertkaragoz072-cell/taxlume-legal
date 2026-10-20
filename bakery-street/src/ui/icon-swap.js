@@ -3,7 +3,7 @@
 import { PRODUCTS, INGREDIENTS } from '../data/economy.js';
 import { ICON_IDS } from '../assets.js';
 
-const EMOJI = { '💰': 'coin', '✨': 'xp', '💎': 'gem', '🎁': 'gift', '🔒': 'lock', '⏱': 'timer', '✅': 'check', '⬆': 'arrow', '🛒': 'basket', '🧾': 'receipt',
+const EMOJI = { '💰': 'coin', '✨': 'xp', '💎': 'gem', '🎁': 'gift', '🔒': 'lock', '⏱': 'timer', '✅': 'check', '⬆': 'arrow', '🛒': 'basket', '🧾': 'o-order', '👥': 'o-guests', '⏳': 'o-waiting', '📚': 'b-bookshop', '🏗': 'b-plot', '🌿': 'r-meadow', '🌲': 'r-forest', '🏛': 'r-ruins',
   '🔥': 'u-oven', '⚡': 'u-speed', '🗄': 'u-showcase', '🪑': 'u-tables', '📖': 'r-knowledge', '🧺': 'r-efficient', '🏷': 'r-seller', '🎭': 'r-culture', '🛠': 'r-equipment', '🎯': 'q-target', '🏭': 'q-line', '🧭': 'q-explorer' };   // keys without the emoji variation selector (U+FE0F)
 const bare = (e) => e.replace(/\uFE0F/g, '');
 for (const [id, d] of Object.entries({ ...PRODUCTS, ...INGREDIENTS })) if (ICON_IDS.includes(id) && d.icon) EMOJI[bare(d.icon)] = id;

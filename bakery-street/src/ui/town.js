@@ -43,7 +43,7 @@ export function createTownPanel(root, game, town, { onVisit, onOpened, onDevelop
       if (id === 'bookshop') btn = `<div class="btns col"><button class="go" data-visit="bookshop">Görüntüle</button>${btn}</div>`;
     }
     return `<div class="card town ${s.status}" data-b="${id}">
-      <div class="ci">${d.icon}</div>
+      <div class="ci"><img class="gi" src="assets/icons/b-${id}.webp" alt="${d.icon}" draggable="false"></div>
       <div class="cm"><div class="ct"><b>${d.name}</b><span class="tag ${s.status}">${LABEL[s.status]}</span></div>${body}</div>${btn}
     </div>`;
   }

@@ -283,7 +283,7 @@ Sokak karakterleri `SCALE` (0,78 → 0,9, `src/characters/sprites.js`) ile ~%15 
 
 ## Currency / status icons
 
-`assets/icons/` also holds ten UI pictures: `coin, xp, gem, gift, lock, timer, check, arrow, basket, receipt` (`UI_ICON_IDS` in `src/assets.js`).
+`assets/icons/` also holds ten UI pictures: `coin, xp, gem, gift, lock, timer, check, arrow, basket` (`UI_ICON_IDS` in `src/assets.js`).
 `src/ui/icon-swap.js` maps 💰 ✨ 💎 🎁 🔒 ⏱ ✅ ⬆️ 🛒 🧾 to them in every panel/toast; the HUD coin, the "+N" sale pops, the upgrades sign and the Keşif lock/gift badges use them on canvas.
 `drawIcon` keeps the picture's aspect ratio. Game data still holds the emoji (fallback).
 
@@ -309,3 +309,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### Upgrade, research and quest icons
 
 `u-oven, u-speed, u-showcase, u-tables` (🔥 ⚡ 🗄️ 🪑), `r-knowledge, r-efficient, r-seller, r-culture, r-equipment` (📖 🧺 🏷️ 🎭 🛠️) and `q-target, q-line, q-explorer` (🎯 🏭 🧭) are swapped in by `icon-swap.js` wherever those emoji appear (matching ignores the U+FE0F variation selector).
+
+### Places, regions and order-bar icons
+
+`b-bakery, b-market, b-bookshop, b-plot` (the Kasaba cards use them directly), `r-meadow, r-forest, r-ruins` (🌿 🌲 🏛️ in Keşif), `o-guests, o-waiting, o-order` (👥 ⏳ 🧾 in the order bar and quests). The supplied sheet had a baked-in chequerboard; it was removed by flood-filling the neutral grey from the edges (and the enclosed pockets of the crane and the hourglass).
