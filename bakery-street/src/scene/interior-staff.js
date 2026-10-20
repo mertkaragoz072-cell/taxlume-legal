@@ -6,7 +6,7 @@
 import { drawSprite, hasSprite } from '../characters/sprites.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE } from './interior-layout.js';
 
-const STOPS = { oven: 175, counter: 450, counter2: 620, coffee: 1266, storage: 1342 };
+const STOPS = { oven: 165, counter: 400, counter2: 560, coffee: 1050, storage: 1338 };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 
 class Walker {
