@@ -137,23 +137,23 @@ export class InteriorScene {
 
   /** Wall, wainscot, floor. */
   room(ctx, x0, w, yTop, yBot) {
-    const wall = getImage('int-wall'), floor = getImage('int-floor');
-    if (wall && floor) { // supplied wall and floor art, tiled sideways
-      const tile = (img, y, h) => { const tw = (img.naturalWidth / img.naturalHeight) * h; for (let x = x0 - (((x0 % tw) + tw) % tw); x < x0 + w; x += tw) ctx.drawImage(img, x, y, tw + 1, h); };
-      tile(wall, yTop, FLOOR_Y - yTop); tile(floor, FLOOR_Y, yBot - FLOOR_Y);
-      return;
+    const wallImg = getImage('int-wall'), floorImg = getImage('int-floor');
+    const tile = (img, y, h) => { const tw = (img.naturalWidth / img.naturalHeight) * h; for (let x = x0 - (((x0 % tw) + tw) % tw); x < x0 + w; x += tw) ctx.drawImage(img, x, y, tw + 1, h); };
+    if (wallImg) tile(wallImg, yTop, FLOOR_Y - yTop);        // supplied wall art, repeated sideways (each piece falls back on its own)
+    else {
+      ctx.fillStyle = vgrad(ctx, yTop, FLOOR_Y, [[0, '#f6e2b4'], [1, '#e8c98c']]);
+      ctx.fillRect(x0, yTop, w, FLOOR_Y - yTop);
+      // wallpaper stripes
+      ctx.fillStyle = 'rgba(190,130,60,.10)';
+      for (let x = x0 - (x0 % 56); x < x0 + w; x += 56) ctx.fillRect(x, yTop, 22, FLOOR_Y - yTop - 70);
+      // wood wainscot
+      ctx.fillStyle = vgrad(ctx, FLOOR_Y - 76, FLOOR_Y, [[0, '#9a6234'], [1, '#6a3d1c']]);
+      ctx.fillRect(x0, FLOOR_Y - 76, w, 76);
+      ctx.fillStyle = 'rgba(255,225,170,.35)'; ctx.fillRect(x0, FLOOR_Y - 76, w, 4);
+      ctx.fillStyle = 'rgba(40,16,4,.45)';
+      for (let x = x0 - (x0 % 70); x < x0 + w; x += 70) ctx.fillRect(x, FLOOR_Y - 72, 3, 68);
     }
-    ctx.fillStyle = vgrad(ctx, yTop, FLOOR_Y, [[0, '#f6e2b4'], [1, '#e8c98c']]);
-    ctx.fillRect(x0, yTop, w, FLOOR_Y - yTop);
-    // wallpaper stripes
-    ctx.fillStyle = 'rgba(190,130,60,.10)';
-    for (let x = x0 - (x0 % 56); x < x0 + w; x += 56) ctx.fillRect(x, yTop, 22, FLOOR_Y - yTop - 70);
-    // wood wainscot
-    ctx.fillStyle = vgrad(ctx, FLOOR_Y - 76, FLOOR_Y, [[0, '#9a6234'], [1, '#6a3d1c']]);
-    ctx.fillRect(x0, FLOOR_Y - 76, w, 76);
-    ctx.fillStyle = 'rgba(255,225,170,.35)'; ctx.fillRect(x0, FLOOR_Y - 76, w, 4);
-    ctx.fillStyle = 'rgba(40,16,4,.45)';
-    for (let x = x0 - (x0 % 70); x < x0 + w; x += 70) ctx.fillRect(x, FLOOR_Y - 72, 3, 68);
+    if (floorImg) { tile(floorImg, FLOOR_Y, yBot - FLOOR_Y); return; }
     // floor planks
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, yBot, [[0, '#c18a52'], [1, '#97642f']]);
     ctx.fillRect(x0, FLOOR_Y, w, yBot - FLOOR_Y);
