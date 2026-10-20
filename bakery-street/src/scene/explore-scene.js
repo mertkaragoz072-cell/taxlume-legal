@@ -1,6 +1,6 @@
 // Exploration map: a warm, hand-painted-style parchment map drawn with canvas shapes (no image assets).
 // Each region is a marker on the left half; the details and buttons are a DOM panel (ui/explore.js) on the right.
-import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor } from '../util.js';
+import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor, gradeScreen } from '../util.js';
 
 const R = 62;                                              // tap radius of a marker (design px)
 
@@ -46,11 +46,7 @@ export class ExploreScene {
     ctx.strokeStyle = 'rgba(120,70,25,.7)'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.setLineDash([2, 16]);
     ctx.beginPath(); rs.forEach((r, i) => (i ? ctx.lineTo(r.map.x, r.map.y) : ctx.moveTo(r.map.x, r.map.y))); ctx.stroke(); ctx.setLineDash([]);
     for (const r of rs) this.drawRegion(ctx, r, t);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    const W = ctx.canvas.width, H = ctx.canvas.height;
-    const vg = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.45, W / 2, H * 0.5, Math.max(W, H) * 0.75);
-    vg.addColorStop(0, 'rgba(60,30,0,0)'); vg.addColorStop(1, 'rgba(60,30,0,.28)');
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    gradeScreen(ctx, { warm: 0.25, vignette: 0.3, floorFade: 0 });
   }
 
   drawRegion(ctx, r, t) {

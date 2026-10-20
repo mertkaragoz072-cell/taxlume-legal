@@ -58,11 +58,11 @@ export class StaffLayer {
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker;
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: 1.08, frame: b.moving ? null : 0 });
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: 1.08, frame: b.moving ? null : 0, bob: 0.014 });
   }
 
   drawWaiter(ctx) {
     const w = this.waiter;
-    drawSprite(ctx, 'waiter', w.x, WAITER_LANE_Y, w.t, { dir: w.dir, fps: 7, scale: 0.9, frame: w.moving ? null : 0 });
+    drawSprite(ctx, 'waiter', w.x, WAITER_LANE_Y, w.t, { dir: w.dir, fps: 7, scale: 0.9, frame: w.moving ? null : 0, bob: 0.012 });
   }
 }

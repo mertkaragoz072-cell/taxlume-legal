@@ -267,3 +267,8 @@ Kayıt sürümü 8: `research {levels}`. Eski kayıtlarda tüm araştırmalar 0.
 ## Kafe iç mekânı yerleşimi (derinlik planı)
 
 Tek zemin, basamak yok; arkadan öne (`src/scene/interior-layout.js`): **arka duvar** (`FLOOR_Y` çizgisi; fırın ve depo duvara yaslı, tabela duvarda, raflar ve lambalar `decor()`), **mutfak zemini** (fırıncı `STAFF_LANE_Y`'de duvarla tezgâhlar arasında çalışır; tezgâhlar alt gövdesini örter, baş ve omuzları görünür), **servis hattı** (üretim tezgâhı, vitrin, kahve makinesi; ön kenarı `COUNTER_Y`), **müşteri zemini** (müşteriler vitrinin önünde `SERVICE_LINE_Y`'de bekler, garson `WAITER_LANE_Y`'de yalnızca salonda gezer, en önde masalar) ve **ön katman** (halı, büyük bitkiler). Çizim sırası `DRAW_ORDER`. Fırıncı `src/scene/interior-staff.js`'te dekoratiftir (mantık/kayıt yok). Garson (`assets/characters/waiter.webp`, 8 kare yürüyüş) yalnızca salonda (`WAITER_LANE_Y`) rastgele gezer; dekoratiftir.
+
+## Oyun hissi turu (ışık, gölge, derinlik, canlılık)
+
+- **Ortak renk derecelendirmesi** (`gradeScreen` in `src/util.js`): tüm ekranlarda (sokak, kafe, Market/Kitapçı, Keşif) en sonda sıcak bir çarpım tonu, vinyet ve alt kenarda hafif kararma; farklı çizilen parçaları tek bir ışık altında birleştirir.
+- **Kafe:** tavana doğru kararan duvar, zemin tonunun sakinleştirilmesi (çarpım), duvar-zemin birleşiminde ve tezgâh önlerinde temas gölgesi, her mobilyanın altında geniş yumuşak + sıkı koyu gölge (ışık sol üstten), lamba ışık havuzları, ışıkta süzülen toz, vitrin camında periyodik parlama, boştaki fırında kor ışığı, çalışan kahve makinesinde buhar, ön plan bitkilerinde hafif bulanıklık (derinlik netliği), bekleyen karakterlerde nefes alma hareketi.

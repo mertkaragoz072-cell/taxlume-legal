@@ -1,7 +1,7 @@
 // The main street scene: owns the cached layers, per-frame animation and input hit-testing.
 import { DESIGN, TEXT } from '../config.js';
 import { getImage } from '../assets.js';
-import { glowAt, clamp, INK, applyGrain } from '../util.js';
+import { glowAt, clamp, INK, applyGrain, gradeScreen } from '../util.js';
 import { drawSky, makeClouds, drawCloud, drawBackdrop } from './backdrop.js';
 import { drawPavement } from './pavement.js';
 import { drawSides } from './sides.js';
@@ -219,12 +219,7 @@ export class StreetScene {
 
     this.motes(ctx, k, v, t);
 
-    // soft vignette
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    const W = ctx.canvas.width, H = ctx.canvas.height;
-    const g = ctx.createRadialGradient(W / 2, H * 0.55, H * 0.45, W / 2, H * 0.55, Math.max(W, H) * 0.75);
-    g.addColorStop(0, 'rgba(40,15,0,0)'); g.addColorStop(1, 'rgba(40,15,0,.28)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    gradeScreen(ctx, { warm: 0.22, vignette: 0.3, floorFade: 0.1 });
   }
 }
 

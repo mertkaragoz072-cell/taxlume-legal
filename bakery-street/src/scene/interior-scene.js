@@ -1,6 +1,6 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { DESIGN } from '../config.js';
-import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor } from '../util.js';
+import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen } from '../util.js';
 import { AREAS, DRAW_ORDER, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
@@ -23,6 +23,7 @@ export class InteriorScene {
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
     this.rects = {};            // where each area's art was actually drawn (labels follow it)
+    this.motes = Array.from({ length: 34 }, (_, i) => ({ x: (i * 97) % 1400, y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: `+1 ${game.productsDef[product].icon}`, life: 1 });
@@ -41,6 +42,7 @@ export class InteriorScene {
     this.t += dt;
     this.customers.update(dt);
     this.staff.update(dt);
+    for (const m of this.motes) { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y < 100) { m.y = 740; m.x = (m.x * 7.3) % 1400; } if (m.x > 1400) m.x -= 1400; }
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
   }
@@ -66,6 +68,7 @@ export class InteriorScene {
     for (const a of AREAS) this.overlay(ctx, a);
     this.staff.drawWaiter(ctx);
     this.customers.draw(ctx, t);
+    this.light(ctx);
     this.frontDecor(ctx, v);
 
     for (const p of this.pops) { // completion pops
@@ -73,12 +76,7 @@ export class InteriorScene {
       label(ctx, p.text, p.x, p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: '#fff6c0', lw: 5 });
     }
     ctx.globalAlpha = 1;
-    // soft vignette
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    const W = ctx.canvas.width, H = ctx.canvas.height;
-    const g = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.45, W / 2, H * 0.5, Math.max(W, H) * 0.75);
-    g.addColorStop(0, 'rgba(40,15,0,0)'); g.addColorStop(1, 'rgba(40,15,0,.3)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    gradeScreen(ctx, { warm: 0.4, vignette: 0.4, floorFade: 0.16 });
   }
 
   /**
@@ -91,10 +89,16 @@ export class InteriorScene {
     if (!img) return false;
     const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s;
     const h = Math.min(img.naturalHeight * s * 1.18, a.h);       // a very flat piece may be stretched up to 18% taller to fill its box
-    shadow(ctx, a.x + a.w / 2, a.y + a.h + 4, w * 0.5, 10, 0.28);
+    // contact shadow: a wide soft one plus a tighter dark core, pushed a little to the right (light comes from the upper left)
+    shadow(ctx, a.x + a.w / 2 + 10, a.y + a.h + 3, w * 0.54, 13, 0.30);
+    shadow(ctx, a.x + a.w / 2 + 4, a.y + a.h + 1, w * 0.44, 6, 0.32);
     const dx = a.x + (a.w - w) / 2, dy = a.y + a.h - h;
     this.rects[a.id] = { x: dx, y: dy, w, h };
     ctx.drawImage(img, dx, dy, w, h);
+    const busy = !!(a.station && this.game.jobs[a.station]);
+    if (a.id === 'oven' && !busy) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.62, a.w * 0.42, '255,140,50', 0.09 + 0.03 * Math.sin(this.t * 3)); ctx.globalCompositeOperation = 'source-over'; }   // embers
+    if (a.id === 'coffee' && busy) steam(ctx, a.x + a.w * 0.5, dy + h * 0.42, this.t);
+    if (a.id === 'showcase') this.glint(ctx, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
     if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
     if (a.id === 'upgrades') upgradeCount(ctx, this, dx + w * 0.58, dy + h * 0.775);   // the sign's empty lower panel
@@ -122,17 +126,50 @@ export class InteriorScene {
       ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = '#ffe9a0'; ctx.fill();
       ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 175, 120, '255,190,90', 0.16 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
     }
+    // ceiling shade, so the wall gets darker toward the top like a lit room (starts above the screen so there is no visible edge)
+    ctx.fillStyle = vgrad(ctx, -600, 250, [[0, 'rgba(50,22,6,.55)'], [0.7, 'rgba(50,22,6,.38)'], [1, 'rgba(50,22,6,0)']]);
+    ctx.fillRect(-600, -600, DESIGN.w + 1200, 850);
     // soft floor shadow where the wall meets the kitchen floor
     ctx.fillStyle = vgrad(ctx, wall, wall + 30, [[0, 'rgba(40,16,4,.28)'], [1, 'rgba(40,16,4,0)']]);
     ctx.fillRect(0, wall, DESIGN.w, 30);
+  }
+
+  /** Warm pools of lamp light on counters and floor, drifting dust in the light, and soft depth haze. Additive, so it only brightens. */
+  light(ctx) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (const lx of [380, 640, 900, 1160]) {
+      const f = 0.9 + 0.1 * Math.sin(this.t * 2.1 + lx);
+      glowAt(ctx, lx, 330, 170, '255,196,110', 0.10 * f);
+      glowAt(ctx, lx, 600, 210, '255,190,100', 0.075 * f);
+    }
+    for (const m of this.motes) {
+      const a = 0.25 + 0.25 * Math.sin(this.t * 1.3 + m.p);
+      ctx.fillStyle = `rgba(255,236,190,${a})`;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   /** Front layer: a rug at the entrance and big leafy plants framing the bottom corners, in front of everyone. */
   frontDecor(ctx, v) {
     rrect(ctx, 540, 752, 340, 60, 12); paint(ctx, vgrad(ctx, 752, 812, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
     ctx.strokeStyle = 'rgba(246,221,154,.7)'; ctx.lineWidth = 3; ctx.strokeRect(556, 764, 308, 30);
+    const blur = 'filter' in ctx;                              // depth of field: the nearest plants are soft (skipped where unsupported)
+    if (blur) ctx.filter = 'blur(2.5px)';
     drawProp(ctx, 'pot_topiary', -v.ox + 46, DESIGN.h + 40, 170, { shade: false });
     drawProp(ctx, 'pot_topiary2', DESIGN.w + v.ox - 46, DESIGN.h + 40, 170, { shade: false });
+    if (blur) ctx.filter = 'none';
+  }
+
+  /** A soft highlight sweeping across the showcase glass every few seconds. */
+  glint(ctx, x, y, w, h) {
+    const p = ((this.t * 0.16) % 1.7) - 0.35;
+    if (p < 0 || p > 1) return;
+    ctx.save(); ctx.beginPath(); ctx.rect(x + w * 0.05, y + h * 0.2, w * 0.9, h * 0.42); ctx.clip();
+    const gx = x + w * p, g = ctx.createLinearGradient(gx - 30, 0, gx + 30, 0);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,.28)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.transform(1, 0, -0.35, 1, 0, 0); ctx.fillRect(gx - 30 + (y + h * 0.4) * 0.35, y, 60, h);
+    ctx.restore();
   }
 
   /** Wall, wainscot, floor. */
@@ -153,7 +190,13 @@ export class InteriorScene {
       ctx.fillStyle = 'rgba(40,16,4,.45)';
       for (let x = x0 - (x0 % 70); x < x0 + w; x += 70) ctx.fillRect(x, FLOOR_Y - 72, 3, 68);
     }
-    if (floorImg) { tile(floorImg, FLOOR_Y, yBot - FLOOR_Y); return; }
+    if (floorImg) {
+      tile(floorImg, FLOOR_Y, yBot - FLOOR_Y);
+      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgba(214,170,128,.55)'; ctx.fillRect(x0, FLOOR_Y, w, yBot - FLOOR_Y);   // calm the orange so the floor sits behind the furniture
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = vgrad(ctx, FLOOR_Y, FLOOR_Y + 46, [[0, 'rgba(40,16,4,.4)'], [1, 'rgba(40,16,4,0)']]); ctx.fillRect(x0, FLOOR_Y, w, 46);   // wall meets floor
+      return;
+    }
     // floor planks
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, yBot, [[0, '#c18a52'], [1, '#97642f']]);
     ctx.fillRect(x0, FLOOR_Y, w, yBot - FLOOR_Y);

@@ -2,7 +2,7 @@
 // The shopping list itself is a DOM panel (ui/market.js) on the right.
 import { DESIGN } from '../config.js';
 import { getImage } from '../assets.js';
-import { vgrad, shadow, glowAt, rrect, paint } from '../util.js';
+import { vgrad, shadow, glowAt, rrect, paint, gradeScreen } from '../util.js';
 import { drawProp } from './props.js';
 
 export class MarketScene {
@@ -39,10 +39,6 @@ export class MarketScene {
       ctx.globalCompositeOperation = 'source-over';
     } else { rrect(ctx, 80, 160, 340, 400, 12); paint(ctx, '#c08648', 3); }
     for (const p of this.props.front) drawProp(ctx, p.name, p.x, p.y, p.h, { flip: p.flip });
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    const W = ctx.canvas.width, H = ctx.canvas.height;
-    const g = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.45, W / 2, H * 0.5, Math.max(W, H) * 0.75);
-    g.addColorStop(0, 'rgba(40,15,0,0)'); g.addColorStop(1, 'rgba(40,15,0,.3)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    gradeScreen(ctx, { warm: 0.3, vignette: 0.32, floorFade: 0.14 });
   }
 }

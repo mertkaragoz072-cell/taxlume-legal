@@ -117,3 +117,20 @@ export function applyGrain(ctx, w, h, alpha = 0.07) {
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
 }
+
+/**
+ * Final colour grade for a whole screen (call last, in canvas pixels): a warm multiply tint that pulls every piece of art toward
+ * one lighting colour, a vignette, and a slightly darker bottom edge for depth. Keeps differently drawn pieces feeling like one scene.
+ */
+export function gradeScreen(ctx, { warm = 0.35, vignette = 0.34, floorFade = 0.12 } = {}) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = warm; ctx.fillStyle = 'rgb(255,226,190)'; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  const g = ctx.createRadialGradient(W / 2, H * 0.52, H * 0.42, W / 2, H * 0.52, Math.max(W, H) * 0.78);
+  g.addColorStop(0, 'rgba(40,15,0,0)'); g.addColorStop(1, `rgba(40,15,0,${vignette})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (floorFade) { const f = ctx.createLinearGradient(0, H * 0.72, 0, H); f.addColorStop(0, 'rgba(30,10,0,0)'); f.addColorStop(1, `rgba(30,10,0,${floorFade})`); ctx.fillStyle = f; ctx.fillRect(0, H * 0.72, W, H * 0.28); }
+}

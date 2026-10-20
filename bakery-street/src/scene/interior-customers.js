@@ -78,7 +78,7 @@ export class CustomerLayer {
   draw(ctx, t) {
     const list = [...this.v.entries()].sort((a, b) => a[1].y - b[1].y);
     for (const [id, v] of list) {
-      drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0 });
+      drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0, bob: 0.012 });
     }
     for (const [id, v] of list) {
       const c = this.cafe.customers.find((x) => x.id === id);
