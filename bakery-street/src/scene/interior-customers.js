@@ -1,10 +1,10 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { chairSpot, QUEUE_SPOTS } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 
-const ENTRY = { x: 1520, y: 716 };
+const ENTRY = { x: 1520, y: SERVICE_LINE_Y };          // customers come in from the right along the service line
 const SPEED = 210;                 // design px per second
 const BODY_H = 130;                // approximate sprite height at the interior scale (for bubbles and hit-testing)
 

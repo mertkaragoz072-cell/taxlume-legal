@@ -5,6 +5,7 @@ import { AREAS, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
 import { formatTime } from '../game/game.js';
 import { getImage } from '../assets.js';
 import { CustomerLayer } from './interior-customers.js';
+import { StaffLayer } from './interior-staff.js';
 
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
@@ -19,6 +20,8 @@ export class InteriorScene {
     this.pops = [];             // floating "+1 Ekmek" texts
     this.view = null;
     this.customers = new CustomerLayer(game, game.cafe);
+    this.staff = new StaffLayer(game);
+    this.rects = {};            // where each area's art was actually drawn (labels follow it)
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: `+1 ${game.productsDef[product].icon}`, life: 1 });
@@ -36,6 +39,7 @@ export class InteriorScene {
   update(dt) {
     this.t += dt;
     this.customers.update(dt);
+    this.staff.update(dt);
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
   }
@@ -56,6 +60,7 @@ export class InteriorScene {
       ctx.restore();
     }
     for (const a of AREAS) this.overlay(ctx, a);
+    this.staff.draw(ctx);
     this.customers.draw(ctx, t);
 
     for (const p of this.pops) { // completion pops
@@ -83,6 +88,7 @@ export class InteriorScene {
     const h = Math.min(img.naturalHeight * s * 1.18, a.h);       // a very flat piece may be stretched up to 18% taller to fill its box
     shadow(ctx, a.x + a.w / 2, a.y + a.h + 4, w * 0.5, 10, 0.28);
     const dx = a.x + (a.w - w) / 2, dy = a.y + a.h - h;
+    this.rects[a.id] = { x: dx, y: dy, w, h };
     ctx.drawImage(img, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
     if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
@@ -122,8 +128,8 @@ export class InteriorScene {
     for (let y = FLOOR_Y + 36; y < yBot; y += 44 + (y - FLOOR_Y) * 0.05) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke(); }
     for (let y = FLOOR_Y, row = 0; y < yBot; y += 44, row++) for (let x = x0 - (x0 % 180) + (row % 2) * 90; x < x0 + w; x += 180) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 44); ctx.stroke(); }
     // entrance mat on the right: customers walk in from here
-    rrect(ctx, 1235, 692, 200, 52, 10); paint(ctx, vgrad(ctx, 692, 744, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
-    label(ctx, '▶ Giriş', 1335, 735, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#f6dd9a', lw: 3 });
+    rrect(ctx, 1235, 548, 200, 46, 10); paint(ctx, vgrad(ctx, 548, 594, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
+    label(ctx, '▶ Giriş', 1335, 584, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#f6dd9a', lw: 3 });
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, FLOOR_Y + 40, [[0, 'rgba(40,16,4,.4)'], [1, 'rgba(40,16,4,0)']]);
     ctx.fillRect(x0, FLOOR_Y, w, 40);
   }
@@ -135,7 +141,8 @@ export class InteriorScene {
     const sel = this.selected === a.id;
     const text = a.label;
     ctx.font = fontCss(FONT);
-    const tw = ctx.measureText(text).width + 28, ty = a.y - 22, th = Math.max(34, textFloor.px * 1.5);
+    const top = this.rects[a.id]?.y ?? a.y;                          // the tag sits on the object, not on its empty box
+    const tw = ctx.measureText(text).width + 28, ty = Math.max(top - 20, 112), th = Math.max(34, textFloor.px * 1.5);
     const lx = clamp(cx, tw / 2 + 8, DESIGN.w - tw / 2 - 8);          // keep the tag inside the screen (e.g. "Geliştirmeler" at the right edge)
     rrect(ctx, lx - tw / 2, ty - th / 2, tw, th, th / 2);
     paint(ctx, sel ? vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');

@@ -7,11 +7,18 @@ export const AREAS = [
   { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1085, y: 230, w: 175, h: 250 },
   { id: 'storage', label: 'Depo', panel: 'storage', x: 1272, y: 322, w: 124, h: 158 },
   { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1272, y: 140, w: 124, h: 152 },
-  { id: 'table1', label: 'Masa 1', panel: null, x: 120, y: 552, w: 290, h: 178 },
-  { id: 'table2', label: 'Masa 2', panel: null, x: 510, y: 567, w: 290, h: 178 },
-  { id: 'table3', label: 'Masa 3', panel: null, x: 900, y: 552, w: 290, h: 178 },
+  { id: 'table1', label: 'Masa 1', panel: null, x: 205, y: 575, w: 250, h: 132 },
+  { id: 'table2', label: 'Masa 2', panel: null, x: 575, y: 575, w: 250, h: 132 },
+  { id: 'table3', label: 'Masa 3', panel: null, x: 945, y: 575, w: 250, h: 132 },
 ];
 
+/*
+ * Floor plan (one continuous floor, no steps): the machines stand on the floor line FLOOR_Y (oven, production counter, showcase, coffee
+ * machine, storage). The baker walks the staff lane right in front of them, customers wait along the service line in front of the
+ * showcase, and the tables sit further forward, so the three zones never overlap.
+ */
+export const STAFF_LANE_Y = 514;       // the baker's feet
+export const SERVICE_LINE_Y = 566;     // customers' feet while they wait and when they enter
 export const WALL_Y = 96;     // top of the back wall (below the HUD)
 export const FLOOR_Y = 480;   // where the back wall meets the floor
 
@@ -22,8 +29,8 @@ const TABLES = AREAS.filter((a) => a.id.startsWith('table'));
 /** Where a seated customer stands: beside the table on its left, so neighbours and the entrance queue never overlap. */
 export const chairSpot = (index) => {
   const a = TABLES[index];
-  return { x: a.x + a.w / 2 - 95, y: a.y + a.h - 6 };
+  return { x: a.x + a.w / 2 - 88, y: a.y + a.h - 6 };
 };
 
-/** Waiting spots by the entrance (right side), staggered in depth so the queue does not pile up. */
-export const QUEUE_SPOTS = [{ x: 1352, y: 708 }, { x: 1262, y: 734 }, { x: 1176, y: 708 }];
+/** Waiting spots along the service line in front of the showcase, staggered a little in depth. */
+export const QUEUE_SPOTS = [{ x: 800, y: SERVICE_LINE_Y }, { x: 900, y: SERVICE_LINE_Y + 8 }, { x: 1000, y: SERVICE_LINE_Y }];
