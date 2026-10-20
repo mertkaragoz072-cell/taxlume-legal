@@ -1,5 +1,6 @@
 // Small canvas + math helpers shared by every drawing module.
-export const INK = '#3a2213';
+import { INK, mix } from './palette.js';
+export { INK, mix };
 
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const lerp = (a, b, t) => a + (b - a) * t;
@@ -46,7 +47,7 @@ export function paint(ctx, fill, lw = 2.5, stroke = INK) {
 }
 
 export function shadow(ctx, x, y, rx, ry, a = 0.28) {
-  ctx.fillStyle = `rgba(40,22,10,${a})`;
+  ctx.fillStyle = `rgba(70,48,32,${a})`;
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -74,22 +75,14 @@ export function label(ctx, str, x, y, { font, fill = '#fff', stroke = INK, lw = 
   ctx.fillText(str, x, y);
 }
 
-const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
-/** Blend two #rrggbb colours (used for atmospheric haze on the far town). */
-export function mix(a, b, f) {
-  const [r1, g1, b1] = hex(a), [r2, g2, b2] = hex(b);
-  const h = (v) => Math.round(v).toString(16).padStart(2, '0');
-  return `#${h(lerp(r1, r2, f))}${h(lerp(g1, g2, f))}${h(lerp(b1, b2, f))}`;
-}
-
 export const lighten = (c, f) => mix(c, '#ffffff', f);
 export const darken = (c, f) => mix(c, '#000000', f);
 
 /** Soft vertical shadow strip (used under eaves, awnings and signs). */
 export function softBand(ctx, x, y, w, h, a = 0.3, up = false) {
   const g = ctx.createLinearGradient(0, up ? y + h : y, 0, up ? y : y + h);
-  g.addColorStop(0, `rgba(45,20,5,${a})`);
-  g.addColorStop(1, 'rgba(45,20,5,0)');
+  g.addColorStop(0, `rgba(70,48,32,${a})`);
+  g.addColorStop(1, 'rgba(70,48,32,0)');
   ctx.fillStyle = g;
   ctx.fillRect(x, y, w, h);
 }
@@ -126,11 +119,11 @@ export function gradeScreen(ctx, { warm = 0.35, vignette = 0.34, floorFade = 0.1
   const W = ctx.canvas.width, H = ctx.canvas.height;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = warm; ctx.fillStyle = 'rgb(255,226,190)'; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = warm; ctx.fillStyle = 'rgb(245,230,200)'; ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
   const g = ctx.createRadialGradient(W / 2, H * 0.52, H * 0.42, W / 2, H * 0.52, Math.max(W, H) * 0.78);
-  g.addColorStop(0, 'rgba(40,15,0,0)'); g.addColorStop(1, `rgba(40,15,0,${vignette})`);
+  g.addColorStop(0, 'rgba(70,48,32,0)'); g.addColorStop(1, `rgba(70,48,32,${vignette})`);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  if (floorFade) { const f = ctx.createLinearGradient(0, H * 0.72, 0, H); f.addColorStop(0, 'rgba(30,10,0,0)'); f.addColorStop(1, `rgba(30,10,0,${floorFade})`); ctx.fillStyle = f; ctx.fillRect(0, H * 0.72, W, H * 0.28); }
+  if (floorFade) { const f = ctx.createLinearGradient(0, H * 0.72, 0, H); f.addColorStop(0, 'rgba(70,48,32,0)'); f.addColorStop(1, `rgba(70,48,32,${floorFade})`); ctx.fillStyle = f; ctx.fillRect(0, H * 0.72, W, H * 0.28); }
 }

@@ -3,6 +3,7 @@
 import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, PERSON_SCALE, PERSON_H } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
+import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
 
 const ENTRY = { x: 1560, y: SERVICE_LINE_Y };          // customers come in from the right along the service line (x follows the screen edge, see setEntry)
@@ -100,7 +101,7 @@ export class CustomerLayer {
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
       const py = p.y - (1 - p.life) * 70;
-      label(ctx, p.text, p.x - 14, py, { font: '700 36px sans-serif', fill: '#fff3a0', lw: 6 });
+      label(ctx, p.text, p.x - 14, py, { font: '700 36px sans-serif', fill: PAL.vanilla, lw: 6 });
       ctx.font = '700 36px sans-serif';
       drawIcon(ctx, 'coin', p.x - 14 + ctx.measureText(p.text).width / 2 + 24, py, 36);
     }
@@ -113,26 +114,26 @@ export class CustomerLayer {
     const def = this.game.productsDef[order.product], inStock = this.game.products[order.product] >= 1;
     const w = 112, h = 64, x = v.x - w / 2, y = v.y - BODY_H - h - 18, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
     ctx.save(); ctx.translate(v.x, y + h); ctx.scale(pulse, pulse); ctx.translate(-v.x, -(y + h));
-    poly(ctx, [[v.x - 9, y + h - 1], [v.x + 9, y + h - 1], [v.x, y + h + 13]]); paint(ctx, '#fffaf0', 3, inStock ? '#3fa63a' : '#d9665a');
-    rrect(ctx, x, y, w, h, 16); paint(ctx, '#fffaf0', 4, inStock ? '#3fa63a' : '#d9665a');
-    ctx.fillStyle = '#fffaf0'; ctx.fillRect(v.x - 8, y + h - 5, 16, 6);
+    poly(ctx, [[v.x - 9, y + h - 1], [v.x + 9, y + h - 1], [v.x, y + h + 13]]); paint(ctx, PAL.paper, 3, inStock ? PAL.green : PAL.terracottaLight);
+    rrect(ctx, x, y, w, h, 16); paint(ctx, PAL.paper, 4, inStock ? PAL.green : PAL.terracottaLight);
+    ctx.fillStyle = PAL.paper; ctx.fillRect(v.x - 8, y + h - 5, 16, 6);
     ctx.font = '36px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    if (!drawIcon(ctx, order.product, x + 30, y + 30, 46)) { ctx.fillStyle = '#000'; ctx.fillText(def.icon, x + 30, y + 30); }
-    label(ctx, `${order.price}`, x + 80, y + 28, { font: '700 24px "Trebuchet MS", sans-serif', fill: '#6a3a14', lw: 0 });
+    if (!drawIcon(ctx, order.product, x + 30, y + 30, 46)) { ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, x + 30, y + 30); }
+    label(ctx, `${order.price}`, x + 80, y + 28, { font: '700 24px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
     // patience bar
     const f = this.cafe.patienceFraction(c);
-    rrect(ctx, x + 12, y + h - 16, w - 24, 8, 4); paint(ctx, '#d8cbb0', 1.5, '#8a6a4a');
+    rrect(ctx, x + 12, y + h - 16, w - 24, 8, 4); paint(ctx, PAL.vanilla, 1.5, PAL.honeyDark);
     ctx.save(); rrect(ctx, x + 13, y + h - 15, w - 26, 6, 3); ctx.clip();
-    ctx.fillStyle = f > 0.5 ? '#5cc03a' : f > 0.25 ? '#f2b21b' : '#e8473d'; ctx.fillRect(x + 13, y + h - 15, (w - 26) * f, 6);
+    ctx.fillStyle = f > 0.5 ? PAL.green : f > 0.25 ? PAL.honey : PAL.terracottaLight; ctx.fillRect(x + 13, y + h - 15, (w - 26) * f, 6);
     ctx.restore();
-    if (!inStock) label(ctx, 'stok yok', v.x, y - 10, { font: '700 17px sans-serif', fill: '#ffd0c8', lw: 4 });
+    if (!inStock) label(ctx, 'stok yok', v.x, y - 10, { font: '700 17px sans-serif', fill: PAL.terracottaPale, lw: 4 });
     ctx.restore();
   }
 
   waitBubble(ctx, v, c, t) {
     const y = v.y - BODY_H - 16, f = this.cafe.patienceFraction(c);
-    label(ctx, '⏳', v.x, y, { font: '28px "Segoe UI Emoji","Apple Color Emoji",sans-serif', fill: '#000', lw: 0 });
-    rrect(ctx, v.x - 26, y + 16, 52, 7, 3.5); paint(ctx, '#d8cbb0', 1.5, '#8a6a4a');
-    ctx.fillStyle = f > 0.5 ? '#5cc03a' : f > 0.25 ? '#f2b21b' : '#e8473d'; ctx.fillRect(v.x - 25, y + 17, 50 * f, 5);
+    label(ctx, '⏳', v.x, y, { font: '28px "Segoe UI Emoji","Apple Color Emoji",sans-serif', fill: PAL.brownDark, lw: 0 });
+    rrect(ctx, v.x - 26, y + 16, 52, 7, 3.5); paint(ctx, PAL.vanilla, 1.5, PAL.honeyDark);
+    ctx.fillStyle = f > 0.5 ? PAL.green : f > 0.25 ? PAL.honey : PAL.terracottaLight; ctx.fillRect(v.x - 25, y + 17, 50 * f, 5);
   }
 }

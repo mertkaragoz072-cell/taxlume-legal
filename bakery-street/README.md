@@ -299,3 +299,9 @@ The interior camera is zoomed out (`CAM` in `interior-layout.js`: zoom 0.8, cent
 Layout, back to front: oven, prep counter, showcase, coffee station and storage in a row against the wall (~80 px apart); an open corridor (waiter lane y 535, guests' service line y 565); the tables (up to 4, 100 px of floor between them) at the front on the same floor.
 Guests walk along the service line and only turn into a table gap when level with it (no cutting across tables); the waiter shows only while there are guests; a new guest never has the same look as someone already inside.
 Name tags appear only for the selected/pressed area; machine progress bars are small and sit on top of the object. The order chips no longer wrap into a second row.
+
+## Colour palette (art-direction standard)
+
+`src/palette.js` is the single source: six base colours (cream #F5E6C8, vanilla #E8D2A8, honey #C99A61, terracotta #B85F3B, dark brown #795238, soft green #7D9855) plus tones mixed from them (`paper`, `creamLight`, `honeyLight/Dark`, `terracottaLight/Pale/Dark`, `brownDark` = text/outline ink, `greenLight/Pale/Dark/Deep`).
+Canvas code uses `PAL.<token>`; CSS uses `var(--<token>)` (the palette block in the `:root` of style.css is generated from the file and `tests/palette.test.js` fails if they drift).
+Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta, progress and positive buttons soft green, text and outlines dark brown. Characters, food, item icons and the supplied art keep their natural colours; the scene only grades them (cream wall wash, vanilla/honey floor wash, softer vignette, brown shadows).
