@@ -15,7 +15,7 @@ export const SHEETS = {
   waiter: { frames: 8, w: 112, h: 165 },
 };
 
-const SCALE = 0.78; // native sprite px -> design px (a character ends up ~100 px tall)
+const SCALE = 0.9; // native sprite px -> design px (a street character ends up ~150 px tall; the cafe scales people up further, see PERSON_SCALE)
 
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 

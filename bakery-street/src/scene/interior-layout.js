@@ -25,10 +25,13 @@ export const DRAW_ORDER = ['oven', 'storage', 'upgrades', '_staff', 'counter', '
  *   service line ....... counters, showcase and coffee machine, their front edge on COUNTER_Y
  *   customer floor ..... guests queue in front of the showcase (SERVICE_LINE_Y), the waiter walks (WAITER_LANE_Y), tables further forward
  */
+/** People in the cafe are drawn this much larger than on the street so they match the furniture (a guest is ~205 px, the counter 150). */
+export const PERSON_SCALE = 1.4;
+export const PERSON_H = 205;                // approximate drawn height of a guest (bubbles, hit tests)
 export const COUNTER_Y = 500;          // front edge of the counters
 export const STAFF_LANE_Y = 430;       // the baker's feet: head and shoulders show above the counters
-export const SERVICE_LINE_Y = 540;     // customers' feet while they wait and when they enter
-export const WAITER_LANE_Y = 566;      // the waiter's feet: strictly inside the dining area
+export const SERVICE_LINE_Y = 575;     // customers' feet while they wait and when they enter
+export const WAITER_LANE_Y = 560;      // the waiter's feet: strictly inside the dining area
 export const WALL_Y = 96;              // top of the back wall (below the HUD)
 export const FLOOR_Y = 400;            // where the back wall meets the floor
 
@@ -43,4 +46,4 @@ export const chairSpot = (index) => {
 };
 
 /** Waiting spots along the service line in front of the showcase, staggered a little in depth. */
-export const QUEUE_SPOTS = [{ x: 800, y: SERVICE_LINE_Y }, { x: 900, y: SERVICE_LINE_Y + 8 }, { x: 1000, y: SERVICE_LINE_Y }];
+export const QUEUE_SPOTS = [{ x: 790, y: SERVICE_LINE_Y }, { x: 890, y: SERVICE_LINE_Y + 6 }, { x: 990, y: SERVICE_LINE_Y }];

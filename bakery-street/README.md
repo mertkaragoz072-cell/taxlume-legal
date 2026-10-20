@@ -272,3 +272,7 @@ Tek zemin, basamak yok; arkadan öne (`src/scene/interior-layout.js`): **arka du
 
 - **Ortak renk derecelendirmesi** (`gradeScreen` in `src/util.js`): tüm ekranlarda (sokak, kafe, Market/Kitapçı, Keşif) en sonda sıcak bir çarpım tonu, vinyet ve alt kenarda hafif kararma; farklı çizilen parçaları tek bir ışık altında birleştirir.
 - **Kafe:** tavana doğru kararan duvar, zemin tonunun sakinleştirilmesi (çarpım), duvar-zemin birleşiminde ve tezgâh önlerinde temas gölgesi, her mobilyanın altında geniş yumuşak + sıkı koyu gölge (ışık sol üstten), lamba ışık havuzları, ışıkta süzülen toz, vitrin camında periyodik parlama, boştaki fırında kor ışığı, çalışan kahve makinesinde buhar, ön plan bitkilerinde hafif bulanıklık (derinlik netliği), bekleyen karakterlerde nefes alma hareketi.
+
+## Karakter ölçüleri
+
+Sokak karakterleri `SCALE` (0,78 → 0,9, `src/characters/sprites.js`) ile ~%15 büyüdü. Kafede insanlar mobilyalarla orantılı olsun diye ayrıca `PERSON_SCALE = 1,4` (`src/scene/interior-layout.js`) ile çizilir: misafir ≈ 205 px, tezgâh 150 px, sandalye ≈ 130 px. Sipariş balonları, tıklama alanı, kuyruk (`SERVICE_LINE_Y`) ve garson hattı bu ölçüye göre ayarlıdır; vitrinin stok ikonları kuyruktaki başların üstünde kalacak şekilde yukarı alındı.

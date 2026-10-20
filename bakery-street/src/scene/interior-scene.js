@@ -325,7 +325,7 @@ function upgradeCount(ctx, scene, x, y) {
 function showcaseStock(ctx, a, scene, art = null) {
   // `art` = where the supplied showcase image was drawn: the items then stand on its lower shelf, the counts on the wooden front
   const { x, y } = a;
-  const iy = art ? art.y + art.h * 0.55 : y + 78, ly = art ? art.y + art.h * 0.83 : y + 110, step = art ? art.w * 0.2 : 76;
+  const iy = art ? art.y + art.h * 0.43 : y + 78, ly = art ? art.y + art.h * 0.58 : y + 110, step = art ? art.w * 0.2 : 76;
     let ix = art ? art.x + art.w * 0.17 : x + 28;
     for (const [id, def] of Object.entries(scene.game.productsDef)) {
       const n = scene.game.products[id];

@@ -1,12 +1,12 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, PERSON_SCALE, PERSON_H } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 
 const ENTRY = { x: 1520, y: SERVICE_LINE_Y };          // customers come in from the right along the service line
 const SPEED = 210;                 // design px per second
-const BODY_H = 130;                // approximate sprite height at the interior scale (for bubbles and hit-testing)
+const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
 
 export class CustomerLayer {
   constructor(game, cafe) {
@@ -70,7 +70,7 @@ export class CustomerLayer {
       if (c.state !== 'seated') continue;
       const v = this.v.get(c.id);
       if (!v || v.moving) continue;
-      if (Math.abs(x - v.x) < 52 && y > v.y - BODY_H - 70 && y < v.y + 6) return `customer:${c.id}`;
+      if (Math.abs(x - v.x) < 66 && y > v.y - BODY_H - 70 && y < v.y + 6) return `customer:${c.id}`;
     }
     return null;
   }
@@ -78,7 +78,7 @@ export class CustomerLayer {
   draw(ctx, t) {
     const list = [...this.v.entries()].sort((a, b) => a[1].y - b[1].y);
     for (const [id, v] of list) {
-      drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0, bob: 0.012 });
+      drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0, bob: 0.012, scale: PERSON_SCALE });
     }
     for (const [id, v] of list) {
       const c = this.cafe.customers.find((x) => x.id === id);
