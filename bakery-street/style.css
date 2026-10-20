@@ -338,4 +338,6 @@ s.muted { text-decoration: line-through; }
 
 /* ---------- Item icons (replace the product / ingredient emoji) ---------- */
 img.gi { height: 1.18em; width: auto; vertical-align: -0.24em; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.ci:has(img.scene) { width: calc(var(--u) * 12); }
+.ci img.gi.scene { height: 1.45em; }
 .ci img.gi { height: 1em; vertical-align: baseline; filter: drop-shadow(0 calc(var(--u) * .25) 0 rgba(60,30,5,.25)); }
