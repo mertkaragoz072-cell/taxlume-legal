@@ -1,13 +1,14 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
-import { DESIGN } from '../config.js';
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen } from '../util.js';
-import { AREAS, DRAW_ORDER, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, areaAt } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
 import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
+/** Pendant lamps along the back wall. */
+const LAMPS = [380, 640, 900, 1160];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
 export class InteriorScene {
@@ -20,20 +21,36 @@ export class InteriorScene {
     this.selected = null;       // area id whose panel is open
     this.pops = [];             // floating "+1 Ekmek" texts
     this.view = null;
+    this.cam = { zoom: CAM.zoom, tx: 0, ty: 0, wl: 0, wr: 1400, wt: 0, wb: 790 };   // zoomed-out camera, see resize()
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
     this.rects = {};            // where each area's art was actually drawn (labels follow it)
-    this.motes = Array.from({ length: 34 }, (_, i) => ({ x: (i * 97) % 1400, y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
+    this.motes = Array.from({ length: 34 }, (_, i) => ({ x: -120 + ((i * 97) % 1620), y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: '+1', icon: product, life: 1 });
     });
   }
 
-  resize(view) { this.view = view; }
+  /**
+   * The camera looks at the room from a little further away: world coordinates (the layout in interior-layout.js) are drawn at
+   * `zoom` and centred on CAM.cx, with the floor's front edge a fixed margin above the bottom of the screen. Taps and the guests'
+   * entrance follow the same transform, so everything else keeps working in world coordinates.
+   */
+  resize(view) {
+    this.view = view;
+    const z = CAM.zoom, tx = view.vw / 2 - CAM.cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
+    this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: -ty / z, wb: (view.vh - ty) / z };
+    this.customers.setEntry(this.cam.wr + 70);
+  }
+
+  /** Pointer position in the design space used by main.js (origin shifted by view.ox/oy) -> world. */
+  toWorld(x, y) { const c = this.cam, v = this.view; return { x: (x + v.ox - c.tx) / c.zoom, y: (y + v.oy - c.ty) / c.zoom }; }
+  /** World -> the same pointer space (used by tests and debugging). */
+  toScreen(x, y) { const c = this.cam, v = this.view; return { x: x * c.zoom + c.tx - v.ox, y: y * c.zoom + c.ty - v.oy }; }
 
   /** Customers (their order bubbles) take priority over the tables and machines they stand in front of. */
-  hitTest(x, y) { return this.customers.hitTest(x, y) ?? areaAt(x, y)?.id ?? null; }
+  hitTest(x, y) { const p = this.toWorld(x, y); return this.customers.hitTest(p.x, p.y) ?? areaAt(p.x, p.y)?.id ?? null; }
   snap() { this.customers.snap(); }
   press(on, x, y) { this.pressedId = on ? this.hitTest(x, y) : null; }
   select(id) { this.selected = id; }
@@ -42,17 +59,18 @@ export class InteriorScene {
     this.t += dt;
     this.customers.update(dt);
     this.staff.update(dt);
-    for (const m of this.motes) { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y < 100) { m.y = 740; m.x = (m.x * 7.3) % 1400; } if (m.x > 1400) m.x -= 1400; }
+    for (const m of this.motes) { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y < 100) { m.y = 740; m.x = -120 + ((m.x + 120) * 7.3) % 1620; } if (m.x > 1500) m.x -= 1620; }
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
   }
 
   render(ctx) {
-    const v = this.view, k = v.scale * v.dpr, t = this.t;
+    const v = this.view, c = this.cam, k = v.scale * v.dpr * c.zoom, t = this.t;
+    const floorPx = textFloor.px; textFloor.px = floorPx / c.zoom;           // canvas text keeps its ~12 screen px minimum under the zoom
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.setTransform(k, 0, 0, k, v.ox * k, v.oy * k);
-    const x0 = -v.ox - 10, w = v.vw + 20, yTop = -v.oy - 10, yBot = v.vh - v.oy + 10;
+    ctx.setTransform(k, 0, 0, k, c.tx * v.scale * v.dpr, c.ty * v.scale * v.dpr);
+    const x0 = c.wl - 10, w = c.wr - c.wl + 20, yTop = c.wt - 10, yBot = c.wb + 10;
 
     this.room(ctx, x0, w, yTop, yBot);
     this.decor(ctx);
@@ -70,7 +88,7 @@ export class InteriorScene {
     this.staff.drawWaiter(ctx);
     this.customers.draw(ctx, t);
     this.light(ctx);
-    this.frontDecor(ctx, v);
+    this.frontDecor(ctx);
 
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
@@ -79,6 +97,7 @@ export class InteriorScene {
     }
     ctx.globalAlpha = 1;
     gradeScreen(ctx, { warm: 0.4, vignette: 0.4, floorFade: 0.16 });
+    textFloor.px = floorPx;
   }
 
   /**
@@ -111,7 +130,7 @@ export class InteriorScene {
   decor(ctx) {
     const wall = FLOOR_Y;
     // two shelf rows along the wall behind the counters
-    for (const [x0, x1, y] of [[330, 880, 208], [330, 880, 268]]) {
+    for (const [x0, x1, y] of [[320, 1030, 208], [320, 1030, 268]]) {
       ctx.fillStyle = '#7a4824'; ctx.fillRect(x0, y, x1 - x0, 7);
       ctx.fillStyle = 'rgba(40,16,4,.35)'; ctx.fillRect(x0, y + 7, x1 - x0, 3);
       for (let x = x0 + 14; x < x1 - 20; x += 34) {
@@ -122,24 +141,24 @@ export class InteriorScene {
       }
     }
     // hanging copper lamps with a warm pool of light on the wall
-    for (const lx of [380, 640, 900, 1160]) {
-      ctx.strokeStyle = '#3a2213'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, WALL_Y - 12); ctx.lineTo(lx, 128); ctx.stroke();
+    for (const lx of LAMPS) {
+      ctx.strokeStyle = '#3a2213'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, this.cam.wt - 20); ctx.lineTo(lx, 128); ctx.stroke();
       poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, '#b8662a', 2.5);
       ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = '#ffe9a0'; ctx.fill();
       ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 175, 120, '255,190,90', 0.16 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
     }
     // ceiling shade, so the wall gets darker toward the top like a lit room (starts above the screen so there is no visible edge)
     ctx.fillStyle = vgrad(ctx, -600, 250, [[0, 'rgba(50,22,6,.55)'], [0.7, 'rgba(50,22,6,.38)'], [1, 'rgba(50,22,6,0)']]);
-    ctx.fillRect(-600, -600, DESIGN.w + 1200, 850);
+    ctx.fillRect(this.cam.wl - 100, -600, this.cam.wr - this.cam.wl + 200, 850);
     // soft floor shadow where the wall meets the kitchen floor
     ctx.fillStyle = vgrad(ctx, wall, wall + 30, [[0, 'rgba(40,16,4,.28)'], [1, 'rgba(40,16,4,0)']]);
-    ctx.fillRect(0, wall, DESIGN.w, 30);
+    ctx.fillRect(this.cam.wl - 100, wall, this.cam.wr - this.cam.wl + 200, 30);
   }
 
   /** Warm pools of lamp light on counters and floor, drifting dust in the light, and soft depth haze. Additive, so it only brightens. */
   light(ctx) {
     ctx.globalCompositeOperation = 'lighter';
-    for (const lx of [380, 640, 900, 1160]) {
+    for (const lx of LAMPS) {
       const f = 0.9 + 0.1 * Math.sin(this.t * 2.1 + lx);
       glowAt(ctx, lx, 330, 170, '255,196,110', 0.10 * f);
       glowAt(ctx, lx, 600, 210, '255,190,100', 0.075 * f);
@@ -152,14 +171,12 @@ export class InteriorScene {
     ctx.globalCompositeOperation = 'source-over';
   }
 
-  /** Front layer: a rug at the entrance and big leafy plants framing the bottom corners, in front of everyone. */
-  frontDecor(ctx, v) {
-    rrect(ctx, 540, 752, 340, 60, 12); paint(ctx, vgrad(ctx, 752, 812, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
-    ctx.strokeStyle = 'rgba(246,221,154,.7)'; ctx.lineWidth = 3; ctx.strokeRect(556, 764, 308, 30);
-    const blur = 'filter' in ctx;                              // depth of field: the nearest plants are soft (skipped where unsupported)
+  /** Front layer: two big leafy plants framing the bottom corners of the screen, a little blurred, in front of everyone. */
+  frontDecor(ctx) {
+    const c = this.cam, blur = 'filter' in ctx;                // depth of field: the nearest plants are soft (skipped where unsupported)
     if (blur) ctx.filter = 'blur(2.5px)';
-    drawProp(ctx, 'pot_topiary', -v.ox + 46, DESIGN.h + 40, 170, { shade: false });
-    drawProp(ctx, 'pot_topiary2', DESIGN.w + v.ox - 46, DESIGN.h + 40, 170, { shade: false });
+    drawProp(ctx, 'pot_topiary', c.wl + 60, c.wb + 40, 150, { shade: false });
+    drawProp(ctx, 'pot_topiary2', c.wr - 60, c.wb + 40, 150, { shade: false });
     if (blur) ctx.filter = 'none';
   }
 
@@ -219,33 +236,37 @@ export class InteriorScene {
     return !cafe || i < cafe.tableCount() || !!cafe.tableOwner(i);
   }
 
-  /** Name tag + progress bar over each area. */
+  /**
+   * Name tag (only while the area is selected or pressed, so the room stays calm) and, for machines, a small progress bar
+   * that sits on top of the object.
+   */
   overlay(ctx, a) {
-    if (a.id.startsWith('table') && this.game.cafe?.tableOwner(+a.id.slice(5) - 1)) return;   // the order bubble takes the label's place
-    const cx = a.x + a.w / 2;
-    const sel = this.selected === a.id;
-    const text = a.label;
-    ctx.font = fontCss(FONT);
-    const top = this.rects[a.id]?.y ?? a.y;                          // the tag sits on the object, not on its empty box
-    const rect = this.rects[a.id];
-    // `labelOn: 'front'` puts the tag on the object's front panel, leaving its top free (the baker's head shows above the counter)
-    const tw = ctx.measureText(text).width + 28, th = Math.max(34, textFloor.px * 1.5), ty = a.labelOn === 'front' && rect ? rect.y + rect.h * 0.64 : Math.max(top - 20, 112);
-    const lx = clamp(cx, tw / 2 + 8, DESIGN.w - tw / 2 - 8);          // keep the tag inside the screen (e.g. "Geliştirmeler" at the right edge)
-    rrect(ctx, lx - tw / 2, ty - th / 2, tw, th, th / 2);
-    paint(ctx, sel ? vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');
-    label(ctx, text, lx, ty + 1, { font: FONT, fill: '#4a2a12', lw: 0 });
+    const sel = this.selected === a.id, tagOn = sel || this.pressedId === a.id;
+    const cx = a.x + a.w / 2, rect = this.rects[a.id], top = rect?.y ?? a.y;    // the tag sits on the object, not on its empty box
+    let barTop = top - 10;
+    if (tagOn) {
+      const text = a.label;
+      ctx.font = fontCss(FONT);
+      // `labelOn: 'front'` puts the tag on the object's front panel, leaving its top free (the baker's head shows above the counter)
+      const tw = ctx.measureText(text).width + 28, th = Math.max(34, textFloor.px * 1.5), ty = a.labelOn === 'front' && rect ? rect.y + rect.h * 0.64 : top - 20;
+      const lx = clamp(cx, this.cam.wl + tw / 2 + 8, this.cam.wr - tw / 2 - 8);   // keep the tag inside the screen
+      rrect(ctx, lx - tw / 2, ty - th / 2, tw, th, th / 2);
+      paint(ctx, sel ? vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');
+      label(ctx, text, lx, ty + 1, { font: FONT, fill: '#4a2a12', lw: 0 });
+      if (a.labelOn !== 'front') barTop = ty - th / 2 - 8;
+    }
     if (!a.station) return;
     const jobs = [...this.game.jobsOf(a.station)].sort((p, q) => this.game.remainingOf(p) - this.game.remainingOf(q));
-    const bw = Math.min(a.w - 30, 220), many = jobs.length > 1, bh = Math.max(many ? 18 : 24, textFloor.px * 1.25), step = bh + 4;
+    const bw = Math.min(a.w - 50, 170), many = jobs.length > 1, bh = Math.max(many ? 16 : 20, textFloor.px * 1.2), step = bh + 4;
     jobs.forEach((job, i) => {
-      const by = ty + th / 2 + 17 + i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
+      const by = barTop - bh - i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
       rrect(ctx, cx - bw / 2, by, bw, bh, bh / 2); paint(ctx, '#4a3a2a', 2.5);
       ctx.save(); rrect(ctx, cx - bw / 2 + 2, by + 2, bw - 4, bh - 4, bh / 2 - 2); ctx.clip();
       ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, '#9be86a'], [1, '#3fa63a']]); ctx.fillRect(cx - bw / 2, by, bw * prog, bh);
       ctx.restore();
       const def = this.game.productsDef[job.product];
-      const tx = cx + 12, hasIcon = drawIcon(ctx, job.product, cx - 34, by + bh / 2, bh * 1.1);
-      label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : cx, by + bh / 2 + 1, { font: `700 ${many ? 14 : 17}px sans-serif`, fill: '#fff', lw: 4 });
+      const tx = cx + 10, hasIcon = drawIcon(ctx, job.product, cx - 30, by + bh / 2, bh * 1.1);
+      label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : cx, by + bh / 2 + 1, { font: `700 ${many ? 13 : 15}px sans-serif`, fill: '#fff', lw: 4 });
     });
     if (a.station && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: '#fff6dc', lw: 4 });
   }

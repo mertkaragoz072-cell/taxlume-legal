@@ -6,7 +6,7 @@
 import { drawSprite, hasSprite } from '../characters/sprites.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE } from './interior-layout.js';
 
-const STOPS = { oven: 165, counter: 400, counter2: 560, coffee: 1050, storage: 1338 };
+const STOPS = { oven: 140, counter: 440, counter2: 580, coffee: 1165, storage: 1358 };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 
 class Walker {
@@ -29,6 +29,7 @@ export class StaffLayer {
     this.baker = new Walker(STOPS.counter, 70);
     this.waiter = new Walker(380, 62);
     this.tour = 0;
+    this.show = 0;              // the waiter fades in only while the cafe has guests
   }
 
   /** Where the baker should be: next to a busy machine first, otherwise the next stop of the tour. */
@@ -46,12 +47,13 @@ export class StaffLayer {
       b.wait -= dt;
       if (b.wait <= 0) { const x = this.bakerStop(); if (Math.abs(x - b.x) < 3) b.wait = 1.5; else b.target = x; }
     }
+    this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length ? dt : -dt)));
     if (!hasSprite('waiter')) return;
     const w = this.waiter;
     if (w.step(dt)) w.wait = 2 + Math.random() * 3;
     else if (!w.target) {
       w.wait -= dt;
-      if (w.wait <= 0) w.target = 150 + Math.random() * 580;       // the left part of the dining area: away from the queue and the entrance, never beyond the room
+      if (w.wait <= 0) w.target = 330 + Math.random() * 340;       // the left part of the dining area: away from the queue and the entrance, never beyond the room
     }
   }
 
@@ -63,6 +65,9 @@ export class StaffLayer {
 
   drawWaiter(ctx) {
     const w = this.waiter;
+    if (this.show <= 0) return;
+    ctx.globalAlpha = this.show;
     drawSprite(ctx, 'waiter', w.x, WAITER_LANE_Y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE, frame: w.moving ? null : 0, bob: 0.012 });
+    ctx.globalAlpha = 1;
   }
 }

@@ -91,8 +91,15 @@ export class Cafe {
     return ms((a + this.rng() * (b - a)) * pace);
   }
 
+  /** A look nobody in the cafe has right now (so two guests never look like copies), unless every look is taken. */
+  pickLook() {
+    const used = new Set(this.customers.map((c) => c.look));
+    const free = this.looks.filter((l) => !used.has(l)), pool = free.length ? free : this.looks;
+    return pool[Math.floor(this.rng() * pool.length)];
+  }
+
   arrive() {
-    const c = { id: this.nextId++, look: this.looks[Math.floor(this.rng() * this.looks.length)], state: 'queued', table: null, orderId: null, patience: ms(this.cfg.queuePatienceSec) };
+    const c = { id: this.nextId++, look: this.pickLook(), state: 'queued', table: null, orderId: null, patience: ms(this.cfg.queuePatienceSec) };
     this.customers.push(c);
     this.game.emit('customer', { type: 'arrive', id: c.id });
     return c;

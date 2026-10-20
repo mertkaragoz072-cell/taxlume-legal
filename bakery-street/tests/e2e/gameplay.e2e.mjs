@@ -8,7 +8,7 @@ export default async function run({ browser, url }) {
 
   // --- production on the oven (tap the oven, press "Üret", wait for the clock) ---
   await S(() => window.__street.go('interior')); await page.waitForTimeout(700);
-  await tapDesign(page, 195, 330);
+  await tapDesign(page, 140, 330);
   c.ok('oven panel opens', await page.isVisible('#panel [data-make=bread]'));
   const flour0 = await S(() => window.__street.game.ingredients.flour);
   await page.click('[data-make=bread]'); await page.waitForTimeout(200);
@@ -46,7 +46,7 @@ export default async function run({ browser, url }) {
 
   // --- upgrades: a double click buys one level ---
   await S(() => window.__street.go('interior')); await page.waitForTimeout(700);
-  await tapDesign(page, 1335, 210);
+  await tapDesign(page, 1352, 216);
   const gu = await S(() => window.__street.game.player.gold);
   await page.evaluate(() => { const b = document.querySelector('[data-upgrade=ovenCapacity]'); b.click(); b.click(); b.click(); }); await page.waitForTimeout(300);
   c.ok('triple click buys one upgrade level only', (await S(() => window.__street.game.upgrades.ovenCapacity)) === 1 && gu - (await S(() => window.__street.game.player.gold)) === 800);

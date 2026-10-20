@@ -48,10 +48,11 @@ export async function closeDaily(page) {
 }
 
 export const game = (page, fn, arg) => page.evaluate(fn, arg);
-/** Design-space point -> click on the canvas. */
+/** Design-space point -> click on the canvas. Inside the cafe the point is a world coordinate (the interior camera is zoomed out). */
 export async function tapDesign(page, x, y) {
   const p = await page.evaluate(([x, y]) => {
     const v = window.__street.view, r = document.getElementById('game').getBoundingClientRect();
+    if (document.body.classList.contains('in-interior') || document.getElementById('stage')?.classList.contains('in-interior')) ({ x, y } = window.__street.interior.toScreen(x, y));
     return { x: r.left + (x + v.ox) * v.scale, y: r.top + (y + v.oy) * v.scale };
   }, [x, y]);
   await page.mouse.click(p.x, p.y);

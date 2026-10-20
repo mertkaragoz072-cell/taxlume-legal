@@ -292,3 +292,10 @@ Sokak karakterleri `SCALE` (0,78 → 0,9, `src/characters/sprites.js`) ile ~%15 
 New upgrade **Kafe masaları** (`UPGRADES.cafeTables`, costs 1.800 / 6.500): the cafe starts with 2 tables and gets a 3rd and 4th (the interior has room for 4, `CAFE.tables`).
 Arrival gaps scale with the open tables (`CAFE.baseTables` = 2 tables → 26–42 s; 4 tables → half that), so more tables mean proportionally more guests.
 Tables open in the order Masa 1, 2, 3, 4 (middle first). Old saves load at level 0; no progress is lost.
+
+## Airy cafe interior (camera and layout)
+
+The interior camera is zoomed out (`CAM` in `interior-layout.js`: zoom 0.8, centred on world x 718, floor front edge 64 px above the screen bottom), so the room has air on both sides and more wall/floor shows. Everything still works in world coordinates; `InteriorScene.toWorld/toScreen` convert pointer positions, and the e2e `tapDesign` helper uses them inside the cafe.
+Layout, back to front: oven, prep counter, showcase, coffee station and storage in a row against the wall (~80 px apart); an open corridor (waiter lane y 535, guests' service line y 565); the tables (up to 4, 100 px of floor between them) at the front on the same floor.
+Guests walk along the service line and only turn into a table gap when level with it (no cutting across tables); the waiter shows only while there are guests; a new guest never has the same look as someone already inside.
+Name tags appear only for the selected/pressed area; machine progress bars are small and sit on top of the object. The order chips no longer wrap into a second row.

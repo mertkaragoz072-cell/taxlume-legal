@@ -5,7 +5,7 @@ import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { drawIcon } from '../assets.js';
 
-const ENTRY = { x: 1520, y: SERVICE_LINE_Y };          // customers come in from the right along the service line
+const ENTRY = { x: 1560, y: SERVICE_LINE_Y };          // customers come in from the right along the service line (x follows the screen edge, see setEntry)
 const SPEED = 210;                 // design px per second
 const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
 
@@ -15,6 +15,7 @@ export class CustomerLayer {
     this.cafe = cafe;
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
+    this.entryX = ENTRY.x;
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
@@ -22,6 +23,9 @@ export class CustomerLayer {
       }
     });
   }
+
+  /** Guests appear just outside the visible room, whatever the screen's width. */
+  setEntry(x) { this.entryX = x; }
 
   targetFor(c) {
     if (c.state === 'seated') return chairSpot(c.table);
@@ -43,23 +47,29 @@ export class CustomerLayer {
     for (const c of this.cafe.customers) {
       live.add(c.id);
       let v = this.v.get(c.id);
-      if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look }; this.v.set(c.id, v); }
+      if (!v) { v = { x: this.entryX, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look }; this.v.set(c.id, v); }
       this.step(v, this.targetFor(c), dt);
-      if (!v.moving && c.state === 'seated') v.dir = 1;   // once at the table, face it
+      if (!v.moving && c.state === 'seated') v.dir = 1;   // once at the table (it stands on its right), face it
     }
     for (const [id, v] of this.v) {
       if (live.has(id)) continue;
       v.leaving = true;                                          // logic removed them: walk out through the entrance
-      this.step(v, { x: ENTRY.x + 40, y: ENTRY.y }, dt);
-      if (v.x >= ENTRY.x + 30) this.v.delete(id);
+      this.step(v, { x: this.entryX + 40, y: ENTRY.y }, dt);
+      if (v.x >= this.entryX + 30) this.v.delete(id);
     }
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
   }
 
-  step(v, to, dt) {
+  /**
+   * Guests walk along the open service line and only turn into a table gap once they are level with it, so they never cut across
+   * tables, counters or each other (leaving works the same way in reverse).
+   */
+  step(v, goal, dt) {
+    let to = goal;
+    if (Math.abs(goal.x - v.x) > 8) to = Math.abs(v.y - SERVICE_LINE_Y) > 4 ? { x: v.x, y: SERVICE_LINE_Y } : { x: goal.x, y: v.y };
     const dx = to.x - v.x, dy = to.y - v.y, d = Math.hypot(dx, dy);
-    if (d < 2) { v.x = to.x; v.y = to.y; v.moving = false; return; }
+    if (d < 2) { v.x = to.x; v.y = to.y; v.moving = Math.hypot(goal.x - v.x, goal.y - v.y) > 2; return; }
     const s = Math.min(d, SPEED * dt);
     v.x += (dx / d) * s; v.y += (dy / d) * s; v.moving = true;
     if (Math.abs(dx) > 1) v.dir = dx > 0 ? 1 : -1;
