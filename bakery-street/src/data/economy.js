@@ -44,9 +44,9 @@ export const SALES = { showcaseNetShare: 0.8 };
 /** Customer / order tuning. Times are seconds, converted to milliseconds by the code. */
 export const CAFE = {
   tables: 3,                    // seats available for customers (matches the 3 tables in the interior)
-  queueMax: 3,                  // customers waiting outside for a table; nobody new arrives beyond this
+  queueMax: 1,                  // customers waiting outside for a table; nobody new arrives beyond this
   firstSpawnSec: 4,             // first customer after a fresh start
-  spawnEverySec: [14, 26],      // random gap between arrivals
+  spawnEverySec: [26, 42],      // random gap between arrivals
   queuePatienceSec: 45,         // waiting for a table before giving up
   orderPatienceSec: 100,        // waiting for the order after sitting down
   maxStepSec: 2,                // longest time one tick may advance patience (a hidden tab never burns patience)

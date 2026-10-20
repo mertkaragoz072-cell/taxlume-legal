@@ -229,7 +229,7 @@ test('v1 saves (without a cafe section) still load, with an empty cafe', () => {
 
 test('invalid or finished orders in a save are repaired safely instead of crashing', () => {
   const game = new Game({ gold: 0 }, {}, () => 0);
-  const cfg = { ...CAFE };
+  const cfg = { ...CAFE, queueMax: 3 };
   const raw = {
     nextId: 3,
     orders: [
