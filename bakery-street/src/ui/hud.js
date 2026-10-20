@@ -2,6 +2,7 @@
 import { PLAYER, HUD_BUTTONS, HUD_SHOW } from '../config.js';
 import { ICONS } from './icons.js';
 
+const PICS = { coin: '<img class="hud-pic" alt="" src="assets/icons/coin.webp" draggable="false">', gem: '<img class="hud-pic" alt="" src="assets/icons/gem.webp" draggable="false">' };
 const fmt = (n) => n.toLocaleString('tr-TR');
 
 export function createHud(root, { onButton }) {
@@ -38,5 +39,5 @@ export function createHud(root, { onButton }) {
 }
 
 function res(icon, value, id, cls = '', spanId = '') {
-  return `<div class="pill res ${cls}${HUD_SHOW.plus ? '' : ' noplus'}">${ICONS[icon]}<span${spanId ? ` id="${spanId}"` : ''}>${value}</span>${HUD_SHOW.plus ? `<button class="plus" data-res="${id}" aria-label="Ekle">+</button>` : ''}</div>`;
+  return `<div class="pill res ${cls}${HUD_SHOW.plus ? '' : ' noplus'}">${PICS[icon] ?? ICONS[icon]}<span${spanId ? ` id="${spanId}"` : ''}>${value}</span>${HUD_SHOW.plus ? `<button class="plus" data-res="${id}" aria-label="Ekle">+</button>` : ''}</div>`;
 }

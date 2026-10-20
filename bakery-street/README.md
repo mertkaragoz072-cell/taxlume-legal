@@ -280,3 +280,9 @@ Sokak karakterleri `SCALE` (0,78 → 0,9, `src/characters/sprites.js`) ile ~%15 
 ## Ürün ve malzeme ikonları
 
 10 ikon (`assets/icons/<id>.webp`, 256 px: ekmek, kruvasan, pasta, kahve, un, tereyağı, şeker, yumurta, süt, çekirdek; `ICON_IDS` in `src/assets.js`). Oyun verisi (`economy.js`) düz emoji tutar (yedek/test); `src/ui/icon-swap.js` bir MutationObserver ile arayüzdeki ürün/malzeme emojilerini (paneller, bildirimler, çipler, tarifler) resimle değiştirir, kafe sahnesi (`drawIcon`) vitrin, sipariş balonu, üretim çubuğu ve "+1" belirtilerinde resmi çizer. Yeni bir ürün eklenirse ikon adı `ICON_IDS`'e yazılır; ikon yoksa emoji görünmeye devam eder.
+
+## Currency / status icons
+
+`assets/icons/` also holds ten UI pictures: `coin, xp, gem, gift, lock, timer, check, arrow, basket, receipt` (`UI_ICON_IDS` in `src/assets.js`).
+`src/ui/icon-swap.js` maps 💰 ✨ 💎 🎁 🔒 ⏱ ✅ ⬆️ 🛒 🧾 to them in every panel/toast; the HUD coin, the "+N" sale pops, the upgrades sign and the Keşif lock/gift badges use them on canvas.
+`drawIcon` keeps the picture's aspect ratio. Game data still holds the emoji (fallback).

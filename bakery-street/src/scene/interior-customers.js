@@ -18,7 +18,7 @@ export class CustomerLayer {
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
-        this.pops.push({ x: v?.x ?? 700, y: (v?.y ?? 700) - BODY_H - 30, text: `+${e.income} 💰`, life: 1 });
+        this.pops.push({ x: v?.x ?? 700, y: (v?.y ?? 700) - BODY_H - 30, text: `+${e.income}`, life: 1 });
       }
     });
   }
@@ -89,7 +89,10 @@ export class CustomerLayer {
     }
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
-      label(ctx, p.text, p.x, p.y - (1 - p.life) * 70, { font: '700 36px sans-serif', fill: '#fff3a0', lw: 6 });
+      const py = p.y - (1 - p.life) * 70;
+      label(ctx, p.text, p.x - 14, py, { font: '700 36px sans-serif', fill: '#fff3a0', lw: 6 });
+      ctx.font = '700 36px sans-serif';
+      drawIcon(ctx, 'coin', p.x - 14 + ctx.measureText(p.text).width / 2 + 24, py, 36);
     }
     ctx.globalAlpha = 1;
   }

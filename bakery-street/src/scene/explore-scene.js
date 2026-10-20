@@ -1,6 +1,7 @@
 // Exploration map: a warm, hand-painted-style parchment map drawn with canvas shapes (no image assets).
 // Each region is a marker on the left half; the details and buttons are a DOM panel (ui/explore.js) on the right.
 import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor, gradeScreen } from '../util.js';
+import { drawIcon } from '../assets.js';
 
 const R = 62;                                              // tap radius of a marker (design px)
 
@@ -75,14 +76,15 @@ export class ExploreScene {
   }
 
   badge(ctx, r, st, t) {
-    let label = null, col = '#e0951f';
-    if (st === 'locked') { label = '🔒'; col = '#8a8068'; }
-    else if (st === 'ready') { label = '🎁'; col = '#3fa63a'; }
+    let label = null, icon = null, col = '#e0951f';
+    if (st === 'locked') { label = '🔒'; icon = 'lock'; col = '#8a8068'; }
+    else if (st === 'ready') { label = '🎁'; icon = 'gift'; col = '#3fa63a'; }
     else if (st === 'active') { label = formatShort(this.ex.remaining()); col = '#3a7bd5'; }
     if (!label) return;
     ctx.font = fontCss('700 22px "Trebuchet MS", system-ui, sans-serif'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const w = Math.max(44, ctx.measureText(label).width + 22), h = Math.max(36, textFloor.px * 1.5);
+    const w = icon ? 44 : Math.max(44, ctx.measureText(label).width + 22), h = Math.max(36, textFloor.px * 1.5);
     ctx.beginPath(); ctx.roundRect(-w / 2, -92, w, h, h / 2); paint(ctx, col, 3, '#3a2213');
+    if (icon && drawIcon(ctx, icon, 0, -92 + h / 2, h * 0.9)) return;
     ctx.fillStyle = '#fff'; ctx.fillText(label, 0, -92 + h / 2 + 1);
   }
 

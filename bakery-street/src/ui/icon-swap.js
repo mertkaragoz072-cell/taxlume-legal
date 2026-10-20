@@ -3,7 +3,7 @@
 import { PRODUCTS, INGREDIENTS } from '../data/economy.js';
 import { ICON_IDS } from '../assets.js';
 
-const EMOJI = {};
+const EMOJI = { '💰': 'coin', '✨': 'xp', '💎': 'gem', '🎁': 'gift', '🔒': 'lock', '⏱': 'timer', '✅': 'check', '⬆️': 'arrow', '🛒': 'basket', '🧾': 'receipt' };
 for (const [id, d] of Object.entries({ ...PRODUCTS, ...INGREDIENTS })) if (ICON_IDS.includes(id) && d.icon) EMOJI[d.icon] = id;
 const RE = new RegExp(`(${Object.keys(EMOJI).map((e) => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'u');
 

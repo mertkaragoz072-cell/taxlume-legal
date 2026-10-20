@@ -51,7 +51,8 @@ body {
 .level small { font-size: max(12px, calc(var(--u) * 1.7)); line-height: 1; opacity: .85; white-space: nowrap; }
 .xp i { transition: width .35s ease; display: block; height: 100%; background: linear-gradient(#8fe05a, #3fa63a); border-radius: 99px; }
 .res { min-width: calc(var(--u) * 18.5); padding: 0 calc(var(--u) * .5) 0 calc(var(--u) * 7); justify-content: space-between; gap: calc(var(--u) * 1.2); }
-.res > svg.ico { position: absolute; left: calc(var(--u) * -1.6); top: 50%; width: calc(var(--u) * 8.2); height: calc(var(--u) * 8.2); transform: translateY(-50%); filter: drop-shadow(0 calc(var(--u) * .3) 0 rgba(60,30,5,.45)); }
+.res > svg.ico, .res > img.hud-pic { position: absolute; left: calc(var(--u) * -1.6); top: 50%; width: calc(var(--u) * 8.2); height: calc(var(--u) * 8.2); transform: translateY(-50%); filter: drop-shadow(0 calc(var(--u) * .3) 0 rgba(60,30,5,.45)); }
+.res > img.hud-pic { object-fit: contain; pointer-events: none; }
 .res span { flex: 1; white-space: nowrap; text-align: center; font-variant-numeric: tabular-nums; }
 .res.energy { background: linear-gradient(#fff2c4, #f6c85a); }
 .plus {

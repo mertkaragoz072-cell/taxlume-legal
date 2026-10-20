@@ -309,7 +309,7 @@ const ART = {
     ctx.fillStyle = '#6a3d1c'; ctx.fillRect(cx - 4, y, 8, 26);                    // hanging bracket
     rrect(ctx, x + 4, y + 26, w - 8, h - 40, 10); paint(ctx, vgrad(ctx, y + 26, y + h, [[0, '#d9a05a'], [1, '#8a5a2c']]), 3.5);
     rrect(ctx, x + 12, y + 34, w - 24, h - 56, 6); paint(ctx, '#fff3d0', 2);
-    label(ctx, '⬆', cx, y + 66, { font: '700 44px sans-serif', fill: '#3fa63a', lw: 4 });
+    if (!drawIcon(ctx, 'arrow', cx, y + 64, 48)) label(ctx, '⬆', cx, y + 66, { font: '700 44px sans-serif', fill: '#3fa63a', lw: 4 });
     upgradeCount(ctx, scene, cx, y + 104);
   },
   table1: (ctx, a) => drawTable(ctx, a),

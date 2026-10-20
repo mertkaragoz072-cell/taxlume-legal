@@ -36,6 +36,9 @@ for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${na
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
 // fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().
 export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butter', 'sugar', 'egg', 'milk', 'beans'];
+/** Currency / status pictures (coin, XP star, gem, gift, lock, stopwatch, check, up-arrow, basket, receipt). */
+export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket', 'receipt'];
+for (const id of UI_ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 for (const id of ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 
 const images = {};
@@ -72,6 +75,7 @@ export function drawAsset(ctx, key, x, y, w, h) {
 export function drawIcon(ctx, id, x, y, size) {
   const img = images[`icon-${id}`];
   if (!img) return false;
-  ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+  const k = size / Math.max(img.width, img.height), w = img.width * k, h = img.height * k;
+  ctx.drawImage(img, x - w / 2, y - h / 2, w, h);
   return true;
 }
