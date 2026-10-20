@@ -1,42 +1,68 @@
-// The baker: a decorative staff member who walks along the service line (the lane just in front of the machines) and works at
-// whichever station is busy, otherwise strolls between oven, counter and coffee machine. Purely visual: no game logic, no state saved.
-import { drawSprite } from '../characters/sprites.js';
-import { STAFF_LANE_Y } from './interior-layout.js';
+// Staff, purely visual (no game logic, nothing saved):
+//  - the baker works on the kitchen floor between the back wall and the counters (head and shoulders show above the counters) and
+//    goes to whichever machine is busy, otherwise strolls between oven, counter, coffee machine and storage;
+//  - the waiter walks the dining area only (never leaves the room). It needs its own sprite sheet ('waiter', see characters/sprites.js);
+//    until that art exists nothing is drawn, so no customer sprite is passed off as staff.
+import { drawSprite, hasSprite } from '../characters/sprites.js';
+import { STAFF_LANE_Y, WAITER_LANE_Y } from './interior-layout.js';
 
-const SPEED = 70;                  // design px per second (a calm walk)
-const STOPS = [{ id: 'oven', x: 190 }, { id: 'counter', x: 520 }, { id: 'showcase', x: 880 }, { id: 'coffee', x: 1170 }];
+const STOPS = { oven: 175, counter: 450, counter2: 620, coffee: 1266, storage: 1342 };
+const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
+
+class Walker {
+  constructor(x, speed) { this.x = x; this.speed = speed; this.dir = 1; this.moving = false; this.target = null; this.wait = 1.5; this.t = 0; }
+  /** Moves toward the target; returns true when it has just arrived. */
+  step(dt) {
+    this.t += dt;
+    if (!this.target) return false;
+    const dx = this.target - this.x;
+    if (Math.abs(dx) < 3) { this.x = this.target; this.target = null; this.moving = false; return true; }
+    this.moving = true; this.dir = dx > 0 ? 1 : -1;
+    this.x += this.dir * Math.min(Math.abs(dx), this.speed * dt);
+    return false;
+  }
+}
 
 export class StaffLayer {
   constructor(game) {
     this.game = game;
-    this.x = STOPS[1].x; this.dir = 1; this.moving = false;
-    this.target = null; this.wait = 1.5; this.i = 1; this.t = 0;
+    this.baker = new Walker(STOPS.counter, 70);
+    this.waiter = new Walker(380, 62);
+    this.tour = 0;
   }
 
-  /** The station the baker should be at: a busy machine first, otherwise the next stop on a tour. */
-  pick() {
-    const busy = STOPS.filter((s) => this.game.jobsOf(s.id).length);
-    if (busy.length) return busy.reduce((a, b) => (Math.abs(a.x - this.x) <= Math.abs(b.x - this.x) ? a : b));
-    this.i = (this.i + 1) % STOPS.length;
-    return STOPS[this.i];
+  /** Where the baker should be: next to a busy machine first, otherwise the next stop of the tour. */
+  bakerStop() {
+    const busy = ['oven', 'coffee'].filter((id) => this.game.jobsOf(id).length);
+    if (busy.length) { const id = busy[0]; return STOPS[id]; }
+    this.tour = (this.tour + 1) % TOUR.length;
+    return STOPS[TOUR[this.tour]];
   }
 
   update(dt) {
-    this.t += dt;
-    if (this.target) {
-      const dx = this.target.x - this.x;
-      if (Math.abs(dx) < 3) { this.x = this.target.x; this.target = null; this.moving = false; this.wait = 2 + Math.random() * 2.5; }
-      else { this.moving = true; this.dir = dx > 0 ? 1 : -1; this.x += this.dir * Math.min(Math.abs(dx), SPEED * dt); }
-      return;
+    const b = this.baker;
+    if (b.step(dt)) b.wait = 2 + Math.random() * 2.5;
+    else if (!b.target) {
+      b.wait -= dt;
+      if (b.wait <= 0) { const x = this.bakerStop(); if (Math.abs(x - b.x) < 3) b.wait = 1.5; else b.target = x; }
     }
-    this.wait -= dt;
-    if (this.wait <= 0) {
-      const next = this.pick();
-      if (Math.abs(next.x - this.x) < 3) this.wait = 1.5; else this.target = next;
+    if (!hasSprite('waiter')) return;
+    const w = this.waiter;
+    if (w.step(dt)) w.wait = 2 + Math.random() * 3;
+    else if (!w.target) {
+      w.wait -= dt;
+      if (w.wait <= 0) w.target = 150 + Math.random() * 1000;      // somewhere in the dining area, never beyond the room
     }
   }
 
-  draw(ctx) {
-    drawSprite(ctx, 'chef', this.x, STAFF_LANE_Y, this.t, { dir: this.dir, fps: 7, scale: 0.9, frame: this.moving ? null : 0 });
+  /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
+  drawBaker(ctx) {
+    const b = this.baker;
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: 1.08, frame: b.moving ? null : 0 });
+  }
+
+  drawWaiter(ctx) {
+    const w = this.waiter;
+    drawSprite(ctx, 'waiter', w.x, WAITER_LANE_Y, w.t, { dir: w.dir, fps: 7, scale: 0.9, frame: w.moving ? null : 0 });
   }
 }

@@ -1,7 +1,8 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { DESIGN } from '../config.js';
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor } from '../util.js';
-import { AREAS, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
+import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage } from '../assets.js';
 import { CustomerLayer } from './interior-customers.js';
@@ -52,7 +53,10 @@ export class InteriorScene {
     const x0 = -v.ox - 10, w = v.vw + 20, yTop = -v.oy - 10, yBot = v.vh - v.oy + 10;
 
     this.room(ctx, x0, w, yTop, yBot);
-    for (const a of AREAS) {
+    this.decor(ctx);
+    for (const id of DRAW_ORDER) {                              // depth order: kitchen side, baker, counters, tables
+      if (id === '_staff') { this.staff.drawBaker(ctx); continue; }
+      const a = AREAS.find((x) => x.id === id);
       const press = this.pressedId === a.id ? 1.5 : 0;
       ctx.save();
       if (press) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
@@ -60,8 +64,9 @@ export class InteriorScene {
       ctx.restore();
     }
     for (const a of AREAS) this.overlay(ctx, a);
-    this.staff.draw(ctx);
+    this.staff.drawWaiter(ctx);
     this.customers.draw(ctx, t);
+    this.frontDecor(ctx, v);
 
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
@@ -96,7 +101,41 @@ export class InteriorScene {
     return true;
   }
 
-  /** Wall, wainscot, window, floor. */
+  /** Back layer: shelves with jars and plates, plants and warm pendant lamps on the back wall (drawn over any wall art). */
+  decor(ctx) {
+    const wall = FLOOR_Y;
+    // two shelf rows along the wall behind the counters
+    for (const [x0, x1, y] of [[330, 880, 208], [330, 880, 268]]) {
+      ctx.fillStyle = '#7a4824'; ctx.fillRect(x0, y, x1 - x0, 7);
+      ctx.fillStyle = 'rgba(40,16,4,.35)'; ctx.fillRect(x0, y + 7, x1 - x0, 3);
+      for (let x = x0 + 14; x < x1 - 20; x += 34) {
+        const k = Math.round((x * 7) % 3);
+        if (k === 0) { rrect(ctx, x, y - 24, 22, 24, 5); paint(ctx, '#e7d3a6', 2); ctx.fillStyle = '#9a6a38'; ctx.fillRect(x + 3, y - 29, 16, 6); }
+        else if (k === 1) { for (let i = 0; i < 3; i++) { rrect(ctx, x - 2, y - 7 - i * 5, 26, 5, 2); paint(ctx, '#f4eee0', 1.5); } }
+        else { rrect(ctx, x, y - 20, 22, 20, 4); paint(ctx, '#c98a4a', 2); }
+      }
+    }
+    // hanging copper lamps with a warm pool of light on the wall
+    for (const lx of [380, 640, 900, 1160]) {
+      ctx.strokeStyle = '#3a2213'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, WALL_Y - 12); ctx.lineTo(lx, 128); ctx.stroke();
+      poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, '#b8662a', 2.5);
+      ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = '#ffe9a0'; ctx.fill();
+      ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 175, 120, '255,190,90', 0.16 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
+    }
+    // soft floor shadow where the wall meets the kitchen floor
+    ctx.fillStyle = vgrad(ctx, wall, wall + 30, [[0, 'rgba(40,16,4,.28)'], [1, 'rgba(40,16,4,0)']]);
+    ctx.fillRect(0, wall, DESIGN.w, 30);
+  }
+
+  /** Front layer: a rug at the entrance and big leafy plants framing the bottom corners, in front of everyone. */
+  frontDecor(ctx, v) {
+    rrect(ctx, 540, 752, 340, 60, 12); paint(ctx, vgrad(ctx, 752, 812, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
+    ctx.strokeStyle = 'rgba(246,221,154,.7)'; ctx.lineWidth = 3; ctx.strokeRect(556, 764, 308, 30);
+    drawProp(ctx, 'pot_topiary', -v.ox + 46, DESIGN.h + 40, 170, { shade: false });
+    drawProp(ctx, 'pot_topiary2', DESIGN.w + v.ox - 46, DESIGN.h + 40, 170, { shade: false });
+  }
+
+  /** Wall, wainscot, floor. */
   room(ctx, x0, w, yTop, yBot) {
     const wall = getImage('int-wall'), floor = getImage('int-floor');
     if (wall && floor) { // supplied wall and floor art, tiled sideways
@@ -115,12 +154,6 @@ export class InteriorScene {
     ctx.fillStyle = 'rgba(255,225,170,.35)'; ctx.fillRect(x0, FLOOR_Y - 76, w, 4);
     ctx.fillStyle = 'rgba(40,16,4,.45)';
     for (let x = x0 - (x0 % 70); x < x0 + w; x += 70) ctx.fillRect(x, FLOOR_Y - 72, 3, 68);
-    // two windows with warm daylight
-    for (const wx of [440, 830]) {
-      rrect(ctx, wx, 118, 150, 120, 8); paint(ctx, '#7a4824', 3);
-      rrect(ctx, wx + 8, 126, 134, 104, 4); paint(ctx, vgrad(ctx, 126, 230, [[0, '#bfe4ff'], [1, '#ffeec0']]), 1.5);
-      ctx.fillStyle = '#7a4824'; ctx.fillRect(wx + 73, 126, 4, 104); ctx.fillRect(wx + 8, 176, 134, 4);
-    }
     // floor planks
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, yBot, [[0, '#c18a52'], [1, '#97642f']]);
     ctx.fillRect(x0, FLOOR_Y, w, yBot - FLOOR_Y);
@@ -128,8 +161,8 @@ export class InteriorScene {
     for (let y = FLOOR_Y + 36; y < yBot; y += 44 + (y - FLOOR_Y) * 0.05) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke(); }
     for (let y = FLOOR_Y, row = 0; y < yBot; y += 44, row++) for (let x = x0 - (x0 % 180) + (row % 2) * 90; x < x0 + w; x += 180) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 44); ctx.stroke(); }
     // entrance mat on the right: customers walk in from here
-    rrect(ctx, 1235, 548, 200, 46, 10); paint(ctx, vgrad(ctx, 548, 594, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
-    label(ctx, '▶ Giriş', 1335, 584, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#f6dd9a', lw: 3 });
+    rrect(ctx, 1235, 522, 200, 46, 10); paint(ctx, vgrad(ctx, 522, 568, [[0, '#8a2f2a'], [1, '#5a1c18']]), 3);
+    label(ctx, '▶ Giriş', 1335, 558, { font: '700 20px "Trebuchet MS", sans-serif', fill: '#f6dd9a', lw: 3 });
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, FLOOR_Y + 40, [[0, 'rgba(40,16,4,.4)'], [1, 'rgba(40,16,4,0)']]);
     ctx.fillRect(x0, FLOOR_Y, w, 40);
   }
@@ -142,7 +175,9 @@ export class InteriorScene {
     const text = a.label;
     ctx.font = fontCss(FONT);
     const top = this.rects[a.id]?.y ?? a.y;                          // the tag sits on the object, not on its empty box
-    const tw = ctx.measureText(text).width + 28, ty = Math.max(top - 20, 112), th = Math.max(34, textFloor.px * 1.5);
+    const rect = this.rects[a.id];
+    // `labelOn: 'front'` puts the tag on the object's front panel, leaving its top free (the baker's head shows above the counter)
+    const tw = ctx.measureText(text).width + 28, th = Math.max(34, textFloor.px * 1.5), ty = a.labelOn === 'front' && rect ? rect.y + rect.h * 0.64 : Math.max(top - 20, 112);
     const lx = clamp(cx, tw / 2 + 8, DESIGN.w - tw / 2 - 8);          // keep the tag inside the screen (e.g. "Geliştirmeler" at the right edge)
     rrect(ctx, lx - tw / 2, ty - th / 2, tw, th, th / 2);
     paint(ctx, sel ? vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff2b8'], [1, '#ffc94a']]) : vgrad(ctx, ty - th / 2, ty + th / 2, [[0, '#fff6dc'], [1, '#f1d9a3']]), 2.5, sel ? '#c8861a' : '#9a6431');
