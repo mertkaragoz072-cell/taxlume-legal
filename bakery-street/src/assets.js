@@ -33,6 +33,11 @@ for (const name of PROPS) MANIFEST[`prop-${name}`] = `assets/props/${name}.webp`
 export const INTERIOR_ART = ['oven', 'counter', 'showcase', 'coffee', 'storage', 'upgrades', 'table', 'wall', 'floor'];
 for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`;
 
+// Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
+// fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().
+export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butter', 'sugar', 'egg', 'milk', 'beans'];
+for (const id of ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
+
 const images = {};
 
 /**
@@ -60,5 +65,13 @@ export function drawAsset(ctx, key, x, y, w, h) {
   const img = images[key];
   if (!img) return false;
   ctx.drawImage(img, x, y, w, h);
+  return true;
+}
+
+/** Draws the icon of product / ingredient `id` centred at (x, y), `size` px square. Returns false when the picture is missing. */
+export function drawIcon(ctx, id, x, y, size) {
+  const img = images[`icon-${id}`];
+  if (!img) return false;
+  ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
   return true;
 }

@@ -3,6 +3,7 @@
 import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, PERSON_SCALE, PERSON_H } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
+import { drawIcon } from '../assets.js';
 
 const ENTRY = { x: 1520, y: SERVICE_LINE_Y };          // customers come in from the right along the service line
 const SPEED = 210;                 // design px per second
@@ -103,7 +104,7 @@ export class CustomerLayer {
     rrect(ctx, x, y, w, h, 16); paint(ctx, '#fffaf0', 4, inStock ? '#3fa63a' : '#d9665a');
     ctx.fillStyle = '#fffaf0'; ctx.fillRect(v.x - 8, y + h - 5, 16, 6);
     ctx.font = '36px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000'; ctx.fillText(def.icon, x + 30, y + 30);
+    if (!drawIcon(ctx, order.product, x + 30, y + 30, 46)) { ctx.fillStyle = '#000'; ctx.fillText(def.icon, x + 30, y + 30); }
     label(ctx, `${order.price}`, x + 80, y + 28, { font: '700 24px "Trebuchet MS", sans-serif', fill: '#6a3a14', lw: 0 });
     // patience bar
     const f = this.cafe.patienceFraction(c);

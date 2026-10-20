@@ -4,7 +4,7 @@ import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt,
 import { AREAS, DRAW_ORDER, WALL_Y, FLOOR_Y, areaAt } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
-import { getImage } from '../assets.js';
+import { getImage, drawIcon } from '../assets.js';
 import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
@@ -26,7 +26,7 @@ export class InteriorScene {
     this.motes = Array.from({ length: 34 }, (_, i) => ({ x: (i * 97) % 1400, y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
-      this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: `+1 ${game.productsDef[product].icon}`, life: 1 });
+      this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: '+1', icon: product, life: 1 });
     });
   }
 
@@ -73,7 +73,8 @@ export class InteriorScene {
 
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
-      label(ctx, p.text, p.x, p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: '#fff6c0', lw: 5 });
+      label(ctx, p.text, p.x - (p.icon ? 18 : 0), p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: '#fff6c0', lw: 5 });
+      if (p.icon) drawIcon(ctx, p.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
     }
     ctx.globalAlpha = 1;
     gradeScreen(ctx, { warm: 0.4, vignette: 0.4, floorFade: 0.16 });
@@ -235,7 +236,8 @@ export class InteriorScene {
       ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, '#9be86a'], [1, '#3fa63a']]); ctx.fillRect(cx - bw / 2, by, bw * prog, bh);
       ctx.restore();
       const def = this.game.productsDef[job.product];
-      label(ctx, `${def.icon} ${formatTime(rem)}`, cx, by + bh / 2 + 1, { font: `700 ${many ? 14 : 17}px sans-serif`, fill: '#fff', lw: 4 });
+      const tx = cx + 12, hasIcon = drawIcon(ctx, job.product, cx - 34, by + bh / 2, bh * 1.1);
+      label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : cx, by + bh / 2 + 1, { font: `700 ${many ? 14 : 17}px sans-serif`, fill: '#fff', lw: 4 });
     });
     if (a.station && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: '#fff6dc', lw: 4 });
   }
@@ -329,7 +331,7 @@ function showcaseStock(ctx, a, scene, art = null) {
     let ix = art ? art.x + art.w * 0.17 : x + 28;
     for (const [id, def] of Object.entries(scene.game.productsDef)) {
       const n = scene.game.products[id];
-      if (n > 0) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(def.icon, ix, iy); label(ctx, `×${n}`, ix, ly, { font: '700 17px sans-serif', fill: '#fff', lw: 4 }); }
+      if (n > 0) { if (!drawIcon(ctx, id, ix, iy, 46)) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; ctx.fillText(def.icon, ix, iy); } label(ctx, `×${n}`, ix, ly, { font: '700 17px sans-serif', fill: '#fff', lw: 4 }); }
       ix += step;
     }
 }

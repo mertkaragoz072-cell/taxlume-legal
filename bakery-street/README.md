@@ -276,3 +276,7 @@ Tek zemin, basamak yok; arkadan öne (`src/scene/interior-layout.js`): **arka du
 ## Karakter ölçüleri
 
 Sokak karakterleri `SCALE` (0,78 → 0,9, `src/characters/sprites.js`) ile ~%15 büyüdü. Kafede insanlar mobilyalarla orantılı olsun diye ayrıca `PERSON_SCALE = 1,4` (`src/scene/interior-layout.js`) ile çizilir: misafir ≈ 205 px, tezgâh 150 px, sandalye ≈ 130 px. Sipariş balonları, tıklama alanı, kuyruk (`SERVICE_LINE_Y`) ve garson hattı bu ölçüye göre ayarlıdır; vitrinin stok ikonları kuyruktaki başların üstünde kalacak şekilde yukarı alındı.
+
+## Ürün ve malzeme ikonları
+
+10 ikon (`assets/icons/<id>.webp`, 256 px: ekmek, kruvasan, pasta, kahve, un, tereyağı, şeker, yumurta, süt, çekirdek; `ICON_IDS` in `src/assets.js`). Oyun verisi (`economy.js`) düz emoji tutar (yedek/test); `src/ui/icon-swap.js` bir MutationObserver ile arayüzdeki ürün/malzeme emojilerini (paneller, bildirimler, çipler, tarifler) resimle değiştirir, kafe sahnesi (`drawIcon`) vitrin, sipariş balonu, üretim çubuğu ve "+1" belirtilerinde resmi çizer. Yeni bir ürün eklenirse ikon adı `ICON_IDS`'e yazılır; ikon yoksa emoji görünmeye devam eder.

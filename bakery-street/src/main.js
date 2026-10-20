@@ -35,6 +35,7 @@ import { createHud } from './ui/hud.js';
 import { createNav } from './ui/nav.js';
 import { AREAS } from './scene/interior-layout.js';
 import { textFloor } from './util.js';
+import { installIconSwap } from './ui/icon-swap.js';
 import { showToast } from './ui/toast.js';
 
 const canvas = document.getElementById('game');
@@ -309,6 +310,7 @@ window.addEventListener('resize', scheduleLayout);
 window.addEventListener('orientationchange', scheduleLayout);
 try { screen.orientation?.lock?.('landscape').catch(() => {}); } catch { /* only works in fullscreen / installed mode */ }
 
+installIconSwap(document.getElementById('stage'));    // product / ingredient emoji -> the supplied icon pictures
 // ---- boot: loading screen, assets, save ----------------------------------------------------------
 const loadingEl = document.getElementById('loading'), ldFill = document.getElementById('ldFill'), ldText = document.getElementById('ldText'), ldRetry = document.getElementById('ldRetry');
 ldRetry.addEventListener('click', () => window.location.reload());
