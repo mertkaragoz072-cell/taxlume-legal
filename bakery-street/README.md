@@ -286,3 +286,9 @@ Sokak karakterleri `SCALE` (0,78 → 0,9, `src/characters/sprites.js`) ile ~%15 
 `assets/icons/` also holds ten UI pictures: `coin, xp, gem, gift, lock, timer, check, arrow, basket, receipt` (`UI_ICON_IDS` in `src/assets.js`).
 `src/ui/icon-swap.js` maps 💰 ✨ 💎 🎁 🔒 ⏱ ✅ ⬆️ 🛒 🧾 to them in every panel/toast; the HUD coin, the "+N" sale pops, the upgrades sign and the Keşif lock/gift badges use them on canvas.
 `drawIcon` keeps the picture's aspect ratio. Game data still holds the emoji (fallback).
+
+## Cafe tables (crowd grows with upgrades)
+
+New upgrade **Kafe masaları** (`UPGRADES.cafeTables`, costs 1.800 / 6.500): the cafe starts with 2 tables and gets a 3rd and 4th (the interior has room for 4, `CAFE.tables`).
+Arrival gaps scale with the open tables (`CAFE.baseTables` = 2 tables → 26–42 s; 4 tables → half that), so more tables mean proportionally more guests.
+Tables open in the order Masa 1, 2, 3, 4 (middle first). Old saves load at level 0; no progress is lost.

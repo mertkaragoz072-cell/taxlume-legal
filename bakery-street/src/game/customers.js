@@ -34,7 +34,12 @@ export class Cafe {
 
   // ---- queries --------------------------------------------------------------------------------
   tableOwner(index) { return this.customers.find((c) => c.state === 'seated' && c.table === index) ?? null; }
-  freeTables() { return Array.from({ length: this.cfg.tables }, (_, i) => i).filter((i) => !this.tableOwner(i)); }
+  /** Open tables: the cafeTables upgrade level (never more than the interior has room for). */
+  tableCount() {
+    const id = this.cfg.tablesUpgrade;
+    return id && this.game.upgradesDef[id] ? Math.min(this.cfg.tables, this.game.effect(id)) : this.cfg.tables;
+  }
+  freeTables() { return Array.from({ length: this.tableCount() }, (_, i) => i).filter((i) => !this.tableOwner(i)); }
   queued() { return this.customers.filter((c) => c.state === 'queued').sort((a, b) => a.id - b.id); }
   orderOf(c) { return c.orderId ? this.orders.find((o) => o.id === c.orderId) ?? null : null; }
   openOrders() { return this.orders.filter((o) => o.status === 'open'); }
@@ -82,7 +87,8 @@ export class Cafe {
 
   nextInterval() {
     const [a, b] = this.cfg.spawnEverySec;
-    return ms(a + this.rng() * (b - a));
+    const pace = this.cfg.tablesUpgrade ? Math.min(1, this.cfg.baseTables / this.tableCount()) : 1;   // more tables, shorter gaps
+    return ms((a + this.rng() * (b - a)) * pace);
   }
 
   arrive() {

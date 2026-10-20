@@ -13,7 +13,7 @@ function make({ gold = 1000, config = {}, seed = 7 } = {}) {
   const clock = { now: 1_700_000_000_000 };
   const player = { gold };
   const game = new Game(player, {}, () => clock.now);
-  const cfg = { ...CAFE, firstSpawnSec: 1, spawnEverySec: [5, 5], ...config };
+  const cfg = { ...CAFE, tablesUpgrade: null, firstSpawnSec: 1, spawnEverySec: [5, 5], ...config };
   const cafe = new Cafe(game, { rng: seeded(seed), config: cfg });
   cafe.setActive(true);   // customers only run while the interior is open
   /** advance fake time in 1 s steps, ticking each step */

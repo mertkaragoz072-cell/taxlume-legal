@@ -10,13 +10,15 @@ export const AREAS = [
   { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 670, y: 322, w: 270, h: 178 },
   { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 975, y: 295, w: 150, h: 205 },
   // dining area, in front
-  { id: 'table1', label: 'Masa 1', panel: null, x: 180, y: 566, w: 300, h: 158 },
-  { id: 'table2', label: 'Masa 2', panel: null, x: 550, y: 566, w: 300, h: 158 },
-  { id: 'table3', label: 'Masa 3', panel: null, x: 920, y: 566, w: 300, h: 158 },
+  // four slots; the cafeTables upgrade opens them in this order (the two middle ones first, so the room always looks balanced)
+  { id: 'table1', label: 'Masa 1', panel: null, x: 415, y: 566, w: 300, h: 158 },
+  { id: 'table2', label: 'Masa 2', panel: null, x: 765, y: 566, w: 300, h: 158 },
+  { id: 'table3', label: 'Masa 3', panel: null, x: 65, y: 566, w: 300, h: 158 },
+  { id: 'table4', label: 'Masa 4', panel: null, x: 1115, y: 566, w: 300, h: 158 },
 ];
 
 /** Drawing order = depth: the kitchen side first, then the baker (behind the counters), then the counters, then the tables. */
-export const DRAW_ORDER = ['oven', 'storage', 'upgrades', '_staff', 'counter', 'showcase', 'coffee', 'table1', 'table2', 'table3'];
+export const DRAW_ORDER = ['oven', 'storage', 'upgrades', '_staff', 'counter', 'showcase', 'coffee', 'table1', 'table2', 'table3', 'table4'];
 
 /*
  * Depth plan (one continuous floor, no steps), back to front:

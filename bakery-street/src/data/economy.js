@@ -43,7 +43,9 @@ export const SALES = { showcaseNetShare: 0.8 };
 
 /** Customer / order tuning. Times are seconds, converted to milliseconds by the code. */
 export const CAFE = {
-  tables: 3,                    // seats available for customers (matches the 3 tables in the interior)
+  tables: 4,                    // most tables the interior has room for (the cafeTables upgrade opens them one by one)
+  tablesUpgrade: 'cafeTables',  // upgrade whose value is the number of open tables; null = all `tables` are open
+  baseTables: 2,                // arrivals are paced for this many tables; more tables bring proportionally more guests
   queueMax: 1,                  // customers waiting outside for a table; nobody new arrives beyond this
   firstSpawnSec: 4,             // first customer after a fresh start
   spawnEverySec: [26, 42],      // random gap between arrivals
@@ -83,6 +85,10 @@ export const UPGRADES = {
   showcaseCapacity: {
     name: 'Satış vitrini', icon: '🗄️', costs: [400, 1200, 3000, 7000, 15000], values: [10, 15, 20, 30, 40, 60],
     describe: (v) => `Vitrin her üründen ${v} adet tutar`,
+  },
+  cafeTables: {
+    name: 'Kafe masaları', icon: '🪑', costs: [1800, 6500], values: [2, 3, 4],
+    describe: (v) => `Kafede ${v} masa var, müşteri sayısı masalarla artar`,
   },
 };
 

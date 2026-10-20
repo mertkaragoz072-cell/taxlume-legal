@@ -59,13 +59,14 @@ export class InteriorScene {
     for (const id of DRAW_ORDER) {                              // depth order: kitchen side, baker, counters, tables
       if (id === '_staff') { this.staff.drawBaker(ctx); continue; }
       const a = AREAS.find((x) => x.id === id);
+      if (!this.tableOpen(a)) continue;
       const press = this.pressedId === a.id ? 1.5 : 0;
       ctx.save();
       if (press) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
       if (!this.areaAsset(ctx, a)) ART[a.id]?.(ctx, a, this);
       ctx.restore();
     }
-    for (const a of AREAS) this.overlay(ctx, a);
+    for (const a of AREAS) if (this.tableOpen(a)) this.overlay(ctx, a);
     this.staff.drawWaiter(ctx);
     this.customers.draw(ctx, t);
     this.light(ctx);
@@ -211,6 +212,13 @@ export class InteriorScene {
     ctx.fillRect(x0, FLOOR_Y, w, 40);
   }
 
+  /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */
+  tableOpen(a) {
+    if (!a.id.startsWith('table')) return true;
+    const i = +a.id.slice(5) - 1, cafe = this.game.cafe;
+    return !cafe || i < cafe.tableCount() || !!cafe.tableOwner(i);
+  }
+
   /** Name tag + progress bar over each area. */
   overlay(ctx, a) {
     if (a.id.startsWith('table') && this.game.cafe?.tableOwner(+a.id.slice(5) - 1)) return;   // the order bubble takes the label's place
@@ -315,6 +323,7 @@ const ART = {
   table1: (ctx, a) => drawTable(ctx, a),
   table2: (ctx, a) => drawTable(ctx, a),
   table3: (ctx, a) => drawTable(ctx, a),
+  table4: (ctx, a) => drawTable(ctx, a),
 };
 
 /** "bought / total" upgrade levels as small dark text. */
