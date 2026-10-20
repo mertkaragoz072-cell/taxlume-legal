@@ -313,3 +313,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### Places, regions and order-bar icons
 
 `b-bakery, b-market, b-bookshop, b-plot` (the Kasaba cards use them directly), `r-meadow, r-forest, r-ruins` (🌿 🌲 🏛️ in Keşif), `o-guests, o-waiting, o-order` (👥 ⏳ 🧾 in the order bar and quests). The supplied sheet had a baked-in chequerboard; it was removed by flood-filling the neutral grey from the edges (and the enclosed pockets of the crane and the hourglass).
+
+### HUD and menu pictures
+
+`hud-quests, hud-events, hud-settings, hud-avatar, nav-cafe, nav-town, nav-explore, hud-back` replace the old SVGs (`src/ui/icons.js` now builds them with `pic(name)`), including the back button's arrow.

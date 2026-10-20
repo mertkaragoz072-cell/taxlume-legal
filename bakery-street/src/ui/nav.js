@@ -3,7 +3,7 @@ import { NAV } from '../config.js';
 import { ICONS } from './icons.js';
 
 const ICON_FOR = {
-  cafe: ICONS.bread + ICONS.cup,
+  cafe: ICONS.cafe,
   town: ICONS.town,
   explore: ICONS.explore,
   shop: ICONS.shop,

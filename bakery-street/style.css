@@ -66,6 +66,11 @@ body {
   box-shadow: 0 calc(var(--u) * .5) 0 var(--shadow);
 }
 .avatar svg { width: 100%; height: 100%; display: block; }
+.avatar img.pic { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; transform: scale(1.12); }
+img.pic { pointer-events: none; user-select: none; -webkit-user-drag: none; object-fit: contain; }
+.tile img.pic { width: calc(var(--u) * 6.4); height: calc(var(--u) * 5.6); filter: drop-shadow(0 calc(var(--u) * .25) 0 rgba(70,48,32,.3)); }
+.nav-btn img.pic { height: calc(var(--u) * 7.6); width: auto; max-width: calc(var(--u) * 9.6); filter: drop-shadow(0 calc(var(--u) * .25) 0 rgba(70,48,32,.3)); }
+.back-btn img.pic { height: 1.15em; width: auto; vertical-align: -0.22em; margin-right: .25em; }
 .level { display: flex; flex-direction: column; gap: calc(var(--u) * .7); padding-right: calc(var(--u) * 2.2); flex: 1; }
 .level b { font-size: max(12px, calc(var(--u) * 3.3)); line-height: 1; }
 .xp { height: calc(var(--u) * 1.5); border-radius: 99px; background: var(--brown); overflow: hidden; border: calc(var(--u) * .25) solid var(--brown-dark); }
@@ -212,8 +217,8 @@ body {
 #saveWarn[hidden] { display: none; }
 
 /* ---------- Customers: order strip ---------- */
-#orderBar { position: absolute; left: calc(var(--u) * 21 + var(--safe-l)); bottom: calc(var(--u) * 1.4 + var(--safe-b)); z-index: 19; display: none;
-  align-items: flex-end; flex-wrap: nowrap; gap: calc(var(--u) * .8); max-width: calc(100vw - var(--u) * 46); pointer-events: none; }
+#orderBar { position: absolute; left: calc(var(--u) * 25 + var(--safe-l)); bottom: calc(var(--u) * 1.4 + var(--safe-b)); z-index: 19; display: none;
+  align-items: flex-end; flex-wrap: nowrap; gap: calc(var(--u) * .8); max-width: calc(100vw - var(--u) * 50); pointer-events: none; }
 .in-interior #orderBar { display: flex; }
 #orderBar > * { pointer-events: auto; }
 .ostat { flex: none; display: flex; gap: calc(var(--u) * 1.2); align-items: center; height: calc(var(--u) * 7.6); padding: 0 calc(var(--u) * 2); border-radius: calc(var(--u) * 3.8);
@@ -312,7 +317,7 @@ s.muted { text-decoration: line-through; }
 .qty { gap: calc(var(--u) * .6); }
 .back-btn { min-height: 40px; height: max(40px, calc(var(--u) * 8)); }
 .ochip, .ostat { min-height: 40px; height: max(40px, calc(var(--u) * 7.6)); }
-#orderBar { left: calc(max(var(--u) * 21, 96px) + var(--safe-l)); }
+#orderBar { left: calc(max(var(--u) * 25, 124px) + var(--safe-l)); }
 .nav-btn { min-width: 84px; min-height: 44px; }
 #panel, #marketPanel, #explorePanel, #researchPanel, #questPanel, #dailyPanel, #settingsPanel { width: max(min(calc(var(--u) * 78), 48vw), min(310px, 54vw)); top: max(calc(var(--u) * 12.8 + var(--safe-t)), 50px); }
 #townPanel { width: max(min(calc(var(--u) * 96), 70vw), min(360px, 80vw)); top: max(calc(var(--u) * 12.8 + var(--safe-t)), 50px); }

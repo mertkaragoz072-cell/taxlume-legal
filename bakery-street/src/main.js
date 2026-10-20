@@ -188,7 +188,7 @@ function go(id) {
     stage.classList.toggle('in-bookshop', id === 'bookshop');
     stage.classList.toggle('in-explore', id === 'explore');
     if (id === 'explore') explorePanel.show(); else explorePanel.hide();
-    backBtn.textContent = id === 'market' ? '◀ Marketten Çık' : id === 'bookshop' ? '◀ Kitapçıdan Çık' : '◀ Sokak';
+    backBtn.innerHTML = `<img class="pic" alt="" draggable="false" src="assets/icons/hud-back.webp">${id === 'market' ? 'Marketten Çık' : id === 'bookshop' ? 'Kitapçıdan Çık' : 'Sokak'}`;
     if (id === 'bookshop') researchPanel.show(); else researchPanel.hide();
     if (id === 'market') marketPanel.show(); else marketPanel.hide();
     scene.resize(view);
