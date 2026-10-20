@@ -15,6 +15,7 @@ export const MANIFEST = {
   'char-girl_hat': 'assets/characters/girl_hat.webp',
   'char-oldman': 'assets/characters/oldman.webp',
   'char-chef': 'assets/characters/chef.webp',
+  'char-waiter': 'assets/characters/waiter.webp',   // the dining-room waiter (walk cycle)
   'ground-walk-a': 'assets/ground-walk-a.webp',   // sidewalk slab strips (tile left-to-right)
   'ground-walk-b': 'assets/ground-walk-b.webp',
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha

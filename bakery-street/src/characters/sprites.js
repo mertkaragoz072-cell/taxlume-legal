@@ -12,6 +12,7 @@ export const SHEETS = {
   girl_red: { frames: 8, w: 109, h: 162 },
   grandma: { frames: 8, w: 99, h: 158 },
   chef: { frames: 8, w: 143, h: 173 },
+  waiter: { frames: 8, w: 112, h: 165 },
 };
 
 const SCALE = 0.78; // native sprite px -> design px (a character ends up ~100 px tall)
