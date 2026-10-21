@@ -85,7 +85,7 @@ export function GameView({ world, sceneId, active, pixelRatio, onPress, onLook }
   const move = (e: GestureResponderEvent) => { const v = viewport.current; if (v && onLook) onLook((e.nativeEvent.locationX / v.W - 0.5) * 2); };
 
   return (
-    <View style={styles.fill} onLayout={onLayout} onTouchStart={down} onTouchEnd={up} onTouchMove={move} onTouchCancel={() => { const p = { x: -1e6, y: -1e6 }; onPress(scene, p, false); }}>
+    <View style={styles.fill} onLayout={onLayout} onTouchStart={down} onTouchEnd={(e) => { up(e); onLook?.(0); }} onTouchMove={move} onTouchCancel={() => { const p = { x: -1e6, y: -1e6 }; onPress(scene, p, false); }}>
       {picture ? <SkiaPictureView style={styles.fill} picture={picture} opaque androidWarmup /> : null}
     </View>
   );

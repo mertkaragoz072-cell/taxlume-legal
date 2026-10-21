@@ -202,7 +202,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   return (
     <WorldProvider world={world} act={act}>
       <View style={styles.fill}>
-        <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes.street.setLook?.(n)} />
+        <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes[sceneRef.current]?.setLook?.(n)} />
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
           <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} go={go} />
           {sceneId === "interior" && panel ? <CafePanel id={panel.id} side={panel.side} /> : null}

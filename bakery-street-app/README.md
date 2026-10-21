@@ -86,3 +86,7 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 ## Cafe look
 
 The cafe is built from the separate supplied pieces (wall, floor, oven, counter, showcase, coffee machine, storage, sign, tables, windows, door, shelf, rack, beam), each depth-sorted with the baker, waiter and guests. (An attempt to use one reference picture as the whole back wall was reverted: it made the room flat and unlayered.)
+
+### Cafe parallax
+
+The cafe camera sways sideways by up to 24 world px; planes move by different shares of it: wall 0.25, wall decoration and lamps 0.5, kitchen furniture and the baker 0.8, floor level (tables, guests, waiter, tags, bubbles) 1.1, front plants 1.7. It follows the finger while touching and otherwise eases into a slow idle sway, so the depth shows without touching. Taps are corrected per plane (`InteriorScene.shift/planeOf/hitTest`). The cached wall/floor layer is drawn 60 px wider than the screen so no edge shows.

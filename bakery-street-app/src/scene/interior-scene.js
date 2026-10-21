@@ -9,6 +9,9 @@ import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
+/** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
+const PARALLAX_PX = 24;
+const PLANE = { wall: 0.25, deco: 0.5, kitchen: 0.8, floor: 1.1, front: 1.7 };
 const LAMPS = [285, 700, 975];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
@@ -28,6 +31,7 @@ export class InteriorScene {
     this.staff.guests = () => this.customers.v.values();
     this.customers.extra = () => [this.staff.waiter];          // guests give way to the waiter too
     this.rects = {};            // where each area's art was actually drawn (labels follow it)
+    this.look = 0; this.lk = 0; // parallax: target (-1..1, from touch) and the smoothed value in use
     this.motes = Array.from({ length: 34 }, (_, i) => ({ x: -120 + ((i * 97) % 1620), y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
@@ -52,14 +56,31 @@ export class InteriorScene {
   /** World -> the same pointer space (used by tests and debugging). */
   toScreen(x, y) { const c = this.cam, v = this.view; return { x: x * c.zoom + c.tx - v.ox, y: y * c.zoom + c.ty - v.oy }; }
 
+  /** Steer the parallax (finger position), -1..1. */
+  setLook(n) { this.look = clamp(n, -1, 1); }
+
+  /**
+   * Parallax: the camera sways a little, so planes at different depths slide against each other. Factor per plane (nearer = more):
+   * wall .25, wall decoration .5, kitchen furniture and baker .8, floor level (tables, guests, waiter) 1.1, front plants 1.7.
+   */
+  shift(plane) { return -this.lk * PARALLAX_PX * PLANE[plane]; }
+  /** The plane an area belongs to. */
+  planeOf(a) { return a.id.startsWith('table') ? 'floor' : 'kitchen'; }
+
   /** Customers (their order bubbles) take priority over the tables and machines they stand in front of. */
-  hitTest(x, y) { const p = this.toWorld(x, y); return this.customers.hitTest(p.x, p.y) ?? areaAt(p.x, p.y)?.id ?? null; }
+  hitTest(x, y) {
+    const p = this.toWorld(x, y), f = this.shift('floor');
+    return this.customers.hitTest(p.x - f, p.y) ?? AREAS.find((a) => { const q = p.x - this.shift(this.planeOf(a)); return q >= a.x && q <= a.x + a.w && p.y >= a.y && p.y <= a.y + a.h; })?.id ?? null;
+  }
   snap() { this.customers.snap(); }
   press(on, x, y) { this.pressedId = on ? this.hitTest(x, y) : null; }
   select(id) { this.selected = id; }
 
   update(dt) {
     this.t += dt;
+    // the look follows the finger and eases back to a slow idle sway, so the depth is visible without touching
+    const idle = Math.sin(this.t * 0.35) * 0.45;
+    this.lk += ((this.look !== 0 ? this.look : idle) - this.lk) * Math.min(1, dt * 3);
     this.customers.update(dt);
     this.staff.update(dt);
     for (const m of this.motes) { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y < 100) { m.y = 740; m.x = -120 + ((m.x + 120) * 7.3) % 1620; } if (m.x > 1500) m.x -= 1620; }
@@ -75,24 +96,24 @@ export class InteriorScene {
     ctx.setTransform(k, 0, 0, k, c.tx * v.scale * v.dpr, c.ty * v.scale * v.dpr);
     const x0 = c.wl - 10, w = c.wr - c.wl + 20, yTop = c.wt - 10, yBot = c.wb + 10;
 
-    this.cachedRoom(ctx, x0, w, yTop, yBot);
-    this.decor(ctx);
+    this.cachedRoom(ctx, x0 - 60, w + 120, yTop, yBot, this.shift('wall'));   // wall and floor, cached (a little wider than the screen for the sway)
+    ctx.save(); ctx.translate(this.shift('deco'), 0); this.decor(ctx); ctx.restore();
     // Everything that stands on the floor is drawn back to front by the line it stands on (its base y), so people pass in front of
     // or behind counters and tables correctly. Ties keep the DRAW_ORDER of the furniture.
     const items = [];
     for (const id of DRAW_ORDER) {
-      if (id === '_staff') { items.push({ y: STAFF_LANE_Y, draw: () => this.staff.drawBaker(ctx) }); continue; }
+      if (id === '_staff') { items.push({ y: STAFF_LANE_Y, draw: () => this.shifted(ctx, 'kitchen', () => this.staff.drawBaker(ctx)) }); continue; }
       const a = AREAS.find((x) => x.id === id);
       if (!this.tableOpen(a)) continue;
-      items.push({ y: depthOf(a), draw: () => this.drawArea(ctx, a) });
+      items.push({ y: depthOf(a), draw: () => this.shifted(ctx, this.planeOf(a), () => this.drawArea(ctx, a)) });
     }
-    items.push({ y: this.staff.waiter.y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
+    items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
-    this.staff.drawServed(ctx);
-    for (const a of AREAS) if (this.tableOpen(a)) this.overlay(ctx, a);
-    this.customers.drawBubbles(ctx, t);
-    this.light(ctx);
-    this.frontDecor(ctx);
+    this.shifted(ctx, 'floor', () => this.staff.drawServed(ctx));
+    for (const a of AREAS) if (this.tableOpen(a)) this.shifted(ctx, this.planeOf(a), () => this.overlay(ctx, a));
+    this.shifted(ctx, 'floor', () => this.customers.drawBubbles(ctx, t));
+    this.shifted(ctx, 'deco', () => this.light(ctx));
+    this.shifted(ctx, 'front', () => this.frontDecor(ctx));
 
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
@@ -103,6 +124,9 @@ export class InteriorScene {
     gradeScreen(ctx, { warm: 0.3, vignette: 0.3, floorFade: 0.12 });
     textFloor.px = floorPx;
   }
+
+  /** Runs `fn` with the drawing moved sideways by the parallax of `plane`. */
+  shifted(ctx, plane, fn) { const d = this.shift(plane); ctx.save(); ctx.translate(d, 0); fn(); ctx.restore(); }
 
   drawArea(ctx, a) {
     ctx.save();
@@ -280,18 +304,18 @@ export class InteriorScene {
   }
 
   /** The wall and floor never change, so they are painted once per screen size and then just copied (the multiply wash is costly). */
-  cachedRoom(ctx, x0, w, yTop, yBot) {
-    const cv = ctx.canvas, key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}`;
+  cachedRoom(ctx, x0, w, yTop, yBot, dx = 0) {
+    const cv = ctx.canvas, m = ctx.getTransform(), M = Math.ceil(60 * m.a);          // 60 world px of spare wall on each side for the sway
+    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}`;
     if (this.roomKey !== key) {
-      const c = createCanvas(cv.width, cv.height);
+      const c = createCanvas(cv.width + 2 * M, cv.height);
       this.roomCanvas = c;
-      const g = c.getContext('2d'), m = ctx.getTransform();
-      g.setTransform(m);
+      const g = c.getContext('2d');
+      g.setTransform(m.a, m.b, m.c, m.d, m.e + M, m.f);
       this.room(g, x0, w, yTop, yBot);
       this.roomKey = key;
     }
-    const m = ctx.getTransform();
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.roomCanvas, 0, 0); ctx.setTransform(m);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.roomCanvas, dx * m.a - M, 0); ctx.setTransform(m);
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */
