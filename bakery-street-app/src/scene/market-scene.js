@@ -39,6 +39,6 @@ export class MarketScene {
       ctx.globalCompositeOperation = 'source-over';
     } else { rrect(ctx, 80, 160, 340, 400, 12); paint(ctx, '#c08648', 3); }
     for (const p of this.props.front) drawProp(ctx, p.name, p.x, p.y, p.h, { flip: p.flip });
-    gradeScreen(ctx, { warm: 0.3, vignette: 0.32, floorFade: 0.14 });
+    gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
   }
 }

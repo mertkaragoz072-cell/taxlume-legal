@@ -60,7 +60,7 @@ export class ExploreScene {
     ctx.beginPath(); rs.forEach((r, i) => (i ? ctx.lineTo(r.map.x, r.map.y) : ctx.moveTo(r.map.x, r.map.y))); ctx.stroke(); ctx.setLineDash([]);
     }
     for (const r of rs) this.drawRegion(ctx, r, t);
-    gradeScreen(ctx, { warm: 0.25, vignette: 0.3, floorFade: 0 });
+    gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0 });
   }
 
   drawRegion(ctx, r, t) {

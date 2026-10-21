@@ -95,6 +95,7 @@ export const createCanvas = (w, h) => makeCanvas(w, h);
 let grainTile = null;
 /** Fine paper-like noise, applied only over painted pixels so the art feels hand-painted rather than flat vector. */
 export function applyGrain(ctx, w, h, alpha = 0.07) {
+  return;                                                     // film grain is off: it made the pictures look photographic
   if (!grainTile) {
     grainTile = createCanvas(128, 128);
     const g = grainTile.getContext('2d'), r = rng(77);

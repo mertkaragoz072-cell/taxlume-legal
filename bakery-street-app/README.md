@@ -106,3 +106,8 @@ The four tables no longer sit in one row: they are at different depths (front ed
 ### Tables as separate pieces
 
 `assets/game/interior/table.webp` was cut into `table.webp` (table only), `chair-left.webp` and `chair-right.webp` (connected-component split of the original picture, colour-graded: cushions toned from bright red to a matte terracotta, specular highlights calmed, light from the left). `InteriorScene.tableSet` draws them separately: each table has its own chair offsets and tilt (`CHAIRS`), the chair a guest uses is pulled out while they walk up and slid in when they sit, and each chair throws its own shadow. A served item rests on a small saucer on the tabletop.
+
+### Game look instead of photographic
+
+- `scripts/stylize.py` (applied once to every picture under assets/game except icons and the app icon; the originals are in git history): edge-preserving smoothing removes fine texture and noise, colour is posterised in soft steps, saturation lifted ~8%. Strength 0.85 (0.9 town backdrop, 0.6 Keşif map).
+- Photographic effects removed: film grain, heavy vignette and warm multiply (now 0.1-0.12), sun shafts on the street, dust motes and bokeh, the blurred "depth of field" corner plants in the cafe.

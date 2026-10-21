@@ -160,7 +160,7 @@ export class StreetScene {
     const design = (f = PAR.shops) => ctx.setTransform(k, 0, 0, k, (v.ox + shift(f)) * k, v.oy * k);
 
     blit(this.layers.far, PAR.far);
-    this.lightShafts(ctx, k, v);
+    // (sun shafts removed: they read as a camera effect)
     blit(this.layers.back, PAR.shops);
 
     // bakery sprite with press / tap squash
@@ -214,9 +214,8 @@ export class StreetScene {
     }
     ctx.globalAlpha = 1;
 
-    this.motes(ctx, k, v, t);
 
-    gradeScreen(ctx, { warm: 0.22, vignette: 0.3, floorFade: 0.1 });
+    gradeScreen(ctx, { warm: 0.1, vignette: 0.1, floorFade: 0.04 });
   }
 }
 

@@ -128,7 +128,7 @@ export class InteriorScene {
       if (p.icon) drawIcon(ctx, p.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
     }
     ctx.globalAlpha = 1;
-    gradeScreen(ctx, { warm: 0.3, vignette: 0.3, floorFade: 0.12 });
+    gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
     textFloor.px = floorPx;
   }
 
@@ -292,7 +292,7 @@ export class InteriorScene {
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w / 2, top); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 - 150 + sway, 560); ctx.lineTo(x - w / 2 - 150 + sway, 560); ctx.closePath(); ctx.fill();
       }
     }
-    for (const m of this.motes) {
+    for (const m of []) {                                         // drifting dust motes removed (photographic)
       const a = 0.25 + 0.25 * Math.sin(this.t * 1.3 + m.p);
       ctx.fillStyle = `rgba(255,236,190,${a})`;
       ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
@@ -303,7 +303,8 @@ export class InteriorScene {
   /** Front layer: two big leafy plants framing the bottom corners of the screen, a little blurred, in front of everyone. */
   frontDecor(ctx) {
     const c = this.cam, blur = 'filter' in ctx;                // depth of field: the nearest plants are soft (skipped where unsupported)
-    if (blur) ctx.filter = 'blur(2.5px)';
+    // (the corner plants used to be blurred like a camera's depth of field; they are crisp now)
+    if (false && blur) ctx.filter = 'blur(2.5px)';
     drawProp(ctx, 'pot_topiary', c.wl + 60, c.wb + 40, 150, { shade: false });
     drawProp(ctx, 'pot_topiary2', c.wr - 60, c.wb + 40, 150, { shade: false });
     if (blur) ctx.filter = 'none';
