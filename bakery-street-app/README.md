@@ -102,3 +102,7 @@ Cafe furniture throws its own silhouette across the floor (tinted dark brown, fl
 ### Scattered tables
 
 The four tables no longer sit in one row: they are at different depths (front edges y 732 / 732 / 786 / 798 after the sizes in `AREAS`), slightly different sizes, and two are mirrored (`flip`), so the room reads like a real cafe floor. Guests still use the same lane and the gap beside their table; the access gaps stay clear.
+
+### Tables as separate pieces
+
+`assets/game/interior/table.webp` was cut into `table.webp` (table only), `chair-left.webp` and `chair-right.webp` (connected-component split of the original picture, colour-graded: cushions toned from bright red to a matte terracotta, specular highlights calmed, light from the left). `InteriorScene.tableSet` draws them separately: each table has its own chair offsets and tilt (`CHAIRS`), the chair a guest uses is pulled out while they walk up and slid in when they sit, and each chair throws its own shadow. A served item rests on a small saucer on the tabletop.

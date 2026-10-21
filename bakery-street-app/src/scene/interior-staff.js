@@ -127,17 +127,26 @@ export class StaffLayer {
   }
 
   /** Served orders rest on their table until the guest pays: the handover is visible and stays readable. The icon flies from the waiter's hands to the tabletop. */
+  /** A small saucer on the tabletop under a served item, so it looks placed there. */
+  plate(ctx, x, y) {
+    ctx.fillStyle = 'rgba(70,48,32,.28)'; ctx.beginPath(); ctx.ellipse(x + 3, y + 4, 30, 9, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f6eddc'; ctx.beginPath(); ctx.ellipse(x, y, 29, 8.5, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(121,82,56,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(x, y, 29, 8.5, 0, 0, 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(121,82,56,.25)'; ctx.beginPath(); ctx.ellipse(x, y, 19, 5, 0, 0, 7); ctx.stroke();
+  }
+
   drawServed(ctx) {
     const cafe = this.game.cafe;
     for (const c of cafe?.customers ?? []) {
       const o = c.state === 'seated' ? cafe.orderOf(c) : null;
       if (!o || o.status !== 'open' || !this.served.has(o.id)) continue;
       const a = AREAS.find((x) => x.id === `table${c.table + 1}`);
-      drawIcon(ctx, o.product, a.x + a.w / 2, a.y + a.h * 0.25, 34);
+      this.plate(ctx, a.x + a.w / 2, a.y + a.h * 0.26);
+      drawIcon(ctx, o.product, a.x + a.w / 2, a.y + a.h * 0.26 - 12, 34);
     }
     if (this.phase === 'hand' && this.carry) {                // the icon is carried from the hands toward the table while handing over
       const w = this.waiter, a = AREAS.find((x) => x.id === this.job.table), k = Math.min(1, this.handT / HAND_SEC);
-      drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, w.y - 108 + (a.y + a.h * 0.25 - (w.y - 108)) * k, 36);
+      drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, w.y - 108 + (a.y + a.h * 0.26 - 12 - (w.y - 108)) * k, 36);
     }
   }
 

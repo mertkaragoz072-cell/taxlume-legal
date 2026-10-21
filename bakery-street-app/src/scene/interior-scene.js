@@ -12,6 +12,13 @@ import { StaffLayer } from './interior-staff.js';
 /** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
 const PARALLAX_PX = 24;
 const PLANE = { wall: 0.25, deco: 0.5, kitchen: 0.8, floor: 1.1, front: 1.7 };
+/** Per-table chair offsets (design px at 2x of the picture scale) and tilt in radians: [left chair, right chair]. */
+const CHAIRS = [
+  [{ dx: -7, dy: 3, rot: -0.035 }, { dx: 9, dy: -2, rot: 0.04 }],
+  [{ dx: 5, dy: -3, rot: 0.03 }, { dx: -6, dy: 2, rot: -0.05 }],
+  [{ dx: -10, dy: 0, rot: 0.05 }, { dx: 4, dy: 4, rot: 0.02 }],
+  [{ dx: 2, dy: 3, rot: -0.02 }, { dx: 11, dy: -3, rot: -0.04 }],
+];
 const LAMPS = [285, 700, 975];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
@@ -135,6 +142,33 @@ export class InteriorScene {
     ctx.restore();
   }
 
+  /**
+   * A table with its two chairs as separate pieces: each table has its own chair offsets and tilt, the chair a guest uses is pulled out
+   * while they walk up and slid in when they sit, and a mirrored table swaps the chairs' roles.
+   */
+  tableSet(ctx, a, tableImg, dx, dy, w, h) {
+    const i = +a.id.slice(5) - 1, tw = CHAIRS[i % CHAIRS.length], s = w / 1000;
+    const owner = this.game.cafe?.tableOwner(i), v = owner ? this.customers.v.get(owner.id) : null;
+    const near = !!(v && (v.moving || v.sit > 0 || owner.state === 'seated'));
+    const sit = v ? v.sit ?? 0 : 0;
+    const side = a.side ?? -1;                                   // the chair the guest uses
+    const slide = near ? 14 * (1 - sit) - 5 * sit : 0;           // out while walking up, in when seated
+    const draw = (key, base, cx) => {
+      const img = getImage(`int-${key}`), isGuestChair = (key === 'chair-left') === (side === -1);
+      const t = tw[key === 'chair-left' ? 0 : 1];
+      const out = isGuestChair ? slide * (key === 'chair-left' ? -1 : 1) : 0;
+      ctx.save();
+      ctx.translate(dx + cx * s + t.dx * 1.6 + out, dy + h);
+      ctx.rotate(t.rot);
+      ctx.translate(-(dx + cx * s), -(dy + h));
+      ctx.drawImage(img, dx, dy + t.dy, w, h);
+      ctx.restore();
+    };
+    ctx.drawImage(tableImg, dx, dy, w, h);
+    draw('chair-left', 0, 170);
+    draw('chair-right', 0, 830);
+  }
+
   /** Thrown shadow of a piece of furniture: its silhouette, tinted, flattened and leaning right (cached once per piece). */
   castShadow(ctx, key, img, dx, dy, w, h) {
     const K = 0.55, S = 0.2, by = dy + h;                       // lean per unit of height, depth squash (the shadow falls back and to the right)
@@ -167,11 +201,14 @@ export class InteriorScene {
     const dx = a.x + (a.w - w) / 2, dy = a.y + a.h - h;
     // grounding: the object's own silhouette thrown across the floor to the right and back (light from the upper left), soft, plus a
     // tight dark line where the base touches the floor and a faint wider pool of occlusion
-    this.castShadow(ctx, a.id.startsWith('table') ? 'table' : a.id, img, dx, dy, w, h);
+    const isTable = a.id.startsWith('table') && getImage('int-chair-left') && getImage('int-chair-right');
+    if (isTable) { this.castShadow(ctx, 'table', img, dx, dy, w, h); this.castShadow(ctx, 'chair-left', getImage('int-chair-left'), dx, dy, w, h); this.castShadow(ctx, 'chair-right', getImage('int-chair-right'), dx, dy, w, h); }
+    else this.castShadow(ctx, a.id.startsWith('table') ? 'table' : a.id, img, dx, dy, w, h);
     shadow(ctx, a.x + a.w / 2 + 6, a.y + a.h + 2, w * 0.5, 9, 0.16);
     shadow(ctx, a.x + a.w / 2 + 2, a.y + a.h, w * 0.4, 3.5, 0.34);
     this.rects[a.id] = { x: dx, y: dy, w, h };
-    if (a.flip) { ctx.save(); ctx.translate(dx + w, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, dy, w, h); ctx.restore(); }   // some tables are mirrored so they do not all look alike
+    if (isTable) this.tableSet(ctx, a, img, dx, dy, w, h);
+    else if (a.flip) { ctx.save(); ctx.translate(dx + w, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, dy, w, h); ctx.restore(); }
     else ctx.drawImage(img, dx, dy, w, h);
     const busy = !!(a.station && this.game.jobs[a.station]);
     if (a.id === 'oven' && !busy) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.62, a.w * 0.42, '255,140,50', 0.09 + 0.03 * Math.sin(this.t * 3)); ctx.globalCompositeOperation = 'source-over'; }   // embers
