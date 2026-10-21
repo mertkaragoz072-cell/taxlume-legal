@@ -161,3 +161,6 @@ Not: `oldman`, `boy_redcap`, `girl_red`, `girl_glasses` da artık 6 karelik önd
 - Üretim bitince: şef zıplar, istasyon yaylanır, kıvılcım çıkar (`complete` olayı). Sipariş masaya konunca: yeşil tik rozeti, kıvılcım ve oturan misafirin sevinç sıçraması (`StaffLayer.onServed`). Yerken hafif çiğneme, beklerken nefes alma titremesi.
 - Vitrin stok etiketleri yalnızca vitrine dokunulunca/seçilince görünür. Kuyruk noktaları 120 px aralıklı (karakterler üst üste binmez).
 - Eksik asset (raporlandı): oturma/kalkma geçiş kareleri, yemek yeme kareleri, şefin hazırlık/pişirme pozları, garsonun tepsi alma pozu, müşteri ayrılırken el sallama/memnuniyet pozu.
+
+### Kamera ölçeği
+İç mekân kamerası artık ekrana göre sığdırılıyor: `zoom = min(vw/1600, (vh-48)/750, 1.08)`, merkez x=790 (fırından kapıya kadar tüm oda görünür), zemin ön kenarı ekran altından 40 px yukarıda. 16:9'da eski ölçeğe göre ~%10, geniş telefonlarda (844×390) ~%25 büyük; tablette genişliğe sığar (üstte boş duvar bandı kalır).

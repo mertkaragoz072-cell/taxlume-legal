@@ -63,8 +63,10 @@ export class InteriorScene {
    */
   resize(view) {
     this.view = view;
-    // tablets (4:3 and similar): the room is brought closer so the extra height is not just empty wall; phones keep the base zoom
-    const tall = Math.max(0, Math.min(1, (view.vh - 870) / 180)), z = CAM.zoom + (Math.min(view.vw / 1650, 0.9) - CAM.zoom) * tall, cx = CAM.cx + (815 - CAM.cx) * tall, tx = view.vw / 2 - cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
+    // The room is the focus: zoom so the whole width of the dining room (world x 0..1580, door included) fills the screen, but never taller than the space between the
+    // top of the beam (the HUD floats over it) and the floor's front edge. Wide phones are limited by height, 16:9 and tablets by width.
+    const z = Math.min(view.vw / 1600, (view.vh - CAM.bottomPad + 8) / (CAM.baseY - 10), 1.08), cx = 790
+    const tx = view.vw / 2 - cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z
     this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: -ty / z, wb: (view.vh - ty) / z };
   }
 

@@ -88,4 +88,4 @@ export const ROOM = { join: 0.484 };
 /** Depth scale: the nearer to the viewer (larger y), the larger a person or table is drawn (perspective), 0.86 at the wall to 1.04 at the front. */
 export const depthScale = (y) => 0.86 + 0.18 * Math.max(0, Math.min(1, (y - 430) / 380));
 
-export const CAM = { zoom: 0.8, cx: 718, baseY: 760, bottomPad: 64 };
+export const CAM = { zoom: 0.97, cx: 790, baseY: 760, bottomPad: 40 };
