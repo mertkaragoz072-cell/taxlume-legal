@@ -138,3 +138,6 @@ oven, counter (dough and rolling pin on top), showcase (goods baked into the gla
 
 ### Ön görünüm masa ve sandalyeler (2.5D)
 `assets/game/interior/table.webp` ve `chair-left/right.webp` karşıdan, hafif yukarıdan bakan yeni setten üretildi. `table-cup`, `table-cake`, `chair-front`, `chair-back` hazır ama henüz kullanılmıyor. Oturan misafir resimleri ve yürüyen karakterler hâlâ yandan görünümlü.
+
+### Önden/arkadan yürüyen müşteriler
+`girl_basket`, `boy_cap`, `boy_backpack`, `grandma` 6 karelik şeritler (0-2 önden, 3-5 arkadan; `views: true`). Kameradan uzaklaşırken (yukarı yürürken) arka kareler, diğer durumlarda ön kareler çizilir. Diğer 4 müşteri ve şef/garson hâlâ eski görünümde.

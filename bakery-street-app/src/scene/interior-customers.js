@@ -51,6 +51,7 @@ export class CustomerLayer {
       const goal = this.targetFor(c);
       v.via = goal.via ?? null;
       this.step(v, goal, dt, c.id);
+      if (!v.moving) v.back = false;
       if (!v.moving && c.state === 'seated') v.dir = -(goal.side ?? -1);   // once in the chair, face the table
     }
     for (const [id, v] of this.v) {
@@ -104,6 +105,7 @@ export class CustomerLayer {
     const s = Math.min(d, SPEED * dt);
     v.x += (dx / d) * s; v.y += (dy / d) * s; v.moving = true;
     if (Math.abs(dx) > 1) v.dir = dx > 0 ? 1 : -1;
+    v.back = dy < 0 && Math.abs(dy) > Math.abs(dx) * 0.6;   // walking away from the camera: show the back
   }
 
   /** 'customer:<id>' when the point is on a seated customer or their order bubble. */
@@ -149,7 +151,7 @@ export class CustomerLayer {
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
           if (seated) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 160, y - 420, 320, sitCutY(c.table) - (y - 420)); ctx.clip(); }
           const hold = v.moving && !v.pause;
-          drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
+          drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, back: !!v.back && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
           if (seated) ctx.restore();
           ctx.globalAlpha = 1;
         },

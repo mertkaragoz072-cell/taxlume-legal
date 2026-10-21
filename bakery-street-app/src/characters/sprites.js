@@ -4,14 +4,14 @@ import { getImage } from '../assets.js';
 import { shadow } from '../util.js';
 
 export const SHEETS = {
-  boy_backpack: { frames: 1, w: 83, h: 142 },
-  girl_basket: { frames: 1, w: 127, h: 170 },
+  boy_backpack: { frames: 6, w: 84, h: 143, views: true },
+  girl_basket: { frames: 6, w: 117, h: 172, views: true },
   oldman: { frames: 1, w: 110, h: 163 },
-  boy_cap: { frames: 1, w: 96, h: 171 },
+  boy_cap: { frames: 6, w: 108, h: 172, views: true },
   boy_redcap: { frames: 1, w: 101, h: 164 },
   girl_glasses: { frames: 1, w: 97, h: 159 },
   girl_red: { frames: 1, w: 114, h: 147 },
-  grandma: { frames: 1, w: 101, h: 163 },
+  grandma: { frames: 6, w: 111, h: 164, views: true },
   chef: { frames: 1, w: 124, h: 163 },                          // the chef holding fresh bread; his walk is made by bouncing the picture
   waiter: { frames: 4, w: 133, h: 162, cycle: [1, 0, 2, 0] },   // 0 stand, 1 and 2 walk, 3 carrying a tray; walking plays `cycle`
 };
@@ -21,12 +21,13 @@ const SCALE = 0.9; // native sprite px -> design px (a street character ends up 
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 
 /** Draws frame `floor(t*fps+phase)` of the sheet with the feet at (x, y). Returns false when the sheet is not loaded. */
-export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false } = {}) {
+export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false, back = false } = {}) {
   const img = getImage(`char-${id}`), m = SHEETS[id];
   if (!img || !m) return false;
-  const seq = m.cycle ?? Array.from({ length: m.frames }, (_, i) => i);
-  const f = m.frames === 1 ? 0 : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
-  const walking = (m.frames === 1 && frame === null) || bounce;          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
+  const base = m.views && back ? 3 : 0;   // sheets with views: frames 3-5 show the character from behind
+  const seq = m.views ? [1, 0, 2, 0].map((i) => base + i) : m.cycle ?? Array.from({ length: m.frames }, (_, i) => i);
+  const f = m.frames === 1 ? 0 : m.views && frame !== null ? base : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
+  const walking = (m.frames === 1 && frame === null) || bounce;   // views sheets have real steps, so only `bounce` (waiting in place) moves them          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
   const s = SCALE * scale, dw = m.w * s, dh = m.h * s;
   if (shade) shadow(ctx, x, y + 1, dw * 0.28, 4.5, 0.32);
   ctx.save();
