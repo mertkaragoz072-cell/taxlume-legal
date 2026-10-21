@@ -10,7 +10,7 @@ export const WALKERS = () => [
   // schoolboy: tall, backpack, blue jacket, sneakers
   { sprite: 'boy_backpack', fps: 7, x: 120, dir: 1, speed: 38, y: DESIGN.walkY + 5, step: 8.2, phase: 0, skin: SKINS[0], hair: '#4a2a14', hairStyle: 'short', top: '#3f7fc9', under: '#f4f0e6', zip: true, pants: '#39435c', shoe: '#e8e2d6', backpack: '#2e8a5a', scale: 1.04 },
   // girl in a straw hat and sundress with a flower basket
-  { sprite: 'girl_hat', fps: 7, x: 980, dir: -1, speed: 34, y: DESIGN.walkY - 3, step: 7.6, phase: 2, skin: SKINS[1], hair: '#6a3418', hairStyle: 'hat', top: '#fff7ea', dress: '#3f86d6', pants: '#e8d2b0', shoe: '#a8683a', lashes: true, bag: true, scale: 0.98, eye: '#5a3a1e' },
+  { sprite: 'girl_glasses', fps: 7, x: 980, dir: -1, speed: 34, y: DESIGN.walkY - 3, step: 7.6, phase: 2, skin: SKINS[1], hair: '#6a3418', hairStyle: 'hat', top: '#fff7ea', dress: '#3f86d6', pants: '#e8d2b0', shoe: '#a8683a', lashes: true, bag: true, scale: 0.98, eye: '#5a3a1e' },
   // elderly gentleman: flat cap, vest, white moustache, baguettes in a paper bag
   { sprite: 'oldman', fps: 5, x: 1290, dir: 1, speed: 24, y: DESIGN.walkY + 1, step: 6.6, phase: 4, skin: SKINS[2], hair: '#d8d4cc', mustache: true, hairStyle: 'cap', cap: '#7a5a3a', top: '#7a8a5a', under: '#f4efe2', buttons: '#e8d8a0', pants: '#5a4a3a', shoe: '#3a2a20', paperBag: true, scale: 1.0, glasses: true },
 ];

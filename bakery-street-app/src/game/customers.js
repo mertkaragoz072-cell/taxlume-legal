@@ -5,7 +5,7 @@
 // Every sale is one synchronous commit (stock, gold, order status, customer removal), so an order can be paid only once.
 import { CAFE } from '../data/economy.js';
 
-export const LOOKS = ['boy_backpack', 'girl_basket', 'oldman', 'boy_cap', 'girl_hat', 'girl_red', 'grandma'];
+export const LOOKS = ['boy_backpack', 'girl_basket', 'oldman', 'boy_cap', 'girl_glasses', 'girl_red', 'grandma', 'boy_redcap'];
 const ms = (s) => Math.round(s * 1000);
 const isId = (n) => Number.isInteger(n) && n > 0 && n < 1e12;
 

@@ -12,7 +12,8 @@ export const MANIFEST = {
   'char-girl_red': 'assets/characters/girl_red.webp',
   'char-grandma': 'assets/characters/grandma.webp',
   'char-boy_backpack': 'assets/characters/boy_backpack.webp',   // walk-cycle strips
-  'char-girl_hat': 'assets/characters/girl_hat.webp',
+  'char-boy_redcap': 'assets/characters/boy_redcap.webp',
+  'char-girl_glasses': 'assets/characters/girl_glasses.webp',
   'char-oldman': 'assets/characters/oldman.webp',
   'char-chef': 'assets/characters/chef.webp',
   'char-waiter': 'assets/characters/waiter.webp',   // the dining-room waiter (walk cycle)

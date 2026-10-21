@@ -111,3 +111,7 @@ The four tables no longer sit in one row: they are at different depths (front ed
 
 - `scripts/stylize.py` (applied once to every picture under assets/game except icons and the app icon; the originals are in git history): edge-preserving smoothing removes fine texture and noise, colour is posterised in soft steps, saturation lifted ~8%. Strength 0.85 (0.9 town backdrop, 0.6 Keşif map).
 - Photographic effects removed: film grain, heavy vignette and warm multiply (now 0.1-0.12), sun shafts on the street, dust motes and bokeh, the blurred "depth of field" corner plants in the cafe.
+
+### New customer characters (reference-quality art)
+
+Eight newly drawn characters replace the old walk strips: girl_basket, boy_cap, boy_backpack, grandma, oldman, girl_red, boy_redcap (new), girl_glasses (replaces girl_hat). They are single standing pictures (`frames: 1` in `SHEETS`); `drawSprite` makes the walk by moving the picture (two bounces per cycle, a small lean, squash and stretch). Chef and waiter are still the old sheets until new art arrives. A real walk cycle or a seated pose can replace any of these by supplying a multi-frame strip.
