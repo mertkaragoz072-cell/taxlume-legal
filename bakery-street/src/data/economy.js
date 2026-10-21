@@ -212,19 +212,19 @@ export const RESEARCH = {
  */
 export const EXPLORE = [
   {
-    id: 'meadow', name: 'Yeşil Çayırlar', icon: '🌿', map: { x: 190, y: 470 },
+    id: 'meadow', name: 'Yeşil Çayırlar', icon: '🌿', map: { x: 268, y: 494 },
     desc: 'Çiçekli, sakin otlaklar. Kısa bir yürüyüşle malzeme toplanır.',
     minLevel: 1, duration: 60,
     rewards: { gold: [50, 90], xp: [14, 22], ingredients: [{ id: 'flour', amount: [2, 4], chance: 1 }, { id: 'egg', amount: [1, 3], chance: 0.5 }] },
   },
   {
-    id: 'forest', name: 'Orman Yolu', icon: '🌲', map: { x: 400, y: 300 },
+    id: 'forest', name: 'Orman Yolu', icon: '🌲', map: { x: 536, y: 228 },
     desc: 'Gölgeli patikalar; mantar, süt ve tatlı bulmak için iyi bir yer.',
     minLevel: 4, after: { region: 'meadow', times: 1 }, duration: 300,
     rewards: { gold: [450, 750], xp: [100, 140], ingredients: [{ id: 'milk', amount: [2, 4], chance: 1 }, { id: 'sugar', amount: [2, 4], chance: 0.7 }, { id: 'butter', amount: [1, 2], chance: 0.4 }] },
   },
   {
-    id: 'ruins', name: 'Eski Harabeler', icon: '🏛️', map: { x: 600, y: 440 },
+    id: 'ruins', name: 'Eski Harabeler', icon: '🏛️', map: { x: 590, y: 440 },
     desc: 'Unutulmuş taş kalıntılar. Tehlikeli ama nadir hazineler saklar.',
     minLevel: 8, after: { region: 'forest', times: 1 }, duration: 900,
     rewards: { gold: [1800, 2700], xp: [400, 500], ingredients: [{ id: 'butter', amount: [3, 6], chance: 1 }, { id: 'beans', amount: [3, 6], chance: 0.8 }], gems: { amount: [2, 5], chance: 0.4 } },

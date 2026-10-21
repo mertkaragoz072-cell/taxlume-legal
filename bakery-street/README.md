@@ -321,3 +321,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### App icon
 
 `assets/app/logo.webp` is the transparent logo on the loading screen. `assets/app/` also holds the app icon (1024 master, 512/192 for the manifest, 180 apple-touch, 48/32 favicons), cut from the supplied artwork with its rounded frame removed (the platforms round the corners themselves). `manifest.webmanifest` + the `<link>`s in index.html make it installable with the right icon, name and colours.
+
+### Keşif map
+
+`assets/explore-map.webp` (key `explore-map`) is the parchment map. It is drawn sharp inside the 1400×790 design rectangle and as a soft blurred copy beyond it on wider screens; the region markers (`EXPLORE` regions' `map` in data/economy.js: meadow 268,494 · forest 536,228 · ruins 590,440) sit on its three empty patches. Without the image the scene falls back to the code-drawn parchment and dotted trail.

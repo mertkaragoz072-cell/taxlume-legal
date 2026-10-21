@@ -19,6 +19,7 @@ export const MANIFEST = {
   'ground-walk-a': 'assets/ground-walk-a.webp',   // sidewalk slab strips (tile left-to-right)
   'ground-walk-b': 'assets/ground-walk-b.webp',
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha
+  'explore-map': 'assets/explore-map.webp',       // Keşif parchment map (1600 px wide, 16:9; the three region spots sit on its left half)
 };
 
 // Street / scene props (assets/props/<name>.webp), registered under the key 'prop-<name>'.

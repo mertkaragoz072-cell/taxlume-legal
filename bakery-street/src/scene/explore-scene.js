@@ -2,7 +2,8 @@
 // Each region is a marker on the left half; the details and buttons are a DOM panel (ui/explore.js) on the right.
 import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor, gradeScreen } from '../util.js';
 import { PAL } from '../palette.js';
-import { drawIcon } from '../assets.js';
+import { drawIcon, getImage } from '../assets.js';
+import { DESIGN } from '../config.js';
 
 const R = 62;                                              // tap radius of a marker (design px)
 
@@ -21,6 +22,15 @@ export class ExploreScene {
   paintBackdrop(w, h) {
     const c = document.createElement('canvas'); c.width = w; c.height = h;
     const g = c.getContext('2d'), rand = rng(7);
+    const map = getImage('explore-map');
+    if (map) {                                                    // supplied map: sharp in the design rectangle, soft parchment beyond it
+      const v = this.view, k = v.scale * v.dpr, cover = Math.max(w / map.naturalWidth, h / map.naturalHeight);
+      if ('filter' in g) g.filter = 'blur(10px)';
+      g.drawImage(map, (w - map.naturalWidth * cover) / 2, (h - map.naturalHeight * cover) / 2, map.naturalWidth * cover, map.naturalHeight * cover);
+      g.filter = 'none';
+      g.drawImage(map, v.ox * k, v.oy * k, DESIGN.w * k, DESIGN.h * k);
+      return c;
+    }
     g.fillStyle = vgrad(g, 0, h, [[0, PAL.vanilla], [1, PAL.honeyLight]]); g.fillRect(0, 0, w, h);
     for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(160,110,50,${0.03 + rand() * 0.04})`; g.beginPath(); g.ellipse(rand() * w, rand() * h, 40 + rand() * 120, 14 + rand() * 40, rand() * 3, 0, 7); g.fill(); }
     // rolling green hills across the map
@@ -44,9 +54,11 @@ export class ExploreScene {
     ctx.drawImage(this.bg, 0, 0);
     ctx.setTransform(k, 0, 0, k, v.ox * k, v.oy * k);
     const rs = this.ex.regions;
-    // dotted trail linking the regions in order
+    // dotted trail linking the regions in order (the supplied map already has its own paths)
+    if (!getImage('explore-map')) {
     ctx.strokeStyle = 'rgba(120,70,25,.7)'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.setLineDash([2, 16]);
     ctx.beginPath(); rs.forEach((r, i) => (i ? ctx.lineTo(r.map.x, r.map.y) : ctx.moveTo(r.map.x, r.map.y))); ctx.stroke(); ctx.setLineDash([]);
+    }
     for (const r of rs) this.drawRegion(ctx, r, t);
     gradeScreen(ctx, { warm: 0.25, vignette: 0.3, floorFade: 0 });
   }
