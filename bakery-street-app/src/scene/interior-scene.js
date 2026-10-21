@@ -170,7 +170,7 @@ export class InteriorScene {
     const side = a.side ?? -1;                                   // the chair the guest uses
     const slide = near ? 14 * (1 - sit) - 5 * sit : 0;           // out while walking up, in when seated
     // the three pieces are separate pictures: sizes follow the table (460 units wide of a 1000-unit set), all standing on one baseline
-    const f = (460 / tableImg.naturalWidth) * s, base = dy + h;
+    const f = (580 / tableImg.naturalWidth) * s, base = dy + h;
     const tW = tableImg.naturalWidth * f, tH = tableImg.naturalHeight * f;
     const pieces = [];
     for (const [key, cx] of [['chair-left', 165], ['chair-right', 835]]) {

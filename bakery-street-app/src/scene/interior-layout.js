@@ -59,12 +59,13 @@ export const chairSpot = (index) => {
  * top edge is cut off, so the legs sit behind the chair front and nobody floats or sinks into the tabletop.
  */
 /**
- * Where the picture of a seated guest (chair + guest + table, facing right with the chair on the left) is drawn for table `a`:
+ * Where the picture of a seated guest (chair + guest + table, seen from the front, centred on the table) is drawn for table `a`:
  * as wide as the table slot, standing on its bottom edge; mirrored when the guest sits on the right (`side` 1).
  */
+export const SEAT_TABLE_FRAC = 268 / 460;   // the table top is 268 of the 460 px of a seat picture, which is centred on the table
 export const seatRect = (a, img) => {
-  const w = a.w * 0.8, h = (w * img.naturalHeight) / img.naturalWidth;
-  return { x: a.x + (a.w - w) / 2, y: a.y + a.h + 8 - h, w, h, flip: (a.side ?? -1) === 1 };
+  const k = (0.58 * a.w) / (SEAT_TABLE_FRAC * img.naturalWidth), w = img.naturalWidth * k, h = img.naturalHeight * k;   // table top as wide as the empty table's (460 of 1000 units)
+  return { x: a.x + a.w / 2 - w / 2, y: a.y + a.h - h, w, h, flip: (a.side ?? -1) === 1 };
 };
 export const seatTop = (a) => a.y + a.h * 0.38;
 export const HIP_H = 118;
