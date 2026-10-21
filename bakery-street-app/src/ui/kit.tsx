@@ -17,12 +17,12 @@ export function Btn({ label, sub, variant = "go", onPress, disabled, small, styl
     : variant === "lack" ? { top: C.terracottaLight, bot: C.terracotta, edge: C.terracottaDark, shadow: C.terracottaDark, text: C.paper }
     : variant === "plain" ? { top: C.creamLight, bot: C.cream, edge: C.brown, shadow: C.brownDark, text: C.brownDark }
     : { top: C.greenLight, bot: C.green, edge: C.greenDeep, shadow: C.greenDeep, text: C.paper };
-  const h = Math.max(40, u * (small ? 6.2 : 7));
+  const h = Math.max(44, u * (small ? 6.2 : 7));
   return (
     <Pressable onPress={off ? undefined : onPress} disabled={off && variant !== "lack"} accessibilityRole="button"
-      style={({ pressed }) => [{ minWidth: Math.max(40, u * (small ? 7.5 : 14)), height: h, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: pal.edge, overflow: "hidden", transform: [{ translateY: pressed ? u * 0.3 : 0 }] }, style]}>
+      style={({ pressed }) => [{ minWidth: Math.max(44, u * (small ? 7.5 : 14)), height: h, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: pal.edge, overflow: "hidden", transform: [{ translateY: pressed ? u * 0.3 : 0 }] }, style]}>
       <LinearGradient colors={[pal.top, pal.bot]} style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: u * 1.6 }}>
-        <Text style={{ color: pal.text, fontFamily: FONT.bold, fontSize: fs(u, small ? 2.9 : 3.2) }} numberOfLines={1}>{label}</Text>
+        <Text allowFontScaling={false} style={{ color: pal.text, fontFamily: FONT.bold, fontSize: fs(u, small ? 2.9 : 3.2) }} numberOfLines={1}>{label}</Text>
         {sub ? <Rich text={sub} size={fs(u, 2.2)} style={{ color: pal.text, marginTop: -u * 0.2 }} /> : null}
       </LinearGradient>
     </Pressable>
@@ -47,8 +47,8 @@ export function Title({ name, note }: { name: string; note?: string }) {
   const u = useU();
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: u }}>
-      <Text style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.3), flexShrink: 1 }}>{name}</Text>
-      {note ? <Text style={{ color: C.honeyDark, fontFamily: FONT.regular, fontSize: fs(u, 2.5) }}>{note}</Text> : null}
+      <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.3), flexShrink: 1 }}>{name}</Text>
+      {note ? <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.regular, fontSize: fs(u, 2.5) }}>{note}</Text> : null}
     </View>
   );
 }
@@ -73,7 +73,7 @@ export function Bar({ value, text, color }: { value: number; text?: string; colo
   return (
     <View style={{ height: u * 3.4, borderRadius: 99, backgroundColor: C.brown, borderWidth: u * 0.25, borderColor: C.brownDark, overflow: "hidden", justifyContent: "center" }}>
       <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.max(0, Math.min(1, value)) * 100}%`, backgroundColor: color ?? C.green }} />
-      {text ? <Text style={{ textAlign: "center", color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, 2.2) }}>{text}</Text> : null}
+      {text ? <Text allowFontScaling={false} style={{ textAlign: "center", color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, 2.2) }}>{text}</Text> : null}
     </View>
   );
 }
@@ -98,8 +98,8 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, children 
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: u * 2.2, paddingTop: u * 1.6, paddingBottom: u * 0.6 }}>
         <Rich text={title} size={fs(u, 4)} style={{ color: C.brownDark, fontFamily: FONT.bold }} />
         {onClose ? (
-          <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ width: Math.max(40, u * 6), height: Math.max(40, u * 6), borderRadius: 99, backgroundColor: C.terracotta, alignItems: "center", justifyContent: "center", marginRight: -u * 0.8 }}>
-            <Text style={{ color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, 3) }}>✕</Text>
+          <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ width: Math.max(44, u * 6), height: Math.max(44, u * 6), borderRadius: 99, backgroundColor: C.terracotta, alignItems: "center", justifyContent: "center", marginRight: -u * 0.8 }}>
+            <Text allowFontScaling={false} style={{ color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, 3) }}>✕</Text>
           </Pressable>
         ) : null}
       </View>

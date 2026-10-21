@@ -39,12 +39,24 @@ export class GameImage {
   get height() { return this.naturalHeight; }
 }
 
+/** Gradients are rebuilt by the scene code every frame with identical numbers; the Skia shader is made once per distinct gradient. */
+const shaderCache = new Map<string, SkShader | null>();
+
 export class Gradient {
   stops: { pos: number; color: SkColor }[] = [];
   constructor(public kind: "linear" | "radial", public a: number[]) {}
   addColorStop(pos: number, css: string) { this.stops.push({ pos, color: color(css) }); }
   shader(): SkShader | null {
     if (!this.stops.length) return null;
+    const key = `${this.kind}|${this.a.map((n) => Math.round(n * 10)).join(",")}|${this.stops.map((s) => `${s.pos}:${s.color.join(",")}`).join(";")}`;
+    let sh = shaderCache.get(key);
+    if (!sh) {
+      sh = this.make();
+      if (sh) { if (shaderCache.size > 300) shaderCache.clear(); shaderCache.set(key, sh); }
+    }
+    return sh;
+  }
+  private make(): SkShader | null {
     const colors = this.stops.map((s) => s.color), pos = this.stops.map((s) => s.pos);
     if (this.kind === "linear") {
       const [x0, y0, x1, y1] = this.a;
@@ -130,12 +142,12 @@ export class Ctx2D {
   getTransform() { const [a, b, c, d, e, f] = this.m; return { a, b, c, d, e, f }; }
   setLineDash(d: number[]) { this.dash = d.length ? d : []; }
   clearRect(x: number, y: number, w: number, h: number) {
-    const p = Skia.Paint(); p.setBlendMode(BlendMode.Clear);
+    const p = (this.shared ??= Skia.Paint()); p.reset(); p.setBlendMode(BlendMode.Clear);
     this.sk.drawRect(Skia.XYWHRect(x, y, w, h), p);
   }
 
   // ---- paths -------------------------------------------------------------------------------------------------------------------------
-  beginPath() { this.path = Skia.Path.Make(); }
+  beginPath() { if (this.pathBuf) { this.pathBuf.rewind(); this.path = this.pathBuf; } else this.path = this.pathBuf = Skia.Path.Make(); }
   closePath() { this.path.close(); }
   moveTo(x: number, y: number) { this.path.moveTo(x, y); this.cx = x; this.cy = y; }
   lineTo(x: number, y: number) { this.path.lineTo(x, y); this.cx = x; this.cy = y; }
@@ -165,8 +177,12 @@ export class Ctx2D {
   }
 
   // ---- painting ----------------------------------------------------------------------------------------------------------------------
+  private shared: SkPaint | null = null;
+  private pathBuf: SkPath | null = null;
+  private blurs = new Map<number, SkImageFilter>();
   private paint(style: Style, stroke: boolean): SkPaint {
-    const p = Skia.Paint();
+    const p = (this.shared ??= Skia.Paint());                // one paint per context, reset for every draw (no garbage per shape)
+    p.reset();
     p.setAntiAlias(true);
     p.setStyle(stroke ? PaintStyle.Stroke : PaintStyle.Fill);
     if (typeof style === "string") p.setColor(withAlpha(color(style), this.globalAlpha));
@@ -192,7 +208,7 @@ export class Ctx2D {
     const f = this.filter;
     if (f !== "none") {
       const blur = f.match(/blur\(([\d.]+)px\)/);
-      if (blur) p.setImageFilter(Skia.ImageFilter.MakeBlur(parseFloat(blur[1]), parseFloat(blur[1]), TileMode.Decal, null) as SkImageFilter);
+      if (blur) { const r = parseFloat(blur[1]); let f = this.blurs.get(r); if (!f) { f = Skia.ImageFilter.MakeBlur(r, r, TileMode.Decal, null) as SkImageFilter; this.blurs.set(r, f); } p.setImageFilter(f); }
       const gray = f.match(/grayscale\(([\d.]+)\)/);
       if (gray) {
         const s = 1 - parseFloat(gray[1]), r = 0.2126 * (1 - s), g = 0.7152 * (1 - s), b = 0.0722 * (1 - s);
@@ -219,7 +235,8 @@ export class Ctx2D {
     else if (a.length === 4) { [dx, dy, dw, dh] = a; }
     else { [sx, sy, sw, sh, dx, dy, dw, dh] = a; }
     if (dw <= 0 || dh <= 0 || sw <= 0 || sh <= 0) return;
-    const p = Skia.Paint();
+    const p = (this.shared ??= Skia.Paint());
+    p.reset();
     p.setAlphaf(this.globalAlpha);
     this.applyCommon(p);
     this.sk.drawImageRectOptions(img, Skia.XYWHRect(sx, sy, sw, sh), Skia.XYWHRect(dx, dy, dw, dh), FilterMode.Linear, MipmapMode.Linear, p);

@@ -64,3 +64,12 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 - Gökyüzü kenar renkleri sabit tonlar (resim piksellerini geri okumuyoruz); fark küçük.
 - Yazı tipi Nunito (web'deki Trebuchet'e yakın, yuvarlak).
 - `../bakery-street` (eski web sürümü) yerinde duruyor; oyun kuralları iki yerde kopya olduğu için yeni özellikler `bakery-street-app`'e eklenmeli. Web sürümü artık dağıtılmıyor, silinebilir.
+
+## Mobil optimizasyon (yapılanlar)
+
+- **Çizim:** tek `Paint` ve tek `Path` her karede sıfırlanarak yeniden kullanılır (şekil başına çöp yok); gradyan shader'ları değerlerine göre önbelleğe alınır; blur filtresi bir kez üretilir. Sokak ve kafe duvar/zemin katmanları ekran boyutu başına bir kez çizilir.
+- **Uyarlanabilir kalite:** kare çizimi uzun süre 22 ms'yi aşarsa önce 30 fps sınırı, sonra çözünürlük (en düşük %60) düşürülür. Piksel bütçesi tavanı ve dpr ≤ 2 sınırı sürüyor.
+- **Pil:** uygulama arka plandayken ne çizilir ne de sahne güncellenir; müzik duraklar.
+- **Android:** geri tuşu açık paneli, sonra sahneyi kapatır (sokakta uygulamadan çıkar); `androidWarmup` ve `opaque` Skia görünümü.
+- **Dokunma ve yazı:** tüm düğmeler en az 44 dp; sistem yazı boyutu ayarı yerleşimi bozmaz (`allowFontScaling={false}`); çentik/güvenli alanlar uygulanır.
+- Ölçüm sınırı: geliştirme ortamında GPU yoktur; kare süresi ölçümleri yalnızca JS tarafındaki kayıt maliyetini gösterir (sokak ~2 ms, kafe ~3 ms medyan). Gerçek kare hızı telefonda ölçülmeli.

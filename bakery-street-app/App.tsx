@@ -6,7 +6,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Animated, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Animated, BackHandler, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AREAS } from "./src/scene/interior-layout.js";
 import { DESIGN } from "./src/config.js";
@@ -48,8 +48,8 @@ export default function App() {
     })();
   }, []);
 
-  if (error) return <View style={styles.center}><Text style={styles.msg}>Oyun yüklenemedi.{"\n"}{error}</Text></View>;
-  if (!world || !fontsReady) return <View style={styles.center}><Text style={styles.msg}>Yükleniyor… {Math.round(progress * 100)}%</Text></View>;
+  if (error) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun yüklenemedi.{"\n"}{error}</Text></View>;
+  if (!world || !fontsReady) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Yükleniyor… {Math.round(progress * 100)}%</Text></View>;
   return (
     <SafeAreaProvider>
       <StatusBar hidden />
@@ -146,6 +146,17 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     return () => sub.remove();
   }, [feedback, storage, world, showToast]);
 
+  // Android back button: close the open panel, then go back to the street, otherwise leave the app as usual
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (overlay) { setOverlay(null); return true; }
+      if (panel) { act.closePanel(); return true; }
+      if (sceneRef.current !== "street") { go("street"); return true; }
+      return false;
+    });
+    return () => sub.remove();
+  }, [overlay, panel, act, go]);
+
   const reset = useCallback(() => {
     const r = world.saves.reset({ confirmed: true });
     if (!r.ok) { warn(r.message, 4500); return; }
@@ -203,7 +214,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           {overlay === "settings" ? <SettingsPanel onReset={reset} /> : null}
           {overlay === "town" ? <TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /> : null}
           <Toast text={toast.text} seq={toast.seq} />
-          {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
+          {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
         </View>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: C.brownDark, opacity: fade }]} />
       </View>

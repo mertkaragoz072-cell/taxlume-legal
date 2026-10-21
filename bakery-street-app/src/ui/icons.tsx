@@ -32,18 +32,18 @@ export function GameIcon({ id, size, style }: { id: string; size: number; style?
 /** One emoji from the game data shown as its picture (or the emoji itself when it has none). */
 export function EmojiIcon({ emoji, size, style }: { emoji: string; size: number; style?: any }) {
   const id = iconIdFor(emoji);
-  return id ? <GameIcon id={id} size={size} style={style} /> : <Text style={{ fontSize: size * 0.85 }}>{emoji}</Text>;
+  return id ? <GameIcon id={id} size={size} style={style} /> : <Text allowFontScaling={false} style={{ fontSize: size * 0.85 }}>{emoji}</Text>;
 }
 
 /** Text whose emoji are shown as pictures, inline. */
 export function Rich({ text, size, style }: { text: string; size: number; style?: StyleProp<TextStyle> }) {
   const parts = text.split(new RegExp(RE.source, "gu"));
   return (
-    <Text style={[{ fontFamily: FONT.regular, fontSize: size }, style]}>
+    <Text allowFontScaling={false} style={[{ fontFamily: FONT.regular, fontSize: size }, style]}>
       {parts.map((p, i) => {
         const id = EMOJI[bare(p)];
         if (id) return <Image key={i} source={iconSource(id)} style={{ width: size * 1.25, height: size * 1.25, resizeMode: "contain" }} />;
-        return p ? <Text key={i}>{p}</Text> : null;
+        return p ? <Text allowFontScaling={false} key={i}>{p}</Text> : null;
       })}
     </Text>
   );

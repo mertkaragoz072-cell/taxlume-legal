@@ -74,7 +74,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
   const [, bump] = useState(0);
   const toggle = (key: string) => { settings.toggle(key); act.sfx("tap"); bump((n) => n + 1); };
   const row = (key: string, icon: string, label: string) => (
-    <Card key={key} left={<Text style={{ fontSize: u * 5 }}>{icon}</Text>} right={<Btn label={settings.values[key] ? "Açık" : "Kapalı"} variant={settings.values[key] ? "go" : "busy"} onPress={() => toggle(key)} />}>
+    <Card key={key} left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>{icon}</Text>} right={<Btn label={settings.values[key] ? "Açık" : "Kapalı"} variant={settings.values[key] ? "go" : "busy"} onPress={() => toggle(key)} />}>
       <Title name={label} />
     </Card>
   );
@@ -178,7 +178,7 @@ export function ResearchPanel() {
           <Card key={id} tone={st === "max" ? "open" : st === "locked" ? "locked" : undefined} left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={btn}>
             <Title name={d.name} note={`Seviye ${lv}/${max}`} />
             <Pips level={lv} max={max} />
-            <Text style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, 2.4) }}>{bonusText(id, lv)}</Text>
+            <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, 2.4) }}>{bonusText(id, lv)}</Text>
             {extra}
           </Card>
         );
