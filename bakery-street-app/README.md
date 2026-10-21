@@ -45,7 +45,7 @@ Android: `eas build --profile production --platform android`, sonra Play Console
 
 | Alan | Değer |
 |---|---|
-| Platform | iOS, yalnızca iPhone (`supportsTablet: false`) |
+| Platform | iPhone ve iPad (`supportsTablet: true`, tam ekran yatay) |
 | Ad | Fırın & Kafe |
 | Bundle ID | `com.firinkafe.app` (sonradan değişmez) |
 | SKU | firin-kafe-1 |
@@ -73,3 +73,12 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 - **Android:** geri tuşu açık paneli, sonra sahneyi kapatır (sokakta uygulamadan çıkar); `androidWarmup` ve `opaque` Skia görünümü.
 - **Dokunma ve yazı:** tüm düğmeler en az 44 dp; sistem yazı boyutu ayarı yerleşimi bozmaz (`allowFontScaling={false}`); çentik/güvenli alanlar uygulanır.
 - Ölçüm sınırı: geliştirme ortamında GPU yoktur; kare süresi ölçümleri yalnızca JS tarafındaki kayıt maliyetini gösterir (sokak ~2 ms, kafe ~3 ms medyan). Gerçek kare hızı telefonda ölçülmeli.
+
+## Tablet (iPad ve Android tabletler)
+
+- `app.json`: `supportsTablet: true`; yatay mod kilitli, iPad'de çoklu görev bölünmüş görünümü kapalı (`requireFullScreen`).
+- **Sokak:** 4:3 ekranlarda gökyüzü üstte uzar. Panorama ile gökyüzü arasında görünen koyu çizgi, `destination-in` karışım modunun çizim katmanında eksik olmasından kaynaklanıyordu (telefonlarda da küçük bir hataydı); düzeltildi. Panorama kenar renkleri artık resmin gerçek piksellerinden okunuyor.
+- **Kafe:** 4:3'te oda yakınlaştırılır (zoom 0.8 → ~0.85, merkez kapıya doğru kayar), üstteki boş duvar azalır; telefon görünümü aynı kalır.
+- **Keşif haritası:** 4:3'te harita tam yükseklik ile telefondaki "sığdır" arasında ortalanır (yaklaşık yarı yarıya yakınlaştırılır, sola hizalı); işaretçiler sağ paneli kapatmaz, üstteki bulanık şerit küçülür.
+- **Arayüz:** boyutlar ekran yüksekliği/genişliğinden türetilen birimle ölçeklenir; 1024×768 ve 1366×1024'te paneller, üst çubuk ve menü ekran görüntüsüyle kontrol edildi.
+- Gerçek iPad/tablet cihazında denenmedi.

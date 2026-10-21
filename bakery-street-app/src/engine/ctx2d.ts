@@ -205,6 +205,8 @@ export class Ctx2D {
     if (op === "lighter") p.setBlendMode(BlendMode.Plus);
     else if (op === "multiply") p.setBlendMode(BlendMode.Multiply);
     else if (op === "source-atop") p.setBlendMode(BlendMode.SrcATop);
+    else if (op === "destination-in") p.setBlendMode(BlendMode.DstIn);
+    else if (op === "destination-out") p.setBlendMode(BlendMode.DstOut);
     const f = this.filter;
     if (f !== "none") {
       const blur = f.match(/blur\(([\d.]+)px\)/);

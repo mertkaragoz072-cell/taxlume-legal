@@ -122,8 +122,19 @@ function treeMass(ctx, xmin, xmax) {
 const edgeCache = {};
 /** Average colours along the panorama's top or bottom edge, sampled left-to-right. */
 function sampleEdge(img, which) {
-  // plain sky and pavement tones (the picture's own pixels are not read back on the phone)
-  return edgeCache[which] ??= Array.from({ length: 8 }, () => (which === 'top' ? [122, 172, 216] : [168, 150, 120]));
+  if (edgeCache[which]) return edgeCache[which];
+  const fallback = Array.from({ length: 8 }, () => (which === 'top' ? [122, 172, 216] : [168, 150, 120]));
+  try {                                                     // read a thin strip of the picture and average it in 8 columns (CPU copy, once)
+    const w = img.naturalWidth, h = img.naturalHeight, y0 = which === 'top' ? 0 : h - 6;
+    const px = img.image.readPixels(0, y0, { width: w, height: 6, colorType: 4, alphaType: 3 });   // RGBA_8888, unpremultiplied
+    if (!px || px.length < w * 6 * 4) return (edgeCache[which] = fallback);
+    const step = Math.floor(w / 8);
+    return (edgeCache[which] = Array.from({ length: 8 }, (_, i) => {
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let y = 0; y < 6; y++) for (let x = i * step; x < (i + 1) * step; x += 3) { const k = (y * w + x) * 4; r += px[k]; g += px[k + 1]; b += px[k + 2]; n++; }
+      return [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+    }));
+  } catch { return (edgeCache[which] = fallback); }
 }
 
 let softImg = null;

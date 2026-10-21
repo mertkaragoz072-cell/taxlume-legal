@@ -42,7 +42,8 @@ export class InteriorScene {
    */
   resize(view) {
     this.view = view;
-    const z = CAM.zoom, tx = view.vw / 2 - CAM.cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
+    // tablets (4:3 and similar): the room is brought closer so the extra height is not just empty wall; phones keep the base zoom
+    const tall = Math.max(0, Math.min(1, (view.vh - 870) / 180)), z = CAM.zoom + (Math.min(view.vw / 1650, 0.9) - CAM.zoom) * tall, cx = CAM.cx + (815 - CAM.cx) * tall, tx = view.vw / 2 - cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
     this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: -ty / z, wb: (view.vh - ty) / z };
   }
 
