@@ -1,0 +1,15 @@
+{
+  "name": "Fırın & Kafe",
+  "short_name": "Fırın & Kafe",
+  "description": "Kendi fırınını ve kafeni büyüt.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#463020",
+  "theme_color": "#463020",
+  "icons": [
+    { "src": "assets/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

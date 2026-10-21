@@ -317,3 +317,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### HUD and menu pictures
 
 `hud-quests, hud-events, hud-settings, hud-avatar, nav-cafe, nav-town, nav-explore, hud-back` replace the old SVGs (`src/ui/icons.js` now builds them with `pic(name)`), including the back button's arrow.
+
+### App icon
+
+`assets/app/` holds the app icon (1024 master, 512/192 for the manifest, 180 apple-touch, 48/32 favicons), cut from the supplied artwork with its rounded frame removed (the platforms round the corners themselves). `manifest.webmanifest` + the `<link>`s in index.html make it installable with the right icon, name and colours.
