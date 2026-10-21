@@ -16,7 +16,7 @@ const POST = { x: 655, y: WAITER_LANE_Y };                 // the waiter's post:
 const HAND_SEC = 1.1;                                       // time spent handing the order over
 
 class Walker {
-  constructor(x, y, speed) { this.x = x; this.y = y; this.speed = speed; this.dir = 1; this.moving = false; this.target = null; this.wait = 1.5; this.t = 0; }
+  constructor(x, y, speed) { this.x = x; this.y = y; this.speed = speed; this.dir = 1; this.moving = false; this.target = null; this.wait = 1.5; this.t = 0; this.view = 'side'; }
   /** Moves toward the target point (one axis at a time is up to the route); returns true when it has just arrived. */
   step(dt, blocked = null) {
     this.t += dt;
@@ -24,6 +24,7 @@ class Walker {
     const dx = this.target.x - this.x, dy = this.target.y - this.y, d = Math.hypot(dx, dy);
     if (d < 3) { this.x = this.target.x; this.y = this.target.y; this.target = null; this.moving = false; return true; }
     if (Math.abs(dx) > 1) this.dir = dx > 0 ? 1 : -1;
+    this.view = Math.abs(dy) > Math.abs(dx) * 0.6 ? (dy < 0 ? 'back' : 'front') : 'side';   // which side of the walker the camera sees
     if (blocked?.(this.x, this.y, Math.abs(dx) > 1 ? Math.sign(dx) : 0, Math.sign(dy))) { this.moving = false; return false; }     // someone is in the way: wait
     this.moving = true;
     const s = Math.min(d, this.speed * dt);
@@ -153,7 +154,7 @@ export class StaffLayer {
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, view: b.view, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
   }
 
   drawWaiter(ctx) {
@@ -162,7 +163,7 @@ export class StaffLayer {
     ctx.globalAlpha = this.show;
     // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
     const tray = !!this.carry && this.phase !== 'hand';
-    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: tray ? 3 : w.moving ? null : 0, bounce: tray && w.moving, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
+    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : tray ? 3 : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
     // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
     ctx.globalAlpha = 1;
   }

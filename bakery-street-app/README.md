@@ -141,3 +141,6 @@ oven, counter (dough and rolling pin on top), showcase (goods baked into the gla
 
 ### Önden/arkadan yürüyen müşteriler
 `girl_basket`, `boy_cap`, `boy_backpack`, `grandma` 6 karelik şeritler (0-2 önden, 3-5 arkadan; `views: true`). Kameradan uzaklaşırken (yukarı yürürken) arka kareler, diğer durumlarda ön kareler çizilir. Diğer 4 müşteri ve şef/garson hâlâ eski görünümde.
+
+### Şef ve garson (önden/arkadan/yandan)
+`chef.webp` ve `waiter.webp` 6 karelik şerit (`staff: true`): 0 boş duruş, 1 taşıyarak duruş, 2-3 önden yürüyüş, 4 arka, 5 yan. Yürüme yönüne göre (`Walker.view`) kare seçilir; tepsisiz garson boş duruş karesini zıplatarak yürür.
