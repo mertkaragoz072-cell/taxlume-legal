@@ -169,20 +169,24 @@ export class InteriorScene {
     const sit = v ? v.sit ?? 0 : 0;
     const side = a.side ?? -1;                                   // the chair the guest uses
     const slide = near ? 14 * (1 - sit) - 5 * sit : 0;           // out while walking up, in when seated
-    const draw = (key, base, cx) => {
-      const img = getImage(`int-${key}`), isGuestChair = (key === 'chair-left') === (side === -1);
-      const t = tw[key === 'chair-left' ? 0 : 1];
-      const out = isGuestChair ? slide * (key === 'chair-left' ? -1 : 1) : 0;
-      ctx.save();
-      ctx.translate(dx + cx * s + t.dx * 1.6 + out, dy + h);
-      ctx.rotate(t.rot);
-      ctx.translate(-(dx + cx * s), -(dy + h));
-      ctx.drawImage(img, dx, dy + t.dy, w, h);
+    // the three pieces are separate pictures: sizes follow the table (460 units wide of a 1000-unit set), all standing on one baseline
+    const f = (460 / tableImg.naturalWidth) * s, base = dy + h;
+    const tW = tableImg.naturalWidth * f, tH = tableImg.naturalHeight * f;
+    const pieces = [];
+    for (const [key, cx] of [['chair-left', 150], ['chair-right', 850]]) {
+      const img = getImage(`int-${key}`), t = tw[key === 'chair-left' ? 0 : 1];
+      const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f, ch = img.naturalHeight * f;
+      const px = dx + cx * s + t.dx * 1.6 + (guest ? slide * (key === 'chair-left' ? -1 : 1) : 0);
+      pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px });
+    }
+    for (const p of pieces) this.castShadow(ctx, p.key, p.img, p.x, p.y, p.w, p.h);
+    this.castShadow(ctx, 'table', tableImg, dx + 500 * s - tW / 2, base - tH, tW, tH);
+    for (const p of pieces) {                                    // chairs stand behind the table
+      ctx.save(); ctx.translate(p.pivot, base); ctx.rotate(p.rot); ctx.translate(-p.pivot, -base);
+      ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
       ctx.restore();
-    };
-    ctx.drawImage(tableImg, dx, dy, w, h);
-    draw('chair-left', 0, 170);
-    draw('chair-right', 0, 830);
+    }
+    ctx.drawImage(tableImg, dx + 500 * s - tW / 2, base - tH, tW, tH);
   }
 
   /** Thrown shadow of a piece of furniture: its silhouette, tinted, flattened and leaning right (cached once per piece). */
@@ -199,9 +203,10 @@ export class InteriorScene {
       g.drawImage(img, dx, dy, w, h);
       c = this.shadows[ck] = { cv, ox: ox - dx, oy: oy - by };
     }
-    ctx.globalAlpha = 0.45;
+    const keep = ctx.globalAlpha;
+    ctx.globalAlpha = keep * 0.45;
     ctx.drawImage(c.cv, dx + c.ox, by + c.oy);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = keep;
   }
 
   /**
@@ -212,14 +217,17 @@ export class InteriorScene {
   areaAsset(ctx, a) {
     const img = getImage(`int-${a.id.startsWith('table') ? 'table' : a.id}`);
     if (!img) return false;
-    const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s;
-    const h = Math.min(img.naturalHeight * s * 1.18, a.h);       // a very flat piece may be stretched up to 18% taller to fill its box
-    const dx = a.x + (a.w - w) / 2, dy = a.y + a.h - h;
-    // grounding: the object's own silhouette thrown across the floor to the right and back (light from the upper left), soft, plus a
-    // tight dark line where the base touches the floor and a faint wider pool of occlusion
     const isTable = a.id.startsWith('table') && getImage('int-chair-left') && getImage('int-chair-right');
-    if (isTable) { this.castShadow(ctx, 'table', img, dx, dy, w, h); this.castShadow(ctx, 'chair-left', getImage('int-chair-left'), dx, dy, w, h); this.castShadow(ctx, 'chair-right', getImage('int-chair-right'), dx, dy, w, h); }
-    else this.castShadow(ctx, a.id.startsWith('table') ? 'table' : a.id, img, dx, dy, w, h);
+    let w, h, dx, dy;
+    if (isTable) { w = a.w; h = w * 0.524; dx = a.x; dy = a.y + a.h - h; }   // a table set is a 1000 x 524 unit box (table + two chairs), see drawEmptyTable
+    else {
+      const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight); w = img.naturalWidth * s;
+      h = Math.min(img.naturalHeight * s * 1.18, a.h);        // a very flat piece may be stretched up to 18% taller to fill its box
+      dx = a.x + (a.w - w) / 2; dy = a.y + a.h - h;
+    }
+    // grounding: the object's own silhouette thrown across the floor (see castShadow; tables and chairs cast their own), plus a
+    // tight dark line where the base touches the floor and a faint wider pool of occlusion
+    if (!isTable) this.castShadow(ctx, a.id, img, dx, dy, w, h);
     shadow(ctx, a.x + a.w / 2 + 6, a.y + a.h + 2, w * 0.5, 9, 0.16);
     shadow(ctx, a.x + a.w / 2 + 2, a.y + a.h, w * 0.4, 3.5, 0.34);
     this.rects[a.id] = { x: dx, y: dy, w, h };

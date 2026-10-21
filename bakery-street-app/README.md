@@ -123,3 +123,7 @@ Chef: the "carrying fresh bread" picture (single frame, walks by bouncing). Wait
 ### Seated guests
 
 `assets/game/characters/seat-<look>.webp` (8 pictures: guest + chair + small table, eating or drinking; the fake checkerboard of the supplied sheet was removed). When a guest sits, their picture fades in over the empty table (`InteriorScene.tableSet`, `seatRect` in interior-layout.js; mirrored when the guest sits on the right) and the walking sprite fades out; the order bubble and tap area follow the picture. The old "walking sprite cut at the hips" is only a fallback when a seat picture is missing. The seat pictures use a smaller round wooden table than the empty table set: an empty-table picture in the same style (ask for it with the next prompt) would remove that difference.
+
+### New table and chairs (same style as the seated guests)
+
+`assets/game/interior/table.webp`, `chair-left.webp` (faces right, the guest's chair when it stands on the left), `chair-right.webp` (faces left) are the new separate pictures; `table-cup`, `table-cake` and `chair-back` are saved too (not used yet). `drawEmptyTable` scales them from the table width (460 of a 1000-unit set), puts the chairs behind the table on one baseline and gives each its own tilt and shadow. Occupied tables fade to the seated-guest picture (same wood tone and outline).
