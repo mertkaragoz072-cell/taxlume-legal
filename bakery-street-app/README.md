@@ -83,8 +83,6 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 - **Arayüz:** boyutlar ekran yüksekliği/genişliğinden türetilen birimle ölçeklenir; 1024×768 ve 1366×1024'te paneller, üst çubuk ve menü ekran görüntüsüyle kontrol edildi.
 - Gerçek iPad/tablet cihazında denenmedi.
 
-## Cafe look: the reference kitchen picture
+## Cafe look
 
-The cafe's back wall, oven, shelves, prep counter, showcase, coffee machine, fridge, storage and green door now come from the supplied reference (`assets/game/interior/backdrop.webp`, drawn 1750 world px wide behind everything; `BACKDROP` in `interior-layout.js`). The tappable areas sit on those objects; live details stay on top: oven glow and progress bar, coffee steam, a stock chip per product on the showcase front, the upgrade count on the sign. The counter run is drawn again in front of the baker so he works behind it. Tables, chairs, guests, staff, floor and front plants are still separate, depth-sorted pieces. Guests enter and leave through the door at the right edge. Wide screens are brought closer so the picture always fills the width. (The old web version `../bakery-street` still has the previous look.)
-
-Depth props: `FLOOR_PROPS` (interior-scene.js) places plants/planters between the walking lane and the tables (centre aisle, both ends); they are depth-sorted with guests, so people walking the lane pass behind them, like the counter strip in front of the baker.
+The cafe is built from the separate supplied pieces (wall, floor, oven, counter, showcase, coffee machine, storage, sign, tables, windows, door, shelf, rack, beam), each depth-sorted with the baker, waiter and guests. (An attempt to use one reference picture as the whole back wall was reverted: it made the room flat and unlayered.)

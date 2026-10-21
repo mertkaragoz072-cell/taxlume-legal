@@ -2,14 +2,13 @@
 // `panel` names the UI opened by the area; `station` ties a machine to the production jobs it runs.
 export const AREAS = [
   // against the back wall (kitchen side), left to right: oven, prep counter, showcase facing the guests, coffee station, storage
-  // (positions follow the supplied kitchen picture, see BACKDROP below)
-  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 63, y: 150, w: 252, h: 236 },
-  { id: 'storage', label: 'Depo', panel: 'storage', x: 1423, y: 336, w: 84, h: 131 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1400, y: 149, w: 103, h: 127 },
+  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 30, y: 205, w: 220, h: 220 },
+  { id: 'storage', label: 'Depo', panel: 'storage', x: 1230, y: 318, w: 96, h: 118 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1212, y: 140, w: 124, h: 152 },
   // the service line: counters stand in front of the kitchen floor, about 80 px apart
-  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 161, y: 378, w: 336, h: 114 },
-  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 497, y: 328, w: 313, h: 164 },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 815, y: 263, w: 195, h: 229 },
+  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 310, y: 368, w: 330, h: 122 },
+  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 720, y: 312, w: 270, h: 178 },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1060, y: 285, w: 150, h: 205 },
   // dining area, in front, behind a wide open corridor: two groups either side of a central aisle (tables 3+1 left, 2+4 right), the outer
   // table of each group set back a little. The cafeTables upgrade opens them in this order (the two aisle tables first), so the room always
   // looks balanced. `side` is the chair the guest takes (-1 left, +1 right); each guest's access gap lies on that side.
@@ -67,15 +66,8 @@ export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 /** Depth key (the y of the line an object stands on): what is further back is drawn first. Tables are judged by their front edge a bit above the chair feet. */
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
-/** Waiting spots in front of the showcase (centre 653), one body width apart. */
-export const QUEUE_SPOTS = [{ x: 653, y: QUEUE_Y }, { x: 558, y: QUEUE_Y }, { x: 748, y: QUEUE_Y }];
+/** Waiting spots in front of the showcase (centre 855), one body width apart. */
+export const QUEUE_SPOTS = [{ x: 855, y: QUEUE_Y }, { x: 760, y: QUEUE_Y }, { x: 950, y: QUEUE_Y }];
 
 /** Camera: the interior is drawn zoomed out (see InteriorScene), centred on this world x so the 30..1414 content has air on both sides. */
 export const CAM = { zoom: 0.8, cx: 718, baseY: 760, bottomPad: 64 };
-
-/**
- * The supplied kitchen picture (assets/game/interior/backdrop.webp, the top 548 of 840 rows of the reference): back wall, oven, shelves,
- * prep counter, showcase, coffee machine, fridge, storage and the green door, drawn at 1750 px wide (scale 0.935). The areas above are
- * placed on its objects. The counter strip is drawn again in front of the baker so he works behind it.
- */
-export const BACKDROP = { x: -157, y: -10, w: 1750, h: 512, counterTop: 378, counterX0: 215 };

@@ -6,8 +6,8 @@ import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
 
-const ENTRY = { x: 1545, y: 440 };        // the way in
-const EXIT = { x: 1590, y: 440 };         // the way out (the door is wide enough for two columns)
+const ENTRY = { x: 1415, y: 440 };        // the way in
+const EXIT = { x: 1545, y: 440 };         // the way out (the door is wide enough for two columns)
 const SPEED = 210;                 // design px per second
 const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
 

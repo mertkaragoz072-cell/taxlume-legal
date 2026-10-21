@@ -32,7 +32,7 @@ for (const name of PROPS) MANIFEST[`prop-${name}`] = `assets/props/${name}.webp`
 // its own drawing. Names that are not listed are never requested (no 404 noise). Possible names: wall, floor, oven, counter, showcase,
 // coffee, storage, upgrades, table, chair (see assets/interior/README.md).
 export const INTERIOR_ART = ['oven', 'counter', 'showcase', 'coffee', 'storage', 'upgrades', 'table', 'wall', 'floor',
-  'window-arch', 'window-shutter', 'shelf', 'door', 'rack', 'beam', 'backdrop'];   // the last six are wall decoration (see InteriorScene.decor)
+  'window-arch', 'window-shutter', 'shelf', 'door', 'rack', 'beam'];   // the last six are wall decoration (see InteriorScene.decor)
 for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`;
 
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
