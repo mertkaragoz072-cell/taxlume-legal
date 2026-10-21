@@ -119,3 +119,7 @@ Eight newly drawn characters replace the old walk strips: girl_basket, boy_cap, 
 ### New chef and waiter
 
 Chef: the "carrying fresh bread" picture (single frame, walks by bouncing). Waiter: a 4-frame strip (stand, walk 1, walk 2, tray with cup and cake); walking plays the cycle 1-0-2-0, carrying an order uses the tray frame with the bounce. The working poses in the supplied sheet (kneading, serving) include their own table and are not used yet.
+
+### Seated guests
+
+`assets/game/characters/seat-<look>.webp` (8 pictures: guest + chair + small table, eating or drinking; the fake checkerboard of the supplied sheet was removed). When a guest sits, their picture fades in over the empty table (`InteriorScene.tableSet`, `seatRect` in interior-layout.js; mirrored when the guest sits on the right) and the walking sprite fades out; the order bubble and tap area follow the picture. The old "walking sprite cut at the hips" is only a fallback when a seat picture is missing. The seat pictures use a smaller round wooden table than the empty table set: an empty-table picture in the same style (ask for it with the next prompt) would remove that difference.

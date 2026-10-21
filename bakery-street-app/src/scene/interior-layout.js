@@ -58,6 +58,14 @@ export const chairSpot = (index) => {
  * drawn lowered so the hips rest on the cushion (hips are ~118 px above the feet at the cafe scale), and everything below the cushion's
  * top edge is cut off, so the legs sit behind the chair front and nobody floats or sinks into the tabletop.
  */
+/**
+ * Where the picture of a seated guest (chair + guest + table, facing right with the chair on the left) is drawn for table `a`:
+ * as wide as the table slot, standing on its bottom edge; mirrored when the guest sits on the right (`side` 1).
+ */
+export const seatRect = (a, img) => {
+  const w = a.w * 0.8, h = (w * img.naturalHeight) / img.naturalWidth;
+  return { x: a.x + (a.w - w) / 2, y: a.y + a.h + 8 - h, w, h, flip: (a.side ?? -1) === 1 };
+};
 export const seatTop = (a) => a.y + a.h * 0.38;
 export const HIP_H = 118;
 export const sitFeetY = (index) => seatTop(TABLES[index]) + 12 + HIP_H;     // where the (hidden) feet of a seated guest end up

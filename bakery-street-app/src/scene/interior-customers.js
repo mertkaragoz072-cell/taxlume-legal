@@ -1,7 +1,8 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, sitFeetY, sitCutY } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, sitFeetY, sitCutY, seatRect } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
+import { getImage } from '../assets.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
@@ -111,6 +112,8 @@ export class CustomerLayer {
       if (c.state !== 'seated') continue;
       const v = this.v.get(c.id);
       if (!v || v.moving) continue;
+      const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
+      if (art && A) { const r = seatRect(A, art); if (x > r.x && x < r.x + r.w && y > r.y - 50 && y < r.y + r.h) return `customer:${c.id}`; continue; }
       const vy = this.drawY(v, c); if (Math.abs(x - v.x) < 66 && y > vy - BODY_H - 70 && y < vy + 6) return `customer:${c.id}`;
     }
     return null;
@@ -119,8 +122,18 @@ export class CustomerLayer {
   /** True while the guest sits in the chair (not walking, not yet leaving): drawn from the waist up, behind the table's front edge. */
   isSitting(v, c) { return !!c && c.state === 'seated' && !v.moving && !v.leaving; }
 
+  /** The y of the guest's head top, where the order bubble stands. */
+  bubbleTop(v, c) {
+    const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
+    if (art && A && v.sit > 0.5) return seatRect(A, art).y - 2;
+    return this.drawY(v, c) - BODY_H;
+  }
+
   /** Where the guest's feet are drawn: lowered onto the chair while seated (eased), otherwise where they walk. */
-  drawY(v, c) { return c && c.table != null && v.sit > 0 ? v.y + (sitFeetY(c.table) - v.y) * v.sit : v.y; }
+  /** The picture of this guest seated at a table (chair + guest + table), when it exists. */
+  seatArt(v, c) { return c && c.table != null ? getImage(`seat-${v.look}`) : null; }
+
+  drawY(v, c) { return c && c.table != null && v.sit > 0 && !this.seatArt(v, c) ? v.y + (sitFeetY(c.table) - v.y) * v.sit : v.y; }
 
   /** Depth-sorted pieces for the scene: one { y, draw } per guest (the scene sorts them with the furniture). */
   items(t) {
@@ -132,7 +145,8 @@ export class CustomerLayer {
         y: table ? depthOf(table) + 1 : v.y,
         draw: (ctx) => {
           ctx.globalAlpha = clamp((v.y - EXIT.y) / 45, 0, 1);       // fades in and out at the door
-          const y = this.drawY(v, c), seated = table && v.sit >= 0.999;
+          const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
+          if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
           if (seated) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 160, y - 420, 320, sitCutY(c.table) - (y - 420)); ctx.clip(); }
           const hold = v.moving && !v.pause;
           drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE, shade: !seated });
@@ -167,7 +181,7 @@ export class CustomerLayer {
     const order = this.cafe.orderOf(c);
     if (!order) return;
     const def = this.game.productsDef[order.product], inStock = this.game.products[order.product] >= 1;
-    const w = 92, h = 52, x = v.x - w / 2, top = this.drawY(v, c) - BODY_H, y = top - h - 10, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
+    const w = 92, h = 52, x = v.x - w / 2, top = this.bubbleTop(v, c), y = top - h - 10, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
     const edge = inStock ? PAL.green : PAL.terracottaLight;
     ctx.save(); ctx.translate(v.x, y + h); ctx.scale(pulse, pulse); ctx.translate(-v.x, -(y + h));
     poly(ctx, [[v.x - 7, y + h - 1], [v.x + 7, y + h - 1], [v.x, y + h + 10]]); paint(ctx, PAL.paper, 3, edge);

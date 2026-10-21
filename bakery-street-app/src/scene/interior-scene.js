@@ -1,7 +1,7 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
-import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
@@ -149,6 +149,22 @@ export class InteriorScene {
   tableSet(ctx, a, tableImg, dx, dy, w, h) {
     const i = +a.id.slice(5) - 1, tw = CHAIRS[i % CHAIRS.length], s = w / 1000;
     const owner = this.game.cafe?.tableOwner(i), v = owner ? this.customers.v.get(owner.id) : null;
+    const seat = v && v.sit > 0 ? getImage(`seat-${v.look}`) : null;
+    if (seat) {                                                 // an occupied table: the guest's own seated picture fades in over the empty table
+      const r = seatRect(a, seat);
+      ctx.globalAlpha = 1 - v.sit;
+      this.drawEmptyTable(ctx, a, tableImg, dx, dy, w, h, tw, s, null);
+      ctx.globalAlpha = v.sit;
+      this.castShadow(ctx, `seat-${v.look}`, seat, r.x, r.y, r.w, r.h);
+      if (r.flip) { ctx.save(); ctx.translate(r.x + r.w, 0); ctx.scale(-1, 1); ctx.drawImage(seat, 0, r.y, r.w, r.h); ctx.restore(); } else ctx.drawImage(seat, r.x, r.y, r.w, r.h);
+      ctx.globalAlpha = 1;
+      return;
+    }
+    this.drawEmptyTable(ctx, a, tableImg, dx, dy, w, h, tw, s, v);
+  }
+
+  drawEmptyTable(ctx, a, tableImg, dx, dy, w, h, tw, s, v) {
+    const i = +a.id.slice(5) - 1, owner = this.game.cafe?.tableOwner(i);
     const near = !!(v && (v.moving || v.sit > 0 || owner.state === 'seated'));
     const sit = v ? v.sit ?? 0 : 0;
     const side = a.side ?? -1;                                   // the chair the guest uses
