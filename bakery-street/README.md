@@ -320,4 +320,4 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 
 ### App icon
 
-`assets/app/` holds the app icon (1024 master, 512/192 for the manifest, 180 apple-touch, 48/32 favicons), cut from the supplied artwork with its rounded frame removed (the platforms round the corners themselves). `manifest.webmanifest` + the `<link>`s in index.html make it installable with the right icon, name and colours.
+`assets/app/logo.webp` is the transparent logo on the loading screen. `assets/app/` also holds the app icon (1024 master, 512/192 for the manifest, 180 apple-touch, 48/32 favicons), cut from the supplied artwork with its rounded frame removed (the platforms round the corners themselves). `manifest.webmanifest` + the `<link>`s in index.html make it installable with the right icon, name and colours.
