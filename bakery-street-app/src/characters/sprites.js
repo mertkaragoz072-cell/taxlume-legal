@@ -6,11 +6,11 @@ import { shadow } from '../util.js';
 export const SHEETS = {
   boy_backpack: { frames: 6, w: 84, h: 143, views: true },
   girl_basket: { frames: 6, w: 117, h: 172, views: true },
-  oldman: { frames: 1, w: 110, h: 163 },
+  oldman: { frames: 6, w: 102, h: 164, views: true },
   boy_cap: { frames: 6, w: 108, h: 172, views: true },
-  boy_redcap: { frames: 1, w: 101, h: 164 },
-  girl_glasses: { frames: 1, w: 97, h: 159 },
-  girl_red: { frames: 1, w: 114, h: 147 },
+  boy_redcap: { frames: 6, w: 97, h: 165, views: true },
+  girl_glasses: { frames: 6, w: 106, h: 160, views: true },
+  girl_red: { frames: 6, w: 117, h: 148, views: true },
   grandma: { frames: 6, w: 111, h: 164, views: true },
   // staff: true = chef and waiter sheet: 0 stand, 1 stand carrying, 2-3 walk carrying (front), 4 back, 5 side (carrying)
   chef: { frames: 6, w: 92, h: 164, staff: true },
