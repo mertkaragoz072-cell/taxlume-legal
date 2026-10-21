@@ -33,7 +33,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#463020"
         }
-      ]
-    ]
+      ],
+      "expo-audio",
+      "expo-font"
+    ],
+    "web": {
+      "bundler": "metro"
+    }
   }
 }
