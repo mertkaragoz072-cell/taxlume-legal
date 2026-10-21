@@ -173,9 +173,9 @@ export class InteriorScene {
     const f = (460 / tableImg.naturalWidth) * s, base = dy + h;
     const tW = tableImg.naturalWidth * f, tH = tableImg.naturalHeight * f;
     const pieces = [];
-    for (const [key, cx] of [['chair-left', 150], ['chair-right', 850]]) {
+    for (const [key, cx] of [['chair-left', 165], ['chair-right', 835]]) {
       const img = getImage(`int-${key}`), t = tw[key === 'chair-left' ? 0 : 1];
-      const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f, ch = img.naturalHeight * f;
+      const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f * 0.78, ch = img.naturalHeight * f * 0.78;       // chairs are drawn a bit smaller than the table's scale (the picture drew them large)
       const px = dx + cx * s + t.dx * 1.6 + (guest ? slide * (key === 'chair-left' ? -1 : 1) : 0);
       pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px });
     }

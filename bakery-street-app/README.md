@@ -135,3 +135,6 @@ oven, counter (dough and rolling pin on top), showcase (goods baked into the gla
 ### 2.5D camera: room shell and depth scale
 
 `assets/game/interior/room.webp` (supplied empty room: perspective floor, back wall, side walls, beams) is now the cafe's background (`InteriorScene.shell`, wall/floor join on FLOOR_Y, scaled to cover the screen). `depthScale(y)` (0.86 at the wall to 1.04 at the front) makes people larger as they come toward the viewer. Still to come, front-view art for: equipment, tables/chairs, characters (front/back walks), seated guests, wall decoration; until then the current side-view pieces stand on the new floor.
+
+### Ön görünüm masa ve sandalyeler (2.5D)
+`assets/game/interior/table.webp` ve `chair-left/right.webp` karşıdan, hafif yukarıdan bakan yeni setten üretildi. `table-cup`, `table-cake`, `chair-front`, `chair-back` hazır ama henüz kullanılmıyor. Oturan misafir resimleri ve yürüyen karakterler hâlâ yandan görünümlü.
