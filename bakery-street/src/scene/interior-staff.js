@@ -12,7 +12,7 @@ import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot } from './i
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
 const STOPS = { oven: { x: 272, dir: -1 }, counter: { x: 420, dir: 1 }, counter2: { x: 560, dir: 1 }, coffee: { x: 1042, dir: 1 }, storage: { x: 1190, dir: 1 } };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
-const POST = { x: 610, y: WAITER_LANE_Y };                 // the waiter's post, at the end of the counters
+const POST = { x: 480, y: WAITER_LANE_Y };                 // the waiter's post, in front of the prep counter (clear of the showcase queue)
 const HAND_SEC = 1.1;                                       // time spent handing the order over
 
 class Walker {
@@ -45,6 +45,7 @@ export class StaffLayer {
     this.handT = 0;
     this.served = new Set();    // order ids the waiter has already brought (so each order is carried once)
     this.tour = 0;
+    this.bakerWait = 0;
     this.show = 0;              // the waiter fades in only while the cafe has guests
     this.guests = () => [];     // set by the scene: where the guests stand (the waiter never walks into one)
   }
@@ -59,8 +60,12 @@ export class StaffLayer {
   }
 
   updateBaker(dt) {
-    const b = this.baker, busy = this.busyStop();
-    if (b.step(dt)) { b.wait = 2 + Math.random() * 2.5; b.dir = STOPS[b.stop].dir; return; }
+    const b = this.baker, busy = this.busyStop(), w = this.waiter;
+    // walking behind the counters he waits while the waiter stands right in front of his path (no heads on top of each other), but never longer than 2 s
+    const wBlock = (x, y, dirx) => this.show > 0 && this.bakerWait < 2 && dirx && w.y < 560 && (w.x - x) * dirx > -30 && (w.x - x) * dirx < 100;
+    const arrived = b.step(dt, (x, y, dirx) => { const hit = wBlock(x, y, dirx); if (hit) this.bakerWait += dt; return hit; });
+    if (arrived) this.bakerWait = 0;
+    if (arrived) { b.wait = 2 + Math.random() * 2.5; b.dir = STOPS[b.stop].dir; return; }
     if (b.target) return;
     if (busy && b.stop !== busy) { b.stop = busy; b.target = { x: STOPS[busy].x, y: STAFF_LANE_Y }; return; }      // production started: go to the machine now
     if (busy) { b.dir = STOPS[busy].dir; return; }                                                                     // working: stay put

@@ -92,9 +92,10 @@ export class CustomerLayer {
     v.pause = false;
     const k = Math.min(d, 40) / d, nx = v.x + dx * k, ny = v.y + dy * k;         // a short look ahead along the path
     if ((v.waited ?? 0) < 1.2) {
-      for (const o of [...this.v.values(), ...(this.extra?.() ?? [])]) {
+      const staff = this.extra?.() ?? [];
+      for (const o of [...this.v.values(), ...staff]) {
         if (o === v) continue;
-        if (Math.abs(o.x - nx) < 56 && Math.abs(o.y - ny) < 22 && Math.hypot(o.x - nx, o.y - ny) <= Math.hypot(o.x - v.x, o.y - v.y)) { v.pause = true; break; }
+        if (Math.abs(o.x - nx) < 56 && Math.abs(o.y - ny) < (staff.includes(o) ? 40 : 12) && Math.hypot(o.x - nx, o.y - ny) <= Math.hypot(o.x - v.x, o.y - v.y)) { v.pause = true; break; }
       }
     }
     v.waited = v.pause ? (v.waited ?? 0) + dt : (v.waited > 0 && v.waited < 1.2 ? 0 : (v.waited ?? 0) > 1.2 ? Math.max(0, (v.waited ?? 0) - dt * 2) : 0);

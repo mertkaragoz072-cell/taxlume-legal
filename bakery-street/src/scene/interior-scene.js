@@ -425,7 +425,7 @@ function showcaseStock(ctx, a, scene, art = null) {
     let ix = art ? art.x + art.w * 0.17 : x + 28;
     for (const [id, def] of Object.entries(scene.game.productsDef)) {
       const n = scene.game.products[id];
-      if (n > 0) { if (!drawIcon(ctx, id, ix, iy, 46)) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, ix, iy); } label(ctx, `×${n}`, ix, ly, { font: '700 14px sans-serif', fill: PAL.paper, lw: 4 }); }
+      if (n > 0) { if (!drawIcon(ctx, id, ix, iy, 46)) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, ix, iy); } label(ctx, `${n}`, ix, ly, { font: '700 14px sans-serif', fill: PAL.paper, lw: 4 });      // plain number: stays narrower than the icon spacing even when the text floor enlarges it on small screens }
       ix += step;
     }
 }
