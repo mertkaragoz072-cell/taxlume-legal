@@ -329,3 +329,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### Cafe wall decoration
 
 `window-arch, window-shutter, shelf, door, rack, beam` (assets/interior/) dress the back wall: the beam runs across the room, the rack hangs above the oven, the shelf over the prep counter, the windows over the showcase and coffee station, the green door at the right end (decorative; guests still walk in along the service line). Pendant lamps hang in the gaps between the pieces. Each piece keeps its aspect ratio and is skipped if its picture is missing.
+
+### Door entrance, daylight, small cleanups
+
+Guests now step out of the green door at the right end of the back wall (and leave through it, fading in/out), then use the service line as before. Two soft daylight shafts fall from the windows. The wall and floor are painted once per screen size and copied each frame. The nav lock badge and the panels' "Geri" button use the supplied pictures.

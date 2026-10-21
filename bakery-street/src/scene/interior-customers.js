@@ -6,7 +6,7 @@ import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
 
-const ENTRY = { x: 1560, y: SERVICE_LINE_Y };          // customers come in from the right along the service line (x follows the screen edge, see setEntry)
+const ENTRY = { x: 1490, y: 440 };                      // the green door at the right end of the back wall (see InteriorScene.wallDecor): guests step out of it and leave through it
 const SPEED = 210;                 // design px per second
 const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
 
@@ -16,7 +16,6 @@ export class CustomerLayer {
     this.cafe = cafe;
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
-    this.entryX = ENTRY.x;
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
@@ -24,9 +23,6 @@ export class CustomerLayer {
       }
     });
   }
-
-  /** Guests appear just outside the visible room, whatever the screen's width. */
-  setEntry(x) { this.entryX = x; }
 
   targetFor(c) {
     if (c.state === 'seated') return chairSpot(c.table);
@@ -48,15 +44,15 @@ export class CustomerLayer {
     for (const c of this.cafe.customers) {
       live.add(c.id);
       let v = this.v.get(c.id);
-      if (!v) { v = { x: this.entryX, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look }; this.v.set(c.id, v); }
+      if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look }; this.v.set(c.id, v); }
       this.step(v, this.targetFor(c), dt);
       if (!v.moving && c.state === 'seated') v.dir = 1;   // once at the table (it stands on its right), face it
     }
     for (const [id, v] of this.v) {
       if (live.has(id)) continue;
       v.leaving = true;                                          // logic removed them: walk out through the entrance
-      this.step(v, { x: this.entryX + 40, y: ENTRY.y }, dt);
-      if (v.x >= this.entryX + 30) this.v.delete(id);
+      this.step(v, ENTRY, dt);
+      if (!v.moving) this.v.delete(id);
     }
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
@@ -90,7 +86,9 @@ export class CustomerLayer {
   draw(ctx, t) {
     const list = [...this.v.entries()].sort((a, b) => a[1].y - b[1].y);
     for (const [id, v] of list) {
+      ctx.globalAlpha = clamp((v.y - ENTRY.y) / 45, 0, 1);       // fades in and out at the door
       drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0, bob: 0.012, scale: PERSON_SCALE });
+      ctx.globalAlpha = 1;
     }
     for (const [id, v] of list) {
       const c = this.cafe.customers.find((x) => x.id === id);

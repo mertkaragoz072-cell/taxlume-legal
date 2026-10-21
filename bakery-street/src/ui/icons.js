@@ -12,6 +12,6 @@ export const ICONS = {
   town: pic('nav-town'),
   explore: pic('nav-explore'),
   shop: `<svg viewBox="0 0 48 44"><path d="M13 17a11 11 0 0 1 22 0" fill="none" stroke="#6a3d1c" stroke-width="3.4" stroke-linecap="round"/><circle cx="17" cy="15" r="4.5" fill="#5bb83a" stroke="#2a6a1a" stroke-width="1.6"/><circle cx="29" cy="14" r="4.5" fill="#f58a1f" stroke="#8a4a08" stroke-width="1.6"/><path d="M4 18h40l-5 23H9z" fill="#d6382e" stroke="#7a1f1a" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 22l1 15M24 22v15M33 22l-1 15" stroke="#ff8a7a" stroke-width="2"/></svg>`,
-  lock: `<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2.5" fill="#f4f0e6"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="#f4f0e6" stroke-width="2.4"/></svg>`,
+  lock: pic('lock'),
   avatar: pic('hud-avatar'),
 };

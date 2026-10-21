@@ -78,7 +78,7 @@ export function createPanels(root, game, { onWarn, onClose, onUpgraded }) {
         </div>
         <button class="go buy" data-upgrade="${id}" ${maxed ? 'disabled' : ''}><span>${maxed ? 'Maksimum' : 'Geliştir'}</span>${maxed ? '' : `<small>💰 ${fmt(cost)}</small>`}</button>
       </div>`;
-    }).join('') + '<button class="go back-in" data-close>◀ Geri</button>';
+    }).join('') + '<button class="go back-in" data-close><img class="pic" alt="" draggable="false" src="assets/icons/hud-back.webp">Geri</button>';
   }
 
   function render() {

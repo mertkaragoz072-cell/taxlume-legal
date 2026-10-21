@@ -42,7 +42,6 @@ export class InteriorScene {
     this.view = view;
     const z = CAM.zoom, tx = view.vw / 2 - CAM.cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
     this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: -ty / z, wb: (view.vh - ty) / z };
-    this.customers.setEntry(this.cam.wr + 70);
   }
 
   /** Pointer position in the design space used by main.js (origin shifted by view.ox/oy) -> world. */
@@ -73,7 +72,7 @@ export class InteriorScene {
     ctx.setTransform(k, 0, 0, k, c.tx * v.scale * v.dpr, c.ty * v.scale * v.dpr);
     const x0 = c.wl - 10, w = c.wr - c.wl + 20, yTop = c.wt - 10, yBot = c.wb + 10;
 
-    this.room(ctx, x0, w, yTop, yBot);
+    this.cachedRoom(ctx, x0, w, yTop, yBot);
     this.decor(ctx);
     for (const id of DRAW_ORDER) {                              // depth order: kitchen side, baker, counters, tables
       if (id === '_staff') { this.staff.drawBaker(ctx); continue; }
@@ -191,6 +190,13 @@ export class InteriorScene {
       glowAt(ctx, lx, 330, 170, '255,196,110', 0.10 * f);
       glowAt(ctx, lx, 600, 210, '255,190,100', 0.075 * f);
     }
+    if (getImage('int-window-arch')) {                         // daylight falling from the two windows onto the wall and floor
+      for (const [x, top, w] of [[880, 188, 120], [1160, 190, 110]]) {
+        const sway = 4 * Math.sin(this.t * 0.4 + x), g = ctx.createLinearGradient(0, top, 0, 560);
+        g.addColorStop(0, 'rgba(255,238,190,.16)'); g.addColorStop(1, 'rgba(255,238,190,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w / 2, top); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 - 150 + sway, 560); ctx.lineTo(x - w / 2 - 150 + sway, 560); ctx.closePath(); ctx.fill();
+      }
+    }
     for (const m of this.motes) {
       const a = 0.25 + 0.25 * Math.sin(this.t * 1.3 + m.p);
       ctx.fillStyle = `rgba(255,236,190,${a})`;
@@ -259,6 +265,21 @@ export class InteriorScene {
     label(ctx, '▶ Giriş', 1335, 558, { font: '700 20px "Trebuchet MS", sans-serif', fill: PAL.vanilla, lw: 3 });
     ctx.fillStyle = vgrad(ctx, FLOOR_Y, FLOOR_Y + 40, [[0, 'rgba(70,48,32,.4)'], [1, 'rgba(70,48,32,0)']]);
     ctx.fillRect(x0, FLOOR_Y, w, 40);
+  }
+
+  /** The wall and floor never change, so they are painted once per screen size and then just copied (the multiply wash is costly). */
+  cachedRoom(ctx, x0, w, yTop, yBot) {
+    const cv = ctx.canvas, key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}`;
+    if (this.roomKey !== key) {
+      const c = this.roomCanvas ?? (this.roomCanvas = document.createElement('canvas'));
+      c.width = cv.width; c.height = cv.height;
+      const g = c.getContext('2d'), m = ctx.getTransform();
+      g.setTransform(m);
+      this.room(g, x0, w, yTop, yBot);
+      this.roomKey = key;
+    }
+    const m = ctx.getTransform();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.roomCanvas, 0, 0); ctx.setTransform(m);
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */
