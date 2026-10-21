@@ -12,8 +12,8 @@ export const SHEETS = {
   girl_glasses: { frames: 1, w: 97, h: 159 },
   girl_red: { frames: 1, w: 114, h: 147 },
   grandma: { frames: 1, w: 101, h: 163 },
-  chef: { frames: 8, w: 143, h: 173 },
-  waiter: { frames: 8, w: 112, h: 165 },
+  chef: { frames: 1, w: 124, h: 163 },                          // the chef holding fresh bread; his walk is made by bouncing the picture
+  waiter: { frames: 4, w: 133, h: 162, cycle: [1, 0, 2, 0] },   // 0 stand, 1 and 2 walk, 3 carrying a tray; walking plays `cycle`
 };
 
 const SCALE = 0.9; // native sprite px -> design px (a street character ends up ~150 px tall; the cafe scales people up further, see PERSON_SCALE)
@@ -21,11 +21,12 @@ const SCALE = 0.9; // native sprite px -> design px (a street character ends up 
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 
 /** Draws frame `floor(t*fps+phase)` of the sheet with the feet at (x, y). Returns false when the sheet is not loaded. */
-export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true } = {}) {
+export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false } = {}) {
   const img = getImage(`char-${id}`), m = SHEETS[id];
   if (!img || !m) return false;
-  const f = m.frames === 1 ? 0 : frame ?? ((Math.floor(t * fps + phase) % m.frames) + m.frames) % m.frames;   // `frame` freezes the pose (standing)
-  const walking = m.frames === 1 && frame === null;          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
+  const seq = m.cycle ?? Array.from({ length: m.frames }, (_, i) => i);
+  const f = m.frames === 1 ? 0 : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
+  const walking = (m.frames === 1 && frame === null) || bounce;          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
   const s = SCALE * scale, dw = m.w * s, dh = m.h * s;
   if (shade) shadow(ctx, x, y + 1, dw * 0.28, 4.5, 0.32);
   ctx.save();

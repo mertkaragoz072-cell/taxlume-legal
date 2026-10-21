@@ -115,3 +115,7 @@ The four tables no longer sit in one row: they are at different depths (front ed
 ### New customer characters (reference-quality art)
 
 Eight newly drawn characters replace the old walk strips: girl_basket, boy_cap, boy_backpack, grandma, oldman, girl_red, boy_redcap (new), girl_glasses (replaces girl_hat). They are single standing pictures (`frames: 1` in `SHEETS`); `drawSprite` makes the walk by moving the picture (two bounces per cycle, a small lean, squash and stretch). Chef and waiter are still the old sheets until new art arrives. A real walk cycle or a seated pose can replace any of these by supplying a multi-frame strip.
+
+### New chef and waiter
+
+Chef: the "carrying fresh bread" picture (single frame, walks by bouncing). Waiter: a 4-frame strip (stand, walk 1, walk 2, tray with cup and cake); walking plays the cycle 1-0-2-0, carrying an order uses the tray frame with the bounce. The working poses in the supplied sheet (kneading, serving) include their own table and are not used yet.

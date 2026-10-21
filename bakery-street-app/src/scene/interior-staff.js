@@ -160,10 +160,10 @@ export class StaffLayer {
     const w = this.waiter;
     if (this.show <= 0) return;
     ctx.globalAlpha = this.show;
-    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE, frame: w.moving ? null : 0, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
-    if (this.carry && this.phase !== 'hand') {                // the order, held out in front at tray height
-      drawIcon(ctx, this.carry, w.x + w.dir * 40, w.y - 108, 36);
-    }
+    // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
+    const tray = !!this.carry && this.phase !== 'hand';
+    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE, frame: tray ? 3 : w.moving ? null : 0, bounce: tray && w.moving, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
+    // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
     ctx.globalAlpha = 1;
   }
 }
