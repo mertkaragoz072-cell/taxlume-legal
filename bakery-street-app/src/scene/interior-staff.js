@@ -109,8 +109,13 @@ export class StaffLayer {
         const gx = Math.max(-50, Math.min(1400, spot.via)), gy = a.y + 55;
         this.job = { order: job.o.id, product: job.o.product, side: spot.side, gx, table: a.id };
         this.route = [{ x: gx, y: WAITER_LANE_Y }, { x: gx, y: gy }];
-        this.carry = job.o.product; this.phase = 'carry'; w.target = this.route.shift();
+        this.carry = job.o.product; this.phase = 'pick'; this.pickT = 0; w.dir = 1;       // takes the order from the counter first (a short beat), then sets off
       } else if (Math.abs(w.x - POST.x) > 3 || Math.abs(w.y - POST.y) > 3) w.target = { ...POST };
+      return;
+    }
+    if (this.phase === 'pick') {
+      w.t += dt; this.pickT += dt;
+      if (this.pickT >= 0.45) { this.phase = 'carry'; w.target = this.route.shift(); }
       return;
     }
     if (this.phase === 'carry') {
@@ -159,7 +164,7 @@ export class StaffLayer {
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, view: b.view, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, view: b.view, bob: working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }
 
   drawWaiter(ctx) {

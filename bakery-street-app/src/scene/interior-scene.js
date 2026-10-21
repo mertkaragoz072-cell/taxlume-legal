@@ -372,7 +372,7 @@ export class InteriorScene {
     if (getImage('int-window-arch')) {                         // daylight falling from the two windows onto the wall and floor
       for (const [x, top, w] of [[840, 200, 120], [1112, 190, 110]]) {
         const sway = 4 * Math.sin(this.t * 0.4 + x), g = ctx.createLinearGradient(0, top, 0, 560);
-        g.addColorStop(0, 'rgba(255,238,190,.16)'); g.addColorStop(1, 'rgba(255,238,190,0)');
+        g.addColorStop(0, 'rgba(255,238,190,.08)'); g.addColorStop(1, 'rgba(255,238,190,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w / 2, top); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 - 150 + sway, 560); ctx.lineTo(x - w / 2 - 150 + sway, 560); ctx.closePath(); ctx.fill();
       }
     }
@@ -528,7 +528,7 @@ export class InteriorScene {
       const tx = cx + 10, hasIcon = drawIcon(ctx, job.product, cx - 30, by + bh / 2, bh * 1.1);
       label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : cx, by + bh / 2 + 1, { font: `700 ${many ? 13 : 15}px sans-serif`, fill: PAL.paper, lw: 4 });
     });
-    if (a.station && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: PAL.creamLight, lw: 4 });
+    if (a.station && jobs.length && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: PAL.creamLight, lw: 4 });
   }
 }
 

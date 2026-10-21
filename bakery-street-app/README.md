@@ -164,3 +164,8 @@ Not: `oldman`, `boy_redcap`, `girl_red`, `girl_glasses` da artık 6 karelik önd
 
 ### Kamera ölçeği
 İç mekân kamerası artık ekrana göre sığdırılıyor: `zoom = min(vw/1600, (vh-48)/750, 1.08)`, merkez x=790 (fırından kapıya kadar tüm oda görünür), zemin ön kenarı ekran altından 40 px yukarıda. 16:9'da eski ölçeğe göre ~%10, geniş telefonlarda (844×390) ~%25 büyük; tablette genişliğe sığar (üstte boş duvar bandı kalır).
+
+### Son kalite geçişi
+- Kuyruk noktaları 150 px aralıklı (710/855/1000): ortada kümelenme azaldı. Masa sırası oyun mantığında olduğu gibi (önce koridora yakın masalar) bırakıldı.
+- Şef: ölçek 1.1, çalışırken hızlı yoğurma/karıştırma ritmi (`bobRate`) ve makineye eğilme. Garson: siparişi tezgâh arasındaki yerinde alır (0.45 sn `pick` aşaması), sonra yürür.
+- `scripts/defringe.py`: kesilmiş eşya resimlerindeki beyaz kenar kalıntılarını temizler (kenar pikselleri en yakın dolu pikselin rengini alır, kesim 1 px sıkılaşır); mobilya/ekipman/duvar süsü resimlerine uygulandı. Üretim sayacı (0/2) yalnızca iş varken görünür; pencere ışık huzmeleri %50 azaltıldı.

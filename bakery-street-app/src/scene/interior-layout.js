@@ -76,7 +76,7 @@ export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
 /** Waiting spots in front of the showcase (centre 855), one body width apart. */
-export const QUEUE_SPOTS = [{ x: 855, y: QUEUE_Y }, { x: 735, y: QUEUE_Y }, { x: 975, y: QUEUE_Y }];
+export const QUEUE_SPOTS = [{ x: 855, y: QUEUE_Y }, { x: 710, y: QUEUE_Y }, { x: 1000, y: QUEUE_Y }];
 
 /** Camera: the interior is drawn zoomed out (see InteriorScene), centred on this world x so the 30..1414 content has air on both sides. */
 /**
