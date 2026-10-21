@@ -135,6 +135,25 @@ export class InteriorScene {
     ctx.restore();
   }
 
+  /** Thrown shadow of a piece of furniture: its silhouette, tinted, flattened and leaning right (cached once per piece). */
+  castShadow(ctx, key, img, dx, dy, w, h) {
+    const K = 0.55, S = 0.2, by = dy + h;                       // lean per unit of height, depth squash (the shadow falls back and to the right)
+    const ck = `${key}:${Math.round(w)}x${Math.round(h)}`;
+    this.shadows ??= {};
+    let c = this.shadows[ck];
+    if (!c) {
+      const ox = dx - 12, oy = by - S * h - 14, cw = Math.ceil(w + K * h + 24), ch = Math.ceil(S * h + 20);
+      const cv = createCanvas(cw, ch), g = cv.getContext('2d');
+      g.setTransform(1, 0, -K, S, K * by - ox, by * (1 - S) - oy);
+      g.filter = 'shadow-tint blur(3px)';
+      g.drawImage(img, dx, dy, w, h);
+      c = this.shadows[ck] = { cv, ox: ox - dx, oy: oy - by };
+    }
+    ctx.globalAlpha = 0.45;
+    ctx.drawImage(c.cv, dx + c.ox, by + c.oy);
+    ctx.globalAlpha = 1;
+  }
+
   /**
    * Draws the supplied art for an area (assets/interior/<id>.webp; the three tables share 'table') fitted inside the area's box,
    * standing on its bottom edge. Returns false when there is no art, so the procedural drawing is used. Live details (oven fire,
@@ -145,10 +164,12 @@ export class InteriorScene {
     if (!img) return false;
     const s = Math.min(a.w / img.naturalWidth, a.h / img.naturalHeight), w = img.naturalWidth * s;
     const h = Math.min(img.naturalHeight * s * 1.18, a.h);       // a very flat piece may be stretched up to 18% taller to fill its box
-    // contact shadow: a wide soft one plus a tighter dark core, pushed a little to the right (light comes from the upper left)
-    shadow(ctx, a.x + a.w / 2 + 10, a.y + a.h + 3, w * 0.54, 13, 0.30);
-    shadow(ctx, a.x + a.w / 2 + 4, a.y + a.h + 1, w * 0.44, 6, 0.32);
     const dx = a.x + (a.w - w) / 2, dy = a.y + a.h - h;
+    // grounding: the object's own silhouette thrown across the floor to the right and back (light from the upper left), soft, plus a
+    // tight dark line where the base touches the floor and a faint wider pool of occlusion
+    this.castShadow(ctx, a.id.startsWith('table') ? 'table' : a.id, img, dx, dy, w, h);
+    shadow(ctx, a.x + a.w / 2 + 6, a.y + a.h + 2, w * 0.5, 9, 0.16);
+    shadow(ctx, a.x + a.w / 2 + 2, a.y + a.h, w * 0.4, 3.5, 0.34);
     this.rects[a.id] = { x: dx, y: dy, w, h };
     ctx.drawImage(img, dx, dy, w, h);
     const busy = !!(a.station && this.game.jobs[a.station]);

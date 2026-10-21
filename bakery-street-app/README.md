@@ -94,3 +94,7 @@ The cafe camera sways sideways by up to 24 world px; planes move by different sh
 ### Softer edges on the furniture pictures
 
 `scripts/soften-edges.py` (already applied to assets/game/interior/* except wall and floor, and assets/game/props/*): dark outline pixels along the silhouette take the nearest body colour (slightly darker, smoothed), thin dark seams inside are lightened, and the alpha edge falls off softly. Characters, buildings and icons were left as they are (eyes and faces need their dark lines). Rerun the script on a new picture before adding it.
+
+### Grounding the furniture
+
+Cafe furniture throws its own silhouette across the floor (tinted dark brown, flattened to 20% depth, leaning right at 0.55 per unit of height, blurred once and cached per piece in `InteriorScene.castShadow`), plus a tight dark line where the base touches the floor and a faint wider occlusion pool. Light comes from the upper left, matching the window light.

@@ -211,6 +211,7 @@ export class Ctx2D {
     if (f !== "none") {
       const blur = f.match(/blur\(([\d.]+)px\)/);
       if (blur) { const r = parseFloat(blur[1]); let f = this.blurs.get(r); if (!f) { f = Skia.ImageFilter.MakeBlur(r, r, TileMode.Decal, null) as SkImageFilter; this.blurs.set(r, f); } p.setImageFilter(f); }
+      if (f.includes("shadow-tint")) p.setColorFilter(Skia.ColorFilter.MakeMatrix([0, 0, 0, 0, 0.27, 0, 0, 0, 0, 0.19, 0, 0, 0, 0, 0.12, 0, 0, 0, 1, 0]) as SkColorFilter);   // flat dark-brown silhouette
       const gray = f.match(/grayscale\(([\d.]+)\)/);
       if (gray) {
         const s = 1 - parseFloat(gray[1]), r = 0.2126 * (1 - s), g = 0.7152 * (1 - s), b = 0.0722 * (1 - s);
