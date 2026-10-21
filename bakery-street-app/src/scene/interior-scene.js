@@ -1,7 +1,7 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
-import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
@@ -286,7 +286,7 @@ export class InteriorScene {
       ctx.drawImage(img, cx - w / 2, base - h, w, h);
       return true;
     };
-    const c = this.cam, beam = getImage('int-beam');
+    const c = this.cam, beam = getImage('int-room') ? null : getImage('int-beam');          // the new room has its own beams
     if (beam) {                                                   // the plain middle of the beam, stretched along the wall
       const top = 22, h = 66, sx = beam.naturalWidth * 0.2, sw = beam.naturalWidth * 0.6;
       ctx.drawImage(beam, sx, 0, sw, beam.naturalHeight, c.wl - 20, top, c.wr - c.wl + 40, h);
@@ -390,16 +390,25 @@ export class InteriorScene {
   /** The wall and floor never change, so they are painted once per screen size and then just copied (the multiply wash is costly). */
   cachedRoom(ctx, x0, w, yTop, yBot, dx = 0) {
     const cv = ctx.canvas, m = ctx.getTransform(), M = Math.ceil(60 * m.a);          // 60 world px of spare wall on each side for the sway
-    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}`;
+    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}${!!getImage('int-room')}`;
     if (this.roomKey !== key) {
       const c = createCanvas(cv.width + 2 * M, cv.height);
       this.roomCanvas = c;
       const g = c.getContext('2d');
       g.setTransform(m.a, m.b, m.c, m.d, m.e + M, m.f);
-      this.room(g, x0, w, yTop, yBot);
+      if (getImage('int-room')) this.shell(g, x0, w, yTop, yBot); else this.room(g, x0, w, yTop, yBot);
       this.roomKey = key;
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.roomCanvas, dx * m.a - M, 0); ctx.setTransform(m);
+  }
+
+  /** The supplied empty room, scaled to cover the visible world with its wall/floor join on FLOOR_Y; dark wood fills any spare edge. */
+  shell(g, x0, w, yTop, yBot) {
+    const img = getImage('int-room'), ratio = img.naturalHeight / img.naturalWidth, jn = ROOM.join;
+    const sc = Math.max((w + 20) / img.naturalWidth, (yBot - FLOOR_Y) / (img.naturalHeight * (1 - jn)), (FLOOR_Y - yTop) / (img.naturalHeight * jn));
+    const iw = img.naturalWidth * sc, ih = img.naturalHeight * sc, x = x0 + w / 2 - iw / 2 - 0, y = FLOOR_Y - ih * jn;
+    g.fillStyle = PAL.honeyDark; g.fillRect(x0, yTop, w, yBot - yTop);
+    g.drawImage(img, x, y, iw, ih);
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */

@@ -131,3 +131,7 @@ Chef: the "carrying fresh bread" picture (single frame, walks by bouncing). Wait
 ### New kitchen equipment
 
 oven, counter (dough and rolling pin on top), showcase (goods baked into the glass, so stock shows as count chips on the wooden front), coffee machine, storage (crates and flour sacks) and the upgrades sign are the new pictures (background removed from the supplied sheet, 0.6x). Boxes in `AREAS` were resized to their aspect ratios, all counters standing on the same front line (y 490).
+
+### 2.5D camera: room shell and depth scale
+
+`assets/game/interior/room.webp` (supplied empty room: perspective floor, back wall, side walls, beams) is now the cafe's background (`InteriorScene.shell`, wall/floor join on FLOOR_Y, scaled to cover the screen). `depthScale(y)` (0.86 at the wall to 1.04 at the front) makes people larger as they come toward the viewer. Still to come, front-view art for: equipment, tables/chairs, characters (front/back walks), seated guests, wall decoration; until then the current side-view pieces stand on the new floor.

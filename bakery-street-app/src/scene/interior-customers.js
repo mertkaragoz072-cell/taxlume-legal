@@ -1,6 +1,6 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, sitFeetY, sitCutY, seatRect } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, depthScale, sitFeetY, sitCutY, seatRect } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { getImage } from '../assets.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
@@ -149,7 +149,7 @@ export class CustomerLayer {
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
           if (seated) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 160, y - 420, 320, sitCutY(c.table) - (y - 420)); ctx.clip(); }
           const hold = v.moving && !v.pause;
-          drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE, shade: !seated });
+          drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
           if (seated) ctx.restore();
           ctx.globalAlpha = 1;
         },

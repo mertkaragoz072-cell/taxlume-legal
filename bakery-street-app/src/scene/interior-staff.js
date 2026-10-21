@@ -7,7 +7,7 @@
 //    service: the sale itself is still made by tapping the guest, as before.
 import { drawSprite } from '../characters/sprites.js';
 import { drawIcon } from '../assets.js';
-import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot } from './interior-layout.js';
+import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
 const STOPS = { oven: { x: 272, dir: -1 }, counter: { x: 420, dir: 1 }, counter2: { x: 560, dir: 1 }, coffee: { x: 1130, dir: 1 }, storage: { x: 1330, dir: 1 } };
@@ -153,7 +153,7 @@ export class StaffLayer {
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04, frame: b.moving ? null : 0, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
   }
 
   drawWaiter(ctx) {
@@ -162,7 +162,7 @@ export class StaffLayer {
     ctx.globalAlpha = this.show;
     // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
     const tray = !!this.carry && this.phase !== 'hand';
-    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE, frame: tray ? 3 : w.moving ? null : 0, bounce: tray && w.moving, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
+    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: tray ? 3 : w.moving ? null : 0, bounce: tray && w.moving, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
     // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
     ctx.globalAlpha = 1;
   }

@@ -78,4 +78,13 @@ export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id 
 export const QUEUE_SPOTS = [{ x: 855, y: QUEUE_Y }, { x: 760, y: QUEUE_Y }, { x: 950, y: QUEUE_Y }];
 
 /** Camera: the interior is drawn zoomed out (see InteriorScene), centred on this world x so the 30..1414 content has air on both sides. */
+/**
+ * The supplied empty room (assets/game/interior/room.webp, 1600 x 900): its wall/floor join is at 48% of the picture's height. It is drawn
+ * so that join sits on FLOOR_Y, scaled to cover the screen; the picture's perspective (planks widening towards the viewer) is the floor.
+ */
+export const ROOM = { join: 0.484 };
+
+/** Depth scale: the nearer to the viewer (larger y), the larger a person or table is drawn (perspective), 0.86 at the wall to 1.04 at the front. */
+export const depthScale = (y) => 0.86 + 0.18 * Math.max(0, Math.min(1, (y - 430) / 380));
+
 export const CAM = { zoom: 0.8, cx: 718, baseY: 760, bottomPad: 64 };
