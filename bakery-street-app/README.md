@@ -152,3 +152,6 @@ oven, counter (dough and rolling pin on top), showcase (goods baked into the gla
 Dokununca eşya yaylanır (sönümlü squash/stretch) ve kıvılcımlar saçar; fırında kor/ateş parçacıkları, kahve makinesinde sürekli buhar; zemine perspektifli dokuma halı (`rug`); karakterlerin gerçek adım karelerine hafif eğilme/sekme eklendi.
 
 Not: `oldman`, `boy_redcap`, `girl_red`, `girl_glasses` da artık 6 karelik önden/arkadan şeritler; sekiz müşterinin hepsi aynı sistemde. Oturan resmi olmayan yalnızca `boy_redcap` ve `girl_glasses` kaldı (Komut 6b).
+
+### Yeni duvar dekoru (Komut 7)
+`window-shutter` (panjurlu kemerli pencere), `window-arch` (küçük kare pencere), `door`, `shelf`, `rack` (bakır tencereler) ve `lamp` (bakır tavan lambası) yeni resimlerle değişti; lambalar artık resimden çiziliyor. `menu.webp` (tebeşir menü tahtası) kaydedildi ama duvarda henüz yeri yok.

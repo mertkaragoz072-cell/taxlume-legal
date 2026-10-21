@@ -290,8 +290,12 @@ export class InteriorScene {
     // hanging copper lamps with a warm pool of light on the wall
     for (const lx of LAMPS) {
       ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, deco.beamBottom ?? this.cam.wt - 20); ctx.lineTo(lx, 128); ctx.stroke();
-      poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, PAL.honeyDark, 2.5);
-      ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = PAL.vanilla; ctx.fill();
+      const lamp = getImage('int-lamp');
+      if (lamp) { const lh = 82, lw = lamp.naturalWidth * lh / lamp.naturalHeight; ctx.drawImage(lamp, lx - lw / 2, 112, lw, lh); }     // supplied copper lamp (its chain starts at the cord)
+      else {
+        poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, PAL.honeyDark, 2.5);
+        ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = PAL.vanilla; ctx.fill();
+      }
       ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 175, 120, '255,190,90', 0.16 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
     }
     // ceiling shade, so the wall gets darker toward the top like a lit room (starts above the screen so there is no visible edge)
@@ -322,10 +326,10 @@ export class InteriorScene {
       ctx.fillStyle = vgrad(ctx, top + h, top + h + 26, [[0, 'rgba(70,48,32,.22)'], [1, 'rgba(70,48,32,0)']]); ctx.fillRect(c.wl - 20, top + h, c.wr - c.wl + 40, 26);
     }
     // heights follow the people (a guest is ~250 px): door ~1.0x, windows 0.65-0.75x with their sills on one line (y ~290), even ~90 px gaps
-    put('rack', 140, 172, 100);
+    put('rack', 150, 190, 105);
     put('shelf', 500, 252, 165);
-    put('window-shutter', 840, 290, 160);
-    put('window-arch', 1112, 284, 190);
+    put('window-shutter', 840, 292, 178);
+    put('window-arch', 1112, 268, 138);
     put('door', 1470, 430, 255);
     return { beamBottom: beam ? 86 : null };
   }
