@@ -41,11 +41,19 @@ export const areaAt = (x, y) => AREAS.find((a) => x >= a.x && x <= a.x + a.w && 
 
 const TABLES = AREAS.filter((a) => a.id.startsWith('table'));
 
-/** Where a seated customer stands: in the gap on the table's left (190 px from its centre), so neither the table nor its neighbour is covered. */
+/**
+ * Where a seated customer sits: on the table's left chair. `via` is the open column in the gap left of the table that they walk down
+ * and slide out of, so nobody crosses the table or its neighbour.
+ */
 export const chairSpot = (index) => {
   const a = TABLES[index];
-  return { x: a.x + a.w / 2 - 190, y: a.y + a.h - 6 };
+  return { x: a.x + a.w / 2 - 105, y: a.y + a.h - 27, via: a.x + a.w / 2 - 190, seat: true };
 };
+/** Hips-down part of a seated guest is hidden behind the table: cut the sprite this far above the feet. */
+export const SEAT_CUT = 95;
+
+/** Depth key (the y of the line an object stands on): what is further back is drawn first. Tables are judged by their front edge a bit above the chair feet. */
+export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
 /** Waiting spots along the service line in front of the showcase, staggered a little in depth. */
 export const QUEUE_SPOTS = [{ x: 875, y: SERVICE_LINE_Y }, { x: 775, y: SERVICE_LINE_Y }, { x: 975, y: SERVICE_LINE_Y }];

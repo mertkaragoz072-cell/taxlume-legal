@@ -1,6 +1,6 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, PERSON_SCALE, PERSON_H } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, PERSON_SCALE, PERSON_H, SEAT_CUT, AREAS, depthOf } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
@@ -35,7 +35,7 @@ export class CustomerLayer {
     this.v.clear();
     for (const c of this.cafe.customers) {
       const t = this.targetFor(c);
-      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? 1 : -1, moving: false, leaving: false, look: c.look });
+      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? 1 : -1, moving: false, leaving: false, look: c.look, via: t.via ?? null });
     }
   }
 
@@ -45,8 +45,10 @@ export class CustomerLayer {
       live.add(c.id);
       let v = this.v.get(c.id);
       if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look }; this.v.set(c.id, v); }
-      this.step(v, this.targetFor(c), dt);
-      if (!v.moving && c.state === 'seated') v.dir = 1;   // once at the table (it stands on its right), face it
+      const goal = this.targetFor(c);
+      v.via = goal.via ?? null;
+      this.step(v, goal, dt);
+      if (!v.moving && c.state === 'seated') v.dir = 1;   // once in the chair, face the table
     }
     for (const [id, v] of this.v) {
       if (live.has(id)) continue;
@@ -64,9 +66,19 @@ export class CustomerLayer {
    */
   step(v, goal, dt) {
     let to = goal;
-    if (Math.abs(goal.x - v.x) > 8) to = Math.abs(v.y - SERVICE_LINE_Y) > 4 ? { x: v.x, y: SERVICE_LINE_Y } : { x: goal.x, y: v.y };
+    const lane = Math.abs(v.y - SERVICE_LINE_Y) <= 4;
+    if (goal.via != null) {                                       // going to a chair: lane -> table gap -> down the gap -> slide into the chair
+      const inGap = Math.abs(v.x - goal.via) <= 8, atRow = Math.abs(v.y - goal.y) <= 4;
+      if (atRow) to = { x: goal.x, y: goal.y };
+      else if (inGap) to = { x: goal.via, y: goal.y };
+      else to = lane ? { x: goal.via, y: v.y } : { x: v.x, y: SERVICE_LINE_Y };
+    } else if (v.via != null && v.y > SERVICE_LINE_Y + 30 && Math.abs(v.x - v.via) > 8) {
+      to = { x: v.via, y: v.y };                                  // leaving a chair: slide back out into the gap first
+    } else if (Math.abs(goal.x - v.x) > 8) {
+      to = lane ? { x: goal.x, y: v.y } : { x: v.x, y: SERVICE_LINE_Y };
+    }
     const dx = to.x - v.x, dy = to.y - v.y, d = Math.hypot(dx, dy);
-    if (d < 2) { v.x = to.x; v.y = to.y; v.moving = Math.hypot(goal.x - v.x, goal.y - v.y) > 2; return; }
+    if (d < 2) { v.x = to.x; v.y = to.y; v.moving = Math.hypot(goal.x - v.x, goal.y - v.y) > 2; if (!v.moving) v.via = goal.via ?? null; return; }
     const s = Math.min(d, SPEED * dt);
     v.x += (dx / d) * s; v.y += (dy / d) * s; v.moving = true;
     if (Math.abs(dx) > 1) v.dir = dx > 0 ? 1 : -1;
@@ -83,13 +95,32 @@ export class CustomerLayer {
     return null;
   }
 
-  draw(ctx, t) {
-    const list = [...this.v.entries()].sort((a, b) => a[1].y - b[1].y);
-    for (const [id, v] of list) {
-      ctx.globalAlpha = clamp((v.y - ENTRY.y) / 45, 0, 1);       // fades in and out at the door
-      drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0, bob: 0.012, scale: PERSON_SCALE });
-      ctx.globalAlpha = 1;
+  /** True while the guest sits in the chair (not walking, not yet leaving): drawn from the waist up, behind the table's front edge. */
+  isSitting(v, c) { return !!c && c.state === 'seated' && !v.moving && !v.leaving; }
+
+  /** Depth-sorted pieces for the scene: one { y, draw } per guest (the scene sorts them with the furniture). */
+  items(t) {
+    const out = [];
+    for (const [id, v] of this.v) {
+      const c = this.cafe.customers.find((x) => x.id === id), sit = this.isSitting(v, c);
+      const table = sit ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
+      out.push({
+        y: table ? depthOf(table) + 1 : v.y,
+        draw: (ctx) => {
+          ctx.globalAlpha = clamp((v.y - ENTRY.y) / 45, 0, 1);       // fades in and out at the door
+          if (sit) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 150, v.y - 400, 300, 400 - SEAT_CUT); ctx.clip(); }
+          drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving ? null : 0, bob: 0.012, scale: PERSON_SCALE });
+          if (sit) ctx.restore();
+          ctx.globalAlpha = 1;
+        },
+      });
     }
+    return out;
+  }
+
+  /** Order / waiting bubbles and the "+N" pops: drawn last so nothing covers them. */
+  drawBubbles(ctx, t) {
+    const list = [...this.v.entries()];
     for (const [id, v] of list) {
       const c = this.cafe.customers.find((x) => x.id === id);
       if (!c || v.moving || v.leaving) continue;

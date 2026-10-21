@@ -4,7 +4,7 @@
 //  - the waiter walks the dining area only (never leaves the room). It needs its own sprite sheet ('waiter', see characters/sprites.js);
 //    until that art exists nothing is drawn, so no customer sprite is passed off as staff.
 import { drawSprite, hasSprite } from '../characters/sprites.js';
-import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE } from './interior-layout.js';
+import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS } from './interior-layout.js';
 
 const STOPS = { oven: 140, counter: 420, counter2: 560, coffee: 1135, storage: 1278 };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
@@ -53,14 +53,26 @@ export class StaffLayer {
     if (w.step(dt)) w.wait = 2 + Math.random() * 3;
     else if (!w.target) {
       w.wait -= dt;
-      if (w.wait <= 0) w.target = 330 + Math.random() * 340;       // the left part of the dining area: away from the queue and the entrance, never beyond the room
+      if (w.wait <= 0) w.target = this.serviceStop();
     }
+  }
+
+  /** The waiter walks to a table that has a guest waiting for an order (along the corridor in front of the counters), otherwise strolls near the counter. */
+  serviceStop() {
+    const seated = (this.game.cafe?.customers ?? []).filter((c) => c.state === 'seated');
+    if (seated.length) {
+      const c = seated[Math.floor(Math.random() * seated.length)], a = AREAS.find((x) => x.id === `table${c.table + 1}`);
+      return Math.max(120, Math.min(1180, a.x + a.w / 2 - 190));
+    }
+    return 330 + Math.random() * 340;
   }
 
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker;
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04, frame: b.moving ? null : 0, bob: 0.014 });
+    // at a busy machine he works it: the standing pose rocks and breathes faster; otherwise he just stands
+    const working = !b.moving && ['oven', 'coffee'].some((id) => this.game.jobsOf(id).length);
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04, frame: b.moving ? null : 0, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
   }
 
   drawWaiter(ctx) {

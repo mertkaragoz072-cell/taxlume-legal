@@ -1,7 +1,7 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen } from '../util.js';
 import { PAL } from '../palette.js';
-import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, areaAt } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
@@ -74,19 +74,19 @@ export class InteriorScene {
 
     this.cachedRoom(ctx, x0, w, yTop, yBot);
     this.decor(ctx);
-    for (const id of DRAW_ORDER) {                              // depth order: kitchen side, baker, counters, tables
-      if (id === '_staff') { this.staff.drawBaker(ctx); continue; }
+    // Everything that stands on the floor is drawn back to front by the line it stands on (its base y), so people pass in front of
+    // or behind counters and tables correctly. Ties keep the DRAW_ORDER of the furniture.
+    const items = [];
+    for (const id of DRAW_ORDER) {
+      if (id === '_staff') { items.push({ y: STAFF_LANE_Y, draw: () => this.staff.drawBaker(ctx) }); continue; }
       const a = AREAS.find((x) => x.id === id);
       if (!this.tableOpen(a)) continue;
-      const press = this.pressedId === a.id ? 1.5 : 0;
-      ctx.save();
-      if (press) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
-      if (!this.areaAsset(ctx, a)) ART[a.id]?.(ctx, a, this);
-      ctx.restore();
+      items.push({ y: depthOf(a), draw: () => this.drawArea(ctx, a) });
     }
+    items.push({ y: WAITER_LANE_Y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
+    items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
     for (const a of AREAS) if (this.tableOpen(a)) this.overlay(ctx, a);
-    this.staff.drawWaiter(ctx);
-    this.customers.draw(ctx, t);
+    this.customers.drawBubbles(ctx, t);
     this.light(ctx);
     this.frontDecor(ctx);
 
@@ -98,6 +98,13 @@ export class InteriorScene {
     ctx.globalAlpha = 1;
     gradeScreen(ctx, { warm: 0.3, vignette: 0.3, floorFade: 0.12 });
     textFloor.px = floorPx;
+  }
+
+  drawArea(ctx, a) {
+    ctx.save();
+    if (this.pressedId === a.id) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
+    if (!this.areaAsset(ctx, a)) ART[a.id]?.(ctx, a, this);
+    ctx.restore();
   }
 
   /**

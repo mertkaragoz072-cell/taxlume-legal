@@ -394,3 +394,40 @@ test('visual layout: every seated spot is apart from the other tables, the queue
   for (let i = 0; i < QUEUE_SPOTS.length; i++) for (let j = i + 1; j < QUEUE_SPOTS.length; j++) assert.ok(dist(QUEUE_SPOTS[i], QUEUE_SPOTS[j]) > 85, 'queue spots too close');
   assert.ok(QUEUE_SPOTS.length >= CAFE.queueMax);
 });
+
+test('guests walk the lanes: they never cross a table, sit in their own chair and leave through the door', async () => {
+  const { CustomerLayer } = await import('../src/scene/interior-customers.js');
+  const { AREAS, chairSpot } = await import('../src/scene/interior-layout.js');
+  const { game, cafe, clock } = make({ config: { spawnEverySec: [3, 3], orderPatienceSec: 60, queuePatienceSec: 60, tables: 4, tablesUpgrade: null } });
+  for (const id of Object.keys(game.products)) game.products[id] = 99;
+  const layer = new CustomerLayer(game, cafe);
+  const tables = AREAS.filter((a) => a.id.startsWith('table'));
+  const onTable = (v) => tables.some((a) => v.x > a.x + 90 && v.x < a.x + a.w - 40 && v.y > a.y + 60 && v.y < a.y + a.h - 10);   // tabletop and the far chair (the left chair is where the guest sits)
+  let seatedSeen = 0, left = 0;
+  for (let i = 0; i < 6000; i++) {                                   // 300 s at 50 ms
+    if (i % 300 === 299) { const c = cafe.customers.find((x) => x.state === 'seated'); if (c && cafe.deliverToCustomer(c.id).ok) left++; }
+    clock.now += 50; game.tick(); layer.update(0.05);
+    for (const [id, v] of layer.v) {
+      const c = cafe.customers.find((x) => x.id === id);
+      if (v.moving) assert.ok(!onTable(v), `guest ${id} walks over a table at ${v.x | 0},${v.y | 0}`);
+      if (c?.state === 'seated' && !v.moving) {
+        seatedSeen++;
+        const s = chairSpot(c.table);
+        assert.ok(Math.hypot(v.x - s.x, v.y - s.y) < 3, `a seated guest is in its own chair (guest ${id} at ${v.x | 0},${v.y | 0}, chair ${s.x | 0},${s.y | 0}, table ${c.table}, step ${i})`);
+      }
+    }
+  }
+  assert.ok(seatedSeen > 0 && left > 0, 'guests sat down and were served');
+  assert.ok(layer.v.size <= cafe.customers.length + 2, 'guests that left are removed after walking out');
+});
+
+test('depth order: kitchen side, baker, counters, waiter lane, service line, tables (back to front)', async () => {
+  const L = await import('../src/scene/interior-layout.js');
+  const d = (id) => L.depthOf(L.AREAS.find((a) => a.id === id));
+  assert.ok(d('oven') <= L.STAFF_LANE_Y && L.STAFF_LANE_Y < d('counter'), 'the baker stands in front of the oven and behind the counter');
+  assert.ok(d('counter') < L.WAITER_LANE_Y && L.WAITER_LANE_Y < L.SERVICE_LINE_Y, 'the waiter passes in front of the counters, behind the service line');
+  for (const t of ['table1', 'table2', 'table3', 'table4']) assert.ok(L.SERVICE_LINE_Y < d(t), 'guests in the lane are behind the tables');
+  for (const id of ['showcase', 'coffee']) assert.equal(d(id), d('counter'), 'the counters share one front line');
+  const seat = L.chairSpot(0);
+  assert.ok(seat.y <= d('table1') + 40, 'a seated guest belongs to its table');
+});

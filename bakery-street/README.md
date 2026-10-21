@@ -337,3 +337,10 @@ Guests now step out of the green door at the right end of the back wall (and lea
 ### Proportions pass (tables and wall pieces)
 
 Tables are 300×175 (chair backs ≈ 0.7 of a guest's height), spaced 380 px apart; guests stand in the 80 px gap left of their table. The back-wall row was re-spaced (counter 310, showcase 720, coffee 1060, storage 1230, door 1470) so the gaps are even; windows share one sill line, the door is about guest height, and the pendant lamps hang in the gaps.
+
+## Living cafe scene (depth sorting, sitting guests, working staff)
+
+- **Depth:** everything standing on the floor (furniture, baker, waiter, guests) is sorted by its base y each frame (`depthOf`, `InteriorScene.render`), so people pass in front of or behind counters and tables correctly; wall, floor and wall pieces stay in the static back layers. Name tags and order bubbles are drawn last.
+- **Guests:** enter from the green door, walk along the service line, go down the gap beside their table and slide into the left chair, where they are drawn from the waist up (the sprite is cut `SEAT_CUT` px above the feet; there is no sitting animation in the sheets). Leaving is the same path in reverse, out through the door.
+- **Staff:** the baker works at a busy oven/coffee machine (standing pose rocks and breathes faster, no new sheet needed); the waiter walks the corridor to tables that have a seated guest, otherwise strolls near the counter. Visual only; no game logic or timers are touched.
+- **Tests:** `tests/cafe.test.js` simulates 300 s of guests (never on a table, seated in their own chair, removed after leaving) and checks the back-to-front depth order.
