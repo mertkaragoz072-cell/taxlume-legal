@@ -1,6 +1,6 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
-import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, SEAT_CUT, AREAS, depthOf } from './interior-layout.js';
+import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, sitFeetY, sitCutY } from './interior-layout.js';
 import { drawSprite } from '../characters/sprites.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
@@ -36,7 +36,7 @@ export class CustomerLayer {
     this.v.clear();
     for (const c of this.cafe.customers) {
       const t = this.targetFor(c);
-      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? -(t.side ?? -1) : -1, moving: false, leaving: false, look: c.look, via: t.via ?? null, pause: false });
+      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? -(t.side ?? -1) : -1, moving: false, leaving: false, look: c.look, via: t.via ?? null, pause: false, sit: c.state === 'seated' ? 1 : 0 });
     }
   }
 
@@ -45,7 +45,7 @@ export class CustomerLayer {
     for (const c of this.cafe.customers) {
       live.add(c.id);
       let v = this.v.get(c.id);
-      if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look, via: null, pause: false }; this.v.set(c.id, v); }
+      if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look, via: null, pause: false, sit: 0 }; this.v.set(c.id, v); }
       const goal = this.targetFor(c);
       v.via = goal.via ?? null;
       this.step(v, goal, dt, c.id);
@@ -59,6 +59,10 @@ export class CustomerLayer {
     }
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
+    for (const [id, v] of this.v) {                                 // lower into / rise out of the chair
+      const c = this.cafe.customers.find((x) => x.id === id);
+      v.sit = clamp((v.sit ?? 0) + (this.isSitting(v, c) ? dt * 3.5 : -dt * 3.5), 0, 1);
+    }
   }
 
   /**
@@ -105,7 +109,7 @@ export class CustomerLayer {
       if (c.state !== 'seated') continue;
       const v = this.v.get(c.id);
       if (!v || v.moving) continue;
-      if (Math.abs(x - v.x) < 66 && y > v.y - BODY_H - 70 && y < v.y + 6) return `customer:${c.id}`;
+      const vy = this.drawY(v, c); if (Math.abs(x - v.x) < 66 && y > vy - BODY_H - 70 && y < vy + 6) return `customer:${c.id}`;
     }
     return null;
   }
@@ -113,19 +117,24 @@ export class CustomerLayer {
   /** True while the guest sits in the chair (not walking, not yet leaving): drawn from the waist up, behind the table's front edge. */
   isSitting(v, c) { return !!c && c.state === 'seated' && !v.moving && !v.leaving; }
 
+  /** Where the guest's feet are drawn: lowered onto the chair while seated (eased), otherwise where they walk. */
+  drawY(v, c) { return c && c.table != null && v.sit > 0 ? v.y + (sitFeetY(c.table) - v.y) * v.sit : v.y; }
+
   /** Depth-sorted pieces for the scene: one { y, draw } per guest (the scene sorts them with the furniture). */
   items(t) {
     const out = [];
     for (const [id, v] of this.v) {
-      const c = this.cafe.customers.find((x) => x.id === id), sit = this.isSitting(v, c);
-      const table = sit ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
+      const c = this.cafe.customers.find((x) => x.id === id);
+      const table = c && c.state === 'seated' && v.sit > 0 ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       out.push({
         y: table ? depthOf(table) + 1 : v.y,
         draw: (ctx) => {
           ctx.globalAlpha = clamp((v.y - EXIT.y) / 45, 0, 1);       // fades in and out at the door
-          if (sit) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 150, v.y - 400, 300, 400 - SEAT_CUT); ctx.clip(); }
-          drawSprite(ctx, v.look, v.x, v.y, t, { dir: v.dir, fps: 8, phase: id, frame: v.moving && !v.pause ? null : 0, bob: 0.012, scale: PERSON_SCALE });
-          if (sit) ctx.restore();
+          const y = this.drawY(v, c), seated = table && v.sit >= 0.999;
+          if (seated) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 160, y - 420, 320, sitCutY(c.table) - (y - 420)); ctx.clip(); }
+          const hold = v.moving && !v.pause;
+          drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE, shade: !seated });
+          if (seated) ctx.restore();
           ctx.globalAlpha = 1;
         },
       });
@@ -156,20 +165,22 @@ export class CustomerLayer {
     const order = this.cafe.orderOf(c);
     if (!order) return;
     const def = this.game.productsDef[order.product], inStock = this.game.products[order.product] >= 1;
-    const w = inStock ? 112 : 136, h = 64, x = v.x - w / 2, y = v.y - BODY_H - h - 18, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
+    const w = 92, h = 52, x = v.x - w / 2, top = this.drawY(v, c) - BODY_H, y = top - h - 10, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
+    const edge = inStock ? PAL.green : PAL.terracottaLight;
     ctx.save(); ctx.translate(v.x, y + h); ctx.scale(pulse, pulse); ctx.translate(-v.x, -(y + h));
-    poly(ctx, [[v.x - 9, y + h - 1], [v.x + 9, y + h - 1], [v.x, y + h + 13]]); paint(ctx, PAL.paper, 3, inStock ? PAL.green : PAL.terracottaLight);
-    rrect(ctx, x, y, w, h, 16); paint(ctx, PAL.paper, 4, inStock ? PAL.green : PAL.terracottaLight);
-    ctx.fillStyle = PAL.paper; ctx.fillRect(v.x - 8, y + h - 5, 16, 6);
-    ctx.font = '36px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    if (!drawIcon(ctx, order.product, x + 30, y + 30, 46)) { ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, x + 30, y + 30); }
-    if (inStock) label(ctx, `${order.price}`, x + 80, y + 28, { font: '700 24px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
-    else label(ctx, 'stok yok', x + 92, y + 28, { font: '700 16px "Trebuchet MS", sans-serif', fill: PAL.terracottaDark, lw: 0 });      // the shortage is said inside the bubble, not on top of the scene
-    // patience bar
-    const f = this.cafe.patienceFraction(c);
-    rrect(ctx, x + 12, y + h - 16, w - 24, 8, 4); paint(ctx, PAL.vanilla, 1.5, PAL.honeyDark);
-    ctx.save(); rrect(ctx, x + 13, y + h - 15, w - 26, 6, 3); ctx.clip();
-    ctx.fillStyle = f > 0.5 ? PAL.green : f > 0.25 ? PAL.honey : PAL.terracottaLight; ctx.fillRect(x + 13, y + h - 15, (w - 26) * f, 6);
+    poly(ctx, [[v.x - 7, y + h - 1], [v.x + 7, y + h - 1], [v.x, y + h + 10]]); paint(ctx, PAL.paper, 3, edge);
+    rrect(ctx, x, y, w, h, 14); paint(ctx, PAL.paper, 3.5, edge);
+    ctx.fillStyle = PAL.paper; ctx.fillRect(v.x - 6, y + h - 4, 12, 5);
+    ctx.font = '30px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.globalAlpha *= inStock ? 1 : 0.45;                                   // out of stock: the same bubble, faded, with a small red mark instead of the price
+    if (!drawIcon(ctx, order.product, x + 27, y + 24, 38)) { ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, x + 27, y + 24); }
+    ctx.globalAlpha = Math.min(1, ctx.globalAlpha / (inStock ? 1 : 0.45));
+    if (inStock) label(ctx, `${order.price}`, x + 66, y + 23, { font: '700 21px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
+    else { ctx.beginPath(); ctx.arc(x + 66, y + 23, 11, 0, 7); paint(ctx, PAL.terracotta, 2, PAL.terracottaDark); label(ctx, '!', x + 66, y + 24, { font: '800 17px "Trebuchet MS", sans-serif', fill: PAL.paper, lw: 0 }); }
+    const f = this.cafe.patienceFraction(c);                                  // patience bar
+    rrect(ctx, x + 10, y + h - 13, w - 20, 7, 3.5); paint(ctx, PAL.vanilla, 1.2, PAL.honeyDark);
+    ctx.save(); rrect(ctx, x + 11, y + h - 12, w - 22, 5, 2.5); ctx.clip();
+    ctx.fillStyle = f > 0.5 ? PAL.green : f > 0.25 ? PAL.honey : PAL.terracottaLight; ctx.fillRect(x + 11, y + h - 12, (w - 22) * f, 5);
     ctx.restore();
     ctx.restore();
   }

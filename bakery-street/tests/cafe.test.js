@@ -433,3 +433,27 @@ test('depth order: kitchen side, baker, counters, waiter lane, service line, tab
   const seat = L.chairSpot(0);
   assert.ok(seat.y <= d('table1') + 40, 'a seated guest belongs to its table');
 });
+
+test('seating: hips rest on the chair cushion inside the table picture, and the cut hides legs below it', async () => {
+  const L = await import('../src/scene/interior-layout.js');
+  for (let i = 0; i < 4; i++) {
+    const a = L.AREAS.find((x) => x.id === `table${i + 1}`);
+    const hips = L.sitFeetY(i) - L.HIP_H;
+    assert.ok(hips > a.y + a.h * 0.3 && hips < a.y + a.h * 0.6, 'hips are at cushion height');
+    assert.ok(L.sitCutY(i) > hips && L.sitCutY(i) < a.y + a.h * 0.7, 'the sprite is cut just below the hips, above the chair feet');
+  }
+});
+
+test('waiter service: picks up an open order, carries it to the table gap, hands it over and returns to the post', async () => {
+  const { StaffLayer } = await import('../src/scene/interior-staff.js');
+  const { game, cafe, run } = make({ config: { spawnEverySec: [999, 999], firstSpawnSec: 999, tablesUpgrade: null, orderPatienceSec: 500 } });
+  const staff = new StaffLayer(game);
+  staff.show = 1;
+  const c = cafe.arrive(); cafe.seatQueued();
+  const seen = new Set(); let carried = null;
+  for (let i = 0; i < 1200; i++) { staff.update(0.05); seen.add(staff.phase); if (staff.carry) carried = staff.carry; }
+  assert.ok(seen.has('carry') && seen.has('hand') && seen.has('back'), `phases seen: ${[...seen]}`);
+  assert.equal(carried, cafe.orderOf(c).product, 'the waiter carried the guest\'s product');
+  assert.equal(staff.phase, 'post'); assert.equal(staff.carry, null);
+  assert.equal(cafe.orderOf(c).status, 'open', 'service is only visual: the sale is still made by tapping');
+});

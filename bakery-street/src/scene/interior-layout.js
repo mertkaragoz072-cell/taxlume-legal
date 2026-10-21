@@ -53,8 +53,15 @@ export const chairSpot = (index) => {
   const side = a.side ?? -1;
   return { x: a.x + a.w / 2 + side * 105, y: a.y + a.h - 27, via: a.x + a.w / 2 + side * 190, seat: true, side };
 };
-/** Hips-down part of a seated guest is hidden behind the table: cut the sprite this far above the feet. */
-export const SEAT_CUT = 95;
+/**
+ * Sitting: the cushion of a chair is at 38% of the table picture's height (measured on assets/interior/table.webp). A seated guest is
+ * drawn lowered so the hips rest on the cushion (hips are ~118 px above the feet at the cafe scale), and everything below the cushion's
+ * top edge is cut off, so the legs sit behind the chair front and nobody floats or sinks into the tabletop.
+ */
+export const seatTop = (a) => a.y + a.h * 0.38;
+export const HIP_H = 118;
+export const sitFeetY = (index) => seatTop(TABLES[index]) + 12 + HIP_H;     // where the (hidden) feet of a seated guest end up
+export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 
 /** Depth key (the y of the line an object stands on): what is further back is drawn first. Tables are judged by their front edge a bit above the chair feet. */
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);

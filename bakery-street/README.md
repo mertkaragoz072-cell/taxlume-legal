@@ -352,3 +352,11 @@ Tables are 300×175 (chair backs ≈ 0.7 of a guest's height), spaced 380 px apa
 - **Waiter:** walks the row in front of the counters (y 505) to tables with a seated guest and waits if a guest is in the way.
 - **Bubbles:** "stok yok" is said inside the order bubble (it widens), not as a second label on the scene.
 - `tests/cafe.test.js` now also fails if two guests ever stand inside each other during a 300 s simulation.
+
+### Seating, service and bubbles (final polish)
+
+- **Sitting:** the chair cushion sits at 38% of the table picture (`seatTop`); a seated guest is eased down so the hips rest on it (`sitFeetY`, `HIP_H`) and the sprite is cut just below the hips (`sitCutY`), so legs vanish behind the chair front. No contact shadow while seated; hit-testing and the bubble follow the lowered head.
+- **Baker:** goes to a busy oven/coffee machine at once, stands beside it (oven x 272 facing left, coffee x 1042 facing right) and works (rock + faster breathing); strolls only while idle.
+- **Waiter:** post at x 610 in front of the counters; for each seated guest with an open order he carries the product (icon in his hands) along the corridor and down the access gap, pauses 1.1 s beside the guest, then returns to the post. Visual only; the sale is still a tap on the guest.
+- **Bubbles:** 92×52, product + price; out of stock = faded product with a small red "!" (no text). Showcase counts use a 14 px label.
+- Tests: hip/cut heights per table and the waiter's carry → hand → return phases.

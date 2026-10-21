@@ -84,7 +84,7 @@ export class InteriorScene {
       if (!this.tableOpen(a)) continue;
       items.push({ y: depthOf(a), draw: () => this.drawArea(ctx, a) });
     }
-    items.push({ y: WAITER_LANE_Y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
+    items.push({ y: this.staff.waiter.y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
     for (const a of AREAS) if (this.tableOpen(a)) this.overlay(ctx, a);
     this.customers.drawBubbles(ctx, t);
@@ -423,7 +423,7 @@ function showcaseStock(ctx, a, scene, art = null) {
     let ix = art ? art.x + art.w * 0.17 : x + 28;
     for (const [id, def] of Object.entries(scene.game.productsDef)) {
       const n = scene.game.products[id];
-      if (n > 0) { if (!drawIcon(ctx, id, ix, iy, 46)) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, ix, iy); } label(ctx, `×${n}`, ix, ly, { font: '700 17px sans-serif', fill: PAL.paper, lw: 4 }); }
+      if (n > 0) { if (!drawIcon(ctx, id, ix, iy, 46)) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, ix, iy); } label(ctx, `×${n}`, ix, ly, { font: '700 14px sans-serif', fill: PAL.paper, lw: 4 }); }
       ix += step;
     }
 }

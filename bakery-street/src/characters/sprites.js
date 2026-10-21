@@ -20,12 +20,12 @@ const SCALE = 0.9; // native sprite px -> design px (a street character ends up 
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 
 /** Draws frame `floor(t*fps+phase)` of the sheet with the feet at (x, y). Returns false when the sheet is not loaded. */
-export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0 } = {}) {
+export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true } = {}) {
   const img = getImage(`char-${id}`), m = SHEETS[id];
   if (!img || !m) return false;
   const f = frame ?? ((Math.floor(t * fps + phase) % m.frames) + m.frames) % m.frames;   // `frame` freezes the pose (standing)
   const s = SCALE * scale, dw = m.w * s, dh = m.h * s;
-  shadow(ctx, x, y + 1, dw * 0.28, 4.5, 0.32);
+  if (shade) shadow(ctx, x, y + 1, dw * 0.28, 4.5, 0.32);
   ctx.save();
   ctx.translate(x, y);
   if (bob && frame !== null) ctx.scale(1, 1 + Math.sin(t * 2.2 + phase * 1.7) * bob);   // standing pose breathes a little (bob = relative height change)
