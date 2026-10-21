@@ -407,6 +407,8 @@ test('guests walk the lanes: they never cross a table, sit in their own chair an
   for (let i = 0; i < 6000; i++) {                                   // 300 s at 50 ms
     if (i % 300 === 299) { const c = cafe.customers.find((x) => x.state === 'seated'); if (c && cafe.deliverToCustomer(c.id).ok) left++; }
     clock.now += 50; game.tick(); layer.update(0.05);
+    const all = [...layer.v.values()];
+    for (let p = 0; p < all.length; p++) for (let q = p + 1; q < all.length; q++) assert.ok(!(Math.abs(all[p].x - all[q].x) < 40 && Math.abs(all[p].y - all[q].y) < 12), `two guests stand inside each other at step ${i}: ${all[p].x | 0},${all[p].y | 0} / ${all[q].x | 0},${all[q].y | 0}`);
     for (const [id, v] of layer.v) {
       const c = cafe.customers.find((x) => x.id === id);
       if (v.moving) assert.ok(!onTable(v), `guest ${id} walks over a table at ${v.x | 0},${v.y | 0}`);

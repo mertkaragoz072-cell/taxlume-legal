@@ -12,12 +12,14 @@ const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 class Walker {
   constructor(x, speed) { this.x = x; this.speed = speed; this.dir = 1; this.moving = false; this.target = null; this.wait = 1.5; this.t = 0; }
   /** Moves toward the target; returns true when it has just arrived. */
-  step(dt) {
+  step(dt, blocked = null) {
     this.t += dt;
     if (!this.target) return false;
     const dx = this.target - this.x;
     if (Math.abs(dx) < 3) { this.x = this.target; this.target = null; this.moving = false; return true; }
-    this.moving = true; this.dir = dx > 0 ? 1 : -1;
+    this.dir = dx > 0 ? 1 : -1;
+    if (blocked?.(this.x, this.dir)) { this.moving = false; return false; }     // someone is in the way: wait
+    this.moving = true;
     this.x += this.dir * Math.min(Math.abs(dx), this.speed * dt);
     return false;
   }
@@ -29,7 +31,8 @@ export class StaffLayer {
     this.baker = new Walker(STOPS.counter, 70);
     this.waiter = new Walker(380, 62);
     this.tour = 0;
-    this.show = 0;              // the waiter fades in only while the cafe has guests
+    this.show = 0;
+    this.guests = () => [];     // set by the scene: where the guests stand (the waiter never walks into one)              // the waiter fades in only while the cafe has guests
   }
 
   /** Where the baker should be: next to a busy machine first, otherwise the next stop of the tour. */
@@ -50,7 +53,8 @@ export class StaffLayer {
     this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length ? dt : -dt)));
     if (!hasSprite('waiter')) return;
     const w = this.waiter;
-    if (w.step(dt)) w.wait = 2 + Math.random() * 3;
+    const blocked = (x, dir) => [...this.guests()].some((g) => Math.abs(g.y - WAITER_LANE_Y) < 45 && (g.x - x) * dir > 0 && (g.x - x) * dir < 120);
+    if (w.step(dt, blocked)) w.wait = 2 + Math.random() * 3;
     else if (!w.target) {
       w.wait -= dt;
       if (w.wait <= 0) w.target = this.serviceStop();
@@ -62,7 +66,7 @@ export class StaffLayer {
     const seated = (this.game.cafe?.customers ?? []).filter((c) => c.state === 'seated');
     if (seated.length) {
       const c = seated[Math.floor(Math.random() * seated.length)], a = AREAS.find((x) => x.id === `table${c.table + 1}`);
-      return Math.max(120, Math.min(1180, a.x + a.w / 2 - 190));
+      return Math.max(120, Math.min(1200, a.x + a.w / 2 + (a.side ?? -1) * 190));
     }
     return 330 + Math.random() * 340;
   }

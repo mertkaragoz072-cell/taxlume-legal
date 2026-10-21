@@ -25,6 +25,7 @@ export class InteriorScene {
     this.cam = { zoom: CAM.zoom, tx: 0, ty: 0, wl: 0, wr: 1400, wt: 0, wb: 790 };   // zoomed-out camera, see resize()
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
+    this.staff.guests = () => this.customers.v.values();
     this.rects = {};            // where each area's art was actually drawn (labels follow it)
     this.motes = Array.from({ length: 34 }, (_, i) => ({ x: -120 + ((i * 97) % 1620), y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {

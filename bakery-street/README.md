@@ -344,3 +344,11 @@ Tables are 300×175 (chair backs ≈ 0.7 of a guest's height), spaced 380 px apa
 - **Guests:** enter from the green door, walk along the service line, go down the gap beside their table and slide into the left chair, where they are drawn from the waist up (the sprite is cut `SEAT_CUT` px above the feet; there is no sitting animation in the sheets). Leaving is the same path in reverse, out through the door.
 - **Staff:** the baker works at a busy oven/coffee machine (standing pose rocks and breathes faster, no new sheet needed); the waiter walks the corridor to tables that have a seated guest, otherwise strolls near the counter. Visual only; no game logic or timers are touched.
 - **Tests:** `tests/cafe.test.js` simulates 300 s of guests (never on a table, seated in their own chair, removed after leaving) and checks the back-to-front depth order.
+
+### Cafe flow polish
+
+- **Seating groups:** tables sit in two groups either side of a central aisle (tables 3+1 left, 2+4 right; the outer ones set back 10 px). Each guest takes the chair on the aisle side of their table (`side` in `AREAS`) and faces it, so no chair is crossed.
+- **Lanes:** guests walk left on the service line (y 575) and right on a second lane (y 592), so opposite flows pass instead of colliding; they queue at the showcase one row behind (y 538). Anyone about to step into another guest waits a moment (a guest that has waited 1.2 s goes first, so lanes never lock). Entry and exit use two columns of the door.
+- **Waiter:** walks the row in front of the counters (y 505) to tables with a seated guest and waits if a guest is in the way.
+- **Bubbles:** "stok yok" is said inside the order bubble (it widens), not as a second label on the scene.
+- `tests/cafe.test.js` now also fails if two guests ever stand inside each other during a 300 s simulation.
