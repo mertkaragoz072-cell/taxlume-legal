@@ -9,7 +9,7 @@ import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
-const LAMPS = [275, 740, 1020];
+const LAMPS = [285, 700, 975];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
 export class InteriorScene {
@@ -174,11 +174,12 @@ export class InteriorScene {
       ctx.drawImage(beam, sx, 0, sw, beam.naturalHeight, c.wl - 20, top, c.wr - c.wl + 40, h);
       ctx.fillStyle = vgrad(ctx, top + h, top + h + 26, [[0, 'rgba(70,48,32,.22)'], [1, 'rgba(70,48,32,0)']]); ctx.fillRect(c.wl - 20, top + h, c.wr - c.wl + 40, 26);
     }
+    // heights follow the people (a guest is ~250 px): door ~1.0x, windows 0.65-0.75x with their sills on one line (y ~290), even ~90 px gaps
     put('rack', 140, 172, 100);
-    put('shelf', 500, 262, 184);
-    put('window-shutter', 880, 262, 150);
-    put('window-arch', 1160, 268, 190);
-    put('door', 1490, 430, 215);
+    put('shelf', 500, 252, 165);
+    put('window-shutter', 840, 290, 160);
+    put('window-arch', 1112, 284, 190);
+    put('door', 1470, 430, 255);
     return { beamBottom: beam ? 86 : null };
   }
 
@@ -191,7 +192,7 @@ export class InteriorScene {
       glowAt(ctx, lx, 600, 210, '255,190,100', 0.075 * f);
     }
     if (getImage('int-window-arch')) {                         // daylight falling from the two windows onto the wall and floor
-      for (const [x, top, w] of [[880, 188, 120], [1160, 190, 110]]) {
+      for (const [x, top, w] of [[840, 200, 120], [1112, 190, 110]]) {
         const sway = 4 * Math.sin(this.t * 0.4 + x), g = ctx.createLinearGradient(0, top, 0, 560);
         g.addColorStop(0, 'rgba(255,238,190,.16)'); g.addColorStop(1, 'rgba(255,238,190,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w / 2, top); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 - 150 + sway, 560); ctx.lineTo(x - w / 2 - 150 + sway, 560); ctx.closePath(); ctx.fill();

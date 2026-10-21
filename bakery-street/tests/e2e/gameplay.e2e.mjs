@@ -46,7 +46,7 @@ export default async function run({ browser, url }) {
 
   // --- upgrades: a double click buys one level ---
   await S(() => window.__street.go('interior')); await page.waitForTimeout(700);
-  await tapDesign(page, 1352, 216);
+  await tapDesign(page, 1274, 216);
   const gu = await S(() => window.__street.game.player.gold);
   await page.evaluate(() => { const b = document.querySelector('[data-upgrade=ovenCapacity]'); b.click(); b.click(); b.click(); }); await page.waitForTimeout(300);
   c.ok('triple click buys one upgrade level only', (await S(() => window.__street.game.upgrades.ovenCapacity)) === 1 && gu - (await S(() => window.__street.game.player.gold)) === 800);

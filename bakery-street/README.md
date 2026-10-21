@@ -333,3 +333,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### Door entrance, daylight, small cleanups
 
 Guests now step out of the green door at the right end of the back wall (and leave through it, fading in/out), then use the service line as before. Two soft daylight shafts fall from the windows. The wall and floor are painted once per screen size and copied each frame. The nav lock badge and the panels' "Geri" button use the supplied pictures.
+
+### Proportions pass (tables and wall pieces)
+
+Tables are 300×175 (chair backs ≈ 0.7 of a guest's height), spaced 380 px apart; guests stand in the 80 px gap left of their table. The back-wall row was re-spaced (counter 310, showcase 720, coffee 1060, storage 1230, door 1470) so the gaps are even; windows share one sill line, the door is about guest height, and the pendant lamps hang in the gaps.

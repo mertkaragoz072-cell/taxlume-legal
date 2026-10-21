@@ -3,18 +3,18 @@
 export const AREAS = [
   // against the back wall (kitchen side), left to right: oven, prep counter, showcase facing the guests, coffee station, storage
   { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 30, y: 205, w: 220, h: 220 },
-  { id: 'storage', label: 'Depo', panel: 'storage', x: 1310, y: 318, w: 96, h: 118 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1290, y: 140, w: 124, h: 152 },
+  { id: 'storage', label: 'Depo', panel: 'storage', x: 1230, y: 318, w: 96, h: 118 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1212, y: 140, w: 124, h: 152 },
   // the service line: counters stand in front of the kitchen floor, about 80 px apart
-  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 330, y: 368, w: 330, h: 122 },
-  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 740, y: 312, w: 270, h: 178 },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1090, y: 285, w: 150, h: 205 },
+  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 310, y: 368, w: 330, h: 122 },
+  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 720, y: 312, w: 270, h: 178 },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1060, y: 285, w: 150, h: 205 },
   // dining area, in front, behind a wide open corridor. Four slots; the cafeTables upgrade opens them in this order
-  // (the two middle ones first, so the room always looks balanced). 100 px of floor between neighbours.
-  { id: 'table1', label: 'Masa 1', panel: null, x: 408, y: 622, w: 260, h: 140 },
-  { id: 'table2', label: 'Masa 2', panel: null, x: 768, y: 622, w: 260, h: 140 },
-  { id: 'table3', label: 'Masa 3', panel: null, x: 48, y: 622, w: 260, h: 140 },
-  { id: 'table4', label: 'Masa 4', panel: null, x: 1128, y: 622, w: 260, h: 140 },
+  // (the two middle ones first, so the room always looks balanced). 80 px of floor between neighbours.
+  { id: 'table1', label: 'Masa 1', panel: null, x: 378, y: 587, w: 300, h: 175 },
+  { id: 'table2', label: 'Masa 2', panel: null, x: 758, y: 587, w: 300, h: 175 },
+  { id: 'table3', label: 'Masa 3', panel: null, x: -2, y: 587, w: 300, h: 175 },
+  { id: 'table4', label: 'Masa 4', panel: null, x: 1138, y: 587, w: 300, h: 175 },
 ];
 
 /** Drawing order = depth: the kitchen side first, then the baker (behind the counters), then the counters, then the tables. */
@@ -41,10 +41,10 @@ export const areaAt = (x, y) => AREAS.find((a) => x >= a.x && x <= a.x + a.w && 
 
 const TABLES = AREAS.filter((a) => a.id.startsWith('table'));
 
-/** Where a seated customer stands: in the gap on the table's left (180 px from its centre), so neither the table nor its neighbour is covered. */
+/** Where a seated customer stands: in the gap on the table's left (190 px from its centre), so neither the table nor its neighbour is covered. */
 export const chairSpot = (index) => {
   const a = TABLES[index];
-  return { x: a.x + a.w / 2 - 180, y: a.y + a.h - 6 };
+  return { x: a.x + a.w / 2 - 190, y: a.y + a.h - 6 };
 };
 
 /** Waiting spots along the service line in front of the showcase, staggered a little in depth. */

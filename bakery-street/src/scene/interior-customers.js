@@ -6,7 +6,7 @@ import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
 
-const ENTRY = { x: 1490, y: 440 };                      // the green door at the right end of the back wall (see InteriorScene.wallDecor): guests step out of it and leave through it
+const ENTRY = { x: 1470, y: 440 };                      // the green door at the right end of the back wall (see InteriorScene.wallDecor): guests step out of it and leave through it
 const SPEED = 210;                 // design px per second
 const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
 
