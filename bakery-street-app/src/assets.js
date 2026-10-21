@@ -47,7 +47,7 @@ for (const id of UI_ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`
 for (const id of ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 
 /** Seated guests with their own chair and table (assets/characters/seat-<look>.webp), drawn in place of the empty table while a guest sits. */
-export const SEAT_LOOKS = ['girl_basket', 'boy_cap', 'boy_backpack', 'grandma', 'oldman', 'girl_red']   // boy_redcap and girl_glasses have no front-view seated picture yet: they sit as the walking sprite;
+export const SEAT_LOOKS = ['girl_basket', 'boy_cap', 'boy_backpack', 'grandma', 'oldman', 'girl_red', 'boy_redcap', 'girl_glasses'];
 for (const id of SEAT_LOOKS) MANIFEST[`seat-${id}`] = `assets/characters/seat-${id}.webp`;
 
 const images = {};
