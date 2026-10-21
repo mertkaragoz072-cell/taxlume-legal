@@ -12,6 +12,8 @@ import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
+/** [prop, x, foot y, height, flip]: they stand in front of the walking lane (y 575) and beside the tables' access gaps, never on a path. */
+const FLOOR_PROPS = [['pot_topiary', -105, 655, 170], ['planter_flowers', 718, 668, 130], ['pot_topiary2', 1475, 650, 175, true]];
 const LAMPS = [423, 685, 989, 1336];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
@@ -91,6 +93,7 @@ export class InteriorScene {
       items.push({ y: depthOf(a), draw: () => this.drawArea(ctx, a) });
     }
     if (getImage('int-backdrop')) items.push({ y: 492, draw: () => this.counterStrip(ctx) });
+    for (const [name, x, y, h, flip] of FLOOR_PROPS) items.push({ y, draw: () => drawProp(ctx, name, x, y, h, { flip }) });   // plants and a board standing between the walking lane and the tables: guests pass behind them
     items.push({ y: this.staff.waiter.y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
     this.staff.drawServed(ctx);
