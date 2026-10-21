@@ -325,3 +325,7 @@ Use: walls cream/vanilla, floor and wood honey, oven/accents/warnings terracotta
 ### Keşif map
 
 `assets/explore-map.webp` (key `explore-map`) is the parchment map. It is drawn sharp inside the 1400×790 design rectangle and as a soft blurred copy beyond it on wider screens; the region markers (`EXPLORE` regions' `map` in data/economy.js: meadow 268,494 · forest 536,228 · ruins 590,440) sit on its three empty patches. Without the image the scene falls back to the code-drawn parchment and dotted trail.
+
+### Cafe wall decoration
+
+`window-arch, window-shutter, shelf, door, rack, beam` (assets/interior/) dress the back wall: the beam runs across the room, the rack hangs above the oven, the shelf over the prep counter, the windows over the showcase and coffee station, the green door at the right end (decorative; guests still walk in along the service line). Pendant lamps hang in the gaps between the pieces. Each piece keeps its aspect ratio and is skipped if its picture is missing.

@@ -8,8 +8,8 @@ import { getImage, drawIcon } from '../assets.js';
 import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
-/** Pendant lamps along the back wall. */
-const LAMPS = [380, 640, 900, 1160];
+/** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
+const LAMPS = [275, 740, 1020];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
 export class InteriorScene {
@@ -129,9 +129,9 @@ export class InteriorScene {
 
   /** Back layer: shelves with jars and plates, plants and warm pendant lamps on the back wall (drawn over any wall art). */
   decor(ctx) {
-    const wall = FLOOR_Y;
-    // two shelf rows along the wall behind the counters
-    for (const [x0, x1, y] of [[320, 1030, 208], [320, 1030, 268]]) {
+    const wall = FLOOR_Y, deco = this.wallDecor(ctx);
+    // two shelf rows along the wall behind the counters (only when the supplied shelf picture is missing)
+    if (!getImage('int-shelf')) for (const [x0, x1, y] of [[320, 1030, 208], [320, 1030, 268]]) {
       ctx.fillStyle = PAL.brown; ctx.fillRect(x0, y, x1 - x0, 7);
       ctx.fillStyle = 'rgba(70,48,32,.35)'; ctx.fillRect(x0, y + 7, x1 - x0, 3);
       for (let x = x0 + 14; x < x1 - 20; x += 34) {
@@ -143,7 +143,7 @@ export class InteriorScene {
     }
     // hanging copper lamps with a warm pool of light on the wall
     for (const lx of LAMPS) {
-      ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, this.cam.wt - 20); ctx.lineTo(lx, 128); ctx.stroke();
+      ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, deco.beamBottom ?? this.cam.wt - 20); ctx.lineTo(lx, 128); ctx.stroke();
       poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, PAL.honeyDark, 2.5);
       ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = PAL.vanilla; ctx.fill();
       ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 175, 120, '255,190,90', 0.16 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
@@ -154,6 +154,33 @@ export class InteriorScene {
     // soft floor shadow where the wall meets the kitchen floor
     ctx.fillStyle = vgrad(ctx, wall, wall + 30, [[0, 'rgba(70,48,32,.28)'], [1, 'rgba(70,48,32,0)']]);
     ctx.fillRect(this.cam.wl - 100, wall, this.cam.wr - this.cam.wl + 200, 30);
+  }
+
+  /**
+   * Supplied wall pieces, each drawn only when its picture exists, always keeping its aspect ratio: a ceiling beam across the room, the
+   * rack above the oven, the shelf over the prep counter, two windows, and the green entrance door at the right end.
+   * Returns where the lamps' cords should start (under the beam).
+   */
+  wallDecor(ctx) {
+    const put = (key, cx, base, h) => {
+      const img = getImage(`int-${key}`); if (!img) return false;
+      const w = img.naturalWidth * h / img.naturalHeight;
+      shadow(ctx, cx + 6, base + 2, w * 0.42, 6, 0.16);
+      ctx.drawImage(img, cx - w / 2, base - h, w, h);
+      return true;
+    };
+    const c = this.cam, beam = getImage('int-beam');
+    if (beam) {                                                   // the plain middle of the beam, stretched along the wall
+      const top = 22, h = 66, sx = beam.naturalWidth * 0.2, sw = beam.naturalWidth * 0.6;
+      ctx.drawImage(beam, sx, 0, sw, beam.naturalHeight, c.wl - 20, top, c.wr - c.wl + 40, h);
+      ctx.fillStyle = vgrad(ctx, top + h, top + h + 26, [[0, 'rgba(70,48,32,.22)'], [1, 'rgba(70,48,32,0)']]); ctx.fillRect(c.wl - 20, top + h, c.wr - c.wl + 40, 26);
+    }
+    put('rack', 140, 172, 100);
+    put('shelf', 500, 262, 184);
+    put('window-shutter', 880, 262, 150);
+    put('window-arch', 1160, 268, 190);
+    put('door', 1490, 430, 215);
+    return { beamBottom: beam ? 86 : null };
   }
 
   /** Warm pools of lamp light on counters and floor, drifting dust in the light, and soft depth haze. Additive, so it only brightens. */

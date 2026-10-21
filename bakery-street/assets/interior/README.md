@@ -16,3 +16,6 @@ Bu klasöre aşağıdaki adlarla **WebP (saydam arka planlı, duvar/zemin hariç
 | `floor.webp` | Zemin (yatay döşenebilir) | 1400 × ~310 | `wall.webp` ile birlikte |
 
 Görsel, kutuya oranı bozulmadan sığdırılır ve alt kenara oturtulur. Önerilen boyut: kutunun 2–3 katı piksel (ör. fırın için ~800 × 800).
+
+## Duvar dekoru (kullanılıyor)
+`window-arch`, `window-shutter`, `shelf`, `door`, `rack`, `beam` (listede `INTERIOR_ART`): `InteriorScene.wallDecor` yerleştirir; her biri yoksa atlanır. Kiriş odanın genişliğince, orta kısmı uzatılarak çizilir; lambalar parçaların arasında asılıdır.
