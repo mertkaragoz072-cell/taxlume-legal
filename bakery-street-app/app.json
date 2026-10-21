@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Fırın & Kafe",
+    "slug": "firin-kafe",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.firinkafe.app",
+      "buildNumber": "1",
+      "requireFullScreen": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.firinkafe.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#F5E6C8",
+        "foregroundImage": "./assets/icon.png"
+      }
+    },
+    "plugins": [
+      "expo-screen-orientation",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#463020"
+        }
+      ]
+    ]
+  }
+}

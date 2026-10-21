@@ -129,7 +129,9 @@ function sampleEdge(img, which) {
   g.drawImage(img, 0, 0);
   const n = 8, step = Math.floor(c.width / n), y0 = which === 'top' ? 0 : c.height - 6;
   edgeCache[which] = Array.from({ length: n }, (_, i) => {
-    const d = g.getImageData(i * step, y0, step, 6).data;
+    let d;
+    try { d = g.getImageData(i * step, y0, step, 6).data; }
+    catch { return which === 'top' ? [122, 172, 216] : [168, 150, 120]; }      // pixels unreadable (file:// pages in the app): plain sky / pavement tones
     let r = 0, gg = 0, b = 0;
     for (let k = 0; k < d.length; k += 4) { r += d[k]; gg += d[k + 1]; b += d[k + 2]; }
     const m = d.length / 4;
