@@ -189,7 +189,7 @@ export class CustomerLayer {
 
   waitBubble(ctx, v, c, t) {
     const y = v.y - BODY_H - 16, f = this.cafe.patienceFraction(c);
-    label(ctx, '⏳', v.x, y, { font: '28px "Segoe UI Emoji","Apple Color Emoji",sans-serif', fill: PAL.brownDark, lw: 0 });
+    drawIcon(ctx, 'o-waiting', v.x, y, 30);
     rrect(ctx, v.x - 26, y + 16, 52, 7, 3.5); paint(ctx, PAL.vanilla, 1.5, PAL.honeyDark);
     ctx.fillStyle = f > 0.5 ? PAL.green : f > 0.25 ? PAL.honey : PAL.terracottaLight; ctx.fillRect(v.x - 25, y + 17, 50 * f, 5);
   }

@@ -57,7 +57,7 @@ export function GameView({ world, sceneId, active, pixelRatio, onPress, onLook }
         const ctx = new Ctx2D(canvas, { width: Math.ceil(view.W * view.dpr), height: Math.ceil(view.H * view.dpr) });
         scene.render(ctx);
         setPicture(rec.finishRecordingAsPicture());
-      } catch (e) { console.warn("[frame]", String(e)); }
+      } catch (e: any) { console.warn("[frame]", String(e), String(e?.stack ?? "").split("\n").slice(0, 4).join(" | ")); }
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);

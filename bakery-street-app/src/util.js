@@ -1,4 +1,3 @@
-import { createCanvas } from './engine/ctx2d';
 // Small canvas + math helpers shared by every drawing module.
 import { INK, mix } from './palette.js';
 export { INK, mix };
@@ -87,6 +86,11 @@ export function softBand(ctx, x, y, w, h, a = 0.3, up = false) {
   ctx.fillStyle = g;
   ctx.fillRect(x, y, w, h);
 }
+
+/** Off-screen canvas factory, installed by the Skia engine at start-up (the game logic and its tests do not need it). */
+let makeCanvas = null;
+export const setCanvasFactory = (fn) => { makeCanvas = fn; };
+export const createCanvas = (w, h) => makeCanvas(w, h);
 
 let grainTile = null;
 /** Fine paper-like noise, applied only over painted pixels so the art feels hand-painted rather than flat vector. */

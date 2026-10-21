@@ -1,8 +1,7 @@
 // The main street scene: owns the cached layers, per-frame animation and input hit-testing.
-import { createCanvas } from '../engine/ctx2d';
 import { DESIGN, TEXT } from '../config.js';
 import { getImage } from '../assets.js';
-import { glowAt, clamp, INK, applyGrain, gradeScreen } from '../util.js';
+import { glowAt, clamp, INK, applyGrain, gradeScreen, createCanvas } from '../util.js';
 import { drawSky, makeClouds, drawCloud, drawBackdrop } from './backdrop.js';
 import { drawPavement } from './pavement.js';
 import { drawSides } from './sides.js';

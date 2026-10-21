@@ -1,0 +1,198 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { Game, formatTime } from '../src/game/game.js';
+import { INGREDIENTS, PRODUCTS, SALES } from '../src/data/economy.js';
+
+const make = (gold = 1000) => {
+  let now = 0;
+  const player = { gold };
+  const game = new Game(player, {}, () => now);
+  return { game, player, advance: (sec) => { now += sec * 1000; game.tick(); } };
+};
+
+test('starting stock comes from the data tables', () => {
+  const { game } = make();
+  for (const [id, d] of Object.entries(INGREDIENTS)) assert.equal(game.ingredients[id], d.start);
+  for (const [id, d] of Object.entries(PRODUCTS)) assert.equal(game.products[id], d.start);
+});
+
+test('every product defines time, ingredients, price and station', () => {
+  for (const [id, p] of Object.entries(PRODUCTS)) {
+    assert.ok(p.time > 0, `${id} time`);
+    assert.ok(p.price > 0, `${id} price`);
+    assert.ok(Object.keys(p.ingredients).length > 0, `${id} ingredients`);
+    for (const ing of Object.keys(p.ingredients)) assert.ok(INGREDIENTS[ing], `${id} uses unknown ingredient ${ing}`);
+  }
+});
+
+test('production consumes ingredients and adds stock only after the timer ends', () => {
+  const { game, advance } = make();
+  const flourBefore = game.ingredients.flour, breadBefore = game.products.bread;
+  assert.deepEqual(game.startProduction('bread'), { ok: true });
+  assert.equal(game.ingredients.flour, flourBefore - PRODUCTS.bread.ingredients.flour);
+  assert.equal(game.products.bread, breadBefore);          // not yet
+  advance(PRODUCTS.bread.time - 1);
+  assert.equal(game.products.bread, breadBefore);          // 1 s early
+  assert.ok(game.remaining('oven') > 0 && game.remaining('oven') <= 1);
+  advance(1);
+  assert.equal(game.products.bread, breadBefore + 1);      // done
+  assert.equal(game.remaining('oven'), 0);
+  assert.equal(game.jobs.oven, undefined);
+});
+
+test('remaining time and progress are reported while a job runs', () => {
+  const { game, advance } = make();
+  game.startProduction('croissant');
+  assert.equal(Math.round(game.remaining('oven')), PRODUCTS.croissant.time);
+  advance(10);
+  assert.equal(Math.round(game.remaining('oven')), PRODUCTS.croissant.time - 10);
+  assert.ok(Math.abs(game.progress('oven') - 10 / PRODUCTS.croissant.time) < 1e-9);
+});
+
+test('production is refused with a clear message when ingredients are short', () => {
+  const { game } = make();
+  game.ingredients.butter = 0;
+  const flour = game.ingredients.flour;
+  const r = game.startProduction('croissant');
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, 'ingredients');
+  assert.match(r.message, /Yetersiz malzeme: 1 Tereyağı eksik/);
+  assert.equal(game.ingredients.flour, flour);             // nothing consumed
+  assert.equal(game.jobs.oven, undefined);                 // nothing started
+});
+
+test('the oven runs one job at a time; the coffee machine is independent', () => {
+  const { game, advance } = make();
+  assert.ok(game.startProduction('bread').ok);
+  const flour = game.ingredients.flour;
+  const busy = game.startProduction('croissant');
+  assert.equal(busy.ok, false);
+  assert.equal(busy.reason, 'busy');
+  assert.match(busy.message, /Fırın meşgul/);
+  assert.equal(game.ingredients.flour, flour);
+  assert.ok(game.startProduction('coffee').ok);            // other station is free
+  advance(PRODUCTS.coffee.time);
+  assert.equal(game.products.coffee, 1);
+  assert.ok(game.jobs.oven);                               // bread still baking
+  advance(PRODUCTS.bread.time);
+  assert.equal(game.products.bread, PRODUCTS.bread.start + 1);
+});
+
+test('tick catches up after a long pause and finishes jobs once', () => {
+  const { game, advance } = make();
+  game.startProduction('cake');
+  advance(5000);
+  assert.equal(game.products.cake, 1);
+  advance(5000);
+  assert.equal(game.products.cake, 1);
+});
+
+test('buying ingredients spends gold and adds stock', () => {
+  const { game, player } = make(100);
+  const r = game.buyIngredient('flour', 5);
+  assert.deepEqual(r, { ok: true, cost: INGREDIENTS.flour.price * 5 });
+  assert.equal(player.gold, 100 - INGREDIENTS.flour.price * 5);
+  assert.equal(game.ingredients.flour, INGREDIENTS.flour.start + 5);
+});
+
+test('buying is refused without enough gold and changes nothing', () => {
+  const { game, player } = make(10);
+  const r = game.buyIngredient('butter', 1);               // costs 15
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, 'gold');
+  assert.match(r.message, /Yetersiz altın/);
+  assert.equal(player.gold, 10);
+  assert.equal(game.ingredients.butter, INGREDIENTS.butter.start);
+});
+
+test('selling removes stock and pays the sale price', () => {
+  const { game, player } = make(0);
+  const r = game.sellProduct('bread', 2);
+  const unit = game.showcaseIncome('bread');
+  assert.deepEqual(r, { ok: true, income: unit * 2 });
+  assert.equal(player.gold, unit * 2);
+  assert.equal(game.products.bread, PRODUCTS.bread.start - 2);
+});
+
+test('showcase nets ~20% less than a customer order for every product, with costs taken from the single ingredient list', () => {
+  const { game } = make(0);
+  assert.equal(SALES.showcaseNetShare, 0.8);
+  for (const [id, p] of Object.entries(PRODUCTS)) {
+    const cost = game.ingredientCost(id);
+    assert.equal(cost, Object.entries(p.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0));
+    const customerNet = game.saleIncome(p.price) - cost, showcaseNet = game.showcaseIncome(id) - cost;
+    assert.ok(showcaseNet > 0, `${id}: showcase must still be profitable`);
+    assert.ok(showcaseNet < customerNet, `${id}: showcase must net less`);
+    assert.ok(Math.abs(showcaseNet / customerNet - 0.8) < 0.06, `${id}: ratio ${(showcaseNet / customerNet).toFixed(2)}`);
+  }
+});
+
+test('with research bonuses both sale kinds get the same multiplier exactly once', () => {
+  const { game } = make(0);
+  game.research = { bonus: (e) => (e === 'saleIncome' ? 0.25 : 0) };
+  const u = game.unitEconomics('cake');
+  assert.equal(u.customer, 150);                                 // 120 * 1.25, applied once
+  assert.equal(u.cost, 60);
+  assert.equal(u.showcase, 150 - Math.round((150 - 60) * 0.2));  // the showcase gives up 20% of the customer's net
+  assert.equal(game.saleIncome(120), 150);
+  game.research = null;
+  assert.equal(game.saleIncome(120), 120);
+});
+
+test('invalid quantities cannot create gold, stock or NaN', () => {
+  const { game, player } = make(1000);
+  game.products.bread = 5;
+  for (const bad of [NaN, 1.5, -1, 0, Infinity, '2', null]) {
+    assert.equal(game.sellProduct('bread', bad).ok, false, String(bad));
+    assert.equal(game.buyIngredient('flour', bad).ok, false, String(bad));
+  }
+  assert.equal(game.products.bread, 5);
+  assert.equal(player.gold, 1000);
+});
+
+test('ingredient refund is rounded to the nearest gold and never exceeds the ingredient cost', () => {
+  const { game, player } = make(5000);
+  game.ingredients.flour = 100;
+  for (const lv of [0.05, 0.10, 0.15, 0.20, 0.25]) {
+    game.research = { bonus: (e) => (e === 'ingredientCost' ? lv : 0) };
+    for (const id of Object.keys(PRODUCTS)) {
+      const r = game.ingredientRebate(id), cost = game.ingredientCost(id);
+      assert.ok(Number.isInteger(r) && r >= 0 && r <= cost, `${id}@${lv}`);
+      assert.ok(Math.abs(r - cost * lv) <= 0.5, `${id}@${lv}: ${r} vs ${cost * lv}`);
+    }
+  }
+  assert.equal(player.gold, 5000);
+});
+
+test('selling more than the stock is refused', () => {
+  const { game, player } = make(0);
+  const r = game.sellProduct('cake', 1);
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, 'stock');
+  assert.equal(player.gold, 0);
+});
+
+test('a full produce-and-sell round trip balances the economy', () => {
+  const { game, player, advance } = make(500);
+  const cost = Object.entries(PRODUCTS.coffee.ingredients).reduce((s, [i, n]) => s + INGREDIENTS[i].price * n, 0);
+  game.startProduction('coffee'); advance(PRODUCTS.coffee.time);
+  game.sellProduct('coffee', 1);
+  assert.equal(player.gold, 500 + game.showcaseIncome('coffee'));   // ingredients were already owned
+  assert.ok(game.showcaseIncome('coffee') > cost, 'coffee must stay profitable even when sold from the showcase');
+});
+
+test('change and complete events fire', () => {
+  const { game, advance } = make();
+  const seen = [];
+  game.on('change', (e) => seen.push(e.type));
+  game.on('complete', (e) => seen.push(`done:${e.product}`));
+  game.startProduction('coffee'); advance(PRODUCTS.coffee.time);
+  game.buyIngredient('milk', 1); game.sellProduct('coffee', 1);
+  assert.deepEqual(seen, ['start', 'done:coffee', 'complete', 'buy', 'sell']);
+});
+
+test('formatTime renders m:ss', () => {
+  assert.equal(formatTime(75), '1:15');
+  assert.equal(formatTime(9.2), '0:10');
+  assert.equal(formatTime(0), '0:00');
+});

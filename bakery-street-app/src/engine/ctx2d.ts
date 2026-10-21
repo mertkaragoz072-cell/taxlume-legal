@@ -6,6 +6,7 @@ import {
 } from "@shopify/react-native-skia";
 import { Platform } from "react-native";
 import { fontFor } from "./fonts";
+import { setCanvasFactory } from "../util.js";
 
 const colorCache = new Map<string, SkColor>();
 /** CSS colour string -> Skia colour (cached). Supports #rgb, #rrggbb, rgb(), rgba(), names Skia knows. */
@@ -68,6 +69,21 @@ const toSk = (m: M6) => [m[0], m[2], m[4], m[1], m[3], m[5], 0, 0, 1];
 interface State {
   fillStyle: Style; strokeStyle: Style; lineWidth: number; lineCap: string; lineJoin: string; dash: number[]; alpha: number; op: string; filter: string;
   font: string; textAlign: string; textBaseline: string; m: M6;
+}
+
+const widthCache = new WeakMap<SkFont, Map<string, number>>();
+/** Text width. `measureText` is missing in Skia's web build (used for development screenshots), so fall back to summing glyph widths. */
+function textWidth(font: SkFont, s: string): number {
+  let m = widthCache.get(font);
+  if (!m) { m = new Map(); widthCache.set(font, m); }
+  const hit = m.get(s);
+  if (hit !== undefined) return hit;
+  let w: number;
+  try { w = font.measureText(s).width; }
+  catch { w = font.getGlyphWidths(font.getGlyphIDs(s)).reduce((a, b) => a + b, 0); }
+  if (m.size > 600) m.clear();
+  m.set(s, w);
+  return w;
 }
 
 export class Ctx2D {
@@ -211,9 +227,9 @@ export class Ctx2D {
 
   // ---- text --------------------------------------------------------------------------------------------------------------------------
   private fontNow(): SkFont { return fontFor(this.font); }
-  measureText(s: string) { return { width: this.fontNow().measureText(s).width }; }
+  measureText(s: string) { return { width: textWidth(this.fontNow(), s) }; }
   private textPos(s: string, x: number, y: number) {
-    const f = this.fontNow(), w = f.measureText(s).width, mt = f.getMetrics();
+    const f = this.fontNow(), w = textWidth(f, s), mt = f.getMetrics();
     let px = x; if (this.textAlign === "center") px = x - w / 2; else if (this.textAlign === "right" || this.textAlign === "end") px = x - w;
     let py = y;
     if (this.textBaseline === "middle") py = y - (mt.ascent + mt.descent) / 2;
@@ -247,3 +263,4 @@ export class Surface2D {
   }
 }
 export const createCanvas = (w: number, h: number) => new Surface2D(w, h);
+setCanvasFactory(createCanvas);

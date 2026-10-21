@@ -1,7 +1,6 @@
 // Sky, mountains, the terraced European hill-town and the leafy mass behind the shops.
-import { createCanvas } from '../engine/ctx2d';
 import { DESIGN } from '../config.js';
-import { rng, vgrad, poly, mix, rrect } from '../util.js';
+import { rng, vgrad, poly, mix, rrect, createCanvas } from '../util.js';
 import { drawAsset, getImage } from '../assets.js';
 import { tiledRoof } from './parts.js';
 

@@ -1,7 +1,6 @@
 // Exploration map: a warm, hand-painted-style parchment map drawn with canvas shapes (no image assets).
 // Each region is a marker on the left half; the details and buttons are a DOM panel (ui/explore.js) on the right.
-import { createCanvas } from '../engine/ctx2d';
-import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor, gradeScreen } from '../util.js';
+import { rng, vgrad, shadow, glowAt, paint, poly, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon, getImage } from '../assets.js';
 import { DESIGN } from '../config.js';

@@ -1,6 +1,5 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
-import { createCanvas } from '../engine/ctx2d';
-import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen } from '../util.js';
+import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
 import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf } from './interior-layout.js';
 import { drawProp } from './props.js';

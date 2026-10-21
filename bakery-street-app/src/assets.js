@@ -1,8 +1,3 @@
-import { Asset } from 'expo-asset';
-import { Skia } from '@shopify/react-native-skia';
-import { GameImage } from './engine/ctx2d';
-import { ASSET_MODULES } from './generated/assetModules';
-
 // Artwork registry: every image the game draws, keyed by name.
 //
 // To replace artwork, drop a WebP/PNG into ./assets and change its path here.
@@ -57,6 +52,8 @@ const images = {};
  * (modules fall back to their own drawing).
  */
 export async function loadAssets({ onProgress } = {}) {
+  // native modules are loaded here, not at the top, so the game logic and its tests can import this file in plain Node
+  const [{ Asset }, { Skia }, { GameImage }, { ASSET_MODULES }] = await Promise.all([import('expo-asset'), import('@shopify/react-native-skia'), import('./engine/ctx2d'), import('./generated/assetModules')]);
   const entries = Object.entries(MANIFEST).filter(([, src]) => src);
   let done = 0, failed = 0;
   // a handful at a time: decoding everything at once spikes memory on small phones
