@@ -12,10 +12,10 @@ export const AREAS = [
   // dining area, in front, behind a wide open corridor: two groups either side of a central aisle (tables 3+1 left, 2+4 right), the outer
   // table of each group set back a little. The cafeTables upgrade opens them in this order (the two aisle tables first), so the room always
   // looks balanced. `side` is the chair the guest takes (-1 left, +1 right); each guest's access gap lies on that side.
-  { id: 'table1', label: 'Masa 1', panel: null, side: -1, x: 368, y: 600, w: 280, h: 162 },
-  { id: 'table2', label: 'Masa 2', panel: null, side: 1, x: 788, y: 600, w: 280, h: 162 },
-  { id: 'table3', label: 'Masa 3', panel: null, side: -1, x: -12, y: 590, w: 280, h: 162 },
-  { id: 'table4', label: 'Masa 4', panel: null, side: 1, x: 1168, y: 590, w: 280, h: 162 },
+  { id: 'table1', label: 'Masa 1', panel: null, side: -1, x: 352, y: 576, w: 270, h: 156 },
+  { id: 'table2', label: 'Masa 2', panel: null, side: 1, x: 806, y: 630, w: 290, h: 168, flip: true },
+  { id: 'table3', label: 'Masa 3', panel: null, side: -1, x: -22, y: 618, w: 290, h: 168 },
+  { id: 'table4', label: 'Masa 4', panel: null, side: 1, x: 1186, y: 584, w: 270, h: 156, flip: true },
 ];
 
 /** Drawing order = depth: the kitchen side first, then the baker (behind the counters), then the counters, then the tables. */

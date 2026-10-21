@@ -98,3 +98,7 @@ The cafe camera sways sideways by up to 24 world px; planes move by different sh
 ### Grounding the furniture
 
 Cafe furniture throws its own silhouette across the floor (tinted dark brown, flattened to 20% depth, leaning right at 0.55 per unit of height, blurred once and cached per piece in `InteriorScene.castShadow`), plus a tight dark line where the base touches the floor and a faint wider occlusion pool. Light comes from the upper left, matching the window light.
+
+### Scattered tables
+
+The four tables no longer sit in one row: they are at different depths (front edges y 732 / 732 / 786 / 798 after the sizes in `AREAS`), slightly different sizes, and two are mirrored (`flip`), so the room reads like a real cafe floor. Guests still use the same lane and the gap beside their table; the access gaps stay clear.

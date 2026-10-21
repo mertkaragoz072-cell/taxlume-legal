@@ -171,7 +171,8 @@ export class InteriorScene {
     shadow(ctx, a.x + a.w / 2 + 6, a.y + a.h + 2, w * 0.5, 9, 0.16);
     shadow(ctx, a.x + a.w / 2 + 2, a.y + a.h, w * 0.4, 3.5, 0.34);
     this.rects[a.id] = { x: dx, y: dy, w, h };
-    ctx.drawImage(img, dx, dy, w, h);
+    if (a.flip) { ctx.save(); ctx.translate(dx + w, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, dy, w, h); ctx.restore(); }   // some tables are mirrored so they do not all look alike
+    else ctx.drawImage(img, dx, dy, w, h);
     const busy = !!(a.station && this.game.jobs[a.station]);
     if (a.id === 'oven' && !busy) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.62, a.w * 0.42, '255,140,50', 0.09 + 0.03 * Math.sin(this.t * 3)); ctx.globalCompositeOperation = 'source-over'; }   // embers
     if (a.id === 'coffee' && busy) steam(ctx, a.x + a.w * 0.5, dy + h * 0.42, this.t);
