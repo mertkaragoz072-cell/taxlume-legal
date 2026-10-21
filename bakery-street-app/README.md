@@ -90,3 +90,7 @@ The cafe is built from the separate supplied pieces (wall, floor, oven, counter,
 ### Cafe parallax
 
 The cafe camera sways sideways by up to 24 world px; planes move by different shares of it: wall 0.25, wall decoration and lamps 0.5, kitchen furniture and the baker 0.8, floor level (tables, guests, waiter, tags, bubbles) 1.1, front plants 1.7. It follows the finger while touching and otherwise eases into a slow idle sway, so the depth shows without touching. Taps are corrected per plane (`InteriorScene.shift/planeOf/hitTest`). The cached wall/floor layer is drawn 60 px wider than the screen so no edge shows.
+
+### Softer edges on the furniture pictures
+
+`scripts/soften-edges.py` (already applied to assets/game/interior/* except wall and floor, and assets/game/props/*): dark outline pixels along the silhouette take the nearest body colour (slightly darker, smoothed), thin dark seams inside are lightened, and the alpha edge falls off softly. Characters, buildings and icons were left as they are (eyes and faces need their dark lines). Rerun the script on a new picture before adding it.
