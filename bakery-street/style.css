@@ -220,7 +220,6 @@ img.pic { pointer-events: none; user-select: none; -webkit-user-drag: none; obje
 /* ---------- Customers: order strip ---------- */
 #orderBar { position: absolute; left: calc(var(--u) * 25 + var(--safe-l)); bottom: calc(var(--u) * 1.4 + var(--safe-b)); z-index: 19; display: none;
   align-items: flex-end; flex-wrap: nowrap; gap: calc(var(--u) * .8); max-width: calc(100vw - var(--u) * 50); pointer-events: none; }
-.in-interior #orderBar { display: flex; }
 #orderBar > * { pointer-events: auto; }
 .ostat { flex: none; display: flex; gap: calc(var(--u) * 1.2); align-items: center; height: calc(var(--u) * 7.6); padding: 0 calc(var(--u) * 2); border-radius: calc(var(--u) * 3.8);
   background: linear-gradient(var(--cream-a), var(--cream-b)); border: calc(var(--u) * .4) solid var(--edge); box-shadow: 0 calc(var(--u) * .4) 0 var(--shadow); font-size: max(12px, calc(var(--u) * 2.8)); white-space: nowrap; }

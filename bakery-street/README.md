@@ -367,3 +367,7 @@ Tables are 300×175 (chair backs ≈ 0.7 of a guest's height), spaced 380 px apa
 - **Handover:** the waiter flies the product icon from his hands to the tabletop; a served order stays on its table until the guest pays.
 - **Yielding:** the waiter stops for guests ahead of him (also vertically in the table gaps), guests give way to the waiter, and the waiter does not serve the far-left tables while the baker works at the oven.
 - **Missing art (reported):** there is no seated/serving pose in any sprite sheet. Guests use the standing frame lowered onto the chair and cut at the hips; a real sitting frame (and a tray-carry frame for the waiter) is the one missing sprite need.
+
+### Order bar removed
+
+The bottom strip (guest counters and per-product stock chips) is no longer shown in the cafe. Guests are served by tapping them (their bubble shows the product and price); stock is on the showcase and in the panels. `createOrderBar` still exists but its container stays hidden.

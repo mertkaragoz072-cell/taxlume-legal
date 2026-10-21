@@ -26,10 +26,11 @@ export default async function run({ browser, url }) {
   c.ok('showcase sale pays unitEconomics.showcase', (await S(() => window.__street.game.player.gold)) - g0 === eco.showcase);
   await page.click('#panel .x');
   await S(() => { const s = window.__street; s.game.products.bread = 2; s.cafe.arrive(); s.cafe.seatQueued(); s.cafe.openOrders().forEach((o) => { o.product = 'bread'; o.price = s.game.productsDef.bread.price; }); }); await page.waitForTimeout(400);
-  const chip = await page.$('.ochip');
-  c.ok('a seated customer shows an order chip', !!chip);
+  await S(() => window.__street.interior.snap()); await page.waitForTimeout(200);
+  const spot = await S(() => { const s = window.__street, c = s.cafe.customers.find((x) => x.state === 'seated'), v = s.interior.customers.v.get(c.id); return { x: v.x, y: s.interior.customers.drawY(v, c) - 120 }; });
+  c.ok('the order bar is gone (guests are served by tapping them)', !(await page.isVisible('#orderBar')));
   const g1 = await S(() => window.__street.game.player.gold);
-  await page.click('.ochip'); await page.waitForTimeout(300);
+  await tapDesign(page, spot.x, spot.y); await page.waitForTimeout(300);
   c.ok('delivering pays unitEconomics.customer exactly once', (await S(() => window.__street.game.player.gold)) - g1 === eco.customer);
   c.ok('showcase nets less than a customer', eco.showcaseNet < eco.customerNet);
 
