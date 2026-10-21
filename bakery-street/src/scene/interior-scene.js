@@ -26,6 +26,7 @@ export class InteriorScene {
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
     this.staff.guests = () => this.customers.v.values();
+    this.customers.extra = () => [this.staff.waiter];          // guests give way to the waiter too
     this.rects = {};            // where each area's art was actually drawn (labels follow it)
     this.motes = Array.from({ length: 34 }, (_, i) => ({ x: -120 + ((i * 97) % 1620), y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {
@@ -86,6 +87,7 @@ export class InteriorScene {
     }
     items.push({ y: this.staff.waiter.y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
+    this.staff.drawServed(ctx);
     for (const a of AREAS) if (this.tableOpen(a)) this.overlay(ctx, a);
     this.customers.drawBubbles(ctx, t);
     this.light(ctx);

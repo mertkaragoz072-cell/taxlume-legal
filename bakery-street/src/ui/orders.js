@@ -1,4 +1,4 @@
-// Bottom-left strip in the cafe: crowd counters + one chip per open order. Tapping a chip delivers that order.
+// Bottom-left strip in the cafe: crowd counters + one chip per product that guests are waiting for (icon, ×guests, real stock).
 // It sits beside the back button, outside the side panels, so production panels never hide customer interaction.
 import { formatTime } from '../game/game.js';
 
@@ -7,9 +7,18 @@ export function createOrderBar(root, game, cafe, { onWarn, onSale }) {
 
   function render() {
     const n = cafe.counts();
-    const chips = cafe.customers.filter((c) => c.state === 'seated').map((c) => {
-      const o = cafe.orderOf(c), d = game.productsDef[o.product];
-      return `<button class="ochip" data-order="${o.id}" data-p="${o.product}" title="${d.name} · ${game.saleIncome(o.price).toLocaleString('tr-TR')} altın"><span class="oi">${d.icon}</span><b>${game.saleIncome(o.price).toLocaleString('tr-TR')}</b><i class="pb"><u></u></i></button>`;
+    // one chip per product with open orders (not one per guest): icon, how many guests wait for it, and the real stock of that product.
+    // Tapping delivers the most urgent order (least patience left) of that product.
+    const groups = new Map();
+    for (const c of cafe.customers.filter((x) => x.state === 'seated')) {
+      const o = cafe.orderOf(c); if (!o || o.status !== 'open') continue;
+      const g = groups.get(o.product) ?? { product: o.product, orders: [] };
+      g.orders.push({ o, f: cafe.patienceFraction(c) }); groups.set(o.product, g);
+    }
+    const chips = [...groups.values()].map((g) => {
+      const d = game.productsDef[g.product], urgent = g.orders.reduce((a, b) => (b.f < a.f ? b : a)), stock = game.products[g.product];
+      const price = game.saleIncome(urgent.o.price).toLocaleString('tr-TR');
+      return `<button class="ochip" data-order="${urgent.o.id}" data-p="${g.product}" title="${d.name} · ${price} altın · stokta ${stock}"><span class="oi">${d.icon}</span>${g.orders.length > 1 ? `<em>×${g.orders.length}</em>` : ''}<b>stok ${stock}</b><i class="pb"><u></u></i></button>`;
     }).join('');
     root.innerHTML = `<div class="ostat" title="Müşteri · bekleyen · açık sipariş" aria-label="${n.customers} müşteri, ${n.queued} bekleyen, ${n.openOrders} sipariş"><span>👥 ${n.customers}</span><span>⏳ ${n.queued}</span><span>🧾 ${n.openOrders}</span></div>${chips}`;
     update();
@@ -22,6 +31,7 @@ export function createOrderBar(root, game, cafe, { onWarn, onSale }) {
       const c = o && cafe.customers.find((x) => x.id === o.customerId);
       if (!c) continue;
       chip.classList.toggle('lack', game.products[o.product] < 1);
+      chip.querySelector("b").textContent = `stok ${game.products[o.product]}`;
       chip.querySelector('u').style.width = `${cafe.patienceFraction(c) * 100}%`;
     }
   }

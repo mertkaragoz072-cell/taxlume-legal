@@ -360,3 +360,10 @@ Tables are 300×175 (chair backs ≈ 0.7 of a guest's height), spaced 380 px apa
 - **Waiter:** post at x 610 in front of the counters; for each seated guest with an open order he carries the product (icon in his hands) along the corridor and down the access gap, pauses 1.1 s beside the guest, then returns to the post. Visual only; the sale is still a tap on the guest.
 - **Bubbles:** 92×52, product + price; out of stock = faded product with a small red "!" (no text). Showcase counts use a 14 px label.
 - Tests: hip/cut heights per table and the waiter's carry → hand → return phases.
+
+### Order chips, service handover, yielding
+
+- **Order bar:** one chip per product guests are waiting for (not per guest): icon, "×guests", and the real stock of that product (`game.products`, the same pool the showcase and panels show). Tapping delivers the most urgent order of that product; the price is in the tooltip.
+- **Handover:** the waiter flies the product icon from his hands to the tabletop; a served order stays on its table until the guest pays.
+- **Yielding:** the waiter stops for guests ahead of him (also vertically in the table gaps), guests give way to the waiter, and the waiter does not serve the far-left tables while the baker works at the oven.
+- **Missing art (reported):** there is no seated/serving pose in any sprite sheet. Guests use the standing frame lowered onto the chair and cut at the hips; a real sitting frame (and a tray-carry frame for the waiter) is the one missing sprite need.

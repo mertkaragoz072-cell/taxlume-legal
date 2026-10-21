@@ -24,7 +24,7 @@ class Walker {
     const dx = this.target.x - this.x, dy = this.target.y - this.y, d = Math.hypot(dx, dy);
     if (d < 3) { this.x = this.target.x; this.y = this.target.y; this.target = null; this.moving = false; return true; }
     if (Math.abs(dx) > 1) this.dir = dx > 0 ? 1 : -1;
-    if (blocked?.(this.x, this.y, Math.sign(dx))) { this.moving = false; return false; }     // someone is in the way: wait
+    if (blocked?.(this.x, this.y, Math.abs(dx) > 1 ? Math.sign(dx) : 0, Math.sign(dy))) { this.moving = false; return false; }     // someone is in the way: wait
     this.moving = true;
     const s = Math.min(d, this.speed * dt);
     this.x += (dx / d) * s; this.y += (dy / d) * s;
@@ -78,14 +78,18 @@ export class StaffLayer {
     for (const c of cafe?.customers ?? []) {
       if (c.state !== 'seated') continue;
       const o = cafe.orderOf(c);
-      if (o && o.status === 'open' && !this.served.has(o.id)) return { c, o };
+      if (!o || o.status !== 'open' || this.served.has(o.id)) continue;
+      const gx = chairSpot(c.table).via;
+      if (gx < 380 && this.busyStop() === 'oven') continue;     // the baker works at the oven: don't walk through him, serve the others first
+      return { c, o };
     }
     return null;
   }
 
   updateWaiter(dt) {
     const w = this.waiter, cafe = this.game.cafe;
-    const blocked = (x, y, dir) => [...this.guests()].some((g) => Math.abs(g.y - y) < 40 && (g.x - x) * dir > 0 && (g.x - x) * dir < 110);
+    // blocked: a guest right ahead (along the row, or below/above when walking down/up a gap)
+    const blocked = (x, y, dirx, diry) => [...this.guests()].some((g) => (dirx ? Math.abs(g.y - y) < 40 && (g.x - x) * dirx > 0 && (g.x - x) * dirx < 110 : Math.abs(g.x - x) < 55 && (g.y - y) * diry > 0 && (g.y - y) * diry < 95));
     if (this.phase === 'post') {
       if (w.step(dt, blocked)) { w.dir = 1; return; }
       if (w.target) return;
@@ -93,7 +97,7 @@ export class StaffLayer {
       if (job) {
         const a = AREAS.find((x) => x.id === `table${job.c.table + 1}`), spot = chairSpot(job.c.table);
         const gx = Math.max(-50, Math.min(1400, spot.via)), gy = a.y + 55;
-        this.job = { order: job.o.id, product: job.o.product, side: spot.side, gx };
+        this.job = { order: job.o.id, product: job.o.product, side: spot.side, gx, table: a.id };
         this.route = [{ x: gx, y: WAITER_LANE_Y }, { x: gx, y: gy }];
         this.carry = job.o.product; this.phase = 'carry'; w.target = this.route.shift();
       } else if (Math.abs(w.x - POST.x) > 3 || Math.abs(w.y - POST.y) > 3) w.target = { ...POST };
@@ -117,6 +121,21 @@ export class StaffLayer {
     if (this.served.size > 40) this.served = new Set([...this.served].slice(-10));
   }
 
+  /** Served orders rest on their table until the guest pays: the handover is visible and stays readable. The icon flies from the waiter's hands to the tabletop. */
+  drawServed(ctx) {
+    const cafe = this.game.cafe;
+    for (const c of cafe?.customers ?? []) {
+      const o = c.state === 'seated' ? cafe.orderOf(c) : null;
+      if (!o || o.status !== 'open' || !this.served.has(o.id)) continue;
+      const a = AREAS.find((x) => x.id === `table${c.table + 1}`);
+      drawIcon(ctx, o.product, a.x + a.w / 2, a.y + a.h * 0.25, 34);
+    }
+    if (this.phase === 'hand' && this.carry) {                // the icon is carried from the hands toward the table while handing over
+      const w = this.waiter, a = AREAS.find((x) => x.id === this.job.table), k = Math.min(1, this.handT / HAND_SEC);
+      drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, w.y - 108 + (a.y + a.h * 0.25 - (w.y - 108)) * k, 36);
+    }
+  }
+
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
@@ -128,9 +147,8 @@ export class StaffLayer {
     if (this.show <= 0) return;
     ctx.globalAlpha = this.show;
     drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE, frame: w.moving ? null : 0, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
-    if (this.carry) {                                         // the order, held out in front at tray height
-      const lift = this.phase === 'hand' ? Math.sin(this.handT * 5) * 3 : 0;
-      drawIcon(ctx, this.carry, w.x + w.dir * 40, w.y - 108 + lift, 36);
+    if (this.carry && this.phase !== 'hand') {                // the order, held out in front at tray height
+      drawIcon(ctx, this.carry, w.x + w.dir * 40, w.y - 108, 36);
     }
     ctx.globalAlpha = 1;
   }

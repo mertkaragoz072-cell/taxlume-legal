@@ -230,6 +230,7 @@ img.pic { pointer-events: none; user-select: none; -webkit-user-drag: none; obje
 .ochip:active { transform: translateY(calc(var(--u) * .3)); }
 .ochip .oi { font-size: max(12px, calc(var(--u) * 4)); line-height: 1; }
 .ochip.lack { background: linear-gradient(var(--terracotta-pale), var(--terracotta-pale)); border-color: var(--terracotta-light); box-shadow: 0 calc(var(--u) * .4) 0 var(--terracotta-dark); }
+.ochip em { font-style: normal; font-size: max(12px, calc(var(--u) * 2.3)); color: var(--terracotta-dark); }
 .ochip .pb { position: absolute; left: calc(var(--u) * .6); right: calc(var(--u) * .6); bottom: calc(var(--u) * .3); height: calc(var(--u) * .7); background: rgba(60,40,20,.25); border-radius: 99px; overflow: hidden; }
 .ochip .pb u { display: block; height: 100%; background: var(--green); text-decoration: none; }
 .ochip.lack .pb u { background: var(--terracotta-light); }
