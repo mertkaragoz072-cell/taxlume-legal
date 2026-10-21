@@ -82,3 +82,7 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 - **Keşif haritası:** 4:3'te harita tam yükseklik ile telefondaki "sığdır" arasında ortalanır (yaklaşık yarı yarıya yakınlaştırılır, sola hizalı); işaretçiler sağ paneli kapatmaz, üstteki bulanık şerit küçülür.
 - **Arayüz:** boyutlar ekran yüksekliği/genişliğinden türetilen birimle ölçeklenir; 1024×768 ve 1366×1024'te paneller, üst çubuk ve menü ekran görüntüsüyle kontrol edildi.
 - Gerçek iPad/tablet cihazında denenmedi.
+
+## Cafe look: the reference kitchen picture
+
+The cafe's back wall, oven, shelves, prep counter, showcase, coffee machine, fridge, storage and green door now come from the supplied reference (`assets/game/interior/backdrop.webp`, drawn 1750 world px wide behind everything; `BACKDROP` in `interior-layout.js`). The tappable areas sit on those objects; live details stay on top: oven glow and progress bar, coffee steam, a stock chip per product on the showcase front, the upgrade count on the sign. The counter run is drawn again in front of the baker so he works behind it. Tables, chairs, guests, staff, floor and front plants are still separate, depth-sorted pieces. Guests enter and leave through the door at the right edge. Wide screens are brought closer so the picture always fills the width. (The old web version `../bakery-street` still has the previous look.)

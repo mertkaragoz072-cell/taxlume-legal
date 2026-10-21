@@ -1,7 +1,10 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
-import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, BACKDROP, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf } from './interior-layout.js';
+
+/** Areas whose furniture is part of the supplied kitchen picture (they are tappable and show live details, but are not drawn separately). */
+const BAKED = new Set(['oven', 'counter', 'showcase', 'coffee', 'storage', 'upgrades']);
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
@@ -9,7 +12,7 @@ import { CustomerLayer } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
-const LAMPS = [285, 700, 975];
+const LAMPS = [423, 685, 989, 1336];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
 export class InteriorScene {
@@ -43,7 +46,8 @@ export class InteriorScene {
   resize(view) {
     this.view = view;
     // tablets (4:3 and similar): the room is brought closer so the extra height is not just empty wall; phones keep the base zoom
-    const tall = Math.max(0, Math.min(1, (view.vh - 870) / 180)), z = CAM.zoom + (Math.min(view.vw / 1650, 0.9) - CAM.zoom) * tall, cx = CAM.cx + (815 - CAM.cx) * tall, tx = view.vw / 2 - cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
+    // the kitchen picture is 1750 world px wide: wider screens are brought closer so it always fills the width
+    const z = Math.max(CAM.zoom, view.vw / 1750), cx = CAM.cx, tx = view.vw / 2 - cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z;
     this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: -ty / z, wb: (view.vh - ty) / z };
   }
 
@@ -76,7 +80,7 @@ export class InteriorScene {
     const x0 = c.wl - 10, w = c.wr - c.wl + 20, yTop = c.wt - 10, yBot = c.wb + 10;
 
     this.cachedRoom(ctx, x0, w, yTop, yBot);
-    this.decor(ctx);
+    if (!getImage('int-backdrop')) this.decor(ctx);
     // Everything that stands on the floor is drawn back to front by the line it stands on (its base y), so people pass in front of
     // or behind counters and tables correctly. Ties keep the DRAW_ORDER of the furniture.
     const items = [];
@@ -86,6 +90,7 @@ export class InteriorScene {
       if (!this.tableOpen(a)) continue;
       items.push({ y: depthOf(a), draw: () => this.drawArea(ctx, a) });
     }
+    if (getImage('int-backdrop')) items.push({ y: 492, draw: () => this.counterStrip(ctx) });
     items.push({ y: this.staff.waiter.y, draw: () => this.staff.drawWaiter(ctx) }, ...this.customers.items(t));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
     this.staff.drawServed(ctx);
@@ -105,6 +110,7 @@ export class InteriorScene {
   }
 
   drawArea(ctx, a) {
+    if (BAKED.has(a.id) && getImage('int-backdrop')) { this.bakedArea(ctx, a); return; }
     ctx.save();
     if (this.pressedId === a.id) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
     if (!this.areaAsset(ctx, a)) ART[a.id]?.(ctx, a, this);
@@ -202,7 +208,7 @@ export class InteriorScene {
       glowAt(ctx, lx, 330, 170, '255,196,110', 0.10 * f);
       glowAt(ctx, lx, 600, 210, '255,190,100', 0.075 * f);
     }
-    if (getImage('int-window-arch')) {                         // daylight falling from the two windows onto the wall and floor
+    if (getImage('int-window-arch') && !getImage('int-backdrop')) {                         // daylight falling from the two windows onto the wall and floor
       for (const [x, top, w] of [[840, 200, 120], [1112, 190, 110]]) {
         const sway = 4 * Math.sin(this.t * 0.4 + x), g = ctx.createLinearGradient(0, top, 0, 560);
         g.addColorStop(0, 'rgba(255,238,190,.16)'); g.addColorStop(1, 'rgba(255,238,190,0)');
@@ -281,17 +287,58 @@ export class InteriorScene {
 
   /** The wall and floor never change, so they are painted once per screen size and then just copied (the multiply wash is costly). */
   cachedRoom(ctx, x0, w, yTop, yBot) {
-    const cv = ctx.canvas, key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}`;
+    const cv = ctx.canvas, key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}${!!getImage('int-backdrop')}`;
     if (this.roomKey !== key) {
       const c = createCanvas(cv.width, cv.height);
       this.roomCanvas = c;
       const g = c.getContext('2d'), m = ctx.getTransform();
       g.setTransform(m);
       this.room(g, x0, w, yTop, yBot);
+      this.kitchen(g, x0, w, yTop);
       this.roomKey = key;
     }
     const m = ctx.getTransform();
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.roomCanvas, 0, 0); ctx.setTransform(m);
+  }
+
+  /** The supplied kitchen picture over the wall and floor, with dark wood continued above it and a soft edge where it meets the floor. */
+  kitchen(g, x0, w, yTop) {
+    const img = getImage('int-backdrop');
+    if (!img) return;
+    const B = BACKDROP;
+    if (yTop < B.y) { g.fillStyle = vgrad(g, yTop, B.y, [[0, PAL.brownDark], [1, PAL.honeyDark]]); g.fillRect(x0, yTop, w, B.y - yTop + 2); }
+    g.drawImage(img, B.x, B.y, B.w, B.h);
+    if (x0 < B.x) { g.fillStyle = PAL.brownDark; g.fillRect(x0, B.y, B.x - x0 + 1, B.h); }
+    if (x0 + w > B.x + B.w) { g.fillStyle = PAL.brownDark; g.fillRect(B.x + B.w - 1, B.y, x0 + w - B.x - B.w + 1, B.h); }
+    g.fillStyle = vgrad(g, B.y + B.h - 10, B.y + B.h + 14, [[0, 'rgba(70,48,32,0)'], [1, 'rgba(70,48,32,.25)']]); g.fillRect(B.x, B.y + B.h - 10, B.w, 24);
+  }
+
+  /** The counter run of the picture again, in front of the baker, so he stands behind it. */
+  counterStrip(ctx) {
+    const img = getImage('int-backdrop');
+    if (!img) return;
+    const B = BACKDROP, x = B.counterX0, y = B.counterTop, w = B.x + B.w - x, h = B.y + B.h - y;
+    ctx.drawImage(img, ((x - B.x) / B.w) * img.naturalWidth, ((y - B.y) / B.h) * img.naturalHeight, (w / B.w) * img.naturalWidth, (h / B.h) * img.naturalHeight, x, y, w, h);
+  }
+
+  /** Live details on furniture that is part of the picture: oven glow, coffee steam, showcase stock and the upgrade count. */
+  bakedArea(ctx, a) {
+    this.rects[a.id] = { x: a.x, y: a.y, w: a.w, h: a.h };
+    const busy = !!(a.station && this.game.jobs[a.station]);
+    if (a.id === 'oven') { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w * 0.48, a.y + a.h * 0.7, a.w * 0.5, '255,150,60', busy ? 0.26 + 0.07 * Math.sin(this.t * 9) : 0.06 + 0.03 * Math.sin(this.t * 3)); ctx.globalCompositeOperation = 'source-over'; }
+    if (a.id === 'coffee' && busy) { steam(ctx, a.x + 62, a.y + 40, this.t); ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + 62, a.y + 80, 70, '255,170,60', 0.18 + 0.05 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
+    if (a.id === 'showcase') {
+      this.glint(ctx, a.x + 10, a.y + 8, a.w - 20, a.h - 70);
+      const items = Object.entries(this.game.productsDef).filter(([id]) => this.game.products[id] > 0);   // stock chips on the dark wooden front, one per product in stock
+      const step = Math.min(78, (a.w - 20) / Math.max(1, items.length));
+      items.forEach(([id, def], i) => {
+        const cx = a.x + a.w / 2 + (i - (items.length - 1) / 2) * step, cy = a.y + a.h - 26;
+        rrect(ctx, cx - 31, cy - 15, 62, 30, 15); paint(ctx, 'rgba(70,48,32,.82)', 1.5, PAL.honeyLight);
+        if (!drawIcon(ctx, id, cx - 14, cy, 24)) label(ctx, def.icon, cx - 14, cy, { font: '16px sans-serif', fill: PAL.paper, lw: 0 });
+        label(ctx, `${this.game.products[id]}`, cx + 14, cy + 1, { font: '700 15px sans-serif', fill: PAL.paper, lw: 0 });
+      });
+    }
+    if (a.id === 'upgrades') upgradeCount(ctx, this, a.x + a.w * 0.5, a.y + a.h * 0.84);
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */
