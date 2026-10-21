@@ -13,7 +13,33 @@ export class MarketScene {
   press() {}
   update(dt) { this.t += dt; }
 
+  /** Portrait: the shop front stands big in the upper part of the screen (the shopping list is a bottom sheet over the rest), warm wall behind, wooden floor in front. */
+  renderPortrait(ctx) {
+    const v = this.view, k = v.scale * v.dpr, t = this.t, W = v.vw, H = v.vh, floor = Math.max(560, H * 0.36);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.fillStyle = vgrad(ctx, 0, floor, [[0, '#f6e2b4'], [1, '#e2c286']]); ctx.fillRect(0, 0, W, floor);
+    ctx.fillStyle = 'rgba(150,100,40,.10)'; for (let x = 0; x < W; x += 60) ctx.fillRect(x, 0, 24, floor);
+    ctx.fillStyle = vgrad(ctx, floor, H, [[0, '#c9955c'], [1, '#97642f']]); ctx.fillRect(0, floor, W, H - floor);
+    ctx.strokeStyle = 'rgba(60,28,6,.35)'; ctx.lineWidth = 2;
+    for (let y = floor + 40; y < H; y += 56) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    const img = getImage(this.imageKey);
+    if (img) {
+      const iw = Math.min(W * 0.92, 700), h = iw * (img.naturalHeight / img.naturalWidth), x = W / 2 - iw / 2, y = floor + 50 - h;
+      shadow(ctx, W / 2, floor + 44, iw * 0.42, 14, 0.32);
+      ctx.drawImage(img, x, y, iw, h);
+      const flick = 0.85 + 0.15 * Math.sin(t * 2.3);
+      ctx.globalCompositeOperation = 'lighter';
+      glowAt(ctx, x + iw * 0.17, y + h * 0.56, 70, '255,190,80', 0.3 * flick);
+      glowAt(ctx, x + iw * 0.84, y + h * 0.56, 70, '255,190,80', 0.3 * flick);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
+  }
+
   render(ctx) {
+    if (this.view.portrait) return this.renderPortrait(ctx);
     const v = this.view, k = v.scale * v.dpr, t = this.t;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);

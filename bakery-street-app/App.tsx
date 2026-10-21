@@ -9,7 +9,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AppState, Animated, BackHandler, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AREAS } from "./src/scene/interior-layout.js";
-import { DESIGN } from "./src/config.js";
 import { loadAssets } from "./src/assets.js";
 import { loadFonts } from "./src/engine/fonts";
 import { Feedback } from "./src/runtime/feedback";
@@ -17,7 +16,7 @@ import { WorldProvider, useRefresh, type Actions } from "./src/runtime/context";
 import { GameView } from "./src/runtime/GameView";
 import { NativeStorage } from "./src/runtime/storage";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
-import { BackButton, Hud, Nav, Toast } from "./src/ui/Chrome";
+import { Hud, Nav, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
@@ -34,7 +33,7 @@ export default function App() {
   const startupProblems = useRef<string[]>([]);
 
   useEffect(() => {
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
     (async () => {
       try {
         await storage.current.hydrate();
@@ -63,7 +62,7 @@ type Overlay = "quests" | "daily" | "settings" | "town";
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
   const feedback = useMemo(() => new Feedback(world.settings), [world]);
-  const [sceneId, setSceneId] = useState<SceneId>("street");
+  const [sceneId, setSceneId] = useState<SceneId>("interior");
   const [panel, setPanel] = useState<{ id: string; side: "left" | "right" } | null>(null);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [toast, setToast] = useState({ text: "", seq: 0 });
@@ -72,9 +71,10 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   const fade = useRef(new Animated.Value(0)).current;
   const switching = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sceneRef = useRef<SceneId>("street");
+  const sceneRef = useRef<SceneId>("interior");
   sceneRef.current = sceneId;
   const game = world.game;
+  useEffect(() => { world.cafe.setActive(true); world.scenes.interior.snap(); }, [world]);          // the game starts in the cafe
 
   const showToast = useCallback((text: string, ms = 1800) => {
     setToast((t) => ({ text, seq: t.seq + 1 }));
@@ -151,7 +151,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (overlay) { setOverlay(null); return true; }
       if (panel) { act.closePanel(); return true; }
-      if (sceneRef.current !== "street") { go("street"); return true; }
+      if (sceneRef.current !== "interior") { go("interior"); return true; }
       return false;
     });
     return () => sub.remove();
@@ -185,18 +185,17 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         if (r.ok) showToast(`${game.productsDef[r.product].icon} satıldı · +${fmt(r.income)} altın`, 1400); else showToast(r.message, 2400);
       } else {
         const area = AREAS.find((a: any) => a.id === hit);
-        if (area?.panel) { scene.select(area.id); setOverlay(null); setPanel({ id: area.panel, side: area.x + area.w / 2 > 700 ? "left" : "right" }); }
+        if (area?.panel) { scene.select(area.id); setOverlay(null); setPanel({ id: area.panel, side: "right" }); }
         else { act.closePanel(); showToast("Müşteri masaları yakında!"); }
       }
     }
   }, [act, feedback, game, go, showToast, world]);
 
   if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast };   // development screenshots only
-  const street = world.scenes.street;
-  const navSelect = (id: "cafe" | "town" | "explore") => {
-    if (id === "cafe") { setOverlay(null); street.tapBuilding("bakery", DESIGN.w / 2, 400); setTimeout(() => go("interior"), 260); }
-    else if (id === "town") setOverlay((o) => (o === "town" ? null : "town"));
-    else { setOverlay(null); go("explore"); }
+  const navSelect = (id: NavId) => {
+    if (id === "town") { setOverlay((o) => (o === "town" ? null : "town")); return; }
+    setOverlay(null);
+    go(id === "cafe" ? "interior" : id);
   };
 
   return (
@@ -204,7 +203,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       <View style={styles.fill}>
         <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes[sceneRef.current]?.setLook?.(n)} />
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
-          <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} go={go} />
+          <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />
           {sceneId === "interior" && panel ? <CafePanel id={panel.id} side={panel.side} /> : null}
           {sceneId === "market" ? <MarketPanel /> : null}
           {sceneId === "bookshop" ? <ResearchPanel /> : null}
@@ -222,17 +221,17 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   );
 }
 
-/** Top bar, bottom menu and back button, with the badge state. */
-function Chrome({ sceneId, overlay, setOverlay, navSelect, go }: { sceneId: SceneId; overlay: Overlay | null; setOverlay: (o: Overlay | null) => void; navSelect: (id: "cafe" | "town" | "explore") => void; go: (id: SceneId) => void }) {
+/** Top bar and the fixed bottom navigation, with the badge state. */
+function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId; overlay: Overlay | null; setOverlay: (o: Overlay | null) => void; navSelect: (id: NavId) => void }) {
   const { world } = useWorldOnly();
   useRefresh(5000);
   const badges = { quests: world.quests.claimable().length > 0, daily: world.daily.status().canClaim };
   const toggle = (o: Overlay) => setOverlay(overlay === o ? null : o);
-  const label = sceneId === "market" ? "Marketten Çık" : sceneId === "bookshop" ? "Kitapçıdan Çık" : "Sokak";
+  const active: NavId | null = overlay === "town" ? "town" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (
     <>
       <Hud badges={badges} onOpen={(id) => toggle(id === "daily" ? "daily" : id)} />
-      {sceneId === "street" ? <Nav active={overlay === "town" ? "town" : "cafe"} onSelect={navSelect} exploreBadge={world.exploration.isReady()} /> : <BackButton label={label} onPress={() => go("street")} />}
+      <Nav active={active} onSelect={navSelect} exploreBadge={world.exploration.isReady()} />
     </>
   );
 }
@@ -242,6 +241,6 @@ const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: "#463020" },
   center: { flex: 1, backgroundColor: "#463020", alignItems: "center", justifyContent: "center" },
   msg: { color: "#F5E6C8", fontSize: 18, textAlign: "center" },
-  warn: { position: "absolute", left: 12, right: 12, bottom: 70, padding: 10, borderRadius: 12, backgroundColor: C.terracotta },
+  warn: { position: "absolute", left: 12, right: 12, bottom: 96, padding: 10, borderRadius: 12, backgroundColor: C.terracotta },
   warnText: { color: C.paper, fontFamily: FONT.bold, fontSize: 13 },
 });

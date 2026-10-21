@@ -5,7 +5,7 @@ import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, are
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
-import { CustomerLayer } from './interior-customers.js';
+import { CustomerLayer, setEntryY } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
@@ -19,7 +19,7 @@ const CHAIRS = [
   [{ dx: -10, dy: 0, rot: 0.05 }, { dx: 4, dy: 4, rot: 0.02 }],
   [{ dx: 2, dy: 3, rot: -0.02 }, { dx: 11, dy: -3, rot: -0.04 }],
 ];
-const LAMPS = [285, 700, 975];
+const LAMPS = [130, 465, 735];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
 export class InteriorScene {
@@ -35,10 +35,11 @@ export class InteriorScene {
     this.sparks = [];           // little glittering bits that fly off a tapped piece of furniture
     this.pops = [];             // floating "+1 Ekmek" texts
     this.view = null;
-    this.cam = { zoom: CAM.zoom, tx: 0, ty: 0, wl: 0, wr: 1400, wt: 0, wb: 790 };   // zoomed-out camera, see resize()
+    this.cam = { zoom: 0.4, tx: 0, ty: 0, wl: 0, wr: 900, wt: 0, wb: 1600 };   // portrait camera, see resize()
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
     this.staff.guests = () => this.customers.v.values();
+    this.customers.warp = this.staff.warp = (y) => this.warpAt(y);
     this.customers.extra = () => [this.staff.waiter];          // guests give way to the waiter too
     this.rects = {};            // where each area's art was actually drawn (labels follow it)
     this.look = 0; this.lk = 0; // parallax: target (-1..1, from touch) and the smoothed value in use
@@ -63,12 +64,20 @@ export class InteriorScene {
    */
   resize(view) {
     this.view = view;
-    // The room is the focus: zoom so the whole width of the dining room (world x 0..1580, door included) fills the screen, but never taller than the space between the
-    // top of the beam (the HUD floats over it) and the floor's front edge. Wide phones are limited by height, 16:9 and tablets by width.
-    const z = Math.min(view.vw / 1600, (view.vh - CAM.bottomPad + 8) / (CAM.baseY - 10), 1.08), cx = 790
-    const tx = view.vw / 2 - cx * z, ty = view.vh - CAM.bottomPad - CAM.baseY * z
-    this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: -ty / z, wb: (view.vh - ty) / z };
+    // Portrait: the 900 x 1600 world fits the width (or the height on wide screens like tablets) and is anchored to the top; taller phones show more floor below.
+    const z = Math.min(view.vw / CAM.w, view.vh / CAM.h), tx = (view.vw - CAM.w * z) / 2, ty = 0;
+    this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: 0, wb: view.vh / z };
+    // Tall phones: everything on the floor below y 840 is drawn a little lower (a smooth ramp, see warpAt) so the dining area spreads over the extra height
+    // instead of leaving an empty band; game logic keeps using the plain coordinates.
+    this.warpD = clamp((this.cam.wb - 1600) * 0.55, 0, 260);
+    setEntryY(Math.max(1580, this.cam.wb + 30 - this.warpD));   // guests appear / vanish just below the visible floor
+
   }
+
+  /** How far (world units) things standing at logic y are drawn lower on tall screens; 0 above y 840, the full `warpD` from y 1240 on. */
+  warpAt(y) { const t = clamp((y - 840) / 400, 0, 1); return (this.warpD ?? 0) * t * t * (3 - 2 * t); }
+  /** The logic y of a point drawn at world y `ys` (inverse of y + warpAt(y), which is increasing). */
+  unwarp(ys) { if (!this.warpD) return ys; let lo = 0, hi = 4000; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (m + this.warpAt(m) < ys) lo = m; else hi = m; } return lo; }
 
   /** Pointer position in the design space used by main.js (origin shifted by view.ox/oy) -> world. */
   toWorld(x, y) { const c = this.cam, v = this.view; return { x: (x + v.ox - c.tx) / c.zoom, y: (y + v.oy - c.ty) / c.zoom }; }
@@ -89,6 +98,7 @@ export class InteriorScene {
   /** Customers (their order bubbles) take priority over the tables and machines they stand in front of. */
   hitTest(x, y) {
     const p = this.toWorld(x, y), f = this.shift('floor');
+    p.y = this.unwarp(p.y);
     return this.customers.hitTest(p.x - f, p.y) ?? AREAS.find((a) => { const q = p.x - this.shift(this.planeOf(a)); return q >= a.x && q <= a.x + a.w && p.y >= a.y && p.y <= a.y + a.h; })?.id ?? null;
   }
   snap() { this.customers.snap(); }
@@ -144,9 +154,9 @@ export class InteriorScene {
       items.push({ y: depthOf(a), draw: () => this.shifted(ctx, this.planeOf(a), () => this.drawArea(ctx, a)) });
     }
     items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
-    items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => it.draw(ctx));
+    items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => { const d = this.warpAt(it.y); ctx.save(); ctx.translate(0, d); it.draw(ctx); ctx.restore(); });
     this.shifted(ctx, 'floor', () => this.staff.drawServed(ctx));
-    for (const a of AREAS) if (this.tableOpen(a)) this.shifted(ctx, this.planeOf(a), () => this.overlay(ctx, a));
+    for (const a of AREAS) if (this.tableOpen(a)) { ctx.save(); ctx.translate(0, this.warpAt(depthOf(a))); this.shifted(ctx, this.planeOf(a), () => this.overlay(ctx, a)); ctx.restore(); }
     this.shifted(ctx, 'floor', () => this.customers.drawBubbles(ctx, t));
     this.shifted(ctx, 'deco', () => this.light(ctx));
     this.shifted(ctx, 'front', () => this.frontDecor(ctx));
@@ -318,7 +328,7 @@ export class InteriorScene {
     for (const lx of LAMPS) {
       ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, deco.beamBottom ?? this.cam.wt - 20); ctx.lineTo(lx, 128); ctx.stroke();
       const lamp = getImage('int-lamp');
-      if (lamp) { const lh = 82, lw = lamp.naturalWidth * lh / lamp.naturalHeight; ctx.drawImage(lamp, lx - lw / 2, 112, lw, lh); }     // supplied copper lamp (its chain starts at the cord)
+      if (lamp) { const lh = 70, lw = lamp.naturalWidth * lh / lamp.naturalHeight; ctx.drawImage(lamp, lx - lw / 2, 112, lw, lh); }     // supplied copper lamp (its chain starts at the cord)
       else {
         poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, PAL.honeyDark, 2.5);
         ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = PAL.vanilla; ctx.fill();
@@ -353,11 +363,9 @@ export class InteriorScene {
       ctx.fillStyle = vgrad(ctx, top + h, top + h + 26, [[0, 'rgba(70,48,32,.22)'], [1, 'rgba(70,48,32,0)']]); ctx.fillRect(c.wl - 20, top + h, c.wr - c.wl + 40, 26);
     }
     // heights follow the people (a guest is ~250 px): door ~1.0x, windows 0.65-0.75x with their sills on one line (y ~290), even ~90 px gaps
-    put('rack', 150, 190, 105);
-    put('shelf', 500, 252, 165);
-    put('window-shutter', 840, 292, 178);
-    put('window-arch', 1112, 268, 138);
-    put('door', 1470, 430, 255);
+    put('rack', 130, 290, 105);
+    put('shelf', 345, 372, 165);
+    put('window-shutter', 585, 400, 178);
     return { beamBottom: beam ? 86 : null };
   }
 
@@ -367,10 +375,10 @@ export class InteriorScene {
     for (const lx of LAMPS) {
       const f = 0.9 + 0.1 * Math.sin(this.t * 2.1 + lx);
       glowAt(ctx, lx, 330, 170, '255,196,110', 0.10 * f);
-      glowAt(ctx, lx, 600, 210, '255,190,100', 0.075 * f);
+      glowAt(ctx, lx, 690, 210, '255,190,100', 0.075 * f);
     }
     if (getImage('int-window-arch')) {                         // daylight falling from the two windows onto the wall and floor
-      for (const [x, top, w] of [[840, 200, 120], [1112, 190, 110]]) {
+      for (const [x, top, w] of [[585, 225, 130]]) {
         const sway = 4 * Math.sin(this.t * 0.4 + x), g = ctx.createLinearGradient(0, top, 0, 560);
         g.addColorStop(0, 'rgba(255,238,190,.08)'); g.addColorStop(1, 'rgba(255,238,190,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w / 2, top); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 - 150 + sway, 560); ctx.lineTo(x - w / 2 - 150 + sway, 560); ctx.closePath(); ctx.fill();
@@ -389,14 +397,15 @@ export class InteriorScene {
     const c = this.cam, blur = 'filter' in ctx;                // depth of field: the nearest plants are soft (skipped where unsupported)
     // (the corner plants used to be blurred like a camera's depth of field; they are crisp now)
     if (false && blur) ctx.filter = 'blur(2.5px)';
-    drawProp(ctx, 'pot_topiary', c.wl + 60, c.wb + 40, 150, { shade: false });
-    drawProp(ctx, 'pot_topiary2', c.wr - 60, c.wb + 40, 150, { shade: false });
+    const by = c.wb - 150;                                    // above the navigation bar, in the open aisle at the front (the tables stand at the sides)
+    drawProp(ctx, 'pot_topiary', 330, by, 150, { shade: false });
+    drawProp(ctx, 'pot_topiary2', 570, by, 150, { shade: false });
     if (blur) ctx.filter = 'none';
   }
 
   /** A woven rug lying flat on the floor in front of the counter: a perspective trapezoid with a border, stripes and fringe. */
   rug(ctx) {
-    const cx = 720, y0 = 492, y1 = 590, w0 = 470, w1 = 560;
+    const cx = 450, y0 = 748, y1 = 858, w0 = 520, w1 = 640;
     const quad = (k) => { const a0 = w0 / 2 - k, a1 = w1 / 2 - k * 1.1, ya = y0 + k * 0.35, yb = y1 - k * 0.35; poly(ctx, [[cx - a0, ya], [cx + a0, ya], [cx + a1, yb], [cx - a1, yb]]); };
     ctx.save();
     ctx.globalAlpha = 0.9;
@@ -468,7 +477,7 @@ export class InteriorScene {
   /** The wall and floor never change, so they are painted once per screen size and then just copied (the multiply wash is costly). */
   cachedRoom(ctx, x0, w, yTop, yBot, dx = 0) {
     const cv = ctx.canvas, m = ctx.getTransform(), M = Math.ceil(60 * m.a);          // 60 world px of spare wall on each side for the sway
-    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.ty.toFixed(1)}:${!!getImage('int-wall')}${!!getImage('int-floor')}${!!getImage('int-room')}`;
+    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.zoom.toFixed(3)}:${yBot.toFixed(0)}:${!!getImage('int-wall')}${!!getImage('int-floor')}${!!getImage('int-room')}`;
     if (this.roomKey !== key) {
       const c = createCanvas(cv.width + 2 * M, cv.height);
       this.roomCanvas = c;
@@ -482,11 +491,13 @@ export class InteriorScene {
 
   /** The supplied empty room, scaled to cover the visible world with its wall/floor join on FLOOR_Y; dark wood fills any spare edge. */
   shell(g, x0, w, yTop, yBot) {
-    const img = getImage('int-room'), ratio = img.naturalHeight / img.naturalWidth, jn = ROOM.join;
-    const sc = Math.max((w + 20) / img.naturalWidth, (yBot - FLOOR_Y) / (img.naturalHeight * (1 - jn)), (FLOOR_Y - yTop) / (img.naturalHeight * jn));
-    const iw = img.naturalWidth * sc, ih = img.naturalHeight * sc, x = x0 + w / 2 - iw / 2 - 0, y = FLOOR_Y - ih * jn;
+    const img = getImage('int-room'), iw0 = img.naturalWidth, ih0 = img.naturalHeight;
+    // the picture's wall/floor join (48.4% of its height) is placed on FLOOR_Y; the wall is shown at that scale, centred on the world (x 450)
+    const ks = (FLOOR_Y / (ih0 * ROOM.join)), x = 450 - (iw0 / 2) * ks, joinSrc = ih0 * ROOM.join;
     g.fillStyle = PAL.honeyDark; g.fillRect(x0, yTop, w, yBot - yTop);
-    g.drawImage(img, x, y, iw, ih);
+    g.drawImage(img, 0, 0, iw0, joinSrc + 1, x, 0, iw0 * ks, FLOOR_Y + ks);                                       // wall with beams and wainscot
+    g.drawImage(img, 0, joinSrc, iw0, ih0 - joinSrc, x, FLOOR_Y, iw0 * ks, Math.max(yBot, 1600) - FLOOR_Y + 20); // floor, stretched down the long room
+    g.fillStyle = vgrad(g, FLOOR_Y, FLOOR_Y + 60, [[0, 'rgba(70,48,32,.35)'], [1, 'rgba(70,48,32,0)']]); g.fillRect(x0, FLOOR_Y, w, 60);   // wall meets floor
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */

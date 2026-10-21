@@ -10,10 +10,28 @@ const R = 62;                                              // tap radius of a ma
 export class ExploreScene {
   /** @param {import('../game/exploration.js').Exploration} exploration */
   constructor(exploration) { this.id = 'explore'; this.ex = exploration; this.t = 0; this.view = null; this.selected = null; this.pressedId = null; this.bg = null; this.bgKey = ''; }
-  resize(view) { this.view = view; this.bgKey = ''; }
-  update(dt) { this.t += dt; }
+  resize(view) { this.view = view; this.bgKey = ''; this.panX = null; }
+  update(dt) {
+    this.t += dt;
+    if (this.view?.portrait) {                                    // the map slides so the selected (or first) region stays in view
+      const { s } = this.xform(), want = this.panTarget(s);
+      this.panX = this.panX == null ? want : this.panX + (want - this.panX) * Math.min(1, dt * 6);
+    }
+  }
+  /** Portrait: the map is shown at a scale that fills the upper half of the screen and is panned sideways; landscape draws it 1:1. */
+  xform() {
+    const v = this.view;
+    if (!v?.portrait) return { s: 1, ox: 0, oy: 0 };
+    const s = Math.max(v.vw / DESIGN.w, (v.vh * 0.46) / DESIGN.h);
+    return { s, ox: this.panX ?? this.panTarget(s), oy: 70 };
+  }
+  panTarget(s) {
+    const v = this.view, r = this.ex.regions.find((q) => q.id === this.selected) ?? this.ex.regions[0], fx = r ? r.map.x : DESIGN.w / 2;
+    return Math.max(v.vw - DESIGN.w * s, Math.min(0, v.vw / 2 - fx * s));
+  }
   hitTest(x, y) {
-    for (const r of this.ex.regions) if (Math.hypot(x - r.map.x, y - r.map.y) <= R) return r.id;
+    const { s, ox, oy } = this.xform(), mx = (x - ox) / s, my = (y - oy) / s;
+    for (const r of this.ex.regions) if (Math.hypot(mx - r.map.x, my - r.map.y) <= R) return r.id;
     return null;
   }
   press(on, x, y) { this.pressedId = on ? this.hitTest(x, y) : null; }
@@ -45,7 +63,21 @@ export class ExploreScene {
     return c;
   }
 
+  renderPortrait(ctx) {
+    const v = this.view, k = v.scale * v.dpr, t = this.t, { s, ox, oy } = this.xform(), map = getImage('explore-map');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.fillStyle = vgrad(ctx, 0, v.vh, [[0, PAL.vanilla], [1, PAL.honeyLight]]); ctx.fillRect(0, 0, v.vw, v.vh);
+    if (map) ctx.drawImage(map, ox, oy, DESIGN.w * s, DESIGN.h * s);
+    ctx.setTransform(k * s, 0, 0, k * s, ox * k, oy * k);
+    for (const r of this.ex.regions) this.drawRegion(ctx, r, t);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0 });
+  }
+
   render(ctx) {
+    if (this.view.portrait) return this.renderPortrait(ctx);
     const v = this.view, k = v.scale * v.dpr, t = this.t;
     const key = `${ctx.canvas.width}x${ctx.canvas.height}`;
     if (this.bgKey !== key) { this.bg = this.paintBackdrop(ctx.canvas.width, ctx.canvas.height); this.bgKey = key; }

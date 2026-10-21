@@ -1,21 +1,21 @@
 // Where each functional area sits in the cafe interior (design space 1400 x 790) and what it does when tapped.
 // `panel` names the UI opened by the area; `station` ties a machine to the production jobs it runs.
 export const AREAS = [
-  // against the back wall (kitchen side), left to right: oven, prep counter, showcase facing the guests, coffee station, storage
-  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 30, y: 205, w: 222, h: 224 },
-  { id: 'storage', label: 'Depo', panel: 'storage', x: 1252, y: 306, w: 150, h: 127 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1268, y: 130, w: 118, h: 148 },
-  // the service line: counters stand in front of the kitchen floor, about 80 px apart
-  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 300, y: 232, w: 330, h: 258 },
-  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 715, y: 259, w: 300, h: 231 },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1025, y: 261, w: 215, h: 229 },
-  // dining area, in front, behind a wide open corridor: two groups either side of a central aisle (tables 3+1 left, 2+4 right), the outer
-  // table of each group set back a little. The cafeTables upgrade opens them in this order (the two aisle tables first), so the room always
-  // looks balanced. `side` is the chair the guest takes (-1 left, +1 right); each guest's access gap lies on that side.
-  { id: 'table1', label: 'Masa 1', panel: null, side: -1, x: 352, y: 576, w: 270, h: 156 },
-  { id: 'table2', label: 'Masa 2', panel: null, side: 1, x: 806, y: 630, w: 290, h: 168, flip: true },
-  { id: 'table3', label: 'Masa 3', panel: null, side: -1, x: -22, y: 618, w: 290, h: 168 },
-  { id: 'table4', label: 'Masa 4', panel: null, side: 1, x: 1186, y: 584, w: 270, h: 156, flip: true },
+  // PORTRAIT cafe, a 900-unit-wide world (see CAM). Back wall, kitchen row against it (oven, storage, the upgrade sign on the wall):
+  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 18, y: 288, w: 222, h: 224 },
+  { id: 'storage', label: 'Depo', panel: 'storage', x: 270, y: 385, w: 150, h: 127 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 760, y: 200, w: 118, h: 148 },
+  // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station
+  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 14, y: 442, w: 330, h: 258 },
+  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 352, y: 469, w: 300, h: 231 },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 660, y: 471, w: 215, h: 229 },
+  // dining area, in front: two columns either side of a central aisle (tables 1 and 3 left, 2 and 4 right), the second row set back from
+  // the edge a little. The cafeTables upgrade opens them in this order (row one first). `side` is the chair the guest takes: always the one
+  // facing the aisle (-1 left, +1 right), so each guest's access gap lies in the aisle.
+  { id: 'table1', label: 'Masa 1', panel: null, side: 1, x: 20, y: 884, w: 270, h: 156, flip: true },
+  { id: 'table2', label: 'Masa 2', panel: null, side: -1, x: 610, y: 934, w: 270, h: 156 },
+  { id: 'table3', label: 'Masa 3', panel: null, side: 1, x: 5, y: 1134, w: 270, h: 156, flip: true },
+  { id: 'table4', label: 'Masa 4', panel: null, side: -1, x: 625, y: 1184, w: 270, h: 156 },
 ];
 
 /** Drawing order = depth: the kitchen side first, then the baker (behind the counters), then the counters, then the tables. */
@@ -31,14 +31,14 @@ export const DRAW_ORDER = ['oven', 'storage', 'upgrades', '_staff', 'counter', '
 /** People in the cafe are drawn this much larger than on the street so they match the furniture (a guest is ~250 px, the counter ~120 and waist-high). */
 export const PERSON_SCALE = 1.7;
 export const PERSON_H = 250;                // approximate drawn height of a guest (bubbles, hit tests)
-export const COUNTER_Y = 490;          // front edge of the counters
-export const STAFF_LANE_Y = 432;       // the baker's feet: head and shoulders show above the counters
-export const SERVICE_LINE_Y = 575;     // lane for guests walking left (from the door toward the showcase and the left tables)
-export const LEAVE_LINE_Y = 592;       // lane for guests walking right (to the right-hand tables and out of the door): opposite flows pass 17 px apart
-export const QUEUE_Y = 538;            // guests waiting at the showcase stand a row behind the lane, so walkers pass in front of them
-export const WAITER_LANE_Y = 505;      // the waiter's feet, right in front of the counters
-export const WALL_Y = 96;              // top of the back wall (below the HUD)
-export const FLOOR_Y = 400;            // where the back wall meets the floor
+export const COUNTER_Y = 700;          // front edge of the counters
+export const STAFF_LANE_Y = 545;       // the baker's feet: head and shoulders show above the counters
+export const SERVICE_LINE_Y = 805;     // lane for guests walking left (from the door toward the showcase and the left tables)
+export const LEAVE_LINE_Y = 822;       // lane for guests walking right (to the right-hand tables and out of the door): opposite flows pass 17 px apart
+export const QUEUE_Y = 770;            // guests waiting at the showcase stand a row behind the lane, so walkers pass in front of them
+export const WAITER_LANE_Y = 735;      // the waiter's feet, right in front of the counters
+export const WALL_Y = 130;              // top of the back wall (below the HUD)
+export const FLOOR_Y = 516;            // where the back wall meets the floor
 
 export const areaAt = (x, y) => AREAS.find((a) => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h) ?? null;
 
@@ -75,8 +75,8 @@ export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 /** Depth key (the y of the line an object stands on): what is further back is drawn first. Tables are judged by their front edge a bit above the chair feet. */
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
-/** Waiting spots in front of the showcase (centre 855), one body width apart. */
-export const QUEUE_SPOTS = [{ x: 855, y: QUEUE_Y }, { x: 710, y: QUEUE_Y }, { x: 1000, y: QUEUE_Y }];
+/** Waiting spots in front of the showcase (centre 502), one body width apart. */
+export const QUEUE_SPOTS = [{ x: 502, y: QUEUE_Y }, { x: 352, y: QUEUE_Y }, { x: 652, y: QUEUE_Y }];
 
 /** Camera: the interior is drawn zoomed out (see InteriorScene), centred on this world x so the 30..1414 content has air on both sides. */
 /**
@@ -86,6 +86,7 @@ export const QUEUE_SPOTS = [{ x: 855, y: QUEUE_Y }, { x: 710, y: QUEUE_Y }, { x:
 export const ROOM = { join: 0.484 };
 
 /** Depth scale: the nearer to the viewer (larger y), the larger a person or table is drawn (perspective), 0.86 at the wall to 1.04 at the front. */
-export const depthScale = (y) => 0.86 + 0.18 * Math.max(0, Math.min(1, (y - 430) / 380));
+export const depthScale = (y) => 0.9 + 0.12 * Math.max(0, Math.min(1, (y - 545) / 300));
 
-export const CAM = { zoom: 0.97, cx: 790, baseY: 760, bottomPad: 40 };
+/** Portrait camera: the world is 900 units wide and 1600 tall (9:16); the scene fits the width (or the height on wide screens) and is anchored to the top. */
+export const CAM = { w: 900, h: 1600 };

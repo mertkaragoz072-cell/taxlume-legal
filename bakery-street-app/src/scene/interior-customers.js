@@ -7,10 +7,14 @@ import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
 
-const ENTRY = { x: 1415, y: 440 };        // the way in
-const EXIT = { x: 1545, y: 440 };         // the way out (the door is wide enough for two columns)
+// guests come in from the bottom edge of the screen (the street side, behind the navigation bar) and leave the same way; `entryY` follows the screen height
+const ENTRY = { x: 450, y: 1580 };
+const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests use different columns (arrivals x 450 / table gaps, leavers x 395 / 62 px further into the aisle), so nobody walks head-on
 const SPEED = 210;                 // design px per second
 const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
+
+/** Where guests appear and disappear: just below the bottom edge of what is visible (taller phones show more floor). */
+export function setEntryY(y) { ENTRY.y = y; EXIT.y = y; }
 
 export class CustomerLayer {
   constructor(game, cafe) {
@@ -18,6 +22,7 @@ export class CustomerLayer {
     this.cafe = cafe;
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
+    this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
@@ -38,7 +43,7 @@ export class CustomerLayer {
     this.v.clear();
     for (const c of this.cafe.customers) {
       const t = this.targetFor(c);
-      this.v.set(c.id, { x: t.x, y: t.y, dir: c.state === 'seated' ? -(t.side ?? -1) : -1, moving: false, leaving: false, look: c.look, via: t.via ?? null, pause: false, sit: c.state === 'seated' ? 1 : 0 });
+      this.v.set(c.id, { id: c.id, x: t.x, y: t.y, dir: c.state === 'seated' ? -(t.side ?? -1) : -1, moving: false, leaving: false, look: c.look, via: t.via ?? null, chairY: t.via != null ? t.y : null, side: t.side ?? null, pause: false, sit: c.state === 'seated' ? 1 : 0 });
     }
   }
 
@@ -47,7 +52,7 @@ export class CustomerLayer {
     for (const c of this.cafe.customers) {
       live.add(c.id);
       let v = this.v.get(c.id);
-      if (!v) { v = { x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look, via: null, pause: false, sit: 0 }; this.v.set(c.id, v); }
+      if (!v) { v = { id: c.id, x: ENTRY.x, y: ENTRY.y, dir: -1, moving: true, leaving: false, look: c.look, via: null, pause: false, sit: 0 }; this.v.set(c.id, v); }
       const goal = this.targetFor(c);
       v.via = goal.via ?? null;
       this.step(v, goal, dt, c.id);
@@ -77,18 +82,21 @@ export class CustomerLayer {
     const LANE = Math.abs(tx - v.x) <= 8 ? (v.y > (SERVICE_LINE_Y + LEAVE_LINE_Y) / 2 ? LEAVE_LINE_Y : SERVICE_LINE_Y) : tx > v.x ? LEAVE_LINE_Y : SERVICE_LINE_Y;   // two lanes, one per walking direction: left-going 575, right-going 592
     let to = goal;
     const onLane = Math.abs(v.y - LANE) <= 4;
-    if (goal.via != null) {                                       // going to a chair: lane -> table gap -> down the gap -> slide into the chair
+    if (goal.via != null) {                                       // going to a chair: from the entrance sideways to the gap, up the gap, slide into the chair
       const inGap = Math.abs(v.x - goal.via) <= 8, atRow = Math.abs(v.y - goal.y) <= 4;
       if (atRow) to = { x: goal.x, y: goal.y };
       else if (inGap) to = { x: goal.via, y: goal.y };
+      else if (v.y > goal.y + 4 && v.y > LEAVE_LINE_Y + 40) to = { x: goal.via, y: v.y };     // still below the dining area: across to the gap first
       else to = onLane ? { x: goal.via, y: v.y } : { x: v.x, y: LANE };
-    } else if (v.via != null && v.y > LANE + 30 && Math.abs(v.x - v.via) > 8) {
-      to = { x: v.via, y: v.y };                                  // leaving a chair: slide back out into the gap first
+    } else if (v.chairY != null && goal.exit && Math.abs(v.y - v.chairY) < 6 && v.via != null && Math.abs(v.x - (v.via + (v.side ?? 0) * 62)) > 8) {
+      to = { x: v.via + (v.side ?? 0) * 62, y: v.y };             // leaving a chair: slide out into the gap, a little further into the aisle than arriving guests use (they walk the other way)
+    } else if (goal.exit && v.y > LEAVE_LINE_Y + 30) {
+      to = Math.abs(v.y - goal.y) > 4 ? { x: v.x, y: goal.y } : goal;      // down the gap to the bottom edge, then along it to the exit
     } else if (Math.abs(goal.x - v.x) > 8) {
       to = onLane ? { x: goal.x, y: v.y } : { x: v.x, y: LANE };  // up/down to the lane, then along it
     }
     const dx = to.x - v.x, dy = to.y - v.y, d = Math.hypot(dx, dy);
-    if (d < 2) { v.x = to.x; v.y = to.y; v.moving = Math.hypot(goal.x - v.x, goal.y - v.y) > 2; v.pause = false; if (!v.moving) v.via = goal.via ?? null; return; }
+    if (d < 2) { v.x = to.x; v.y = to.y; v.moving = Math.hypot(goal.x - v.x, goal.y - v.y) > 2; v.pause = false; if (!v.moving) { v.via = goal.via ?? null; v.chairY = goal.via != null ? goal.y : null; v.side = goal.side ?? null; } return; }
     // nobody walks into another guest: wait while someone is where we are about to step. If two wait for each other, the one that has
     // waited longest (over 1.2 s) goes first, so the lanes can never lock up.
     v.pause = false;
@@ -97,7 +105,10 @@ export class CustomerLayer {
       const staff = this.extra?.() ?? [];
       for (const o of [...this.v.values(), ...staff]) {
         if (o === v) continue;
-        if (Math.abs(o.x - nx) < 56 && Math.abs(o.y - ny) < (staff.includes(o) ? 40 : 12) && Math.hypot(o.x - nx, o.y - ny) <= Math.hypot(o.x - v.x, o.y - v.y)) { v.pause = true; break; }
+        if (Math.abs(o.x - nx) < 56 && Math.abs(o.y - ny) < (staff.includes(o) ? 40 : 30)) {
+          const after = Math.hypot(o.x - nx, o.y - ny), now = Math.hypot(o.x - v.x, o.y - v.y);
+          if (after < now - 1e-6 || (Math.abs(after - now) < 1e-6 && id > (o.id ?? -1))) { v.pause = true; break; }     // closing in (or side by side: the higher id waits)
+        }
       }
     }
     v.waited = v.pause ? (v.waited ?? 0) + dt : (v.waited > 0 && v.waited < 1.2 ? 0 : (v.waited ?? 0) > 1.2 ? Math.max(0, (v.waited ?? 0) - dt * 2) : 0);
@@ -146,7 +157,7 @@ export class CustomerLayer {
       out.push({
         y: table ? depthOf(table) + 1 : v.y,
         draw: (ctx) => {
-          ctx.globalAlpha = clamp((v.y - EXIT.y) / 45, 0, 1);       // fades in and out at the door
+          ctx.globalAlpha = clamp((EXIT.y - v.y) / 60, 0, 1);       // fades in and out at the bottom edge
           const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
           if (seated) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 160, y - 420, 320, sitCutY(c.table) - (y - 420)); ctx.clip(); }
@@ -166,12 +177,15 @@ export class CustomerLayer {
     for (const [id, v] of list) {
       const c = this.cafe.customers.find((x) => x.id === id);
       if (!c || v.moving || v.leaving) continue;
+      const table = c.state === 'seated' && c.table != null ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
+      ctx.save(); ctx.translate(0, this.warp(table ? depthOf(table) + 1 : v.y));
       if (c.state === 'seated') this.orderBubble(ctx, v, c, t);
       else this.waitBubble(ctx, v, c, t);
+      ctx.restore();
     }
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
-      const py = p.y - (1 - p.life) * 70;
+      const py = p.y - (1 - p.life) * 70 + this.warp(p.y + BODY_H);
       label(ctx, p.text, p.x - 14, py, { font: '700 36px sans-serif', fill: PAL.vanilla, lw: 6 });
       ctx.font = '700 36px sans-serif';
       drawIcon(ctx, 'coin', p.x - 14 + ctx.measureText(p.text).width / 2 + 24, py, 36);

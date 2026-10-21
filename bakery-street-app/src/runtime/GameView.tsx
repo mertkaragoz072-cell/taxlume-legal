@@ -37,7 +37,7 @@ export function GameView({ world, sceneId, active, pixelRatio, onPress, onLook }
   useEffect(() => {
     const { w, h } = size.current;
     if (!w || !h) return;
-    viewport.current = computeView(w, h, pixelRatio * quality, sceneId === "explore");
+    viewport.current = computeView(w, h, pixelRatio * quality, sceneId === "explore", sceneId === "interior");
     scene.resize(viewport.current);
     if (sceneId === "interior") scene.snap();
   }, [ready, sceneId, scene, pixelRatio, quality]);

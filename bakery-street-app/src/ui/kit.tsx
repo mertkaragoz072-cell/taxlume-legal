@@ -31,15 +31,27 @@ export function Btn({ label, sub, variant = "go", onPress, disabled, small, styl
 
 export function Card({ left, children, right, tone, style }: { left?: React.ReactNode; children: React.ReactNode; right?: React.ReactNode; tone?: "open" | "locked" | "ready" | "danger"; style?: any }) {
   const u = useU();
+  const { width, height } = useWindowDimensions();
+  const portrait = height >= width;
   const bg = tone === "open" ? C.greenPale : tone === "ready" ? C.creamLight : tone === "locked" ? C.cream : tone === "danger" ? C.terracottaPale : C.paper;
   const edge = tone === "open" ? C.green : tone === "ready" ? C.green : tone === "danger" ? C.terracottaLight : C.honeyLight;
-  return (
-    <View style={[{ flexDirection: "row", alignItems: "center", gap: u * 1.6, padding: u * 1.3, borderRadius: u * 2, backgroundColor: bg, borderWidth: u * 0.3, borderColor: edge, opacity: tone === "locked" ? 0.8 : 1 }, style]}>
+  const frame = { padding: u * 1.3, borderRadius: u * 2, backgroundColor: bg, borderWidth: u * 0.3, borderColor: edge, opacity: tone === "locked" ? 0.8 : 1 };
+  const main = (
+    <>
       {left ? <View style={{ width: u * 10, alignItems: "center" }}>{left}</View> : null}
       <View style={{ flex: 1, gap: u * 0.7 }}>{children}</View>
-      {right}
-    </View>
+    </>
   );
+  // portrait: the card's action (button) goes under the text, full width, so the text keeps the whole row
+  if (portrait && right) {
+    return (
+      <View style={[{ gap: u * 1.1 }, frame, style]}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: u * 1.6 }}>{main}</View>
+        <View style={{ alignItems: "stretch" }}>{right}</View>
+      </View>
+    );
+  }
+  return <View style={[{ flexDirection: "row", alignItems: "center", gap: u * 1.6 }, frame, style]}>{main}{right}</View>;
 }
 
 /** The title line of a card: name on the left, a small muted note on the right. */
@@ -90,10 +102,15 @@ export function Pips({ level, max }: { level: number; max: number }) {
 /** A side panel: title row with an optional close button, a hint line and a scrolling body. `side` picks which edge it sticks to. */
 export function Sheet({ title, hint, onClose, side = "right", lowered, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; children: React.ReactNode }) {
   const u = useU();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const portrait = height >= width;
+  // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it);
+  // wide windows keep the old side panel
+  const place = portrait
+    ? { left: u * 1.2, right: u * 1.2, bottom: Math.max(52, u * 13.6) + u * 3.6, height: Math.min(height * 0.52, u * 150) }
+    : { top: u * 12.8, bottom: lowered ? u * 11 : u * 1.4, width: Math.min(u * 78, width * 0.48), ...(side === "left" ? { left: u * 1.4 } : { right: u * 1.4 }) };
   return (
-    <View style={[{ position: "absolute", top: u * 12.8, bottom: lowered ? u * 11 : u * 1.4, width: Math.min(u * 78, width * 0.48), borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.vanilla, overflow: "hidden", zIndex: 20 },
-      side === "left" ? { left: u * 1.4 } : { right: u * 1.4 },
+    <View style={[{ position: "absolute", borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.vanilla, overflow: "hidden", zIndex: 20 }, place,
       { shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: u * 2, shadowOffset: { width: 0, height: u }, elevation: 8 }]}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: u * 2.2, paddingTop: u * 1.6, paddingBottom: u * 0.6 }}>
         <Rich text={title} size={fs(u, 4)} style={{ color: C.brownDark, fontFamily: FONT.bold }} />

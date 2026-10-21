@@ -7,7 +7,7 @@ WebView yok, tarayıcı yok. Oyun tamamen yerel çalışır:
 - **Oyun kuralları** (`src/game`, `src/data`) saf JS'tir, bağımsız birim testleri `tests/` altındadır.
 - **Kayıt**: oyun kendi (eşzamanlı) depolama arayüzüne yazar; `src/runtime/storage.ts` bunu bellekte tutup `AsyncStorage`'a (debounce ile, uygulama arka plana gidince hemen) yazar.
 - **Ses**: web sürümünün canlı sentezlediği efektler ve müzik `scripts/gen-sounds.mjs` ile WAV dosyalarına çevrildi (`assets/sounds`), `expo-audio` çalar. **Titreşim**: `expo-haptics`.
-- Yatay mod kilitli, durum çubuğu gizli, çentik/güvenli alanlar `react-native-safe-area-context` ile.
+- Dikey (portre) mod kilitli, durum çubuğu gizli, çentik/güvenli alanlar `react-native-safe-area-context` ile.
 
 ## Geliştirme
 
@@ -45,7 +45,7 @@ Android: `eas build --profile production --platform android`, sonra Play Console
 
 | Alan | Değer |
 |---|---|
-| Platform | iPhone ve iPad (`supportsTablet: true`, tam ekran yatay) |
+| Platform | iPhone ve iPad (`supportsTablet: true`, tam ekran dikey) |
 | Ad | Fırın & Kafe |
 | Bundle ID | `com.firinkafe.app` (sonradan değişmez) |
 | SKU | firin-kafe-1 |
@@ -76,7 +76,7 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 
 ## Tablet (iPad ve Android tabletler)
 
-- `app.json`: `supportsTablet: true`; yatay mod kilitli, iPad'de çoklu görev bölünmüş görünümü kapalı (`requireFullScreen`).
+- `app.json`: `supportsTablet: true`; dikey mod kilitli, iPad'de çoklu görev bölünmüş görünümü kapalı (`requireFullScreen`).
 - **Sokak:** 4:3 ekranlarda gökyüzü üstte uzar. Panorama ile gökyüzü arasında görünen koyu çizgi, `destination-in` karışım modunun çizim katmanında eksik olmasından kaynaklanıyordu (telefonlarda da küçük bir hataydı); düzeltildi. Panorama kenar renkleri artık resmin gerçek piksellerinden okunuyor.
 - **Kafe:** 4:3'te oda yakınlaştırılır (zoom 0.8 → ~0.85, merkez kapıya doğru kayar), üstteki boş duvar azalır; telefon görünümü aynı kalır.
 - **Keşif haritası:** 4:3'te harita tam yükseklik ile telefondaki "sığdır" arasında ortalanır (yaklaşık yarı yarıya yakınlaştırılır, sola hizalı); işaretçiler sağ paneli kapatmaz, üstteki bulanık şerit küçülür.
@@ -169,3 +169,16 @@ Not: `oldman`, `boy_redcap`, `girl_red`, `girl_glasses` da artık 6 karelik önd
 - Kuyruk noktaları 150 px aralıklı (710/855/1000): ortada kümelenme azaldı. Masa sırası oyun mantığında olduğu gibi (önce koridora yakın masalar) bırakıldı.
 - Şef: ölçek 1.1, çalışırken hızlı yoğurma/karıştırma ritmi (`bobRate`) ve makineye eğilme. Garson: siparişi tezgâh arasındaki yerinde alır (0.45 sn `pick` aşaması), sonra yürür.
 - `scripts/defringe.py`: kesilmiş eşya resimlerindeki beyaz kenar kalıntılarını temizler (kenar pikselleri en yakın dolu pikselin rengini alır, kesim 1 px sıkılaşır); mobilya/ekipman/duvar süsü resimlerine uygulandı. Üretim sayacı (0/2) yalnızca iş varken görünür; pencere ışık huzmeleri %50 azaltıldı.
+
+
+## Dikey (portre) ekran
+
+Oyun artık yalnızca dikey çalışır (`app.json: orientation: portrait`, `ScreenOrientation.PORTRAIT_UP`). Hedef oran 9:16; 9:19.5/20:9 uzun telefonlar ve 3:4 tabletler de desteklenir.
+
+- **Görünüm (`src/runtime/view.ts`):** Dikeyde `scale = genişlik / tasarım genişliği`; kafe için 900, diğer sahneler (market, kitapçı, keşif haritası) için 800 birim. Yükseklik ekrana göre değişir (`vh`). Sahneler `view.portrait` ile kendi kompozisyonunu seçer.
+- **Kafe dünyası:** 900 × 1600 birim (`CAM` in `interior-layout.js`). Kamera genişliğe (tabletlerde yüksekliğe) sığar ve üste hizalıdır. Üstten alta: duvar + HUD, duvar boyunca fırın/depo/yükseltme tabelası, tek sıra hâlinde tezgâh–vitrin–kahve makinesi, servis alanı (garson şeridi, kuyruk, müşteri şeritleri), ortada koridor ve iki yanda masalar (1-3 solda, 2-4 sağda; misafir hep koridora bakan sandalyeye oturur), en altta sabit gezinme çubuğu. Eşya ve karakter boyutları yatay sürümle aynıdır; yalnızca yerleşim değişti.
+- **Uzun telefonlar:** 1600'den fazla yükseklikte zemin altta uzar ve y=840'tan aşağıdaki nesneler yumuşak bir geçişle biraz aşağı çizilir (`InteriorScene.warpAt`, en çok 260 birim); oyun mantığı düz koordinatları kullanmaya devam eder, dokunmalar `unwarp` ile geri çevrilir.
+- **Müşteri yolları:** Müşteriler ekranın alt kenarından (gezinme çubuğunun arkasından) girer ve oradan çıkar. Girişte koridor (x 450) ve masa aralıkları, çıkışta 62 birim daha içeriden sütunlar (x 395) kullanılır; böylece kimse karşıdan karşıya yürümez (`tests/portrait.test.js`). Çakışma beklemesinde yan yana gelenlerde yüksek kimlikli bekler.
+- **Arayüz (`src/ui`):** Birim `u` dikeyde genişliğin %1,02'si (üst sınır 5,6). Üst çubuk tek sıra: avatar+seviye, altın, Görevler / Günlük Ödül / Ayarlar simge düğmeleri (etiketler erişilebilirlik adı olarak durur). Alt gezinme sabit: Fırın & Kafe, Kasaba (kasaba paneli), Keşif, Mağaza (market); eski "Sokak" sahnesi artık gezinmede yok, oyun kafede açılır. Paneller (`Sheet`) dikeyde gezinme çubuğunun üstünde alt sayfa olarak açılır (ekranın ~yarısı), kartların düğmeleri metnin altına tam genişlikte iner.
+- **Market / Kitapçı:** dükkân cephesi üstte büyük, liste alt sayfada. **Keşif:** harita üst yarıda, seçilen bölgeye kayarak odaklanır (`ExploreScene.xform`).
+- **Test:** `tests/portrait.test.js` (yerleşim sınırları, sıralar, koridor sütunları, kuyruk). Gerçek cihazda denenmedi.

@@ -10,9 +10,9 @@ import { drawIcon } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
-const STOPS = { oven: { x: 272, dir: -1 }, counter: { x: 420, dir: 1 }, counter2: { x: 560, dir: 1 }, coffee: { x: 1130, dir: 1 }, storage: { x: 1330, dir: 1 } };
+const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 140, dir: 1 }, counter2: { x: 500, dir: 1 }, coffee: { x: 770, dir: 1 }, storage: { x: 345, dir: 1 } };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
-const POST = { x: 655, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, clear of the queue spot (855) and of the oven and coffee machine
+const POST = { x: 190, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, in front of the prep counter, clear of the queue spots (352..652)
 const HAND_SEC = 1.1;                                       // time spent handing the order over
 
 class Walker {
@@ -38,7 +38,7 @@ export class StaffLayer {
     this.game = game;
     this.baker = new Walker(STOPS.counter.x, STAFF_LANE_Y, 70);
     this.baker.stop = 'counter';
-    this.waiter = new Walker(POST.x, POST.y, 70);
+    this.waiter = new Walker(POST.x, POST.y, 95);
     this.waiter.dir = 1;
     this.route = [];            // waypoints of the current service trip
     this.phase = 'post';        // post -> carry -> hand -> back
@@ -48,6 +48,7 @@ export class StaffLayer {
     this.tour = 0;
     this.bakerWait = 0;
     this.show = 0;              // the waiter fades in only while the cafe has guests
+    this.warp = (y) => 0;       // set by the scene (see InteriorScene.warpAt)
     this.cheer = 0;             // seconds left of the baker's little hop after a product comes out
     this.onServed = null;       // set by the scene: called with the table area when the waiter puts an order down
     game.on('complete', () => { this.cheer = 0.55; });
@@ -67,7 +68,7 @@ export class StaffLayer {
   updateBaker(dt) {
     const b = this.baker, busy = this.busyStop(), w = this.waiter;
     // walking behind the counters he waits while the waiter stands right in front of his path (no heads on top of each other), but never longer than 2 s
-    const wBlock = (x, y, dirx) => this.show > 0 && this.bakerWait < 2 && dirx && w.y < 560 && (w.x - x) * dirx > -30 && (w.x - x) * dirx < 100;
+    const wBlock = (x, y, dirx) => this.show > 0 && this.bakerWait < 2 && dirx && w.y < STAFF_LANE_Y + 70 && (w.x - x) * dirx > -30 && (w.x - x) * dirx < 100;
     const arrived = b.step(dt, (x, y, dirx) => { const hit = wBlock(x, y, dirx); if (hit) this.bakerWait += dt; return hit; });
     if (arrived) this.bakerWait = 0;
     if (arrived) { b.wait = 2 + Math.random() * 2.5; b.dir = STOPS[b.stop].dir; return; }
@@ -90,7 +91,6 @@ export class StaffLayer {
       const o = cafe.orderOf(c);
       if (!o || o.status !== 'open' || this.served.has(o.id)) continue;
       const gx = chairSpot(c.table).via;
-      if (gx < 380 && this.busyStop() === 'oven') continue;     // the baker works at the oven: don't walk through him, serve the others first
       return { c, o };
     }
     return null;
@@ -106,7 +106,7 @@ export class StaffLayer {
       const job = this.show >= 1 ? this.nextOrder() : null;
       if (job) {
         const a = AREAS.find((x) => x.id === `table${job.c.table + 1}`), spot = chairSpot(job.c.table);
-        const gx = Math.max(-50, Math.min(1400, spot.via)), gy = a.y + 55;
+        const gx = Math.max(-50, Math.min(950, spot.via)), gy = a.y + 55;
         this.job = { order: job.o.id, product: job.o.product, side: spot.side, gx, table: a.id };
         this.route = [{ x: gx, y: WAITER_LANE_Y }, { x: gx, y: gy }];
         this.carry = job.o.product; this.phase = 'pick'; this.pickT = 0; w.dir = 1;       // takes the order from the counter first (a short beat), then sets off
@@ -151,12 +151,15 @@ export class StaffLayer {
       const o = c.state === 'seated' ? cafe.orderOf(c) : null;
       if (!o || o.status !== 'open' || !this.served.has(o.id)) continue;
       const a = AREAS.find((x) => x.id === `table${c.table + 1}`);
+      ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35));
       this.plate(ctx, a.x + a.w / 2, a.y + a.h * 0.26);
       drawIcon(ctx, o.product, a.x + a.w / 2, a.y + a.h * 0.26 - 12, 34);
+      ctx.restore();
     }
     if (this.phase === 'hand' && this.carry) {                // the icon is carried from the hands toward the table while handing over
       const w = this.waiter, a = AREAS.find((x) => x.id === this.job.table), k = Math.min(1, this.handT / HAND_SEC);
-      drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, w.y - 108 + (a.y + a.h * 0.26 - 12 - (w.y - 108)) * k, 36);
+      const wy = this.warp(w.y), ty = this.warp(a.y + a.h - 35);
+      drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, wy + w.y - 108 + (ty + a.y + a.h * 0.26 - 12 - (wy + w.y - 108)) * k, 36);
     }
   }
 
