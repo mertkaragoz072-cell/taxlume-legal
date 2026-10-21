@@ -30,6 +30,8 @@ export class InteriorScene {
     this.t = 0;
     this.pressedId = null;
     this.selected = null;       // area id whose panel is open
+    this.spring = {};           // area id -> seconds since it was tapped (a springy squash-and-stretch)
+    this.sparks = [];           // little glittering bits that fly off a tapped piece of furniture
     this.pops = [];             // floating "+1 Ekmek" texts
     this.view = null;
     this.cam = { zoom: CAM.zoom, tx: 0, ty: 0, wl: 0, wr: 1400, wt: 0, wb: 790 };   // zoomed-out camera, see resize()
@@ -80,7 +82,15 @@ export class InteriorScene {
     return this.customers.hitTest(p.x - f, p.y) ?? AREAS.find((a) => { const q = p.x - this.shift(this.planeOf(a)); return q >= a.x && q <= a.x + a.w && p.y >= a.y && p.y <= a.y + a.h; })?.id ?? null;
   }
   snap() { this.customers.snap(); }
-  press(on, x, y) { this.pressedId = on ? this.hitTest(x, y) : null; }
+  press(on, x, y) {
+    const was = this.pressedId;
+    this.pressedId = on ? this.hitTest(x, y) : null;
+    const a = !on && was ? AREAS.find((q) => q.id === was) : null;
+    if (a) {                                                     // let go: the piece springs back and a few sparkles pop out of it
+      this.spring[a.id] = 0;
+      for (let i = 0; i < 9; i++) this.sparks.push({ x: a.x + a.w * (0.2 + Math.random() * 0.6), y: a.y + a.h * (0.3 + Math.random() * 0.4), vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
+    }
+  }
   select(id) { this.selected = id; }
 
   update(dt) {
@@ -91,6 +101,9 @@ export class InteriorScene {
     this.customers.update(dt);
     this.staff.update(dt);
     for (const m of this.motes) { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y < 100) { m.y = 740; m.x = -120 + ((m.x + 120) * 7.3) % 1620; } if (m.x > 1500) m.x -= 1620; }
+    for (const id in this.spring) { this.spring[id] += dt; if (this.spring[id] > 1) delete this.spring[id]; }
+    for (const p of this.sparks) { p.life -= dt * 1.6; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; }
+    this.sparks = this.sparks.filter((p) => p.life > 0);
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
   }
@@ -105,6 +118,7 @@ export class InteriorScene {
 
     this.cachedRoom(ctx, x0 - 60, w + 120, yTop, yBot, this.shift('wall'));   // wall and floor, cached (a little wider than the screen for the sway)
     ctx.save(); ctx.translate(this.shift('deco'), 0); this.decor(ctx); ctx.restore();
+    this.shifted(ctx, 'floor', () => this.rug(ctx));
     // Everything that stands on the floor is drawn back to front by the line it stands on (its base y), so people pass in front of
     // or behind counters and tables correctly. Ties keep the DRAW_ORDER of the furniture.
     const items = [];
@@ -127,6 +141,9 @@ export class InteriorScene {
       label(ctx, p.text, p.x - (p.icon ? 18 : 0), p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: PAL.cream, lw: 5 });
       if (p.icon) drawIcon(ctx, p.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
     }
+    ctx.globalCompositeOperation = 'lighter';
+    for (const p of this.sparks) { ctx.fillStyle = `rgba(255,222,150,${clamp(p.life, 0, 1) * 0.9})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, 7); ctx.fill(); }
+    ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
     textFloor.px = floorPx;
@@ -137,7 +154,11 @@ export class InteriorScene {
 
   drawArea(ctx, a) {
     ctx.save();
-    if (this.pressedId === a.id) { ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(0.99, 0.99); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h)); }
+    const sp = this.spring[a.id], b = sp === undefined ? 0 : Math.exp(-7 * sp) * Math.sin(sp * 22) * 0.04;   // damped bounce after a tap
+    if (this.pressedId === a.id || sp !== undefined) {
+      const px = this.pressedId === a.id ? 0.975 : 1 + b * -0.5, py = this.pressedId === a.id ? 0.96 : 1 + b;
+      ctx.translate(a.x + a.w / 2, a.y + a.h); ctx.scale(px, py); ctx.translate(-(a.x + a.w / 2), -(a.y + a.h));
+    }
     if (!this.areaAsset(ctx, a)) ART[a.id]?.(ctx, a, this);
     ctx.restore();
   }
@@ -236,7 +257,15 @@ export class InteriorScene {
     else ctx.drawImage(img, dx, dy, w, h);
     const busy = !!(a.station && this.game.jobs[a.station]);
     if (a.id === 'oven' && !busy) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.62, a.w * 0.42, '255,140,50', 0.09 + 0.03 * Math.sin(this.t * 3)); ctx.globalCompositeOperation = 'source-over'; }   // embers
-    if (a.id === 'coffee' && busy) steam(ctx, a.x + a.w * 0.5, dy + h * 0.42, this.t);
+    if (a.id === 'oven') {                                       // embers and a thin smoke rising from the oven
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 7; i++) {
+        const p = (((this.t * (busy ? 0.55 : 0.3) + i / 7) % 1) + 1) % 1, ex = a.x + a.w * (0.3 + 0.4 * ((i * 0.37) % 1)) + Math.sin(p * 6 + i) * 8;
+        ctx.fillStyle = `rgba(255,${150 + 60 * p | 0},70,${0.8 * (1 - p)})`; ctx.beginPath(); ctx.arc(ex, a.y + a.h * 0.5 - p * 90, 2.2 * (1 - p * 0.6), 0, 7); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (a.id === 'coffee') steam(ctx, a.x + a.w * 0.5, dy + h * 0.42, this.t);
     if (a.id === 'showcase') this.glint(ctx, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
     if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
@@ -332,6 +361,24 @@ export class InteriorScene {
     drawProp(ctx, 'pot_topiary', c.wl + 60, c.wb + 40, 150, { shade: false });
     drawProp(ctx, 'pot_topiary2', c.wr - 60, c.wb + 40, 150, { shade: false });
     if (blur) ctx.filter = 'none';
+  }
+
+  /** A woven rug lying flat on the floor in front of the counter: a perspective trapezoid with a border, stripes and fringe. */
+  rug(ctx) {
+    const cx = 720, y0 = 492, y1 = 590, w0 = 470, w1 = 560;
+    const quad = (k) => { const a0 = w0 / 2 - k, a1 = w1 / 2 - k * 1.1, ya = y0 + k * 0.35, yb = y1 - k * 0.35; poly(ctx, [[cx - a0, ya], [cx + a0, ya], [cx + a1, yb], [cx - a1, yb]]); };
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    quad(-6); ctx.fillStyle = 'rgba(70,48,32,.22)'; ctx.fill();                          // contact shadow
+    for (let i = 0; i < 9; i++) { const x = cx - w1 / 2 + 8 + i * (w1 - 16) / 8; ctx.strokeStyle = PAL.cream; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y1 - 1); ctx.lineTo(x - 3, y1 + 7); ctx.stroke(); }   // fringe
+    quad(0); ctx.fillStyle = PAL.terracotta; ctx.fill();
+    quad(9); ctx.fillStyle = PAL.cream; ctx.fill();
+    quad(15); ctx.fillStyle = PAL.honey; ctx.fill();
+    quad(30); ctx.fillStyle = PAL.terracotta; ctx.fill();
+    ctx.strokeStyle = 'rgba(245,230,200,.55)'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);   // stitched diamonds along the middle
+    for (let i = 0; i < 5; i++) { const x = cx - 180 + i * 90, y = (y0 + y1) / 2; poly(ctx, [[x - 28, y], [x, y - 14], [x + 28, y], [x, y + 14]]); ctx.stroke(); }
+    ctx.setLineDash([]);
+    ctx.restore();
   }
 
   /** A soft highlight sweeping across the showcase glass every few seconds. */

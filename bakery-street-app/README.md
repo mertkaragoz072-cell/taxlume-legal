@@ -147,3 +147,6 @@ oven, counter (dough and rolling pin on top), showcase (goods baked into the gla
 
 ### Karşıdan oturan misafirler
 `seat-<look>.webp` (460 px genişlik, masa üstü 268 px, masa merkezde) karşıdan görünümlü masa + sandalye + misafir resimleri: girl_basket, boy_cap, boy_backpack, grandma, oldman, girl_red. `seatRect` masa üstünü boş masayla aynı genişliğe (a.w × 0.58) ölçekler. boy_redcap ve girl_glasses için henüz oturan resim yok; yürüyen karakter olarak oturur. Çizimdeki şef ve garson oturan resimleri (görselde 5 ve 6. kare) kullanılmadı.
+
+### "Oyun hissi" geçişi
+Dokununca eşya yaylanır (sönümlü squash/stretch) ve kıvılcımlar saçar; fırında kor/ateş parçacıkları, kahve makinesinde sürekli buhar; zemine perspektifli dokuma halı (`rug`); karakterlerin gerçek adım karelerine hafif eğilme/sekme eklendi.

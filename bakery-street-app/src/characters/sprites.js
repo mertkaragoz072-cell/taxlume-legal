@@ -34,7 +34,7 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
     f0 = !staffMove ? (frame === 3 ? 1 : rest) : view === 'back' ? (carry ? 4 : 0) : view === 'side' ? (carry ? 5 : 0) : carry ? [2, 1, 3, 1][((Math.floor(t * fps + phase) % 4) + 4) % 4] : 0;
   }
   const f = m.staff ? f0 : m.frames === 1 ? 0 : m.views && frame !== null ? base : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
-  const walking = (m.frames === 1 && frame === null) || bounce || (staffMove && view !== 'front');   // views sheets have real steps, so only `bounce` (waiting in place) moves them          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
+  const walking = (m.frames === 1 && frame === null) || bounce || (staffMove && view !== 'front') || (m.views && frame === null);   // views sheets have real steps, so only `bounce` (waiting in place) moves them          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
   const s = SCALE * scale, dw = m.w * s, dh = m.h * s;
   if (shade) shadow(ctx, x, y + 1, dw * 0.28, 4.5, 0.32);
   ctx.save();
@@ -44,8 +44,9 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
   let lift = 0;
   if (walking) {
     const ph = t * fps * Math.PI + phase * 1.3, step = Math.abs(Math.sin(ph));            // two bounces per cycle, like footfalls
-    lift = step * 4.5 * s;
-    ctx.rotate(Math.sin(ph) * 0.045);                                                    // the body leans with each step
+    const amp = m.views ? 0.6 : 1;                         // real step frames need less faking
+    lift = step * 4.5 * s * amp;
+    ctx.rotate(Math.sin(ph) * 0.045 * amp);                                                    // the body leans with each step
     ctx.scale(1 + (0.5 - step) * 0.035, 1 - (0.5 - step) * 0.05);                         // squash on contact, stretch in the air
   }
   ctx.scale(dir, 1);
