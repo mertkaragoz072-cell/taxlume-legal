@@ -127,3 +127,7 @@ Chef: the "carrying fresh bread" picture (single frame, walks by bouncing). Wait
 ### New table and chairs (same style as the seated guests)
 
 `assets/game/interior/table.webp`, `chair-left.webp` (faces right, the guest's chair when it stands on the left), `chair-right.webp` (faces left) are the new separate pictures; `table-cup`, `table-cake` and `chair-back` are saved too (not used yet). `drawEmptyTable` scales them from the table width (460 of a 1000-unit set), puts the chairs behind the table on one baseline and gives each its own tilt and shadow. Occupied tables fade to the seated-guest picture (same wood tone and outline).
+
+### New kitchen equipment
+
+oven, counter (dough and rolling pin on top), showcase (goods baked into the glass, so stock shows as count chips on the wooden front), coffee machine, storage (crates and flour sacks) and the upgrades sign are the new pictures (background removed from the supplied sheet, 0.6x). Boxes in `AREAS` were resized to their aspect ratios, all counters standing on the same front line (y 490).

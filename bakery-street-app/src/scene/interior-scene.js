@@ -240,7 +240,7 @@ export class InteriorScene {
     if (a.id === 'showcase') this.glint(ctx, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
     if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
-    if (a.id === 'upgrades') upgradeCount(ctx, this, dx + w * 0.58, dy + h * 0.775);   // the sign's empty lower panel
+    if (a.id === 'upgrades') upgradeCount(ctx, this, dx + w * 0.6, dy + h * 0.865);   // the sign's empty lower panel
     return true;
   }
 
@@ -528,15 +528,16 @@ function upgradeCount(ctx, scene, x, y) {
 
 /** Stock icons in the showcase glass: one small pile per product in stock. */
 function showcaseStock(ctx, a, scene, art = null) {
-  // `art` = where the supplied showcase image was drawn: the items then stand on its lower shelf, the counts on the wooden front
-  const { x, y } = a;
-  const iy = art ? art.y + art.h * 0.43 : y + 78, ly = art ? art.y + art.h * 0.58 : y + 110, step = art ? art.w * 0.2 : 76;
-    let ix = art ? art.x + art.w * 0.17 : x + 28;
-    for (const [id, def] of Object.entries(scene.game.productsDef)) {
-      const n = scene.game.products[id];
-      if (n > 0) { if (!drawIcon(ctx, id, ix, iy, 46)) { ctx.font = '34px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, ix, iy); } label(ctx, `${n}`, ix, ly, { font: '700 14px sans-serif', fill: PAL.paper, lw: 4 });       }
-      ix += step;
-    }
+  // a stock chip per product in stock on the wooden front of the showcase (the glass already shows the goods)
+  const r = art ?? { x: a.x, y: a.y, w: a.w, h: a.h };
+  const items = Object.entries(scene.game.productsDef).filter(([id]) => scene.game.products[id] > 0);
+  const step = Math.min(70, (r.w * 0.82) / Math.max(1, items.length));
+  items.forEach(([id, def], i) => {
+    const cx = r.x + r.w / 2 + (i - (items.length - 1) / 2) * step, cy = r.y + r.h * 0.865;
+    rrect(ctx, cx - 30, cy - 14, 60, 28, 14); paint(ctx, 'rgba(70,48,32,.85)', 1.5, PAL.honeyLight);
+    if (!drawIcon(ctx, id, cx - 13, cy, 22)) label(ctx, def.icon, cx - 13, cy, { font: '15px sans-serif', fill: PAL.paper, lw: 0 });
+    label(ctx, `${scene.game.products[id]}`, cx + 13, cy + 1, { font: '700 14px sans-serif', fill: PAL.paper, lw: 0 });
+  });
 }
 
 function drawTable(ctx, a) {

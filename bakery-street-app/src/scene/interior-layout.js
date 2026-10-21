@@ -2,13 +2,13 @@
 // `panel` names the UI opened by the area; `station` ties a machine to the production jobs it runs.
 export const AREAS = [
   // against the back wall (kitchen side), left to right: oven, prep counter, showcase facing the guests, coffee station, storage
-  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 30, y: 205, w: 220, h: 220 },
-  { id: 'storage', label: 'Depo', panel: 'storage', x: 1230, y: 318, w: 96, h: 118 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1212, y: 140, w: 124, h: 152 },
+  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 30, y: 205, w: 222, h: 224 },
+  { id: 'storage', label: 'Depo', panel: 'storage', x: 1252, y: 306, w: 150, h: 127 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 1268, y: 130, w: 110, h: 150 },
   // the service line: counters stand in front of the kitchen floor, about 80 px apart
-  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 310, y: 368, w: 330, h: 122 },
-  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 720, y: 312, w: 270, h: 178 },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1060, y: 285, w: 150, h: 205 },
+  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 300, y: 232, w: 330, h: 258 },
+  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 715, y: 259, w: 300, h: 231 },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 1040, y: 259, w: 190, h: 231 },
   // dining area, in front, behind a wide open corridor: two groups either side of a central aisle (tables 3+1 left, 2+4 right), the outer
   // table of each group set back a little. The cafeTables upgrade opens them in this order (the two aisle tables first), so the room always
   // looks balanced. `side` is the chair the guest takes (-1 left, +1 right); each guest's access gap lies on that side.
