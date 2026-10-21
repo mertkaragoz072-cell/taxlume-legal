@@ -48,6 +48,9 @@ export class StaffLayer {
     this.tour = 0;
     this.bakerWait = 0;
     this.show = 0;              // the waiter fades in only while the cafe has guests
+    this.cheer = 0;             // seconds left of the baker's little hop after a product comes out
+    this.onServed = null;       // set by the scene: called with the table area when the waiter puts an order down
+    game.on('complete', () => { this.cheer = 0.55; });
     this.guests = () => [];     // set by the scene: where the guests stand (the waiter never walks into one)
   }
 
@@ -56,6 +59,7 @@ export class StaffLayer {
 
   update(dt) {
     this.updateBaker(dt);
+    this.cheer = Math.max(0, this.cheer - dt);
     this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length ? dt : -dt)));
     this.updateWaiter(dt);          // without the waiter sheet drawSprite simply draws nothing
   }
@@ -118,7 +122,7 @@ export class StaffLayer {
     if (this.phase === 'hand') {                              // standing beside the guest, offering the order
       w.t += dt; this.handT += dt;
       if (this.handT >= HAND_SEC) {
-        this.served.add(this.job.order); this.carry = null; this.phase = 'back';
+        this.served.add(this.job.order); this.carry = null; this.onServed?.(AREAS.find((x) => x.id === this.job.table)); this.phase = 'back';
         this.route = [{ x: this.job.gx, y: WAITER_LANE_Y }, { ...POST }]; w.target = this.route.shift();
       }
       return;
@@ -154,7 +158,8 @@ export class StaffLayer {
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, view: b.view, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
+    const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.04 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, view: b.view, bob: working ? 0.03 : 0.014, sway: working ? 0.035 : 0 });
   }
 
   drawWaiter(ctx) {

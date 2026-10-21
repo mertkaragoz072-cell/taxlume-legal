@@ -155,3 +155,9 @@ Not: `oldman`, `boy_redcap`, `girl_red`, `girl_glasses` da artık 6 karelik önd
 
 ### Yeni duvar dekoru (Komut 7)
 `window-shutter` (panjurlu kemerli pencere), `window-arch` (küçük kare pencere), `door`, `shelf`, `rack` (bakır tencereler) ve `lamp` (bakır tavan lambası) yeni resimlerle değişti; lambalar artık resimden çiziliyor. `menu.webp` (tebeşir menü tahtası) kaydedildi ama duvarda henüz yeri yok.
+
+### Görsel sunum geçişi (olaya bağlı animasyonlar)
+- `shadow()` artık yumuşak kenarlı (üç katmanlı elips); karakter ve mobilya zemin gölgeleri buna bağlı.
+- Üretim bitince: şef zıplar, istasyon yaylanır, kıvılcım çıkar (`complete` olayı). Sipariş masaya konunca: yeşil tik rozeti, kıvılcım ve oturan misafirin sevinç sıçraması (`StaffLayer.onServed`). Yerken hafif çiğneme, beklerken nefes alma titremesi.
+- Vitrin stok etiketleri yalnızca vitrine dokunulunca/seçilince görünür. Kuyruk noktaları 120 px aralıklı (karakterler üst üste binmez).
+- Eksik asset (raporlandı): oturma/kalkma geçiş kareleri, yemek yeme kareleri, şefin hazırlık/pişirme pozları, garsonun tepsi alma pozu, müşteri ayrılırken el sallama/memnuniyet pozu.

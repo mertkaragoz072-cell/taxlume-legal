@@ -30,6 +30,7 @@ export class InteriorScene {
     this.t = 0;
     this.pressedId = null;
     this.selected = null;       // area id whose panel is open
+    this.pulse = {};            // table id -> seconds since the order was put down (the seated guest bounces happily)
     this.spring = {};           // area id -> seconds since it was tapped (a springy squash-and-stretch)
     this.sparks = [];           // little glittering bits that fly off a tapped piece of furniture
     this.pops = [];             // floating "+1 Ekmek" texts
@@ -45,7 +46,14 @@ export class InteriorScene {
     game.on('complete', ({ station, product }) => {
       const area = AREAS.find((a) => a.station === station);
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: '+1', icon: product, life: 1 });
+      this.burst(area.x + area.w / 2, area.y + area.h * 0.35, 12);
+      this.spring[area.id] = 0;
     });
+    this.staff.onServed = (a) => {                          // the waiter put the order down: a tick and glitter on the table, the guest perks up
+      this.pops.push({ x: a.x + a.w / 2, y: a.y + a.h * 0.08, check: true, life: 0.8 });
+      this.burst(a.x + a.w / 2, a.y + a.h * 0.3, 7);
+      this.pulse[a.id] = 0;
+    };
   }
 
   /**
@@ -88,8 +96,12 @@ export class InteriorScene {
     const a = !on && was ? AREAS.find((q) => q.id === was) : null;
     if (a) {                                                     // let go: the piece springs back and a few sparkles pop out of it
       this.spring[a.id] = 0;
-      for (let i = 0; i < 9; i++) this.sparks.push({ x: a.x + a.w * (0.2 + Math.random() * 0.6), y: a.y + a.h * (0.3 + Math.random() * 0.4), vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
+      this.burst(a.x + a.w / 2, a.y + a.h * 0.5, 9, a.w * 0.3);
     }
+  }
+  /** `n` glittering bits flying up from (x, y). */
+  burst(x, y, n, spread = 40) {
+    for (let i = 0; i < n; i++) this.sparks.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread * 0.5, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
   }
   select(id) { this.selected = id; }
 
@@ -101,6 +113,7 @@ export class InteriorScene {
     this.customers.update(dt);
     this.staff.update(dt);
     for (const m of this.motes) { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y < 100) { m.y = 740; m.x = -120 + ((m.x + 120) * 7.3) % 1620; } if (m.x > 1500) m.x -= 1620; }
+    for (const id in this.pulse) { this.pulse[id] += dt; if (this.pulse[id] > 1.2) delete this.pulse[id]; }
     for (const id in this.spring) { this.spring[id] += dt; if (this.spring[id] > 1) delete this.spring[id]; }
     for (const p of this.sparks) { p.life -= dt * 1.6; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 180 * dt; }
     this.sparks = this.sparks.filter((p) => p.life > 0);
@@ -138,6 +151,13 @@ export class InteriorScene {
 
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
+      if (p.check) {                                             // a green tick badge (vector, no font needed)
+        const py = p.y - (1 - p.life) * 40;
+        ctx.beginPath(); ctx.arc(p.x, py, 17, 0, 7); paint(ctx, PAL.green, 3, PAL.paper);
+        ctx.strokeStyle = PAL.paper; ctx.lineWidth = 4.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.moveTo(p.x - 7, py + 1); ctx.lineTo(p.x - 2, py + 7); ctx.lineTo(p.x + 8, py - 6); ctx.stroke();
+        continue;
+      }
       label(ctx, p.text, p.x - (p.icon ? 18 : 0), p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: PAL.cream, lw: 5 });
       if (p.icon) drawIcon(ctx, p.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
     }
@@ -177,7 +197,12 @@ export class InteriorScene {
       this.drawEmptyTable(ctx, a, tableImg, dx, dy, w, h, tw, s, null);
       ctx.globalAlpha = v.sit;
       this.castShadow(ctx, `seat-${v.look}`, seat, r.x, r.y, r.w, r.h);
-      if (r.flip) { ctx.save(); ctx.translate(r.x + r.w, 0); ctx.scale(-1, 1); ctx.drawImage(seat, 0, r.y, r.w, r.h); ctx.restore(); } else ctx.drawImage(seat, r.x, r.y, r.w, r.h);
+      const ord = owner && this.game.cafe.orderOf(owner), eating = !!ord && this.staff.served.has(ord.id), pu = this.pulse[a.id];
+      const bob = pu !== undefined ? Math.exp(-6 * pu) * Math.sin(pu * 20) * 0.05 : eating ? Math.sin(this.t * 6 + i) * 0.01 : Math.sin(this.t * 1.7 + i * 2) * 0.004;   // delighted hop on delivery, chewing while eating, breathing while waiting
+      ctx.save(); ctx.translate(r.x + r.w / 2, r.y + r.h); ctx.scale(1 - bob * 0.4, 1 + bob);
+      if (r.flip) ctx.scale(-1, 1);
+      ctx.drawImage(seat, -r.w / 2, -r.h, r.w, r.h);
+      ctx.restore();
       ctx.globalAlpha = 1;
       return;
     }
@@ -589,6 +614,7 @@ function upgradeCount(ctx, scene, x, y) {
 /** Stock icons in the showcase glass: one small pile per product in stock. */
 function showcaseStock(ctx, a, scene, art = null) {
   // a stock chip per product in stock on the wooden front of the showcase (the glass already shows the goods)
+  if (scene.selected !== 'showcase' && scene.pressedId !== 'showcase') return;     // stock chips only while the showcase is touched or open, so the room stays calm
   const r = art ?? { x: a.x, y: a.y, w: a.w, h: a.h };
   const items = Object.entries(scene.game.productsDef).filter(([id]) => scene.game.products[id] > 0);
   const step = Math.min(70, (r.w * 0.82) / Math.max(1, items.length));

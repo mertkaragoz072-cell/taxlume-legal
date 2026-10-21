@@ -47,10 +47,13 @@ export function paint(ctx, fill, lw = 2.5, stroke = INK) {
 }
 
 export function shadow(ctx, x, y, rx, ry, a = 0.28) {
-  ctx.fillStyle = `rgba(70,48,32,${a})`;
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
+  for (let i = 0; i < 3; i++) {          // three stacked ellipses fake a soft edge (cheaper than a blur)
+    const k = 1.18 - i * 0.18;
+    ctx.fillStyle = `rgba(70,48,32,${a * (i === 0 ? 0.35 : 0.4)})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx * k, ry * k, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 export function glowAt(ctx, x, y, r, rgb, a) {
