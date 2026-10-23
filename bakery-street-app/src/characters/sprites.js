@@ -18,6 +18,7 @@ export const SHEETS = {
   chef: { frames: 54, cols: 10, w: 132, h: 167, crew: 'chef', side: 15, knead: 37 },   // 0-8 front walk with the basket (0 also stands), 9-14 joy hop, 15-36 side walk with the basket (22-frame loop), 37-53 kneading dough (17-frame loop, front view)   // 0-8 front walk with the basket (0 also stands), 9-14 joy hop, 15-36 side walk with the basket (22-frame loop, faces right)
   waiter: { frames: 56, cols: 10, w: 137, h: 164, crew: 'waiter', side: 24, sideEmpty: 34 },   // 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk (front), 24-33 tray walk sideways (10-frame loop), 34-55 empty-handed walk sideways (22-frame loop); side frames face right
   chef_oven: { frames: 30, cols: 6, w: 384, h: 179, once: true },   // the chef puts the bread in the oven: one pass through 30 frames (progress = `hand`, 0..1), faces right, head on the centre line
+  chef_coffee: { frames: 24, cols: 6, w: 179, h: 168, once: true },   // the chef makes a coffee: reaches for the lever, takes the cup, sips (one pass, progress = `hand`), faces right, head on the centre line
   waiter_hand: { frames: 24, cols: 6, w: 205, h: 163, once: true },   // handing the tray over: one pass through 24 frames (progress = `hand`, 0..1), faces right   // 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk (front), 24-33 tray walk sideways (10-frame loop), 34-55 empty-handed walk sideways (22-frame loop), 56-79 handing the tray over (one shot, 24 frames); side and hand frames face right   // 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk (front), 24-33 tray walk sideways (10-frame loop), 34-55 empty-handed walk sideways (22-frame loop); side frames face right   // 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk, 24-33 tray walk sideways (10-frame loop, faces right)
 };
 
@@ -27,6 +28,7 @@ const SCALE = 0.9; // native sprite px -> design px (a street character ends up 
 export const hasSitFrames = (id) => SHEETS[id]?.eat !== undefined;
 /** True when the waiter has the hand-over frames (the tray with cup and cake is then in the picture, so no icon flies to the table). */
 export const hasOvenFrames = () => !!SHEETS.chef_oven && !!getImage('char-chef_oven');
+export const hasCoffeeFrames = () => !!SHEETS.chef_coffee && !!getImage('char-chef_coffee');
 export const hasHandFrames = () => !!SHEETS.waiter_hand && !!getImage('char-waiter_hand');
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 

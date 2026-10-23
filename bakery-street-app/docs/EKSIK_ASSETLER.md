@@ -13,7 +13,8 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | Garson: boş elle yürüme | HAZIR (E3; 22 karelik döngü, son satırda numara kalıntısı olduğu için 3.-24. kareler alındı) |
 | Şef: hamur yoğurma (E4) | HAZIR (17 karelik döngü) |
 | Şef: fırına ürün koyma (E5) | HAZIR (30 kare, tek seferlik) |
-| Şef: kahve hazırlama (E6), sevinç sıçraması (E7) | EKSİK |
+| Şef: kahve hazırlama (E6) | HAZIR (24 kare, tek seferlik; sayfanın son satırında numaralar kareye yapışık olduğu için 25-30. kareler alınmadı) |
+| Şef: sevinç sıçraması (E7) | EKSİK |
 | Garson: tepsiyi masaya uzatma | HAZIR (E8; 24 kare, tek seferlik) |
 | 8 müşteri kedi: oturup yeme | 7/8 HAZIR. EKSİK: yalnız siyah kırmızı atkılı kedi (E9) |
 | Ürün, malzeme ve durum ikonları (E11) | HAZIR, oyunda |
