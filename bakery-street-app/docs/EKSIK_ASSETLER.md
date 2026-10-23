@@ -10,7 +10,7 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | 8 müşteri kedi: 30 karelik yürüme + önden/arkadan | HAZIR, oyunda |
 | Şef: sepetle yürüme (22 kare) | HAZIR (E1; sayfanın son 6 karesinde numaralar ayaklara binmişti, kullanılmadı) |
 | Garson: tepsiyle yürüme | HAZIR ama kısa (E2; sayfanın son satırında ayaklar kırpılmıştı, yalnız 10 karelik temiz bir döngü alındı; daha uzun döngü için sayfayı alt kenar boşluğuyla yeniden ürettir) |
-| Garson: boş elle yürüme | EKSİK (E3) |
+| Garson: boş elle yürüme | HAZIR (E3; 22 karelik döngü, son satırda numara kalıntısı olduğu için 3.-24. kareler alındı) |
 | Şef: hamur, fırın, kahve, sevinç | EKSİK (E4–E7) |
 | Garson: tepsiyi masaya uzatma | EKSİK (E8) |
 | 8 müşteri kedi: oturup yeme | 7/8 HAZIR. EKSİK: yalnız siyah kırmızı atkılı kedi (E9) |

@@ -217,3 +217,4 @@ Oturup yeme sayfaları artık 7 kedi için bağlı (yalnız siyah atkılı `boy_
 
 ### Garson kedi: tepsiyle yandan yürüme (E2)
 `waiter.webp` 34 kareli ızgara: 0-7 tepsiyle önden, 8-15 tepsiyle arkadan, 16-23 boş elle, 24-33 tepsiyle yandan (10 karelik döngü, 12 kare/sn, sağa bakar). Sayfanın 25-30. karelerinde ayaklar kırpıldığı ve uzun döngüler kapanmadığı için sayfanın 8-17. kareleri alındı. Tepsili + yatay yürüyüşte yan kareler, diğerlerinde eski kareler oynar.
+`waiter.webp` artık 56 kare: 34-55 boş elle yandan yürüme (22 karelik döngü, 22 kare/sn). Garson tepsisizken yatay yürüyüşte bu kareleri, dikeyde eski önden boş el karelerini oynar.
