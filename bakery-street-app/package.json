@@ -33,6 +33,7 @@
     "gen:assets": "node scripts/gen-assets.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.js",
-    "web:wasm": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/"
+    "web:wasm": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/",
+    "postinstall": "node scripts/gen-assets.mjs"
   }
 }

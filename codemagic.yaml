@@ -1,0 +1,93 @@
+# Fırın & Kafe — iOS (TestFlight) derlemesi. Uygulama bakery-street-app/ klasöründe.
+# Kurulum ve ilk çalıştırma: bakery-street-app/docs/CODEMAGIC.md
+#
+# Golden Town iş akışının (branch town-economy) aynı düzeni: Expo prebuild -> pod install -> imzalama -> IPA -> TestFlight'a yükle.
+# Elle başlatılır (triggering yok): bir derleme dakikası para tutar, oyun hazır olunca çıkar.
+#
+# Codemagic'te zaten kurulu olanlar (diğer oyunlarla ortak):
+#   - Integrations -> App Store Connect: `taxlume-admin` (hesap genelinde API anahtarı, bu bundle id'yi de kapsar)
+#   - Environment variables -> group `ios_signing`: CERTIFICATE_PRIVATE_KEY
+# Yeni olan tek şey: App Store Connect'te "Fırın & Kafe" uygulama kaydı (bundle id com.firinkafe.app).
+
+workflows:
+  firin-kafe-ios:
+    name: Fırın & Kafe — iOS (IPA for TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: bakery-street-app
+
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/Library/Caches/CocoaPods
+
+    integrations:
+      app_store_connect: taxlume-admin
+
+    environment:
+      groups:
+        - ios_signing # CERTIFICATE_PRIVATE_KEY
+      node: 22
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: com.firinkafe.app
+
+    scripts:
+      # postinstall src/generated/assetModules.ts dosyasını üretir (git'te yok, resim listesi)
+      - name: Install dependencies
+        script: npm ci
+
+      # Saniyeler içinde biter; yarım saatlik bir derlemenin sonunda değil başında hata verir.
+      - name: Typecheck and test
+        script: |
+          npm run typecheck
+          npm test
+
+      # Codemagic'in BUILD_NUMBER değişkeni app.json'a yazılır (App Store aynı numarayı iki kez kabul etmez).
+      - name: Stamp the build number
+        script: node scripts/ci/set-build-number.js
+
+      - name: Generate the native project
+        script: npx expo prebuild --platform ios --no-install --clean
+
+      - name: Install pods
+        script: cd ios && pod install
+
+      # Dağıtım sertifikasını ve App Store profilini yoksa oluşturur (--create), bundle id'yi de kaydeder.
+      - name: Set up code signing
+        script: |
+          set -e
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+          if ! grep -q "$BUNDLE_ID" "$HOME/export_options.plist" 2>/dev/null; then
+            echo "No provisioning profile for $BUNDLE_ID reached the export options." >&2
+            echo "Read the fetch-signing-files output above for the reason." >&2
+            exit 1
+          fi
+          echo "signing ready for $BUNDLE_ID"
+
+      # Proje adı app.json'daki addan türetilir ("Fırın & Kafe" -> FrnKafe), o yüzden sabit yazmak yerine bulunur.
+      - name: Archive and export
+        script: |
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "workspace=$WORKSPACE scheme=$SCHEME"
+          xcode-project build-ipa --workspace "$WORKSPACE" --scheme "$SCHEME"
+
+    artifacts:
+      - $CM_BUILD_DIR/bakery-street-app/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $CM_BUILD_DIR/bakery-street-app/build/ios/xcarchive/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Yalnızca yükle: build işlendikten sonra iç testçiler TestFlight'tan kurar (inceleme gerekmez).
+        submit_to_testflight: false
+        submit_to_app_store: false
