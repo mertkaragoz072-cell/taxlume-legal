@@ -10,7 +10,7 @@ import { drawIcon } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
-const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 140, dir: 1 }, counter2: { x: 500, dir: 1 }, coffee: { x: 770, dir: 1 }, storage: { x: 345, dir: 1 } };
+const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 160, dir: 1 }, counter2: { x: 468, dir: 1 }, coffee: { x: 760, dir: 1 }, storage: { x: 352, dir: 1 } };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 const POST = { x: 190, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, in front of the prep counter, clear of the queue spots (352..652)
 const HAND_SEC = 1.1;                                       // time spent handing the order over

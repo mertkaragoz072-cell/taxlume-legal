@@ -2,13 +2,13 @@
 // `panel` names the UI opened by the area; `station` ties a machine to the production jobs it runs.
 export const AREAS = [
   // PORTRAIT cafe, a 900-unit-wide world (see CAM). Back wall, kitchen row against it (oven, storage, the upgrade sign on the wall):
-  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 18, y: 288, w: 222, h: 224 },
-  { id: 'storage', label: 'Depo', panel: 'storage', x: 270, y: 385, w: 150, h: 127 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 690, y: 282, w: 118, h: 148 },
+  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 18, y: 248, w: 222, h: 222 },
+  { id: 'storage', label: 'Depo', panel: 'storage', x: 262, y: 328, w: 180, h: 142 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 690, y: 282, w: 130, h: 131 },
   // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station
-  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 14, y: 442, w: 330, h: 258 },
-  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 352, y: 469, w: 300, h: 231 },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 660, y: 471, w: 215, h: 229 },
+  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 10, y: 462, w: 300, h: 238 },
+  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 318, y: 474, w: 300, h: 226 },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 626, y: 491, w: 270, h: 209 },
   // dining area, in front: two columns either side of a central aisle (tables 1 and 3 left, 2 and 4 right), the second row set back from
   // the edge a little. The cafeTables upgrade opens them in this order (row one first). `side` is the chair the guest takes: always the one
   // facing the aisle (-1 left, +1 right), so each guest's access gap lies in the aisle.
@@ -76,7 +76,7 @@ export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
 /** Waiting spots in front of the showcase (centre 502), one body width apart. */
-export const QUEUE_SPOTS = [{ x: 502, y: QUEUE_Y }, { x: 352, y: QUEUE_Y }, { x: 652, y: QUEUE_Y }];
+export const QUEUE_SPOTS = [{ x: 468, y: QUEUE_Y }, { x: 328, y: QUEUE_Y }, { x: 608, y: QUEUE_Y }];
 
 /** Camera: the interior is drawn zoomed out (see InteriorScene), centred on this world x so the 30..1414 content has air on both sides. */
 /**
