@@ -191,3 +191,6 @@ Oyun artık yalnızca dikey çalışır (`app.json: orientation: portrait`, `Scr
 
 ### Kedi müşteriler
 Sekiz müşteri artık kedi: 20 karelik şeritler (0-7 önden yürüme, 8-15 arkadan yürüme, 16-19 duruş/nefes), ~12 kare/sn oynar (`cat: true` in `sprites.js`). Eşleşme: boy_backpack=siyah-beyaz, girl_basket=yeşil bereli krem, oldman=şapkalı siyah, boy_cap=gri tekir, girl_glasses=kahverengi tekir, girl_red=fiyonklu turuncu, grandma=üç renkli, boy_redcap=siyah atkılı. Oturan kedi resimleri (Komut 5) gelene kadar masada yürüyen kedi sprite'ı belden aşağısı kesilerek oturur; eski insan `seat-*` resimleri devre dışı.
+
+### Çalışan kediler
+`chef.webp` (15 kare: 0-8 sepetle yürüme/duruş, 9-14 sevinç sıçraması) ve `waiter.webp` (24 kare: 0-7 tepsiyle önden, 8-15 tepsiyle arkadan, 16-23 boş elle yürüme) turuncu şef kedi ve yeşil önlüklü garson kedi. Kullanılmayan kareler (hamur yoğurma, fırın küreği, kahve hazırlama, tepsi uzatma) için sprite desteği yok; ileride istasyon animasyonu olarak bağlanabilir.

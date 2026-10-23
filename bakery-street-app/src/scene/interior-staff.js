@@ -167,7 +167,7 @@ export class StaffLayer {
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, view: b.view, bob: working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, view: b.view, bob: working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }
 
   drawWaiter(ctx) {
@@ -176,7 +176,7 @@ export class StaffLayer {
     ctx.globalAlpha = this.show;
     // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
     const tray = !!this.carry && this.phase !== 'hand';
-    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : tray ? 3 : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
+    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
     // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
     ctx.globalAlpha = 1;
   }
