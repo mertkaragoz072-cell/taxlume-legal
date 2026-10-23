@@ -63,10 +63,10 @@ export function GameView({ world, sceneId, active, pixelRatio, onPress, onLook }
         const ctx = new Ctx2D(canvas, { width: Math.ceil(view.W * view.dpr), height: Math.ceil(view.H * view.dpr) });
         scene.render(ctx);
         setPicture(rec.finishRecordingAsPicture());
-        // adaptive quality: if drawing alone takes too long for a long while, cap at 30 fps first, then render at lower resolution
+        // adaptive quality: the target is 60 fps (a frame has ~16 ms); if drawing alone takes over 14 ms for a long while, cap at ~30 fps first, then render at lower resolution
         const cost = Date.now() - t0;
         if (Platform.OS === "web") { const w = window as any; (w.__cost ??= []).push(cost); if (w.__cost.length > 200) w.__cost.shift(); }   // development measurements only
-        if (cost > 22) { slow += 1; fast = 0; } else { fast += 1; if (fast > 120) slow = 0; }
+        if (cost > 14) { slow += 1; fast = 0; } else { fast += 1; if (fast > 120) slow = 0; }
         if (slow === 90 && minGap === 0) { minGap = 30; slow = 0; }
         else if (slow === 90 && quality > 0.6) { setQuality((q) => Math.max(0.6, q - 0.2)); slow = 0; }
       } catch (e: any) { console.warn("[frame]", String(e), String(e?.stack ?? "").split("\n").slice(0, 4).join(" | ")); }
