@@ -182,3 +182,6 @@ Oyun artık yalnızca dikey çalışır (`app.json: orientation: portrait`, `Scr
 - **Arayüz (`src/ui`):** Birim `u` dikeyde genişliğin %1,02'si (üst sınır 5,6). Üst çubuk tek sıra: avatar+seviye, altın, Görevler / Günlük Ödül / Ayarlar simge düğmeleri (etiketler erişilebilirlik adı olarak durur). Alt gezinme sabit: Fırın & Kafe, Kasaba (kasaba paneli), Keşif, Mağaza (market); eski "Sokak" sahnesi artık gezinmede yok, oyun kafede açılır. Paneller (`Sheet`) dikeyde gezinme çubuğunun üstünde alt sayfa olarak açılır (ekranın ~yarısı), kartların düğmeleri metnin altına tam genişlikte iner.
 - **Market / Kitapçı:** dükkân cephesi üstte büyük, liste alt sayfada. **Keşif:** harita üst yarıda, seçilen bölgeye kayarak odaklanır (`ExploreScene.xform`).
 - **Test:** `tests/portrait.test.js` (yerleşim sınırları, sıralar, koridor sütunları, kuyruk). Gerçek cihazda denenmedi.
+
+### Kedi kafe odası
+`assets/game/interior/room.webp` artık 1024×1536 dikey "kedi kafe" boş odası (referans görsele göre); duvar/zemin birleşimi y=452'de, dünyada `FLOOR_Y = 470`. Odanın kendi lambaları, rafları, tebeşir tahtası, penceresi ve kapısı var; eski duvar süsleri (raf, pencere, tencere askısı, lambalar) ve ön plan saksıları çizilmiyor. Yükseltme tabelası (690, 282) konumuna alındı. Sıradaki: referanstaki açıya (yukarıdan ~45°) uygun ekipman, masa, kedi karakter ve arayüz resimleri.

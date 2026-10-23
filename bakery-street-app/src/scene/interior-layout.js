@@ -4,7 +4,7 @@ export const AREAS = [
   // PORTRAIT cafe, a 900-unit-wide world (see CAM). Back wall, kitchen row against it (oven, storage, the upgrade sign on the wall):
   { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 18, y: 288, w: 222, h: 224 },
   { id: 'storage', label: 'Depo', panel: 'storage', x: 270, y: 385, w: 150, h: 127 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 760, y: 200, w: 118, h: 148 },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 690, y: 282, w: 118, h: 148 },
   // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station
   { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 14, y: 442, w: 330, h: 258 },
   { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 352, y: 469, w: 300, h: 231 },
@@ -38,7 +38,7 @@ export const LEAVE_LINE_Y = 822;       // lane for guests walking right (to the 
 export const QUEUE_Y = 770;            // guests waiting at the showcase stand a row behind the lane, so walkers pass in front of them
 export const WAITER_LANE_Y = 735;      // the waiter's feet, right in front of the counters
 export const WALL_Y = 130;              // top of the back wall (below the HUD)
-export const FLOOR_Y = 516;            // where the back wall meets the floor
+export const FLOOR_Y = 470;            // where the back wall meets the floor
 
 export const areaAt = (x, y) => AREAS.find((a) => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h) ?? null;
 

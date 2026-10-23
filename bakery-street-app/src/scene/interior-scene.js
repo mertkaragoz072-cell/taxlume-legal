@@ -19,7 +19,7 @@ const CHAIRS = [
   [{ dx: -10, dy: 0, rot: 0.05 }, { dx: 4, dy: 4, rot: 0.02 }],
   [{ dx: 2, dy: 3, rot: -0.02 }, { dx: 11, dy: -3, rot: -0.04 }],
 ];
-const LAMPS = [130, 465, 735];
+const LAMPS = [240, 662];
 const FONT = '700 22px "Trebuchet MS", "Segoe UI", sans-serif';
 
 export class InteriorScene {
@@ -324,20 +324,10 @@ export class InteriorScene {
         else { rrect(ctx, x, y - 20, 22, 20, 4); paint(ctx, PAL.honey, 2); }
       }
     }
-    // hanging copper lamps with a warm pool of light on the wall
+    // the room picture has its own lamps (at x 240 and 662); only their warm glow is added here
     for (const lx of LAMPS) {
-      ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, deco.beamBottom ?? this.cam.wt - 20); ctx.lineTo(lx, 128); ctx.stroke();
-      const lamp = getImage('int-lamp');
-      if (lamp) { const lh = 70, lw = lamp.naturalWidth * lh / lamp.naturalHeight; ctx.drawImage(lamp, lx - lw / 2, 112, lw, lh); }     // supplied copper lamp (its chain starts at the cord)
-      else {
-        poly(ctx, [[lx - 26, 156], [lx + 26, 156], [lx + 14, 128], [lx - 14, 128]]); paint(ctx, PAL.honeyDark, 2.5);
-        ctx.beginPath(); ctx.arc(lx, 158, 7, 0, 7); ctx.fillStyle = PAL.vanilla; ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 175, 120, '255,190,90', 0.16 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, lx, 215, 120, '255,190,90', 0.14 + 0.03 * Math.sin(this.t * 2 + lx)); ctx.globalCompositeOperation = 'source-over';
     }
-    // ceiling shade, so the wall gets darker toward the top like a lit room (starts above the screen so there is no visible edge)
-    ctx.fillStyle = vgrad(ctx, -600, 250, [[0, 'rgba(121,82,56,.3)'], [0.7, 'rgba(121,82,56,.16)'], [1, 'rgba(121,82,56,0)']]);
-    ctx.fillRect(this.cam.wl - 100, -600, this.cam.wr - this.cam.wl + 200, 850);
     // soft floor shadow where the wall meets the kitchen floor
     ctx.fillStyle = vgrad(ctx, wall, wall + 30, [[0, 'rgba(70,48,32,.28)'], [1, 'rgba(70,48,32,0)']]);
     ctx.fillRect(this.cam.wl - 100, wall, this.cam.wr - this.cam.wl + 200, 30);
@@ -363,9 +353,7 @@ export class InteriorScene {
       ctx.fillStyle = vgrad(ctx, top + h, top + h + 26, [[0, 'rgba(70,48,32,.22)'], [1, 'rgba(70,48,32,0)']]); ctx.fillRect(c.wl - 20, top + h, c.wr - c.wl + 40, 26);
     }
     // heights follow the people (a guest is ~250 px): door ~1.0x, windows 0.65-0.75x with their sills on one line (y ~290), even ~90 px gaps
-    put('rack', 130, 290, 105);
-    put('shelf', 345, 372, 165);
-    put('window-shutter', 585, 400, 178);
+    // (the room picture carries its own shelves, windows, chalkboard and door)
     return { beamBottom: beam ? 86 : null };
   }
 
@@ -378,7 +366,7 @@ export class InteriorScene {
       glowAt(ctx, lx, 690, 210, '255,190,100', 0.075 * f);
     }
     if (getImage('int-window-arch')) {                         // daylight falling from the two windows onto the wall and floor
-      for (const [x, top, w] of [[585, 225, 130]]) {
+      for (const [x, top, w] of []) {
         const sway = 4 * Math.sin(this.t * 0.4 + x), g = ctx.createLinearGradient(0, top, 0, 560);
         g.addColorStop(0, 'rgba(255,238,190,.08)'); g.addColorStop(1, 'rgba(255,238,190,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - w / 2, top); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 - 150 + sway, 560); ctx.lineTo(x - w / 2 - 150 + sway, 560); ctx.closePath(); ctx.fill();
@@ -397,9 +385,6 @@ export class InteriorScene {
     const c = this.cam, blur = 'filter' in ctx;                // depth of field: the nearest plants are soft (skipped where unsupported)
     // (the corner plants used to be blurred like a camera's depth of field; they are crisp now)
     if (false && blur) ctx.filter = 'blur(2.5px)';
-    const by = c.wb - 150;                                    // above the navigation bar, in the open aisle at the front (the tables stand at the sides)
-    drawProp(ctx, 'pot_topiary', 330, by, 150, { shade: false });
-    drawProp(ctx, 'pot_topiary2', 570, by, 150, { shade: false });
     if (blur) ctx.filter = 'none';
   }
 
@@ -491,13 +476,13 @@ export class InteriorScene {
 
   /** The supplied empty room, scaled to cover the visible world with its wall/floor join on FLOOR_Y; dark wood fills any spare edge. */
   shell(g, x0, w, yTop, yBot) {
-    const img = getImage('int-room'), iw0 = img.naturalWidth, ih0 = img.naturalHeight;
-    // the picture's wall/floor join (48.4% of its height) is placed on FLOOR_Y; the wall is shown at that scale, centred on the world (x 450)
-    const ks = (FLOOR_Y / (ih0 * ROOM.join)), x = 450 - (iw0 / 2) * ks, joinSrc = ih0 * ROOM.join;
+    // the cat-cafe room (1024 x 1536): its wall/floor join (y 452 in the picture) sits on FLOOR_Y; the wall is shown 1:1 sideways (cropped a little at 9:16),
+    // the plain tile floor is stretched down to the bottom of the screen
+    const img = getImage('int-room'), iw0 = img.naturalWidth, ih0 = img.naturalHeight, JOIN = 452;
+    const sx = Math.max(1, (w + 20) / iw0), x = 450 - (iw0 / 2) * sx;
     g.fillStyle = PAL.honeyDark; g.fillRect(x0, yTop, w, yBot - yTop);
-    g.drawImage(img, 0, 0, iw0, joinSrc + 1, x, 0, iw0 * ks, FLOOR_Y + ks);                                       // wall with beams and wainscot
-    g.drawImage(img, 0, joinSrc, iw0, ih0 - joinSrc, x, FLOOR_Y, iw0 * ks, Math.max(yBot, 1600) - FLOOR_Y + 20); // floor, stretched down the long room
-    g.fillStyle = vgrad(g, FLOOR_Y, FLOOR_Y + 60, [[0, 'rgba(70,48,32,.35)'], [1, 'rgba(70,48,32,0)']]); g.fillRect(x0, FLOOR_Y, w, 60);   // wall meets floor
+    g.drawImage(img, 0, 0, iw0, JOIN + 1, x, 0, iw0 * sx, FLOOR_Y + 1);                                              // wall
+    g.drawImage(img, 0, JOIN, iw0, ih0 - JOIN, x, FLOOR_Y, iw0 * sx, Math.max(yBot, 1600) - FLOOR_Y + 20);         // floor
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */
