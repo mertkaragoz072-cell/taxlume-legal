@@ -147,7 +147,7 @@ export class CustomerLayer {
   /** The picture of this guest seated at a table (chair + guest + table), when it exists. */
   seatArt(v, c) { return c && c.table != null ? getImage(`seat-${v.look}`) : null; }
 
-  drawY(v, c) { return c && c.table != null && v.sit > 0 && !this.seatArt(v, c) ? v.y + (sitFeetY(c.table) - v.y) * v.sit : v.y; }
+  drawY(v, c) { return c && c.table != null && v.sit > 0 && !this.seatArt(v, c) ? v.y + (sitFeetY(c.table) - 62 - v.y) * v.sit : v.y; }     // a cat sits whole: feet just below the cushion, nothing is cut off
 
   /** Depth-sorted pieces for the scene: one { y, draw } per guest (the scene sorts them with the furniture). */
   items(t) {
@@ -161,10 +161,8 @@ export class CustomerLayer {
           ctx.globalAlpha = clamp((EXIT.y - v.y) / 60, 0, 1);       // fades in and out at the bottom edge
           const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
-          if (seated) { ctx.save(); ctx.beginPath(); ctx.rect(v.x - 160, y - 420, 320, sitCutY(c.table) - (y - 420)); ctx.clip(); }
           const hold = v.moving && !v.pause;
-          drawSprite(ctx, v.look, v.x, y, t, { dir: v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
-          if (seated) ctx.restore();
+          drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
           ctx.globalAlpha = 1;
         },
       });
