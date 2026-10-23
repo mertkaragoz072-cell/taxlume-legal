@@ -7,7 +7,7 @@ import { shadow } from '../util.js';
 export const SHEETS = {
   boy_backpack: { frames: 50, cols: 10, w: 121, h: 131, cat: true, side: 20 },
   girl_basket: { frames: 50, cols: 10, w: 112, h: 137, cat: true, side: 20 },
-  oldman: { frames: 20, w: 88, h: 130, cat: true },
+  oldman: { frames: 50, cols: 10, w: 116, h: 145, cat: true, side: 20 },
   boy_cap: { frames: 20, w: 93, h: 130, cat: true },
   boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
   girl_glasses: { frames: 20, w: 87, h: 130, cat: true },
