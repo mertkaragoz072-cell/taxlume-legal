@@ -15,7 +15,7 @@ export const SHEETS = {
   grandma: { frames: 80, cols: 10, w: 119, h: 136, cat: true, side: 20, eat: 50 },
   // staff: true = chef and waiter sheet: 0 stand, 1 stand carrying, 2-3 walk carrying (front), 4 back, 5 side (carrying)
   // crew: true = cat staff sheets. chef: 0-8 walk holding the basket (0 is also the stand), 9-14 joy hop. waiter: 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk
-  chef: { frames: 15, w: 123, h: 166, crew: 'chef' },
+  chef: { frames: 37, cols: 10, w: 132, h: 166, crew: 'chef', side: 15 },   // 0-8 front walk with the basket (0 also stands), 9-14 joy hop, 15-36 side walk with the basket (22-frame loop, faces right)
   waiter: { frames: 24, w: 97, h: 155, crew: 'waiter' },
 };
 
@@ -32,7 +32,7 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
   const base = m.views && back ? 3 : 0;   // sheets with views: frames 3-5 show the character from behind
   const seq = m.views ? [1, 0, 2, 0].map((i) => base + i) : m.cycle ?? Array.from({ length: m.frames }, (_, i) => i);
   let crewFrame = null;
-  if (m.crew === 'chef') crewFrame = joy ? 9 + (Math.floor(t * 12) % 6) : frame === null ? Math.floor(t * 12 + phase) % 9 : 0;
+  if (m.crew === 'chef') crewFrame = joy ? 9 + (Math.floor(t * 12) % 6) : frame === null ? (view === 'side' ? m.side + (Math.floor(t * 22 + phase * 5) % 22) : Math.floor(t * 12 + phase) % 9) : 0;
   else if (m.crew === 'waiter') {
     const n = Math.floor(t * 12 + phase) % 8;
     crewFrame = carry ? (frame === null ? (view === 'back' ? 8 : 0) + n : 0) : 16 + (frame === null ? n : 0);

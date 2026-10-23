@@ -1,5 +1,5 @@
 """Cuts a 30-frame animation sheet (6 columns x 5 rows, numbered, pure black background) into frames and appends them to a character strip.
-Usage: python3 scripts/extract_cat_walk.py <sheet.png|webp> <out_frames_dir> [--cols 6 --rows 5]
+Usage: python3 scripts/extract_cat_walk.py <sheet.png|webp> <out_frames_dir> [--inpaint]   (--inpaint: the numbers overlap the feet, paint them out)
 Each frame: the largest bright blob of its cell (numbers and stray bits dropped), holes filled, soft edge, feet (bottom of the blob) on one common line,
 horizontal position smoothed over the loop so ChatGPT's cell jitter disappears but the walk sway stays. Output: RGBA PNGs on one common canvas."""
 import sys, os
@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-def cut(path, cols=6, rows=5):
+def cut(path, cols=6, rows=5, inpaint=False):
     im = np.asarray(Image.open(path).convert('RGB')).astype(float)
     H, W = im.shape[:2]; cw, ch = W / cols, H / rows
     out = []
@@ -16,6 +16,13 @@ def cut(path, cols=6, rows=5):
             x0, x1, y0, y1 = int(c * cw), int((c + 1) * cw), int(r * ch), int((r + 1) * ch)
             a = im[y0:y1, x0:x1]
             hh = a.shape[0]
+            if inpaint:                                                  # numbers drawn over the feet: pure white pixels in the bottom band are painted over from their surroundings
+                import cv2
+                mn0, mx0 = a.min(axis=2), a.max(axis=2)
+                pw = (mn0 > 244) & (mx0 - mn0 < 14); pw[: int(hh * 0.70)] = False
+                pw = ndi.binary_dilation(pw, iterations=2)
+                if pw.any():
+                    a = cv2.inpaint(a.astype(np.uint8), (pw * 255).astype(np.uint8), 4, cv2.INPAINT_TELEA).astype(float)
             mx, mn = a.max(axis=2), a.min(axis=2)
             sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1), 0)
             # the frame number (also the one of the row above, when rows are not evenly spaced): a small, pure white, unsaturated blob that is its own
@@ -60,6 +67,6 @@ def canvas(frames, pad=4):
 if __name__ == '__main__':
     src, outdir = sys.argv[1], sys.argv[2]
     os.makedirs(outdir, exist_ok=True)
-    fr = canvas(cut(src))
+    fr = canvas(cut(src, inpaint='--inpaint' in sys.argv))
     for i, f in enumerate(fr, 1): f.save(os.path.join(outdir, f'walk_{i:02d}.png'))
     print(len(fr), fr[0].size)

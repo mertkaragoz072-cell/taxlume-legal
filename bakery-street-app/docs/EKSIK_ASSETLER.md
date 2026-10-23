@@ -8,7 +8,7 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 |---|---|
 | Boş oda, mutfak ekipmanı, masa/sandalye/halı | HAZIR, oyunda |
 | 8 müşteri kedi: 30 karelik yürüme + önden/arkadan | HAZIR, oyunda |
-| Şef: sepetle yürüme (30 kare) | EKSİK (E1) |
+| Şef: sepetle yürüme (22 kare) | HAZIR (E1; sayfanın son 6 karesinde numaralar ayaklara binmişti, kullanılmadı) |
 | Garson: tepsiyle yürüme, boş elle yürüme (30 kare) | EKSİK (E2, E3) |
 | Şef: hamur, fırın, kahve, sevinç | EKSİK (E4–E7) |
 | Garson: tepsiyi masaya uzatma | EKSİK (E8) |
@@ -20,6 +20,8 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.
 
 ## Ortak kurallar (her karakter komutunun içinde var)
+HER KOMUTUN SONUNA şunu ekle (son satırda numaralar ayaklara biniyordu): "Numaralar her hücrenin en altında olsun, kedinin ayaklarına ASLA değmesin: ayaklar ile numara arasında en az 25 piksel boşluk bırak. Sayfanın en alt satırında da aynı boşluk olsun, kedi ve numara kesilmesin."
+
 Sağa bakış, 6×5 ızgara, 1–30 numara, düz siyah (#000000) arka plan, aynı boy, aynı ayak çizgisi, kedi hücrenin ortasında, gölge yok, kusursuz döngü.
 
 ## E9: Müşteri kedi oturup yeme (8 kedi için aynı komut, her kedinin kendi şeridiyle)
