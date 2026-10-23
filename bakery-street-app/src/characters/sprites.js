@@ -9,7 +9,7 @@ export const SHEETS = {
   girl_basket: { frames: 50, cols: 10, w: 112, h: 137, cat: true, side: 20 },
   oldman: { frames: 20, w: 88, h: 130, cat: true },
   boy_cap: { frames: 20, w: 93, h: 130, cat: true },
-  boy_redcap: { frames: 20, w: 90, h: 130, cat: true },
+  boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
   girl_glasses: { frames: 20, w: 87, h: 130, cat: true },
   girl_red: { frames: 50, cols: 10, w: 115, h: 131, cat: true, side: 20 },   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
   grandma: { frames: 20, w: 83, h: 130, cat: true },
