@@ -141,7 +141,7 @@ export class CustomerLayer {
   bubbleTop(v, c) {
     const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
     if (art && A && v.sit > 0.5) return seatRect(A, art).y - 2;
-    return this.drawY(v, c) - (hasSitFrames(v.look) ? BODY_H * 0.82 : BODY_H);
+    return this.drawY(v, c) - (hasSitFrames(v.look) ? BODY_H * 0.72 : BODY_H);
   }
 
   /** Where the guest's feet are drawn: lowered onto the chair while seated (eased), otherwise where they walk. */
@@ -151,7 +151,7 @@ export class CustomerLayer {
   /** Cats with sitting frames sit behind the middle of their table (the table covers their lower body): where their seat is drawn. */
   sitPos(v, c) {
     const a = AREAS.find((q) => q.id === `table${c.table + 1}`), e = v.sit * v.sit * (3 - 2 * v.sit);
-    const tx = a.x + a.w / 2, ty = a.y + a.h - 0.37 * a.w;
+    const tx = a.x + a.w / 2, ty = a.y + a.h - 0.55 * a.w;
     return { x: v.x + (tx - v.x) * e, y: v.y + (ty - v.y) * e };
   }
 
@@ -172,7 +172,7 @@ export class CustomerLayer {
           const hold = v.moving && !v.pause;
           if (table && hasSitFrames(v.look)) {                      // sitting behind the table: eats once the order is on the table, otherwise waits
             const p = this.sitPos(v, c), ord = this.cafe.orderOf(c), settled = v.sit >= 0.999;
-            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: settled ? (ord && this.isServed(ord.id) ? 'eat' : 'wait') : false, frame: settled ? 0 : null, back: false, fps: 8, phase: id, scale: PERSON_SCALE * 0.82 * depthScale(p.y), shade: false });
+            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: settled ? (ord && this.isServed(ord.id) ? 'eat' : 'wait') : false, frame: settled ? 0 : null, back: false, fps: 8, phase: id, scale: PERSON_SCALE * 0.72 * depthScale(p.y), shade: false });
             ctx.globalAlpha = 1; return;
           }
           drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });

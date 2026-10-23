@@ -12,6 +12,8 @@ import { hasSitFrames } from '../characters/sprites.js';
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
 /** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
 const PARALLAX_PX = 24;
+const TABLE_UNITS = 670;      // width of a table picture in the 1000-unit table set
+const SIT_SEAT = 0.55;        // a seated cat's seat sits this many table widths above the table's base
 const PLANE = { wall: 0.25, deco: 0.5, kitchen: 0.8, floor: 1.1, front: 1.7 };
 /** Per-table chair offsets (design px at 2x of the picture scale) and tilt in radians: [left chair, right chair]. */
 const CHAIRS = [
@@ -209,6 +211,8 @@ export class InteriorScene {
   tableSet(ctx, a, tableImg, dx, dy, w, h) {
     const i = +a.id.slice(5) - 1, tw = CHAIRS[i % CHAIRS.length], s = w / 1000;
     const owner = this.game.cafe?.tableOwner(i), v = owner ? this.customers.v.get(owner.id) : null;
+    const plain = v && v.sit > 0.5 && hasSitFrames(v.look) ? getImage('int-table-plain') : null;       // a seated cat eats at a table without the vase
+    if (plain) tableImg = plain;
     const seat = v && v.sit > 0 ? getImage(`seat-${v.look}`) : null;
     if (seat) {                                                 // an occupied table: the guest's own seated picture fades in over the empty table
       const r = seatRect(a, seat);
@@ -235,7 +239,7 @@ export class InteriorScene {
     const side = a.side ?? -1;                                   // the chair the guest uses
     const slide = near ? 14 * (1 - sit) - 5 * sit : 0;           // out while walking up, in when seated
     // the three pieces are separate pictures: sizes follow the table (460 units wide of a 1000-unit set), all standing on one baseline
-    const f = (580 / tableImg.naturalWidth) * s, base = dy + h;
+    const f = (TABLE_UNITS / tableImg.naturalWidth) * s, base = dy + h;
     const tW = tableImg.naturalWidth * f, tH = tableImg.naturalHeight * f;
     const sc = v && hasSitFrames(v.look) ? v.sit * v.sit * (3 - 2 * v.sit) : 0;           // a seated cat takes its chair behind the table (see guestChair)
     const pieces = [];
@@ -261,9 +265,9 @@ export class InteriorScene {
   guestChair(ctx, a, v) {
     const side = a.side ?? -1, key = side === -1 ? 'chair-left' : 'chair-right', img = getImage(`int-${key}`), tableImg = getImage('int-table');
     if (!img || !tableImg) return;
-    const i = +a.id.slice(5) - 1, t = CHAIRS[i % CHAIRS.length][side === -1 ? 0 : 1], s = a.w / 1000, f = (580 / tableImg.naturalWidth) * s, e = v.sit * v.sit * (3 - 2 * v.sit);
-    const sideX = a.x + (side === -1 ? 165 : 835) * s + t.dx * 1.6, sideBase = a.y + a.h + t.dy, seatBase = a.y + a.h - 0.37 * a.w + 0.09 * a.w;
-    const k = 0.62 + (1.22 - 0.62) * e, cw = img.naturalWidth * f * k, ch = img.naturalHeight * f * k;
+    const i = +a.id.slice(5) - 1, t = CHAIRS[i % CHAIRS.length][side === -1 ? 0 : 1], s = a.w / 1000, f = (TABLE_UNITS / tableImg.naturalWidth) * s, e = v.sit * v.sit * (3 - 2 * v.sit);
+    const sideX = a.x + (side === -1 ? 165 : 835) * s + t.dx * 1.6, sideBase = a.y + a.h + t.dy, seatBase = a.y + a.h - SIT_SEAT * a.w + 0.09 * a.w;
+    const k = 0.62 + (0.88 - 0.62) * e, cw = img.naturalWidth * f * k, ch = img.naturalHeight * f * k;
     const x = sideX + (a.x + a.w / 2 - sideX) * e, base = sideBase + (seatBase - sideBase) * e;
     this.castShadow(ctx, key, img, x - cw / 2, base - ch, cw, ch);
     ctx.drawImage(img, x - cw / 2, base - ch, cw, ch);
