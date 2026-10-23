@@ -18,36 +18,9 @@ Sonra tarayıcıda açıp gerçekten yüklendiğini kontrol et:
 
 (Pages'in yenilenmesi birkaç dakika sürebilir.)
 
-## 1. Derleme
+## 1-2. Derleme ve TestFlight (Codemagic)
 
-EAS derlemeyi Expo'nun bulutunda yapar ama projeyi diskinden yükler; depo yerelde olmalı. Node 22, npm 10.
-
-```bash
-git clone https://github.com/mertkaragoz072-cell/taxlume-legal.git
-cd taxlume-legal/bakery-street-app
-npm ci                         # install değil ci: kilit dosyasından kurar
-npm install -g eas-cli
-eas login                      # Expo hesabın (Apple veya Google değil)
-eas init                       # uygulamayı bir EAS projesine bağlar, yalnızca ilk sefer
-eas build --profile production --platform ios
-```
-
-`eas init`, `app.json` içine `extra.eas.projectId` yazar. **Bunu commit et.** Yoksa bir sonraki bilgisayar ikinci bir EAS projesi açar ve derleme numaraları baştan başlar.
-
-İlk derlemede imza bilgisi sorulur, ikisine de cevap "EAS halletsin":
-
-- **iOS:** Developer Program'daki Apple ID ile giriş yap. Dağıtım sertifikasını ve provisioning profile'ı EAS oluşturur.
-- **Android:** EAS bir yükleme anahtarı (keystore) üretir ve saklar. Bu anahtar Google Play'in uygulamayı tanıma yoludur; kaybedersen aynı kayda güncelleme gönderemezsin. Oluştuğu gün yedekle: `eas credentials` → Android → keystore'u indir.
-
-Derleme 10–25 dakika sürer. `eas.json` içinde `appVersionSource: "remote"` ve `autoIncrement` var; derleme numaralarını bundan sonra EAS tutar.
-
-## 2. TestFlight'a gönder
-
-```bash
-eas submit --profile production --platform ios
-```
-
-İlk seferde App Store Connect'te uygulamayı oluşturman istenir (aşağıdaki tablo). Derleme App Store Connect'te göründükten sonra TestFlight'ta iç test (kendi hesabın ve ekibin) için inceleme gerekmez; dış test için Apple kısa bir beta incelemesi yapar.
+Diğer oyunlarla aynı hat; adımlar `docs/CODEMAGIC.md` içinde. Özet: App Store Connect'te uygulama kaydı (bir kerelik) → Codemagic'te `firin-kafe-ios` iş akışını başlat → TestFlight'ta iç test grubuna ekle.
 
 **Önce telefonda dene.** Bu oyun şimdiye kadar yalnızca tarayıcıda (Skia web) çalıştırıldı. Gerçek cihazda bakılacaklar:
 
@@ -55,7 +28,7 @@ eas submit --profile production --platform ios
 - Üst çubuk ve alt gezinme çentik / ana ekran çubuğuyla çakışıyor mu.
 - Kare hızı (kafede 4 masa dolu, üretim sürerken), ses, dokunma ve titreşim.
 - Kayıt: uygulamayı arka plana atıp dönünce ilerleme duruyor mu.
-- Paneller (alt sayfa) açılıp kapanıyor, kaydırma çalışıyor.
+- Kediler masada oturup yiyor mu, şef fırına ekmek koyuyor mu, garson tepsi bırakıyor mu.
 
 ## 3. App Store Connect
 

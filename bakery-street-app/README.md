@@ -22,20 +22,15 @@ node scripts/gen-sounds.mjs   # sesleri yeniden üretir
 
 Ekran görüntüsü almak için (yalnızca geliştirme): `npm run web:wasm && npx expo export --platform web`; Skia'nın web çalışma zamanı kullanılır. Gerçek uygulama web'e yayınlanmaz.
 
-## TestFlight'a yükleme (Golden Town ile aynı hat: Expo + EAS Build, Mac gerekmez)
+## TestFlight'a yükleme (Golden Town ve Clashborn ile aynı hat: Codemagic)
 
-Gerekenler: Apple Developer Program üyeliği (99 USD/yıl), Expo hesabı (ücretsiz).
+Depo kökündeki `codemagic.yaml` (iş akışı `firin-kafe-ios`) kullanılır; API anahtarı (`taxlume-admin`) ve imzalama grubu (`ios_signing`) diğer oyunlarla ortaktır. Ayrıntılı adımlar: `docs/CODEMAGIC.md`.
 
-```bash
-git clone https://github.com/mertkaragoz072-cell/taxlume-legal.git
-cd taxlume-legal/bakery-street-app
-npm ci
-npm install -g eas-cli
-eas login
-eas init                  # app.json'a extra.eas.projectId yazar → COMMIT et
-eas build --profile production --platform ios
-eas submit --profile production --platform ios
-```
+1. App Store Connect'te uygulama kaydını aç: ad "Fırın & Kafe", bundle id `com.firinkafe.app`, SKU `firin-kafe-1` (bir kerelik).
+2. Codemagic → `taxlume-legal` → Start new build → branch `claude/bakery-street-step1` → workflow "Fırın & Kafe — iOS (IPA for TestFlight)".
+3. Derleme bitince TestFlight'ta iç test grubuna ekle (inceleme gerekmez).
+
+(Alternatif olarak EAS Build da çalışır: `eas build --profile production --platform ios`; ama diğer oyunlarda kullanılan yol Codemagic'tir.)
 
 Skia yerel modül olduğu için Expo Go çalışmaz; EAS build (veya `eas build --profile development`) kullanılır. İlk build'de Apple ID'ni sorar, sertifika ve provisioning profile'ı EAS oluşturur. 10–25 dk sürer. Build App Store Connect'te göründükten sonra TestFlight'ta iç test için inceleme gerekmez; dış test için Apple kısa bir beta incelemesi yapar.
 
