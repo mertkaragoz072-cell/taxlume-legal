@@ -13,7 +13,8 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | Şef: hamur, fırın, kahve, sevinç | EKSİK (E4–E7) |
 | Garson: tepsiyi masaya uzatma | EKSİK (E8) |
 | 8 müşteri kedi: oturup yeme | EKSİK (E9, 8 sayfa) |
-| Arayüz öğeleri, ürün ve malzeme ikonları | EKSİK (E10, E11) |
+| Ürün, malzeme ve durum ikonları (E11) | HAZIR, oyunda |
+| Arayüz öğeleri (E10) | EKSİK |
 
 ## Sıra (görünürlüğe göre)
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.

@@ -197,3 +197,6 @@ Sekiz müşteri artık kedi: 20 karelik şeritler (0-7 önden yürüme, 8-15 ark
 
 ### 30 karelik yürüme sayfaları (Clashborn yöntemi)
 ChatGPT'den numaralı, siyah arka planlı 6×5 sayfa → `scripts/extract_cat_walk.py <sayfa> <klasör>` (kareleri keser, numarayı atar, ayakları ortak çizgiye oturtur) → `scripts/add_cat_walk.py <kedi> <klasör>` (kedinin şeridine 20-49. kareler olarak ekler; sayfa 10 sütunlu ızgara, doku sınırı için). Kedi sağa bakar, sola giderken yansıtılır. Yatay yürürken yan kareler (30 fps = ekranda her kare 2 yenileme), dikeyde eski önden/arkadan kareler. Sekiz müşteri kedinin hepsinde var; şef ve garson için henüz yok.
+
+### Kedi kafe ikonları (E11)
+Ekmek, kruvasan, pasta, kahve, un, tereyağı, şeker, yumurta, süt, kahve çekirdeği, altın (pati desenli), yıldız (XP), kilit ve hediye ikonları yeni resimlerle değişti (`assets/game/icons`, 256×256, kenarlar `scripts/defringe.py` ile temizlendi).
