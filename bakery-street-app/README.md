@@ -206,3 +206,4 @@ Ekmek, kruvasan, pasta, kahve, un, tereyağı, şeker, yumurta, süt, kahve çek
 
 ### Oturup yiyen kedi (E9)
 `girl_red` şeridine 50-79. kareler olarak 30 karelik "oturup yeme" eklendi (`scripts/add_cat_anim.py <kedi> <klasör> --old 50`). Oturma karesi olan kedi (`hasSitFrames`) masaya yürüyünce masanın ARKASINA, ortaya geçer ve masa alt yarısını örter (masadan 2 birim geride çizilir); sipariş masaya konana kadar duruş karesini (50) tutar, konunca 30 fps yeme döngüsünü oynar. Diğer kediler sayfaları gelene kadar eski düzende (sandalyenin yanında ayakta) kalır.
+Oturan kedi sandalyesiyle birlikte masanın arkasında durur: kedinin sandalyesi yandan ortaya kayar ve büyür (`InteriorScene.guestChair`, kediden bir adım önce çizilir), yandaki boş sandalye silinir.

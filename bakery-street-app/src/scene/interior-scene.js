@@ -7,6 +7,7 @@ import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
 import { CustomerLayer, setEntryY } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
+import { hasSitFrames } from '../characters/sprites.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
 /** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
@@ -154,6 +155,11 @@ export class InteriorScene {
       if (!this.tableOpen(a)) continue;
       items.push({ y: depthOf(a), draw: () => this.shifted(ctx, this.planeOf(a), () => this.drawArea(ctx, a)) });
     }
+    for (const a of AREAS) {                                      // the chairs of seated cats (behind the cat, which is drawn at the table's depth - 2)
+      if (!a.id.startsWith('table') || !this.tableOpen(a)) continue;
+      const i = +a.id.slice(5) - 1, owner = this.game.cafe?.tableOwner(i), v = owner ? this.customers.v.get(owner.id) : null;
+      if (v && v.sit > 0 && hasSitFrames(v.look)) items.push({ y: depthOf(a) - 3, draw: () => this.shifted(ctx, 'floor', () => this.guestChair(ctx, a, v)) });
+    }
     items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => { const d = this.warpAt(it.y); ctx.save(); ctx.translate(0, d); it.draw(ctx); ctx.restore(); });
     this.shifted(ctx, 'floor', () => this.staff.drawServed(ctx));
@@ -231,21 +237,36 @@ export class InteriorScene {
     // the three pieces are separate pictures: sizes follow the table (460 units wide of a 1000-unit set), all standing on one baseline
     const f = (580 / tableImg.naturalWidth) * s, base = dy + h;
     const tW = tableImg.naturalWidth * f, tH = tableImg.naturalHeight * f;
+    const sc = v && hasSitFrames(v.look) ? v.sit * v.sit * (3 - 2 * v.sit) : 0;           // a seated cat takes its chair behind the table (see guestChair)
     const pieces = [];
     for (const [key, cx] of [['chair-left', 165], ['chair-right', 835]]) {
       const img = getImage(`int-${key}`), t = tw[key === 'chair-left' ? 0 : 1];
       const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f * 0.62, ch = img.naturalHeight * f * 0.62;       // a chair is about half as wide as the table (the pictures were drawn at one scale)
       const px = dx + cx * s + t.dx * 1.6 + (guest ? slide * (key === 'chair-left' ? -1 : 1) : 0);
-      pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px });
+      if (guest && sc > 0) continue;
+      pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px, fade: sc });
     }
-    for (const p of pieces) this.castShadow(ctx, p.key, p.img, p.x, p.y, p.w, p.h);
+    for (const p of pieces) { const keep = ctx.globalAlpha; ctx.globalAlpha = keep * (1 - p.fade); this.castShadow(ctx, p.key, p.img, p.x, p.y, p.w, p.h); ctx.globalAlpha = keep; }
     this.castShadow(ctx, 'table', tableImg, dx + 500 * s - tW / 2, base - tH, tW, tH);
     for (const p of pieces) {                                    // chairs stand behind the table
+      const keep = ctx.globalAlpha; ctx.globalAlpha = keep * (1 - p.fade);
       ctx.save(); ctx.translate(p.pivot, base); ctx.rotate(p.rot); ctx.translate(-p.pivot, -base);
       ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
-      ctx.restore();
+      ctx.restore(); ctx.globalAlpha = keep;
     }
     ctx.drawImage(tableImg, dx + 500 * s - tW / 2, base - tH, tW, tH);
+  }
+
+  /** The chair of a cat that sits behind its table: slides from beside the table to the middle, behind the cat (drawn just before the cat), and grows to the cat's size. */
+  guestChair(ctx, a, v) {
+    const side = a.side ?? -1, key = side === -1 ? 'chair-left' : 'chair-right', img = getImage(`int-${key}`), tableImg = getImage('int-table');
+    if (!img || !tableImg) return;
+    const i = +a.id.slice(5) - 1, t = CHAIRS[i % CHAIRS.length][side === -1 ? 0 : 1], s = a.w / 1000, f = (580 / tableImg.naturalWidth) * s, e = v.sit * v.sit * (3 - 2 * v.sit);
+    const sideX = a.x + (side === -1 ? 165 : 835) * s + t.dx * 1.6, sideBase = a.y + a.h + t.dy, seatBase = a.y + a.h - 0.37 * a.w + 0.09 * a.w;
+    const k = 0.62 + (1.22 - 0.62) * e, cw = img.naturalWidth * f * k, ch = img.naturalHeight * f * k;
+    const x = sideX + (a.x + a.w / 2 - sideX) * e, base = sideBase + (seatBase - sideBase) * e;
+    this.castShadow(ctx, key, img, x - cw / 2, base - ch, cw, ch);
+    ctx.drawImage(img, x - cw / 2, base - ch, cw, ch);
   }
 
   /** Thrown shadow of a piece of furniture: its silhouette, tinted, flattened and leaning right (cached once per piece). */
