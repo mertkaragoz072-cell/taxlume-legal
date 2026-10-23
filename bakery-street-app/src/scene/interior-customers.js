@@ -1,7 +1,7 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
 import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, depthScale, sitFeetY, sitCutY, seatRect } from './interior-layout.js';
-import { drawSprite } from '../characters/sprites.js';
+import { drawSprite, hasSitFrames } from '../characters/sprites.js';
 import { getImage } from '../assets.js';
 import { INK, rrect, poly, paint, label, clamp } from '../util.js';
 import { PAL } from '../palette.js';
@@ -23,6 +23,7 @@ export class CustomerLayer {
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
     this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
+    this.isServed = () => false;   // set by the scene: has this order been brought to the table (the guest then eats)
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
@@ -140,14 +141,21 @@ export class CustomerLayer {
   bubbleTop(v, c) {
     const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
     if (art && A && v.sit > 0.5) return seatRect(A, art).y - 2;
-    return this.drawY(v, c) - BODY_H;
+    return this.drawY(v, c) - (hasSitFrames(v.look) ? BODY_H * 0.82 : BODY_H);
   }
 
   /** Where the guest's feet are drawn: lowered onto the chair while seated (eased), otherwise where they walk. */
   /** The picture of this guest seated at a table (chair + guest + table), when it exists. */
   seatArt(v, c) { return c && c.table != null ? getImage(`seat-${v.look}`) : null; }
 
-  drawY(v, c) { return c && c.table != null && v.sit > 0 && !this.seatArt(v, c) ? v.y + (sitFeetY(c.table) - 62 - v.y) * v.sit : v.y; }     // a cat sits whole: feet just below the cushion, nothing is cut off
+  /** Cats with sitting frames sit behind the middle of their table (the table covers their lower body): where their seat is drawn. */
+  sitPos(v, c) {
+    const a = AREAS.find((q) => q.id === `table${c.table + 1}`), e = v.sit * v.sit * (3 - 2 * v.sit);
+    const tx = a.x + a.w / 2, ty = a.y + a.h - 0.37 * a.w;
+    return { x: v.x + (tx - v.x) * e, y: v.y + (ty - v.y) * e };
+  }
+
+  drawY(v, c) { return c && c.table != null && v.sit > 0 && !this.seatArt(v, c) && hasSitFrames(v.look) ? this.sitPos(v, c).y : c && c.table != null && v.sit > 0 && !this.seatArt(v, c) ? v.y + (sitFeetY(c.table) - 62 - v.y) * v.sit : v.y; }     // a cat sits whole: feet just below the cushion, nothing is cut off
 
   /** Depth-sorted pieces for the scene: one { y, draw } per guest (the scene sorts them with the furniture). */
   items(t) {
@@ -156,12 +164,17 @@ export class CustomerLayer {
       const c = this.cafe.customers.find((x) => x.id === id);
       const table = c && c.state === 'seated' && v.sit > 0 ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       out.push({
-        y: table ? depthOf(table) + 1 : v.y,
+        y: table ? depthOf(table) + (hasSitFrames(v.look) ? -2 : 1) : v.y,
         draw: (ctx) => {
           ctx.globalAlpha = clamp((EXIT.y - v.y) / 60, 0, 1);       // fades in and out at the bottom edge
           const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
           const hold = v.moving && !v.pause;
+          if (table && hasSitFrames(v.look)) {                      // sitting behind the table: eats once the order is on the table, otherwise waits
+            const p = this.sitPos(v, c), ord = this.cafe.orderOf(c), settled = v.sit >= 0.999;
+            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: settled ? (ord && this.isServed(ord.id) ? 'eat' : 'wait') : false, frame: settled ? 0 : null, back: false, fps: 8, phase: id, scale: PERSON_SCALE * 0.82 * depthScale(p.y), shade: false });
+            ctx.globalAlpha = 1; return;
+          }
           drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
           ctx.globalAlpha = 1;
         },

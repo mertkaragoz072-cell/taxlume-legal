@@ -11,7 +11,7 @@ export const SHEETS = {
   boy_cap: { frames: 50, cols: 10, w: 117, h: 131, cat: true, side: 20 },
   boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
   girl_glasses: { frames: 50, cols: 10, w: 117, h: 137, cat: true, side: 20 },
-  girl_red: { frames: 50, cols: 10, w: 115, h: 131, cat: true, side: 20 },   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
+  girl_red: { frames: 80, cols: 10, w: 115, h: 131, cat: true, side: 20, eat: 50 },   // 20-49 side walk; 50-79 sitting and eating (50 is the plain sitting pose)   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
   grandma: { frames: 50, cols: 10, w: 119, h: 136, cat: true, side: 20 },
   // staff: true = chef and waiter sheet: 0 stand, 1 stand carrying, 2-3 walk carrying (front), 4 back, 5 side (carrying)
   // crew: true = cat staff sheets. chef: 0-8 walk holding the basket (0 is also the stand), 9-14 joy hop. waiter: 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk
@@ -21,10 +21,12 @@ export const SHEETS = {
 
 const SCALE = 0.9; // native sprite px -> design px (a street character ends up ~150 px tall; the cafe scales people up further, see PERSON_SCALE)
 
+/** True when the character has sitting frames (it is then drawn behind its table, centred, instead of beside it). */
+export const hasSitFrames = (id) => SHEETS[id]?.eat !== undefined;
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 
 /** Draws frame `floor(t*fps+phase)` of the sheet with the feet at (x, y). Returns false when the sheet is not loaded. */
-export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false, back = false, view = 'side', carry = true, bobRate = 2.2, joy = false, side: sideWalk = false } = {}) {
+export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false, back = false, view = 'side', carry = true, bobRate = 2.2, joy = false, side: sideWalk = false, sit = false } = {}) {
   const img = getImage(`char-${id}`), m = SHEETS[id];
   if (!img || !m) return false;
   const base = m.views && back ? 3 : 0;   // sheets with views: frames 3-5 show the character from behind
@@ -36,7 +38,8 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
     crewFrame = carry ? (frame === null ? (view === 'back' ? 8 : 0) + n : 0) : 16 + (frame === null ? n : 0);
   }
   let catFrame = null;
-  if (m.cat) {
+  if (m.cat && m.eat !== undefined && sit) catFrame = sit === 'eat' ? m.eat + (((Math.floor(t * 30 + phase * 5)) % 30 + 30) % 30) : m.eat;     // seated: eating plays the 30-frame loop, waiting holds the sitting pose
+  else if (m.cat) {
     const n = Math.floor(t * 12 + phase * 3);
     catFrame = frame === null ? (m.side !== undefined && sideWalk && !back ? m.side + (((Math.floor(t * 30 + phase * 7)) % 30 + 30) % 30) : (back ? 8 : 0) + (((n % 8) + 8) % 8)) : 16 + (((Math.floor(t * 3 + phase) % 4) + 4) % 4);
   }

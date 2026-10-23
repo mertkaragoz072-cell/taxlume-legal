@@ -12,7 +12,7 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | Garson: tepsiyle yürüme, boş elle yürüme (30 kare) | EKSİK (E2, E3) |
 | Şef: hamur, fırın, kahve, sevinç | EKSİK (E4–E7) |
 | Garson: tepsiyi masaya uzatma | EKSİK (E8) |
-| 8 müşteri kedi: oturup yeme | EKSİK (E9, 8 sayfa) |
+| 8 müşteri kedi: oturup yeme | 1/8 HAZIR (fiyonklu turuncu), 7 sayfa EKSİK (E9) |
 | Ürün, malzeme ve durum ikonları (E11) | HAZIR, oyunda |
 | Arayüz öğeleri (E10): rozet, menü, alt menü, kapatma, panel çerçevesi | HAZIR, oyunda (yeşil/kiremit düğmeler ve geniş panel çerçevesi kaydedilmedi) |
 

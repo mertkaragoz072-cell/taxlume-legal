@@ -203,3 +203,6 @@ Ekmek, kruvasan, pasta, kahve, un, tereyağı, şeker, yumurta, süt, kahve çek
 
 ### Kedi kafe arayüzü (E10)
 `assets/game/icons/ui-*.webp`: kedi kulaklı seviye rozeti (`ui-badge`, içinde Lv), menü düğmesi (`ui-menu`; Görevler / Günlük Ödül / Ayarlar buradan açılan listede), alt menü düğmeleri normal ve seçili (`ui-nav-<cafe|town|explore|market>[-on]`), kapatma (`ui-close`), alt sayfa çerçevesi (`ui-card`, dikeyde `Sheet` arka planı, `stretch`). Altın ve XP sayaçları kodla çizilir (yeni pati/yıldız ikonlarıyla); örnek resimdeki sayaç hapları "+" işaretli olduğu için kullanılmadı. Alt menü yüksekliği `navHeight(u)` ile hesaplanır, paneller onun üstünde durur. Yeşil/kiremit düğme ve geniş panel çerçevesi 9-dilim gerektirdiği için bağlanmadı (düğmeler eskisi gibi renkli degrade).
+
+### Oturup yiyen kedi (E9)
+`girl_red` şeridine 50-79. kareler olarak 30 karelik "oturup yeme" eklendi (`scripts/add_cat_anim.py <kedi> <klasör> --old 50`). Oturma karesi olan kedi (`hasSitFrames`) masaya yürüyünce masanın ARKASINA, ortaya geçer ve masa alt yarısını örter (masadan 2 birim geride çizilir); sipariş masaya konana kadar duruş karesini (50) tutar, konunca 30 fps yeme döngüsünü oynar. Diğer kediler sayfaları gelene kadar eski düzende (sandalyenin yanında ayakta) kalır.
