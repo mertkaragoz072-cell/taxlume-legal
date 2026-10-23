@@ -15,15 +15,25 @@ def cut(path, cols=6, rows=5):
         for c in range(cols):
             x0, x1, y0, y1 = int(c * cw), int((c + 1) * cw), int(r * ch), int((r + 1) * ch)
             a = im[y0:y1, x0:x1]
-            fg = a.max(axis=2) > 38
+            hh = a.shape[0]
+            mx, mn = a.max(axis=2), a.min(axis=2)
+            sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1), 0)
+            white = (mn > 190) & (sat < 0.12)                           # the frame number under the cat (or the one of the row above, when rows are not evenly spaced): white, unsaturated, small
+            wl, wn = ndi.label(ndi.binary_dilation(white, iterations=2))
+            num = np.zeros_like(white)
+            for i in range(1, wn + 1):
+                comp = wl == i; yy, xx = np.where(comp)
+                if comp.sum() < 700 and (yy.min() > hh * 0.78 or yy.max() < hh * 0.22): num |= comp         # a number is in the bottom band, or (the row above's label) in the top band
+            fg = (mx > 38) & ~ndi.binary_dilation(num, iterations=1)
             fg = ndi.binary_closing(fg, iterations=2)
             lab, n = ndi.label(fg)
             sz = ndi.sum(fg, lab, range(1, n + 1))
             m = lab == (1 + int(np.argmax(sz)))
-            holes = ndi.binary_fill_holes(m) & ~m                     # only tiny holes are filled; the gap between tail and back stays open
+            holes = ndi.binary_fill_holes(m) & ~m                      # eyes (dark but not pure black) are filled; the black gap between tail and back stays open
             hl, hn = ndi.label(holes)
             for i in range(1, hn + 1):
-                if (hl == i).sum() < 40: m |= hl == i
+                hm = hl == i
+                if hm.sum() < 40 or mx[hm].mean() > 14: m |= hm
             ys, xs = np.where(m)
             al = ndi.gaussian_filter(m.astype(float), 0.7)
             rgba = np.dstack([a, al * 255]).astype(np.uint8)

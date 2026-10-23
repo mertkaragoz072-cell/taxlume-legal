@@ -5,9 +5,9 @@ import { shadow } from '../util.js';
 
 // cat: true = the cat sheets: frames 0-7 walk from the front, 8-15 walk from behind, 16-19 standing (breathing); played at ~12 frames per second
 export const SHEETS = {
-  boy_backpack: { frames: 50, cols: 10, w: 121, h: 131, cat: true, side: 20 },
-  girl_basket: { frames: 50, cols: 10, w: 112, h: 137, cat: true, side: 20 },
-  oldman: { frames: 50, cols: 10, w: 116, h: 145, cat: true, side: 20 },
+  boy_backpack: { frames: 80, cols: 10, w: 121, h: 132, cat: true, side: 20, eat: 50 },
+  girl_basket: { frames: 80, cols: 10, w: 112, h: 137, cat: true, side: 20, eat: 50 },
+  oldman: { frames: 80, cols: 10, w: 116, h: 145, cat: true, side: 20, eat: 50 },
   boy_cap: { frames: 50, cols: 10, w: 117, h: 131, cat: true, side: 20 },
   boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
   girl_glasses: { frames: 50, cols: 10, w: 117, h: 137, cat: true, side: 20 },
