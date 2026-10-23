@@ -1,8 +1,9 @@
 // The small building blocks of every panel: sheet, card, button, bar, chip, pips. Sizes are multiples of the UI unit (see theme.ts).
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { C, FONT, fs, useU } from "./theme";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ASSET_MODULES } from "../generated/assetModules";
+import { C, FONT, fs, navHeight, useU } from "./theme";
 import { Rich } from "./icons";
 
 export type Variant = "go" | "alt" | "lack" | "busy" | "plain";
@@ -104,25 +105,36 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, children 
   const u = useU();
   const { width, height } = useWindowDimensions();
   const portrait = height >= width;
-  // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it);
-  // wide windows keep the old side panel
+  // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it) in the picture frame
+  // (wood border, cream inside, paw crest); wide windows keep the old plain side panel
   const place = portrait
-    ? { left: u * 1.2, right: u * 1.2, bottom: Math.max(52, u * 13.6) + u * 3.6, height: Math.min(height * 0.52, u * 150) }
+    ? { left: u * 1, right: u * 1, bottom: navHeight(u) + u * 1.6, height: Math.min(height * 0.54, u * 150) }
     : { top: u * 12.8, bottom: lowered ? u * 11 : u * 1.4, width: Math.min(u * 78, width * 0.48), ...(side === "left" ? { left: u * 1.4 } : { right: u * 1.4 }) };
-  return (
-    <View style={[{ position: "absolute", borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.vanilla, overflow: "hidden", zIndex: 20 }, place,
-      { shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: u * 2, shadowOffset: { width: 0, height: u }, elevation: 8 }]}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: u * 2.2, paddingTop: u * 1.6, paddingBottom: u * 0.6 }}>
+  const inner = (
+    <>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: u * 2.2, paddingTop: portrait ? 0 : u * 1.6, paddingBottom: u * 0.6 }}>
         <Rich text={title} size={fs(u, 4)} style={{ color: C.brownDark, fontFamily: FONT.bold }} />
         {onClose ? (
-          <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ width: Math.max(44, u * 6), height: Math.max(44, u * 6), borderRadius: 99, backgroundColor: C.terracotta, alignItems: "center", justifyContent: "center", marginRight: -u * 0.8 }}>
-            <Text allowFontScaling={false} style={{ color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, 3) }}>✕</Text>
+          <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ width: Math.max(44, u * 6), height: Math.max(44, u * 6), alignItems: "center", justifyContent: "center", marginRight: -u * 0.8 }}>
+            <Image source={ASSET_MODULES["assets/icons/ui-close.webp"]} style={{ width: Math.max(40, u * 7.4), height: Math.max(40, u * 7.4) * (144 / 140), resizeMode: "contain" }} />
           </Pressable>
         ) : null}
       </View>
       {hint ? <Rich text={hint} size={fs(u, 2.5)} style={{ color: C.brown, paddingHorizontal: u * 2.2, paddingBottom: u }} /> : null}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: u * 1.6, paddingBottom: u * 1.6, gap: u * 1.2 }}>{children}</ScrollView>
-    </View>
+    </>
+  );
+  const shadow = { shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: u * 2, shadowOffset: { width: 0, height: u }, elevation: 8 };
+  if (portrait) {
+    return (
+      <View style={[{ position: "absolute", zIndex: 20 }, place, shadow]}>
+        <Image source={ASSET_MODULES["assets/icons/ui-card.webp"]} resizeMode="stretch" style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
+        <View style={{ flex: 1, paddingTop: Math.round(u * 8.6), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 3.2) }}>{inner}</View>
+      </View>
+    );
+  }
+  return (
+    <View style={[{ position: "absolute", borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.vanilla, overflow: "hidden", zIndex: 20 }, place, shadow]}>{inner}</View>
   );
 }
 

@@ -241,6 +241,6 @@ const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: "#463020" },
   center: { flex: 1, backgroundColor: "#463020", alignItems: "center", justifyContent: "center" },
   msg: { color: "#F5E6C8", fontSize: 18, textAlign: "center" },
-  warn: { position: "absolute", left: 12, right: 12, bottom: 96, padding: 10, borderRadius: 12, backgroundColor: C.terracotta },
+  warn: { position: "absolute", left: 12, right: 12, bottom: 110, padding: 10, borderRadius: 12, backgroundColor: C.terracotta },
   warnText: { color: C.paper, fontFamily: FONT.bold, fontSize: 13 },
 });

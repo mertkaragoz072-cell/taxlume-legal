@@ -200,3 +200,6 @@ ChatGPT'den numaralı, siyah arka planlı 6×5 sayfa → `scripts/extract_cat_wa
 
 ### Kedi kafe ikonları (E11)
 Ekmek, kruvasan, pasta, kahve, un, tereyağı, şeker, yumurta, süt, kahve çekirdeği, altın (pati desenli), yıldız (XP), kilit ve hediye ikonları yeni resimlerle değişti (`assets/game/icons`, 256×256, kenarlar `scripts/defringe.py` ile temizlendi).
+
+### Kedi kafe arayüzü (E10)
+`assets/game/icons/ui-*.webp`: kedi kulaklı seviye rozeti (`ui-badge`, içinde Lv), menü düğmesi (`ui-menu`; Görevler / Günlük Ödül / Ayarlar buradan açılan listede), alt menü düğmeleri normal ve seçili (`ui-nav-<cafe|town|explore|market>[-on]`), kapatma (`ui-close`), alt sayfa çerçevesi (`ui-card`, dikeyde `Sheet` arka planı, `stretch`). Altın ve XP sayaçları kodla çizilir (yeni pati/yıldız ikonlarıyla); örnek resimdeki sayaç hapları "+" işaretli olduğu için kullanılmadı. Alt menü yüksekliği `navHeight(u)` ile hesaplanır, paneller onun üstünde durur. Yeşil/kiremit düğme ve geniş panel çerçevesi 9-dilim gerektirdiği için bağlanmadı (düğmeler eskisi gibi renkli degrade).

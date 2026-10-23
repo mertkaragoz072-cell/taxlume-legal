@@ -14,7 +14,7 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | Garson: tepsiyi masaya uzatma | EKSİK (E8) |
 | 8 müşteri kedi: oturup yeme | EKSİK (E9, 8 sayfa) |
 | Ürün, malzeme ve durum ikonları (E11) | HAZIR, oyunda |
-| Arayüz öğeleri (E10) | EKSİK |
+| Arayüz öğeleri (E10): rozet, menü, alt menü, kapatma, panel çerçevesi | HAZIR, oyunda (yeşil/kiremit düğmeler ve geniş panel çerçevesi kaydedilmedi) |
 
 ## Sıra (görünürlüğe göre)
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.
