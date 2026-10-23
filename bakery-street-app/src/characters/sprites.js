@@ -12,7 +12,7 @@ export const SHEETS = {
   boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
   girl_glasses: { frames: 50, cols: 10, w: 117, h: 137, cat: true, side: 20 },
   girl_red: { frames: 50, cols: 10, w: 115, h: 131, cat: true, side: 20 },   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
-  grandma: { frames: 20, w: 83, h: 130, cat: true },
+  grandma: { frames: 50, cols: 10, w: 119, h: 136, cat: true, side: 20 },
   // staff: true = chef and waiter sheet: 0 stand, 1 stand carrying, 2-3 walk carrying (front), 4 back, 5 side (carrying)
   // crew: true = cat staff sheets. chef: 0-8 walk holding the basket (0 is also the stand), 9-14 joy hop. waiter: 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk
   chef: { frames: 15, w: 123, h: 166, crew: 'chef' },
