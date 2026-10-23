@@ -8,7 +8,7 @@ export const SHEETS = {
   boy_backpack: { frames: 50, cols: 10, w: 121, h: 131, cat: true, side: 20 },
   girl_basket: { frames: 50, cols: 10, w: 112, h: 137, cat: true, side: 20 },
   oldman: { frames: 50, cols: 10, w: 116, h: 145, cat: true, side: 20 },
-  boy_cap: { frames: 20, w: 93, h: 130, cat: true },
+  boy_cap: { frames: 50, cols: 10, w: 117, h: 131, cat: true, side: 20 },
   boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
   girl_glasses: { frames: 50, cols: 10, w: 117, h: 137, cat: true, side: 20 },
   girl_red: { frames: 50, cols: 10, w: 115, h: 131, cat: true, side: 20 },   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
