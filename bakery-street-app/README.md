@@ -221,3 +221,6 @@ Oturup yeme sayfaları artık 7 kedi için bağlı (yalnız siyah atkılı `boy_
 
 ### Garson: tepsi teslimi (E8)
 `waiter_hand.webp` (24 kare, 6 sütun, tek seferlik): garson masaya yaklaşınca tepsiyi uzatır, bırakır, gülümser. İlerleme `handT / HAND_SEC`'e bağlıdır; bu kareler varken tepsideki fincan ve pasta resmin içinde olduğu için uçan ürün ikonu çizilmez (`hasHandFrames`). `scripts/extract_cat_walk.py --head-anchor` kafayı sabit tutar (tepsi yana uzanınca gövde kaymasın). Sayfanın numaralanması 22'den sonra 29'a atlıyordu, son satırda numaralar ayaklara bindiği için yalnız ilk 24 kare alındı.
+
+### Şef: hamur yoğurma (E4)
+`chef.webp` 54 kare: 37-53 hamur yoğurma (17 karelik döngü, 12 kare/sn, önden). Şef tezgâh duraklarında (counter, counter2) ya da bir makine çalışırken beklerken yoğurur; ürün hazır olunca sevinç sıçramasına geçer. Sayfada satır boyları farklıydı (1. satır %5, 5. satır %9), satır medyanına göre eşitlendi; 25-30. kareler küçük çizildiği için döngüye alınmadı. Fırın (E5) ve kahve (E6) çalışma sayfaları gelince makine başında o animasyonlar oynayacak.

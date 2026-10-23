@@ -166,8 +166,9 @@ export class StaffLayer {
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
+    const knead = !b.moving && !b.target && this.cheer <= 0 && (working || b.stop === 'counter' || b.stop === 'counter2');   // standing at the prep counter (or waiting for a machine): kneads dough
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, view: b.view, bob: working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: knead ? 1 : b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, work: knead ? 'knead' : null, view: b.view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }
 
   drawWaiter(ctx) {
