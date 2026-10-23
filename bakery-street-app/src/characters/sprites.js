@@ -11,7 +11,7 @@ export const SHEETS = {
   boy_cap: { frames: 20, w: 93, h: 130, cat: true },
   boy_redcap: { frames: 20, w: 90, h: 130, cat: true },
   girl_glasses: { frames: 20, w: 87, h: 130, cat: true },
-  girl_red: { frames: 20, w: 89, h: 130, cat: true },
+  girl_red: { frames: 50, cols: 10, w: 115, h: 131, cat: true, side: 20 },   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
   grandma: { frames: 20, w: 83, h: 130, cat: true },
   // staff: true = chef and waiter sheet: 0 stand, 1 stand carrying, 2-3 walk carrying (front), 4 back, 5 side (carrying)
   // crew: true = cat staff sheets. chef: 0-8 walk holding the basket (0 is also the stand), 9-14 joy hop. waiter: 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk
@@ -24,7 +24,7 @@ const SCALE = 0.9; // native sprite px -> design px (a street character ends up 
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 
 /** Draws frame `floor(t*fps+phase)` of the sheet with the feet at (x, y). Returns false when the sheet is not loaded. */
-export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false, back = false, view = 'side', carry = true, bobRate = 2.2, joy = false } = {}) {
+export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false, back = false, view = 'side', carry = true, bobRate = 2.2, joy = false, side: sideWalk = false } = {}) {
   const img = getImage(`char-${id}`), m = SHEETS[id];
   if (!img || !m) return false;
   const base = m.views && back ? 3 : 0;   // sheets with views: frames 3-5 show the character from behind
@@ -38,7 +38,7 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
   let catFrame = null;
   if (m.cat) {
     const n = Math.floor(t * 12 + phase * 3);
-    catFrame = frame === null ? (back ? 8 : 0) + (((n % 8) + 8) % 8) : 16 + (((Math.floor(t * 3 + phase) % 4) + 4) % 4);
+    catFrame = frame === null ? (m.side !== undefined && sideWalk && !back ? m.side + (((Math.floor(t * 30 + phase * 7)) % 30 + 30) % 30) : (back ? 8 : 0) + (((n % 8) + 8) % 8)) : 16 + (((Math.floor(t * 3 + phase) % 4) + 4) % 4);
   }
   let staffMove = false, f0 = null;
   if (m.staff) {   // the staff sheet has a front walk (2-3), a back view (4) and a side view (5); an empty-handed waiter uses the plain standing frame
@@ -63,8 +63,8 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
     ctx.scale(1 + (0.5 - step) * 0.035, 1 - (0.5 - step) * 0.05);                         // squash on contact, stretch in the air
   }
   ctx.scale(dir, 1);
-  const sw = img.naturalWidth / m.frames, sh = img.naturalHeight;
-  ctx.drawImage(img, f * sw, 0, sw, sh, -dw / 2, -dh + 2 - lift, dw, dh);
+  const cols = m.cols ?? m.frames, rows = Math.ceil(m.frames / cols), sw = img.naturalWidth / cols, sh = img.naturalHeight / rows;
+  ctx.drawImage(img, (f % cols) * sw, Math.floor(f / cols) * sh, sw, sh, -dw / 2, -dh + 2 - lift, dw, dh);
   ctx.restore();
   return true;
 }
