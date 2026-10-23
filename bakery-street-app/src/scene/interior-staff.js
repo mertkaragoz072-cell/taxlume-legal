@@ -15,7 +15,7 @@ const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 const POST = { x: 190, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, in front of the prep counter, clear of the queue spots (352..652)
 const OVEN_SEC = 1.8;                                       // the baker's put-it-in-the-oven animation (30 frames)
 const COFFEE_SEC = 2.2;                                     // the baker's make-a-coffee animation (24 frames: reach, take the cup, sip)
-const HAND_SEC = 1.1;                                       // time spent handing the order over
+const HAND_SEC = 1.3;                                       // time spent handing the order over
 
 class Walker {
   constructor(x, y, speed) { this.x = x; this.y = y; this.speed = speed; this.dir = 1; this.moving = false; this.target = null; this.wait = 1.5; this.t = 0; this.view = 'side'; }

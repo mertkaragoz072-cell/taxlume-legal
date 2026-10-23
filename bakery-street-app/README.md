@@ -231,3 +231,6 @@ E5 düzeltmesi: sayfada ekmek 8. ve 9. karelerde hücre kenarında yarım kesilm
 
 ### Şef: kahve hazırlama (E6)
 `chef_coffee.webp` (24 kare, 6 sütun, tek seferlik, sağa bakar, kafa ortada): kola uzanır, fincanı alır, yudumlar. Kahve makinesi bir ürüne başlayınca (`change`/`start`, istasyon kahve) şef kahve durağına varınca 2,2 sn oynar (fırın animasyonuyla aynı düzen: `pendingCoffee`/`coffeeT`). Sayfanın ortadaki satırlarında ayaklar kesikti (sayfada satırlar eşit aralıklı değil), ama şef tezgâhın arkasında durduğu için görünmez; son satırda (25-30) numaralar kareye yapışık olduğundan alınmadı. Kesim: `extract_cat_walk.py --whole --head-anchor`, birleştirme: `make_one_shot.py`.
+
+### Garson servis animasyonu (yeni sayfa)
+`waiter_hand.webp` yeni sayfayla değişti (21 kare, 6 sütun, tek seferlik, sağa bakar): tepsiyi masaya indirir, bırakır, boş elle selam durur (sayfanın 22-30. kareleri tepsiyi yeniden alıyor, kullanılmadı). Süre 1,3 sn (`HAND_SEC`). Eğilme kareleri doğal olarak kısa olduğundan `make_one_shot.py --ref-h` ile tek ortak ölçek kullanıldı (satır boyu eşitleme yok).
