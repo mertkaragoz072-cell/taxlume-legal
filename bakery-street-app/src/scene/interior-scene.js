@@ -143,7 +143,7 @@ export class InteriorScene {
 
     this.cachedRoom(ctx, x0 - 60, w + 120, yTop, yBot, this.shift('wall'));   // wall and floor, cached (a little wider than the screen for the sway)
     ctx.save(); ctx.translate(this.shift('deco'), 0); this.decor(ctx); ctx.restore();
-    this.shifted(ctx, 'floor', () => this.rug(ctx));
+    this.shifted(ctx, 'floor', () => { this.rug(ctx); this.tableRugs(ctx); });
     // Everything that stands on the floor is drawn back to front by the line it stands on (its base y), so people pass in front of
     // or behind counters and tables correctly. Ties keep the DRAW_ORDER of the furniture.
     const items = [];
@@ -233,7 +233,7 @@ export class InteriorScene {
     const pieces = [];
     for (const [key, cx] of [['chair-left', 165], ['chair-right', 835]]) {
       const img = getImage(`int-${key}`), t = tw[key === 'chair-left' ? 0 : 1];
-      const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f * 0.78, ch = img.naturalHeight * f * 0.78;       // chairs are drawn a bit smaller than the table's scale (the picture drew them large)
+      const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f * 0.62, ch = img.naturalHeight * f * 0.62;       // a chair is about half as wide as the table (the pictures were drawn at one scale)
       const px = dx + cx * s + t.dx * 1.6 + (guest ? slide * (key === 'chair-left' ? -1 : 1) : 0);
       pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px });
     }
@@ -389,7 +389,19 @@ export class InteriorScene {
   }
 
   /** A woven rug lying flat on the floor in front of the counter: a perspective trapezoid with a border, stripes and fringe. */
+  /** A green rug under every open table. */
+  tableRugs(ctx) {
+    const img = getImage('int-rug-green'); if (!img) return;
+    for (const a of AREAS) {
+      if (!a.id.startsWith('table') || !this.tableOpen(a)) continue;
+      const rw = a.w * 0.58 * 1.7, rh = rw * img.naturalHeight / img.naturalWidth, base = a.y + a.h, d = this.warpAt(depthOf(a));
+      ctx.drawImage(img, a.x + a.w / 2 - rw / 2, base - rh * 0.78 + d, rw, rh);
+    }
+  }
+
   rug(ctx) {
+    const runner = getImage('int-rug-runner');
+    if (runner) { const rw = 540, rh = rw * runner.naturalHeight / runner.naturalWidth; ctx.drawImage(runner, 450 - rw / 2, 800 - rh / 2, rw, rh); return; }
     const cx = 450, y0 = 748, y1 = 858, w0 = 520, w1 = 640;
     const quad = (k) => { const a0 = w0 / 2 - k, a1 = w1 / 2 - k * 1.1, ya = y0 + k * 0.35, yb = y1 - k * 0.35; poly(ctx, [[cx - a0, ya], [cx + a0, ya], [cx + a1, yb], [cx - a1, yb]]); };
     ctx.save();

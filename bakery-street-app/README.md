@@ -185,3 +185,6 @@ Oyun artık yalnızca dikey çalışır (`app.json: orientation: portrait`, `Scr
 
 ### Kedi kafe odası
 `assets/game/interior/room.webp` artık 1024×1536 dikey "kedi kafe" boş odası (referans görsele göre); duvar/zemin birleşimi y=452'de, dünyada `FLOOR_Y = 470`. Odanın kendi lambaları, rafları, tebeşir tahtası, penceresi ve kapısı var; eski duvar süsleri (raf, pencere, tencere askısı, lambalar) ve ön plan saksıları çizilmiyor. Yükseltme tabelası (690, 282) konumuna alındı. Sıradaki: referanstaki açıya (yukarıdan ~45°) uygun ekipman, masa, kedi karakter ve arayüz resimleri.
+
+### Kedi kafe salon eşyaları
+`table.webp` (vazolu masa), `table-plain.webp`, `chair-left/right.webp`, `rug-green.webp` (her masanın altında), `rug-runner.webp` (servis alanı halısı) yeni resimlerle değişti. Bitkiler (`plant-1..3`), raflı bitki (`shelf-plants`) ve paspas (`mat-paw`) kaydedildi, henüz yerleştirilmedi. Sandalye genişliği masa genişliğinin yarısı. Oturan misafir resimleri (`seat-*`) Komut 5 gelene kadar eski stilde.
