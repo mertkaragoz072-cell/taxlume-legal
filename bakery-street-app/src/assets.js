@@ -15,6 +15,7 @@ export const MANIFEST = {
   'char-boy_redcap': 'assets/characters/boy_redcap.webp',
   'char-girl_glasses': 'assets/characters/girl_glasses.webp',
   'char-oldman': 'assets/characters/oldman.webp',
+  'char-chef_oven': 'assets/characters/chef_oven.webp',   // the chef putting bread in the oven (one-shot)
   'char-chef': 'assets/characters/chef.webp',
   'char-waiter_hand': 'assets/characters/waiter_hand.webp',   // the waiter handing a tray over (one-shot)
   'char-waiter': 'assets/characters/waiter.webp',   // the dining-room waiter (walk cycle)

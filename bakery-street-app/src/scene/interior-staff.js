@@ -5,7 +5,7 @@
 //  - the waiter has a post in front of the counters. When a seated guest has an open order he picks it up, carries it (the product is shown
 //    in his hands) along the corridor and down the access gap beside the table, hands it over, and returns to the post. He only mimics
 //    service: the sale itself is still made by tapping the guest, as before.
-import { drawSprite, hasHandFrames } from '../characters/sprites.js';
+import { drawSprite, hasHandFrames, hasOvenFrames } from '../characters/sprites.js';
 import { drawIcon } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
@@ -13,6 +13,7 @@ import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale
 const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 160, dir: 1 }, counter2: { x: 468, dir: 1 }, coffee: { x: 760, dir: 1 }, storage: { x: 352, dir: 1 } };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 const POST = { x: 190, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, in front of the prep counter, clear of the queue spots (352..652)
+const OVEN_SEC = 1.8;                                       // the baker's put-it-in-the-oven animation (30 frames)
 const HAND_SEC = 1.1;                                       // time spent handing the order over
 
 class Walker {
@@ -52,6 +53,9 @@ export class StaffLayer {
     this.cheer = 0;             // seconds left of the baker's little hop after a product comes out
     this.onServed = null;       // set by the scene: called with the table area when the waiter puts an order down
     game.on('complete', () => { this.cheer = 0.55; });
+    this.ovenT = -1;            // seconds into the put-it-in-the-oven animation, -1 = not playing
+    this.pendingOven = false;   // an oven job has started: the animation plays as soon as the baker stands at the oven
+    game.on('change', (e) => { if (e?.type === 'start' && game.productsDef[e.product]?.station === 'oven') this.pendingOven = true; });
     this.guests = () => [];     // set by the scene: where the guests stand (the waiter never walks into one)
   }
 
@@ -61,6 +65,10 @@ export class StaffLayer {
   update(dt) {
     this.updateBaker(dt);
     this.cheer = Math.max(0, this.cheer - dt);
+    const bk = this.baker;
+    if (this.pendingOven && this.busyStop() !== 'oven') this.pendingOven = false;                      // the job is already over
+    if (this.pendingOven && bk.stop === 'oven' && !bk.moving && !bk.target) { this.pendingOven = false; this.ovenT = 0; }
+    if (this.ovenT >= 0) { this.ovenT += dt; if (this.ovenT >= OVEN_SEC || this.cheer > 0) this.ovenT = -1; }
     this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length ? dt : -dt)));
     this.updateWaiter(dt);          // without the waiter sheet drawSprite simply draws nothing
   }
@@ -167,6 +175,7 @@ export class StaffLayer {
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
     const knead = !b.moving && !b.target && this.cheer <= 0 && (working || b.stop === 'counter' || b.stop === 'counter2');   // standing at the prep counter (or waiting for a machine): kneads dough
+    if (this.ovenT >= 0 && hasOvenFrames() && drawSprite(ctx, 'chef_oven', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.ovenT / OVEN_SEC) })) return;
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
     drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: knead ? 1 : b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, work: knead ? 'knead' : null, view: b.view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }

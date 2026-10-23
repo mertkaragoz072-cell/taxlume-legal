@@ -224,3 +224,6 @@ Oturup yeme sayfaları artık 7 kedi için bağlı (yalnız siyah atkılı `boy_
 
 ### Şef: hamur yoğurma (E4)
 `chef.webp` 54 kare: 37-53 hamur yoğurma (17 karelik döngü, 12 kare/sn, önden). Şef tezgâh duraklarında (counter, counter2) ya da bir makine çalışırken beklerken yoğurur; ürün hazır olunca sevinç sıçramasına geçer. Sayfada satır boyları farklıydı (1. satır %5, 5. satır %9), satır medyanına göre eşitlendi; 25-30. kareler küçük çizildiği için döngüye alınmadı. Fırın (E5) ve kahve (E6) çalışma sayfaları gelince makine başında o animasyonlar oynayacak.
+
+### Şef: fırına ürün koyma (E5)
+`chef_oven.webp` (30 kare, 6 sütun, tek seferlik, sağa bakar, kafa hücre ortasında): fırın bir ürüne başlayınca (`change`/`start`, istasyon fırın) şef fırın durağına varınca 1,8 sn boyunca oynar; ürün hazır olunca yarıda kesilip sevinç sıçramasına geçer. Fırın soldadır, sprite `dir -1` ile yansıtılır. Sayfada kürek ucu hücre kenarında kesik çizilmişti (8-13. kareler) ve 11-12. kareler birbirine değiyordu: `extract_cat_walk.py --whole --head-anchor` (gövde tohumlu bağlı parça kesimi, temas noktasından ayırma) ve satır boyu eşitleme (`scripts/make_one_shot.py`, son satır %9 küçüktü) kullanıldı; 12. kare 11.'nin kopyası (kuyrukta kürek parçası kalmıştı).
