@@ -218,3 +218,6 @@ Oturup yeme sayfaları artık 7 kedi için bağlı (yalnız siyah atkılı `boy_
 ### Garson kedi: tepsiyle yandan yürüme (E2)
 `waiter.webp` 34 kareli ızgara: 0-7 tepsiyle önden, 8-15 tepsiyle arkadan, 16-23 boş elle, 24-33 tepsiyle yandan (10 karelik döngü, 12 kare/sn, sağa bakar). Sayfanın 25-30. karelerinde ayaklar kırpıldığı ve uzun döngüler kapanmadığı için sayfanın 8-17. kareleri alındı. Tepsili + yatay yürüyüşte yan kareler, diğerlerinde eski kareler oynar.
 `waiter.webp` artık 56 kare: 34-55 boş elle yandan yürüme (22 karelik döngü, 22 kare/sn). Garson tepsisizken yatay yürüyüşte bu kareleri, dikeyde eski önden boş el karelerini oynar.
+
+### Garson: tepsi teslimi (E8)
+`waiter_hand.webp` (24 kare, 6 sütun, tek seferlik): garson masaya yaklaşınca tepsiyi uzatır, bırakır, gülümser. İlerleme `handT / HAND_SEC`'e bağlıdır; bu kareler varken tepsideki fincan ve pasta resmin içinde olduğu için uçan ürün ikonu çizilmez (`hasHandFrames`). `scripts/extract_cat_walk.py --head-anchor` kafayı sabit tutar (tepsi yana uzanınca gövde kaymasın). Sayfanın numaralanması 22'den sonra 29'a atlıyordu, son satırda numaralar ayaklara bindiği için yalnız ilk 24 kare alındı.

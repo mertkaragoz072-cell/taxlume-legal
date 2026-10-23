@@ -5,7 +5,7 @@
 //  - the waiter has a post in front of the counters. When a seated guest has an open order he picks it up, carries it (the product is shown
 //    in his hands) along the corridor and down the access gap beside the table, hands it over, and returns to the post. He only mimics
 //    service: the sale itself is still made by tapping the guest, as before.
-import { drawSprite } from '../characters/sprites.js';
+import { drawSprite, hasHandFrames } from '../characters/sprites.js';
 import { drawIcon } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
@@ -156,7 +156,7 @@ export class StaffLayer {
       drawIcon(ctx, o.product, a.x + a.w / 2, a.y + a.h * 0.26 - 12, 34);
       ctx.restore();
     }
-    if (this.phase === 'hand' && this.carry) {                // the icon is carried from the hands toward the table while handing over
+    if (this.phase === 'hand' && this.carry && !hasHandFrames()) {                // the icon is carried from the hands toward the table while handing over
       const w = this.waiter, a = AREAS.find((x) => x.id === this.job.table), k = Math.min(1, this.handT / HAND_SEC);
       const wy = this.warp(w.y), ty = this.warp(a.y + a.h - 35);
       drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, wy + w.y - 108 + (ty + a.y + a.h * 0.26 - 12 - (wy + w.y - 108)) * k, 36);
@@ -176,7 +176,9 @@ export class StaffLayer {
     ctx.globalAlpha = this.show;
     // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
     const tray = !!this.carry && this.phase !== 'hand';
-    drawSprite(ctx, 'waiter', w.x, w.y, w.t, { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 });
+    const o = { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 };
+    // handing over: the one-shot hand-over frames (tray with cup and cake) when they exist, else the standing frame with the item icon flying to the table
+    if (!(this.phase === 'hand' && !w.moving && drawSprite(ctx, 'waiter_hand', w.x, w.y, w.t, { ...o, hand: Math.min(0.999, this.handT / HAND_SEC), shade: true, sway: 0, bob: 0 }))) drawSprite(ctx, 'waiter', w.x, w.y, w.t, o);
     // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
     ctx.globalAlpha = 1;
   }
