@@ -18,13 +18,18 @@ def cut(path, cols=6, rows=5):
             hh = a.shape[0]
             mx, mn = a.max(axis=2), a.min(axis=2)
             sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1), 0)
-            white = (mn > 190) & (sat < 0.12)                           # the frame number under the cat (or the one of the row above, when rows are not evenly spaced): white, unsaturated, small
-            wl, wn = ndi.label(ndi.binary_dilation(white, iterations=2))
-            num = np.zeros_like(white)
-            for i in range(1, wn + 1):
-                comp = wl == i; yy, xx = np.where(comp)
-                if comp.sum() < 700 and (yy.min() > hh * 0.78 or yy.max() < hh * 0.22): num |= comp         # a number is in the bottom band, or (the row above's label) in the top band
-            fg = (mx > 38) & ~ndi.binary_dilation(num, iterations=1)
+            # the frame number (also the one of the row above, when rows are not evenly spaced): a small, pure white, unsaturated blob that is its own
+            # component (the black background separates it from the cat) in the top or bottom band; pale belly fur is cream, never pure white
+            fg0 = mx > 38
+            l0, n0 = ndi.label(fg0)
+            num = np.zeros_like(fg0)
+            for i in range(1, n0 + 1):
+                comp = l0 == i
+                if comp.sum() >= 700: continue
+                yy, xx = np.where(comp)
+                if not (yy.min() > hh * 0.78 or yy.max() < hh * 0.22): continue
+                if mn[comp].mean() > 170 and sat[comp].mean() < 0.08: num |= comp
+            fg = fg0 & ~ndi.binary_dilation(num, iterations=2)
             fg = ndi.binary_closing(fg, iterations=2)
             lab, n = ndi.label(fg)
             sz = ndi.sum(fg, lab, range(1, n + 1))

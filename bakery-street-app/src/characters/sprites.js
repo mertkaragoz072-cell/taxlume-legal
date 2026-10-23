@@ -8,11 +8,11 @@ export const SHEETS = {
   boy_backpack: { frames: 80, cols: 10, w: 121, h: 132, cat: true, side: 20, eat: 50 },
   girl_basket: { frames: 80, cols: 10, w: 112, h: 137, cat: true, side: 20, eat: 50 },
   oldman: { frames: 80, cols: 10, w: 116, h: 145, cat: true, side: 20, eat: 50 },
-  boy_cap: { frames: 50, cols: 10, w: 117, h: 131, cat: true, side: 20 },
+  boy_cap: { frames: 80, cols: 10, w: 117, h: 131, cat: true, side: 20, eat: 50 },
   boy_redcap: { frames: 50, cols: 10, w: 113, h: 139, cat: true, side: 20 },
-  girl_glasses: { frames: 50, cols: 10, w: 117, h: 137, cat: true, side: 20 },
+  girl_glasses: { frames: 80, cols: 10, w: 117, h: 137, cat: true, side: 20, eat: 50 },
   girl_red: { frames: 80, cols: 10, w: 115, h: 131, cat: true, side: 20, eat: 50 },   // 20-49 side walk; 50-79 sitting and eating (50 is the plain sitting pose)   // 0-7 front walk, 8-15 back walk, 16-19 idle, 20-49 side walk (30 frames, faces right)
-  grandma: { frames: 50, cols: 10, w: 119, h: 136, cat: true, side: 20 },
+  grandma: { frames: 80, cols: 10, w: 119, h: 136, cat: true, side: 20, eat: 50 },
   // staff: true = chef and waiter sheet: 0 stand, 1 stand carrying, 2-3 walk carrying (front), 4 back, 5 side (carrying)
   // crew: true = cat staff sheets. chef: 0-8 walk holding the basket (0 is also the stand), 9-14 joy hop. waiter: 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk
   chef: { frames: 15, w: 123, h: 166, crew: 'chef' },
