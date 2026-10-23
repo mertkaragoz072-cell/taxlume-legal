@@ -188,3 +188,6 @@ Oyun artık yalnızca dikey çalışır (`app.json: orientation: portrait`, `Scr
 
 ### Kedi kafe salon eşyaları
 `table.webp` (vazolu masa), `table-plain.webp`, `chair-left/right.webp`, `rug-green.webp` (her masanın altında), `rug-runner.webp` (servis alanı halısı) yeni resimlerle değişti. Bitkiler (`plant-1..3`), raflı bitki (`shelf-plants`) ve paspas (`mat-paw`) kaydedildi, henüz yerleştirilmedi. Sandalye genişliği masa genişliğinin yarısı. Oturan misafir resimleri (`seat-*`) Komut 5 gelene kadar eski stilde.
+
+### Kedi müşteriler
+Sekiz müşteri artık kedi: 20 karelik şeritler (0-7 önden yürüme, 8-15 arkadan yürüme, 16-19 duruş/nefes), ~12 kare/sn oynar (`cat: true` in `sprites.js`). Eşleşme: boy_backpack=siyah-beyaz, girl_basket=yeşil bereli krem, oldman=şapkalı siyah, boy_cap=gri tekir, girl_glasses=kahverengi tekir, girl_red=fiyonklu turuncu, grandma=üç renkli, boy_redcap=siyah atkılı. Oturan kedi resimleri (Komut 5) gelene kadar masada yürüyen kedi sprite'ı belden aşağısı kesilerek oturur; eski insan `seat-*` resimleri devre dışı.
