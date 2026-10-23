@@ -214,3 +214,6 @@ Oturup yeme sayfaları artık 7 kedi için bağlı (yalnız siyah atkılı `boy_
 
 ### Şef kedi: yandan yürüme (E1)
 `chef.webp` 37 kareli ızgara (10 sütun): 0-8 önden yürüme, 9-14 sevinç, 15-36 yandan sepetle yürüme (22 karelik döngü, sağa bakar). Sayfanın 25-30. karelerinde numaralar ayaklara bindiği için yalnız 2.-23. kareler alındı (döngü kapanışı kare farkına göre seçildi). `scripts/add_staff_anim.py` mevcut şerite yeni kareleri ekler ve boyu eşler; `scripts/extract_cat_walk.py --inpaint` numara silmeyi dener (ayak üstündeki numaralarda silik iz bıraktığı için kullanılmadı). Yatay yürürken yan kareler, dikey yürürken eski önden kareler oynar.
+
+### Garson kedi: tepsiyle yandan yürüme (E2)
+`waiter.webp` 34 kareli ızgara: 0-7 tepsiyle önden, 8-15 tepsiyle arkadan, 16-23 boş elle, 24-33 tepsiyle yandan (10 karelik döngü, 12 kare/sn, sağa bakar). Sayfanın 25-30. karelerinde ayaklar kırpıldığı ve uzun döngüler kapanmadığı için sayfanın 8-17. kareleri alındı. Tepsili + yatay yürüyüşte yan kareler, diğerlerinde eski kareler oynar.
