@@ -4,11 +4,10 @@ import { DemandCycle } from "../economy/demandCycles";
 import { GOODS_BY_ID } from "../economy/goods";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
-import { GradientFill } from "./GradientFill";
+import { FONT, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
-const HOT = "#f0a04b";
-const GLUT = "#6fb8f2";
+const HOT = "#b5651d";
+const GLUT = "#2f5f8a";
 
 interface Props {
   cycle: DemandCycle;
@@ -45,8 +44,6 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
 
   return (
     <View style={styles.card}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-
       <View style={styles.headRow}>
         <Text style={styles.title}>{t("market.demand.sectionLabel")}</Text>
         <Text style={styles.countdown}>
@@ -89,11 +86,17 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
 
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: PARCHMENT.paper,
     borderRadius: RADIUS.feature,
+    borderWidth: 2,
+    borderColor: PARCHMENT.wood,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
-    overflow: "hidden",
-    ...cardShadow,
+    shadowColor: PARCHMENT.woodDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   headRow: {
     flexDirection: "row",
@@ -102,13 +105,18 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   title: {
-    color: COLORS.textMuted,
+    color: PARCHMENT.inkMuted,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     letterSpacing: 1,
   },
-  countdown: { color: COLORS.accent, fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  countdown: {
+    color: PARCHMENT.woodDark,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
   row: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.xs + 2 },
   rowLabel: {
     width: 82,
@@ -133,14 +141,14 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: "#3a2d1e",
+    borderTopColor: withAlpha(PARCHMENT.woodDark, 0.25),
   },
   nextLabel: {
     width: 82,
-    color: COLORS.textMuted,
+    color: PARCHMENT.inkMuted,
     fontSize: TYPE.micro,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
-  hint: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.sm, lineHeight: 15 },
+  hint: { color: PARCHMENT.inkMuted, fontSize: TYPE.micro, marginTop: SPACING.sm, lineHeight: 15 },
 });
