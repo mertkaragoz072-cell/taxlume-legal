@@ -11,6 +11,7 @@ import { drawIcon } from '../assets.js';
 const ENTRY = { x: 450, y: 1580 };
 const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests use different columns (arrivals x 450 / table gaps, leavers x 395 / 60 px further into the aisle), so nobody walks head-on
 const SPEED = 210;                 // design px per second
+const COIN_FLIGHT_SEC = 0.5;     // a coin's flight from the guest to the register
 const BODY_H = PERSON_H;           // approximate sprite height at scale 1 (the first table row) for bubbles and hit-testing; `bodyH(y)` follows the perspective
 const bodyH = (y) => BODY_H * depthScale(y);
 
@@ -26,16 +27,29 @@ export class CustomerLayer {
     this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
     this.settled = () => true;      // (id) -> true once the guest sits in the chair; the waiter only brings an order to a seated guest
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
+    this.coins = [];               // coins flying from a paying guest to the register: { x0, y0, x1, y1, t, delay, income, last }
+    this.register = { x: 422, y: 620 };   // set by the scene: where the coins land (the showcase's counter top)
+    this.onRegister = null;        // set by the scene: called when a coin lands (the till bounces and glitters)
     this.bubbleScale = 1;          // set by the scene: bubbles grow a little on small screens (zoomed out) so the icon and price stay readable
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
-        this.pops.push({ x: v ? this.bodyX(v, { state: 'seated', table: e.table }) : 700, y: (v?.y ?? 700) - bodyH(v?.y ?? 700) - 30, text: `+${e.income}`, life: 1 });
-        if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; }   // paid: the guest stays in the chair and eats before leaving
+        if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; v.payout = e.income; }   // paid: the guest stays in the chair and eats before leaving; the coins go to the register when they get up
+        else if (v) this.pay(v, e.income);
+        else this.pops.push({ x: 700, y: 640, text: `+${e.income}`, life: 1 });
       } else if (e.type === 'tableFree') {                         // the logic frees the table on the clock: a guest who is (on a slow device) still eating gets up now
         for (const v of this.v.values()) if (v.ghost && v.table === e.table && v.linger > 0) v.linger = 0;
       }
     });
+  }
+
+  /** Placeholder for a paying-at-the-register animation: three coins fly from the guest to the till, which bounces and shows the amount. */
+  pay(v, income) {
+    v.payout = 0;
+    const ghost = v.ghost ?? { state: 'seated', table: v.table };
+    const x0 = v.table != null ? this.bodyX(v, ghost) : v.x, y0 = (v.table != null ? this.drawY(v, ghost) : v.y) - bodyH(v.y) * 0.25 + this.warp(v.y);
+    const r = this.register;
+    for (let i = 0; i < 3; i++) this.coins.push({ x0, y0, x1: r.x + (i - 1) * 14, y1: r.y + this.warp(r.y), t: 0, delay: i * 0.13, income, last: i === 2 });
   }
 
   /** The guest drawn at a table: the logic's seated customer, or the one who has paid and is still finishing the meal (until they have stood up). */
@@ -75,13 +89,19 @@ export class CustomerLayer {
     }
     for (const [id, v] of this.v) {
       if (live.has(id)) continue;
-      if (v.linger > 0 && v.ghost) { v.linger -= dt; v.moving = false; continue; }          // the logic has paid and removed them, they finish eating first
+      if (v.linger > 0 && v.ghost) { v.linger -= dt; v.moving = false; if (v.linger > 0) continue; }          // the logic has paid and removed them, they finish eating first
+      if (v.payout) this.pay(v, v.payout);                       // done eating: the coins go to the register
       if (!v.ghost && v.sit > 0 && v.table != null) v.ghost = { id, state: 'seated', table: v.table, orderId: null };   // gave up while seated: still stands up out of the chair smoothly
       v.leaving = true;                                          // logic removed them: walk out through the entrance
       if (!v.ghost || v.sit < 1) this.step(v, EXIT, dt, id);       // (a guest who is still in the chair first stands up, then walks)
       if (v.ghost && v.sit <= 0) v.ghost = null;
       if (!v.moving && !v.ghost) this.v.delete(id);
     }
+    for (const c of this.coins) {                                   // coins in flight; the last one to land shows the amount
+      c.t += dt;
+      if (c.t - c.delay >= COIN_FLIGHT_SEC) { c.landed = true; this.onRegister?.(c); if (c.last) this.pops.push({ x: c.x1, y: this.register.y - 30, text: `+${c.income}`, life: 1 }); }
+    }
+    this.coins = this.coins.filter((c) => !c.landed);
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
     for (const [id, v] of this.v) {                                 // lower into / rise out of the chair
@@ -177,6 +197,15 @@ export class CustomerLayer {
 
   drawY(v, c) { return c && c.table != null && v.sit > 0 && !this.seatArt(v, c) && hasSitFrames(v.look) ? this.sitPos(v, c).y : c && c.table != null && v.sit > 0 && !this.seatArt(v, c) ? v.y + (sitFeetY(c.table) - 62 - v.y) * v.sit : v.y; }     // a cat sits whole: feet just below the cushion, nothing is cut off
 
+  /** Stand-in for an impatient face: a guest whose patience is nearly gone trembles (sideways, faster the less is left). */
+  shake(v, c, t) {
+    if (!c || v.ghost || v.moving || v.leaving) return 0;
+    const f = this.cafe.patienceFraction(c);
+    return f >= 0.3 ? 0 : Math.sin(t * 32 + v.id * 2) * (1.2 + 2.2 * (1 - f / 0.3));
+  }
+
+  shaken(ctx, dx, fn) { if (!dx) return fn(ctx); ctx.save(); ctx.translate(dx, 0); fn(ctx); ctx.restore(); }
+
   /** Depth-sorted pieces for the scene: one { y, draw } per guest (the scene sorts them with the furniture). */
   items(t) {
     const out = [];
@@ -185,7 +214,7 @@ export class CustomerLayer {
       const table = c && c.state === 'seated' && v.sit > 0 ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       out.push({
         y: table ? depthOf(table) + (hasSitFrames(v.look) ? -2 : 1) : v.y,
-        draw: (ctx) => {
+        draw: (ctx0) => this.shaken(ctx0, this.shake(v, c, t), (ctx) => {
           ctx.globalAlpha = clamp((EXIT.y - v.y) / 60, 0, 1);       // fades in and out at the bottom edge
           const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
@@ -202,7 +231,7 @@ export class CustomerLayer {
           }
           drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
           ctx.globalAlpha = 1;
-        },
+        }),
       });
     }
     return out;
@@ -222,6 +251,12 @@ export class CustomerLayer {
       if (c.state === 'seated') this.orderBubble(ctx, w, c, t);
       else this.waitBubble(ctx, v, c, t);
       ctx.restore();
+    }
+    for (const c of this.coins) {
+      const k = (c.t - c.delay) / COIN_FLIGHT_SEC; if (k <= 0) continue;
+      const e = k * k * (3 - 2 * k);
+      ctx.globalAlpha = 1;
+      drawIcon(ctx, 'coin', c.x0 + (c.x1 - c.x0) * e, c.y0 + (c.y1 - c.y0) * e - Math.sin(k * Math.PI) * 110, 40 - 10 * k);      // an arc over the floor
     }
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);

@@ -20,13 +20,15 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | Ürün, malzeme ve durum ikonları (E11) | HAZIR, oyunda |
 | Arayüz öğeleri (E10): rozet, menü, alt menü, kapatma, panel çerçevesi | HAZIR, oyunda (yeşil/kiremit düğmeler ve geniş panel çerçevesi kaydedilmedi) |
 
-## Kalite geçişinde fark edilen, kodla çözülemeyen eksikler
-| Eksik | Etki |
-|---|---|
-| Garson tepsisi: fincan + pasta resmin içine gömülü | Her siparişte (ekmek, kruvasan…) aynı tepsi görünür. Çözüm: boş tepsili kareler + ürün ikonu katmanı ya da ürün başına tepsi sayfası |
-| Masayı toplama animasyonu (garson tabağı alır) | Tabak şimdilik sönerek kayboluyor |
-| Müşteri ifadeleri (sabır azalınca somurtma, memnun gülümseme) | Yalnız sabır çubuğu/balon var; kedi yüzü değişmiyor |
-| Kasada ödeme animasyonu | Ödeme masada, "+N" yazısıyla gösteriliyor |
+## Eksik animasyonlar için şimdilik kodla yapılmış yedek hareketler
+Gerçek animasyon sayfaları gelene kadar bunlar çalışır; sayfa gelince ilgili satırdaki yedek kaldırılır.
+| Eksik | Şimdiki yedek (kod) | Gerçeği için gereken |
+|---|---|---|
+| Kasada ödeme | Kedi yemeği bitirip kalkarken 3 altın, masadan vitrin tezgâhındaki kasaya yay çizerek uçar; tezgâh sıçrar, kıvılcım çıkar, "+N" yazısı kasada belirir (`CustomerLayer.pay`) | Kasaya yürüyüp ödeme yapan kedi sayfası (+ kasa/para çekmecesi resmi) |
+| Garson tepsisindeki ürün (resimde hep fincan + pasta) | Garsonun başının üstünde, gerçekten taşıdığı ürünün ikonu küçük bir balon içinde sallanır (`drawWaiter`) | Boş tepsili kareler + ürün katmanı, ya da ürün başına tepsi sayfası |
+| Masayı toplama | Tabak söner, masa kıvılcımla parlar (`tableFree`) | Garsonun tabağı alma animasyonu |
+| Sabrı biten müşterinin yüzü | Sabrı %30'un altına inince kedi yana doğru titrer, azaldıkça hızlanır (`CustomerLayer.shake`) | Somurtkan/sinirli yüz kareleri |
+| Şef sevinç sıçraması (E7) | Mevcut sevinç kareleri + zıplama | E7 sayfası |
 
 ## Sıra (görünürlüğe göre)
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.

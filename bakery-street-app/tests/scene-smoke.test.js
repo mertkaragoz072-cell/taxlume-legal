@@ -34,6 +34,7 @@ test('the cafe scene draws and runs a whole service without any picture loaded',
   const ctx = mockCtx();
   const paid = []; game.on('customer', (e) => { if (e.type === 'leave' && e.income) paid.push(e.id); });
   const gold0 = player.gold;
+  let landed = 0, lastLanded = 0; const till = scene.customers.onRegister; scene.customers.onRegister = (c) => { landed++; if (c.last) lastLanded++; till(c); };
   for (let i = 0; i < 60 * 40; i++) {                              // 40 s at 60 fps
     clock.now += 1000 / 60; game.tick(); scene.update(1 / 60);
     if (i % 3 === 0) scene.render(ctx);
@@ -43,5 +44,6 @@ test('the cafe scene draws and runs a whole service without any picture loaded',
   assert.ok(paid.length >= 2, `the waiter served and the guests paid (${paid.length})`);
   assert.equal(new Set(paid).size, paid.length, 'nobody paid twice');
   assert.ok(player.gold > gold0);
+  assert.ok(lastLanded >= 1 && landed >= 3 * lastLanded, `paying guests throw their coins onto the register (${landed} coins, ${lastLanded} payments)`);
   assert.ok(ctx.__calls.n > 1000, 'something was drawn');
 });

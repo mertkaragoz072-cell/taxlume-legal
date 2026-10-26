@@ -63,10 +63,19 @@ export class InteriorScene {
     });
     game.on('levelUp', () => this.burst(CAM.w / 2, 150, 28, CAM.w * 0.8));   // a shower of sparks from the top of the room
     this.staff.onServed = (a) => {                          // the waiter put the order down: a tick and glitter on the table, the guest perks up
-      this.pops.push({ x: a.x + a.w / 2, y: a.y + a.h * 0.08, check: true, life: 0.8 });
-      this.burst(a.x + a.w / 2, a.y + a.h * 0.3, 7);
+      const w = this.warpAt(depthOf(a));                    // (effects are drawn in plain world coordinates: add the table's shift on tall screens)
+      this.pops.push({ x: a.x + a.w / 2, y: a.y + a.h * 0.08 + w, check: true, life: 0.8 });
+      this.burst(a.x + a.w / 2, a.y + a.h * 0.3 + w, 7);
       this.pulse[a.id] = 0;
     };
+    const till = AREAS.find((x) => x.id === 'showcase');    // the register: guests who finished eating throw their coins onto the showcase counter
+    this.customers.register = { x: till.x + till.w / 2, y: till.y + till.h * 0.62 };
+    this.customers.onRegister = (c) => { this.spring[till.id] = 0; this.burst(c.x1, c.y1, c.last ? 7 : 3, 36); };
+    game.on('customer', (e) => {                            // a cleared table sparkles for a moment
+      if (e.type !== 'tableFree') return;
+      const a = AREAS.find((x) => x.id === `table${e.table + 1}`);
+      if (a) this.burst(a.x + a.w / 2, a.y + a.h * 0.3 + this.warpAt(depthOf(a)), 6, a.w * 0.6);
+    });
   }
 
   /**

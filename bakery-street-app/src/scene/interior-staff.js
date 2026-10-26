@@ -239,7 +239,13 @@ export class StaffLayer {
       const hand = Math.min(0.999, this.handT / HAND_SEC);
       this.pose(ctx, 'waiter', 'hand', (c) => drawSprite(c, 'waiter_hand', x, y, t, { ...o, hand, shade: true, sway: 0, bob: 0 }));
     } else this.pose(ctx, 'waiter', tray ? 'tray' : 'plain', (c) => drawSprite(c, 'waiter', x, y, t, o));
-    // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
+    // the tray picture always shows a cup and a cake, so what he really carries is shown as a small marker over his head (a stand-in for per-product tray pictures)
+    if (this.carry && (this.phase === 'pick' || this.phase === 'carry' || (this.phase === 'hand' && !this.job?.paid))) {
+      const my = y - 250 * depthScale(y) - 20 + Math.sin(t * 7) * 3;
+      ctx.beginPath(); ctx.arc(x, my, 26, 0, 7); ctx.fillStyle = '#FFF8EA'; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = '#795238'; ctx.stroke();
+      drawIcon(ctx, this.carry, x, my, 34);
+    }
     ctx.globalAlpha = 1;
   }
 }
