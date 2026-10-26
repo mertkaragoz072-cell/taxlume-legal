@@ -3,6 +3,10 @@ import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
 import { Animated, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import lockBadgeImage from "../../assets/ui/lock-badge.png";
+import categoryCity from "../../assets/ui/categories/city.png";
+import categoryMetropolis from "../../assets/ui/categories/metropolis.png";
+import categoryTown from "../../assets/ui/categories/town.png";
+import categoryTradeHub from "../../assets/ui/categories/tradehub.png";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
@@ -30,6 +34,18 @@ import { CONTENT_MAX_WIDTH, FONT, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, with
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
 const formatPrice = (v: number) => `${v.toFixed(2)} 🪙`;
+
+// The unlock-rank badge on a locked good's card, cropped from the reference
+// sheet's own category pills (Town/City/Metropolis/Trade Hub) — a lookup
+// rather than a field on Good, same reasoning as GOOD_IMAGES: a rank this
+// doesn't cover (there are none right now, but a good could unlock at a
+// rank the sheet never illustrated) just falls back to the plain emoji.
+const CATEGORY_IMAGES: Partial<Record<number, number>> = {
+  1: categoryTown,
+  2: categoryCity,
+  3: categoryMetropolis,
+  4: categoryTradeHub,
+};
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -238,7 +254,11 @@ export function MarketScreen({ sounds }: Props) {
       <View style={[styles.chartCard, { borderColor: selected.color }]}>
         <Animated.View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity: flashOpacity }]}
+          style={[
+            StyleSheet.absoluteFill,
+            styles.flashOverlay,
+            { backgroundColor: flashColor, opacity: flashOpacity },
+          ]}
         />
         <View style={styles.chartHeaderRow}>
           <View>
@@ -251,10 +271,7 @@ export function MarketScreen({ sounds }: Props) {
           <View style={{ alignItems: "flex-end" }}>
             <AnimatedNumber value={selectedState.price} formatter={formatPrice} style={styles.chartPrice} />
             <Text
-              style={[
-                styles.chartChange,
-                { color: change >= 0 ? PARCHMENT.positive : PARCHMENT.negative },
-              ]}
+              style={[styles.chartChange, { color: change >= 0 ? PARCHMENT.positive : PARCHMENT.negative }]}
             >
               {change >= 0 ? "+" : ""}
               {formatPercent(change, state.language, 2)}
@@ -334,7 +351,15 @@ export function MarketScreen({ sounds }: Props) {
                   {t(g.nameKey)}
                 </Text>
                 <View style={styles.lockedRankChip}>
-                  <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
+                  {CATEGORY_IMAGES[g.unlockRank ?? 0] ? (
+                    <Image
+                      source={CATEGORY_IMAGES[g.unlockRank ?? 0]}
+                      style={styles.lockedRankBadge}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
+                  )}
                   <Text style={styles.lockedRankText} numberOfLines={1}>
                     {t(townRankNameKey(g.unlockRank ?? 0))}
                   </Text>
@@ -668,6 +693,11 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     marginTop: 6,
   },
+  // Dark + gold-outlined rather than the paper-colored chip every other
+  // badge on this card uses — matches the reference sheet's own category
+  // pills exactly (they sit on the same near-black fill regardless of
+  // which screen theme surrounds them), and the contrast also just reads
+  // as "a stamped rank marker" better than a paper tag would.
   lockedRankChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -677,13 +707,14 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: RADIUS.chip,
     borderWidth: 1,
-    borderColor: PARCHMENT.wood,
-    backgroundColor: PARCHMENT.paper,
+    borderColor: PARCHMENT.gold,
+    backgroundColor: "#1a1410",
     maxWidth: "100%",
   },
+  lockedRankBadge: { width: 14, height: 14, borderRadius: 7 },
   lockedRankIcon: { fontSize: TYPE.micro },
   lockedRankText: {
-    color: PARCHMENT.inkMuted,
+    color: PARCHMENT.onDark,
     fontSize: TYPE.micro,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
@@ -705,7 +736,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   gameOverSub: { color: "#e0bdb5", fontSize: TYPE.label, marginTop: 6, textAlign: "center" },
-  autoTradeDesc: { color: PARCHMENT.inkMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
+  autoTradeDesc: {
+    color: PARCHMENT.inkMuted,
+    fontSize: TYPE.label,
+    marginBottom: SPACING.md,
+    lineHeight: 17,
+  },
   autoTradePanel: {
     ...panelBase,
     padding: SPACING.md + 2,
