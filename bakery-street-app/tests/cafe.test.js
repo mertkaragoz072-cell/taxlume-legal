@@ -13,7 +13,7 @@ function make({ gold = 1000, config = {}, seed = 7 } = {}) {
   const clock = { now: 1_700_000_000_000 };
   const player = { gold };
   const game = new Game(player, {}, () => clock.now);
-  const cfg = { ...CAFE, tablesUpgrade: null, firstSpawnSec: 1, spawnEverySec: [5, 5], ...config };
+  const cfg = { ...CAFE, tablesUpgrade: null, firstSpawnSec: 1, spawnEverySec: [5, 5], eatSec: 0, cleanSec: 0, ...config };   // eating/clearing is switched off here; its own tests ask for it
   const cafe = new Cafe(game, { rng: seeded(seed), config: cfg });
   cafe.setActive(true);   // customers only run while the interior is open
   /** advance fake time in 1 s steps, ticking each step */
@@ -188,7 +188,7 @@ function session(storage, clock, seed = 3) {
 test('gold, stock, customers, tables and order status survive a reload', () => {
   const st = new FakeStorage(), clock = { now: 1_700_000_000_000 };
   const a = session(st, clock); a.mgr.load(); a.mgr.attach();
-  for (let i = 0; i < 4; i++) a.cafe.arrive();
+  for (let i = 0; i < 3; i++) a.cafe.arrive();                      // two tables + one waiting (the sold table is busy eating, so nobody else sits)
   a.cafe.seatQueued(); a.game.emit('change', { type: 'cafe' });
   const sold = a.cafe.customers.find((c) => c.state === 'seated');
   a.game.products[a.cafe.orderOf(sold).product] = 2;
@@ -444,16 +444,78 @@ test('seating: hips rest on the chair cushion inside the table picture, and the 
   }
 });
 
-test('waiter service: picks up an open order, carries it to the table gap, hands it over and returns to the post', async () => {
+test('waiter service: with stock he picks up an open order, carries it to the table gap, delivers it there (the sale is made) and returns to the post', async () => {
   const { StaffLayer } = await import('../src/scene/interior-staff.js');
-  const { game, cafe, run } = make({ config: { spawnEverySec: [999, 999], firstSpawnSec: 999, tablesUpgrade: null, orderPatienceSec: 500 } });
+  const { game, cafe, player } = make({ config: { spawnEverySec: [999, 999], firstSpawnSec: 999, tablesUpgrade: null, orderPatienceSec: 500, eatSec: 4, cleanSec: 1 } });
   const staff = new StaffLayer(game);
   staff.show = 1;
   const c = cafe.arrive(); cafe.seatQueued();
+  const order = cafe.orderOf(c); game.products[order.product] = 1; const gold = player.gold;
   const seen = new Set(); let carried = null;
   for (let i = 0; i < 1200; i++) { staff.update(0.05); seen.add(staff.phase); if (staff.carry) carried = staff.carry; }
   assert.ok(seen.has('carry') && seen.has('hand') && seen.has('back'), `phases seen: ${[...seen]}`);
-  assert.equal(carried, cafe.orderOf(c).product, 'the waiter carried the guest\'s product');
+  assert.equal(carried, order.product, 'the waiter carried the guest\'s product');
   assert.equal(staff.phase, 'post'); assert.equal(staff.carry, null);
-  assert.equal(cafe.orderOf(c).status, 'open', 'service is only visual: the sale is still made by tapping');
+  assert.equal(order.status, 'paid', 'handing the order over made the sale');
+  assert.ok(player.gold > gold); assert.equal(game.products[order.product], 0);
+  assert.equal(cafe.customers.includes(c), false);
+  assert.ok(staff.plates.has(0) || cafe.holds[0] > 0, 'the table is busy while the guest eats');
+});
+
+test('waiter service: without stock he does not go, the order stays open and nothing is paid; the tap guard sees the order he is bringing', async () => {
+  const { StaffLayer } = await import('../src/scene/interior-staff.js');
+  const { game, cafe, player } = make({ config: { spawnEverySec: [999, 999], firstSpawnSec: 999, tablesUpgrade: null, orderPatienceSec: 500 } });
+  const staff = new StaffLayer(game);
+  staff.show = 1;
+  const c = cafe.arrive(); cafe.seatQueued();
+  const order = cafe.orderOf(c); game.products[order.product] = 0; const gold = player.gold;
+  const seen = new Set();
+  for (let i = 0; i < 400; i++) { staff.update(0.05); seen.add(staff.phase); }
+  assert.deepEqual([...seen], ['post'], 'no stock: he stays at his post');
+  assert.equal(order.status, 'open'); assert.equal(player.gold, gold);
+  game.products[order.product] = 1;                                // produced meanwhile: now he goes
+  for (let i = 0; i < 60; i++) staff.update(0.05);
+  assert.ok(staff.claims(order.id), 'the order is claimed while he brings it (a tap must not serve it twice)');
+  assert.equal(staff.claims(order.id + 999), false);
+});
+
+test('waiter service: a guest who is not in the chair yet is not served', async () => {
+  const { StaffLayer } = await import('../src/scene/interior-staff.js');
+  const { game, cafe } = make({ config: { spawnEverySec: [999, 999], firstSpawnSec: 999, tablesUpgrade: null, orderPatienceSec: 500 } });
+  const staff = new StaffLayer(game); staff.show = 1; staff.seated = () => false;
+  const c = cafe.arrive(); cafe.seatQueued(); game.products[cafe.orderOf(c).product] = 3;
+  for (let i = 0; i < 200; i++) staff.update(0.05);
+  assert.equal(staff.phase, 'post'); assert.equal(cafe.orderOf(c).status, 'open');
+});
+
+test('a served guest keeps the table busy while eating and the table is cleared before the next guest sits', () => {
+  const { cafe, game, run } = make({ config: { eatSec: 5, cleanSec: 2, spawnEverySec: [1000, 1000], firstSpawnSec: 1000, tables: 1, queueMax: 1 } });
+  game.products.bread = 5;
+  const a = cafe.arrive(); cafe.seatQueued(); const b = cafe.arrive(); cafe.seatQueued();
+  assert.equal(a.state, 'seated'); assert.equal(b.state, 'queued');
+  cafe.orders.find((o) => o.id === a.orderId).product = 'bread';
+  const r = cafe.deliver(a.orderId);
+  assert.ok(r.ok); assert.equal(cafe.customers.includes(a), false);
+  assert.equal(b.state, 'queued', 'the table is still busy: nobody sits there while the guest eats');
+  assert.deepEqual(cafe.freeTables(), []);
+  run(5); assert.equal(b.state, 'queued', 'eating is over but the table is still being cleared');
+  run(3); assert.equal(b.state, 'seated', 'cleared: the next guest sits'); assert.equal(b.table, 0);
+});
+
+test('table holds only run while the cafe is open and are not saved', () => {
+  const { cafe, game, clock, run } = make({ config: { eatSec: 5, cleanSec: 2, spawnEverySec: [1000, 1000], firstSpawnSec: 1000, tables: 1 } });
+  game.products.bread = 5;
+  const a = cafe.arrive(); cafe.seatQueued(); cafe.orders[0].product = 'bread'; cafe.deliver(a.orderId);
+  assert.ok(cafe.holds[0] > 0);
+  cafe.setActive(false); clock.now += 60_000; game.tick(); cafe.setActive(true); game.tick();
+  assert.ok(cafe.holds[0] > 0, 'time away did not clear the table');
+  assert.equal('holds' in cafe.exportState(), false);
+  run(8); assert.deepEqual(cafe.freeTables(), [0]);
+});
+
+test('a guest with no matching stock is not served and keeps waiting (nothing is paid)', () => {
+  const { cafe, game, player } = make({ config: { eatSec: 5, cleanSec: 2 } });
+  const c = cafe.arrive(); cafe.seatQueued(); game.products[cafe.orderOf(c).product] = 0;
+  const gold = player.gold, r = cafe.deliver(c.orderId);
+  assert.equal(r.ok, false); assert.equal(r.reason, 'stock'); assert.equal(player.gold, gold); assert.equal(cafe.orderOf(c).status, 'open'); assert.deepEqual(cafe.holds, {});
 });

@@ -24,12 +24,13 @@ export class CustomerLayer {
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
     this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
-    this.isServed = () => false;   // set by the scene: has this order been brought to the table (the guest then eats)
+    this.settled = () => true;      // (id) -> true once the guest sits in the chair; the waiter only brings an order to a seated guest
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
         this.pops.push({ x: v?.x ?? 700, y: (v?.y ?? 700) - bodyH(v?.y ?? 700) - 30, text: `+${e.income}`, life: 1 });
+        if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; }   // paid: the guest stays in the chair and eats before leaving
       }
     });
   }
@@ -59,18 +60,22 @@ export class CustomerLayer {
       v.via = goal.via ?? null;
       this.step(v, goal, dt, c.id);
       if (!v.moving) v.back = false;
+      if (c.state === 'seated') v.table = c.table;
       if (!v.moving && c.state === 'seated') v.dir = -(goal.side ?? -1);   // once in the chair, face the table
     }
     for (const [id, v] of this.v) {
       if (live.has(id)) continue;
+      if (v.linger > 0 && v.ghost) { v.linger -= dt; v.moving = false; continue; }          // the logic has paid and removed them, they finish eating first
+      if (!v.ghost && v.sit > 0 && v.table != null) v.ghost = { id, state: 'seated', table: v.table, orderId: null };   // gave up while seated: still stands up out of the chair smoothly
       v.leaving = true;                                          // logic removed them: walk out through the entrance
-      this.step(v, EXIT, dt, id);
-      if (!v.moving) this.v.delete(id);
+      if (!v.ghost || v.sit < 1) this.step(v, EXIT, dt, id);       // (a guest who is still in the chair first stands up, then walks)
+      if (v.ghost && v.sit <= 0) v.ghost = null;
+      if (!v.moving && !v.ghost) this.v.delete(id);
     }
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
     for (const [id, v] of this.v) {                                 // lower into / rise out of the chair
-      const c = this.cafe.customers.find((x) => x.id === id);
+      const c = this.cafe.customers.find((x) => x.id === id) ?? v.ghost;
       v.sit = clamp((v.sit ?? 0) + (this.isSitting(v, c) ? dt * 3.5 : -dt * 3.5), 0, 1);
     }
   }
@@ -163,7 +168,7 @@ export class CustomerLayer {
   items(t) {
     const out = [];
     for (const [id, v] of this.v) {
-      const c = this.cafe.customers.find((x) => x.id === id);
+      const c = this.cafe.customers.find((x) => x.id === id) ?? v.ghost;
       const table = c && c.state === 'seated' && v.sit > 0 ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       out.push({
         y: table ? depthOf(table) + (hasSitFrames(v.look) ? -2 : 1) : v.y,
@@ -172,9 +177,14 @@ export class CustomerLayer {
           const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
           const hold = v.moving && !v.pause;
-          if (table && hasSitFrames(v.look)) {                      // sitting behind the table: eats once the order is on the table, otherwise waits
-            const p = this.sitPos(v, c), ord = this.cafe.orderOf(c), settled = v.sit >= 0.999;
-            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: settled ? (ord && this.isServed(ord.id) ? 'eat' : 'wait') : false, frame: settled ? 0 : null, back: false, fps: 8, phase: id, scale: PERSON_SCALE * 0.72 * depthScale(table.y + table.h), shade: false });
+          if (table && hasSitFrames(v.look)) {                      // sitting behind the table: eats once the order is on the table (paid), otherwise waits
+            const p = this.sitPos(v, c), settled = v.sit >= 0.999, e = v.sit * v.sit * (3 - 2 * v.sit), sc = PERSON_SCALE * 0.72 * depthScale(table.y + table.h), keep = ctx.globalAlpha;
+            if (!settled) {                                         // sitting down / standing up: the walking pose and the seated pose cross-fade (no pop between poses)
+              ctx.globalAlpha = keep * (1 - e);
+              drawSprite(ctx, v.look, p.x, p.y, t, { dir: v.dir, back: false, side: !!v.horiz, fps: 8, phase: id, frame: null, scale: sc, shade: false });
+            }
+            ctx.globalAlpha = keep * (settled ? 1 : e);
+            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: v.ghost && !v.leaving ? 'eat' : 'wait', frame: 0, back: false, fps: 8, phase: id, scale: sc, shade: false });
             ctx.globalAlpha = 1; return;
           }
           drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
@@ -190,7 +200,7 @@ export class CustomerLayer {
     const list = [...this.v.entries()];
     for (const [id, v] of list) {
       const c = this.cafe.customers.find((x) => x.id === id);
-      if (!c || v.moving || v.leaving) continue;
+      if (!c || v.ghost || v.moving || v.leaving) continue;
       const table = c.state === 'seated' && c.table != null ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       ctx.save(); ctx.translate(0, this.warp(table ? depthOf(table) + 1 : v.y));
       if (c.state === 'seated') this.orderBubble(ctx, v, c, t);

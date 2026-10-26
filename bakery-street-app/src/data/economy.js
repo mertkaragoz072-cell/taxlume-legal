@@ -51,6 +51,8 @@ export const CAFE = {
   spawnEverySec: [26, 42],      // random gap between arrivals
   queuePatienceSec: 45,         // waiting for a table before giving up
   orderPatienceSec: 100,        // waiting for the order after sitting down
+  eatSec: 5,                    // a served guest stays at the table this long eating (the table is not free meanwhile); 0 = the guest leaves at once
+  cleanSec: 1.5,                // after the guest has gone the table is cleared this long before the next guest may sit
   maxStepSec: 2,                // longest time one tick may advance patience (a hidden tab never burns patience)
   orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4 },   // how likely each product is ordered
   history: 20,                  // closed orders kept for reference

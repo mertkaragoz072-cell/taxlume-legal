@@ -42,7 +42,7 @@ export class InteriorScene {
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
     this.staff.guests = () => this.customers.v.values();
-    this.customers.isServed = (id) => this.staff.served.has(id);
+    this.staff.seated = (id) => { const v = this.customers.v.get(id); return !!v && v.sit >= 0.999 && !v.moving; };
     this.customers.warp = this.staff.warp = (y) => this.warpAt(y);
     this.customers.extra = () => [this.staff.waiter];          // guests give way to the waiter too
     this.rects = {};            // where each area's art was actually drawn (labels follow it)

@@ -1,10 +1,11 @@
-// Staff, purely visual (no game logic, nothing saved):
+// Staff. The baker is purely visual (nothing saved):
 //  - the baker works on the kitchen floor between the back wall and the counters (head and shoulders show above the counters). He walks to
-//    whichever machine is busy, stands beside it facing it and works (the standing pose rocks and breathes faster); otherwise he strolls
-//    between oven, counter, coffee machine and storage;
-//  - the waiter has a post in front of the counters. When a seated guest has an open order he picks it up, carries it (the product is shown
-//    in his hands) along the corridor and down the access gap beside the table, hands it over, and returns to the post. He only mimics
-//    service: the sale itself is still made by tapping the guest, as before.
+//    whichever machine is busy, stands beside it facing it and works (kneading, putting bread in the oven, making a coffee); otherwise he
+//    strolls between oven, counter, coffee machine and storage.
+// The waiter runs the service. When a seated guest has an open order AND the product is in stock, he picks it up at his post, carries it down the
+// corridor and the access gap beside the table and hands it over: at that moment the order is really delivered (Cafe.deliver: stock -1, gold,
+// XP, order paid), the product lands on the table and the guest eats. Tapping a guest still serves at once, unless the waiter is already bringing
+// that order (see claims()). No stock = the waiter does not go, the order stays open and the guest keeps waiting.
 import { drawSprite, hasHandFrames, hasOvenFrames, hasCoffeeFrames } from '../characters/sprites.js';
 import { drawIcon } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
@@ -47,7 +48,9 @@ export class StaffLayer {
     this.phase = 'post';        // post -> carry -> hand -> back
     this.carry = null;          // product id shown in the waiter's hands
     this.handT = 0;
-    this.served = new Set();    // order ids the waiter has already brought (so each order is carried once)
+    this.job = null;            // the order the waiter is bringing: { order, product, side, gx, table, paid }
+    this.plates = new Map();    // table index -> the served product on the table { product, t, eat, hold } (eaten, then cleared when the table is free again)
+    this.seated = () => true;   // set by the scene: (customerId) -> the guest sits in the chair
     this.tour = 0;
     this.bakerWait = 0;
     this.show = 0;              // the waiter fades in only while the cafe has guests
@@ -75,7 +78,8 @@ export class StaffLayer {
     if (this.pendingCoffee && this.busyStop() !== 'coffee') this.pendingCoffee = false;
     if (this.pendingCoffee && bk.stop === 'coffee' && !bk.moving && !bk.target) { this.pendingCoffee = false; this.coffeeT = 0; }
     if (this.coffeeT >= 0) { this.coffeeT += dt; if (this.coffeeT >= COFFEE_SEC || this.cheer > 0) this.coffeeT = -1; }
-    this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length ? dt : -dt)));
+    for (const pl of this.plates.values()) pl.t += dt;
+    this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length || this.plates.size || this.phase !== 'post' ? dt : -dt)));
     this.updateWaiter(dt);          // without the waiter sheet drawSprite simply draws nothing
   }
 
@@ -97,18 +101,20 @@ export class StaffLayer {
     }
   }
 
-  /** A seated guest whose open order has not been carried yet (oldest first). */
+  /** A seated guest whose open order can be served now: the product is in stock (oldest first). Without stock the waiter does not go. */
   nextOrder() {
     const cafe = this.game.cafe;
     for (const c of cafe?.customers ?? []) {
-      if (c.state !== 'seated') continue;
+      if (c.state !== 'seated' || !this.seated(c.id)) continue;
       const o = cafe.orderOf(c);
-      if (!o || o.status !== 'open' || this.served.has(o.id)) continue;
-      const gx = chairSpot(c.table).via;
+      if (!o || o.status !== 'open' || !(this.game.products[o.product] >= 1)) continue;
       return { c, o };
     }
     return null;
   }
+
+  /** True while the waiter is bringing this order (a tap on the guest must not serve it a second time). */
+  claims(orderId) { return !!this.job && this.job.order === orderId && ['pick', 'carry', 'hand'].includes(this.phase); }
 
   updateWaiter(dt) {
     const w = this.waiter, cafe = this.game.cafe;
@@ -121,7 +127,7 @@ export class StaffLayer {
       if (job) {
         const a = AREAS.find((x) => x.id === `table${job.c.table + 1}`), spot = chairSpot(job.c.table);
         const gx = Math.max(-50, Math.min(950, spot.via)), gy = a.y + 55;
-        this.job = { order: job.o.id, product: job.o.product, side: spot.side, gx, table: a.id };
+        this.job = { order: job.o.id, product: job.o.product, side: spot.side, gx, table: a.id, paid: false };
         this.route = [{ x: gx, y: WAITER_LANE_Y }, { x: gx, y: gy }];
         this.carry = job.o.product; this.phase = 'pick'; this.pickT = 0; w.dir = 1;       // takes the order from the counter first (a short beat), then sets off
       } else if (Math.abs(w.x - POST.x) > 3 || Math.abs(w.y - POST.y) > 3) w.target = { ...POST };
@@ -129,28 +135,36 @@ export class StaffLayer {
     }
     if (this.phase === 'pick') {
       w.t += dt; this.pickT += dt;
-      if (this.pickT >= 0.45) { this.phase = 'carry'; w.target = this.route.shift(); }
+      if (this.pickT >= 0.45) {
+        const open = this.game.cafe?.orders.some((o) => o.id === this.job.order && o.status === 'open');
+        if (!open || !(this.game.products[this.job.product] >= 1)) { this.carry = null; this.job = null; this.phase = 'post'; return; }     // sold or gone meanwhile: nothing to bring
+        this.phase = 'carry'; w.target = this.route.shift();
+      }
       return;
     }
     if (this.phase === 'carry') {
       const gone = !cafe?.orders.some((o) => o.id === this.job.order && o.status === 'open');
-      if (gone) { this.carry = null; this.phase = 'back'; this.route = [{ x: w.x, y: WAITER_LANE_Y }, { ...POST }]; w.target = this.route.shift(); return; }   // the guest left or was served by a tap
+      if (gone) { this.carry = null; this.job = null; this.phase = 'back'; this.route = [{ x: w.x, y: WAITER_LANE_Y }, { ...POST }]; w.target = this.route.shift(); return; }   // the guest gave up while he was on the way
       if (w.step(dt, blocked)) { if (this.route.length) w.target = this.route.shift(); else { this.phase = 'hand'; this.handT = 0; w.dir = -this.job.side; } }
       return;
     }
-    if (this.phase === 'hand') {                              // standing beside the guest, offering the order
+    if (this.phase === 'hand') {                              // standing beside the guest, putting the order down
       w.t += dt; this.handT += dt;
+      if (!this.job.paid && this.handT >= HAND_SEC * 0.5) {   // the tray touches the table: now the order is really delivered
+        this.job.paid = true;
+        const r = cafe?.deliver(this.job.order);
+        this.job.ok = !!r?.ok;
+        if (this.job.ok) { this.carry = null; this.onServed?.(AREAS.find((x) => x.id === this.job.table)); }
+      }
       if (this.handT >= HAND_SEC) {
-        this.served.add(this.job.order); this.carry = null; this.onServed?.(AREAS.find((x) => x.id === this.job.table)); this.phase = 'back';
+        this.phase = 'back';                                  // a refused delivery (the stock went meanwhile) sends him back with the tray
         this.route = [{ x: this.job.gx, y: WAITER_LANE_Y }, { ...POST }]; w.target = this.route.shift();
       }
       return;
     }
-    if (w.step(dt, blocked)) { if (this.route.length) w.target = this.route.shift(); else { this.phase = 'post'; w.dir = 1; } }   // back
-    if (this.served.size > 40) this.served = new Set([...this.served].slice(-10));
+    if (w.step(dt, blocked)) { if (this.route.length) w.target = this.route.shift(); else { this.phase = 'post'; w.dir = 1; this.carry = null; this.job = null; } }   // back
   }
 
-  /** Served orders rest on their table until the guest pays: the handover is visible and stays readable. The icon flies from the waiter's hands to the tabletop. */
   /** A small saucer on the tabletop under a served item, so it looks placed there. */
   plate(ctx, x, y) {
     ctx.fillStyle = 'rgba(70,48,32,.28)'; ctx.beginPath(); ctx.ellipse(x + 3, y + 4, 30, 9, 0, 0, 7); ctx.fill();
@@ -159,15 +173,15 @@ export class StaffLayer {
     ctx.strokeStyle = 'rgba(121,82,56,.25)'; ctx.beginPath(); ctx.ellipse(x, y, 19, 5, 0, 0, 7); ctx.stroke();
   }
 
+  /** What is on the tables: the served product shrinks while the guest eats it, then the empty plate stays until the table is cleared (it fades out as the table comes free). */
   drawServed(ctx) {
-    const cafe = this.game.cafe;
-    for (const c of cafe?.customers ?? []) {
-      const o = c.state === 'seated' ? cafe.orderOf(c) : null;
-      if (!o || o.status !== 'open' || !this.served.has(o.id)) continue;
-      const a = AREAS.find((x) => x.id === `table${c.table + 1}`);
-      ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35));
-      this.plate(ctx, a.x + a.w / 2, a.y + a.h * 0.26);
-      drawIcon(ctx, o.product, a.x + a.w / 2, a.y + a.h * 0.26 - 12, 34);
+    for (const [ti, pl] of this.plates) {
+      const a = AREAS.find((x) => x.id === `table${ti + 1}`); if (!a) continue;
+      const eaten = pl.eat > 0 ? Math.min(1, pl.t / pl.eat) : 1, fade = Math.min(1, Math.max(0, (pl.hold - pl.t) / 0.35)), cx = a.x + a.w / 2, cy = a.y + a.h * 0.26;
+      ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35)); ctx.globalAlpha = fade;
+      this.plate(ctx, cx, cy);
+      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIcon(ctx, pl.product, 0, -8 / k, 34); ctx.restore(); }
+      else { ctx.fillStyle = 'rgba(121,82,56,.5)'; for (const [dx, dy] of [[-9, 0], [4, 2], [11, -1]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 1.8, 0, 7); ctx.fill(); } }     // crumbs
       ctx.restore();
     }
     if (this.phase === 'hand' && this.carry && !hasHandFrames()) {                // the icon is carried from the hands toward the table while handing over

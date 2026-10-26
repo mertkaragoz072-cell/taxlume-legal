@@ -29,6 +29,7 @@ export class Cafe {
     this.nextId = 1;
     this.customers = [];
     this.orders = [];
+    this.holds = {};            // table index -> ms left while a served guest eats and the table is cleared (the table is not free meanwhile)
     this.spawnIn = ms(this.cfg.firstSpawnSec);
   }
 
@@ -39,7 +40,9 @@ export class Cafe {
     const id = this.cfg.tablesUpgrade;
     return id && this.game.upgradesDef[id] ? Math.min(this.cfg.tables, this.game.effect(id)) : this.cfg.tables;
   }
-  freeTables() { return Array.from({ length: this.tableCount() }, (_, i) => i).filter((i) => !this.tableOwner(i)); }
+  freeTables() { return Array.from({ length: this.tableCount() }, (_, i) => i).filter((i) => !this.tableOwner(i) && !(this.holds[i] > 0)); }
+  /** Seconds a table stays busy after a sale (eating + clearing); 0 when the cafe is configured without it. */
+  holdSec() { return (this.cfg.eatSec ?? 0) > 0 ? (this.cfg.eatSec ?? 0) + (this.cfg.cleanSec ?? 0) : 0; }
   queued() { return this.customers.filter((c) => c.state === 'queued').sort((a, b) => a.id - b.id); }
   orderOf(c) { return c.orderId ? this.orders.find((o) => o.id === c.orderId) ?? null : null; }
   openOrders() { return this.orders.filter((o) => o.status === 'open'); }
@@ -72,6 +75,10 @@ export class Cafe {
     this.last = now;
     if (!dt) return;
     let changed = false;
+    for (const k of Object.keys(this.holds)) {                      // tables being cleared come free again
+      this.holds[k] -= dt;
+      if (this.holds[k] <= 0) { delete this.holds[k]; changed = true; this.game.emit('customer', { type: 'tableFree', table: +k }); }
+    }
     for (const c of [...this.customers]) {
       c.patience -= dt;
       if (c.patience <= 0) { this.leave(c, false); changed = true; }
@@ -147,7 +154,7 @@ export class Cafe {
   }
 
   // ---- sales ----------------------------------------------------------------------------------
-  /** Delivers the product of `orderId`. One atomic step: stock -1, gold +price, order paid, customer leaves, table freed. */
+  /** Delivers the product of `orderId`. One atomic step: stock -1, gold +price, order paid, customer leaves the logic; the table is free again after `holdSec()`. */
   deliver(orderId) {
     const order = this.orders.find((o) => o.id === orderId);
     if (!order) return fail('unknown', 'Sipariş bulunamadı.');
@@ -162,7 +169,8 @@ export class Cafe {
     this.game.recordSold(order.product, 1);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);
-    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income, product: order.product });
+    if (this.holdSec() > 0) this.holds[c.table] = ms(this.holdSec());     // the guest eats (the scene keeps them at the table), then the table is cleared
+    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income, product: order.product, eatSec: this.cfg.eatSec ?? 0, holdSec: this.holdSec() });
     this.seatQueued();
     this.game.emit('change', { type: 'sale', product: order.product, price: income });
     return { ok: true, income, product: order.product, orderId: order.id, customerId: c.id };
@@ -189,6 +197,7 @@ export class Cafe {
     this.nextId = state.nextId;
     this.customers = state.customers.map((c) => ({ ...c }));
     this.orders = state.orders.map((o) => ({ ...o }));
+    this.holds = {};                 // tables being cleared are free after a restart
     this.spawnIn = this.nextInterval();
     this.last = null;                // elapsed time while the app was closed is never counted as waiting time
   }

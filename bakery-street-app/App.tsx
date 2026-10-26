@@ -117,6 +117,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         default: break;
       }
     }));
+    offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income) showToast(`${game.productsDef[e.product].icon} satıldı · +${fmt(e.income)} altın`, 1400); }));   // sold: by a tap or by the waiter
     offs.push(game.on("complete", ({ product }: any) => showToast(`${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600)));
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
     offs.push(game.on("exploreReady", ({ region }: any) => { showToast(`🎁 ${region.name} keşfi tamamlandı — ödülünü al!`, 4000); feedback.sfx("done"); feedback.buzz(40); }));
@@ -181,8 +182,10 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     } else if (id === "interior") {
       if (!hit) { act.closePanel(); }
       else if (hit.startsWith("customer:")) {
+        const cust = world.cafe.customers.find((x: any) => x.id === +hit.slice(9));
+        if (cust?.orderId && scene.staff.claims(cust.orderId)) { showToast("Garson siparişi getiriyor…", 1100); return; }     // already on its way: do not serve it a second time
         const r = world.cafe.deliverToCustomer(+hit.slice(9));
-        if (r.ok) showToast(`${game.productsDef[r.product].icon} satıldı · +${fmt(r.income)} altın`, 1400); else showToast(r.message, 2400);
+        if (!r.ok) showToast(r.message, 2400);                                                                                   // (a sale is announced by the 'customer' event below)
       } else {
         const area = AREAS.find((a: any) => a.id === hit);
         if (area?.panel) { scene.select(area.id); setOverlay(null); setPanel({ id: area.panel, side: "right" }); }
