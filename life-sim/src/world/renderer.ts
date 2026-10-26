@@ -43,6 +43,7 @@ export class GameRenderer {
   private fxOn = true;
   private quality: GraphicsQuality = 'auto';
   private slowFrames = 0;
+  private followX = 0;
   private frames = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
@@ -102,6 +103,8 @@ export class GameRenderer {
     }
     this.location = loc;
     this.scene.add(loc.root);
+    const r = loc.camera.followRange;
+    this.followX = r && loc.focusX ? Math.min(r[1], Math.max(r[0], loc.focusX())) : loc.camera.target[0];
     this.resize();
   }
 
@@ -119,7 +122,7 @@ export class GameRenderer {
   }
 
   /** Fixed camera: keeps the required world rectangle visible at any aspect ratio. */
-  private placeCamera(c: CameraSetup): void {
+  private placeCamera(c: CameraSetup, targetX = c.target[0]): void {
     this.camera.fov = c.fov;
     this.camera.updateProjectionMatrix();
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
@@ -128,7 +131,8 @@ export class GameRenderer {
     const dist = Math.max(c.fitWidth / 2 / (tanHalf * this.camera.aspect), c.fitHeight / free / 2 / tanHalf);
     const yaw = THREE.MathUtils.degToRad(c.yaw);
     const el = THREE.MathUtils.degToRad(c.elevation);
-    const [tx, ty, tz] = c.target;
+    const [, ty, tz] = c.target;
+    const tx = targetX;
     // Shift the look-at point down so the target sits centred in the free area above the UI sheet.
     const visibleH = 2 * dist * tanHalf;
     const lift = (c.uiBottomFraction * visibleH) / 2;
@@ -143,12 +147,33 @@ export class GameRenderer {
       this.elapsed += dt;
       this.onFrame(dt);
       this.location?.update(dt, this.elapsed);
+      this.followCamera(dt);
       if (this.fxOn && this.composer) this.composer.render(dt);
       else this.three.render(this.scene, this.camera);
       this.adaptQuality(dt);
       this.raf = requestAnimationFrame(tick);
     };
     this.raf = requestAnimationFrame(tick);
+  }
+
+  /** Rooms scroll sideways with the character: smooth follow, clamped to the room (angle/height never change). */
+  private followCamera(dt: number): void {
+    const loc = this.location;
+    const range = loc?.camera.followRange;
+    if (!loc || !range || !loc.focusX) return;
+    const want = Math.min(range[1], Math.max(range[0], loc.focusX()));
+    this.followX += (want - this.followX) * (1 - Math.exp(-5 * dt));
+    this.placeCamera(loc.camera, this.followX);
+  }
+
+  /** Cast a ray from a screen point (CSS px) and return the first hit's `userData.interactable`. */
+  pick(clientX: number, clientY: number, meshes: THREE.Object3D[]): string | null {
+    const rect = this.canvas.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, this.camera);
+    const hit = ray.intersectObjects(meshes, false)[0];
+    return (hit?.object.userData.interactable as string | undefined) ?? null;
   }
 
   /** In 'auto', drop the post effects if the device can't hold ~25 fps after warm-up. */

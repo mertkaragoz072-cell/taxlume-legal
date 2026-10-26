@@ -23,6 +23,15 @@ export interface SimConfig {
   healthLossPerHourCritical: number;
   /** Happiness lost per hour per unmet need. */
   moodLossPerHourPerNeed: number;
+  /** Sleeping (per hour, before the quality factor). */
+  sleepEnergyPerHour: number;
+  sleepSleepinessPerHour: number;
+  /** While asleep hunger/thirst progress at this fraction of the awake rate. */
+  sleepNeedsFactor: number;
+  sleepHealthPerHour: number;
+  sleepFatigueFactor: number;
+  /** How fast well-being drifts toward its target (fraction per hour). */
+  wellbeingDriftPerHour: number;
 }
 
 export const DEFAULT_CONFIG: SimConfig = {
@@ -40,4 +49,10 @@ export const DEFAULT_CONFIG: SimConfig = {
   energyWarn: 25,
   healthLossPerHourCritical: 2,
   moodLossPerHourPerNeed: 1.5,
+  sleepEnergyPerHour: 11,
+  sleepSleepinessPerHour: 12.5,
+  sleepNeedsFactor: 0.5,
+  sleepHealthPerHour: 1.5,
+  sleepFatigueFactor: 2.5,
+  wellbeingDriftPerHour: 0.06,
 };

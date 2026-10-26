@@ -85,3 +85,17 @@ Well-being is a simplified game mechanic, not a medical model.
 ## Save data
 Versioned envelope `{version, savedAt, state}`; every load is migrated then sanitized (type-checked and clamped,
 defaults filled). Rolling backup; unreadable saves are kept under a `.corrupt` key and the backup is restored.
+
+
+## Home simulation rules (implemented)
+- New game: 08:00 Monday, at home in the bedroom, $500, starter pantry (bread, apples, noodles, milk, water, eggs, rice, pasta, tomatoes, chicken).
+- **Sleep** (bed 1–12 h, sofa 1–3 h): energy +11/h × quality, sleepiness −12.5/h × quality, hunger/thirst grow at half speed, health +1.5/h if fed,
+  workout recovery debt burns 2.5× faster. Quality = place (sofa 0.6) × daytime (0.8 between 09:00–19:00) × hungry (0.8) × thirsty (0.85).
+  Good sleep (≥ 0.7) raises mood and well-being; poor sleep lowers them. Refused when not tired at all.
+- **Food**: eating consumes one owned item first, then applies effects; refused when full or when the item is a raw ingredient.
+  **Cooking** consumes all ingredients atomically; balanced meals also reduce workout recovery debt. Cooking costs ~$7 of ingredients vs. snacks.
+- **Drinking** tap water is free (up to +25 hydration, refused when not thirsty).
+- **Shower / TV / study**: fixed durations, effects scaled by a repeat factor `1/(1+0.6·n)` over a window (floor 0.2–0.3) so leisure cannot be farmed.
+- **Well-being** drifts 6 %/h toward `50 + 0.4·(mood−50) + 0.15·(energy−50) − 6·unmet needs`.
+- **Travel**: rooms 1 min; home ↔ gym 12 min and 1.2 energy; refused if the destination will be closed on arrival (gym 05:00–23:00) or a workout is active (the app ends and banks it first).
+- All actions go through `simulation/actions.ts → executeAction`; the UI previews availability with `dryRun` on a copy of the state.

@@ -7,6 +7,7 @@ import { hasMembership, purchaseMembership } from '../fitness/membership';
 import { commitRep, planRep } from '../fitness/workout';
 import { MemoryStorage, SaveManager } from '../persistence/save';
 import { advanceTime } from '../simulation/needs';
+import { gymGame } from './helpers';
 import { createNewGame, SAVE_VERSION, START_MONEY, type GameState } from '../simulation/state';
 import { DAY, HOUR } from '../simulation/time';
 
@@ -36,7 +37,7 @@ class Fake implements WorkoutAnimator {
   flush() {}
 }
 
-function setup(state: GameState = createNewGame()) {
+function setup(state: GameState = gymGame()) {
   const bus = new EventBus();
   const events: GameEvent[] = [];
   bus.on((e) => events.push(e));
@@ -211,7 +212,7 @@ describe('purchases', () => {
   });
 });
 
-describe('save migration v1 → v2', () => {
+describe('save migration v1 → v3 (via v2)', () => {
   const v1 = (extra: object = {}) =>
     JSON.stringify({
       version: 1,
@@ -222,8 +223,8 @@ describe('save migration v1 → v2', () => {
 
   it('keeps all existing progress and adds an empty workout', () => {
     const s = mgr.parse(v1());
-    expect(SAVE_VERSION).toBe(2);
-    expect(s.version).toBe(2);
+    expect(SAVE_VERSION).toBe(3);
+    expect(s.version).toBe(3);
     expect(s.money).toBe(321);
     expect(s.character.strength).toBe(12.5);
     expect(s.gym.membershipUntil).toBe(3 * DAY);

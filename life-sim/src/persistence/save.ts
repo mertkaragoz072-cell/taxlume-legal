@@ -1,4 +1,6 @@
 import { clamp } from '../core/math';
+import { HOME_ROOMS, type HomeRoom, type LocationId } from '../core/types';
+import { ITEMS, START_INVENTORY } from '../data/items';
 import { createNewGame, SAVE_VERSION, type GameState } from '../simulation/state';
 
 export interface SaveEnvelope {
@@ -31,6 +33,8 @@ export class MemoryStorage implements SaveStorage {
 export const MIGRATIONS: Array<(raw: Record<string, unknown>) => Record<string, unknown>> = [
   // v1 → v2: the active workout becomes part of the saved state (v1 had none).
   (raw) => ({ ...raw, workout: null }),
+  // v2 → v3: rooms, inventory (starter household), activity log, skills, sleep record.
+  (raw) => ({ ...raw, room: 'bedroom', inventory: { ...START_INVENTORY }, activityLog: [], skills: { office: 0 }, sleep: { lastQuality: 0, lastWakeTime: 0 } }),
 ];
 
 export function migrate(raw: Record<string, unknown>, fromVersion: number): Record<string, unknown> {
@@ -92,6 +96,19 @@ export function sanitize(raw: unknown): GameState {
           levelBefore: Math.floor(num(w.levelBefore, dc.level, 1, 999)),
         }
       : null;
+  const inventory: Record<string, number> = {};
+  if (isObj(raw.inventory)) {
+    for (const [k, v] of Object.entries(raw.inventory)) {
+      if (k in ITEMS && typeof v === 'number' && Number.isFinite(v) && v >= 1) inventory[k] = Math.min(999, Math.floor(v));
+    }
+  } else {
+    Object.assign(inventory, START_INVENTORY);
+  }
+  const activityLog = (Array.isArray(raw.activityLog) ? raw.activityLog : [])
+    .filter(isObj)
+    .map((a) => ({ id: typeof a.id === 'string' ? a.id.slice(0, 32) : '', time: num(a.time, 0, 0) }))
+    .filter((a) => a.id)
+    .slice(-100);
   const txs = Array.isArray(raw.transactions) ? raw.transactions : [];
   const transactions = txs.filter(isObj).map((t) => ({
     id: Math.floor(num(t.id, 0)),
@@ -105,7 +122,8 @@ export function sanitize(raw: unknown): GameState {
   return {
     version: SAVE_VERSION,
     time: num(raw.time, d.time, 0),
-    location: 'gym',
+    location: (raw.location === 'gym' ? 'gym' : 'home') as LocationId,
+    room: (HOME_ROOMS as string[]).includes(raw.room as string) ? (raw.room as HomeRoom) : 'bedroom',
     character: {
       name: typeof c.name === 'string' ? c.name.slice(0, 24) : dc.name,
       level: Math.floor(num(c.level, dc.level, 1, 999)),
@@ -132,7 +150,14 @@ export function sanitize(raw: unknown): GameState {
       totalXpEarned: num(g.totalXpEarned, 0, 0),
     },
     workout,
-    unlockedLocations: ['gym'],
+    inventory,
+    activityLog,
+    skills: { office: isObj(raw.skills) ? num(raw.skills.office, 0, 0, 100) : 0 },
+    sleep: {
+      lastQuality: isObj(raw.sleep) ? num(raw.sleep.lastQuality, 0, 0, 1.5) : 0,
+      lastWakeTime: isObj(raw.sleep) ? num(raw.sleep.lastWakeTime, 0, 0) : 0,
+    },
+    unlockedLocations: ['home', 'gym'],
     flags: isObj(raw.flags) ? Object.fromEntries(Object.entries(raw.flags).filter(([, v]) => typeof v === 'boolean')) as Record<string, boolean> : {},
   };
 }

@@ -6,6 +6,7 @@ import { GYM_PRICES } from '../data/exercises';
 import { hasMembership, membershipRemaining, purchaseMembership } from '../fitness/membership';
 import { MemoryStorage, SaveManager } from '../persistence/save';
 import { advanceTime } from '../simulation/needs';
+import { gymGame } from './helpers';
 import { createNewGame, START_MONEY, type GameState } from '../simulation/state';
 import { DAY, HOUR } from '../simulation/time';
 
@@ -33,7 +34,7 @@ class FakeAnimator implements WorkoutAnimator {
   flush() {}
 }
 
-function rig(state: GameState = createNewGame()) {
+function rig(state: GameState = gymGame()) {
   const bus = new EventBus();
   const events: GameEvent[] = [];
   bus.on((e) => events.push(e));

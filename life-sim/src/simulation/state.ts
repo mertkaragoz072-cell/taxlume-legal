@@ -1,4 +1,5 @@
-import type { ExerciseId, LocationId } from '../core/types';
+import type { ExerciseId, HomeRoom, LocationId } from '../core/types';
+import { START_INVENTORY } from '../data/items';
 import type { Transaction } from '../economy/economy';
 import type { WorkoutSession } from '../fitness/workout';
 
@@ -47,6 +48,8 @@ export interface GameState {
   /** Explicit game clock: seconds since Day 1, 00:00. Only simulation calls advance it. */
   time: number;
   location: LocationId;
+  /** Which room of the home the character is in (meaningful when location = 'home'). */
+  room: HomeRoom;
   character: Character;
   money: number;
   transactions: Transaction[];
@@ -54,12 +57,18 @@ export interface GameState {
   gym: GymState;
   /** The one authoritative active workout (null = not training). Persisted; never held anywhere else. */
   workout: WorkoutSession | null;
+  /** Item id → count. Never negative; entries at 0 are removed. */
+  inventory: Record<string, number>;
+  /** Recent activities (for diminishing returns). Pruned to the last 48 game-hours. */
+  activityLog: Array<{ id: string; time: number }>;
+  skills: { office: number };
+  sleep: { lastQuality: number; lastWakeTime: number };
   unlockedLocations: LocationId[];
   /** Day counter (1-based) the player last got a bill/warning notice on. Reserved for Milestone 3. */
   flags: Record<string, boolean>;
 }
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const START_MONEY = 500;
 /** New games begin at 08:00 on Day 1. */
 export const START_TIME = 8 * 3600;
@@ -68,7 +77,8 @@ export function createNewGame(): GameState {
   return {
     version: SAVE_VERSION,
     time: START_TIME,
-    location: 'gym',
+    location: 'home',
+    room: 'bedroom',
     character: {
       name: 'You',
       level: 1,
@@ -89,7 +99,11 @@ export function createNewGame(): GameState {
     nextTransactionId: 1,
     gym: { membershipUntil: 0, fatigue: 0, lifts: {}, totalWorkoutSeconds: 0, totalXpEarned: 0 },
     workout: null,
-    unlockedLocations: ['gym'],
+    inventory: { ...START_INVENTORY },
+    activityLog: [],
+    skills: { office: 0 },
+    sleep: { lastQuality: 0, lastWakeTime: 0 },
+    unlockedLocations: ['home', 'gym'],
     flags: {},
   };
 }

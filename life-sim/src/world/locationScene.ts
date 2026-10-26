@@ -13,6 +13,8 @@ export interface CameraSetup {
   fitHeight: number;
   /** Fraction (0–1) of screen height the bottom UI sheet covers; target is lifted into the free area. */
   uiBottomFraction: number;
+  /** If set, the camera target x follows `focusX()` clamped to this range. */
+  followRange?: [number, number];
 }
 
 /** What every location scene provides to the renderer. */
@@ -20,6 +22,8 @@ export interface LocationScene {
   id: string;
   root: THREE.Group;
   camera: CameraSetup;
+  /** Optional: the camera tracks this x (room scenes follow the character). */
+  focusX?: () => number;
   update(dt: number, elapsed: number): void;
   dispose(): void;
 }

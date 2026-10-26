@@ -1,5 +1,5 @@
-// End-to-end check of the production build in headless Chromium (needs: npm run build && npm run preview -- --port 4173, and Playwright).
-// Usage: node scripts/verify-e2e.cjs <width> <height> <outDir>   — prints a JSON report; screenshots go to <outDir>.
+// Gym end-to-end check of the production build in headless Chromium (needs: npm run build && npm run preview -- --port 4173, and Playwright).
+// Usage: node scripts/verify-e2e.cjs <width> <height> <outDir> — prints a JSON report; screenshots go to <outDir>.
 const { chromium } = require('playwright');
 const W = +process.argv[2] || 390, H = +process.argv[3] || 844, OUT = process.argv[4];
 const launch = () => chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -37,6 +37,10 @@ const PAGE_HELPERS = () => {
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:4173/?fx=low&debug=1'); await p.waitForTimeout(2500);
+  // new games start at home: walk to the gym first
+  await p.click('[data-act=tab][data-arg=map]'); await p.click('[data-act=go][data-arg=gym]'); await p.click('[data-act=yes]');
+  await p.waitForFunction(() => window.game.state.location === 'gym' && !window.game.busy, null, { timeout: 60000 }); await p.waitForTimeout(1200);
+  await p.click('[data-act=tab][data-arg=here]');
   await p.evaluate(PAGE_HELPERS);
   const res = { viewport: `${W}x${H}` };
 

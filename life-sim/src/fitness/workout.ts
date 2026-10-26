@@ -6,7 +6,7 @@ import type { SimConfig } from '../simulation/config';
 import { DEFAULT_CONFIG } from '../simulation/config';
 import { advanceTime } from '../simulation/needs';
 import type { GameState, LiftRecord } from '../simulation/state';
-import { hasMembership } from './membership';
+import { trainBlockReason } from './access';
 import { addXp } from './progression';
 
 export type RepOutcome = 'success' | 'failed' | 'exhausted';
@@ -78,7 +78,8 @@ export function energyPerRep(state: GameState, id: ExerciseId, weight: number): 
 
 export function startSession(state: GameState, id: ExerciseId, weight: number, targetReps: number): StartResult {
   const d = def(id);
-  if (!hasMembership(state)) return { ok: false, reason: 'You need a gym membership or day pass.' };
+  const blocked = trainBlockReason(state);
+  if (blocked) return { ok: false, reason: blocked };
   if (state.character.health < 20) return { ok: false, reason: 'You are too unwell to train. Rest and eat first.' };
   if (state.character.energy < 8) return { ok: false, reason: 'You are too tired to train. Rest first.' };
   if (weight < d.minWeight || weight > d.maxWeight) return { ok: false, reason: 'Invalid weight.' };

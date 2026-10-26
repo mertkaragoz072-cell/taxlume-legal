@@ -5,12 +5,13 @@ import { purchaseMembership, hasMembership } from '../fitness/membership';
 import { addXp, physiqueStage, xpForNextLevel } from '../fitness/progression';
 import { commitRep, endSession, endSet, maxRepsAt, planRep, restBetweenSets, startSession, currentOneRM } from '../fitness/workout';
 import { advanceTime } from '../simulation/needs';
+import { gymGame } from './helpers';
 import { createNewGame, START_MONEY } from '../simulation/state';
 import { DAY, HOUR, readClock } from '../simulation/time';
 import { MemoryStorage, SaveManager } from '../persistence/save';
 
 const withGym = () => {
-  const s = createNewGame();
+  const s = gymGame();
   expect(purchaseMembership(s, 'dayPass')).toBe(true);
   return s;
 };

@@ -2,6 +2,12 @@ import './styles.css';
 import type { GameEvent } from '../core/events';
 import { EXERCISES, GYM_PRICES } from '../data/exercises';
 import { LOCATIONS } from '../data/locations';
+import { ITEMS } from '../data/items';
+import { HOME_ROOMS } from '../core/types';
+import { ROOMS } from '../data/homeObjects';
+import { optionsFor, type ActionOption } from '../simulation/actions';
+import { isOpen, openingText } from '../navigation/travel';
+import type { LocationId } from '../core/types';
 import { formatMoney } from '../economy/economy';
 import { hasMembership, membershipRemaining, type MembershipPlan } from '../fitness/membership';
 import { PHYSIQUE_STAGES, xpForNextLevel } from '../fitness/progression';
@@ -11,7 +17,7 @@ import type { GraphicsQuality } from '../world/renderer';
 import { DEFAULT_CONFIG } from '../simulation/config';
 import { DAY, formatDuration, HOUR, readClock } from '../simulation/time';
 
-type Tab = 'gym' | 'status' | 'bank' | 'map' | 'menu';
+type Tab = 'here' | 'status' | 'bank' | 'map' | 'menu';
 
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const pct = (v: number): number => Math.round(Math.max(0, Math.min(100, v)));
@@ -25,7 +31,8 @@ interface Confirm {
 }
 
 export class UI {
-  private tab: Tab = 'gym';
+  private tab: Tab = 'here';
+  private options: ActionOption[] = [];
   private confirm: Confirm | null = null;
   private lastSaved = 0;
 
@@ -36,6 +43,25 @@ export class UI {
     game.onChange(() => this.render());
     game.bus.on((e) => this.toast(e));
     root.addEventListener('click', (ev) => this.onClick(ev));
+    // Tap on the 3D scene selects the object under the finger (ignored for drags).
+    const canvas = document.getElementById('stage');
+    let down: [number, number] | null = null;
+    canvas?.addEventListener('pointerdown', (e) => (down = [e.clientX, e.clientY]));
+    canvas?.addEventListener('pointerup', (e) => {
+      if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 10) game.pickAt(e.clientX, e.clientY);
+      down = null;
+    });
+    // Scene transitions fade through black.
+    const fade = document.createElement('div');
+    fade.className = 'fade';
+    document.getElementById('app')?.appendChild(fade);
+    game.onFade(
+      (on) =>
+        new Promise((res) => {
+          fade.classList.toggle('on', on);
+          window.setTimeout(res, 260);
+        }),
+    );
     window.setInterval(() => this.render(), 15000);
     this.render();
   }
@@ -125,6 +151,30 @@ export class UI {
         URL.revokeObjectURL(a.href);
         return;
       }
+      case 'room':
+        void g.goRoom(arg as import('../core/types').HomeRoom);
+        return;
+      case 'obj':
+        g.selectObject(arg);
+        return;
+      case 'do': {
+        const o = this.options[Number(arg)];
+        if (o) void g.runAction(o.spec);
+        return;
+      }
+      case 'go': {
+        const to = arg as LocationId;
+        const r = g.canTravelTo(to);
+        const pending = g.state.workout ? ' Your workout will end and be saved.' : '';
+        if (!r.ok && !g.state.workout) {
+          g.bus.emit('error', r.reason);
+          return;
+        }
+        const name = LOCATIONS.find((l) => l.id === to)?.name ?? to;
+        const mins = r.ok ? r.minutes : 12;
+        this.ask({ title: `Walk to ${name}?`, body: `${mins} min on foot, a little energy.${pending}`, yes: 'Go', run: () => void g.travelTo(to) });
+        return;
+      }
       case 'gfx':
         g.setGraphics(arg as GraphicsQuality);
         return;
@@ -164,7 +214,7 @@ export class UI {
       <div class="hud-row">
         <span class="lv">LV ${c.level}</span>
         <div class="xpbar"><i style="width:${pct((c.xp / xpForNextLevel(c.level)) * 100)}%"></i></div>
-        <span class="clock">${formatClockCompact(st.time)}</span>
+        <span class="clock">${st.location === 'gym' ? '🏋️' : '🏠'} ${formatClockCompact(st.time)}</span>
         <span class="money">${formatMoney(st.money)}</span>
       </div>
       <div class="meters">
@@ -180,13 +230,14 @@ export class UI {
 
   private tabs(): string {
     const t = (id: Tab, icon: string, label: string) => `<button class="tab ${this.tab === id ? 'on' : ''}" data-act="tab" data-arg="${id}"><span>${icon}</span>${label}</button>`;
-    return `<nav class="tabs">${t('gym', '🏋️', 'Gym')}${t('status', '🧍', 'Status')}${t('bank', '💵', 'Bank')}${t('map', '🗺️', 'Map')}${t('menu', '⚙️', 'Menu')}</nav>`;
+    const here = this.game.state.location === 'gym' ? t('here', '🏋️', 'Gym') : t('here', '🏠', 'Home');
+    return `<nav class="tabs">${here}${t('status', '🧍', 'Status')}${t('bank', '💵', 'Bank')}${t('map', '🗺️', 'Map')}${t('menu', '⚙️', 'Menu')}</nav>`;
   }
 
   private sheet(): string {
     switch (this.tab) {
-      case 'gym':
-        return this.gymTab();
+      case 'here':
+        return this.game.state.location === 'gym' ? this.gymTab() : this.homeTab();
       case 'status':
         return this.statusTab();
       case 'bank':
@@ -265,6 +316,8 @@ export class UI {
       <div class="stat"><div class="row"><span>Recovery debt</span><b>${st.gym.fatigue.toFixed(0)}%</b></div><div class="progress"><i style="width:${pct(st.gym.fatigue)}%;background:var(--warn)"></i></div></div>
       <div class="muted small">Performance today: ${Math.round(performance(st) * 100)}% — energy, recovery, food, water and sleep all affect your lifts.</div>
       <h3>Well-being</h3>${stat('Happiness', c.happiness, '#ff7ab8')}${stat('Mental well-being', c.wellbeing, '#a68bff')}
+      <h3>Pantry</h3>${Object.entries(this.game.state.inventory).length ? `<div class="pantry">${Object.entries(this.game.state.inventory).map(([id, n]) => `<span class="pill">${ITEMS[id]?.icon ?? ''} ${ITEMS[id]?.name ?? id} ×${n}</span>`).join('')}</div>` : '<p class="muted small">The pantry is empty.</p>'}
+      <div class="muted small">Skills: office ${this.game.state.skills.office.toFixed(0)}/100 · last sleep quality ${Math.round(this.game.state.sleep.lastQuality * 100)}%</div>
       <h3>Time</h3><button class="btn alt block" data-act="wait" data-arg="1">Take a break (1 hour)</button>
       <p class="muted small">Resting restores energy and burns off recovery debt, but hunger and thirst keep rising. Food, home and sleep arrive in Milestone 2.</p>`;
   }
@@ -282,13 +335,39 @@ export class UI {
   }
 
   private mapTab(): string {
+    const g = this.game;
     return `<h2>Locations</h2>${LOCATIONS.map((l) => {
-      const here = l.id === this.game.state.location;
-      const open = l.milestone <= 1;
-      return `<div class="loc ${open ? '' : 'off'}"><div class="ic">${l.icon}</div><div style="flex:1"><b>${l.name}</b><div class="muted small">${l.blurb}</div></div>${
-        here ? '<span class="pill good">You are here</span>' : `<span class="pill">Milestone ${l.milestone}</span>`
-      }</div>`;
+      const here = l.id === g.state.location;
+      const unlocked = g.state.unlockedLocations.includes(l.id);
+      let right = `<span class="pill">Milestone ${l.milestone}</span>`;
+      let note = l.blurb;
+      if (here) right = '<span class="pill good">You are here</span>';
+      else if (unlocked) {
+        const r = g.canTravelTo(l.id);
+        const closed = l.hours && !isOpen(l.id, g.state.time);
+        if (closed) note = `Closed now · open ${openingText(l.id)}`;
+        right = `<button class="btn sm ${r.ok || g.state.workout ? '' : 'alt'}" data-act="go" data-arg="${l.id}" ${g.busy ? 'disabled' : ''}>${r.ok ? `Walk · ${r.minutes} min` : 'Go'}</button>`;
+        if (!r.ok && !g.state.workout) note = r.reason;
+      }
+      return `<div class="loc ${unlocked ? '' : 'off'}"><div class="ic">${l.icon}</div><div style="flex:1"><b>${l.name}</b><div class="muted small">${note}</div></div>${right}</div>`;
     }).join('')}`;
+  }
+
+  /** Home: room chips, object chips and the actions of the selected object. */
+  private homeTab(): string {
+    const g = this.game;
+    const room = g.state.room;
+    const def = ROOMS[room];
+    const dis = g.busy ? 'disabled' : '';
+    const rooms = HOME_ROOMS.map((r) => `<button class="chip ${r === room ? 'on' : ''}" data-act="room" data-arg="${r}" ${dis}>${ROOMS[r].icon} ${ROOMS[r].short}</button>`).join('');
+    const objs = def.objects.map((o) => `<button class="chip ${o.id === g.selected ? 'on' : ''}" data-act="obj" data-arg="${o.id}" ${dis}>${o.icon} ${o.label}</button>`).join('');
+    this.options = g.selected ? optionsFor(g.state, room, g.selected) : [];
+    const opts = this.options
+      .map(
+        (o, i) => `<button class="opt" data-act="do" data-arg="${i}" ${!o.enabled || g.busy ? 'disabled' : ''}><span class="oi">${o.icon}</span><span class="ot"><b>${esc(o.label)}</b><small>${esc(o.enabled ? o.detail : (o.reason ?? ''))}</small></span></button>`,
+      )
+      .join('');
+    return `<div class="chips">${rooms}</div><div class="chips objs">${objs}</div>${opts || '<p class="muted small">Tap a piece of furniture to use it.</p>'}${g.busy ? '<p class="muted small">…</p>' : ''}`;
   }
 
   private menuTab(): string {

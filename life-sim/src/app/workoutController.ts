@@ -1,7 +1,7 @@
 import type { RepReport, RepResult } from '../animation/benchPress';
 import type { EventBus } from '../core/events';
 import { EXERCISES } from '../data/exercises';
-import { hasMembership } from '../fitness/membership';
+import { canTrainNow, trainBlockReason } from '../fitness/access';
 import { commitRep, endSession, endSet, planRep, restBetweenSets, startSession, type WorkoutSession, type WorkoutSummary } from '../fitness/workout';
 import type { GameState } from '../simulation/state';
 
@@ -64,8 +64,7 @@ export class WorkoutController {
 
   /** The only rule for whether training may happen right now. */
   get canTrain(): boolean {
-    const st = this.d.state();
-    return st.location === 'gym' && hasMembership(st);
+    return canTrainNow(this.d.state());
   }
 
   /** Re-establish a valid state after loading a save. Banks partial sets; ends expired sessions. */
@@ -75,7 +74,7 @@ export class WorkoutController {
     if (!s) return;
     endSet(st, s, this.d.bus); // bank reps of a set that was in progress when the app closed
     if (!this.canTrain) {
-      await this.terminate('Your gym pass expired while you were away — workout ended and saved.');
+      await this.terminate(this.endReason(' while you were away'));
       return;
     }
     s.phase = s.phase === 'ready' ? 'ready' : 'rest';
@@ -123,7 +122,7 @@ export class WorkoutController {
       this.stopRequested = true; // finish the rep in progress, then performSet ends the session
       return;
     }
-    if (!this.busy) void this.terminate('Your gym pass expired — workout ended and saved.');
+    if (!this.busy) void this.terminate(this.endReason());
   }
 
   /** Lift until the target, failure, exhaustion, expiry or a stop request. */
@@ -131,7 +130,7 @@ export class WorkoutController {
     const s = this.session;
     if (!s || this.busy) return;
     if (!this.canTrain) {
-      this.d.bus.emit('error', 'Your gym pass has expired. Buy a new one to keep training.');
+      this.d.bus.emit('error', trainBlockReason(this.d.state()) ?? 'You cannot train right now.');
       await this.terminate('Workout ended and saved.');
       return;
     }
@@ -164,7 +163,7 @@ export class WorkoutController {
     this.lifting = false;
     this.busy = false;
     if (!this.canTrain) {
-      await this.terminate('Your gym pass expired — workout ended and saved.');
+      await this.terminate(this.endReason());
       return;
     }
     void this.d.save();
@@ -215,6 +214,11 @@ export class WorkoutController {
     this.busy = false;
     await this.d.save();
     this.d.changed();
+  }
+
+  private endReason(suffix = ''): string {
+    const why = trainBlockReason(this.d.state()) ?? 'Training is not possible';
+    return `${why.replace(/\.$/, '')}${suffix} — workout ended and saved.`;
   }
 
   /** Drop everything without rewards (used by New Game). */

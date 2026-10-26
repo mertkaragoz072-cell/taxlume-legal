@@ -1,61 +1,97 @@
 # Implementation Status
 
-## Audit and fix round (latest) — root causes found and fixed
+Legend: **VERIFIED** = visuals + interactions + gameplay effects + save behaviour + relevant tests all work (checked, not assumed).
+**IN PROGRESS** = partly built; **NOT STARTED** = nothing real exists yet. Reference board: `../references/life-simulator-reference.jpg`;
+per-location specs: `VISUAL_STYLE_GUIDE.md`.
 
-### Audit findings (what was actually wrong)
-| Symptom | Root cause (file → function) | Evidence |
+Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chromium end-to-end runs (`scripts/home-e2e.cjs`,
+`scripts/verify-e2e.cjs`) on the production build.
+
+## Milestones (numbering from the master specification)
+
+| # | Milestone | Status |
 |---|---|---|
-| Character flips between lying and upright during an exercise | `animation/benchPress.ts → finishSet()` sat the character up after **every set**; `prepareSet()` laid him down again for the next set. `app/workoutController.ts → performSet()` called it each time. | In-browser per-frame torso sampling of the old build over two sets: `LYING → MID → UPRIGHT` after each set, then `MID → LYING` again. At the upright moments `workout.phase` still read `lifting` (UI state ≠ animation state). |
-| Rack obstructs the lifter | Rack uprights stood at the head end of a head-on view (`world/gymScene.ts` `STATION_YAW`, `world/props.ts → createRack`), i.e. between camera and lifter; its 2 m-wide beam, long base rails and racked plates behind added more occlusion. Uprights at z=±0.5 also overlapped heavily loaded plates. | Screenshots; geometry numbers. |
-| Active workout UI with expired membership | The session was a runtime-only object in `WorkoutController` (not in `GameState`, not saved). Membership expiry was only checked when *starting* a workout/set, so a session could stay on screen after the pass expired (rest, time passing) or after a reload decision. | Code path analysis + new tests that reproduced it. |
-| Possible double charge / double reward | `buyMembership` had no idempotency; two concurrent `endWorkout()` calls could both bank/finish. | Code review; new tests. |
-| Shoes 1.5 cm below the floor | `character/rig.ts → applyPose`: shoe offset was defined in the *shin* frame and rotated with the leg; ankle height ignored shoe radius. | Browser bounding-box scan found 2 meshes at y = −0.015; unit test reproduced. |
+| 1 | Fix and polish the gym and bench press | **VERIFIED** (state machine, rack, membership, saves; see audit below) |
+| 2 | Home rooms + sleep, food, hydration, household interactions | **VERIFIED for the implemented scope** (this round) — bills/expenses UI deferred to M3 |
+| 3 | Jobs, wages, bills, banking, recurring expenses | NOT STARTED |
+| 4 | City navigation + travel between all locations | IN PROGRESS (home ↔ gym walking route, opening hours; no city hub yet) |
+| 5 | Grocery, cafés, restaurants, cooking | IN PROGRESS (home cooking from the starter pantry only; no shops) |
+| 6 | Full workout selection, equipment, all exercise animations, physique | IN PROGRESS (bench press + 5 physique stages; 5 exercises NOT STARTED) |
+| 7 | Happiness, social activities, entertainment, nightlife | IN PROGRESS (mood/well-being model + home leisure; no social venues) |
+| 8 | Clothing, barber, tattoos, customization, inventory | IN PROGRESS (pantry inventory only; customization NOT STARTED) |
+| 9 | Polish, mobile optimisation, Android/iOS builds | NOT STARTED (Capacitor config file only) |
 
-### Fixes (files changed)
-- `simulation/state.ts`, `persistence/save.ts`, `fitness/workout.ts`: the active workout is now part of the authoritative saved `GameState.workout`. **Save version 2** with a safe v1→v2 migration and sanitising of malformed workout data.
-- `app/workoutController.ts` (rewritten): reads/writes `state.workout` only; one rule `canTrain` (location = gym ∧ valid membership by in-game time) enforced after every time advance, at set start, after each rep, after rest and on load; the session is ended and banked automatically when training becomes prohibited. `restore()` after load banks partial sets, ends expired sessions, otherwise resumes lying with the bar racked. Idempotent `endWorkout`; concurrent `performSet` calls run one set. Saves after every rep.
-- `app/game.ts`, `ui/ui.ts`: restore on init; `enforceAccess` after idle time; purchase tokens (repeated taps charge once); workout panel only renders when `canTrain`.
-- `animation/benchPress.ts` (rewritten as an explicit state machine): `seated → seatedToLying → lying → lyingToSeated → seated`. Between sets the character **stays lying** with the bar racked (`rackBar()`); only `sitUp()` at the end of the workout (or on forced end) lifts the torso. Torso is exactly π/2 whenever `lying`. Bar path is near-vertical (≤ 8 cm drift per rep, tested). `restoreLying()` for state restore.
-- `character/rig.ts`: rounded elbow/knee/shoulder joint spheres, white material, shoe offset fixed in world frame, `joints()` for tests.
-- `world/props.ts`, `world/gymScene.ts`: new rack (slim uprights at z=±0.42, outside hands, inside plates; no overhead beam; stabiliser behind), bar half-length 0.82, plates can never touch uprights (tested at 200 kg); station moved to the mat surface; camera now views from the foot end diagonally so the rack stands *behind* the lifter and the face, torso, arms and bar are all visible; background decluttered (stray plate stacks and floor items removed, back rack moved aside).
+## Locations
 
-### Verification performed
-- `npm test`: **82 tests pass** (was 57). New: state authority, expiry between sets / mid-set / on reload, restore, repeated taps, v1→v2 migration, animation state machine (never upright mid-workout), torso only changes in transitions, bar vs torso clearance and near-vertical path, rack vs hands/plates, stable pose after stop, no clipping below the mat at any physique, joints ordered consistently.
-- `npm run build`: OK.
-- Headless Chromium end-to-end (`verify` script) at **360×640, 390×844, 430×932** on the production build:
-  - insufficient funds: money unchanged, no pass, Start disabled;
-  - three rapid taps on Confirm: charged once (500 → 492, one transaction);
-  - full workout (2 sets of 3 reps) → reload mid-workout → session restored lying, panel shown, valid;
-  - End workout → no session, seated pose (torso 0.06), summary banked (2 sets, 6 reps);
-  - expiry with no session and with an active session → workout panel disappears, Start disabled;
-  - per-frame pose sequence over the whole run: `SEATED → TRANSITION → LYING → TRANSITION → SEATED` (exactly one lie-down and one sit-up);
-  - camera→joint ray tests (head, shoulder, pelvis, both hands, both elbows, foot): rack blocked **0 of ~390 frames** at every size;
-  - no mesh below the floor; character fits inside the free area between HUD and dock at all three sizes.
+| Location (reference panel) | Status | Notes |
+|---|---|---|
+| Home – Bedroom "Yatak Odası" | **VERIFIED** | Sleep 2/6/8/10 h with quality rules (night, hunger, thirst), Zzz, bed pose on mattress. Wardrobe is set dressing until M8. |
+| Home – Study "Çalışma Odası" | **VERIFIED** | Study at computer: energy cost, office skill + XP, diminishing returns. Job search hooks arrive in M3. |
+| Home – Living room "Oturma Odası" | **VERIFIED** | TV (mood/well-being, diminishing returns, screen light), sofa naps. |
+| Home – Kitchen "Mutfak" | **VERIFIED** | Eat from pantry at the table, cook 3 recipes at the stove (consumes ingredients), drink tap water. Fridge is set dressing; stock shown in Status → Pantry. |
+| Home – Bathroom "Banyo" | **VERIFIED** | Shower with water effect; toilet/mirror are set dressing. |
+| Gym "Spor Salonu" | IN PROGRESS | Bench press + membership **VERIFIED**; squat, deadlift, pull-up, dumbbell, cardio NOT STARTED (equipment is background decoration). |
+| Workplace "İş Yeri" | NOT STARTED | |
+| Café "Kafe" | NOT STARTED | |
+| Grocery "Market" | NOT STARTED | |
+| City centre "Şehir Merkezi" / outdoor life | NOT STARTED | |
+| Character customization | NOT STARTED | |
+| Sports-equipment shop | NOT STARTED | |
+| Clothing shop | NOT STARTED | |
+| Restaurant | NOT STARTED | |
+| Park | NOT STARTED | |
+| Beach / promenade | NOT STARTED | |
+| Relaxation / cinema | NOT STARTED | (living-room TV exists as home leisure) |
+| Health centre | NOT STARTED | (sleep + rest recovery exist at home) |
+| Tattoo studio | NOT STARTED | |
+| Barber | NOT STARTED | |
+| Nightlife / club | NOT STARTED | |
 
-## Systems that work today (all covered by tests unless noted)
-Game clock and needs decay, central economy service with transaction history, gym day pass / monthly membership,
-bench-press workout (reps, sets, energy, XP, levels, strength/endurance/fitness, recovery debt, overtraining, partial-set
-banking), versioned saves (v2) with migration, backup and corruption recovery, IndexedDB autosave (after every rep), stickman
-rig with physique stages, gym scene with post-processing and Graphics setting, compact mobile UI. The end-to-end script is
-`scripts/verify-e2e.cjs` (manual run; not part of CI).
+## Systems
 
-## Unresolved / not yet confirmed
-- Real-device performance and battery are untested; only software WebGL was used (~10 fps).
-- The look is clean and readable but still procedural, not painted like the reference boards (see `docs/ART_SPEC.md`).
-- Seated idle pose is a stand-in for a proper standing/idle animation; elbow flare and facial expressions are not modelled.
-- The e2e script is not in CI; the unit tests are.
+| System | Status | Notes |
+|---|---|---|
+| Game clock, calendar, opening hours | **VERIFIED** | Time moves only through simulation calls; gym open 05:00–23:00. |
+| Needs (health, energy, hunger, hydration, sleepiness) | **VERIFIED** | Passive rules + sleeping rules (slower hunger/thirst, healing, faster recovery). |
+| Happiness / well-being | IN PROGRESS | Well-being drifts toward a target from mood, energy, unmet needs; sleep and leisure move them. Social/nightlife not built. |
+| Economy service + transaction history | IN PROGRESS | `earn`/`spend` verified; only gym passes use it so far. No income, rent, bills, shop prices in use. |
+| Inventory | IN PROGRESS | Atomic add/remove, save-validated, pantry UI. No purchase flows yet (starter household only). |
+| Navigation / travel | IN PROGRESS | Home rooms (1 min) and home ↔ gym (12 min, energy cost, closing time check, workout ended safely). |
+| Persistence | **VERIFIED** | Save v3, migrations v1→v2→v3, sanitising, backup/corruption recovery, autosave. |
+| Character rig and physique | **VERIFIED** | One rig for every scene; 5 physique stages; poses: stand, walk, sit, lie, eat, cook, shower, drink, type, TV, nap. |
+| Clothing / tattoos / hair | NOT STARTED | |
+| Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## Known limitations / honest notes
-- Only the gym is playable. The Map tab lists other locations as "Milestone N" (not clickable).
-- No food, sleep or income yet, so money and hunger move one way until the home/jobs/food milestones are built.
-- Only bench press has data and animation.
-- Visuals were checked with software WebGL (~10 fps). Real-device performance is untested (Milestone 7). Bundle is ~550 KB
-  (three.js); not yet code-split.
-- Elbow flare of a real bench press (lateral motion) is not modelled; the rig animates in the sagittal plane.
-- Capacitor native projects are not generated; only `capacitor.config.json` exists.
-- No automated UI/E2E tests in the repo (headless checks were run manually).
-- The repository's unrelated Expo game (`town-economy/`) is untouched.
+## What was done this round (files)
+- **Reference**: copied to `references/life-simulator-reference.jpg`; analysed; `VISUAL_STYLE_GUIDE.md` written (all panels).
+- **Simulation**: `simulation/activities.ts`, `simulation/actions.ts` (single `executeAction` + side-effect-free `dryRun`), `simulation/needs.ts`
+  (sleeping mode, well-being drift), `simulation/config.ts`, `inventory/inventory.ts`, `navigation/travel.ts`, `fitness/access.ts`
+  (one training rule: gym ∧ open ∧ pass), `data/{items,recipes,activities,homeObjects,locations}.ts`.
+- **State/persistence**: `simulation/state.ts` (room, inventory, activityLog, skills, sleep; new game starts at home), `persistence/save.ts` (v3 + migrations).
+- **Characters**: `character/poses.ts`, `character/actor.ts` (walk/sit/lie/blend state machine), `character/rig.ts` unchanged API.
+- **Scenes**: `world/rooms/roomKit.ts`, `world/rooms/homeRooms.ts` (5 rooms), `world/renderer.ts` (camera follow, picking), textures.
+- **App/UI**: `app/game.ts` (scene switching, travel, actions), `ui/ui.ts` (Home tab, Map travel, pantry, scene tap), `ui/styles.css`.
+- **Tests**: `tests/home.test.ts` (sleep, food, cooking, activities, travel, save v3), `tests/actor.test.ts` (pose reach, floor/surface contact, no pops, mirroring), helpers; earlier suites updated.
 
-## Not implemented (do not treat as done)
-Home rooms, sleep/eating/hydration actions, jobs/shifts/wages/promotions, rent and bills, grocery/cooking/cafés/restaurants,
-city navigation and travel, social/leisure, clothing/barber/tattoos/customization, other exercises. See `GAME_DESIGN.md` plan.
+## Verification performed this round
+- Unit tests: 140 passing (was 82).
+- Real-game run in headless Chromium at 390×844 (`scripts/home-e2e.cjs`): sleep 8 h (08:00→16:00, energy 100, sleepiness 0, slower hunger), tap water (+25),
+  eat bread (stock 3→2), cook chicken & rice (each ingredient −1, +40 min, hunger →0), table options disabled with reasons when full,
+  shower (second shower gives less mood), TV, study (energy −9, office +3), **tap on the 3D table selects it**, walk to gym (12 min),
+  buy pass + 3-rep set, leave → workout ended and banked (3 reps), reload restores location/room/inventory/time. No console errors.
+- Gym regression (`scripts/verify-e2e.cjs`, after the travel change): pass/expiry/refresh scenarios, single lie-down and sit-up, rack blocks 0/379 frames, no floor clipping, fits the screen — all unchanged and passing.
+- All five rooms at 360×640 and 430×932: no horizontal overflow, character always above the action sheet.
+
+## Audit notes for this round
+- Found by tests: lying arms sank into the mattress (fixed: arms straight beside the body); standing pose bent the knees too much (pelvis raised);
+  walk-cycle reach was 0.7 mm out of range (fixed); blends slowed to avoid >5 cm/frame pelvis motion.
+- Honest scope: only the five home rooms and the gym exist as scenes. Everything else in the reference is still to build.
+
+## Known limitations / unresolved
+- No income yet: after the starter pantry runs out the character cannot eat. Jobs (M3) and grocery (M5) close this loop.
+- Gym: only bench press is animated; other stations are scenery.
+- Rooms were visually checked at 390×844 and layout-checked at 360×640 / 430×932 (software WebGL ~10 fps); real-device performance is untested.
+- Room visuals are procedural and simpler than the painted reference (see `docs/ART_SPEC.md`).
+- Capacitor Android/iOS projects not generated.
+- End-to-end scripts are manual (not in CI); unit tests are.
+- `town-economy/` (unrelated Expo game in this repository) is untouched.

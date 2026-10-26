@@ -257,3 +257,117 @@ export const posterTexture = (kind: 'anatomy' | 'abstract'): THREE.CanvasTexture
     g.lineWidth = 14;
     g.strokeRect(0, 0, 256, 340);
   });
+
+// ---------- Room textures ----------
+
+/** Wood plank floor. */
+export const woodFloor = (base = '#8a5a34'): THREE.CanvasTexture =>
+  canvasTexture(
+    512,
+    512,
+    (g) => {
+      const r = noise(33);
+      g.fillStyle = base;
+      g.fillRect(0, 0, 512, 512);
+      for (let y = 0; y < 512; y += 64) {
+        const v = (r() - 0.5) * 36;
+        g.fillStyle = `rgba(${v > 0 ? 255 : 0},${v > 0 ? 220 : 0},${v > 0 ? 170 : 0},${Math.abs(v) / 150})`;
+        g.fillRect(0, y, 512, 64);
+        g.fillStyle = 'rgba(0,0,0,0.5)';
+        g.fillRect(0, y, 512, 3);
+        for (let x = (y / 64) % 2 ? 100 : 260; x < 512; x += 320) g.fillRect(x, y, 3, 64);
+        for (let i = 0; i < 22; i++) {
+          g.fillStyle = `rgba(0,0,0,${0.04 + r() * 0.05})`;
+          g.fillRect(r() * 512, y + r() * 60, 20 + r() * 80, 1.5);
+        }
+      }
+    },
+    [3, 2],
+  );
+
+/** Light bathroom/kitchen tiles. */
+export const lightTiles = (a = '#c9d3d6', b = '#b4c0c4'): THREE.CanvasTexture =>
+  canvasTexture(
+    256,
+    256,
+    (g) => {
+      for (let y = 0; y < 4; y++)
+        for (let x = 0; x < 4; x++) {
+          g.fillStyle = (x + y) % 2 ? a : b;
+          g.fillRect(x * 64, y * 64, 64, 64);
+        }
+      g.strokeStyle = 'rgba(60,70,75,0.55)';
+      g.lineWidth = 3;
+      for (let i = 0; i <= 4; i++) {
+        g.beginPath();
+        g.moveTo(i * 64, 0);
+        g.lineTo(i * 64, 256);
+        g.moveTo(0, i * 64);
+        g.lineTo(256, i * 64);
+        g.stroke();
+      }
+    },
+    [4, 2],
+  );
+
+/** Wallpaper: base colour with a soft vertical gradient and a subtle panel line. */
+export const wallPaper = (top: string, bottom: string, stripe = 'rgba(255,255,255,0.04)'): THREE.CanvasTexture =>
+  canvasTexture(
+    256,
+    256,
+    (g) => {
+      const grad = g.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, top);
+      grad.addColorStop(1, bottom);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 256, 256);
+      g.fillStyle = stripe;
+      for (let x = 0; x < 256; x += 32) g.fillRect(x, 0, 14, 256);
+      const r = noise(77);
+      for (let i = 0; i < 900; i++) {
+        g.fillStyle = `rgba(0,0,0,${r() * 0.05})`;
+        g.fillRect(r() * 256, r() * 256, 2, 2);
+      }
+    },
+    [4, 1],
+  );
+
+/** A glowing TV screen showing a stylised city. */
+export const tvScreen = (): THREE.CanvasTexture =>
+  canvasTexture(256, 144, (g) => {
+    const sky = g.createLinearGradient(0, 0, 0, 144);
+    sky.addColorStop(0, '#2a6cd6');
+    sky.addColorStop(1, '#f0a35a');
+    g.fillStyle = sky;
+    g.fillRect(0, 0, 256, 144);
+    const r = noise(9);
+    g.fillStyle = '#0f1630';
+    for (let x = 0; x < 256; x += 20) {
+      const h = 30 + r() * 70;
+      g.fillRect(x, 144 - h, 18, h);
+    }
+    g.fillStyle = 'rgba(255,230,150,0.9)';
+    for (let i = 0; i < 80; i++) g.fillRect(r() * 256, 60 + r() * 80, 2, 3);
+  });
+
+/** Small "Z" for the sleeping effect. */
+export const zTexture = (): THREE.CanvasTexture =>
+  canvasTexture(64, 64, (g) => {
+    g.font = '800 54px system-ui, Arial Black, sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#cfe0ff';
+    g.strokeStyle = '#14161b';
+    g.lineWidth = 5;
+    g.strokeText('Z', 32, 34);
+    g.fillText('Z', 32, 34);
+  });
+
+export const dropTexture = (): THREE.CanvasTexture =>
+  canvasTexture(32, 32, (g) => {
+    const grad = g.createRadialGradient(16, 16, 1, 16, 16, 15);
+    grad.addColorStop(0, 'rgba(190,230,255,0.95)');
+    grad.addColorStop(1, 'rgba(190,230,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 32, 32);
+  });
