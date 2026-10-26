@@ -1,12 +1,33 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, TYPE, WEIGHT } from "../theme";
 import { ScalePressable } from "./ScalePressable";
-import { TabIcon } from "./TabIcons";
+import achievementsBadge from "../../assets/ui/tabs/achievements.png";
+import inventoryBadge from "../../assets/ui/tabs/inventory.png";
+import investBadge from "../../assets/ui/tabs/invest.png";
+import marketBadge from "../../assets/ui/tabs/market.png";
+import researchBadge from "../../assets/ui/tabs/research.png";
+import townBadge from "../../assets/ui/tabs/town.png";
+import tradeBadge from "../../assets/ui/tabs/trade.png";
 
 export type ScreenId = "market" | "inventory" | "trade" | "town" | "research" | "invest" | "achievements";
+
+// One painted badge per tab, cropped straight from the reskin reference
+// sheet — each already carries its own colour and wood frame, so the badge
+// is no longer drawn (a tinted View plus a vector glyph); only which state
+// a tab is in (active, spotlit, just tapped) is still rendered in code, as
+// an opacity/glow/scale layered over this same image for every tab.
+const TAB_IMAGES: Record<ScreenId, number> = {
+  market: marketBadge,
+  inventory: inventoryBadge,
+  trade: tradeBadge,
+  town: townBadge,
+  research: researchBadge,
+  invest: investBadge,
+  achievements: achievementsBadge,
+};
 
 const TABS: { id: ScreenId; labelKey: string; color: string }[] = [
   { id: "market", labelKey: "tabs.market", color: "#e8c777" },
@@ -138,50 +159,17 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
                 ]}
               />
             )}
-            {/* Every tab carries its own colour on a badge behind the icon
-                now, not just the active one — a plain emoji glyph reads
-                differently (and often flatly) across platforms, where a
-                colour badge we draw ourselves reads the same everywhere and
-                is what actually makes the bar feel designed rather than a
-                row of system emoji. Genuinely tinted even at rest — the
-                first version of this only saturated on tap and read as
-                muddy the rest of the time — then goes to a fully solid
-                fill plus a glow in its own colour.
-                The badge itself is a plain, unanimated View on purpose: an
-                earlier version put the spring "pop" and the shadow on the
-                very same native-driven layer, and on a real phone that
-                left the active badge permanently soft/blurry — two known
-                iOS quirks compounding (a shadowed view gets its own
-                offscreen render pass, and a view that has ever been
-                natively transformed can stay promoted to a GPU layer whose
-                resolution doesn't always end up matching the screen's).
-                Keeping the shadow on a static view and moving the bounce to
-                the small inner wrapper below — which carries no shadow of
-                its own — keeps both effects without stacking them on one
-                layer. */}
-            <View
-              style={[
-                styles.iconBadge,
-                {
-                  backgroundColor: isActive ? tab.color : withAlpha(tab.color, 0.22),
-                  borderColor: withAlpha(tab.color, isActive ? 0.9 : 0.32),
-                },
-                isActive && glowShadow(tab.color),
-              ]}
-            >
-              <Animated.View style={{ transform: [{ scale: badgeScale[i] }], opacity: isActive ? 1 : 0.75 }}>
-                {/* Decoration for a label that is already read out — see
-                    TabIcon's own comment for why this isn't the emoji it
-                    used to be. Dark on an active tab's solid fill, the
-                    app's own light text tone on an inactive one's faint
-                    tint, the same contrast rule the badge's border below
-                    already follows. */}
-                <TabIcon
-                  id={tab.id}
-                  color={isActive ? COLORS.onLight : COLORS.textPrimary}
-                  size={19}
-                  bg={isActive ? tab.color : withAlpha(tab.color, 0.22)}
-                />
+            {/* The painted badge carries its own colour and frame now, so
+                only the active/inactive *state* is still drawn: a resting
+                tab's badge sits dimmed, an active one at full strength plus
+                a glow in the tab's own colour — the same shadow-isolation
+                trick as before (the shadow lives on this static View, the
+                spring "pop" on the Animated.View nested inside it, never
+                the same native-driven layer, or an active badge stays
+                permanently blurred on a real phone). */}
+            <View style={[styles.iconBadge, isActive && glowShadow(tab.color)]}>
+              <Animated.View style={{ transform: [{ scale: badgeScale[i] }], opacity: isActive ? 1 : 0.6 }}>
+                <Image source={TAB_IMAGES[tab.id]} style={styles.badgeImage} resizeMode="contain" />
               </Animated.View>
             </View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
@@ -223,18 +211,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
   },
-  // A rounded-square badge behind each icon rather than bare text — same
-  // trick a card uses to read as "designed": colour, given a shape and a
-  // boundary, reads as an intentional choice instead of whatever an emoji
-  // font happened to draw.
   iconBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    borderWidth: 1.5,
+    width: 36,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
+  badgeImage: { width: 36, height: 32 },
   label: {
     fontSize: TYPE.micro,
     color: COLORS.textMuted,
