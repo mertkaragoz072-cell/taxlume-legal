@@ -18,8 +18,6 @@ import { SpeedBoostButton } from "./SpeedBoostButton";
 
 interface Props {
   townName: string;
-  emblem: string;
-  emblemColor: string;
   rankIcon: string;
   rankTitle: string;
   cash: number;
@@ -91,8 +89,6 @@ const PLATE_CAP_RIGHT_W = 26;
 
 export function InflationHeader({
   townName,
-  emblem,
-  emblemColor,
   rankIcon,
   rankTitle,
   cash,
@@ -227,7 +223,7 @@ export function InflationHeader({
           />
           <View style={styles.plateTextWrap} pointerEvents="none">
             <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
-              <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
+              {townName.toUpperCase()} ✏️
             </Text>
           </View>
         </Pressable>
@@ -412,9 +408,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.display,
     fontSize: TYPE.caption,
     letterSpacing: 0.2,
-    textShadowColor: "rgba(255, 200, 90, 0.55)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textAlign: "center",
   },
   streakBadge: {
     backgroundColor: "#2a2016",
