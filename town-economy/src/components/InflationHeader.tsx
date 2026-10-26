@@ -79,15 +79,14 @@ function dayTintColor(tick: number): string {
 // The plate's caps are fixed-width (the left wheat sheaf, the right pencil)
 // and the middle is a thin stretchable slice of its own wood grain — a
 // 9-slice, not one static image, because the town's name is player-edited
-// and can't be baked into the art. Sized to the ~190px the row already
-// budgeted the town name (six 26px controls take the rest), rather than
-// growing with the available space the way a true flex mid-tile would — a
-// short name would otherwise leave the pencil cap stranded far from the
-// text with a slab of bare wood between them.
-const PLATE_WIDTH = 190;
+// and can't be baked into the art. The mid tile is flex:1 rather than a
+// fixed width: a fixed plate wide enough for a long English name pushed the
+// six control circles half off the screen, and one narrow enough to keep
+// them on screen truncated "Golden Town" — flexing to whatever room is
+// actually left of the controls is the only width that's never both.
 const PLATE_HEIGHT = 34;
-const PLATE_CAP_LEFT_W = 46;
-const PLATE_CAP_RIGHT_W = 48;
+const PLATE_CAP_LEFT_W = 32;
+const PLATE_CAP_RIGHT_W = 34;
 
 export function InflationHeader({
   townName,
@@ -206,11 +205,7 @@ export function InflationHeader({
           />
           <Image
             source={titleplateMid}
-            style={{
-              width: PLATE_WIDTH - PLATE_CAP_LEFT_W - PLATE_CAP_RIGHT_W,
-              height: PLATE_HEIGHT,
-              marginHorizontal: -1,
-            }}
+            style={{ flex: 1, minWidth: 0, height: PLATE_HEIGHT, marginHorizontal: -1 }}
             resizeMode="stretch"
           />
           <Image
@@ -222,7 +217,7 @@ export function InflationHeader({
               cap's art, so there's no separate ✏️ to draw — only the town's
               own name, shrinking to fit rather than truncating. */}
           <View style={styles.plateTextWrap} pointerEvents="none">
-            <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+            <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.45}>
               <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()}
             </Text>
           </View>
@@ -388,7 +383,13 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     marginBottom: SPACING.sm,
   },
-  townNamePressable: { flexDirection: "row", width: PLATE_WIDTH, height: PLATE_HEIGHT },
+  townNamePressable: {
+    flexDirection: "row",
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    height: PLATE_HEIGHT,
+  },
   plateTextWrap: {
     position: "absolute",
     left: PLATE_CAP_LEFT_W - 2,
@@ -400,8 +401,8 @@ const styles = StyleSheet.create({
   town: {
     color: "#ffd75e",
     fontFamily: FONT.display,
-    fontSize: TYPE.body,
-    letterSpacing: 0.3,
+    fontSize: TYPE.caption,
+    letterSpacing: 0.2,
     textShadowColor: "rgba(255, 200, 90, 0.55)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
