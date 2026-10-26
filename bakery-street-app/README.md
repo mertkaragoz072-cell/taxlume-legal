@@ -14,7 +14,7 @@ WebView yok, tarayıcı yok. Oyun tamamen yerel çalışır:
 ```bash
 npm ci
 npm run typecheck        # TypeScript
-npm test                 # oyun mantığı testleri (241)
+npm test                 # oyun mantığı + sahne testleri (252)
 npm start                # Expo; Expo Go yerine development build gerekir (Skia yerel modül)
 node scripts/gen-assets.mjs   # assets/game altına resim ekleyip çıkarınca (Metro için resim listesi)
 node scripts/gen-sounds.mjs   # sesleri yeniden üretir
@@ -55,7 +55,7 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 
 ## Dürüst durum
 
-- **Gerçek cihazda hiç çalıştırılmadı.** Doğrulananlar: TypeScript denetimi, 241 oyun mantığı testi, iOS ve Android için `expo export` (Metro + Hermes paketleri), ve Skia'nın web çalışma zamanında alınan ekran görüntüleri (sokak, kafe, market, keşif, tüm paneller). Yerel Skia'da performans (kare hızı), `PictureRecorder` her kare yeni resim üretmesinin maliyeti, ses ve dokunma hissi ilk TestFlight'ta telefonda kontrol edilmeli.
+- **Gerçek cihazda hiç çalıştırılmadı.** Doğrulananlar: TypeScript denetimi, 252 test (oyun mantığı + varlıksız sahne duman testi), iOS ve Android için `expo export` (Metro + Hermes paketleri), ve Skia'nın web çalışma zamanında alınan ekran görüntüleri (sokak, kafe, market, keşif, tüm paneller). Yerel Skia'da performans (kare hızı), `PictureRecorder` her kare yeni resim üretmesinin maliyeti, ses ve dokunma hissi ilk TestFlight'ta telefonda kontrol edilmeli.
 - Gökyüzü kenar renkleri sabit tonlar (resim piksellerini geri okumuyoruz); fark küçük.
 - Yazı tipi Nunito (web'deki Trebuchet'e yakın, yuvarlak).
 - `../bakery-street` (eski web sürümü) yerinde duruyor; oyun kuralları iki yerde kopya olduğu için yeni özellikler `bakery-street-app`'e eklenmeli. Web sürümü artık dağıtılmıyor, silinebilir.
@@ -232,3 +232,14 @@ E5 düzeltmesi: sayfada ekmek 8. ve 9. karelerde hücre kenarında yarım kesilm
 
 ### Perspektif modeli (eşyalar zemine oturur)
 Zemin resminin fayans genişliği ölçüldü (duvarda 74 px, önde 128 px; `tileW`, `interior-layout.js`). `perspScale(y)` bu büyümeyi (%85 şiddetle) verir ve her şey ondan türer: masalar (`table()`), ekipman (`equip()`, resim boyutu × K0 × perspScale; tezgâh/vitrin/kahve çizgisi y=700, fırın/depo y=482), karakterler (`depthScale` = perspScale; arka şerit ≈0,77, giriş ≈1,25), oturan kedi, sipariş balonu yüksekliği. Birinci masa sırası ölçek 1, ikinci sıra ≈1,12. Zemin resmi artık 6 px'lik şeritlerle, nesnelerle aynı dikey bükülmeyle (`warpAt`, 840→1640 arası yumuşak) çizilir; uzun telefonlarda fayans satırları ve masalar birlikte kayar. Yanlara tablet genişliğinde yansıtılmış kopya konur (fayans genişliği bozulmaz). Zemin teması: `grounding()` (altı yumuşak ardışık elips: geniş havuz, tabanın altı, temas çizgisi) ekipman, masa ayağı ve sandalyelerde; savrulan gölge daha yumuşak (eğim 0,45, opaklık 0,36). Havada duran yükseltme tabelası artık kahve makinesinin arkasında zeminde duruyor. Misafir çıkış/giriş sütun farkı 60 birim (`tests/portrait.test.js`).
+
+### Kalite geçişi: servis döngüsü, geri bildirim, ekran uyumu
+**Servis döngüsü (tek akış, mantık `src/game/customers.js`, görsel `interior-staff.js` / `interior-customers.js`).** Müşteri gelir → sıraya girer → boş masa varsa oturur (masa başına tek misafir, masa `holds` ile "dolu" sayılır) → sipariş balonu çıkar (stok yoksa balon soluk ve kırmızı "!" işaretli) → **garson yalnızca stokta olan siparişi** alır (stok yoksa yerinde bekler; sıradaki sipariş en eski oturan misafirden seçilir) → tepsiyle masaya yürür → teslimde (`deliver()`, atomik: stok düşer, altın/XP/görev tek adımda) ödeme yapılır → ürün masada tabakta görünür, kedi yer (5 sn, ürün küçülür) → kalkar, tabak solar, masa temizlenir (1,5 sn) → masa boşalır. Aynı sipariş iki kez ödenemez (garsonun "claim"i + `deliver()` kontrolü; oyuncu misafire dokunursa garson getiriyorsa "Garson siparişi getiriyor…" der). Oyuncu elle dokunarak da servis edebilir; aynı yemek/temizlik akışından geçer. Süreler `src/data/economy.js` (`eatSec`, `cleanSec`). Kayıt: masa tutmaları yeniden yüklemede sıfırlanır (masalar boş açılır).
+
+**Animasyon geçişleri.** Garson ve şef poz değiştirirken (yürüme ↔ teslim, yoğurma ↔ fırın/kahve ↔ sevinç) eski ve yeni poz 0,14 sn çapraz solar (`StaffLayer.pose`); misafirin oturma/kalkma geçişi zaten çapraz solma. Süreler `dt` ile ilerler (kare hızından bağımsız). Arka plana alınınca oyun döngüsü durur, `dt` 0,05 sn ile sınırlıdır; üretim gerçek saate bağlı, kafe zamanlayıcıları (sabır, geliş, yeme) `dt`'ye bağlıdır — arka planda ilerlemez, geri dönünce ani yığılma olmaz.
+
+**Geri bildirim.** Üst çubuk: altın sayısı 0,45 sn'de yuvarlanarak değişir, altına "+N / −N" çipi çıkar; XP çubuğu akar ve seviye atlayınca dolup baştan başlar, seviye rozeti zıplar. Panel açılış/kapanış (`Present` + `useAppear`, `kit.tsx`): aşağıdan kayıp belirir, kapanırken solar; menü açılır penceresi de. Düğmelerde basma ölçeği, alt menüde ölçek + dokunma sesi. Yükseltme alınınca ilgili makine/tabela sıçrar, kıvılcım ve "Seviye N" yazısı çıkar; seviye atlayınca odanın üstünden kıvılcım yağar. Ses, titreşim ve müzik Ayarlar'a uyar (`Feedback`). Sistemde "hareketi azalt" açıksa paneller animasyonsuz açılır.
+
+**Ekran uyumu.** Küçük ekranlarda (360 px genişlik) sipariş balonları %25'e kadar büyür (`bubbleScale`); balon oturan kedinin üstüne ortalanır (eskiden sandalye noktasının üstündeydi), dokunma alanı da kedinin gerçek yerine taşındı (`bodyX`). Panel başlığı çerçevenin yaprak süslerinin altına indi; tabletlerde panel telefon boyutunda ortalanır. Kahve makinesinin üretim çubuğu yükseltme tabelasının sağına kaydı.
+
+**Test.** `tests/scene-smoke.test.js`: hiçbir resim yüklü değilken sahne 40 sn boyunca çizilip oynatılır (varlık yoksa vektör yedeği / çizmeme), garson servis eder, hiçbir masada iki misafir olmaz, hiçbir sipariş iki kez ödenmez.

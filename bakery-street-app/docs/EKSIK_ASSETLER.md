@@ -20,6 +20,14 @@ Gelen sayfada: 30 kare, numaralar altta, düz siyah arka plan, kareler aynı boy
 | Ürün, malzeme ve durum ikonları (E11) | HAZIR, oyunda |
 | Arayüz öğeleri (E10): rozet, menü, alt menü, kapatma, panel çerçevesi | HAZIR, oyunda (yeşil/kiremit düğmeler ve geniş panel çerçevesi kaydedilmedi) |
 
+## Kalite geçişinde fark edilen, kodla çözülemeyen eksikler
+| Eksik | Etki |
+|---|---|
+| Garson tepsisi: fincan + pasta resmin içine gömülü | Her siparişte (ekmek, kruvasan…) aynı tepsi görünür. Çözüm: boş tepsili kareler + ürün ikonu katmanı ya da ürün başına tepsi sayfası |
+| Masayı toplama animasyonu (garson tabağı alır) | Tabak şimdilik sönerek kayboluyor |
+| Müşteri ifadeleri (sabır azalınca somurtma, memnun gülümseme) | Yalnız sabır çubuğu/balon var; kedi yüzü değişmiyor |
+| Kasada ödeme animasyonu | Ödeme masada, "+N" yazısıyla gösteriliyor |
+
 ## Sıra (görünürlüğe göre)
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.
 

@@ -26,13 +26,23 @@ export class CustomerLayer {
     this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
     this.settled = () => true;      // (id) -> true once the guest sits in the chair; the waiter only brings an order to a seated guest
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
+    this.bubbleScale = 1;          // set by the scene: bubbles grow a little on small screens (zoomed out) so the icon and price stay readable
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
-        this.pops.push({ x: v?.x ?? 700, y: (v?.y ?? 700) - bodyH(v?.y ?? 700) - 30, text: `+${e.income}`, life: 1 });
+        this.pops.push({ x: v ? this.bodyX(v, { state: 'seated', table: e.table }) : 700, y: (v?.y ?? 700) - bodyH(v?.y ?? 700) - 30, text: `+${e.income}`, life: 1 });
         if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; }   // paid: the guest stays in the chair and eats before leaving
+      } else if (e.type === 'tableFree') {                         // the logic frees the table on the clock: a guest who is (on a slow device) still eating gets up now
+        for (const v of this.v.values()) if (v.ghost && v.table === e.table && v.linger > 0) v.linger = 0;
       }
     });
+  }
+
+  /** The guest drawn at a table: the logic's seated customer, or the one who has paid and is still finishing the meal (until they have stood up). */
+  ownerAt(i) {
+    const c = this.cafe.tableOwner(i); if (c) return c;
+    for (const v of this.v.values()) if (v.ghost && v.table === i && v.sit > 0) return v.ghost;
+    return null;
   }
 
   targetFor(c) {
@@ -135,7 +145,7 @@ export class CustomerLayer {
       if (!v || v.moving) continue;
       const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
       if (art && A) { const r = seatRect(A, art); if (x > r.x && x < r.x + r.w && y > r.y - 50 && y < r.y + r.h) return `customer:${c.id}`; continue; }
-      const vy = this.drawY(v, c); if (Math.abs(x - v.x) < 66 && y > vy - bodyH(vy) - 70 && y < vy + 6) return `customer:${c.id}`;
+      const vy = this.drawY(v, c); if (Math.abs(x - this.bodyX(v, c)) < 66 && y > vy - bodyH(vy) - 70 && y < vy + 6) return `customer:${c.id}`;
     }
     return null;
   }
@@ -143,11 +153,14 @@ export class CustomerLayer {
   /** True while the guest sits in the chair (not walking, not yet leaving): drawn from the waist up, behind the table's front edge. */
   isSitting(v, c) { return !!c && c.state === 'seated' && !v.moving && !v.leaving; }
 
+  /** The x the guest is drawn at: a seated cat with sitting frames sits behind the middle of its table, not at the chair spot the logic walks it to. */
+  bodyX(v, c) { return c && c.table != null && c.state === 'seated' && v.sit > 0.5 && !this.seatArt(v, c) && hasSitFrames(v.look) ? this.sitPos(v, c).x : v.x; }
+
   /** The y of the guest's head top, where the order bubble stands. */
   bubbleTop(v, c) {
     const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
     if (art && A && v.sit > 0.5) return seatRect(A, art).y - 2;
-    if (hasSitFrames(v.look) && c && c.table != null) { const a = AREAS.find((q) => q.id === `table${c.table + 1}`); return this.drawY(v, c) - BODY_H * 0.72 * depthScale(a.y + a.h); }
+    if (hasSitFrames(v.look) && c && c.table != null) { const a = AREAS.find((q) => q.id === `table${c.table + 1}`); return this.drawY(v, c) - BODY_H * 0.45 * depthScale(a.y + a.h); }      // (a sitting cat is about 0.45 of a standing one's height here: the bubble sits just over its head, hat included)
     return this.drawY(v, c) - bodyH(v.y);
   }
 
@@ -203,7 +216,10 @@ export class CustomerLayer {
       if (!c || v.ghost || v.moving || v.leaving) continue;
       const table = c.state === 'seated' && c.table != null ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       ctx.save(); ctx.translate(0, this.warp(table ? depthOf(table) + 1 : v.y));
-      if (c.state === 'seated') this.orderBubble(ctx, v, c, t);
+      const bx = this.bodyX(v, c), w = bx === v.x ? v : { ...v, x: bx };                                      // a cat sitting behind its table: the bubble stands over the cat, not over the chair spot
+      const k = this.bubbleScale, ay = c.state === 'seated' ? this.bubbleTop(w, c) : v.y - bodyH(v.y);      // grown about the point on the guest's head, so it still points at them
+      if (k !== 1) { ctx.translate(w.x, ay); ctx.scale(k, k); ctx.translate(-w.x, -ay); }
+      if (c.state === 'seated') this.orderBubble(ctx, w, c, t);
       else this.waitBubble(ctx, v, c, t);
       ctx.restore();
     }

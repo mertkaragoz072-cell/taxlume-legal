@@ -32,7 +32,7 @@ export const AREAS = [
   // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station (all standing on line 700)
   { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', ...equip('counter', 138, 700) },
   { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', ...equip('showcase', 422, 700) },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', ...equip('coffee', 728, 700) },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', barDx: 70, barW: 130, ...equip('coffee', 728, 700) },     // barDx/barW: the progress bar sits right of the upgrade sign behind the machine
   // dining area, in front: two columns either side of a central aisle (tables 1 and 3 left, 2 and 4 right), the right column set back a little. The
   // cafeTables upgrade opens them in this order (row one first). `side` is the chair the guest takes: always the one facing the aisle (-1 left, +1
   // right), so each guest's access gap lies in the aisle. Each table is as much bigger as the floor is wider where it stands.

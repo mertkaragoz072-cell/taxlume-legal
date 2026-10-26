@@ -15,6 +15,7 @@ const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 150, dir: 1 }, counter2
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 const POST = { x: 190, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, in front of the prep counter, clear of the queue spots (352..652)
 const CHEF_SCALE = 1.2;                                     // the baker is drawn a little larger than a guest at his depth: he is the star behind the counter
+const POSE_FADE_SEC = 0.14;   // a change of pose (walking -> handing over, kneading -> oven ...) dissolves over this long instead of popping
 const OVEN_SEC = 1.8;                                       // the baker's put-it-in-the-oven animation (30 frames)
 const COFFEE_SEC = 2.2;                                     // the baker's make-a-coffee animation (24 frames: reach, take the cup, sip)
 const HAND_SEC = 1.3;                                       // time spent handing the order over
@@ -58,11 +59,16 @@ export class StaffLayer {
     this.cheer = 0;             // seconds left of the baker's little hop after a product comes out
     this.onServed = null;       // set by the scene: called with the table area when the waiter puts an order down
     game.on('complete', () => { this.cheer = 0.55; });
+    game.on('customer', (e) => {   // the sale was made at the table: the product stands there while the guest eats, the table is cleared when the logic frees it
+      if (e.type === 'leave' && e.income && e.table != null && e.eatSec > 0) this.plates.set(e.table, { product: e.product, t: 0, eat: e.eatSec, hold: e.holdSec || e.eatSec });
+      else if (e.type === 'tableFree') this.plates.delete(e.table);
+    });
     this.ovenT = -1;            // seconds into the put-it-in-the-oven animation, -1 = not playing
     this.pendingOven = false;   // an oven job has started: the animation plays as soon as the baker stands at the oven
     this.coffeeT = -1; this.pendingCoffee = false;   // the same for the coffee machine
     game.on('change', (e) => { if (e?.type === 'start') { const st = game.productsDef[e.product]?.station; if (st === 'oven') this.pendingOven = true; else if (st === 'coffee') this.pendingCoffee = true; } });
     this.guests = () => [];     // set by the scene: where the guests stand (the waiter never walks into one)
+    this.poses = {};            // who -> { key, last, prev, t }: the pose being drawn and the one it replaces while the two cross-fade (see pose())
   }
 
   /** The busy machine (oven or coffee) the baker should work at, or null. */
@@ -79,6 +85,7 @@ export class StaffLayer {
     if (this.pendingCoffee && bk.stop === 'coffee' && !bk.moving && !bk.target) { this.pendingCoffee = false; this.coffeeT = 0; }
     if (this.coffeeT >= 0) { this.coffeeT += dt; if (this.coffeeT >= COFFEE_SEC || this.cheer > 0) this.coffeeT = -1; }
     for (const pl of this.plates.values()) pl.t += dt;
+    for (const ps of Object.values(this.poses)) if (ps.t < 1) ps.t = Math.min(1, ps.t + dt / POSE_FADE_SEC);
     this.show = Math.max(0, Math.min(1, this.show + (this.game.cafe?.customers.length || this.plates.size || this.phase !== 'post' ? dt : -dt)));
     this.updateWaiter(dt);          // without the waiter sheet drawSprite simply draws nothing
   }
@@ -173,11 +180,11 @@ export class StaffLayer {
     ctx.strokeStyle = 'rgba(121,82,56,.25)'; ctx.beginPath(); ctx.ellipse(x, y, 19, 5, 0, 0, 7); ctx.stroke();
   }
 
-  /** What is on the tables: the served product shrinks while the guest eats it, then the empty plate stays until the table is cleared (it fades out as the table comes free). */
+  /** What is on the tables: the served product shrinks while the guest eats it, then the empty plate fades out as the guest gets up and the table is cleared. */
   drawServed(ctx) {
     for (const [ti, pl] of this.plates) {
       const a = AREAS.find((x) => x.id === `table${ti + 1}`); if (!a) continue;
-      const eaten = pl.eat > 0 ? Math.min(1, pl.t / pl.eat) : 1, fade = Math.min(1, Math.max(0, (pl.hold - pl.t) / 0.35)), cx = a.x + a.w / 2, cy = a.y + a.h * 0.26;
+      const eaten = pl.eat > 0 ? Math.min(1, pl.t / pl.eat) : 1, fade = pl.eat > 0 ? Math.min(1, Math.max(0, 1 - (pl.t - pl.eat) / 0.7)) : Math.min(1, Math.max(0, (pl.hold - pl.t) / 0.35)), cx = a.x + a.w / 2, cy = a.y + a.h * 0.26;
       ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35)); ctx.globalAlpha = fade;
       this.plate(ctx, cx, cy);
       if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIcon(ctx, pl.product, 0, -8 / k, 34); ctx.restore(); }
@@ -192,13 +199,31 @@ export class StaffLayer {
   }
 
   /** The baker is drawn between the back-wall furniture and the counters, so the counters hide his lower body. */
+  /** Draws one pose of an actor; when `key` differs from the previous frame's, the old pose fades out while the new one fades in. */
+  pose(ctx, who, key, draw) {
+    const ps = this.poses[who] ??= { key, last: draw, prev: null, t: 1 };
+    if (ps.key !== key) { ps.prev = ps.last; ps.key = key; ps.t = 0; }
+    ps.last = draw;
+    if (ps.prev && ps.t < 1) {
+      const k = ps.t, keep = ctx.globalAlpha;
+      ctx.globalAlpha = keep * (1 - k); ps.prev(ctx);
+      ctx.globalAlpha = keep * Math.min(1, k * 1.6); draw(ctx);
+      ctx.globalAlpha = keep;
+      return;
+    }
+    ps.prev = null;
+    draw(ctx);
+  }
+
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
     const knead = !b.moving && !b.target && this.cheer <= 0 && (working || b.stop === 'counter' || b.stop === 'counter2');   // standing at the prep counter (or waiting for a machine): kneads dough
-    if (this.ovenT >= 0 && hasOvenFrames() && drawSprite(ctx, 'chef_oven', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.ovenT / OVEN_SEC) })) return;
-    if (this.coffeeT >= 0 && hasCoffeeFrames() && drawSprite(ctx, 'chef_coffee', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.coffeeT / COFFEE_SEC) })) return;
+    const sc = PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), x = b.x, dir = b.dir, t = b.t;
+    if (this.ovenT >= 0 && hasOvenFrames()) { const hand = Math.min(0.999, this.ovenT / OVEN_SEC); return this.pose(ctx, 'baker', 'oven', (c) => drawSprite(c, 'chef_oven', x, STAFF_LANE_Y, t, { dir, scale: sc, hand })); }
+    if (this.coffeeT >= 0 && hasCoffeeFrames()) { const hand = Math.min(0.999, this.coffeeT / COFFEE_SEC); return this.pose(ctx, 'baker', 'coffee', (c) => drawSprite(c, 'chef_coffee', x, STAFF_LANE_Y, t, { dir, scale: sc, hand })); }
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: knead ? 1 : b.dir, fps: 7, scale: PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, work: knead ? 'knead' : null, view: b.view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
+    const joy = this.cheer > 0, moving = b.moving, view = b.view;
+    this.pose(ctx, 'baker', joy ? 'joy' : knead ? 'knead' : 'plain', (c) => drawSprite(c, 'chef', x, STAFF_LANE_Y - hop, t, { dir: knead ? 1 : dir, fps: 7, scale: sc, frame: moving ? null : 0, joy, work: knead ? 'knead' : null, view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 }));   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }
 
   drawWaiter(ctx) {
@@ -208,8 +233,12 @@ export class StaffLayer {
     // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
     const tray = !!this.carry && this.phase !== 'hand';
     const o = { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 };
+    const x = w.x, y = w.y, t = w.t;
     // handing over: the one-shot hand-over frames (tray with cup and cake) when they exist, else the standing frame with the item icon flying to the table
-    if (!(this.phase === 'hand' && !w.moving && drawSprite(ctx, 'waiter_hand', w.x, w.y, w.t, { ...o, hand: Math.min(0.999, this.handT / HAND_SEC), shade: true, sway: 0, bob: 0 }))) drawSprite(ctx, 'waiter', w.x, w.y, w.t, o);
+    if (this.phase === 'hand' && !w.moving && hasHandFrames()) {
+      const hand = Math.min(0.999, this.handT / HAND_SEC);
+      this.pose(ctx, 'waiter', 'hand', (c) => drawSprite(c, 'waiter_hand', x, y, t, { ...o, hand, shade: true, sway: 0, bob: 0 }));
+    } else this.pose(ctx, 'waiter', tray ? 'tray' : 'plain', (c) => drawSprite(c, 'waiter', x, y, t, o));
     // (the tray frame already shows a cup and a cake, so no separate item icon is drawn while carrying)
     ctx.globalAlpha = 1;
   }

@@ -18,6 +18,7 @@ import { NativeStorage } from "./src/runtime/storage";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
 import { Hud, Nav, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
+import { Present } from "./src/ui/kit";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
 import { C, FONT, fmt } from "./src/ui/theme";
@@ -196,6 +197,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
 
   if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast };   // development screenshots only
   const navSelect = (id: NavId) => {
+    feedback.sfx("tap");
     if (id === "town") { setOverlay((o) => (o === "town" ? null : "town")); return; }
     setOverlay(null);
     go(id === "cafe" ? "interior" : id);
@@ -207,14 +209,14 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes[sceneRef.current]?.setLook?.(n)} />
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
           <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />
-          {sceneId === "interior" && panel ? <CafePanel id={panel.id} side={panel.side} /> : null}
+          <Present show={sceneId === "interior" && !!panel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</Present>
           {sceneId === "market" ? <MarketPanel /> : null}
           {sceneId === "bookshop" ? <ResearchPanel /> : null}
           {sceneId === "explore" ? <ExplorePanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} /> : null}
-          {overlay === "quests" ? <QuestPanel /> : null}
-          {overlay === "daily" ? <DailyPanel /> : null}
-          {overlay === "settings" ? <SettingsPanel onReset={reset} /> : null}
-          {overlay === "town" ? <TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /> : null}
+          <Present show={overlay === "quests"}><QuestPanel /></Present>
+          <Present show={overlay === "daily"}><DailyPanel /></Present>
+          <Present show={overlay === "settings"}><SettingsPanel onReset={reset} /></Present>
+          <Present show={overlay === "town"}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></Present>
           <Toast text={toast.text} seq={toast.seq} />
           {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
         </View>

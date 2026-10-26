@@ -1,12 +1,45 @@
 // The small building blocks of every panel: sheet, card, button, bar, chip, pips. Sizes are multiples of the UI unit (see theme.ts).
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { AccessibilityInfo, Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { C, FONT, fs, navHeight, useU } from "./theme";
 import { Rich } from "./icons";
 
 export type Variant = "go" | "alt" | "lack" | "busy" | "plain";
+
+// ---- soft open / close -------------------------------------------------------------------------------------------------------------------
+let reduceMotion = false;                                              // the system's "reduce motion" setting: panels then simply appear
+try { void AccessibilityInfo.isReduceMotionEnabled().then((v) => { reduceMotion = v; }).catch(() => {}); } catch { /* ignore */ }
+
+const PresenceCtx = createContext(false);                              // true while a panel that was just closed is still fading out
+
+/** Keeps a panel mounted for `ms` after `show` turns false, so it can animate out (see useAppear). Remembers the last content for that time. */
+export function Present({ show, children, ms = 160 }: { show: boolean; children: React.ReactNode; ms?: number }) {
+  const last = useRef<React.ReactNode>(null);
+  const [mounted, setMounted] = useState(show);
+  if (show) last.current = children;
+  useEffect(() => {
+    if (show) { setMounted(true); return; }
+    const t = setTimeout(() => setMounted(false), reduceMotion ? 0 : ms);
+    return () => clearTimeout(t);
+  }, [show, ms]);
+  if (!show && !mounted) return null;
+  return <PresenceCtx.Provider value={!show}>{show ? children : last.current}</PresenceCtx.Provider>;
+}
+
+/** 0 -> 1 when the panel opens (starts at 0 on mount), back to 0 when its <Present> closes it. Native driver; frame-rate independent. */
+export function useAppear(openMs = 200, closeMs = 140) {
+  const closing = useContext(PresenceCtx);
+  const v = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  useEffect(() => {
+    if (reduceMotion) { v.setValue(closing ? 0 : 1); return; }
+    const a = Animated.timing(v, { toValue: closing ? 0 : 1, duration: closing ? closeMs : openMs, easing: closing ? Easing.in(Easing.quad) : Easing.out(Easing.back(1.2)), useNativeDriver: true });
+    a.start();
+    return () => a.stop();
+  }, [closing, v, openMs, closeMs]);
+  return v;
+}
 
 export function Btn({ label, sub, variant = "go", onPress, disabled, small, style }: {
   label: string; sub?: string; variant?: Variant; onPress?: () => void; disabled?: boolean; small?: boolean; style?: any;
@@ -21,7 +54,7 @@ export function Btn({ label, sub, variant = "go", onPress, disabled, small, styl
   const h = Math.max(44, u * (small ? 6.2 : 7));
   return (
     <Pressable onPress={off ? undefined : onPress} disabled={off && variant !== "lack"} accessibilityRole="button"
-      style={({ pressed }) => [{ minWidth: Math.max(44, u * (small ? 7.5 : 14)), height: h, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: pal.edge, overflow: "hidden", transform: [{ translateY: pressed ? u * 0.3 : 0 }] }, style]}>
+      style={({ pressed }) => [{ minWidth: Math.max(44, u * (small ? 7.5 : 14)), height: h, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: pal.edge, overflow: "hidden", opacity: pressed && !off ? 0.92 : 1, transform: [{ translateY: pressed ? u * 0.3 : 0 }, { scale: pressed && !off ? 0.96 : 1 }] }, style]}>
       <LinearGradient colors={[pal.top, pal.bot]} style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: u * 1.6 }}>
         <Text allowFontScaling={false} style={{ color: pal.text, fontFamily: FONT.bold, fontSize: fs(u, small ? 2.9 : 3.2) }} numberOfLines={1}>{label}</Text>
         {sub ? <Rich text={sub} size={fs(u, 2.2)} style={{ color: pal.text, marginTop: -u * 0.2 }} /> : null}
@@ -107,8 +140,9 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, children 
   const portrait = height >= width;
   // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it) in the picture frame
   // (wood border, cream inside, paw crest); wide windows keep the old plain side panel
+  const panelH = Math.min(height * 0.54, u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
   const place = portrait
-    ? { left: u * 1, right: u * 1, bottom: navHeight(u) + u * 1.6, height: Math.min(height * 0.54, u * 150) }
+    ? { left: (width - panelW) / 2, width: panelW, bottom: navHeight(u) + u * 1.6, height: panelH }
     : { top: u * 12.8, bottom: lowered ? u * 11 : u * 1.4, width: Math.min(u * 78, width * 0.48), ...(side === "left" ? { left: u * 1.4 } : { right: u * 1.4 }) };
   const inner = (
     <>
@@ -125,16 +159,18 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, children 
     </>
   );
   const shadow = { shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: u * 2, shadowOffset: { width: 0, height: u }, elevation: 8 };
+  const appear = useAppear();
+  const motion = { opacity: appear, transform: portrait ? [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [u * 7, 0] }) }, { scale: appear.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }] : [{ translateX: appear.interpolate({ inputRange: [0, 1], outputRange: [(side === "left" ? -1 : 1) * u * 8, 0] }) }] };
   if (portrait) {
     return (
-      <View style={[{ position: "absolute", zIndex: 20 }, place, shadow]}>
+      <Animated.View style={[{ position: "absolute", zIndex: 20 }, place, shadow, motion]}>
         <Image source={ASSET_MODULES["assets/icons/ui-card.webp"]} resizeMode="stretch" style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
-        <View style={{ flex: 1, paddingTop: Math.round(u * 8.6), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 3.2) }}>{inner}</View>
-      </View>
+        <View style={{ flex: 1, paddingTop: Math.round(Math.max(u * 8.6, panelH * 0.13)), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 3.2) }}>{inner}</View>
+      </Animated.View>
     );
   }
   return (
-    <View style={[{ position: "absolute", borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.vanilla, overflow: "hidden", zIndex: 20 }, place, shadow]}>{inner}</View>
+    <Animated.View style={[{ position: "absolute", borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.vanilla, overflow: "hidden", zIndex: 20 }, place, shadow, motion]}>{inner}</Animated.View>
   );
 }
 

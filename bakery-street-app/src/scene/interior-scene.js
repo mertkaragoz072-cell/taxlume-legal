@@ -54,6 +54,14 @@ export class InteriorScene {
       this.burst(area.x + area.w / 2, area.y + area.h * 0.35, 12);
       this.spring[area.id] = 0;
     });
+    game.on('change', (e) => {                              // an upgrade was bought: the thing it belongs to bounces, glitters and shows its new level
+      if (e?.type !== 'upgrade') return;
+      const a = AREAS.find((x) => x.id === this.selected) ?? AREAS.find((x) => x.id === 'upgrades');
+      if (this.pops.length < 12) this.pops.push({ x: a.x + a.w / 2, y: a.y + 10, text: `Seviye ${e.level}`, life: 1.2 });
+      this.burst(a.x + a.w / 2, a.y + a.h * 0.4, 16, a.w * 0.6);
+      this.spring[a.id] = 0;
+    });
+    game.on('levelUp', () => this.burst(CAM.w / 2, 150, 28, CAM.w * 0.8));   // a shower of sparks from the top of the room
     this.staff.onServed = (a) => {                          // the waiter put the order down: a tick and glitter on the table, the guest perks up
       this.pops.push({ x: a.x + a.w / 2, y: a.y + a.h * 0.08, check: true, life: 0.8 });
       this.burst(a.x + a.w / 2, a.y + a.h * 0.3, 7);
@@ -71,6 +79,7 @@ export class InteriorScene {
     // Portrait: the 900 x 1600 world fits the width (or the height on wide screens like tablets) and is anchored to the top; taller phones show more floor below.
     const z = Math.min(view.vw / CAM.w, view.vh / CAM.h), tx = (view.vw - CAM.w * z) / 2, ty = 0;
     this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: 0, wb: view.vh / z };
+    this.customers.bubbleScale = clamp(0.5 / z, 1, 1.4);        // 360-wide phones (zoom 0.4) get 25% bigger bubbles, tablets none
     // Tall phones: everything on the floor below y 840 is drawn a little lower (a smooth ramp, see warpAt) so the dining area spreads over the extra height
     // instead of leaving an empty band; game logic keeps using the plain coordinates.
     this.warpD = clamp((this.cam.wb - 1600) * 0.7, 0, 300);
@@ -118,6 +127,7 @@ export class InteriorScene {
   }
   /** `n` glittering bits flying up from (x, y). */
   burst(x, y, n, spread = 40) {
+    if (this.sparks.length > 160) return;                      // (events can arrive while the cafe is hidden and nothing updates the sparks)
     for (let i = 0; i < n; i++) this.sparks.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread * 0.5, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
   }
   select(id) { this.selected = id; }
@@ -160,7 +170,7 @@ export class InteriorScene {
     }
     for (const a of AREAS) {                                      // the chairs of seated cats (behind the cat, which is drawn at the table's depth - 2)
       if (!a.id.startsWith('table') || !this.tableOpen(a)) continue;
-      const i = +a.id.slice(5) - 1, owner = this.game.cafe?.tableOwner(i), v = owner ? this.customers.v.get(owner.id) : null;
+      const i = +a.id.slice(5) - 1, owner = this.customers.ownerAt(i), v = owner ? this.customers.v.get(owner.id) : null;
       if (v && v.sit > 0 && hasSitFrames(v.look)) items.push({ y: depthOf(a) - 3, draw: () => this.shifted(ctx, 'floor', () => this.guestChair(ctx, a, v)) });
     }
     items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
@@ -211,7 +221,7 @@ export class InteriorScene {
    */
   tableSet(ctx, a, tableImg, dx, dy, w, h) {
     const i = +a.id.slice(5) - 1, tw = CHAIRS[i % CHAIRS.length], s = w / 1000;
-    const owner = this.game.cafe?.tableOwner(i), v = owner ? this.customers.v.get(owner.id) : null;
+    const owner = this.customers.ownerAt(i), v = owner ? this.customers.v.get(owner.id) : null;
     const plain = v && v.sit > 0.5 && hasSitFrames(v.look) ? getImage('int-table-plain') : null;       // a seated cat eats at a table without the vase
     if (plain) tableImg = plain;
     const seat = v && v.sit > 0 ? getImage(`seat-${v.look}`) : null;
@@ -221,7 +231,7 @@ export class InteriorScene {
       this.drawEmptyTable(ctx, a, tableImg, dx, dy, w, h, tw, s, null);
       ctx.globalAlpha = v.sit;
       this.castShadow(ctx, `seat-${v.look}`, seat, r.x, r.y, r.w, r.h);
-      const ord = owner && this.game.cafe.orderOf(owner), eating = !!ord && this.staff.served.has(ord.id), pu = this.pulse[a.id];
+      const eating = !this.game.cafe.tableOwner(i), pu = this.pulse[a.id];      // a guest the logic no longer knows has paid: they are eating
       const bob = pu !== undefined ? Math.exp(-6 * pu) * Math.sin(pu * 20) * 0.05 : eating ? Math.sin(this.t * 6 + i) * 0.01 : Math.sin(this.t * 1.7 + i * 2) * 0.004;   // delighted hop on delivery, chewing while eating, breathing while waiting
       ctx.save(); ctx.translate(r.x + r.w / 2, r.y + r.h); ctx.scale(1 - bob * 0.4, 1 + bob);
       if (r.flip) ctx.scale(-1, 1);
@@ -234,7 +244,7 @@ export class InteriorScene {
   }
 
   drawEmptyTable(ctx, a, tableImg, dx, dy, w, h, tw, s, v) {
-    const i = +a.id.slice(5) - 1, owner = this.game.cafe?.tableOwner(i);
+    const i = +a.id.slice(5) - 1, owner = this.customers.ownerAt(i);
     const near = !!(v && (v.moving || v.sit > 0 || owner.state === 'seated'));
     const sit = v ? v.sit ?? 0 : 0;
     const side = a.side ?? -1;                                   // the chair the guest uses
@@ -555,7 +565,7 @@ export class InteriorScene {
   tableOpen(a) {
     if (!a.id.startsWith('table')) return true;
     const i = +a.id.slice(5) - 1, cafe = this.game.cafe;
-    return !cafe || i < cafe.tableCount() || !!cafe.tableOwner(i);
+    return !cafe || i < cafe.tableCount() || !!this.customers.ownerAt(i);
   }
 
   /**
@@ -579,16 +589,16 @@ export class InteriorScene {
     }
     if (!a.station) return;
     const jobs = [...this.game.jobsOf(a.station)].sort((p, q) => this.game.remainingOf(p) - this.game.remainingOf(q));
-    const bw = Math.min(a.w - 50, 170), many = jobs.length > 1, bh = Math.max(many ? 16 : 20, textFloor.px * 1.2), step = bh + 4;
+    const bw = Math.min(a.barW ?? a.w - 50, 170), bcx = cx + (a.barDx ?? 0), many = jobs.length > 1, bh = Math.max(many ? 16 : 20, textFloor.px * 1.2), step = bh + 4;
     jobs.forEach((job, i) => {
       const by = barTop - bh - i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
-      rrect(ctx, cx - bw / 2, by, bw, bh, bh / 2); paint(ctx, PAL.brownDark, 2.5);
-      ctx.save(); rrect(ctx, cx - bw / 2 + 2, by + 2, bw - 4, bh - 4, bh / 2 - 2); ctx.clip();
-      ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, PAL.greenLight], [1, PAL.green]]); ctx.fillRect(cx - bw / 2, by, bw * prog, bh);
+      rrect(ctx, bcx - bw / 2, by, bw, bh, bh / 2); paint(ctx, PAL.brownDark, 2.5);
+      ctx.save(); rrect(ctx, bcx - bw / 2 + 2, by + 2, bw - 4, bh - 4, bh / 2 - 2); ctx.clip();
+      ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, PAL.greenLight], [1, PAL.green]]); ctx.fillRect(bcx - bw / 2, by, bw * prog, bh);
       ctx.restore();
       const def = this.game.productsDef[job.product];
-      const tx = cx + 10, hasIcon = drawIcon(ctx, job.product, cx - 30, by + bh / 2, bh * 1.1);
-      label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : cx, by + bh / 2 + 1, { font: `700 ${many ? 13 : 15}px sans-serif`, fill: PAL.paper, lw: 4 });
+      const tx = bcx + 10, hasIcon = drawIcon(ctx, job.product, bcx - 30, by + bh / 2, bh * 1.1);
+      label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : bcx, by + bh / 2 + 1, { font: `700 ${many ? 13 : 15}px sans-serif`, fill: PAL.paper, lw: 4 });
     });
     if (a.station && jobs.length && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: PAL.creamLight, lw: 4 });
   }
