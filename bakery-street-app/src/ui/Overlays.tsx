@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { formatDuration } from "../game/exploration.js";
+import { EXPLORE_LIMIT } from "../data/economy.js";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon, Rich } from "./icons";
@@ -194,6 +195,7 @@ export function ExplorePanel({ selected, onSelect }: { selected: string | null; 
   const { world, act } = useWorld();
   const { game, exploration: ex } = world, u = useU();
   useRefresh(500);
+  const room = ex.goldRoom() as number;
   const possible = (d: any) => {
     const rw = d.rewards, parts = [`💰 ${range(rw.gold)}`, `✨ ${range(rw.xp)} XP`];
     for (const i of rw.ingredients ?? []) parts.push(`${game.ingredientsDef[i.id].icon} ${range(i.amount)}${i.chance < 1 ? ` (%${Math.round(i.chance * 100)})` : ""}`);
@@ -210,14 +212,14 @@ export function ExplorePanel({ selected, onSelect }: { selected: string | null; 
   };
   const STATUS: Record<string, string> = { locked: "Kilitli", available: "Açık", busy: "Açık", active: "Keşifte", ready: "Tamamlandı" };
   return (
-    <Sheet title="🧭 Keşif" hint="Aynı anda bir keşif · süre gerçek zamanlı, oyun kapalıyken de ilerler" side="right">
+    <Sheet title="🧭 Keşif" hint={`Aynı anda bir keşif · süre gerçek zamanlı, oyun kapalıyken de ilerler\nBugün tam ödenen keşif altını: ${fmt(room)} kaldı (sonrası %${Math.round(EXPLORE_LIMIT.overRate * 100)})`} side="right">
       {(ex.list() as any[]).map((s) => {
         const d = s.def, st = s.status, a = ex.active;
         let body: React.ReactNode, btn: React.ReactNode;
         const head = <><Meta text={d.desc} /><Meta text={`⏱ ${formatDuration(d.duration)} · Seviye ${d.minLevel}${d.after ? ` · önce ${ex.region(d.after.region).name}` : ""}${s.done ? ` · ${s.done}× tamamlandı` : ""}`} /></>;
         if (st === "locked") { body = <>{head}{(s.missing as string[]).map((m) => <Meta key={m} tone="bad" text={`✗ ${m}`} />)}</>; btn = <Btn label="🔒 Kilitli" disabled />; }
         else if (st === "active") { body = <>{head}<Bar value={ex.progress()} /><Meta text={`${formatDuration(ex.remaining())} kaldı`} /></>; btn = <Btn label="Keşifte…" disabled />; }
-        else if (st === "ready") { body = <>{head}<Meta tone="reward" text={`🎁 Ödül: ${earned(a.reward)}`} /></>; btn = <Btn variant="alt" label="Ödülü Al" onPress={() => { const r = ex.claim(a.id); if (r.ok) { act.toast(`${r.region.icon} ${r.region.name}: ${earned(r.reward)}`, 4200); act.sfx("claim"); act.buzz([30, 40, 60]); } else act.warn(r.message, 3000); }} />; }
+        else if (st === "ready") { body = <>{head}<Meta tone="reward" text={`🎁 Ödül: ${earned(a.reward)}`} /></>; btn = <Btn variant="alt" label="Ödülü Al" onPress={() => { const r = ex.claim(a.id); if (r.ok) { act.toast(`${r.region.icon} ${r.region.name}: ${earned(r.reward)}${r.reduced ? `\nGünlük keşif altın sınırı aşıldı: ${fmt(r.rolled)} yerine ${fmt(r.reward.gold)} altın` : ""}`, r.reduced ? 5200 : 4200); act.sfx("claim"); act.buzz([30, 40, 60]); } else act.warn(r.message, 3000); }} />; }
         else { body = <>{head}<Meta tone="reward" text={`Olası ödüller: ${possible(d)}`} /></>; btn = st === "busy" ? <Btn label="Başka keşif sürüyor" disabled /> : <Btn variant="alt" label="Keşfe Çık" onPress={() => { const r = ex.start(d.id); if (r.ok) { act.toast(`${r.region.icon} ${r.region.name} keşfi başladı`, 2200); act.sfx("tap"); } else act.warn(r.message, 3000); }} />; }
         return (
           <Card key={d.id} tone={st === "locked" ? "locked" : st === "ready" ? "ready" : undefined} left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={btn} style={selected === d.id ? { borderColor: C.honeyDark } : undefined}>

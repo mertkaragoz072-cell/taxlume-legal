@@ -24,7 +24,7 @@ function Rolling({ value, style }: { value: number; style: any }) {
     const from = cur.current, t0 = Date.now();
     let raf = 0;
     const step = () => {
-      const k = Math.min(1, (Date.now() - t0) / 450);
+      const k = Math.min(1, (Date.now() - t0) / 320);
       cur.current = k >= 1 ? value : Math.round(from + (value - from) * (1 - Math.pow(1 - k, 3)));
       setShown(cur.current);
       if (k < 1) raf = requestAnimationFrame(step);
@@ -157,7 +157,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const ready = g.kind === "ready", tab = g.item.category;
   return (
     <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }] }}>
-      <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 52, minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
+      <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 40, minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>
           <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>

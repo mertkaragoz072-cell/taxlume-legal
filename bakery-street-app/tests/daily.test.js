@@ -53,7 +53,7 @@ test('first ever claim: day 1 reward is given and applied to the shared gold', (
   const r = c.daily.claim();
   assert.equal(r.ok, true); assert.equal(r.day, 1);
   assert.equal(c.player.gold, 1000 + DAILY[0].gold);
-  assert.deepEqual(c.daily.exportState(), { lastDate: '2024-03-10', day: 1 });
+  assert.deepEqual(c.daily.exportState(), { lastDate: '2024-03-10', day: 1, lastAt: c.clock.now });
 });
 
 test('a second claim on the same day is refused and gives nothing, even much later that day', () => {
@@ -161,10 +161,20 @@ test('clock moved back: one day (time-zone change) still counts as claimed; more
   const c = make(at(2024, 3, 10)); c.daily.claim();
   c.set(at(2024, 3, 9, 20));                                              // a day earlier (e.g. travelled west)
   assert.equal(c.daily.status().canClaim, false);
-  c.set(at(2024, 3, 1));                                                  // clock set far back
+  c.set(at(2024, 3, 1));                                                  // clock set far back: no new claim (a second 'day 1' for free), until it catches up
   const s = c.daily.status();
-  assert.equal(s.canClaim, true); assert.equal(s.nextDay, 1);             // never locks the player out for ages
-  assert.equal(c.daily.claim().day, 1);
+  assert.equal(s.canClaim, false); assert.equal(s.clockBack, true);
+  const gold = c.player.gold;
+  assert.equal(c.daily.claim().ok, false); assert.equal(c.player.gold, gold);
+  c.set(at(2024, 3, 11));                                                 // time moves on normally: the next day's reward opens
+  assert.equal(c.daily.status().canClaim, true);
+  assert.equal(c.daily.claim().day, 2);
+});
+
+test('a clock set absurdly far forward and then corrected does not lock the daily reward for years', () => {
+  const c = make(at(2030, 3, 10)); c.daily.claim();                       // claimed with a wrong clock in 2030
+  c.set(at(2024, 3, 10));                                                 // the player fixes the date
+  assert.equal(c.daily.status().canClaim, true);
 });
 
 // ---------------------------------------------------------------------------------- persistence
@@ -182,7 +192,7 @@ test('last reward date, cycle day, gold, gems and inventory survive a reload; th
   a.daily.claim(); clock.now = at(2024, 3, 11, 9); a.daily.claim();       // day 1, day 2
   const before = a.game.exportState();
   const b = session(st, clock, 0); assert.equal(b.mgr.load().status, 'loaded');
-  assert.deepEqual(b.daily.exportState(), { lastDate: '2024-03-11', day: 2 });
+  assert.deepEqual({ ...b.daily.exportState(), lastAt: 0 }, { lastDate: '2024-03-11', day: 2, lastAt: 0 });
   assert.equal(b.player.gold, before.gold); assert.equal(b.player.gems, before.gems);
   assert.deepEqual(b.game.ingredients, before.ingredients);
   assert.equal(b.daily.claim().ok, false);                                // same day after reload
@@ -205,7 +215,7 @@ test('claiming is saved in one snapshot (date, day and rewards together)', () =>
   const a = session(st, clock, 0); a.mgr.load(); a.mgr.attach(); a.daily.claim();
   const saved = JSON.parse(st.getItem(SAVE_KEY));
   assert.equal(saved.version, SAVE_VERSION);
-  assert.deepEqual(saved.daily, { lastDate: '2024-03-10', day: 1 });
+  assert.deepEqual({ ...saved.daily, lastAt: 0 }, { lastDate: '2024-03-10', day: 1, lastAt: 0 });
   assert.equal(saved.gold, DAILY[0].gold);
   assert.equal(saved.gems, 50);
 });
@@ -232,7 +242,7 @@ test('invalid daily or gem data in a save is rejected (backed up) instead of bei
     assert.equal(s.daily.lastDate, null);
   }
   assert.throws(() => validateDaily({ lastDate: '2024-03-10', day: 0 }));
-  assert.deepEqual(validateDaily(undefined), { lastDate: null, day: 0 });
+  assert.deepEqual(validateDaily(undefined), { lastDate: null, day: 0, lastAt: null });
 });
 
 test('if saving fails the claim still works in memory, the player is warned, and it cannot be claimed twice', () => {

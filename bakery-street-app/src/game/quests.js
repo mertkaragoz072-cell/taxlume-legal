@@ -42,7 +42,7 @@ export class Quests {
     if (!this.isComplete(q)) return fail('incomplete', `Görev henüz tamamlanmadı (${this.progress(q)}/${q.target}).`);
     const r = q.reward ?? {};
     this.claimed.add(id);
-    if (r.gold) this.game.player.gold += r.gold;
+    if (r.gold) this.game.earn(r.gold, 'quest', `Görev: ${q.name}`);
     for (const [ing, n] of Object.entries(r.ingredients ?? {})) this.game.ingredients[ing] += n;
     this.game.progression?.award('quest', id);       // XP for turning the quest in, in the same step as the reward
     this.game.emit('change', { type: 'quest', quest: id });

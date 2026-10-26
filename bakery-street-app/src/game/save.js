@@ -14,7 +14,7 @@ import { validateShop } from './shop.js';
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 10;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward, v6 player level / XP (older saves start at level 1), v7 town buildings (older saves: only the starter buildings are open), v8 Bookshop research levels, v9 exploration (active trip + completed counts), v10 shop (owned items, placement, stage; older saves own nothing and keep everything else)
+export const SAVE_VERSION = 11;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward, v6 player level / XP (older saves start at level 1), v7 town buildings (older saves: only the starter buildings are open), v8 Bookshop research levels, v9 exploration (active trip + completed counts), v10 shop (owned items, placement, stage; older saves own nothing and keep everything else), v11 gold earned counter, daily-reward claim time, exploration daily gold budget, stored decoration (every one of these is optional: older saves load with the defaults, nothing is reset)
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -41,7 +41,7 @@ export function validate(raw, game) {
   const rs = raw.stats;
   if (rs !== undefined) {
     if (!rs || typeof rs !== 'object') throw new Error('istatistikler geçersiz');
-    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades', 'researchBought', 'explorationsDone', 'goldSpent', 'shopBought']) {
+    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades', 'researchBought', 'explorationsDone', 'goldSpent', 'goldEarned', 'shopBought']) {
       if (rs[k] === undefined) continue;
       if (!isCount(rs[k])) throw new Error(`istatistik geçersiz (${k})`);
       stats[k] = rs[k];

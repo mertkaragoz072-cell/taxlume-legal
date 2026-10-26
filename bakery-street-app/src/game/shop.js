@@ -3,7 +3,7 @@
 // small queries (speedBonus, capacityBonus, showcaseBonus, refundBonus, ingredientCap, queueBonus, vip, appeal ...) that Game / Cafe call.
 // A purchase is one atomic step: checks -> gold (Game.spend) -> owned + placed -> XP -> one 'change' event; if anything in it throws, gold and
 // state are restored. Prices, gates and effects come only from data/economy.js.
-import { SHOP_ITEMS, SHOP_CATEGORIES, SHARED_SLOTS, STAGES, STORAGE, RECIPES, APPEAL } from '../data/economy.js';
+import { SHOP_ITEMS, SHOP_CATEGORIES, SHARED_SLOTS, DECOR_SLOT_TYPES, STAGES, STORAGE, RECIPES, APPEAL } from '../data/economy.js';
 
 const fmt = (n) => n.toLocaleString('tr-TR');
 
@@ -18,6 +18,7 @@ export class Shop {
     this.appealDef = appeal;
     this.owned = new Set();        // item ids bought
     this.placed = {};              // slot -> item id (decoration that is standing in the café)
+    this.stored = new Set();       // decoration bought but not standing anywhere (taken down, or no free slot): gives no appeal until it is placed
     this.introduced = new Set();   // equipment items whose first-use introduction has played
     this.stageId = 1;              // highest stage reached (its reward is paid when it is reached, never again)
     this.stats = { lastGoal: null };
@@ -79,7 +80,7 @@ export class Shop {
   view(id) {
     const d = this.def(id), status = this.status(id), price = this.priceOf(id), gold = this.game.player.gold;
     const conds = this.conditions(id);
-    return { def: d, status, price, missingGold: status === 'ready' || status === 'locked' ? Math.max(0, price - gold) : 0, conditions: conds, missing: conds.filter((c) => !c.ok), effectText: describeEffect(d, this.game), placed: this.isPlaced(id) };
+    return { def: d, status, price, missingGold: status === 'ready' || status === 'locked' ? Math.max(0, price - gold) : 0, conditions: conds, missing: conds.filter((c) => !c.ok), effectText: describeEffect(d, this.game), placed: this.isPlaced(id), slot: this.slotOf(id) };
   }
   list(category) { return this.items.filter((d) => d.category === category).map((d) => this.view(d.id)); }
 
@@ -109,16 +110,16 @@ export class Shop {
     const block = this.blockReason(id);
     if (block) return fail(block.reason, block.message);
     const price = d.price;
-    const snap = { gold: g.player.gold, spent: g.stats.goldSpent, bought: g.stats.shopBought, owned: new Set(this.owned), placed: { ...this.placed } };
+    const snap = { gold: g.player.gold, spent: g.stats.goldSpent, bought: g.stats.shopBought, ledger: [...(g.ledger ?? [])], owned: new Set(this.owned), placed: { ...this.placed }, stored: new Set(this.stored) };
     try {
-      if (!g.spend(price)) return fail('gold', `${fmt(price - g.player.gold)} altın eksik (${fmt(price)} gerekli, ${fmt(g.player.gold)} var).`);
+      if (!g.spend(price, d.name)) return fail('gold', `${fmt(price - g.player.gold)} altın eksik (${fmt(price)} gerekli, ${fmt(g.player.gold)} var).`);
       this.owned.add(id);
-      if (d.slot) this.place(d.slot, id, true);
+      if (d.type) this.autoPlace(d);
       g.stats.shopBought += 1;
       g.progression?.gain(this.xpFor(d));
     } catch (err) {                                              // nothing half-done: the gold comes back and the item is not owned
-      g.player.gold = snap.gold; g.stats.goldSpent = snap.spent; g.stats.shopBought = snap.bought;
-      this.owned = snap.owned; this.placed = snap.placed;
+      g.player.gold = snap.gold; g.stats.goldSpent = snap.spent; g.stats.shopBought = snap.bought; g.ledger = snap.ledger;
+      this.owned = snap.owned; this.placed = snap.placed; this.stored = snap.stored;
       return fail('error', 'Satın alma tamamlanamadı; altın düşülmedi.');
     }
     if (requestId != null) { if (g.handledRequests.size > 200) g.handledRequests.clear(); g.handledRequests.add(requestId); }
@@ -143,20 +144,49 @@ export class Shop {
   xpFor(d) { return Math.max(10, Math.min(300, Math.round((d.price ?? 0) / 40))); }
 
   // ---- placement ------------------------------------------------------------------------------
-  isPlaced(id) { const d = this.def(id); return !!d?.slot && this.owned.has(id) && this.placed[d.slot] === id; }
-  /** Puts an owned decoration into its slot (a shared slot holds one item at a time). */
-  place(slot, id, force = false) {
+  /** Slots a decoration can stand in (every slot of its type). */
+  slotsOf(id) { const d = this.def(id); return d?.type ? Object.keys(DECOR_SLOT_TYPES).filter((sl) => DECOR_SLOT_TYPES[sl].type === d.type) : []; }
+  /** The slot an item stands in now, or null. */
+  slotOf(id) { return Object.keys(this.placed).find((sl) => this.placed[sl] === id) ?? null; }
+  isPlaced(id) { return this.owned.has(id) && this.slotOf(id) !== null; }
+  /** For the picker: every slot of the item's type with its label and what stands there. */
+  slotChoices(id) { return this.slotsOf(id).map((slot) => ({ slot, label: DECOR_SLOT_TYPES[slot].label, here: this.placed[slot] === id, occupant: this.placed[slot] && this.placed[slot] !== id ? this.def(this.placed[slot])?.name : null })); }
+
+  /** A newly bought piece goes into the first free slot of its type; a shared slot (table top, theme) takes the new piece and stores the old one; with no free slot it is stored. */
+  autoPlace(d) {
+    const slots = this.slotsOf(d.id), free = slots.find((sl) => !this.placed[sl]);
+    if (free) { this.placed[free] = d.id; this.stored.delete(d.id); return free; }
+    if (slots.length === 1 && SHARED_SLOTS.includes(slots[0])) { const old = this.placed[slots[0]]; if (old) this.stored.add(old); this.placed[slots[0]] = d.id; this.stored.delete(d.id); return slots[0]; }
+    this.stored.add(d.id);
+    return null;
+  }
+
+  /** Puts an owned decoration into a slot of its type. A piece already there is swapped into this piece's old slot when it fits, otherwise it is stored. */
+  place(slot, id) {
     const d = this.def(id);
-    if (!d || d.slot !== slot || !this.owned.has(id)) return { ok: false, message: 'Bu eşya yerleştirilemez.' };
-    if (this.placed[slot] === id && !force) return { ok: true };
-    this.placed[slot] = id;
-    if (!force) this.game.emit('change', { type: 'shopPlace', item: id });
+    if (!d || !this.owned.has(id) || !this.slotsOf(id).includes(slot)) return { ok: false, message: 'Bu eşya oraya yerleştirilemez.' };
+    if (this.placed[slot] === id) return { ok: true };
+    const from = this.slotOf(id), other = this.placed[slot];
+    if (from) delete this.placed[from];
+    if (other) { if (from && this.slotsOf(other).includes(from)) this.placed[from] = other; else this.stored.add(other); }
+    this.placed[slot] = id; this.stored.delete(id);
+    this.game.emit('change', { type: 'shopPlace', item: id });
+    return { ok: true, slot };
+  }
+  /** Takes a piece down (it stays owned, gives no appeal, can be placed again). */
+  unplace(id) {
+    const from = this.slotOf(id);
+    if (!from || !this.owned.has(id)) return { ok: false, message: 'Bu eşya zaten yerleştirilmemiş.' };
+    delete this.placed[from]; this.stored.add(id);
+    this.game.emit('change', { type: 'shopPlace', item: id });
     return { ok: true };
   }
   /** Is a decoration item standing in the café (owned and placed)? */
   active(id) { return this.isPlaced(id); }
   /** Items standing in the café, in catalogue order. */
-  placedItems() { return this.items.filter((d) => d.slot && this.isPlaced(d.id)); }
+  placedItems() { return this.items.filter((d) => d.type && this.isPlaced(d.id)); }
+  /** What stands where: [{ slot, d }] (the scene draws these). */
+  placements() { return Object.entries(this.placed).map(([slot, id]) => ({ slot, d: this.def(id) })).filter((p) => p.d && this.owned.has(p.d.id)); }
   /** The value of a shared slot's effect, e.g. tableTop -> 'cake' or null. */
   slotEffect(slot, key) { const id = this.placed[slot]; const d = id && this.isPlaced(id) ? this.def(id) : null; return d?.effect?.[key] ?? null; }
 
@@ -239,6 +269,8 @@ export class Shop {
       case 'level': return this.playerLevel;
       case 'spent': return g.stats.goldSpent;
       case 'items': return this.ownedCount();
+      case 'sold': return g.stats.soldTotal;
+      case 'equipment': return this.items.filter((d) => d.kind === 'equipment' && ['oven', 'coffee', 'counter', 'showcase', 'storage'].includes(d.line) && this.owned.has(d.id)).length;
       case 'upgrades': return g.stats.upgradesBought;
       case 'tables': return g.cafe ? g.cafe.tableCount() : g.effect('cafeTables');
       case 'recipes': return this.recipeCount();
@@ -259,7 +291,7 @@ export class Shop {
     if (!next || !this.stageProgress(next).every((c) => c.ok)) return null;
     this.stageId = next.id;
     const r = next.reward ?? {};
-    if (r.gold) this.game.player.gold += r.gold;
+    if (r.gold) this.game.earn(r.gold, 'stage', `Aşama ödülü: ${next.name}`);
     this.game.progression?.gain(r.xp ?? 0);
     this.game.emit('stage', { stage: next });
     this.game.emit('change', { type: 'stage', stage: next.id });
@@ -292,38 +324,42 @@ export class Shop {
   }
 
   // ---- persistence ------------------------------------------------------------------------------
-  exportState() { return { owned: [...this.owned], placed: { ...this.placed }, introduced: [...this.introduced], stage: this.stageId }; }
+  exportState() { return { owned: [...this.owned], placed: { ...this.placed }, stored: [...this.stored], introduced: [...this.introduced], stage: this.stageId }; }
 
   importState(state) {
     const v = validateShop(state, this);
     this.owned = new Set(v.owned);
     this.placed = { ...v.placed };
+    this.stored = new Set(v.stored);
     this.introduced = new Set(v.introduced);
     this.stageId = v.stage;
   }
 }
 
 /**
- * Sanitizes saved shop data (never throws): unknown ids are dropped, a decoration without a valid slot is not placed, an owned decoration
- * whose slot is empty is placed again (so a bought piece can never be missing from the café), and the stage never goes below what the owned
- * state implies (an old save without a shop simply starts at stage 1 and moves up by itself when its conditions hold).
+ * Sanitizes saved shop data (never throws): unknown ids are dropped; a decoration stands only in a slot of its type and only once; a piece that is
+ * neither placed nor stored (an older save, or a slot that was removed) is placed in the first free slot, or stored, so a bought piece can never be
+ * missing; the stage is clamped. An old save without a shop simply owns nothing and moves up stages by itself when its conditions hold.
  */
 export function validateShop(raw, shop) {
   const known = new Set(shop.items.filter((d) => d.kind !== 'upgrade').map((d) => d.id));
   const owned = [...new Set(Array.isArray(raw?.owned) ? raw.owned.filter((id) => known.has(id)) : [])];
-  const placed = {};
+  const placed = {}, used = new Set();
   for (const [slot, id] of Object.entries(raw?.placed && typeof raw.placed === 'object' ? raw.placed : {})) {
     const d = shop.def(id);
-    if (d && d.slot === slot && owned.includes(id)) placed[slot] = id;
+    if (d && owned.includes(id) && !used.has(id) && DECOR_SLOT_TYPES[slot]?.type === d.type) { placed[slot] = id; used.add(id); }
   }
-  for (const id of owned) {                                    // a bought piece must stand somewhere
+  const stored = new Set((Array.isArray(raw?.stored) ? raw.stored : []).filter((id) => owned.includes(id) && !used.has(id) && shop.def(id)?.type));
+  for (const id of owned) {
     const d = shop.def(id);
-    if (d?.slot && !placed[d.slot]) placed[d.slot] = id;
+    if (!d?.type || used.has(id) || stored.has(id)) continue;
+    const free = Object.keys(DECOR_SLOT_TYPES).find((sl) => DECOR_SLOT_TYPES[sl].type === d.type && !placed[sl]);
+    if (free) { placed[free] = id; used.add(id); } else stored.add(id);
   }
   const introduced = [...new Set(Array.isArray(raw?.introduced) ? raw.introduced.filter((id) => owned.includes(id)) : [])];
   const maxStage = Math.max(...shop.stages.map((s) => s.id));
   const stage = Number.isInteger(raw?.stage) && raw.stage >= 1 ? Math.min(raw.stage, maxStage) : 1;
-  return { owned, placed, introduced, stage };
+  return { owned, placed, stored: [...stored], introduced, stage };
 }
 
 /** One line of what an item does, built from its effect so the text can never disagree with the numbers. */

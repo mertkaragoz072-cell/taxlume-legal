@@ -2,7 +2,8 @@
 // while the game is closed. Rewards are rolled ONCE when the trip starts and stored with it, so reloading cannot re-roll them,
 // and claiming is a single atomic step (reward -> shared gold / XP / inventory, trip cleared, one 'change' event), so a trip can
 // never pay twice. Gold, XP, gems and ingredients all go into the existing player / progression / inventory systems.
-import { EXPLORE } from '../data/economy.js';
+import { EXPLORE, EXPLORE_LIMIT } from '../data/economy.js';
+import { dateKey, dayNumber } from './daily.js';
 
 export function formatDuration(sec) {
   const s = Math.max(0, Math.ceil(sec));
@@ -18,6 +19,7 @@ export class Exploration {
     this.rng = rng;
     this.active = null;            // { id, region, startedAt, duration, reward:{gold,xp,gems,ingredients} }
     this.done = {};                // region id -> number of trips completed and claimed
+    this.goldDay = { date: null, gold: 0 };   // gold paid by trips on that calendar day (the daily budget, see EXPLORE_LIMIT)
     this.nextId = 1;
     this.announced = new Set();    // trip ids already announced as ready (not saved: a returning player is told again)
     game.exploration = this;
@@ -93,12 +95,30 @@ export class Exploration {
     this.announced.delete(a.id);
     this.done[a.region] = this.timesDone(a.region) + 1;
     g.stats.explorationsDone += 1;
-    g.player.gold += r.gold;
+    const paid = this.payGold(r.gold, this.region(a.region).name);
     if (r.gems) g.player.gems = (g.player.gems ?? 0) + r.gems;
     for (const [ing, n] of Object.entries(r.ingredients)) g.ingredients[ing] += n;
     g.progression?.gain(r.xp);
     g.emit('change', { type: 'explore', region: a.region });
-    return { ok: true, reward: r, region: this.region(a.region) };
+    return { ok: true, reward: { ...r, gold: paid }, rolled: r.gold, reduced: paid < r.gold, region: this.region(a.region) };
+  }
+
+  /** Pays a trip's gold against the daily budget: full value until it is used up, `overRate` of the rest. */
+  payGold(gold, regionName) {
+    const today = dateKey(this.game.clock()), saved = this.goldDay;
+    if (saved.date == null || !(dayNumber(today) <= dayNumber(saved.date))) this.goldDay = { date: today, gold: 0 };     // a new day (a clock set back keeps the old day's count)
+    const room = Math.max(0, EXPLORE_LIMIT.dailyGold - this.goldDay.gold);
+    const full = Math.min(gold, room), rest = gold - full, paid = full + Math.floor(rest * EXPLORE_LIMIT.overRate);
+    this.goldDay.gold += gold;
+    this.game.earn(paid, 'explore', `Keşif: ${regionName}`);
+    return paid;
+  }
+
+  /** Gold still paid in full today. */
+  goldRoom() {
+    const today = dateKey(this.game.clock()), d = this.goldDay;
+    if (d.date == null || !(dayNumber(today) <= dayNumber(d.date))) return EXPLORE_LIMIT.dailyGold;
+    return Math.max(0, EXPLORE_LIMIT.dailyGold - d.gold);
   }
 
   /** Called every frame by Game.tick(): fires 'exploreReady' once per finished trip (also right after a reload). */
@@ -112,11 +132,11 @@ export class Exploration {
     }
   }
 
-  exportState() { return { active: this.active ? { ...this.active, reward: { ...this.active.reward, ingredients: { ...this.active.reward.ingredients } } } : null, done: { ...this.done }, nextId: this.nextId }; }
+  exportState() { return { active: this.active ? { ...this.active, reward: { ...this.active.reward, ingredients: { ...this.active.reward.ingredients } } } : null, done: { ...this.done }, nextId: this.nextId, goldDay: { ...this.goldDay } }; }
 
   importState(state) {
     const v = validateExploration(state, this);
-    this.active = v.active; this.done = v.done; this.nextId = v.nextId;
+    this.active = v.active; this.done = v.done; this.nextId = v.nextId; this.goldDay = v.goldDay;
     this.announced = new Set();
   }
 }
@@ -138,5 +158,6 @@ export function validateExploration(raw, ex) {
     };
   }
   const nextId = Math.max(isInt(raw?.nextId, 1e9) ? raw.nextId : 1, (active?.id ?? 0) + 1);
-  return { active, done, nextId };
+  const gd = raw?.goldDay, goldDay = gd && typeof gd.date === 'string' && !Number.isNaN(dayNumber(gd.date)) && isInt(gd.gold, 1e9) ? { date: gd.date, gold: gd.gold } : { date: null, gold: 0 };
+  return { active, done, nextId, goldDay };
 }

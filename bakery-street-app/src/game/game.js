@@ -6,7 +6,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, shopBought: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0 };
 }
 
 export class Game {
@@ -45,11 +45,31 @@ export class Game {
    * The ONE place gold is paid out (café upgrades, ingredients, town, research, shop all call it): refuses what the player cannot afford and
    * counts the lifetime gold spent (stage conditions read it). Returns true when the gold was taken.
    */
-  spend(amount) {
+  spend(amount, label = '') {
     if (!Number.isFinite(amount) || amount < 0 || this.player.gold < amount) return false;
     this.player.gold -= amount;
     this.stats.goldSpent += amount;
+    if (amount > 0) this.record(-amount, 'spend', label);
     return true;
+  }
+
+  /**
+   * The ONE place gold is paid in: sales, tips, showcase sales, ingredient refunds, quest / daily / exploration / level / stage rewards.
+   * Whole, finite, positive amounts only (anything else is ignored), counted in stats.goldEarned and written to the ledger. Returns what was paid.
+   */
+  earn(amount, source = 'other', label = '') {
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 1e9) return 0;
+    amount = Math.floor(amount);
+    this.player.gold += amount;
+    this.stats.goldEarned += amount;
+    this.record(amount, source, label);
+    return amount;
+  }
+
+  /** The last gold movements (newest first, memory only): { t, delta, source, label }. */
+  record(delta, source, label) {
+    (this.ledger ??= []).unshift({ t: this.clock(), delta, source, label });
+    if (this.ledger.length > 40) this.ledger.length = 40;
   }
 
   /** Adds a product after construction (the Shop registers its recipes this way): stock, statistics and the product table follow. */
@@ -180,7 +200,7 @@ export class Game {
     const def = this.productsDef[id];
     for (const [ing, need] of Object.entries(def.ingredients)) this.ingredients[ing] -= need;
     const rebate = this.ingredientRebate(id);
-    this.player.gold += rebate;
+    if (rebate) this.earn(rebate, 'rebate', `${def.name}: malzeme iadesi`);
     (this.jobs[def.station] ??= []).push({ product: id, startedAt: this.clock(), duration: this.duration(id) });
     this.emit('change', { type: 'start', product: id, rebate });
     return rebate ? { ok: true, rebate } : { ok: true };
@@ -236,7 +256,7 @@ export class Game {
     if (needLevel && this.progression && this.progression.level < needLevel) return bad('level', `${def.name} için Seviye ${needLevel} gerekli (şu an ${this.progression.level}).`);
     const cost = this.nextCost(id);
     if (this.player.gold < cost) return bad('gold', `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.`);
-    this.spend(cost);
+    this.spend(cost, def.name);
     this.upgrades[id] = level + 1;
     this.stats.upgradesBought += 1;
     this.progression?.award('upgrade', level + 1);   // XP grows with the upgrade level bought
@@ -303,7 +323,7 @@ export class Game {
       town: { opened: [], levels: {} },
       research: { levels: {} },
       exploration: { active: null, done: {} },
-      shop: { owned: [], placed: {}, introduced: [], stage: 1 },
+      shop: { owned: [], placed: {}, stored: [], introduced: [], stage: 1 },
     };
   }
 
@@ -315,7 +335,7 @@ export class Game {
     const cost = def.price * qty;
     const room = this.ingredientCap() - this.ingredients[id];
     if (qty > room) return { ok: false, reason: 'storage', message: room > 0 ? `Depoda ${def.name} için ${room} adetlik yer var. Depoyu genişlet.` : `Depo dolu: ${def.name} ${this.ingredients[id]}/${this.ingredientCap()}. Depoyu genişlet.` };
-    if (!this.spend(cost)) {
+    if (!this.spend(cost, `${def.name} ×${qty}`)) {
       return { ok: false, reason: 'gold', message: `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.` };
     }
     this.ingredients[id] += qty;
@@ -361,7 +381,7 @@ export class Game {
     if (this.products[id] < qty) return { ok: false, reason: 'stock', message: `Stokta yeterli ${def.name} yok.` };
     const income = this.showcaseIncome(id) * qty;
     this.products[id] -= qty;
-    this.player.gold += income;
+    this.earn(income, 'showcase', `${def.name} ×${qty} vitrinden satıldı`);
     this.recordSold(id, qty);
     this.emit('change', { type: 'sell', product: id, qty });
     return { ok: true, income };

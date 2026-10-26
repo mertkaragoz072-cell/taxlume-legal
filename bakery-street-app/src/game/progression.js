@@ -68,7 +68,7 @@ export class Progression {
       this.level += 1;
       if (this.level > this.rewardedLevel) {                       // one-time guard: never pay a level twice
         const reward = this.rewardFor(this.level);
-        this.game.player.gold += reward.gold;
+        this.game.earn(reward.gold, 'level', `Seviye ${this.level} ödülü`);
         for (const [id, n] of Object.entries(reward.ingredients)) this.game.ingredients[id] += n;
         this.rewardedLevel = this.level;
         result.levels.push({ level: this.level, reward });

@@ -99,7 +99,7 @@ export class CustomerLayer {
     }
     for (const c of this.coins) {                                   // coins in flight; the last one to land shows the amount
       c.t += dt;
-      if (c.t - c.delay >= COIN_FLIGHT_SEC) { c.landed = true; this.onRegister?.(c); if (c.last) this.pops.push({ x: c.x1, y: this.register.y - 30, text: `+${c.income}`, life: 1 }); }
+      if (c.t - c.delay >= COIN_FLIGHT_SEC) { c.landed = true; this.onRegister?.(c); if (c.last) this.pops.push({ x: c.x1, y: this.register.y - 30, text: `+${c.income} altın`, life: 1 }); }
     }
     this.coins = this.coins.filter((c) => !c.landed);
     for (const p of this.pops) p.life -= dt * 0.8;

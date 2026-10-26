@@ -2,16 +2,11 @@
 // posts, VIP marks, and the little reveal / first-use animations. It only READS the shop state every frame (src/game/shop.js), so a bought
 // piece can never be missing from the scene: when a picture is not available a simple vector stand-in is drawn instead.
 import { AREAS, DECOR_SLOTS, QUEUE_SPOTS, perspScale, CAM } from './interior-layout.js';
+import { EQUIPMENT_ART } from '../data/economy.js';
 import { getImage } from '../assets.js';
-import { createCanvas, clamp, shadow, glowAt, label } from '../util.js';
+import { clamp, shadow, glowAt, label } from '../util.js';
 import { PAL } from '../palette.js';
 
-/** How a better tier of a station looks until real art exists: scale, a tint over the picture, a gleam, and stars on a brass plaque. */
-const TIER_LOOK = {
-  2: { tint: 'rgba(255,170,70,.22)', scale: 1.03 },
-  3: { tint: 'rgba(255,205,80,.24)', scale: 1.06 },
-  4: { tint: 'rgba(110,190,255,.20)', scale: 1.09 },
-};
 const AREA_OF_LINE = { oven: 'oven', coffee: 'coffee', counter: 'counter', showcase: 'showcase', storage: 'storage' };
 const LINE_OF_AREA = Object.fromEntries(Object.entries(AREA_OF_LINE).map(([l, a]) => [a, l]));
 const easeOutBack = (k) => { const c = 1.9; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
@@ -21,7 +16,6 @@ export class DecorLayer {
   constructor(scene) {
     this.scene = scene;
     this.game = scene.game;
-    this.cache = {};            // tinted pictures
     this.born = {};             // item id -> seconds since it was bought (a pop-in)
     this.reveals = [];          // { x, y, t, text } rings and labels for something just bought
     this.intros = [];           // { areaId, t, text } first use of new equipment
@@ -29,7 +23,7 @@ export class DecorLayer {
     const g = this.game;
     g.on('shop', ({ item }) => this.onBought(item));
     g.on('shopIntro', ({ item, line }) => this.onIntro(item, line));
-    g.on('stage', () => { this.reveals.push({ x: CAM.w / 2, y: 330, t: 0, text: this.game.shop?.stage().name ?? '', big: true }); scene.burst(CAM.w / 2, 330, 26, 520); });
+    g.on('stage', () => { this.born.stage = 0; this.reveals.push({ x: CAM.w / 2, y: 330, t: 0, text: this.game.shop?.stage().name ?? '', big: true }); scene.burst(CAM.w / 2, 330, 26, 520); });
   }
 
   get shop() { return this.game.shop; }
@@ -41,9 +35,10 @@ export class DecorLayer {
     const s = this.scene;
     const area = (id) => AREAS.find((a) => a.id === id);
     const mid = (a) => (a ? { x: a.x + a.w / 2, y: a.y + a.h * 0.5 } : { x: CAM.w / 2, y: 700 });
-    if (d.slot && DECOR_SLOTS[d.slot]) { const sl = DECOR_SLOTS[d.slot]; return { x: sl.x, y: sl.y - (sl.h ?? 40) * perspScale(sl.y) * 0.5 }; }
-    if (d.slot === 'tableTop') return mid(area('table1'));
-    if (d.slot === 'theme') return { x: CAM.w / 2, y: 420 };
+    const slot = this.shop?.slotOf(d.id), sl = slot ? DECOR_SLOTS[slot] : null;
+    if (sl) return { x: sl.x, y: sl.y - (sl.h ?? 40) * perspScale(sl.y) * 0.5 };
+    if (d.type === 'tabletop') return mid(area('table1'));
+    if (d.type === 'theme') return { x: CAM.w / 2, y: 420 };
     if (d.kind === 'upgrade') return mid(area(`table${d.level + 2}`));
     if (d.line === 'waiting') return { x: QUEUE_SPOTS[0].x, y: QUEUE_SPOTS[0].y - 90 };
     if (d.line === 'vip') return { x: CAM.w / 2, y: 1200 };
@@ -83,45 +78,35 @@ export class DecorLayer {
   pop(id) { const t = this.born[id]; return t === undefined ? 1 : Math.max(0.01, easeOutBack(clamp(t / 0.55, 0, 1))); }
 
   // ---- equipment tiers --------------------------------------------------------------------------
-  tinted(key, img, color) {
-    const ck = `${key}|${color}`;
-    let c = this.cache[ck];
-    if (!c) {
-      const w = img.naturalWidth, h = img.naturalHeight, cv = createCanvas(w, h), g = cv.getContext('2d');
-      g.drawImage(img, 0, 0, w, h);
-      g.globalCompositeOperation = 'source-atop';
-      g.fillStyle = color; g.fillRect(0, 0, w, h);
-      c = this.cache[ck] = cv;
-    }
-    return c;
+  /** The picture to draw for a station at its owned tier: that tier's own picture, else the best lower tier that exists, else null (= the plain picture). */
+  tierImage(line, tier) {
+    for (let t = tier; t >= 2; t--) { const name = EQUIPMENT_ART[line]?.[t]; const img = name ? getImage(`int-${name}`) : null; if (img) return img; }
+    return null;
   }
 
-  /** The picture of a station, in the look of its owned tier (tier 1 = the plain picture). */
+  /**
+   * A station in the look of its owned tier. Only real pictures change its look (EQUIPMENT_ART); when the picture of a tier does not exist yet
+   * the plain picture is kept as it is, and the level shows on the small badge below it. Nothing is tinted, scaled or invented.
+   */
   drawTiered(ctx, a, img, dx, dy, w, h) {
-    const line = LINE_OF_AREA[a.id], tier = line && this.shop ? this.shop.tier(line) : 1, look = TIER_LOOK[tier];
-    const born = this.shop ? this.pop(this.shop.tierItem(line)?.id) : 1;
-    if (!look) { ctx.drawImage(img, dx, dy, w, h); return; }
-    const k = look.scale * (born < 1 || born > 1 ? born : 1), t = this.scene.t;
+    const line = LINE_OF_AREA[a.id], tier = line && this.shop ? this.shop.tier(line) : 1;
+    const art = tier > 1 ? this.tierImage(line, tier) : null;
+    const born = tier > 1 ? this.pop(this.shop.tierItem(line)?.id) : 1;
     ctx.save();
-    ctx.translate(dx + w / 2, dy + h); ctx.scale(k, k); ctx.translate(-(dx + w / 2), -(dy + h));
-    ctx.drawImage(this.tinted(a.id, img, look.tint), dx, dy, w, h);
-    if (tier >= 3) {                                              // a slow gleam over the whole piece
-      const glow = this.tinted(`${a.id}:glow`, img, 'rgba(255,255,255,.9)');
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = 0.05 + 0.05 * Math.sin(t * 2.2 + dx);
-      ctx.drawImage(glow, dx, dy, w, h);
-      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-    }
+    if (born !== 1) { ctx.translate(dx + w / 2, dy + h); ctx.scale(born, born); ctx.translate(-(dx + w / 2), -(dy + h)); }     // pops in when just bought
+    if (art) {                                                    // the tier's own picture: same ground line and centre as the plain one, its own proportions
+      const k = h / art.naturalHeight, w2 = art.naturalWidth * k;
+      ctx.drawImage(art, dx + (w - w2) / 2, dy, w2, h);
+    } else ctx.drawImage(img, dx, dy, w, h);
     ctx.restore();
-    this.plaque(ctx, dx + w / 2, dy + h - 6, tier);
-    if (tier >= 4) {                                              // twinkles
-      ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 4; i++) {
-        const p = (t * 0.6 + i * 0.25) % 1, px = dx + w * (0.15 + 0.7 * ((i * 0.37 + 0.1) % 1)), py = dy + h * (0.2 + 0.5 * ((i * 0.61) % 1));
-        ctx.fillStyle = `rgba(200,240,255,${0.8 * Math.sin(p * Math.PI)})`; ctx.beginPath(); ctx.arc(px, py, 3 + 3 * Math.sin(p * Math.PI), 0, 7); ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'source-over';
-    }
+    if (tier > 1) this.plaque(ctx, dx + w / 2, dy + h - 6, tier);
+  }
+
+  /** Tier pictures that exist (loaded) and the ones still missing, for the dev tools and tests: [{ line, tier, name, ok }]. */
+  equipmentArtStatus() {
+    const out = [];
+    for (const [line, tiers] of Object.entries(EQUIPMENT_ART)) for (const [tier, name] of Object.entries(tiers)) out.push({ line, tier: +tier, name, ok: !!getImage(`int-${name}`) });
+    return out;
   }
 
   /** A small brass plaque with one star per tier above the first, on the front of the station. */
@@ -138,13 +123,13 @@ export class DecorLayer {
   }
 
   // ---- decoration --------------------------------------------------------------------------------
-  placed(kind) { return (this.shop?.placedItems() ?? []).filter((d) => DECOR_SLOTS[d.slot]?.kind === kind); }
+  placed(kind) { return (this.shop?.placements() ?? []).filter((p) => DECOR_SLOTS[p.slot]?.kind === kind); }
 
   /** Rugs and mats lying on the floor (drawn under the furniture and the people). */
   drawFlat(ctx) {
     if (this.shop?.has('areaAisle')) this.drawAisle(ctx);
-    for (const d of this.placed('flat')) {
-      const sl = DECOR_SLOTS[d.slot], img = this.imgOf(d), k = perspScale(sl.y), w = sl.w * k * this.pop(d.id), wy = this.scene.warpAt(sl.y);
+    for (const { d, slot } of this.placed('flat')) {
+      const sl = DECOR_SLOTS[slot], img = this.imgOf(d), k = perspScale(sl.y), w = sl.w * k * this.pop(d.id), wy = this.scene.warpAt(sl.y);
       if (img) { const h = w * img.naturalHeight / img.naturalWidth; ctx.drawImage(img, sl.x - w / 2, sl.y - h / 2 + wy, w, h); }
       else {                                                       // stand-in: a plain woven mat
         const h = w * 0.4;
@@ -169,8 +154,8 @@ export class DecorLayer {
   /** Things standing on the floor and the waiting-area posts: depth-sorted with the people by the scene ({ y, draw }). */
   items() {
     const out = [];
-    for (const d of this.placed('stand')) {
-      const sl = DECOR_SLOTS[d.slot];
+    for (const { d, slot } of this.placed('stand')) {
+      const sl = DECOR_SLOTS[slot];
       out.push({ y: sl.y, draw: (ctx) => this.drawStanding(ctx, d, sl) });
     }
     const q = this.shop?.queueBonus() ?? 0;
@@ -213,8 +198,47 @@ export class DecorLayer {
     for (const x of xs) post(x);
   }
 
+  /**
+   * What the café looks like at its stage (drawn on the back wall): stage 2 a hanging wooden name sign, stage 3 the sign in warmer colours and a
+   * garland of pennants either side of it, stage 4 a gold-framed sign with stars and twinkles. Vector drawing, it follows the stage in the save.
+   */
+  drawStage(ctx) {
+    const stage = this.shop?.stageId ?? 1;
+    if (stage < 2) return;
+    const name = this.shop.stage().name, t = this.scene.t, pop = Math.min(1, this.pop('stage')), cx = 548, y = 138, w = stage >= 4 ? 248 : 206, h = stage >= 4 ? 50 : 42;     // right of centre: the goal chip sits under the top bar on the left
+    ctx.save();
+    ctx.translate(cx, y); ctx.scale(pop, pop); ctx.translate(-cx, -y);
+    if (stage >= 3) {                                               // pennant garland, sagging between hooks on the wall
+      const flags = ['#F5E6C8', '#B85F3B', '#7D9855', '#C99A61'];
+      for (const [x0, x1] of [[26, cx - w / 2 - 14], [cx + w / 2 + 14, 874]]) {
+        const n = 7, sag = 26, yb = y + 12;
+        ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x0, yb); ctx.quadraticCurveTo((x0 + x1) / 2, yb + sag * 2, x1, yb); ctx.stroke();
+        for (let i = 0; i < n; i++) {
+          const k = (i + 0.5) / n, px = x0 + (x1 - x0) * k, py = yb + sag * 4 * k * (1 - k) + 1;
+          ctx.beginPath(); ctx.moveTo(px - 11, py); ctx.lineTo(px + 11, py); ctx.lineTo(px, py + 26); ctx.closePath();
+          ctx.fillStyle = flags[i % 4]; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = PAL.brownDark; ctx.stroke();
+        }
+      }
+    }
+    for (const dx of [-w * 0.32, w * 0.32]) { ctx.strokeStyle = PAL.brownDark; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx + dx, y - h / 2 - 24); ctx.lineTo(cx + dx, y - h / 2 + 2); ctx.stroke(); }
+    shadow(ctx, cx + 4, y + h / 2 + 6, w * 0.42, 5, 0.2);
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - w / 2 - 6, y - h / 2 - 6, w + 12, h + 12, 14) : ctx.rect(cx - w / 2 - 6, y - h / 2 - 6, w + 12, h + 12);
+    ctx.fillStyle = stage >= 4 ? '#E3B64E' : PAL.brown; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = PAL.brownDark; ctx.stroke();
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - w / 2, y - h / 2, w, h, 10) : ctx.rect(cx - w / 2, y - h / 2, w, h);
+    ctx.fillStyle = stage >= 3 ? '#F6E6BC' : '#D9B982'; ctx.fill();
+    label(ctx, name, cx, y + 1, { font: `800 ${stage >= 4 ? 25 : 22}px "Trebuchet MS", sans-serif`, fill: stage >= 3 ? PAL.terracottaDark : PAL.brownDark, lw: 0 });
+    if (stage >= 4) {
+      for (const dx of [-w / 2 - 22, w / 2 + 22]) this.star(ctx, cx + dx, y, 12, '#FFE08A');
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 5; i++) { const p = (t * 0.5 + i * 0.2) % 1, px = cx - w / 2 + w * ((i * 0.23 + 0.08) % 1), py = y - h / 2 + h * ((i * 0.41) % 1); ctx.fillStyle = `rgba(255,240,170,${0.8 * Math.sin(p * Math.PI)})`; ctx.beginPath(); ctx.arc(px, py, 2 + 3 * Math.sin(p * Math.PI), 0, 7); ctx.fill(); }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+  }
+
   /** Shelves on the back wall. */
   drawWall(ctx) {
+    this.drawStage(ctx);
     if (this.shop?.has('areaWall')) {                              // the wooden display panel the shelves hang on
       const x = 732, y = 244, w = 148, h = 214, pop = Math.min(1, this.pop('areaWall'));
       ctx.save(); ctx.globalAlpha = pop;
@@ -225,8 +249,8 @@ export class DecorLayer {
       for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.moveTo(x + (w / 5) * i, y + 4); ctx.lineTo(x + (w / 5) * i, y + h - 4); ctx.stroke(); }
       ctx.restore();
     }
-    for (const d of this.placed('wall')) {
-      const sl = DECOR_SLOTS[d.slot], img = this.imgOf(d), pop = this.pop(d.id);
+    for (const { d, slot } of this.placed('wall')) {
+      const sl = DECOR_SLOTS[slot], img = this.imgOf(d), pop = this.pop(d.id);
       ctx.save(); ctx.translate(sl.x, sl.y); ctx.scale(pop, pop); ctx.translate(-sl.x, -sl.y);
       if (img) {
         const w = sl.w, h = w * img.naturalHeight / img.naturalWidth;
@@ -240,8 +264,8 @@ export class DecorLayer {
   /** Pendant lamps hanging in the aisle (front layer): the picture on a cord that fades into the air, plus a warm pool of light on the floor. */
   drawHang(ctx) {
     const t = this.scene.t;
-    for (const d of this.placed('hang')) {
-      const sl = DECOR_SLOTS[d.slot], img = this.imgOf(d), k = perspScale(sl.y), h = sl.h * k, w = img ? h * img.naturalWidth / img.naturalHeight : h * 0.9, wy = this.scene.warpAt(sl.y), pop = this.pop(d.id);
+    for (const { d, slot } of this.placed('hang')) {
+      const sl = DECOR_SLOTS[slot], img = this.imgOf(d), k = perspScale(sl.y), h = sl.h * k, w = img ? h * img.naturalWidth / img.naturalHeight : h * 0.9, wy = this.scene.warpAt(sl.y), pop = this.pop(d.id);
       const top = sl.y - h + wy, sway = Math.sin(t * 0.9 + sl.y) * 2;
       ctx.save();
       ctx.translate(sl.x, sl.y + wy); ctx.scale(pop, pop); ctx.translate(-sl.x, -(sl.y + wy));

@@ -134,13 +134,13 @@ export function Pips({ level, max }: { level: number; max: number }) {
 }
 
 /** A side panel: title row with an optional close button, a hint line and a scrolling body. `side` picks which edge it sticks to. */
-export function Sheet({ title, hint, onClose, side = "right", lowered, header, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; header?: React.ReactNode; children: React.ReactNode }) {
+export function Sheet({ title, hint, onClose, side = "right", lowered, header, tall, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; header?: React.ReactNode; tall?: boolean; children: React.ReactNode }) {
   const u = useU();
   const { width, height } = useWindowDimensions();
   const portrait = height >= width;
   // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it) in the picture frame
   // (wood border, cream inside, paw crest); wide windows keep the old plain side panel
-  const panelH = Math.min(height * 0.54, u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
+  const panelH = Math.min(height * (tall && height < 720 ? 0.64 : 0.54), u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
   const place = portrait
     ? { left: (width - panelW) / 2, width: panelW, bottom: navHeight(u) + u * 1.6, height: panelH }
     : { top: u * 12.8, bottom: lowered ? u * 11 : u * 1.4, width: Math.min(u * 78, width * 0.48), ...(side === "left" ? { left: u * 1.4 } : { right: u * 1.4 }) };

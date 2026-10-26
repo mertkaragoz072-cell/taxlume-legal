@@ -180,7 +180,7 @@ export class Cafe {
     let tip = 0;
     const tipChance = this.game.shop?.tipChance() ?? 0;                             // decoration: some guests leave a tip (the random number is only drawn when there is a chance)
     if (tipChance > 0 && this.rng() < tipChance) tip = Math.max(1, Math.round(income * this.game.shop.tipShare()));
-    this.game.player.gold += income + tip;
+    this.game.earn(income + tip, 'sale', `${def.name} satışı${tip ? ` (+${tip} bahşiş)` : ''}`);
     this.game.recordSold(order.product, 1);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);

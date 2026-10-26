@@ -30,6 +30,7 @@ export function CafePanel({ id, side }: { id: string; side: "left" | "right" }) 
   return (
     <Sheet title={TITLE[id]} hint={HINT[id] + stationNote} side={side} lowered={side === "left"} onClose={act.closePanel}>
       {id === "showcase" ? <Showcase /> : id === "storage" ? <Storage /> : id === "upgrades" ? <Upgrades /> : products.map(([pid, d]) => <Recipe key={pid} pid={pid} d={d} />)}
+      {id === "oven" || id === "coffee" || id === "counter" ? (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => !game.isUnlocked(pid) && (id === "counter" || d.station === id)).map(([pid, d]) => <LockedRecipe key={pid} pid={pid} d={d} />) : null}
       {id === "upgrades" ? <Btn label="◀ Geri" variant="alt" onPress={act.closePanel} style={{ alignSelf: "stretch" }} /> : null}
     </Sheet>
   );
@@ -43,7 +44,7 @@ function Recipe({ pid, d }: { pid: string; d: any }) {
   const soon = mine.length ? mine.reduce((a: any, b: any) => (game.remainingOf(a) <= game.remainingOf(b) ? a : b)) : null;
   const lack = !full && (game.missingFor(pid).length > 0 || game.committed(pid) >= game.showcaseLimit());
   const label = full ? (cap > 1 ? "Dolu" : mine.length ? "Hazırlanıyor" : "Meşgul") : "Üret";
-  const dur = game.duration(pid);
+  const dur = game.duration(pid), eco = game.unitEconomics(pid);
   return (
     <Card left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={<Btn label={label} variant={full ? "busy" : lack ? "lack" : "go"} onPress={() => { const r = game.startProduction(pid); if (!r.ok) act.warn(r.message); }} />}>
       <Title name={d.name} note={`Stok: ${game.products[pid]}/${game.showcaseLimit()}`} />
@@ -53,8 +54,23 @@ function Recipe({ pid, d }: { pid: string; d: any }) {
           return <Chip key={ing} ok={have >= need} text={`${def.icon} ${def.name} ${need} (${have})`} />;
         })}
       </View>
-      <Meta text={`⏱ ${formatTime(dur)}${dur < d.time ? ` (${formatTime(d.time)})` : ""} · 💰 ${fmt(game.saleIncome(d.price))} müşteri · ${game.stationsDef[d.station].name}`} />
+      <Meta text={`⏱ ${formatTime(dur)}${dur < d.time ? ` (${formatTime(d.time)})` : ""} · 💰 ${fmt(eco.customer)} müşteri · ${game.stationsDef[d.station].name}`} />
+      <Meta tone="muted" text={`Malzeme maliyeti ${fmt(eco.cost)} · net kazanç ${fmt(eco.customerNet)} (saniyede ${(eco.customerNet / dur).toFixed(2).replace(".", ",")})`} />
       {soon ? <Bar value={1 - game.remainingOf(soon) / soon.duration} text={`Kalan: ${formatTime(game.remainingOf(soon))}${mine.length > 1 ? ` (×${mine.length})` : ""}`} /> : null}
+    </Card>
+  );
+}
+
+/** A recipe the player has not bought yet: what it would earn and what it takes to unlock it (the shop item holds the price and the gates). */
+function LockedRecipe({ pid, d }: { pid: string; d: any }) {
+  const { world, act } = useWorld();
+  const game = world.game, shop = world.shop, u = useU();
+  const item = (shop.items as any[]).find((i) => i.recipe === pid), v = item ? shop.view(item.id) : null, eco = game.unitEconomics(pid);
+  return (
+    <Card tone="locked" left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={<Btn label="Mağazada aç" sub={v ? `💰 ${fmt(v.price)}` : undefined} variant="lack" onPress={() => { act.closePanel(); act.openShop("recipes"); }} />}>
+      <Title name={d.name} note="Kilitli tarif" />
+      <Meta text={`⏱ ${formatTime(game.duration(pid))} · 💰 ${fmt(eco.customer)} müşteri · maliyet ${fmt(eco.cost)} · net ${fmt(eco.customerNet)}`} />
+      {v && v.missing.length ? <Meta tone="muted" text={`Gerekli: ${v.missing.map((m: any) => m.text).join(" · ")}`} /> : <Meta tone="reward" text="Altının yetiyorsa Mağaza'dan açabilirsin." />}
     </Card>
   );
 }
@@ -110,6 +126,7 @@ function Upgrades() {
             <Pips level={lvl} max={max} />
             <Meta text={`Şu an: ${up.describe(up.values[lvl])}`} />
             <Meta tone="next" text={maxed ? "Maksimum seviye" : `Sonraki: ${up.describe(up.values[lvl + 1])}`} />
+            {!maxed ? <Meta tone={game.gold < cost ? "bad" : "muted"} text={game.gold < cost ? `Altın: ${fmt(game.gold)} / ${fmt(cost)} · ${fmt(cost - game.gold)} eksik` : `Altın: ${fmt(game.gold)} → ${fmt(game.gold - cost)}`} /> : null}
           </Card>
         );
       })}

@@ -31,16 +31,17 @@ export const PRODUCTS = {
 
 /**
  * Recipes the player buys in the shop (see SHOP_ITEMS, category 'recipes'). They join the products above when the Shop attaches to the game
- * (Shop constructor) and can neither be made nor ordered by guests until bought. Net gold per second of production rises with the tier
- * (about 1.2 -> 1.9) so a new recipe is worth the price, but only for a player who has the capacity to keep it busy.
+ * (Shop constructor) and can neither be made nor ordered by guests until bought. Price, ingredient cost and time are separate per product.
+ * The design makes the choice real: net gold per SECOND stays close to the old products (0.8 - 1.05, so quick recipes win when the player sells from the
+ * showcase), while net gold per GUEST rises with the tier (24 -> 68; bread 14, cake 60), which pays when guests are the limit (more tables, decoration).
  */
 export const RECIPES = {
-  simit: { name: 'Simit', icon: '🥯', station: 'oven', time: 25, ingredients: { flour: 2, sugar: 1 }, price: 52, start: 0 },
-  latte: { name: 'Latte', icon: '🧋', station: 'coffee', time: 22, ingredients: { beans: 1, milk: 2 }, price: 52, start: 0 },
-  kurabiye: { name: 'Kurabiye', icon: '🍪', station: 'oven', time: 45, ingredients: { flour: 2, butter: 1, sugar: 1, egg: 1 }, price: 105, start: 0 },
-  mocha: { name: 'Mocha', icon: '🍫', station: 'coffee', time: 30, ingredients: { beans: 1, milk: 1, sugar: 2 }, price: 80, start: 0 },
-  muffin: { name: 'Muffin', icon: '🧁', station: 'oven', time: 55, ingredients: { flour: 2, sugar: 2, egg: 1, milk: 1 }, price: 130, start: 0 },
-  waffle: { name: 'Waffle', icon: '🧇', station: 'oven', time: 65, ingredients: { flour: 2, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 170, start: 0 },
+  simit: { name: 'Simit', icon: '🥯', station: 'oven', time: 25, ingredients: { flour: 2, sugar: 1 }, price: 46, start: 0 },                        // cost 22, net 24: quick, the best gold per second of the oven line
+  latte: { name: 'Latte', icon: '🧋', station: 'coffee', time: 22, ingredients: { beans: 1, milk: 2 }, price: 46, start: 0 },                     // cost 24, net 22
+  kurabiye: { name: 'Kurabiye', icon: '🍪', station: 'oven', time: 45, ingredients: { flour: 2, butter: 1, sugar: 1, egg: 1 }, price: 78, start: 0 },   // cost 42, net 36: butter-heavy
+  mocha: { name: 'Mocha', icon: '🍫', station: 'coffee', time: 30, ingredients: { beans: 1, milk: 1, sugar: 2 }, price: 58, start: 0 },            // cost 29, net 29
+  muffin: { name: 'Muffin', icon: '🧁', station: 'oven', time: 55, ingredients: { flour: 2, sugar: 2, egg: 1, milk: 1 }, price: 90, start: 0 },   // cost 40, net 50
+  waffle: { name: 'Waffle', icon: '🧇', station: 'oven', time: 80, ingredients: { flour: 2, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 122, start: 0 },   // cost 54, net 68 over 80 s: the most per guest, the least per second of the oven line's new recipes
 };
 
 /** Ingredient storage (only enforced once the Shop is attached): units of each ingredient that can be bought and kept. Rewards are never refused. */
@@ -232,6 +233,12 @@ export const RESEARCH = {
  *  - rewards  : gold / xp are [min, max] ranges; ingredients are drops { id, amount: [min, max], chance }; gems is one optional rare drop
  *  - map      : position of the region's marker on the map (design coordinates, left half of the screen)
  */
+/**
+ * Limits on free, repeatable gold. A trip's gold counts towards a daily budget; once the budget is used the rest of the trip's gold pays
+ * only `overRate` of its value (XP, ingredients and gems are unaffected). Resets with the (local) calendar day, never goes back when the clock does.
+ */
+export const EXPLORE_LIMIT = { dailyGold: 4000, overRate: 0.2 };
+
 export const EXPLORE = [
   {
     id: 'meadow', name: 'Yeşil Çayırlar', icon: '🌿', map: { x: 268, y: 494 },
@@ -261,7 +268,7 @@ export const EXPLORE = [
 export const SHOP_CATEGORIES = [
   { id: 'ingredients', name: 'Malzeme', icon: '🛒' },
   { id: 'equipment', name: 'Ekipman', icon: '🔥' },
-  { id: 'furniture', name: 'Mobilya', icon: '🪑' },
+  { id: 'decor', name: 'Dekorasyon', icon: '🪴' },
   { id: 'recipes', name: 'Tarifler', icon: '📖' },
   { id: 'expansion', name: 'Genişletme', icon: '🏠' },
   { id: 'special', name: 'Özel', icon: '⭐' },
@@ -276,21 +283,21 @@ export const APPEAL = { arrivalPerPoint: 0.012, arrivalMax: 0.35, tipPerPoint: 0
 
 /**
  * Cafe stages. A stage is reached when ALL of its `need` conditions hold (checked after every change; the reward is paid once). Conditions:
- *   level (player level), spent (lifetime gold spent), items (shop items owned), upgrades (café upgrades bought), tables (open tables),
- *   recipes (shop recipes owned), research (research levels bought).
+ *   level (player level), spent (lifetime gold spent), sold (products sold), equipment (better equipment tiers owned), items (shop items owned),
+ *   upgrades (café upgrades bought), tables (open tables), recipes (shop recipes owned), research (research levels bought).
  * Shop items with `stage: n` stay locked until that stage.
  */
 export const STAGES = [
   { id: 1, name: 'Küçük Kafe', note: 'Temel fırın, birkaç masa, sınırlı tarifler.' },
-  { id: 2, name: 'Gelişen Kafe', note: 'Daha iyi ekipman, yeni masalar, daha çok müşteri.', need: { level: 4, spent: 4000, items: 3, upgrades: 2 }, reward: { gold: 1500, xp: 150 } },
-  { id: 3, name: 'Popüler Kafe', note: 'Geniş ürün yelpazesi, güzel dekor, yüksek müşteri kapasitesi.', need: { level: 8, spent: 25000, items: 10, tables: 3, recipes: 3 }, reward: { gold: 6000, xp: 400 } },
-  { id: 4, name: 'Ünlü Kedi Kafesi', note: 'Premium ekipman, özel tarifler, nadir ziyaretçiler.', need: { level: 13, spent: 90000, items: 22, tables: 4, recipes: 5, research: 4 }, reward: { gold: 25000, xp: 1200 } },
+  { id: 2, name: 'Gelişen Kafe', note: 'Daha iyi ekipman, yeni masalar, daha çok müşteri.', need: { level: 4, spent: 4000, sold: 25, equipment: 1, recipes: 1, items: 3, upgrades: 2 }, reward: { gold: 1500, xp: 150 } },
+  { id: 3, name: 'Popüler Kafe', note: 'Geniş ürün yelpazesi, güzel dekor, yüksek müşteri kapasitesi.', need: { level: 8, spent: 25000, sold: 150, equipment: 4, items: 10, tables: 3, recipes: 3 }, reward: { gold: 6000, xp: 400 } },
+  { id: 4, name: 'Ünlü Kedi Kafesi', note: 'Premium ekipman, özel tarifler, nadir ziyaretçiler.', need: { level: 13, spent: 90000, sold: 600, equipment: 9, items: 22, tables: 4, recipes: 5, research: 4 }, reward: { gold: 25000, xp: 1200 } },
 ];
 
 /**
  * Shop items.
  *  - kind 'equipment' (line + tier): the highest owned tier of a line is the one in force, so a tier replaces the one below it (never stacks with it)
- *  - kind 'decor'  (slot, appeal): drawn at the slot (see DECOR_SLOTS in scene/interior-layout.js) once owned; 'tableTop' and 'theme' are shared slots: the latest bought is placed, the others can be placed again from the shop
+ *  - kind 'decor'  (type, group, appeal): drawn in a slot of its type (DECOR_SLOT_TYPES) once placed; a bought piece goes into a free slot, the player can move or store it; a piece that is not placed gives no appeal
  *  - kind 'recipe' (recipe): unlocks a product from RECIPES
  *  - kind 'area' (effect.area): opens a decoration area (a section of the café that gets its own floor / wall panel); the decoration of that area requires it
  *  - kind 'upgrade' (upgrade + level): the café upgrade of that name, sold here too (the price comes from UPGRADES, one list)
@@ -319,18 +326,20 @@ export const SHOP_ITEMS = [
   T('storageT4', 'storage', 4, 'Büyük Ambar', 22000, 10, { storage: 500 }, { desc: 'Her malzemeden 500 adet.', stage: 3 }),
 
   // ---- furniture and decoration (each placed piece adds appeal points)
-  { id: 'matPaw', category: 'furniture', kind: 'decor', name: 'Pati Paspası', desc: 'Girişte misafirleri karşılar.', price: 350, minLevel: 1, slot: 'doormat', appeal: 1, art: { image: 'mat-paw' } },
-  { id: 'plantA', category: 'furniture', kind: 'decor', name: 'Çiçekli Saksı', desc: 'Servis alanının soluna taze bir köşe.', price: 450, minLevel: 1, slot: 'edge-left', appeal: 2, art: { image: 'plant-1' } },
-  { id: 'rugAisle', category: 'furniture', kind: 'decor', name: 'Koridor Halısı', desc: 'Masaların arasındaki yolu yumuşatır.', price: 700, minLevel: 2, slot: 'rug-aisle', appeal: 2, requires: [{ item: 'areaAisle' }], art: { image: 'rug-green' } },
-  { id: 'shelfPlants', category: 'furniture', kind: 'decor', name: 'Raflı Bitki', desc: 'Duvara asılan küçük bir bitki rafı.', price: 1100, minLevel: 3, slot: 'wall-r1', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf-plants' } },
-  { id: 'plantB', category: 'furniture', kind: 'decor', name: 'Pembe Çiçekli Saksı', desc: 'Sağ köşeye renk katar.', price: 900, minLevel: 4, slot: 'edge-right', appeal: 3, art: { image: 'plant-2' } },
-  { id: 'lampA', category: 'furniture', kind: 'decor', name: 'Bakır Sarkıt Lamba', desc: 'Koridora sıcak bir ışık havuzu.', price: 1200, minLevel: 4, slot: 'lamp-1', appeal: 4, requires: [{ item: 'areaAisle' }], art: { image: 'lamp' } },
-  { id: 'shelfBread', category: 'furniture', kind: 'decor', name: 'Ekmek Rafı', desc: 'Sepetler ve taze ekmekler.', price: 1800, minLevel: 5, slot: 'wall-r2', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf' } },
-  { id: 'tableCake', category: 'furniture', kind: 'decor', name: 'Pastalı Masa Takımı', desc: 'Boş masalar çilekli pasta ile süslenir. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, slot: 'tableTop', appeal: 4, effect: { tableTop: 'cake' }, art: { image: 'table-cake' } },
-  { id: 'tableCup', category: 'furniture', kind: 'decor', name: 'Fincanlı Masa Takımı', desc: 'Boş masalarda buğulu kahve fincanı. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, slot: 'tableTop', appeal: 4, effect: { tableTop: 'cup' }, art: { image: 'table-cup' } },
-  { id: 'rugRunner', category: 'furniture', kind: 'decor', name: 'Kırmızı Yolluk', desc: 'Koridora ikinci bir halı.', price: 1600, minLevel: 6, slot: 'rug-aisle-2', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'rug-runner' } },
-  { id: 'plantC', category: 'furniture', kind: 'decor', name: 'Sarkık Bitki', desc: 'Koridorun başında sarmaşıklı saksı.', price: 1500, minLevel: 6, slot: 'aisle-top', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'plant-3' } },
-  { id: 'lampB', category: 'furniture', kind: 'decor', name: 'İkinci Bakır Lamba', desc: 'Koridorun sonuna ikinci lamba.', price: 2400, minLevel: 8, slot: 'lamp-2', appeal: 4, requires: [{ item: 'lampA' }], art: { image: 'lamp' } },
+  { id: 'matPaw', category: 'decor', kind: 'decor', name: 'Pati Paspası', desc: 'Girişte misafirleri karşılar.', price: 350, minLevel: 1, type: 'mat', group: 'Halı & Paspas', appeal: 1, art: { image: 'mat-paw' } },
+  { id: 'plantA', category: 'decor', kind: 'decor', name: 'Çiçekli Saksı', desc: 'Servis alanının soluna taze bir köşe.', price: 450, minLevel: 1, type: 'plant', group: 'Bitki & Çiçek', appeal: 2, art: { image: 'plant-1' } },
+  { id: 'rugAisle', category: 'decor', kind: 'decor', name: 'Koridor Halısı', desc: 'Masaların arasındaki yolu yumuşatır.', price: 700, minLevel: 2, type: 'rug', group: 'Halı & Paspas', appeal: 2, requires: [{ item: 'areaAisle' }], art: { image: 'rug-green' } },
+  { id: 'shelfPlants', category: 'decor', kind: 'decor', name: 'Raflı Bitki', desc: 'Duvara asılan küçük bir bitki rafı.', price: 1100, minLevel: 3, type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf-plants' } },
+  { id: 'plantB', category: 'decor', kind: 'decor', name: 'Pembe Çiçekli Saksı', desc: 'Sağ köşeye renk katar.', price: 900, minLevel: 4, type: 'plant', group: 'Bitki & Çiçek', appeal: 3, art: { image: 'plant-2' } },
+  { id: 'lampA', category: 'decor', kind: 'decor', name: 'Bakır Sarkıt Lamba', desc: 'Koridora sıcak bir ışık havuzu.', price: 1200, minLevel: 4, type: 'lamp', group: 'Aydınlatma', appeal: 4, requires: [{ item: 'areaAisle' }], art: { image: 'lamp' } },
+  { id: 'shelfBread', category: 'decor', kind: 'decor', name: 'Ekmek Rafı', desc: 'Sepetler ve taze ekmekler.', price: 1800, minLevel: 5, type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf' } },
+  { id: 'tableCake', category: 'decor', kind: 'decor', name: 'Pastalı Masa Takımı', desc: 'Boş masalar çilekli pasta ile süslenir. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, type: 'tabletop', group: 'Masa & Sandalye', appeal: 4, effect: { tableTop: 'cake' }, art: { image: 'table-cake' } },
+  { id: 'tableCup', category: 'decor', kind: 'decor', name: 'Fincanlı Masa Takımı', desc: 'Boş masalarda buğulu kahve fincanı. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, type: 'tabletop', group: 'Masa & Sandalye', appeal: 4, effect: { tableTop: 'cup' }, art: { image: 'table-cup' } },
+  { id: 'rugRunner', category: 'decor', kind: 'decor', name: 'Kırmızı Yolluk', desc: 'Koridora ikinci bir halı.', price: 1600, minLevel: 6, type: 'rug', group: 'Halı & Paspas', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'rug-runner' } },
+  { id: 'plantC', category: 'decor', kind: 'decor', name: 'Sarkık Bitki', desc: 'Koridorun başında sarmaşıklı saksı.', price: 1500, minLevel: 6, type: 'plant', group: 'Bitki & Çiçek', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'plant-3' } },
+  { id: 'lampB', category: 'decor', kind: 'decor', name: 'İkinci Bakır Lamba', desc: 'Koridorun sonuna ikinci lamba.', price: 2400, minLevel: 8, type: 'lamp', group: 'Aydınlatma', appeal: 4, requires: [{ item: 'lampA' }], art: { image: 'lamp' } },
+  { id: 'tablePlain', category: 'decor', kind: 'decor', name: 'Sade Masa Takımı', desc: 'Vazosuz, sade ahşap masalar. (Masa süsü: tek seferde biri yerleştirilir.)', price: 500, minLevel: 2, type: 'tabletop', group: 'Masa & Sandalye', appeal: 1, effect: { tableTop: 'plain' }, art: { image: 'table-plain' } },
+  { id: 'rackPots', category: 'decor', kind: 'decor', name: 'Bakır Tencere Askısı', desc: 'Duvara asılan bakır tencereler ve kepçeler. (Duvar rafı: iki raf yeri var, hangisini asacağını sen seç.)', price: 1400, minLevel: 4, type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'rack' } },
 
   // ---- recipes
   { id: 'recipeSimit', category: 'recipes', kind: 'recipe', recipe: 'simit', name: 'Simit Tarifi', desc: 'Susamlı, çıtır halka ekmek.', price: 600, minLevel: 1, art: { icon: 'simit' } },
@@ -351,9 +360,41 @@ export const SHOP_ITEMS = [
   // ---- special content: VIP guests and themes
   { id: 'vip1', category: 'special', kind: 'special', name: 'VIP Misafirler', desc: 'Bazı misafirler VIP gelir: altın taçlı, daha çok öder.', price: 9000, minLevel: 8, stage: 3, effect: { vip: { chance: 0.1, mult: 1.6 } }, line: 'vip', tier: 2, art: { icon: 'vip' } },
   { id: 'vip2', category: 'special', kind: 'special', name: 'Ünlü Ziyaretçiler', desc: 'VIP misafir sıklığı ve ödemesi artar.', price: 30000, minLevel: 13, stage: 4, effect: { vip: { chance: 0.2, mult: 2 } }, line: 'vip', tier: 3, requires: [{ item: 'vip1' }], art: { icon: 'vip' } },
-  { id: 'themeSpring', category: 'special', kind: 'decor', name: 'Bahar Teması', desc: 'Pembe çiçek yaprakları süzülür. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, slot: 'theme', appeal: 5, effect: { theme: 'spring' }, art: { icon: 'spring' } },
-  { id: 'themeCozy', category: 'special', kind: 'decor', name: 'Kış Köşesi Teması', desc: 'Sıcak ışık ve kar taneleri. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, slot: 'theme', appeal: 5, effect: { theme: 'cozy' }, art: { icon: 'cozy' } },
+  { id: 'themeSpring', category: 'special', kind: 'decor', name: 'Bahar Teması', desc: 'Pembe çiçek yaprakları süzülür. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, type: 'theme', appeal: 5, effect: { theme: 'spring' }, art: { icon: 'spring' } },
+  { id: 'themeCozy', category: 'special', kind: 'decor', name: 'Kış Köşesi Teması', desc: 'Sıcak ışık ve kar taneleri. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, type: 'theme', appeal: 5, effect: { theme: 'cozy' }, art: { icon: 'cozy' } },
 ];
 
-/** Decoration is drawn in these places (interior-layout.js DECOR_SLOTS holds their positions); shared slots hold one of several items. */
+/**
+ * The picture of each equipment tier: assets/game/interior/<name>.webp (registered as 'int-<name>'), same size and ground line as the plain
+ * picture of the station. Tier 1 is the plain picture. A tier whose file does not exist yet is NOT replaced by anything invented: the station keeps
+ * its current picture (or the best lower tier that exists) with a small level badge, and the file is listed as missing (docs/EKSIK_ASSETLER.md,
+ * `node scripts/list-missing-art.mjs`). Drop the file in and run `node scripts/gen-assets.mjs`: it is used from then on, nothing else to change.
+ */
+export const EQUIPMENT_ART = {
+  oven: { 2: 'oven-t2', 3: 'oven-t3', 4: 'oven-t4' },
+  coffee: { 2: 'coffee-t2', 3: 'coffee-t3', 4: 'coffee-t4' },
+  showcase: { 2: 'showcase-t2', 3: 'showcase-t3', 4: 'showcase-t4' },
+  storage: { 2: 'storage-t2', 3: 'storage-t3', 4: 'storage-t4' },
+  counter: { 2: 'counter-t2', 3: 'counter-t3', 4: 'counter-t4' },
+};
+
+/**
+ * Decoration slots: where a piece can stand (positions are in scene/interior-layout.js DECOR_SLOTS under the same id). A decoration has a
+ * `type`; it can be placed in any slot of its type, and the player moves pieces between them (Shop.place). 'tableTop' and 'theme' hold one piece
+ * for the whole café.
+ */
+export const DECOR_SLOT_TYPES = {
+  'doormat': { type: 'mat', label: 'Giriş' },
+  'rug-aisle': { type: 'rug', label: 'Koridor ortası' },
+  'rug-aisle-2': { type: 'rug', label: 'Koridor başı' },
+  'edge-left': { type: 'plant', label: 'Sol köşe' },
+  'edge-right': { type: 'plant', label: 'Sağ köşe' },
+  'aisle-top': { type: 'plant', label: 'Koridor girişi' },
+  'lamp-1': { type: 'lamp', label: 'Üst lamba' },
+  'lamp-2': { type: 'lamp', label: 'Alt lamba' },
+  'wall-r1': { type: 'shelf', label: 'Üst raf yeri' },
+  'wall-r2': { type: 'shelf', label: 'Alt raf yeri' },
+  'tableTop': { type: 'tabletop', label: 'Tüm masalar' },
+  'theme': { type: 'theme', label: 'Tüm kafe' },
+};
 export const SHARED_SLOTS = ['tableTop', 'theme'];

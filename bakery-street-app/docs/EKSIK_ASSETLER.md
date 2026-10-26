@@ -33,12 +33,38 @@ Gerçek animasyon sayfaları gelene kadar bunlar çalışır; sayfa gelince ilgi
 ## Ekonomi sistemi için eksik sanat (şimdilik kodla yedeklenmiş)
 | Eksik | Şimdiki yedek | Gerçeği için gereken |
 |---|---|---|
-| Ekipman kademeleri (fırın, kahve makinesi, hamur tezgâhı, vitrin, depo × 3 kademe) | Aynı resim: büyüme + renk tonu + parlama + yıldızlı plaka (`interior-decor.js`) | Her kademe için ayrı şeffaf resim (mevcut resimle aynı boyut ve taban çizgisi) |
+| Ekipman kademeleri (fırın, kahve makinesi, hamur tezgâhı, vitrin, depo × 3 kademe = 15 resim) | **Hiçbir şey uydurulmaz**: mevcut resim korunur, altında kademe rozeti (yıldızlı plaka) görünür | Aşağıdaki E12 komutlarıyla 15 resim (`docs/EKONOMI.md` listesi; `node scripts/list-missing-art.mjs`) |
 | 6 yeni tarifin ikonları | `scripts/make_recipe_icons.py` ile çizilmiş basit ikonlar | ChatGPT ile diğer ikonlarla aynı stilde 256 px simit, latte, kurabiye, mocha, muffin, waffle |
 | VIP / nadir misafir görünümü | Altın taç + altın ışık | Ayrı kedi sayfaları (örn. şapkalı/atkılı özel kediler) |
 | Yeni mobilya çeşitleri (sandalye, farklı masa, bank) | Yok: yalnız eldeki resimler (saksı, lamba, raf, halı, masa süsü) | Yeni sandalye/masa/bank resimleri |
 | Yeni iç mekân bölümleri (teras, ikinci salon) | Koridor cilası ve duvar panosu (vektör) | Bölüm resimleri + sahne düzeni |
 | Bekleme alanı direkleri/halatı | Vektör (pirinç direk, kırmızı halat) | İstenirse resim |
+
+## E12: Ekipman kademeleri (15 resim, her biri AYRI komut)
+Her komutta ilgili İSTASYONUN mevcut resmini (`assets/game/interior/oven.webp`, `coffee.webp`, `showcase.webp`, `storage.webp`, `counter.webp`) referans olarak ekle. Gelen resim: tek nesne, düz siyah (#000000) arka plan. Sonra her resim için:
+```
+python3 scripts/add_equipment_tier.py <istasyon> <kademe> ~/Downloads/resim.png     # örn. oven 2 ...
+node scripts/gen-assets.mjs                                                          # bir kez, dosyalar eklendikten sonra
+```
+Dosya adları: `oven-t2/t3/t4`, `coffee-t2/t3/t4`, `showcase-t2/t3/t4`, `storage-t2/t3/t4`, `counter-t2/t3/t4` (.webp). Oyun resmi aynı taban çizgisi ve merkezle çizer; başka bir kod değişikliği gerekmez.
+
+HER KOMUTUN BAŞINA şunu ekle: "Ekteki resim oyunun mevcut [İSTASYON] resmidir. AYNI sanat stilinde (sıcak, el çizimi, kalın koyu kahverengi dış hat, yumuşak boyama, sevimli kedi kafe teması), AYNI bakış açısıyla (hafif yukarıdan, önden), AYNI yükseklik/genişlik oranına yakın ve AYNI zemin çizgisinde, bu istasyonun YÜKSELTİLMİŞ bir sürümünü çiz. Renk paleti sıcak krem, bal, kiremit, kahverengi ve yumuşak yeşil olsun; yeni kademede daha değerli malzemeler (pirinç, altın, mermer, cam) görünsün ama aynı istasyon olduğu belli olsun. Düz siyah (#000000) arka plan, gölge yok, yalnızca tek nesne, kenarlarda en az 40 piksel boşluk, kesilmemiş, metin/yazı yok."
+
+* **Fırın 2 (Taş Fırın Pro)**: "Tuğla fırın; kapı kemerinde parlak PİRİNÇ çerçeve, pirinç baca kapağı, daha düzgün dizilmiş tuğlalar, yanında asılı bakır kepçe ve maşa, ateş biraz daha parlak, tabanda küçük odun yığını."
+* **Fırın 3 (Altın Fırın)**: "Çift katlı tuğla kemerli fırın; kemer ve kapı çerçevesi ALTIN kaplama, yanlarda altın sütunlar, baca altın başlıklı, mavi-krem seramik süs şeridi, geniş ağızda parlak ateş ve ekmekler."
+* **Fırın 4 (Usta Taş Fırın)**: "Beyaz mermer ve altın detaylı usta fırını; oymalı kemer, üstünde küçük kedi başı kabartması, altın baca, yanlarda altın aletler ve küçük bir tabela, ateş çok parlak."
+* **Kahve makinesi 2 (Barista)**: "Krom çift kollu espresso makinesi, yanında cam çekirdek hazneli değirmen, üstte sıralı fincanlar, küçük basınç göstergesi."
+* **Kahve makinesi 3 (Espresso Pro)**: "Bakır borulu üç kollu espresso makinesi, manometreler, parlak krom gövde, yanında iki değirmen, üstte fincan rafı."
+* **Kahve makinesi 4 (Kristal Espresso Bar)**: "Cam/kristal paneli ve altın detayları olan dört kollu lüks espresso barı, yükselen buhar bulutu, yanda kristal çekirdek kavanozları."
+* **Vitrin 2 (Cam Pasta Vitrini)**: "Kavisli camlı üç raflı pasta vitrini, ahşap taban, raflarda sıralı kruvasan, pasta ve kurabiyeler, ince fiyat etiketleri."
+* **Vitrin 3 (Panoramik Vitrin)**: "Daha geniş, altın çerçeveli panoramik camlı vitrin, içeriden aydınlatmalı dört raf, kubbeli pasta fanusları ve bol ürün."
+* **Vitrin 4 (Kristal Vitrin)**: "Kristal cam paneller ve mermer tabanlı, altın süslemeli lüks vitrin; ışıklı raflar, tepsilerde nefis pastalar, kubbeli fanuslar."
+* **Depo 2 (Geniş Depo Rafları)**: "İki katlı geniş ahşap depo rafları; un çuvalları, süt şişeleri, yumurta kasaları, kavanozlar ve ahşap kutular dolu."
+* **Depo 3 (Soğuk Depo)**: "Ahşap ve çelik karışımı depo; yanında küçük soğutucu dolap kapısı, etiketli kavanozlar, süt ve tereyağı rafları, düzenli kasalar."
+* **Depo 4 (Büyük Ambar)**: "Üç katlı büyük ahşap ve demir ambar rafı; bol çuval, fıçı, kasa ve etiketli kavanoz, altın etiket tabelası."
+* **Tezgâh 2 (Mermer Hamur Tezgâhı)**: "Mermer üstlü hamur hazırlama tezgâhı, üstünde hamur, merdane, un ve kase; alt rafta sepetler."
+* **Tezgâh 3 (Usta Hamur Tezgâhı)**: "Çelik ayaklı, mermer üstlü büyük usta tezgâhı; duvara asılı çelik aletler, hamur teknesi, tartı."
+* **Tezgâh 4 (Şef Tezgâhı)**: "Altın detaylı mermer şef tezgâhı; üstünde hazır hamur işleri, bakır tartı ve kase, küçük kedi şef şapkası süsü."
 
 ## Sıra (görünürlüğe göre)
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.

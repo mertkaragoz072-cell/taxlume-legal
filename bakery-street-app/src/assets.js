@@ -1,3 +1,5 @@
+import { EQUIPMENT_ART } from './data/economy.js';
+
 // Artwork registry: every image the game draws, keyed by name.
 //
 // To replace artwork, drop a WebP/PNG into ./assets and change its path here.
@@ -39,6 +41,9 @@ export const INTERIOR_ART = ['oven', 'counter', 'showcase', 'coffee', 'storage',
   'window-arch', 'window-shutter', 'shelf', 'door', 'rack', 'beam', 'chair-left', 'chair-right', 'room', 'lamp', 'rug-green', 'rug-runner', 'table-plain',
   'plant-1', 'plant-2', 'plant-3', 'shelf-plants', 'mat-paw', 'table-cake', 'table-cup'];     // the last seven are shop decoration (see interior-decor.js)   // the last six are wall decoration (see InteriorScene.decor)
 for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`;
+// Equipment tier pictures (EQUIPMENT_ART) are optional: a file that is not there yet is simply skipped (no warning, the station keeps its picture).
+export const OPTIONAL_ART = new Set();
+for (const tiers of Object.values(EQUIPMENT_ART)) for (const name of Object.values(tiers)) { MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`; OPTIONAL_ART.add(`int-${name}`); }
 
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
 // fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().
@@ -71,6 +76,7 @@ export async function loadAssets({ onProgress } = {}) {
   const worker = async () => {
     for (let e = queue.shift(); e; e = queue.shift()) {
       const [key, src] = e;
+      if (OPTIONAL_ART.has(key) && ASSET_MODULES[src] === undefined) { done += 1; onProgress?.(done, entries.length); continue; }       // optional art that has not been made yet
       try {
         const mod = ASSET_MODULES[src];
         if (mod === undefined) throw new Error(`no module for ${src}`);
@@ -89,6 +95,9 @@ export async function loadAssets({ onProgress } = {}) {
 }
 
 export const getImage = (key) => images[key] ?? null;
+/** Registers a picture under a key (tests and tools use it to stand in for a loaded asset). */
+export const registerImage = (key, img) => { images[key] = img; };
+export const unregisterImage = (key) => { delete images[key]; };
 
 /** Draw the registered image for `key`; returns false when none is available. */
 export function drawAsset(ctx, key, x, y, w, h) {

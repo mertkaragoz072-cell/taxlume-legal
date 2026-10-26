@@ -1,75 +1,118 @@
-# Ekonomi ve gelişim sistemi (Mağaza, aşamalar, hedefler)
+# Ekonomi ve gelişim sistemi
 
-Bu belge oyuna eklenen "altın harca → dünyada gör → yeni hedef" döngüsünü anlatır. Mevcut sistemler (üretim, stok, geliştirmeler, araştırma, görevler, günlük ödül, keşif, kasaba, müşteriler, kayıt) yeniden yazılmadı; yeni parçalar onlara bağlandı.
+Altın kazanma, harcama, satın alınanların dünyada görünmesi ve aşama hedefleri. Mevcut sistemler (üretim, stok, geliştirmeler, araştırma, görevler, günlük ödül, keşif, kasaba, müşteriler, kayıt) yeniden yazılmadı; yeni parçalar onlara bağlandı. Tüm sayılar `src/data/economy.js` içinde; başka dosyada fiyat/denge değeri yok.
 
-## Parçalar
+## 1. Tek para katmanı
 
-| Parça | Dosya | Ne yapar |
+| | Nerede | Kural |
 |---|---|---|
-| Veri (tek yer) | `src/data/economy.js` (`SHOP_ITEMS`, `STAGES`, `RECIPES`, `STORAGE`, `APPEAL`) | Bütün fiyatlar, seviye/aşama kapıları, etkiler. Başka dosyada fiyat yok. |
-| Para katmanı | `Game.spend()` (`src/game/game.js`) | Altın düşmenin TEK yolu: yetmiyorsa reddeder, harcanan toplamı (`stats.goldSpent`) sayar. Geliştirme, malzeme, kasaba, araştırma ve mağaza hepsi bunu çağırır. |
-| Mağaza mantığı | `src/game/shop.js` (`Shop`) | Katalog, kapılar, atomik satın alma, yerleştirme, ekipman kademeleri, aşamalar, hedef, kayıt doğrulama. |
-| Müşteri bağlantısı | `src/game/customers.js` | Bekleme alanı kapasitesi, çekicilikle gelen müşteri sıklığı, bahşiş, VIP misafir, kilitli tarifin sipariş edilmemesi. |
-| Mağaza ekranı | `src/ui/ShopPanel.tsx` | Sekmeler (Hedef, Malzeme, Ekipman, Mobilya, Tarifler, Genişletme, Özel), önizleme, fiyat, kapı, etki, satın al. Kafenin üstünde açılır; satın alınca panel kısa süre çekilir ve yeni parça görülür. |
-| Sahne katmanı | `src/scene/interior-decor.js` (`DecorLayer`) | Satın alınanları kafe sahnesinde çizer (aşağıda). |
-| Hedef çipi | `GoalPill` (`src/ui/Chrome.tsx`) | Üst çubuğun altında küçük, sakin bir çip: sıradaki hedef ve ne kadar kaldığı. Dokununca mağaza o sekmede açılır. |
+| Altın düşme | `Game.spend(amount, label)` | Yetmiyorsa, negatif/NaN ise reddeder; harcanan toplamı (`stats.goldSpent`) ve işlem geçmişini günceller. Geliştirme, malzeme, kasaba, araştırma ve mağaza hepsi bunu çağırır. |
+| Altın ekleme | `Game.earn(amount, source, label)` | Yalnız tam, sonlu, pozitif tutar (≤ 1e9); diğerleri yok sayılır. `stats.goldEarned` ve işlem geçmişi güncellenir. Satış, bahşiş, vitrin satışı, malzeme iadesi, görev/günlük/keşif/seviye/aşama ödülü hepsi bunu çağırır. |
+| Geçmiş | `Game.ledger` (son 40, bellekte) | Mağaza → Hedef sekmesinde "Son altın hareketleri". |
 
-## Kategoriler ve içerik
+* Müşteri satışı ürünün listelenmiş fiyatını öder (araştırma bonusu bir kez, VIP çarpanı bir kez, bahşiş ayrı). Vitrinden satış daha az öder (müşterinin net kârının %20'si kesilir) ama malzeme maliyetinden fazladır. Testle doğrulanır (`tests/economy-integration.test.js`).
+* Üst çubuk altın sayısı değişimi 0,3 sn'de akıcı gösterir ve altında `+N / −N` çipi çıkar; satışta dünyada `+X altın` yazısı ve altınlar kasaya uçar.
+* Başlangıç altını (54.320) ve kayıtlı altınlar olduğu gibi korunur.
 
-* **Ekipman** (5 hat × 3 kademe): fırın (hız), kahve makinesi (eşzamanlı iş + hız), hamur tezgâhı (malzeme iadesi), vitrin (kapasite), depo (malzeme kapasitesi). Bir hattın en yüksek alınan kademesi geçerlidir; kademeler toplanmaz, birbirinin yerini alır.
-* **Mobilya / dekor** (12 parça): paspas, saksılar, halılar, lambalar, raflar, masa süsü (pasta ya da fincan). Her yerleştirilen parça "çekicilik" puanı verir.
-* **Tarifler** (6): Simit, Latte, Kurabiye, Mocha, Muffin, Waffle. Alınana kadar üretilemez ve müşteri sipariş etmez; alınınca üretim panellerinde, vitrinde, sipariş balonlarında ve satışta çalışır. XP ve sipariş ağırlığı tanımlıdır.
-* **Genişletme**: 3. ve 4. masa (mevcut `cafeTables` geliştirmesi: fiyat tek listeden, mağazadan ve tabeladan aynı durum), Bekleme Köşesi / Geniş Bekleme Alanı (dışarıda bekleyen misafir sayısı +1/+2, halat ve direkler sahneye eklenir), Koridor ve Duvar Dekor Alanı (bölümler açılır: cilalı koridor, duvara ahşap pano; ilgili dekorlar bunları ister).
-* **Özel**: VIP Misafirler / Ünlü Ziyaretçiler (altın taçlı ve ışıklı misafir, daha çok öder), Bahar ve Kış Köşesi temaları (yaprak/kar yağar; tek seferde biri yerleştirilir).
-* **Malzeme**: eski market listesi artık mağazanın ilk sekmesi; depo kapasitesi gösterilir ve aşılamaz.
-* **Kasaba / araştırma**: yeniden yazılmadı. Hedef sekmesinden bağlantı var; harcanan altın ve araştırma sayısı aşama koşullarına girer.
+### Sınırsız / hileli altın kapıları
+| Kaynak | Önlem |
+|---|---|
+| Çift tıklama / tekrar | Satın almalar `requestId` + "zaten alındı" + "seviye değişti" kontrolleriyle; görev, günlük, keşif ödülü tek adımda "alındı" işaretlenir; seviye ödülü `rewardedLevel`, aşama ödülü `stage` ile bir kez. |
+| Keşif (tekrarlanan, bedava) | Günlük altın bütçesi `EXPLORE_LIMIT` (4.000): bütçe bitince keşfin altını %20 öder (XP/malzeme/elmas etkilenmez); bütçe takvim gününe bağlı, saat geri alınınca sıfırlanmaz, kayıtlıdır. Ekranda kalan bütçe yazar. |
+| Günlük ödül | Son alım gerçek zamanı (`lastAt`) kaydedilir; saat bunun gerisine alınırsa "ödül kilitli" (eskiden gün-1 ödülü yeniden alınabiliyordu). 400 günden fazla ileriden kalma (yanlış saat) kayıt yok sayılır, oyuncu kilitlenmez. Saati ileri almak çevrimdışı tespit edilemez (sunucu gerekir). |
+| Negatif altın | `spend`/`earn` korumaları; kayıtta negatif/sonlu olmayan altın bozuk kayıt sayılır (yedeklenir, yeni oyun). |
+| Başarısız işlem | `Shop.buy` hata alırsa altın, istatistik, geçmiş ve sahiplik geri yüklenir. |
 
-Hepsi başlangıçta açık değil: seviye (1-13), önceki kademe/tarif, aşama (2-4) ve bölüm (koridor/duvar) kapılarıyla kademeli açılır. 54.320 başlangıç altınıyla seviye 1'de yalnız 3 şey alınabilir (Pati Paspası, Çiçekli Saksı, Simit Tarifi).
+## 2. Ürünler ve tarifler
 
-## Etkiler: her biri tek yerde uygulanır
+Her ürünün fiyatı, malzemeleri (maliyet = malzeme fiyatlarından türer) ve süresi ayrı alanlardır. Mevcut 4 ürün aynen kaldı. Yeni 6 tarif `RECIPES` (mağazadan açılır; alınana kadar üretilemez, sipariş edilmez):
 
-| Etki | Nerede uygulanır | Çift uygulama neden olmaz |
-|---|---|---|
-| Üretim hızı (fırın/kahve kademesi) | `Game.duration()` | Geliştirme × araştırma × ekipman: üç ayrı kaynak, çarpım; ekipmanda yalnız en yüksek kademe |
-| Eşzamanlı iş (kahve) | `Game.capacity()` / kayıtta `maxCapacity()` | Yalnız en yüksek kademe; kayıt bu üst sınıra göre doğrulanır |
-| Vitrin kapasitesi | `Game.showcaseLimit()` | Geliştirme + yalnız en yüksek vitrin kademesi |
-| Malzeme iadesi (hamur tezgâhı) | `Game.ingredientRebate()` | Araştırma iadesiyle TEK toplamda; iade ürünün malzeme değerini aşamaz |
-| Depo kapasitesi | `Game.buyIngredient()` / `ingredientCap()` | Satın alma aşamaz; görev/seviye/günlük ödül sınırı yok sayar (ödül asla kaybolmaz) |
-| Bekleme yeri | `Cafe.queueCap()` | Yalnız en yüksek kademe |
-| Çekicilik → müşteri sıklığı, bahşiş | `Cafe.nextInterval()`, `Cafe.deliver()` | Yalnız yerleştirilmiş parçalar sayılır; masa süsü/tema tek slot |
-| VIP | `Cafe.arrive()` (bayrak, kayıtlı), `Cafe.deliver()` | Çarpan bir kez; bahşiş ayrı |
+| Ürün | İstasyon | Süre | Maliyet | Fiyat | Net/müşteri | Net/sn |
+|---|---|---|---|---|---|---|
+| Ekmek | fırın | 20 | 16 | 30 | 14 | 0,70 |
+| Simit | fırın | 25 | 22 | 46 | 24 | 0,96 |
+| Kruvasan | fırın | 40 | 31 | 60 | 29 | 0,73 |
+| Kurabiye | fırın | 45 | 42 | 78 | 36 | 0,80 |
+| Muffin | fırın | 55 | 40 | 90 | 50 | 0,91 |
+| Pasta | fırın | 75 | 60 | 120 | 60 | 0,80 |
+| Waffle | fırın | 80 | 54 | 122 | 68 | 0,85 |
+| Kahve | kahve | 16 | 17 | 34 | 17 | 1,06 |
+| Latte | kahve | 22 | 24 | 46 | 22 | 1,00 |
+| Mocha | kahve | 30 | 29 | 58 | 29 | 0,97 |
 
-Bahşiş ve VIP için rastgele sayı yalnız ilgili ürün varken çekilir; ürün yokken mevcut davranış (ve testlerdeki tohumlu dizi) aynen kalır.
+Tasarım: saniye başına net kazanç dar bir bantta (0,7–1,06), müşteri başına net kazanç ise süreyle artar (uzun tarif = daha çok kazandıran sipariş). Yani vitrinden elle satan oyuncu için hızlı tarifler, müşteri sayısı sınırlı olduğunda (çok masa, dekor çekiciliği) pahalı tarifler değerlidir; hiçbiri her açıdan en iyisi değildir. Testler bunu korur (`recipe choice is real`). Üretim panelinde her kartta süre, müşteri geliri, malzeme maliyeti ve net kazanç yazar; kilitli tarifler de maliyet/net bilgisiyle ve "Mağazada aç" düğmesiyle listelenir.
 
-## Sahnede görünürlük
+Açma koşulları (mağazada görünür): seviye, önceki tarif (Simit → Kurabiye → Muffin → Waffle; Latte → Mocha), Waffle için Aşama 3.
 
-* Dekor **yuvalara** (`DECOR_SLOTS`, `interior-layout.js`) yerleşir: koridor (halılar, lambalar, saksı), servis alanı kenarları (saksılar), giriş paspası, sağ duvar (raflar). Hepsi yürüme şeritlerinin dışındadır. Yerleştirme durumu kayıtlıdır; yeniden açınca aynı yerde.
-* Yeni masa: mevcut masa mantığıyla açılır; müşteri sistemi o masayı kullanır.
-* Ekipman kademesi: gerçek sanat gelene kadar **yedek görünüm**: büyüme (%3/%6/%9), bakır → altın → kristal tonu, parlama ve istasyonun önünde yıldızlı pirinç plaka. Yeni ekipman ilk kullanıldığında (ilk üretim/satış/malzeme alımı) ışık hüzmesi ve isim animasyonu bir kez oynar (kayıtlı).
-* Satın alınca: parça yay şeklinde "pop" ile belirir, halka ve parıltı çıkar, adı yazılır; mağaza paneli kısa süre çekilir.
-* Resim yoksa her parça için çizilmiş bir yedek (saksı, halı, lamba, raf) çizilir; satın alma sahneye eklenemese bile altın düşüp eşya kaybolmaz çünkü sahne yalnız kayıtlı durumu okur.
-* Aşama arttıkça kafenin ışığı biraz daha sıcak olur.
+## 3. Ekipman: seviyeye göre görünüm ve gerçek etki
 
-## Aşamalar ve hedefler
+5 hat × 3 kademe: fırın (üretim süresi %8/16/25), kahve makinesi (+1/+2/+3 eşzamanlı kahve ve hız), hamur tezgâhı (malzeme iadesi %5/10/15), vitrin (+10/25/50 ürün), depo (malzeme kapasitesi 120/250/500; başlangıç 60). Kademeler birbirinin yerini alır, toplanmaz. Kayıtlıdır.
 
-| Aşama | Adı | Koşullar (hepsi) | Ödül |
+**Görünüm**: her kademenin kendi resmi tanımlıdır (`EQUIPMENT_ART`, `assets/game/interior/<istasyon>-t<kademe>.webp`). Dosya varsa sahne o resmi çizer (en yakın alt kademenin resmi de kullanılır). **Dosya yoksa hiçbir şey uydurulmaz**: istasyon mevcut resmini korur ve altında kademe rozeti (yıldızlı pirinç plaka) görünür; yeni ekipmanın ilk kullanımında kısa tanıtım animasyonu oynar. Renk tonu/büyütme yedeği kaldırıldı. Eksik resim listesi: `node scripts/list-missing-art.mjs`.
+
+```
+| station | tier | file | item | state |
+|---|---|---|---|---|
+| oven | 2 | oven-t2.webp | Taş Fırın Pro | MISSING |
+| oven | 3 | oven-t3.webp | Altın Fırın | MISSING |
+| oven | 4 | oven-t4.webp | Usta Taş Fırın | MISSING |
+| coffee | 2 | coffee-t2.webp | Barista Kahve Makinesi | MISSING |
+| coffee | 3 | coffee-t3.webp | Espresso Pro | MISSING |
+| coffee | 4 | coffee-t4.webp | Kristal Espresso Bar | MISSING |
+| showcase | 2 | showcase-t2.webp | Cam Pasta Vitrini | MISSING |
+| showcase | 3 | showcase-t3.webp | Panoramik Vitrin | MISSING |
+| showcase | 4 | showcase-t4.webp | Kristal Vitrin | MISSING |
+| storage | 2 | storage-t2.webp | Geniş Depo Rafları | MISSING |
+| storage | 3 | storage-t3.webp | Soğuk Depo | MISSING |
+| storage | 4 | storage-t4.webp | Büyük Ambar | MISSING |
+| counter | 2 | counter-t2.webp | Mermer Hamur Tezgâhı | MISSING |
+| counter | 3 | counter-t3.webp | Usta Hamur Tezgâhı | MISSING |
+| counter | 4 | counter-t4.webp | Şef Tezgâhı | MISSING |
+
+15 of 15 tier pictures are missing; those stations keep their plain picture with a level badge.
+```
+
+Gerçek resmi eklemek: ChatGPT komutları `docs/EKSIK_ASSETLER.md` (E12) → gelen resim için `python3 scripts/add_equipment_tier.py oven 2 resim.png` (siyah zemini siler, kırpar, yüksekliği mevcut resme göre ayarlar) → `node scripts/gen-assets.mjs`. Başka bir şey değiştirmek gerekmez.
+
+## 4. Dekorasyon (ayrı kategori) ve yerleştirme modu
+
+Mağaza → **Dekorasyon**: Masa & Sandalye (masa takımları: pastalı, fincanlı, sade), Bitki & Çiçek (3 saksı), Aydınlatma (2 sarkıt lamba), Halı & Paspas (koridor halısı, yolluk, paspas), Raf & Duvar (bitki rafı, ekmek rafı, bakır tencere askısı). Bölümleri açan "Koridor/Duvar Dekor Alanı" Genişletme sekmesindedir.
+
+* Satın alınan parça kafede ilk boş uygun yuvaya yerleşir ve hemen görünür (halka, parıltı, "pop" animasyonu; mağaza sayfası kısa süre çekilir).
+* **Yerleştirme modu**: kartta *Taşı / Kaldır / Yerleştir*. Parça kendi türündeki yuvalar arasında taşınır (sol köşe, sağ köşe, koridor girişi, raf yerleri…); dolu yuvadaki parça takas edilir ya da depoya kalkar; kaldırılan parça sahipliğini korur (depoda), çekicilik vermez. Üç duvar parçası iki yere yarışır, seçim oyuncunundur.
+* Aynı parça ikinci kez alınamaz (tasarım gereği tek parça; yuva sayısı sınırlı).
+* Yerleşim kayda yazılır (`shop.placed`, `shop.stored`); yeniden açınca aynı yerde. Bozuk/eski kayıt onarılır: sahip olunan parça asla kaybolmaz.
+* Yedek çizim: resim yoksa saksı/halı/lamba/raf için çizilmiş basit yedek; satın alma sahneye eklenemese bile altın düşüp eşya kaybolmaz çünkü sahne yalnız kayıtlı durumu okur.
+
+Yeni sandalye çeşidi, duvar lambası ve yeni iç mekân bölümü resimleri yoktur (bkz. eksik asset).
+
+## 5. Aşamalar
+
+Koşullar gerçek verilerden hesaplanır (`Shop.measure`): seviye, harcanan altın, satılan ürün, ekipman geliştirme, tarif, mağaza eşyası, geliştirme, masa, araştırma. Bütün koşullar sağlanınca aşama bir kez ilerler ve ödül bir kez ödenir.
+
+| Aşama | Koşullar | Ödül | Kafede görünüm |
 |---|---|---|---|
-| 1 | Küçük Kafe | başlangıç | — |
-| 2 | Gelişen Kafe | seviye 4 · 4.000 altın harcanmış · 3 mağaza eşyası · 2 geliştirme | 1.500 altın, 150 XP |
-| 3 | Popüler Kafe | seviye 8 · 25.000 harcanmış · 10 eşya · 3 masa · 3 tarif | 6.000 altın, 400 XP |
-| 4 | Ünlü Kedi Kafesi | seviye 13 · 90.000 harcanmış · 22 eşya · 4 masa · 5 tarif · 4 araştırma | 25.000 altın, 1.200 XP |
+| 1 Küçük Kafe | başlangıç | — | sade |
+| 2 Gelişen Kafe | seviye 4 · 4.000 harcama · 25 satış · 1 ekipman · 1 tarif · 3 eşya · 2 geliştirme | 1.500 altın, 150 XP | duvarda ahşap isim tabelası, biraz daha sıcak ışık |
+| 3 Popüler Kafe | seviye 8 · 25.000 · 150 satış · 4 ekipman · 10 eşya · 3 masa · 3 tarif | 6.000 altın, 400 XP | renkli tabela + iki yana flama |
+| 4 Ünlü Kedi Kafesi | seviye 13 · 90.000 · 600 satış · 9 ekipman · 22 eşya · 4 masa · 5 tarif · 4 araştırma | 25.000 altın, 1.200 XP | altın çerçeveli tabela, yıldızlar, parıltı |
 
-Aşama bir kez ve yalnız tüm koşullar sağlanınca ilerler; ödül bir kez ödenir. "Hedef" sekmesi her koşulun ilerleme çubuğunu ve sıradaki hedefi gösterir. Sıradaki hedef: kapıları açık ama altını yetmeyen en ucuz ürün (çip ilerlemesi = altın/fiyat); hepsi alınabiliyorsa en ucuzu "alınabilir"; hiçbiri açık değilse en yakın seviye/aşama kapısı.
+Aşama geçişinde halka/kıvılcım, tabelanın belirmesi ve toast (ödül + sıradaki aşama) gösterilir. Yeni içerik: `stage:` kapılı ürünler (3. ve 4. kademe ekipmanlar, Waffle, VIP, temalar). Tabela/flama vektör çizimdir (resim değil).
 
-Üç yeni görev de sistemi bağlar: "Kafeni süsle" (1 eşya), "Gelişen kafe" (5 eşya), "Büyük yatırım" (5.000 altın harca).
+## 6. Arayüz
 
-## Kayıt (sürüm 10)
+* Satın alma düğmesi: maliyet; kartta "Kazanım: …" ve "Altın: 54.320 → 51.120"; yetmiyorsa "Altın yetersiz · N altın eksik" ve `Altın: x / fiyat`; kilitliyse gereken koşul. Satın alınan kart yeşil parlar ve kısa zıplar, üst çubukta `−N` çipi, toast'ta kalan altın ve sıradaki hedef.
+* Kartların sırası sekme açılırken belirlenir ve satın alma sırasında kaymaz.
+* Dar ekran (320×568'e kadar denendi): mağaza sayfası kısa ekranlarda yükselir, uzun kilit metinleri düğmeye değil kart içine yazılır.
+* Üst çubuğun altında sakin bir hedef çipi; mağaza bildirimleri toast'larla sınırlı, sürekli pop-up yok.
 
-`shop: { owned, placed, introduced, stage }` ve `stats.goldSpent`, `stats.shopBought`; müşterilerde `vip`. Eski kayıtlar (v1–v9) bu alanlar olmadan yüklenir: altın, ilerleme ve her şey korunur, mağaza boş başlar. Bozuk/yabancı veri onarılır (bilinmeyen kimlikler atılır, sahipli bir dekor hep yerleştirilir, aşama sınırlanır); bekleme alanı kapasitesi kayıttaki mağaza durumuna göre denetlenir (yüklemede misafir kırpılmaz). `Shop.buy()` bir hata alırsa altın ve durum geri yüklenir.
+## 7. Kayıt (sürüm 11) ve geçiş
 
-## Denge
+Eklenenler: `stats.goldEarned`, `daily.lastAt`, `exploration.goldDay`, `shop.stored` (öncekiler: `shop`, `stats.goldSpent/shopBought`, müşteri `vip`). **Hepsi isteğe bağlıdır**: v1–v10 kayıtları bu alanlar olmadan yüklenir; altın, ilerleme, üretim, görevler, mağaza sahipliği ve yerleşim korunur, yeni sayaçlar 0'dan başlar. `tests/economy-integration.test.js` bir v10 kaydını yükleyip doğrular.
 
-`node scripts/balance-shop.mjs` aşağıdaki tabloyu üretir. Model: 4 temel ürün, ortalama sipariş geliri, masa sayısına göre müşteri akışı; geri ödeme sütunu orta oyun senaryosuyla (3 masa, fırında 3 eşzamanlı iş, tüm makineler dolu) hesaplanır ve yalnız geliri doğrudan etkileyen ürünler için verilir (vitrin/depo/tarif/bekleme alanı değeri başka yerden gelir).
+## 8. Denge tablosu
+
+`node scripts/balance-shop.mjs` üretir (model: temel ürünlerin ortalama siparişi, masa sayısına göre müşteri akışı; geri ödeme yalnız geliri doğrudan etkileyen ürünler için).
 
 ```
 Average order (base 4 products): 52.0 gold gross, 25.5 net. Guests/min with 2 tables: 1.76, 3: 2.65, 4: 3.53.
@@ -92,24 +135,26 @@ Customer net income with 2 / 3 / 4 tables: 45 / 67 / 90 gold per minute.
 | storageT2 | equipment | 1.800 | 2 | 1 | 35 | — |  |
 | storageT3 | equipment | 7.000 | 5 | 2 | 135 | — |  |
 | storageT4 | equipment | 22.000 | 10 | 3 | 423 | — |  |
-| matPaw | furniture | 350 | 1 | 1 | 7 | 5.6 | appeal +1 |
-| plantA | furniture | 450 | 1 | 1 | 9 | 3.6 | appeal +2 |
-| rugAisle | furniture | 700 | 2 | 1 | 13 | 5.6 | appeal +2 |
-| shelfPlants | furniture | 1.100 | 3 | 1 | 21 | 5.8 | appeal +3 |
-| plantB | furniture | 900 | 4 | 1 | 17 | 4.7 | appeal +3 |
-| lampA | furniture | 1.200 | 4 | 1 | 23 | 4.7 | appeal +4 |
-| shelfBread | furniture | 1.800 | 5 | 1 | 35 | 9.4 | appeal +3 |
-| tableCake | furniture | 2.200 | 5 | 1 | 42 | 8.6 | appeal +4 |
-| tableCup | furniture | 2.200 | 5 | 1 | 42 | 8.6 | appeal +4 |
-| rugRunner | furniture | 1.600 | 6 | 1 | 31 | 8.4 | appeal +3 |
-| plantC | furniture | 1.500 | 6 | 1 | 29 | 7.9 | appeal +3 |
-| lampB | furniture | 2.400 | 8 | 1 | 46 | 9.3 | appeal +4 |
-| recipeSimit | recipes | 600 | 1 | 1 | 12 | — | net 1.20 gold/s, 30 per sale |
-| recipeLatte | recipes | 900 | 3 | 1 | 17 | — | net 1.27 gold/s, 28 per sale |
-| recipeKurabiye | recipes | 1.500 | 4 | 1 | 29 | — | net 1.40 gold/s, 63 per sale |
-| recipeMocha | recipes | 2.400 | 6 | 1 | 46 | — | net 1.70 gold/s, 51 per sale |
-| recipeMuffin | recipes | 3.200 | 7 | 1 | 62 | — | net 1.64 gold/s, 90 per sale |
-| recipeWaffle | recipes | 6.500 | 10 | 3 | 125 | — | net 1.78 gold/s, 116 per sale |
+| matPaw | decor | 350 | 1 | 1 | 7 | 5.6 | appeal +1 |
+| plantA | decor | 450 | 1 | 1 | 9 | 3.6 | appeal +2 |
+| rugAisle | decor | 700 | 2 | 1 | 13 | 5.6 | appeal +2 |
+| shelfPlants | decor | 1.100 | 3 | 1 | 21 | 5.8 | appeal +3 |
+| plantB | decor | 900 | 4 | 1 | 17 | 4.7 | appeal +3 |
+| lampA | decor | 1.200 | 4 | 1 | 23 | 4.7 | appeal +4 |
+| shelfBread | decor | 1.800 | 5 | 1 | 35 | 9.4 | appeal +3 |
+| tableCake | decor | 2.200 | 5 | 1 | 42 | 8.6 | appeal +4 |
+| tableCup | decor | 2.200 | 5 | 1 | 42 | 8.6 | appeal +4 |
+| rugRunner | decor | 1.600 | 6 | 1 | 31 | 8.4 | appeal +3 |
+| plantC | decor | 1.500 | 6 | 1 | 29 | 7.9 | appeal +3 |
+| lampB | decor | 2.400 | 8 | 1 | 46 | 9.3 | appeal +4 |
+| tablePlain | decor | 500 | 2 | 1 | 10 | 8.0 | appeal +1 |
+| rackPots | decor | 1.400 | 4 | 1 | 27 | 7.3 | appeal +3 |
+| recipeSimit | recipes | 600 | 1 | 1 | 12 | — | net 0.96 gold/s, 24 per sale |
+| recipeLatte | recipes | 900 | 3 | 1 | 17 | — | net 1.00 gold/s, 22 per sale |
+| recipeKurabiye | recipes | 1.500 | 4 | 1 | 29 | — | net 0.80 gold/s, 36 per sale |
+| recipeMocha | recipes | 2.400 | 6 | 1 | 46 | — | net 0.97 gold/s, 29 per sale |
+| recipeMuffin | recipes | 3.200 | 7 | 1 | 62 | — | net 0.91 gold/s, 50 per sale |
+| recipeWaffle | recipes | 6.500 | 10 | 3 | 125 | — | net 0.85 gold/s, 68 per sale |
 | areaAisle | expansion | 1.500 | 2 | 1 | 29 | — |  |
 | areaWall | expansion | 1.200 | 3 | 1 | 23 | — |  |
 | table3 | expansion | 1.800 | 2 | 1 | 35 | 1.3 | 3. table |
@@ -121,15 +166,13 @@ Customer net income with 2 / 3 / 4 tables: 45 / 67 / 90 gold per minute.
 | themeSpring | special | 5.000 | 6 | 2 | 96 | 15.4 | appeal +5 |
 | themeCozy | special | 5.000 | 6 | 2 | 96 | 15.4 | appeal +5 |
 
-Catalogue total: 328.700 gold
+Catalogue total: 330.600 gold
 ```
 
-İlk alımlar yaklaşık 7-12 siparişlik gelire denk gelir; orta kademeler 1-5 saatlik, büyük kademeler 8-25 saatlik hedeflerdir. Gerçek ödeme veya zorunlu harcama yoktur.
+## 9. Testler
 
-## Testler
+`tests/shop.test.js` (mağaza mantığı), `tests/economy-integration.test.js` (bütünleşik: satış gerçek fiyatı ödüyor, harcamalar doğru miktarda, tarif/eşya üretim + sipariş sisteminde açılıyor, ekipman etkileri, yeniden açınca durum, v10 geçişi, hedefler gerçek veriden, negatif altın / çift satın alma / çift ödül / saat geri alma / keşif bütçesi, sahnede kademe resmi yoksa mevcut resim, aşamaya göre tabela), `tests/scene-smoke.test.js` (resim yokken tüm katalog çizilir).
 
-`tests/shop.test.js` (29 test): ek masa dikey dilimi (fiyat, düşüş, sahnede açılma, müşterinin kullanması, yeniden açınca kalma), seviye kapısı, yetersiz altın, işlem anında yeniden doğrulama, çift satın alma, tek ödeme katmanı, yarım kalan işlemin geri alınması, kademelerin birbirinin yerini alması, kapasite/vitrin/depo/iade, tarif kilidi ve açılması, dekor-çekicilik-bahşiş-VIP, bekleme alanı, aşamalar ve hedef, kayıt doğrulama ve v9 geriye uyumu, ilk kullanım tanıtımı, katalog tutarlılığı. `tests/scene-smoke.test.js`: hiçbir resim yokken tüm katalog alınır, çizilir ve misafirler ödemeye devam eder.
+## 10. Eksik / yedek olanlar
 
-## Bilinen eksikler (sanat gerektirenler)
-
-Bkz. `docs/EKSIK_ASSETLER.md`: ekipman kademeleri için gerçek resimler (şimdi renk tonu + plaka), yeni tarif ikonları (şimdi `scripts/make_recipe_icons.py` yedekleri), VIP/özel misafir görünümleri (şimdi taç + ışık), yeni sandalye/mobilya çeşitleri (kullanılmayan `chair-front/back` dışında yeni resim yok), yeni iç mekân bölümleri için resimler.
+Bkz. `docs/EKSIK_ASSETLER.md`. Özet: 15 ekipman kademe resmi (E12), yeni tarif ikonları (yedek: `scripts/make_recipe_icons.py`), yeni sandalye/masa çeşitleri, duvar lambası, yeni iç mekân bölümleri, VIP kedi görünümleri; aşama tabelası/flamalar ve bekleme direkleri vektör çizim.
