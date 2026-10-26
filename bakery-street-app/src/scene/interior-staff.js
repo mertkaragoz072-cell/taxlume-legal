@@ -10,9 +10,10 @@ import { drawIcon } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
-const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 160, dir: 1 }, counter2: { x: 468, dir: 1 }, coffee: { x: 760, dir: 1 }, storage: { x: 352, dir: 1 } };
+const STOPS = { oven: { x: 262, dir: -1 }, counter: { x: 150, dir: 1 }, counter2: { x: 422, dir: 1 }, coffee: { x: 728, dir: 1 }, storage: { x: 385, dir: 1 } };
 const TOUR = ['counter', 'oven', 'counter2', 'coffee', 'storage', 'counter2'];
 const POST = { x: 190, y: WAITER_LANE_Y };                 // the waiter's post: the gap between the prep counter and the showcase, in front of the prep counter, clear of the queue spots (352..652)
+const CHEF_SCALE = 1.2;                                     // the baker is drawn a little larger than a guest at his depth: he is the star behind the counter
 const OVEN_SEC = 1.8;                                       // the baker's put-it-in-the-oven animation (30 frames)
 const COFFEE_SEC = 2.2;                                     // the baker's make-a-coffee animation (24 frames: reach, take the cup, sip)
 const HAND_SEC = 1.3;                                       // time spent handing the order over
@@ -180,10 +181,10 @@ export class StaffLayer {
   drawBaker(ctx) {
     const b = this.baker, working = !b.moving && !b.target && !!this.busyStop();
     const knead = !b.moving && !b.target && this.cheer <= 0 && (working || b.stop === 'counter' || b.stop === 'counter2');   // standing at the prep counter (or waiting for a machine): kneads dough
-    if (this.ovenT >= 0 && hasOvenFrames() && drawSprite(ctx, 'chef_oven', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.ovenT / OVEN_SEC) })) return;
-    if (this.coffeeT >= 0 && hasCoffeeFrames() && drawSprite(ctx, 'chef_coffee', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.coffeeT / COFFEE_SEC) })) return;
+    if (this.ovenT >= 0 && hasOvenFrames() && drawSprite(ctx, 'chef_oven', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.ovenT / OVEN_SEC) })) return;
+    if (this.coffeeT >= 0 && hasCoffeeFrames() && drawSprite(ctx, 'chef_coffee', b.x, STAFF_LANE_Y, b.t, { dir: b.dir, scale: PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), hand: Math.min(0.999, this.coffeeT / COFFEE_SEC) })) return;
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
-    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: knead ? 1 : b.dir, fps: 7, scale: PERSON_SCALE * 1.1 * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, work: knead ? 'knead' : null, view: b.view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
+    drawSprite(ctx, 'chef', b.x, STAFF_LANE_Y - hop, b.t, { dir: knead ? 1 : b.dir, fps: 7, scale: PERSON_SCALE * CHEF_SCALE * depthScale(STAFF_LANE_Y), frame: b.moving ? null : 0, joy: this.cheer > 0, work: knead ? 'knead' : null, view: b.view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 });   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }
 
   drawWaiter(ctx) {

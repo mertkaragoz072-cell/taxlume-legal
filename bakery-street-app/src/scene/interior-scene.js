@@ -1,7 +1,7 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
-import { AREAS, DRAW_ORDER, FLOOR_Y, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect } from './interior-layout.js';
+import { AREAS, DRAW_ORDER, FLOOR_Y, FLOOR_K, ROOM_JOIN, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect, perspScale } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
 import { getImage, drawIcon } from '../assets.js';
@@ -73,13 +73,14 @@ export class InteriorScene {
     this.cam = { zoom: z, tx, ty, wl: -tx / z, wr: (view.vw - tx) / z, wt: 0, wb: view.vh / z };
     // Tall phones: everything on the floor below y 840 is drawn a little lower (a smooth ramp, see warpAt) so the dining area spreads over the extra height
     // instead of leaving an empty band; game logic keeps using the plain coordinates.
-    this.warpD = clamp((this.cam.wb - 1600) * 0.55, 0, 260);
+    this.warpD = clamp((this.cam.wb - 1600) * 0.7, 0, 300);
     setEntryY(Math.max(1580, this.cam.wb + 30 - this.warpD));   // guests appear / vanish just below the visible floor
 
   }
 
-  /** How far (world units) things standing at logic y are drawn lower on tall screens; 0 above y 840, the full `warpD` from y 1240 on. */
-  warpAt(y) { const t = clamp((y - 840) / 400, 0, 1); return (this.warpD ?? 0) * t * t * (3 - 2 * t); }
+  /** How far (world units) things standing at logic y are drawn lower on tall screens; 0 above y 840, the full `warpD` from y 1640 on. The floor picture is drawn
+   *  through the same warp (see shell), so tiles and furniture always move together; the ramp is long so the floor is never stretched much. */
+  warpAt(y) { const t = clamp((y - 840) / 800, 0, 1); return (this.warpD ?? 0) * t * t * (3 - 2 * t); }
   /** The logic y of a point drawn at world y `ys` (inverse of y + warpAt(y), which is increasing). */
   unwarp(ys) { if (!this.warpD) return ys; let lo = 0, hi = 4000; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (m + this.warpAt(m) < ys) lo = m; else hi = m; } return lo; }
 
@@ -250,7 +251,8 @@ export class InteriorScene {
       if (guest && sc > 0) continue;
       pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px, fade: sc });
     }
-    for (const p of pieces) { const keep = ctx.globalAlpha; ctx.globalAlpha = keep * (1 - p.fade); this.castShadow(ctx, p.key, p.img, p.x, p.y, p.w, p.h); ctx.globalAlpha = keep; }
+    for (const p of pieces) { const keep = ctx.globalAlpha; ctx.globalAlpha = keep * (1 - p.fade); this.grounding(ctx, p.x + p.w / 2, p.y + p.h, p.w * 0.62); this.castShadow(ctx, p.key, p.img, p.x, p.y, p.w, p.h); ctx.globalAlpha = keep; }
+    this.grounding(ctx, dx + 500 * s, base - 1, tW * 0.36);                  // the table's foot (it stands on a pedestal about a third as wide as the top)
     this.castShadow(ctx, 'table', tableImg, dx + 500 * s - tW / 2, base - tH, tW, tH);
     for (const p of pieces) {                                    // chairs stand behind the table
       const keep = ctx.globalAlpha; ctx.globalAlpha = keep * (1 - p.fade);
@@ -273,9 +275,21 @@ export class InteriorScene {
     ctx.drawImage(img, x - cw / 2, base - ch, cw, ch);
   }
 
+  /**
+   * Where a piece of furniture touches the floor: a soft pool of occlusion under and just in front of the foot print (a flat ellipse, flatter the wider it is, since
+   * the floor is seen at an angle), a tighter dark core right at the contact line, and a faint offset pool on the side away from the light (the light is upper left).
+   * `fw` is the width of the foot print.
+   */
+  grounding(ctx, cx, base, fw) {
+    const ry = 3 + fw * 0.045;
+    shadow(ctx, cx + fw * 0.05, base + 2, fw * 0.54, ry + 2, 0.15);       // wide soft pool, pushed away from the light
+    shadow(ctx, cx, base - 1, fw * 0.5, ry, 0.24);                         // occlusion under the foot print
+    shadow(ctx, cx, base - 2, fw * 0.46, 2.6, 0.3);                        // contact line
+  }
+
   /** Thrown shadow of a piece of furniture: its silhouette, tinted, flattened and leaning right (cached once per piece). */
   castShadow(ctx, key, img, dx, dy, w, h) {
-    const K = 0.55, S = 0.2, by = dy + h;                       // lean per unit of height, depth squash (the shadow falls back and to the right)
+    const K = 0.45, S = 0.2, by = dy + h;                       // lean per unit of height, depth squash (the shadow falls back and to the right)
     const ck = `${key}:${Math.round(w)}x${Math.round(h)}`;
     this.shadows ??= {};
     let c = this.shadows[ck];
@@ -288,7 +302,7 @@ export class InteriorScene {
       c = this.shadows[ck] = { cv, ox: ox - dx, oy: oy - by };
     }
     const keep = ctx.globalAlpha;
-    ctx.globalAlpha = keep * 0.45;
+    ctx.globalAlpha = keep * 0.36;
     ctx.drawImage(c.cv, dx + c.ox, by + c.oy);
     ctx.globalAlpha = keep;
   }
@@ -312,8 +326,7 @@ export class InteriorScene {
     // grounding: the object's own silhouette thrown across the floor (see castShadow; tables and chairs cast their own), plus a
     // tight dark line where the base touches the floor and a faint wider pool of occlusion
     if (!isTable) this.castShadow(ctx, a.id, img, dx, dy, w, h);
-    shadow(ctx, a.x + a.w / 2 + 6, a.y + a.h + 2, w * 0.5, 9, 0.16);
-    shadow(ctx, a.x + a.w / 2 + 2, a.y + a.h, w * 0.4, 3.5, 0.34);
+    if (!isTable) this.grounding(ctx, a.x + a.w / 2, a.y + a.h, w * 0.94);
     this.rects[a.id] = { x: dx, y: dy, w, h };
     if (isTable) this.tableSet(ctx, a, img, dx, dy, w, h);
     else if (a.flip) { ctx.save(); ctx.translate(dx + w, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, dy, w, h); ctx.restore(); }
@@ -500,7 +513,7 @@ export class InteriorScene {
   /** The wall and floor never change, so they are painted once per screen size and then just copied (the multiply wash is costly). */
   cachedRoom(ctx, x0, w, yTop, yBot, dx = 0) {
     const cv = ctx.canvas, m = ctx.getTransform(), M = Math.ceil(60 * m.a);          // 60 world px of spare wall on each side for the sway
-    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.zoom.toFixed(3)}:${yBot.toFixed(0)}:${!!getImage('int-wall')}${!!getImage('int-floor')}${!!getImage('int-room')}`;
+    const key = `${cv.width}x${cv.height}:${this.cam.tx.toFixed(1)}:${this.cam.zoom.toFixed(3)}:${yBot.toFixed(0)}:${(this.warpD ?? 0).toFixed(0)}:${!!getImage('int-wall')}${!!getImage('int-floor')}${!!getImage('int-room')}`;
     if (this.roomKey !== key) {
       const c = createCanvas(cv.width + 2 * M, cv.height);
       this.roomCanvas = c;
@@ -514,13 +527,28 @@ export class InteriorScene {
 
   /** The supplied empty room, scaled to cover the visible world with its wall/floor join on FLOOR_Y; dark wood fills any spare edge. */
   shell(g, x0, w, yTop, yBot) {
-    // the cat-cafe room (1024 x 1536): its wall/floor join (y 452 in the picture) sits on FLOOR_Y; the wall is shown 1:1 sideways (cropped a little at 9:16),
-    // the plain tile floor is stretched down to the bottom of the screen
-    const img = getImage('int-room'), iw0 = img.naturalWidth, ih0 = img.naturalHeight, JOIN = 452;
-    const sx = Math.max(1, (w + 20) / iw0), x = 450 - (iw0 / 2) * sx;
+    // The cat-cafe room (1024 x 1536). Sideways it is shown 1:1 (tile widths are what the furniture scale is measured on), mirrored copies fill any extra width
+    // (tablets). The wall sits above FLOOR_Y; the floor is drawn in thin strips, each placed through the scene's shared warp, so the tile rows and every
+    // object standing on them stay together on every phone height. Below the picture the last strip is stretched to the bottom of the screen.
+    const img = getImage('int-room'), iw0 = img.naturalWidth, ih0 = img.naturalHeight, JOIN = ROOM_JOIN, x = 450 - iw0 / 2;
     g.fillStyle = PAL.honeyDark; g.fillRect(x0, yTop, w, yBot - yTop);
-    g.drawImage(img, 0, 0, iw0, JOIN + 1, x, 0, iw0 * sx, FLOOR_Y + 1);                                              // wall
-    g.drawImage(img, 0, JOIN, iw0, ih0 - JOIN, x, FLOOR_Y, iw0 * sx, Math.max(yBot, 1600) - FLOOR_Y + 20);         // floor
+    const copies = [0]; if (x > x0 - 5) copies.push(-1); if (x + iw0 < x0 + w + 5) copies.push(1);                         // mirrored copies fill the sides when the view is wider than the picture
+    const drawPart = (sx, sy, sw, sh, dy, dh) => {
+      for (const c of copies) {
+        if (c % 2 === 0) { g.drawImage(img, sx, sy, sw, sh, x + c * iw0, dy, sw, dh); continue; }
+        g.save(); g.translate(x + c * iw0 + iw0, 0); g.scale(-1, 1); g.drawImage(img, sx, sy, sw, sh, 0, dy, sw, dh); g.restore();
+      }
+    };
+    drawPart(0, 0, iw0, JOIN + 1, 0, FLOOR_Y + 1);                                                                        // wall
+    const STRIP = 6;
+    let lastY = FLOOR_Y;
+    for (let sy = JOIN; sy < ih0; sy += STRIP) {
+      const sh = Math.min(STRIP, ih0 - sy), ya = FLOOR_Y + (sy - JOIN) * FLOOR_K, yb = FLOOR_Y + (sy + sh - JOIN) * FLOOR_K;
+      const da = ya + this.warpAt(ya), db = yb + this.warpAt(yb);
+      drawPart(0, sy, iw0, sh, da, db - da + 1.2); lastY = db;
+    }
+    if (lastY < yBot + 20) drawPart(0, ih0 - 4, iw0, 4, lastY - 1, yBot + 20 - lastY + 1);                                 // below the picture
+    g.fillStyle = vgrad(g, FLOOR_Y, FLOOR_Y + 60, [[0, 'rgba(70,48,32,.35)'], [1, 'rgba(70,48,32,0)']]); g.fillRect(x0, FLOOR_Y, w, 60);   // wall meets floor
   }
 
   /** Tables beyond the cafeTables upgrade level are not there yet (unless a guest from an older save still sits at one). */

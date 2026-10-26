@@ -35,7 +35,7 @@ test('portrait world: tables stand in two columns either side of an open aisle, 
 test('portrait world: arriving and leaving guests use different columns (nobody walks head-on)', () => {
   const tables = AREAS.filter((a) => a.id.startsWith('table'));
   const arrive = [450, ...tables.map((t, i) => chairSpot(i).via)];
-  const leave = [395, ...tables.map((t, i) => chairSpot(i).via + chairSpot(i).side * 62)];
+  const leave = [395, ...tables.map((t, i) => chairSpot(i).via + chairSpot(i).side * 60)];
   for (const a of arrive) for (const l of leave) assert.ok(Math.abs(a - l) >= 40, `an arrival column (${a}) and a leaving column (${l}) are at least 40 units apart`);
 });
 

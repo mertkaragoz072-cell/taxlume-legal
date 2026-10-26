@@ -9,9 +9,10 @@ import { drawIcon } from '../assets.js';
 
 // guests come in from the bottom edge of the screen (the street side, behind the navigation bar) and leave the same way; `entryY` follows the screen height
 const ENTRY = { x: 450, y: 1580 };
-const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests use different columns (arrivals x 450 / table gaps, leavers x 395 / 62 px further into the aisle), so nobody walks head-on
+const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests use different columns (arrivals x 450 / table gaps, leavers x 395 / 60 px further into the aisle), so nobody walks head-on
 const SPEED = 210;                 // design px per second
-const BODY_H = PERSON_H;           // approximate sprite height at the interior scale (for bubbles and hit-testing)
+const BODY_H = PERSON_H;           // approximate sprite height at scale 1 (the first table row) for bubbles and hit-testing; `bodyH(y)` follows the perspective
+const bodyH = (y) => BODY_H * depthScale(y);
 
 /** Where guests appear and disappear: just below the bottom edge of what is visible (taller phones show more floor). */
 export function setEntryY(y) { ENTRY.y = y; EXIT.y = y; }
@@ -28,7 +29,7 @@ export class CustomerLayer {
     game.on('customer', (e) => {
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
-        this.pops.push({ x: v?.x ?? 700, y: (v?.y ?? 700) - BODY_H - 30, text: `+${e.income}`, life: 1 });
+        this.pops.push({ x: v?.x ?? 700, y: (v?.y ?? 700) - bodyH(v?.y ?? 700) - 30, text: `+${e.income}`, life: 1 });
       }
     });
   }
@@ -89,8 +90,8 @@ export class CustomerLayer {
       else if (inGap) to = { x: goal.via, y: goal.y };
       else if (v.y > goal.y + 4 && v.y > LEAVE_LINE_Y + 40) to = { x: goal.via, y: v.y };     // still below the dining area: across to the gap first
       else to = onLane ? { x: goal.via, y: v.y } : { x: v.x, y: LANE };
-    } else if (v.chairY != null && goal.exit && Math.abs(v.y - v.chairY) < 6 && v.via != null && Math.abs(v.x - (v.via + (v.side ?? 0) * 62)) > 8) {
-      to = { x: v.via + (v.side ?? 0) * 62, y: v.y };             // leaving a chair: slide out into the gap, a little further into the aisle than arriving guests use (they walk the other way)
+    } else if (v.chairY != null && goal.exit && Math.abs(v.y - v.chairY) < 6 && v.via != null && Math.abs(v.x - (v.via + (v.side ?? 0) * 60)) > 8) {
+      to = { x: v.via + (v.side ?? 0) * 60, y: v.y };             // leaving a chair: slide out into the gap, a little further into the aisle than arriving guests use (they walk the other way)
     } else if (goal.exit && v.y > LEAVE_LINE_Y + 30) {
       to = Math.abs(v.y - goal.y) > 4 ? { x: v.x, y: goal.y } : goal;      // down the gap to the bottom edge, then along it to the exit
     } else if (Math.abs(goal.x - v.x) > 8) {
@@ -129,7 +130,7 @@ export class CustomerLayer {
       if (!v || v.moving) continue;
       const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
       if (art && A) { const r = seatRect(A, art); if (x > r.x && x < r.x + r.w && y > r.y - 50 && y < r.y + r.h) return `customer:${c.id}`; continue; }
-      const vy = this.drawY(v, c); if (Math.abs(x - v.x) < 66 && y > vy - BODY_H - 70 && y < vy + 6) return `customer:${c.id}`;
+      const vy = this.drawY(v, c); if (Math.abs(x - v.x) < 66 && y > vy - bodyH(vy) - 70 && y < vy + 6) return `customer:${c.id}`;
     }
     return null;
   }
@@ -141,7 +142,8 @@ export class CustomerLayer {
   bubbleTop(v, c) {
     const art = this.seatArt(v, c), A = art ? AREAS.find((q) => q.id === `table${c.table + 1}`) : null;
     if (art && A && v.sit > 0.5) return seatRect(A, art).y - 2;
-    return this.drawY(v, c) - (hasSitFrames(v.look) ? BODY_H * 0.72 : BODY_H);
+    if (hasSitFrames(v.look) && c && c.table != null) { const a = AREAS.find((q) => q.id === `table${c.table + 1}`); return this.drawY(v, c) - BODY_H * 0.72 * depthScale(a.y + a.h); }
+    return this.drawY(v, c) - bodyH(v.y);
   }
 
   /** Where the guest's feet are drawn: lowered onto the chair while seated (eased), otherwise where they walk. */
@@ -172,7 +174,7 @@ export class CustomerLayer {
           const hold = v.moving && !v.pause;
           if (table && hasSitFrames(v.look)) {                      // sitting behind the table: eats once the order is on the table, otherwise waits
             const p = this.sitPos(v, c), ord = this.cafe.orderOf(c), settled = v.sit >= 0.999;
-            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: settled ? (ord && this.isServed(ord.id) ? 'eat' : 'wait') : false, frame: settled ? 0 : null, back: false, fps: 8, phase: id, scale: PERSON_SCALE * 0.72 * depthScale(p.y), shade: false });
+            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: settled ? (ord && this.isServed(ord.id) ? 'eat' : 'wait') : false, frame: settled ? 0 : null, back: false, fps: 8, phase: id, scale: PERSON_SCALE * 0.72 * depthScale(table.y + table.h), shade: false });
             ctx.globalAlpha = 1; return;
           }
           drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
@@ -197,7 +199,7 @@ export class CustomerLayer {
     }
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
-      const py = p.y - (1 - p.life) * 70 + this.warp(p.y + BODY_H);
+      const py = p.y - (1 - p.life) * 70 + this.warp(p.y + bodyH(p.y));
       label(ctx, p.text, p.x - 14, py, { font: '700 36px sans-serif', fill: PAL.vanilla, lw: 6 });
       ctx.font = '700 36px sans-serif';
       drawIcon(ctx, 'coin', p.x - 14 + ctx.measureText(p.text).width / 2 + 24, py, 36);
@@ -230,7 +232,7 @@ export class CustomerLayer {
   }
 
   waitBubble(ctx, v, c, t) {
-    const y = v.y - BODY_H - 16, f = this.cafe.patienceFraction(c);
+    const y = v.y - bodyH(v.y) - 16, f = this.cafe.patienceFraction(c);
     drawIcon(ctx, 'o-waiting', v.x, y, 30);
     rrect(ctx, v.x - 26, y + 16, 52, 7, 3.5); paint(ctx, PAL.vanilla, 1.5, PAL.honeyDark);
     ctx.fillStyle = f > 0.5 ? PAL.green : f > 0.25 ? PAL.honey : PAL.terracottaLight; ctx.fillRect(v.x - 25, y + 17, 50 * f, 5);

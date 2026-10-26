@@ -1,21 +1,45 @@
 // Where each functional area sits in the cafe interior (design space 1400 x 790) and what it does when tapped.
 // `panel` names the UI opened by the area; `station` ties a machine to the production jobs it runs.
+/*
+ * PERSPECTIVE. The floor picture (assets/game/interior/room.webp) is the ground truth: its tiles are 74 px wide at the wall and 128 px at the front
+ * (measured, `tileW`), so a thing standing nearer the viewer is bigger by the same ratio. Every size below comes from `perspScale(y)`, y being the
+ * world y of the line the thing stands on, so tables, chairs, rugs, equipment and people keep the same proportions to the tiles at every depth.
+ * Picture rows map to world rows as y = FLOOR_Y + (row - ROOM_JOIN) * FLOOR_K (see InteriorScene.shell); on tall phones the scene applies one shared
+ * vertical warp to floor and objects alike (InteriorScene.warpAt), which never changes widths, so this model stays valid.
+ */
+export const FLOOR_Y = 470;            // where the back wall meets the floor
+export const ROOM_JOIN = 452;          // the same line in the room picture (px)
+export const FLOOR_K = 1.07;           // world units per picture px, vertically
+const PERSP_REF_Y = 1040;              // the first table row stands here: scale 1
+export const PERSP_STRENGTH = 0.85;    // 1 = exactly the tile growth; a little less keeps the far kitchen readable
+const tileW = (y) => 0.061 * (ROOM_JOIN + (y - FLOOR_Y) / FLOOR_K) + 42.4;
+/** Size factor of anything standing on world line y (1 at the first table row). */
+export const perspScale = (y) => 1 + PERSP_STRENGTH * (tileW(y) / tileW(PERSP_REF_Y) - 1);
+
+/** Equipment pictures (assets/game/interior/*.webp) in px: an object of picture size (pw, ph) standing on line `base` is drawn pw*k x ph*k, k = K0 * perspScale(base). */
+const EQ = { oven: [334, 333], counter: [333, 264], showcase: [384, 289], coffee: [385, 298], storage: [366, 289], upgrades: [226, 228] };
+const K0 = 300 / 384 / perspScale(700);                // the showcase is 300 wide on its line (700)
+const equip = (id, cx, base) => { const [pw, ph] = EQ[id], k = K0 * perspScale(base), w = Math.round(pw * k), h = Math.round(ph * k); return { x: Math.round(cx - w / 2), y: base - h, w, h }; };
+/** A table slot (a 1000 x 524 unit box: table + two chairs) whose table foot stands on `base`, centred on cx; first-row width TABLE_W. */
+const TABLE_W = 262;
+const table = (cx, base) => { const w = Math.round(TABLE_W * perspScale(base)), h = Math.round(w * 0.5778); return { x: Math.round(cx - w / 2), y: base - h, w, h }; };
+
 export const AREAS = [
-  // PORTRAIT cafe, a 900-unit-wide world (see CAM). Back wall, kitchen row against it (oven, storage, the upgrade sign on the wall):
-  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', x: 18, y: 248, w: 222, h: 222 },
-  { id: 'storage', label: 'Depo', panel: 'storage', x: 262, y: 328, w: 180, h: 142 },
-  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', x: 690, y: 282, w: 130, h: 131 },
-  // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station
-  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', x: 10, y: 462, w: 300, h: 238 },
-  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', x: 318, y: 474, w: 300, h: 226 },
-  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', x: 626, y: 491, w: 270, h: 209 },
-  // dining area, in front: two columns either side of a central aisle (tables 1 and 3 left, 2 and 4 right), the second row set back from
-  // the edge a little. The cafeTables upgrade opens them in this order (row one first). `side` is the chair the guest takes: always the one
-  // facing the aisle (-1 left, +1 right), so each guest's access gap lies in the aisle.
-  { id: 'table1', label: 'Masa 1', panel: null, side: 1, x: 20, y: 884, w: 270, h: 156, flip: true },
-  { id: 'table2', label: 'Masa 2', panel: null, side: -1, x: 610, y: 934, w: 270, h: 156 },
-  { id: 'table3', label: 'Masa 3', panel: null, side: 1, x: 5, y: 1134, w: 270, h: 156, flip: true },
-  { id: 'table4', label: 'Masa 4', panel: null, side: -1, x: 625, y: 1184, w: 270, h: 156 },
+  // PORTRAIT cafe, a 900-unit-wide world (see CAM). Back wall, kitchen row against it (oven, storage, the upgrade sign behind the coffee machine):
+  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', ...equip('oven', 130, 482) },
+  { id: 'storage', label: 'Depo', panel: 'storage', ...equip('storage', 385, 482) },
+  { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', ...equip('upgrades', 660, 490) },
+  // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station (all standing on line 700)
+  { id: 'counter', label: 'Üretim Tezgâhı', labelOn: 'front', panel: 'counter', ...equip('counter', 138, 700) },
+  { id: 'showcase', label: 'Satış Vitrini', panel: 'showcase', ...equip('showcase', 422, 700) },
+  { id: 'coffee', label: 'Kahve Makinesi', panel: 'coffee', station: 'coffee', ...equip('coffee', 728, 700) },
+  // dining area, in front: two columns either side of a central aisle (tables 1 and 3 left, 2 and 4 right), the right column set back a little. The
+  // cafeTables upgrade opens them in this order (row one first). `side` is the chair the guest takes: always the one facing the aisle (-1 left, +1
+  // right), so each guest's access gap lies in the aisle. Each table is as much bigger as the floor is wider where it stands.
+  { id: 'table1', label: 'Masa 1', panel: null, side: 1, flip: true, ...table(160, 1040) },
+  { id: 'table2', label: 'Masa 2', panel: null, side: -1, ...table(740, 1090) },
+  { id: 'table3', label: 'Masa 3', panel: null, side: 1, flip: true, ...table(150, 1290) },
+  { id: 'table4', label: 'Masa 4', panel: null, side: -1, ...table(750, 1340) },
 ];
 
 /** Drawing order = depth: the kitchen side first, then the baker (behind the counters), then the counters, then the tables. */
@@ -38,7 +62,6 @@ export const LEAVE_LINE_Y = 822;       // lane for guests walking right (to the 
 export const QUEUE_Y = 770;            // guests waiting at the showcase stand a row behind the lane, so walkers pass in front of them
 export const WAITER_LANE_Y = 735;      // the waiter's feet, right in front of the counters
 export const WALL_Y = 130;              // top of the back wall (below the HUD)
-export const FLOOR_Y = 470;            // where the back wall meets the floor
 
 export const areaAt = (x, y) => AREAS.find((a) => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h) ?? null;
 
@@ -51,7 +74,7 @@ const TABLES = AREAS.filter((a) => a.id.startsWith('table'));
 export const chairSpot = (index) => {
   const a = TABLES[index];
   const side = a.side ?? -1;
-  return { x: a.x + a.w / 2 + side * 105, y: a.y + a.h - 27, via: a.x + a.w / 2 + side * 190, seat: true, side };
+  return { x: a.x + a.w / 2 + side * 105 * (a.w / 270), y: a.y + a.h - 27, via: a.x + a.w / 2 + side * 190, seat: true, side };
 };
 /**
  * Sitting: the cushion of a chair is at 38% of the table picture's height (measured on assets/interior/table.webp). A seated guest is
@@ -75,8 +98,8 @@ export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 /** Depth key (the y of the line an object stands on): what is further back is drawn first. Tables are judged by their front edge a bit above the chair feet. */
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
-/** Waiting spots in front of the showcase (centre 502), one body width apart. */
-export const QUEUE_SPOTS = [{ x: 468, y: QUEUE_Y }, { x: 328, y: QUEUE_Y }, { x: 608, y: QUEUE_Y }];
+/** Waiting spots in front of the showcase (centre 422), one body width apart. */
+export const QUEUE_SPOTS = [{ x: 422, y: QUEUE_Y }, { x: 282, y: QUEUE_Y }, { x: 562, y: QUEUE_Y }];
 
 /** Camera: the interior is drawn zoomed out (see InteriorScene), centred on this world x so the 30..1414 content has air on both sides. */
 /**
@@ -85,8 +108,8 @@ export const QUEUE_SPOTS = [{ x: 468, y: QUEUE_Y }, { x: 328, y: QUEUE_Y }, { x:
  */
 export const ROOM = { join: 0.484 };
 
-/** Depth scale: the nearer to the viewer (larger y), the larger a person or table is drawn (perspective), 0.86 at the wall to 1.04 at the front. */
-export const depthScale = (y) => 0.9 + 0.12 * Math.max(0, Math.min(1, (y - 545) / 300));
+/** Depth scale of a person standing on world line y: the same perspective as the furniture (see perspScale), about 0.77 behind the counters and 1.3 at the entrance. */
+export const depthScale = (y) => perspScale(y);
 
 /** Portrait camera: the world is 900 units wide and 1600 tall (9:16); the scene fits the width (or the height on wide screens) and is anchored to the top. */
 export const CAM = { w: 900, h: 1600 };
