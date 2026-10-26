@@ -223,9 +223,15 @@ export function InflationHeader({
           />
           <View style={styles.plateTextWrap} pointerEvents="none">
             <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
-              {townName.toUpperCase()} ✏️
+              {townName.toUpperCase()}
             </Text>
           </View>
+          {/* Off on its own rather than trailing the name inline — inline,
+              its width pulled the name itself left of true center, which
+              is exactly the "centered" look this is meant to fix. */}
+          <Text style={styles.editHint} pointerEvents="none">
+            ✏️
+          </Text>
         </Pressable>
         <View style={styles.controls}>
           <Pressable
@@ -397,18 +403,26 @@ const styles = StyleSheet.create({
   },
   plateTextWrap: {
     position: "absolute",
-    left: PLATE_CAP_LEFT_W - 2,
-    right: PLATE_CAP_RIGHT_W - 6,
+    left: PLATE_CAP_LEFT_W,
+    right: PLATE_CAP_RIGHT_W,
     top: 0,
     bottom: 0,
     justifyContent: "center",
+    alignItems: "center",
   },
   town: {
     color: "#ffd75e",
-    fontFamily: FONT.display,
+    fontFamily: FONT.signage,
     fontSize: TYPE.caption,
     letterSpacing: 0.2,
     textAlign: "center",
+  },
+  editHint: {
+    position: "absolute",
+    right: PLATE_CAP_RIGHT_W - 4,
+    top: "50%",
+    marginTop: -7,
+    fontSize: 11,
   },
   streakBadge: {
     backgroundColor: "#2a2016",

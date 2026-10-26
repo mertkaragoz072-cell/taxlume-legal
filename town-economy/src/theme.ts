@@ -45,6 +45,11 @@ export const FONT = {
   bold: "Manrope_700Bold",
   black: "Manrope_800ExtraBold",
   display: "Cinzel_700Bold",
+  // The ornate, chunky-serif sibling of `display` — reserved for text that
+  // sits directly on carved wood/metal art (a sign, a plaque) rather than a
+  // plain card background, where the extra flourish reads as part of the
+  // engraving instead of just a heavier weight.
+  signage: "CinzelDecorative_900Black",
 } as const;
 
 export const SPACING = {
