@@ -19,6 +19,10 @@ export interface CameraSetup {
 
 /** What every location scene provides to the renderer. */
 export interface LocationScene {
+  /** Optional painted full-screen backdrop (cover-fitted by the renderer). Set once loaded. */
+  backdrop?: THREE.Texture | null;
+  /** Called by the scene when `backdrop` becomes available; set by the renderer. */
+  onBackdrop?: () => void;
   id: string;
   root: THREE.Group;
   camera: CameraSetup;

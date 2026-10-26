@@ -19,3 +19,19 @@ camera frustum at that depth; keep the 3D station, character and lighting on top
 ## Character
 The rig (`character/rig.ts`) stays procedural so it can be animated and re-proportioned; only its outline thickness and
 shading ramp (`world/materials.ts`) should be tuned to match painted backdrops.
+
+## Implemented: gym painted backdrop (`public/art/gym-backdrop.webp`)
+- 941×1672 portrait painting supplied by the project owner. `world/gymScene.ts` loads it; `world/renderer.ts` draws it as the scene
+  background, cover-fitted and centred (sides are cropped on narrower screens), **without** filmic tone mapping so the colours stay as painted.
+- The procedural gym (wall, racks, window, treadmills, lamps…) remains as an automatic **fallback** if the file is missing or fails to load.
+- The 3D station (bench, rack, bar, lifter) stands in the middle of the painted floor on a contact shadow; it is lit with a neutral-warm key so the
+  character stays white against the amber painting.
+- To replace the art: overwrite `public/art/gym-backdrop.webp` (keep the portrait aspect; the floor should occupy the lower ~55%; leave the centre of
+  the floor open for the station).
+
+## Slot reserved for the supplied bench-station asset
+The bench station currently in the middle is the procedural placeholder (`world/props.ts → createBench/createRack`, geometry in
+`world/benchGeometry.ts`). A supplied asset replaces it at the station group (`gymScene.ts → station`, origin at the seat, +x toward the viewer's
+feet side). Accepted: a GLB/GLTF model (preferred: separate bar, bench, rack, with the bar centred at its own origin and sized in metres), or
+transparent PNG/WebP sprites (bench + rack as a back layer, bar + plates as a separate layer, an optional front layer) — sprites keep the animated
+stickman between the layers.

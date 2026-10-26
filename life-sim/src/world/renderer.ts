@@ -103,9 +103,46 @@ export class GameRenderer {
     }
     this.location = loc;
     this.scene.add(loc.root);
+    loc.onBackdrop = () => this.applyBackdrop();
+    this.applyBackdrop();
     const r = loc.camera.followRange;
     this.followX = r && loc.focusX ? Math.min(r[1], Math.max(r[0], loc.focusX())) : loc.camera.target[0];
     this.resize();
+  }
+
+  /**
+   * A painted backdrop is drawn exactly as authored (no filmic tone mapping), cover-fitted and centred;
+   * scenes without one use the dark default and the filmic look.
+   */
+  private applyBackdrop(): void {
+    const tex = this.location?.backdrop ?? null;
+    if (tex) {
+      this.scene.background = tex;
+      this.three.toneMapping = THREE.NoToneMapping;
+      this.three.toneMappingExposure = 1;
+      this.fitBackdrop();
+    } else {
+      this.scene.background = new THREE.Color(0x14161b);
+      this.three.toneMapping = THREE.ACESFilmicToneMapping;
+      this.three.toneMappingExposure = 1.35;
+    }
+  }
+
+  private fitBackdrop(): void {
+    const tex = this.location?.backdrop;
+    const img = tex?.image as { width: number; height: number } | undefined;
+    if (!tex || !img) return;
+    const ia = img.width / img.height;
+    const sa = this.camera.aspect;
+    if (sa < ia) {
+      const rx = sa / ia; // screen is narrower than the art: crop the sides
+      tex.repeat.set(rx, 1);
+      tex.offset.set((1 - rx) / 2, 0);
+    } else {
+      const ry = ia / sa; // screen is wider: crop top and bottom (keep the floor)
+      tex.repeat.set(1, ry);
+      tex.offset.set(0, 0);
+    }
   }
 
   resize(): void {
@@ -119,6 +156,7 @@ export class GameRenderer {
     this.camera.aspect = w / h;
     if (this.location) this.placeCamera(this.location.camera);
     this.camera.updateProjectionMatrix();
+    this.fitBackdrop();
   }
 
   /** Fixed camera: keeps the required world rectangle visible at any aspect ratio. */

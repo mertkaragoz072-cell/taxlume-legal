@@ -62,7 +62,13 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 | Clothing / tattoos / hair | NOT STARTED | |
 | Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## Gym staging matched to the reference panel (latest)
+## Gym painted backdrop (latest)
+- The owner-supplied painting `public/art/gym-backdrop.webp` is now the gym's background (full-screen, cover-fitted, no tone mapping); the 3D bench station
+  stands in the centre of its floor with a contact shadow. Procedural background kept as fallback. See `docs/ART_SPEC.md` (also the slot for the bench asset).
+- Checked visually at 390×844 and re-ran the gym e2e scenarios (see below). Not yet checked at other aspect ratios beyond the automatic cover fit.
+- Pending: the supplied bench-station asset (format to be provided) — until then the procedural bench is the placeholder.
+
+## Gym staging matched to the reference panel
 - Bench is now an **incline bench** (`world/benchGeometry.ts` is the single source of truth for seat, pad plane, spine angle, chest/lockout/hook points).
   The lifter sits facing the camera and leans back; the bar is horizontal, its path is exactly vertical (≤ 2 cm drift, tested); the torso axis is
   placed exactly one torso-radius in front of the pad plane for every physique, the pelvis on the seat, the head resting on the pad.
