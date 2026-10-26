@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
-import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Animated, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import lockBadgeImage from "../../assets/ui/lock-badge.png";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
@@ -323,9 +324,8 @@ export function MarketScreen({ sounds }: Props) {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
             {lockedGoods.map((g) => (
               <View key={g.id} style={styles.lockedCard}>
-                <View style={styles.lockedBadge}>
-                  <Text style={styles.lockedBadgeText}>🔒</Text>
-                </View>
+                <Image source={lockBadgeImage} style={styles.lockedBadge} resizeMode="contain" />
+
                 {/* The good's own icon, full size and in its own color
                     rather than greyed out — this is a preview of a reward,
                     not a dead slot, so it should look like one. */}
@@ -654,9 +654,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: SPACING.xs,
     right: SPACING.xs,
-    opacity: 0.8,
+    width: 18,
+    height: 18,
   },
-  lockedBadgeText: { fontSize: TYPE.caption },
   // Full size and full color — this is a preview of a reward waiting at a
   // rank, not a greyed-out dead slot, so only the icon gets a touch of
   // dimming rather than the whole card.

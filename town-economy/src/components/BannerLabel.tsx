@@ -1,67 +1,71 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { FONT, PARCHMENT, SPACING, TYPE, WEIGHT } from "../theme";
+import { Image, StyleSheet, Text, View } from "react-native";
+import leftCap from "../../assets/ui/ribbon-green-left.png";
+import midTile from "../../assets/ui/ribbon-green-mid.png";
+import rightCap from "../../assets/ui/ribbon-green-right.png";
+import { FONT, PARCHMENT, TYPE, WEIGHT } from "../theme";
 
 interface Props {
   text: string;
-  /** a small leading glyph — the mockup's ribbons each carry a wheat-sheaf
-   * ornament; other sections read better with their own icon (a clock, a
-   * lock) so this is a prop rather than hard-coded. */
+  /** a small leading glyph for sections that read better with their own
+   * icon (a clock, a gear) alongside the ribbon's own wheat ornament. */
   icon?: string;
 }
 
-/** The parchment theme's section header: a dark ribbon banner instead of
- * SectionLabel's plain dot-and-caps text. A rounded bar rather than the
- * mockup's pointed flag-tail ends — a true cut-corner ribbon needs either
- * an SVG path or four rotated corner triangles, and neither survives a
- * long translated string (German/Turkish section titles run noticeably
- * longer than English) without the geometry fighting the text. The color
- * and the end ornaments carry the "banner" read without that fragility. */
+const CAP_WIDTH = 95 / 2; // the source crop was taken at ~2x
+const CAP_HEIGHT = 60 / 2;
+const RIGHT_CAP_WIDTH = 55 / 2;
+
+/** The parchment theme's section header: the game's own ribbon banner
+ * artwork (see assets/ui/README or the mockup it was cut from), not a
+ * CSS-drawn approximation — the left end (wheat sheaf) and right end
+ * (pointed tail) are the exact cropped pieces, with a thin clean slice of
+ * the ribbon's own fill stretched to fill however wide the text needs.
+ * Text renders as a normal RN <Text> over it rather than being baked into
+ * the image, which is the only way this still works once translated (or
+ * once a section's name is simply longer in one language than another). */
 export function BannerLabel({ text, icon }: Props) {
   return (
     <View style={styles.row}>
-      <Text aria-hidden style={styles.ornament}>
-        🌾
-      </Text>
-      <View style={styles.ribbon}>
+      <Image source={leftCap} style={styles.leftCap} resizeMode="stretch" />
+      <Image source={midTile} style={styles.midTile} resizeMode="stretch" />
+      <Image source={rightCap} style={styles.rightCap} resizeMode="stretch" />
+      <View style={styles.textWrap} pointerEvents="none">
         <Text style={styles.label} accessibilityRole="header">
           {icon ? `${icon} ` : ""}
           {text}
         </Text>
       </View>
-      <Text aria-hidden style={styles.ornament}>
-        🌾
-      </Text>
     </View>
   );
 }
-
-const RADIUS_PILL = 999;
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
-    gap: 4,
+    height: CAP_HEIGHT,
+    marginTop: 18,
+    marginBottom: 10,
   },
-  ribbon: {
-    backgroundColor: PARCHMENT.ribbon,
-    borderWidth: 1.5,
-    borderColor: PARCHMENT.gold,
-    borderRadius: RADIUS_PILL,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: 6,
+  leftCap: { width: CAP_WIDTH, height: CAP_HEIGHT },
+  midTile: { flex: 1, height: CAP_HEIGHT, marginLeft: -2, marginRight: -2 },
+  rightCap: { width: RIGHT_CAP_WIDTH, height: CAP_HEIGHT },
+  textWrap: {
+    position: "absolute",
+    left: CAP_WIDTH - 6,
+    right: RIGHT_CAP_WIDTH + 2,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     color: PARCHMENT.onDark,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
+    letterSpacing: 1,
+    textAlign: "center",
   },
-  ornament: { fontSize: 14, opacity: 0.85 },
 });
