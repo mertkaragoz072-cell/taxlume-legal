@@ -8,16 +8,19 @@ import chipVillageLeft from "../../assets/ui/chips/chip-village-left.png";
 import titleplateLeft from "../../assets/ui/titleplate-left.png";
 import titleplateMid from "../../assets/ui/titleplate-mid.png";
 import titleplateRight from "../../assets/ui/titleplate-right.png";
+import statBarChart from "../../assets/ui/statpanel/barchart.png";
+import statCoins from "../../assets/ui/statpanel/coins.png";
+import statCorner from "../../assets/ui/statpanel/corner.png";
+import statMoneyBag from "../../assets/ui/statpanel/moneybag.png";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
-import { COLORS, FONT, glowShadow, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, PARCHMENT, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { formatCoins as formatCoinsUtil, formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { seasonFromTick } from "../economy/seasons";
 import { SpotlightTarget } from "./Spotlight";
-import { PriceChart } from "./PriceChart";
 import { SpeedBoostButton } from "./SpeedBoostButton";
 
 interface Props {
@@ -29,7 +32,6 @@ interface Props {
   netWorth: number;
   inflationIndex: number;
   inflationRate: number;
-  inflationHistory: number[];
   paused: boolean;
   muted: boolean;
   streakCount: number;
@@ -127,7 +129,6 @@ export function InflationHeader({
   netWorth,
   inflationIndex,
   inflationRate,
-  inflationHistory,
   paused,
   muted,
   streakCount,
@@ -332,50 +333,68 @@ export function InflationHeader({
           )}
         </View>
 
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>{t("header.cash")}</Text>
-            <AnimatedNumber value={cash} formatter={formatCoins} style={styles.statValue} />
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
-            <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
-          </View>
-          <SpotlightTarget
-            id="inflation"
-            style={[styles.stat, styles.inflationStat, hot && glowShadow("#e0693f")]}
-          >
-            {hot && (
-              <Animated.View
-                pointerEvents="none"
-                style={[StyleSheet.absoluteFill, styles.hotGlow, { opacity: hotGlowOpacity }]}
-              />
-            )}
-            <View style={styles.inflationTextCol}>
-              <Text style={styles.statLabel}>{t("header.inflation")}</Text>
-              {/* The daily rate is its own line rather than a small Text nested
-                inside the index. Inline, it wrapped wherever it ran out of
-                room — on a narrow phone the closing bracket ended up alone on
-                a third line, under the sparkline. */}
-              <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
-                {formatNumber(inflationIndex, language, 1)}
-              </Text>
-              <Text style={[styles.inflationRate, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
-                {"("}
-                {dailyInflationPct >= 0 ? "+" : ""}
-                {formatPercent(dailyInflationPct, language, 2)}
-                {t("header.perTurn")}
-                {")"}
-              </Text>
-            </View>
-            <PriceChart
-              history={inflationHistory}
-              color={hot ? "#ff8a5c" : "#e8c777"}
-              width={70}
-              height={30}
-              strokeWidth={1.5}
+        {/* A parchment inset within the header's own dark wood, exactly the
+            way the reference sheet layers it — not the full-dark panel this
+            used to be. The two corner clasps are one cropped image, the
+            right one just the left one mirrored in code (transform
+            scaleX: -1), since the source art only drew the left one. */}
+        <View style={[styles.statsCard, hot && glowShadow("#e0693f")]}>
+          {hot && (
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, styles.hotGlow, { opacity: hotGlowOpacity }]}
             />
-          </SpotlightTarget>
+          )}
+          <Image source={statCorner} style={styles.statCorner} resizeMode="contain" />
+          <Image
+            source={statCorner}
+            style={[styles.statCorner, styles.statCornerRight, { transform: [{ scaleX: -1 }] }]}
+            resizeMode="contain"
+          />
+          <View style={styles.statsRow}>
+            <View style={styles.stat}>
+              <Image source={statCoins} style={styles.statIcon} resizeMode="contain" />
+              <View>
+                <Text style={styles.statLabel}>{t("header.cash")}</Text>
+                <AnimatedNumber value={cash} formatter={formatCoins} style={styles.statValue} />
+              </View>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.stat}>
+              <Image source={statMoneyBag} style={styles.statIcon} resizeMode="contain" />
+              <View>
+                <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
+                <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
+              </View>
+            </View>
+            <View style={styles.statDivider} />
+            <SpotlightTarget id="inflation" style={[styles.stat, styles.inflationStat]}>
+              <Image source={statBarChart} style={styles.statIcon} resizeMode="contain" />
+              <View style={styles.inflationTextCol}>
+                <Text style={styles.statLabel}>{t("header.inflation")}</Text>
+                {/* The daily rate is its own line rather than a small Text
+                    nested inside the index. Inline, it wrapped wherever it
+                    ran out of room — on a narrow phone the closing bracket
+                    ended up alone on a third line, under the sparkline. */}
+                <Text
+                  style={[styles.statValue, { color: hot ? PARCHMENT.negative : "#9c6b1f" }]}
+                  numberOfLines={1}
+                >
+                  {formatNumber(inflationIndex, language, 1)}
+                </Text>
+                <Text
+                  style={[styles.inflationRate, { color: hot ? PARCHMENT.negative : PARCHMENT.inkMuted }]}
+                  numberOfLines={1}
+                >
+                  {"("}
+                  {dailyInflationPct >= 0 ? "+" : ""}
+                  {formatPercent(dailyInflationPct, language, 2)}
+                  {t("header.perTurn")}
+                  {")"}
+                </Text>
+              </View>
+            </SpotlightTarget>
+          </View>
         </View>
       </View>
     </View>
@@ -473,22 +492,40 @@ const styles = StyleSheet.create({
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
   },
-  statsRow: { flexDirection: "row", justifyContent: "space-between" },
-  stat: { flex: 1 },
-  statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 2 },
+  // A parchment inset in the header's own dark wood (see the JSX's own
+  // comment) rather than the plain dark row this used to be — the corner
+  // clasps sit just inside the card's edge, one image mirrored for the
+  // second corner since the source only drew the left one.
+  statsCard: {
+    backgroundColor: PARCHMENT.paper,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: PARCHMENT.wood,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    overflow: "hidden",
+  },
+  statCorner: { position: "absolute", top: -2, left: -2, width: 20, height: 20 },
+  statCornerRight: { left: undefined, right: -2 },
+  statsRow: { flexDirection: "row", alignItems: "center" },
+  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
+  statIcon: { width: 22, height: 22 },
+  statDivider: { width: 1, height: "80%", backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3) },
+  statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.micro, marginBottom: 2 },
   statValue: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.title,
+    color: PARCHMENT.ink,
+    fontSize: TYPE.body,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
   inflationStat: {
-    flex: 1.4,
+    flex: 1.3,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    gap: 4,
   },
   inflationTextCol: { flex: 1 },
-  inflationRate: { fontSize: 11, fontFamily: FONT.medium },
+  inflationRate: { fontSize: 10, fontFamily: FONT.medium },
   hotGlow: { backgroundColor: "#e0693f", borderRadius: 10 },
 });
