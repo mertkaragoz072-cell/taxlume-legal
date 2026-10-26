@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import headerMarketImage from "../../assets/ui/header-market.webp";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
@@ -165,7 +166,18 @@ export function InflationHeader({
 
   return (
     <View style={styles.wrap}>
-      <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
+      {/* The town's own market street, standing in for the flat wood
+          gradient this used to be — a real scene behind the header rather
+          than a color. A dark scrim sits over it (transparent at the top,
+          solid by the stat row) so the gold title, the chip text and the
+          cash/net worth/inflation numbers all still read the way they did
+          against the old solid background. */}
+      <Image
+        source={headerMarketImage}
+        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+        resizeMode="cover"
+      />
+      <GradientFill colors={["rgba(15,10,5,0.3)", "rgba(15,10,5,0.88)"]} x1="0" y1="0" x2="0" y2="1" />
       <View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
