@@ -39,7 +39,7 @@ import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
 import { TOWN_EMBLEMS_BY_ID } from "./src/economy/emblems";
-import { townRankTitle } from "./src/economy/townRanks";
+import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
 import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
@@ -367,11 +367,13 @@ function Game() {
             townName={state.townName}
             emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
             emblemColor={state.selectedEmblemColor}
+            rankIcon={townRankIcon(state.townRankIndex)}
             rankTitle={rankTitle}
             cash={state.cash}
             netWorth={netWorth}
             inflationIndex={state.inflationIndex}
             inflationRate={state.inflationRate}
+            inflationHistory={state.inflationHistory}
             paused={state.paused}
             muted={sounds.muted}
             streakCount={state.streak.count}
@@ -401,11 +403,7 @@ function Game() {
         {/* Rendered outside the per-screen blocks so the guided task follows
             the player between tabs — several of the steps are there to show
             that a tab exists at all. */}
-        <OnboardingBanner
-          onGoToScreen={setScreen}
-          activeScreen={screen}
-          variant={screen === "market" ? "parchment" : "dark"}
-        />
+        <OnboardingBanner onGoToScreen={setScreen} activeScreen={screen} />
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
