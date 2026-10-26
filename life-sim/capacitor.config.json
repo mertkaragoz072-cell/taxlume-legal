@@ -1,0 +1,6 @@
+{
+  "appId": "com.lifesim.game",
+  "appName": "Life Simulator",
+  "webDir": "dist",
+  "backgroundColor": "#14161b"
+}
