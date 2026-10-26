@@ -26,7 +26,23 @@ import { C, FONT, fmt } from "./src/ui/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function App() {
+/** Start-up diagnostics: any error (also in render or outside React) is shown on screen instead of leaving the splash screen forever. */
+let reportCrash: (m: string) => void = () => {};
+try {
+  const EU = (globalThis as any).ErrorUtils;
+  const prev = EU?.getGlobalHandler?.();
+  EU?.setGlobalHandler?.((e: any, fatal?: boolean) => { reportCrash(`${fatal ? "Hata" : "Uyarı"}: ${String(e?.message ?? e)}\n${String(e?.stack ?? "").split("\n").slice(0, 6).join("\n")}`); prev?.(e, fatal); });
+} catch { /* ignore */ }
+
+class Boundary extends React.Component<{ children: React.ReactNode }, { err: string | null }> {
+  state = { err: null as string | null };
+  static getDerivedStateFromError(e: any) { return { err: `${String(e?.message ?? e)}\n${String(e?.stack ?? "").split("\n").slice(0, 6).join("\n")}` }; }
+  render() { return this.state.err ? <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun çöktü.{"\n"}{this.state.err}</Text></View> : this.props.children; }
+}
+
+export default function Root() { return <Boundary><App /></Boundary>; }
+
+function App() {
   const [fontsReady] = useFonts({ Nunito_700Bold, Nunito_800ExtraBold });
   const [world, setWorld] = useState<World | null>(null);
   const [progress, setProgress] = useState(0);
@@ -34,13 +50,17 @@ export default function App() {
   const storage = useRef(new NativeStorage());
   const startupProblems = useRef<string[]>([]);
 
+  const [stage, setStage] = useState("başlıyor");
   useEffect(() => {
+    reportCrash = (m) => setError(m);
+    SplashScreen.hideAsync().catch(() => {});                  // the loading text (with its stage) is shown at once, never a frozen splash
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
     (async () => {
       try {
-        await storage.current.hydrate();
-        await loadFonts();
-        await loadAssets({ onProgress: (d: number, t: number) => setProgress(d / t) });
+        setStage("kayıt okunuyor"); await storage.current.hydrate();
+        setStage("yazı tipi"); await loadFonts();
+        setStage("resimler"); await loadAssets({ onProgress: (d: number, t: number) => setProgress(d / t) });
+        setStage("oyun kuruluyor");
         const w = createWorld(storage.current, (m) => startupProblems.current.push(m));
         if (Platform.OS === "web") (window as any).__world = w;   // development screenshots only
         setWorld(w);
@@ -50,7 +70,7 @@ export default function App() {
   }, []);
 
   if (error) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun yüklenemedi.{"\n"}{error}</Text></View>;
-  if (!world || !fontsReady) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Yükleniyor… {Math.round(progress * 100)}%</Text></View>;
+  if (!world || !fontsReady) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Yükleniyor… {Math.round(progress * 100)}%{"\n"}({stage})</Text></View>;
   return (
     <SafeAreaProvider>
       <StatusBar hidden />
