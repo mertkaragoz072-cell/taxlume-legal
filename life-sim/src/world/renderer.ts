@@ -84,7 +84,7 @@ export class GameRenderer {
   private buildComposer(): void {
     const c = new EffectComposer(this.three);
     c.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.5, 1.5);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.5, 2.2);
     c.addPass(this.bloom);
     c.addPass(new ShaderPass(GradeShader));
     c.addPass(new OutputPass());

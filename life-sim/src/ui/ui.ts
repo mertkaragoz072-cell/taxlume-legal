@@ -76,8 +76,9 @@ export class UI {
       case 'buy': {
         const plan = arg as MembershipPlan;
         const price = GYM_PRICES[plan];
+        const token = `${plan}:${Date.now()}:${Math.random()}`;
         const label = plan === 'monthly' ? 'monthly membership (30 days)' : 'day pass (24 hours)';
-        this.ask({ title: 'Confirm purchase', body: `Buy a ${label} for ${formatMoney(price)}? You have ${formatMoney(g.state.money)}.`, yes: `Pay ${formatMoney(price)}`, run: () => g.buyMembership(plan) });
+        this.ask({ title: 'Confirm purchase', body: `Buy a ${label} for ${formatMoney(price)}? You have ${formatMoney(g.state.money)}.`, yes: `Pay ${formatMoney(price)}`, run: () => g.buyMembership(plan, token) });
         return;
       }
       case 'start': {
@@ -201,7 +202,8 @@ export class UI {
     const g = this.game;
     const w = g.workout;
     const st = g.state;
-    const s = w.session;
+    // The workout panel is only ever shown while training is actually allowed.
+    const s = w.canTrain ? w.session : null;
     const d = EXERCISES.bench!;
     const member = hasMembership(st);
     const remain = membershipRemaining(st);

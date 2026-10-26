@@ -24,7 +24,12 @@ class FakeAnimator implements WorkoutAnimator {
     await Promise.resolve();
     return this.report ?? (r === 'success' ? { chestReached: true, lockout: true } : { chestReached: true, lockout: false });
   }
-  async finishSet() {}
+  async rackBar() {}
+  async sitUp() {
+    this.sat = true;
+  }
+  sat = false;
+  restoreLying() {}
   flush() {}
 }
 

@@ -1,5 +1,6 @@
 import type { ExerciseId, LocationId } from '../core/types';
 import type { Transaction } from '../economy/economy';
+import type { WorkoutSession } from '../fitness/workout';
 
 export interface Character {
   name: string;
@@ -51,12 +52,14 @@ export interface GameState {
   transactions: Transaction[];
   nextTransactionId: number;
   gym: GymState;
+  /** The one authoritative active workout (null = not training). Persisted; never held anywhere else. */
+  workout: WorkoutSession | null;
   unlockedLocations: LocationId[];
   /** Day counter (1-based) the player last got a bill/warning notice on. Reserved for Milestone 3. */
   flags: Record<string, boolean>;
 }
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const START_MONEY = 500;
 /** New games begin at 08:00 on Day 1. */
 export const START_TIME = 8 * 3600;
@@ -85,6 +88,7 @@ export function createNewGame(): GameState {
     transactions: [],
     nextTransactionId: 1,
     gym: { membershipUntil: 0, fatigue: 0, lifts: {}, totalWorkoutSeconds: 0, totalXpEarned: 0 },
+    workout: null,
     unlockedLocations: ['gym'],
     flags: {},
   };

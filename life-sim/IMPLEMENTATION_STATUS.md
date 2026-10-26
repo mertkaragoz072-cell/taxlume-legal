@@ -1,59 +1,57 @@
 # Implementation Status
 
-## Milestone 1 — Playable foundation: COMPLETE, then polished (this update)
+## Audit and fix round (latest) — root causes found and fixed
 
-Verified by: `npm test` (57 tests pass), `npm run build` (typecheck + bundle OK), and headless-Chromium
-end-to-end runs at 390×844, 360×640 and 430×932 (buy pass → start workout → full set → rest → tabs → reload keeps
-progress; no horizontal overflow or clipped elements detected).
+### Audit findings (what was actually wrong)
+| Symptom | Root cause (file → function) | Evidence |
+|---|---|---|
+| Character flips between lying and upright during an exercise | `animation/benchPress.ts → finishSet()` sat the character up after **every set**; `prepareSet()` laid him down again for the next set. `app/workoutController.ts → performSet()` called it each time. | In-browser per-frame torso sampling of the old build over two sets: `LYING → MID → UPRIGHT` after each set, then `MID → LYING` again. At the upright moments `workout.phase` still read `lifting` (UI state ≠ animation state). |
+| Rack obstructs the lifter | Rack uprights stood at the head end of a head-on view (`world/gymScene.ts` `STATION_YAW`, `world/props.ts → createRack`), i.e. between camera and lifter; its 2 m-wide beam, long base rails and racked plates behind added more occlusion. Uprights at z=±0.5 also overlapped heavily loaded plates. | Screenshots; geometry numbers. |
+| Active workout UI with expired membership | The session was a runtime-only object in `WorkoutController` (not in `GameState`, not saved). Membership expiry was only checked when *starting* a workout/set, so a session could stay on screen after the pass expired (rest, time passing) or after a reload decision. | Code path analysis + new tests that reproduced it. |
+| Possible double charge / double reward | `buyMembership` had no idempotency; two concurrent `endWorkout()` calls could both bank/finish. | Code review; new tests. |
+| Shoes 1.5 cm below the floor | `character/rig.ts → applyPose`: shoe offset was defined in the *shin* frame and rotated with the leg; ankle height ignored shoe radius. | Browser bounding-box scan found 2 meshes at y = −0.015; unit test reproduced. |
 
-### Changed in this update
-**Animation (Priority 1)**
-- Bench station is rotated three-quarter to the fixed camera (as in the reference): bar across the screen, plate each side.
-- New pose model: hands are shoulder-relative IK targets (always attached), feet planted at fixed points, head rests on
-  the pad (`headLift`), pelvis/torso height follows the live muscle-dependent torso radius → no clipping at any physique.
-- Smooth, slower lie-back / sit-up with eased body and arced hands; per-frame motion is bounded by a test.
-- Removed a real bug found by the new tests: idle breathing moved the shoulders but not the bar (2 mm hand detachment).
-- Rep validity: `playRep` returns `{chestReached, lockout}`; only a complete cycle is committed.
-- Chunkier character proportions and thicker outlines, readable face with the head tilted toward the viewer.
+### Fixes (files changed)
+- `simulation/state.ts`, `persistence/save.ts`, `fitness/workout.ts`: the active workout is now part of the authoritative saved `GameState.workout`. **Save version 2** with a safe v1→v2 migration and sanitising of malformed workout data.
+- `app/workoutController.ts` (rewritten): reads/writes `state.workout` only; one rule `canTrain` (location = gym ∧ valid membership by in-game time) enforced after every time advance, at set start, after each rep, after rest and on load; the session is ended and banked automatically when training becomes prohibited. `restore()` after load banks partial sets, ends expired sessions, otherwise resumes lying with the bar racked. Idempotent `endWorkout`; concurrent `performSet` calls run one set. Saves after every rep.
+- `app/game.ts`, `ui/ui.ts`: restore on init; `enforceAccess` after idle time; purchase tokens (repeated taps charge once); workout panel only renders when `canTrain`.
+- `animation/benchPress.ts` (rewritten as an explicit state machine): `seated → seatedToLying → lying → lyingToSeated → seated`. Between sets the character **stays lying** with the bar racked (`rackBar()`); only `sitUp()` at the end of the workout (or on forced end) lifts the torso. Torso is exactly π/2 whenever `lying`. Bar path is near-vertical (≤ 8 cm drift per rep, tested). `restoreLying()` for state restore.
+- `character/rig.ts`: rounded elbow/knee/shoulder joint spheres, white material, shoe offset fixed in world frame, `joints()` for tests.
+- `world/props.ts`, `world/gymScene.ts`: new rack (slim uprights at z=±0.42, outside hands, inside plates; no overhead beam; stabiliser behind), bar half-length 0.82, plates can never touch uprights (tested at 200 kg); station moved to the mat surface; camera now views from the foot end diagonally so the rack stands *behind* the lifter and the face, torso, arms and bar are all visible; background decluttered (stray plate stacks and floor items removed, back rack moved aside).
 
-**Environment (Priority 2)**
-- New dark industrial gym: layered back wall, steel columns/beam, skyline window, sign, power rack, punching bag,
-  black and colour dumbbell racks, treadmills, plate tree, kettlebells, lifting mat, hanging lamps, tiled floor,
-  contact-shadow blobs, soft shadow radius, wider-FOV camera for parallax.
-- Background props are batched into single meshes (one draw call each); only hero objects carry outline hulls.
+### Verification performed
+- `npm test`: **82 tests pass** (was 57). New: state authority, expiry between sets / mid-set / on reload, restore, repeated taps, v1→v2 migration, animation state machine (never upright mid-workout), torso only changes in transitions, bar vs torso clearance and near-vertical path, rack vs hands/plates, stable pose after stop, no clipping below the mat at any physique, joints ordered consistently.
+- `npm run build`: OK.
+- Headless Chromium end-to-end (`verify` script) at **360×640, 390×844, 430×932** on the production build:
+  - insufficient funds: money unchanged, no pass, Start disabled;
+  - three rapid taps on Confirm: charged once (500 → 492, one transaction);
+  - full workout (2 sets of 3 reps) → reload mid-workout → session restored lying, panel shown, valid;
+  - End workout → no session, seated pose (torso 0.06), summary banked (2 sets, 6 reps);
+  - expiry with no session and with an active session → workout panel disappears, Start disabled;
+  - per-frame pose sequence over the whole run: `SEATED → TRANSITION → LYING → TRANSITION → SEATED` (exactly one lie-down and one sit-up);
+  - camera→joint ray tests (head, shoulder, pelvis, both hands, both elbows, foot): rack blocked **0 of ~390 frames** at every size;
+  - no mesh below the floor; character fits inside the free area between HUD and dock at all three sizes.
 
-**UI (Priority 3)**
-- HUD reduced from ~20% to ~8% of the screen: level/XP, clock, money, and a thin 6-meter strip (low values turn red and pulse).
-  Exact values moved to the Status tab.
-- Workout dock is three compact rows (steppers / info / Start·Rest·End); live set view is one row plus Stop.
-- Camera reserves space for the dock so the character and bar stay visible; bottom nav unchanged.
+## Systems that work today (all covered by tests unless noted)
+Game clock and needs decay, central economy service with transaction history, gym day pass / monthly membership,
+bench-press workout (reps, sets, energy, XP, levels, strength/endurance/fitness, recovery debt, overtraining, partial-set
+banking), versioned saves (v2) with migration, backup and corruption recovery, IndexedDB autosave (after every rep), stickman
+rig with physique stages, gym scene with post-processing and Graphics setting, compact mobile UI. The end-to-end script is
+`scripts/verify-e2e.cjs` (manual run; not part of CI).
 
-**Visual quality pass (reference-board target)**
-- Post-processing: bloom limited to emissive things (lamps, treadmill screens, LED strip), warm/teal grade, vignette.
-  Graphics setting in Menu (Auto / High / Low); Auto turns effects off if the device can't hold ~25 fps.
-- Light shafts and warm floor pools under lamps, window glow, ceiling pipes/duct, LED strip, wall shelf, posters,
-  gym bag, gloves; lifted steel palette.
-- Honest gap: the references are painted illustrations. Hand-painted surface detail needs authored art; see
-  `docs/ART_SPEC.md` for the exact plates and the integration point.
-
-**Logic and tests (Priority 4)**
-- Workout flow extracted to `WorkoutController` with an animation port, so it is tested without a renderer.
-- An expired pass now blocks starting the next set even mid-workout.
-- New tests: membership price/deduction/expiry boundary/stacking/insufficient funds, access gating, full-set progression,
-  invalid-cycle reps not counted, too-heavy failure, multi-set accumulation + rest, interruption (partial set banked
-  proportionally and persisted to the save), exhaustion, level-up events, hands/feet/clipping/continuity of the animation.
-
-### Still working from Milestone 1
-Clock, needs decay, economy service, gym membership, progression, versioned saves with backup/recovery, IndexedDB autosave.
+## Unresolved / not yet confirmed
+- Real-device performance and battery are untested; only software WebGL was used (~10 fps).
+- The look is clean and readable but still procedural, not painted like the reference boards (see `docs/ART_SPEC.md`).
+- Seated idle pose is a stand-in for a proper standing/idle animation; elbow flare and facial expressions are not modelled.
+- The e2e script is not in CI; the unit tests are.
 
 ## Known limitations / honest notes
 - Only the gym is playable. The Map tab lists other locations as "Milestone N" (not clickable).
 - No food, sleep or income yet, so money and hunger move one way until the home/jobs/food milestones are built.
 - Only bench press has data and animation.
-- The seated rest pose faces along the bench (away from the camera); only the head turns toward the viewer.
 - Visuals were checked with software WebGL (~10 fps). Real-device performance is untested (Milestone 7). Bundle is ~550 KB
   (three.js); not yet code-split.
-- The elbow flare of a real bench press (lateral motion) is not modelled; the rig animates in the sagittal plane.
+- Elbow flare of a real bench press (lateral motion) is not modelled; the rig animates in the sagittal plane.
 - Capacitor native projects are not generated; only `capacitor.config.json` exists.
 - No automated UI/E2E tests in the repo (headless checks were run manually).
 - The repository's unrelated Expo game (`town-economy/`) is untouched.

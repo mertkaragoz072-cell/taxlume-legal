@@ -3,7 +3,13 @@ import { BODY, lerpPose, shoulderOf, type Pose, type StickmanRig, type V2 } from
 import { BENCH } from '../world/gymScene';
 import type { Barbell } from '../world/props';
 
-type Seg = { dur: number; fn: (t: number) => void; done?: () => void };
+type Seg = { dur: number; fn: (t: number) => void; start?: () => void; done?: () => void };
+
+/**
+ * Explicit body state. The torso angle may change ONLY while `mode` is a transition;
+ * in `lying` it is exactly π/2 and in `seated` exactly its seated value (plus tiny breathing).
+ */
+export type BodyMode = 'seated' | 'lying' | 'seatedToLying' | 'lyingToSeated';
 
 /** What actually happened during one animated repetition. Only a full cycle may be counted. */
 export interface RepReport {
@@ -15,7 +21,7 @@ export interface RepReport {
 
 export type RepResult = 'success' | 'failed';
 
-const FLOOR_Y = 0.065; // ankle height: shoe radius resting on the floor
+const FLOOR_Y = 0.085; // ankle height: shoe radius (0.062) + ankle-to-shoe-centre offset (0.02) above the mat
 /** Feet stay planted at the same spot in every pose, so they never slide during transitions. */
 const FOOT_NEAR: V2 = [0.95, FLOOR_Y];
 const FOOT_FAR: V2 = [0.85, FLOOR_Y];
@@ -24,8 +30,8 @@ const SIT_HAND: V2 = [0.25, -0.35];
 /** Arc control for the hands while reaching: forward and slightly up, clear of the torso. */
 const REACH_CTRL: V2 = [0.45, 0.1];
 /** While resting the head turns toward the viewer (the body faces along the bench, away from the camera). */
-const SIT_HEAD_YAW = 1.15;
-const LIE_HEAD_TILT = 0.75;
+const SIT_HEAD_YAW = 0;
+const LIE_HEAD_TILT = -0.35;
 const ARM_REACH = BODY.upperArm + BODY.foreArm;
 
 const smooth = (t: number): number => easeInOut(Math.min(1, Math.max(0, t)));
@@ -47,16 +53,14 @@ export class BenchPressAnimator {
   private t = 0;
   private bar: V2;
   private holding = false;
-  private stance: 'sit' | 'lie' = 'sit';
+  private mode: BodyMode = 'seated';
   private clock = 0;
-  private barFrom: V2;
 
   constructor(
     private rig: StickmanRig,
     private barbell: Barbell,
   ) {
     this.bar = this.hook();
-    this.barFrom = this.lockout();
     this.syncBar();
     this.rig.applyPose(this.sitPose());
   }
@@ -65,7 +69,13 @@ export class BenchPressAnimator {
     return this.cur !== null || this.queue.length > 0;
   }
   get isLying(): boolean {
-    return this.stance === 'lie';
+    return this.mode === 'lying';
+  }
+  get bodyMode(): BodyMode {
+    return this.mode;
+  }
+  get barHeld(): boolean {
+    return this.holding;
   }
   get barPosition(): V2 {
     return [this.bar[0], this.bar[1]];
@@ -85,10 +95,12 @@ export class BenchPressAnimator {
   }
   private lockout(): V2 {
     const [sx, sy] = shoulderOf(this.lyingBase());
-    return [sx + 0.02, sy + ARM_REACH * 0.93];
+    return [sx + 0.05, sy + ARM_REACH * 0.93];
   }
   private chest(): V2 {
-    return [BENCH.pelvisX - 0.36, BENCH.padTop + 2 * this.rig.torsoRadius + 0.03];
+    // Bar touches the lower chest, only ~5 cm further toward the hips than lockout: a near-vertical path.
+    const [sx] = shoulderOf(this.lyingBase());
+    return [sx + 0.1, BENCH.padTop + 2 * this.rig.torsoRadius + 0.03];
   }
 
   private lyingBase(): Pose {
@@ -167,21 +179,17 @@ export class BenchPressAnimator {
     this.rig.applyPose(this.lyingPose(this.bar));
   }
 
-  /** Lie back and take the bar off the hooks. */
+  /** Lie back (if seated) and take the bar off the hooks. Idempotent while already holding the bar. */
   async prepareSet(): Promise<void> {
-    if (this.stance === 'lie' && this.holding) return;
+    if (this.mode === 'lying' && this.holding) return;
     const list: Seg[] = [];
-    if (this.stance === 'sit') {
-      list.push({
-        dur: 2.2,
-        fn: (t) => this.rig.applyPose(this.transitionPose(t, true)),
-        done: () => (this.stance = 'lie'),
-      });
-    }
-    this.bar = this.hook();
-    this.syncBar();
+    if (this.mode === 'seated') list.push(this.toLyingSeg());
     list.push({
       dur: 0.8,
+      start: () => {
+        this.bar = this.hook();
+        this.syncBar();
+      },
       fn: (t) => {
         this.holding = true;
         this.moveBar(this.hook(), this.lockout(), easeInOut(t), 0.03);
@@ -190,22 +198,55 @@ export class BenchPressAnimator {
     await this.play(list);
   }
 
-  /** Put the bar back and sit up (rest period). */
-  async finishSet(): Promise<void> {
-    if (this.stance === 'sit') return;
-    this.barFrom = [...this.bar];
-    await this.play([
-      {
-        dur: 0.8,
-        fn: (t) => this.moveBar(this.barFrom, this.hook(), easeInOut(t)),
-        done: () => (this.holding = false),
-      },
-      {
-        dur: 2.0,
-        fn: (t) => this.rig.applyPose(this.transitionPose(t, false)),
-        done: () => (this.stance = 'sit'),
-      },
-    ]);
+  /** Return the bar to the hooks and STAY lying on the bench (rest between sets). */
+  async rackBar(): Promise<void> {
+    if (this.mode !== 'lying' || !this.holding) return;
+    await this.play([this.rerackSeg()]);
+  }
+
+  /** Workout over: rack the bar if needed, then sit up. The only way the torso ever leaves the bench. */
+  async sitUp(): Promise<void> {
+    if (this.mode === 'seated') return;
+    const list: Seg[] = [];
+    if (this.holding) list.push(this.rerackSeg());
+    list.push(this.toSeatedSeg());
+    await this.play(list);
+  }
+
+  /** Snap to "lying, bar racked" (restoring a saved workout). */
+  restoreLying(): void {
+    this.flush();
+    this.mode = 'lying';
+    this.holding = false;
+    this.bar = this.hook();
+    this.syncBar();
+    this.rig.applyPose(this.lyingPose(this.bar));
+  }
+
+  private toLyingSeg(): Seg {
+    return {
+      dur: 2.2,
+      start: () => (this.mode = 'seatedToLying'),
+      fn: (t) => this.rig.applyPose(this.transitionPose(t, true)),
+      done: () => (this.mode = 'lying'),
+    };
+  }
+  private toSeatedSeg(): Seg {
+    return {
+      dur: 2.0,
+      start: () => (this.mode = 'lyingToSeated'),
+      fn: (t) => this.rig.applyPose(this.transitionPose(t, false)),
+      done: () => (this.mode = 'seated'),
+    };
+  }
+  private rerackSeg(): Seg {
+    let from: V2 = [0, 0];
+    return {
+      dur: 0.8,
+      start: () => (from = [...this.bar]),
+      fn: (t) => this.moveBar(from, this.hook(), easeInOut(t)),
+      done: () => (this.holding = false),
+    };
   }
 
   /**
@@ -253,6 +294,7 @@ export class BenchPressAnimator {
     if (!this.cur) {
       this.cur = this.queue.shift() ?? null;
       this.t = 0;
+      this.cur?.start?.();
     }
     if (this.cur) {
       this.t += dt;
@@ -270,7 +312,7 @@ export class BenchPressAnimator {
 
   private idle(): void {
     const b = Math.sin(this.clock * 2.1) * 0.006;
-    if (this.stance === 'sit') {
+    if (this.mode === 'seated') {
       const p = this.sitPose();
       this.rig.applyPose({ ...p, torso: p.torso + b * 2, head: Math.sin(this.clock * 0.7) * 0.04, headYaw: SIT_HEAD_YAW + Math.sin(this.clock * 0.5) * 0.1 });
     } else {

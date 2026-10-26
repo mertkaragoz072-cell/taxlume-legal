@@ -1,3 +1,4 @@
+import type * as THREE from 'three';
 import { BenchPressAnimator } from '../animation/benchPress';
 import { StickmanRig } from '../character/rig';
 import { EventBus } from '../core/events';
@@ -14,7 +15,9 @@ import { WorkoutController } from './workoutController';
 export class Game {
   state: GameState = createNewGame();
   readonly bus = new EventBus();
-  private rig = new StickmanRig();
+  readonly rig = new StickmanRig();
+  station!: THREE.Group;
+  private lastPurchaseToken = '';
   private changeListeners = new Set<() => void>();
   workout!: WorkoutController;
 
@@ -27,6 +30,7 @@ export class Game {
     const loaded = await this.saves.load();
     this.state = loaded.state;
     const gym = createGymScene();
+    this.station = gym.station;
     gym.station.add(this.rig.root);
     const animator = new BenchPressAnimator(this.rig, gym.barbell);
     this.workout = new WorkoutController({
@@ -37,6 +41,7 @@ export class Game {
       changed: () => this.changed(),
       bodyChanged: () => this.refreshBody(),
     });
+    await this.workout.restore(); // one valid state after load: banks partial sets, ends expired sessions
     this.renderer.loadLocation(gym);
     this.renderer.setFrameHandler((dt) => animator.update(dt));
     this.refreshBody();
@@ -88,7 +93,10 @@ export class Game {
     this.bus.emit('info', 'New game started.');
   }
 
-  buyMembership(plan: MembershipPlan): boolean {
+  /** `token` identifies one confirmed purchase; repeated taps with the same token charge only once. */
+  buyMembership(plan: MembershipPlan, token = ''): boolean {
+    if (token && token === this.lastPurchaseToken) return false;
+    if (token) this.lastPurchaseToken = token;
     const ok = purchaseMembership(this.state, plan, this.bus);
     if (ok) void this.save();
     this.changed();
@@ -100,5 +108,6 @@ export class Game {
     advanceTime(this.state, seconds, 'resting', this.bus);
     void this.save();
     this.changed();
+    this.workout.enforceAccess();
   }
 }

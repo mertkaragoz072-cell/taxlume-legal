@@ -14,6 +14,11 @@ export const PLATE_SPEC = [
 ] as const;
 
 export const BAR_KG = 20;
+/** Half length of the bar; plates stack inward from here and never come closer to centre than RACK_Z + upright half-width. */
+export const BAR_HALF = 0.82;
+/** Rack uprights stand this far from the bench centre line (inside the plates, outside the lifter's hands). */
+export const RACK_Z = 0.42;
+export const RACK_UPRIGHT = 0.06;
 
 /** Greedy plate loading per side for a total barbell weight. */
 export function platesFor(totalKg: number): number[] {
@@ -35,16 +40,16 @@ const YELLOW = 0xe3a91a;
 /** Olympic barbell lying along z. Origin = bar centre. */
 export class Barbell extends THREE.Group {
   private plates = new THREE.Group();
-  readonly halfLength = 0.72;
+  readonly halfLength = BAR_HALF;
   constructor() {
     super();
     const bar = outlined(new THREE.CylinderGeometry(0.016, 0.016, this.halfLength * 2, 14), 0xd5dae2, 0.008);
     bar.rotation.x = Math.PI / 2;
     this.add(bar);
     for (const s of [1, -1]) {
-      const sleeve = outlined(new THREE.CylinderGeometry(0.028, 0.028, 0.4, 16), 0xb6bcc7, 0.008);
+      const sleeve = outlined(new THREE.CylinderGeometry(0.028, 0.028, 0.34, 16), 0xb6bcc7, 0.008);
       sleeve.rotation.x = Math.PI / 2;
-      sleeve.position.z = s * (this.halfLength - 0.2);
+      sleeve.position.z = s * (this.halfLength - 0.17);
       this.add(sleeve);
     }
     this.add(this.plates);
@@ -100,30 +105,35 @@ export function createBench(): THREE.Group {
   return g;
 }
 
-/** Bench-press rack uprights with J-hooks at the head end. */
+/**
+ * Bench-press rack: two slim uprights flanking the lifter's shoulders with J-hooks, a floor
+ * stabiliser behind them and no overhead beam, so nothing stands between the camera and the lifter.
+ */
 export function createRack(hookY: number, x: number): THREE.Group {
   const g = new THREE.Group();
   const frame = toon(STEEL);
-  for (const z of [0.5, -0.5]) {
-    const up = new OutlinedMesh(new RoundedBoxGeometry(0.09, 1.55, 0.09, 2, 0.02), frame, 0.012);
-    up.position.set(x, 0.775, z);
+  const h = hookY + 0.25;
+  for (const z of [RACK_Z, -RACK_Z]) {
+    const up = new OutlinedMesh(new RoundedBoxGeometry(RACK_UPRIGHT, h, RACK_UPRIGHT, 2, 0.015), frame, 0.012);
+    up.position.set(x, h / 2, z);
     g.add(up);
-    const base = new OutlinedMesh(new RoundedBoxGeometry(0.95, 0.05, 0.09, 2, 0.012), frame, 0.01);
-    base.position.set(x - 0.2, 0.025, z);
+    const base = new OutlinedMesh(new RoundedBoxGeometry(0.7, 0.04, RACK_UPRIGHT + 0.02, 2, 0.01), frame, 0.01);
+    base.position.set(x - 0.3, 0.02, z); // extends away from the camera
     g.add(base);
-    const hook = new OutlinedMesh(new RoundedBoxGeometry(0.12, 0.035, 0.07, 2, 0.01), toon(YELLOW), 0.008);
-    hook.position.set(x + 0.06, hookY - 0.04, z);
+    const hook = new OutlinedMesh(new RoundedBoxGeometry(0.12, 0.03, 0.06, 2, 0.008), toon(YELLOW), 0.008);
+    hook.position.set(x + 0.06, hookY - 0.035, z * 0.97);
     g.add(hook);
-    const hookLip = new OutlinedMesh(new RoundedBoxGeometry(0.03, 0.06, 0.07, 2, 0.01), toon(YELLOW), 0.008);
-    hookLip.position.set(x + 0.115, hookY - 0.015, z);
-    g.add(hookLip);
-    const safety = new OutlinedMesh(new RoundedBoxGeometry(0.42, 0.035, 0.06, 2, 0.01), toon(YELLOW), 0.008);
-    safety.position.set(x + 0.21, 0.5, z);
-    g.add(safety);
+    const lip = new OutlinedMesh(new RoundedBoxGeometry(0.025, 0.06, 0.06, 2, 0.008), toon(YELLOW), 0.008);
+    lip.position.set(x + 0.115, hookY - 0.01, z * 0.97);
+    g.add(lip);
+    const cap = new OutlinedMesh(new RoundedBoxGeometry(RACK_UPRIGHT + 0.015, 0.03, RACK_UPRIGHT + 0.015, 2, 0.008), toon(YELLOW), 0.008);
+    cap.position.set(x, h + 0.015, z);
+    g.add(cap);
   }
-  const cross = new OutlinedMesh(new RoundedBoxGeometry(0.08, 0.08, 1.09, 2, 0.015), frame, 0.012);
-  cross.position.set(x, 1.55, 0);
-  g.add(cross);
+  const stabiliser = new OutlinedMesh(new RoundedBoxGeometry(0.05, 0.04, RACK_Z * 2, 2, 0.01), frame, 0.01);
+  stabiliser.position.set(x - 0.6, 0.02, 0);
+  g.add(stabiliser);
+  g.traverse((o) => (o.userData.rack = true)); // lets the occlusion checks tell the rack apart from the lifter
   return g;
 }
 
@@ -140,10 +150,6 @@ export function powerRackBack(): THREE.Mesh {
   // pull-up bar + bar with plates racked at the left
   b.cyl(0.025, 0.025, 1.6, 0xd5dae2, { pos: [0, 2.2, 0.55], rot: [0, 0, Math.PI / 2] });
   b.cyl(0.016, 0.016, 1.7, 0xd5dae2, { pos: [0, 1.15, 0], rot: [Math.PI / 2, 0, 0] }, 8);
-  for (const [z, s] of [[0.5, 1], [-0.5, -1]] as const) {
-    b.cyl(0.225, 0.225, 0.06, 0x2459d6, { pos: [0, 1.15, z + s * 0.0], rot: [Math.PI / 2, 0, 0] }, 24);
-    b.cyl(0.2, 0.2, 0.05, 0xd8332f, { pos: [0, 1.15, z + s * 0.06], rot: [Math.PI / 2, 0, 0] }, 24);
-  }
   return b.build();
 }
 

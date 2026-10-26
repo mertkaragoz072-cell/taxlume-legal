@@ -21,6 +21,11 @@ async function boot(): Promise<void> {
   window.addEventListener('pagehide', flush);
   window.setInterval(flush, 30000);
   (window as unknown as { game: Game }).game = game;
+  if (new URLSearchParams(location.search).has('debug')) {
+    (window as unknown as { __three: unknown; __scene: unknown; __camera: unknown }).__three = await import('three');
+    (window as unknown as { __scene: unknown }).__scene = renderer.scene;
+    (window as unknown as { __camera: unknown }).__camera = renderer.camera;
+  }
 }
 
 void boot();

@@ -13,6 +13,8 @@ export type RepOutcome = 'success' | 'failed' | 'exhausted';
 
 export interface WorkoutSession {
   exercise: ExerciseId;
+  /** 'ready' before the first set, 'rest' between sets. (A set in progress is runtime-only.) */
+  phase: 'ready' | 'rest';
   weight: number;
   targetReps: number;
   /** Reps completed in the set in progress. */
@@ -85,6 +87,7 @@ export function startSession(state: GameState, id: ExerciseId, weight: number, t
     ok: true,
     session: {
       exercise: id,
+      phase: 'ready',
       weight,
       targetReps: clamp(Math.round(targetReps), 1, 30),
       setReps: 0,

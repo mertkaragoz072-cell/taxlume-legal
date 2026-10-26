@@ -28,7 +28,10 @@ export class MemoryStorage implements SaveStorage {
 }
 
 /** Migrations: index i upgrades version i+1 → i+2 (operating on raw parsed state). */
-export const MIGRATIONS: Array<(raw: Record<string, unknown>) => Record<string, unknown>> = [];
+export const MIGRATIONS: Array<(raw: Record<string, unknown>) => Record<string, unknown>> = [
+  // v1 → v2: the active workout becomes part of the saved state (v1 had none).
+  (raw) => ({ ...raw, workout: null }),
+];
 
 export function migrate(raw: Record<string, unknown>, fromVersion: number): Record<string, unknown> {
   let s = raw;
@@ -68,6 +71,27 @@ export function sanitize(raw: unknown): GameState {
       }
     }
   }
+  const w = isObj(raw.workout) ? raw.workout : null;
+  const workout: GameState['workout'] =
+    w && w.exercise === 'bench'
+      ? {
+          exercise: 'bench',
+          phase: w.phase === 'ready' ? 'ready' : 'rest',
+          weight: num(w.weight, 25, 20, 200),
+          targetReps: Math.floor(num(w.targetReps, 8, 1, 30)),
+          // A set in progress cannot be resumed: its reps were already banked or are dropped on restore.
+          setReps: Math.floor(num(w.setReps, 0, 0, 30)),
+          setActive: w.setActive === true,
+          completedSets: Math.floor(num(w.completedSets, 0, 0, 1000)),
+          totalReps: Math.floor(num(w.totalReps, 0, 0, 100000)),
+          xpEarned: num(w.xpEarned, 0, 0),
+          energySpent: num(w.energySpent, 0, 0),
+          seconds: num(w.seconds, 0, 0),
+          strengthBefore: num(w.strengthBefore, dc.strength, 0, 100),
+          enduranceBefore: num(w.enduranceBefore, dc.endurance, 0, 100),
+          levelBefore: Math.floor(num(w.levelBefore, dc.level, 1, 999)),
+        }
+      : null;
   const txs = Array.isArray(raw.transactions) ? raw.transactions : [];
   const transactions = txs.filter(isObj).map((t) => ({
     id: Math.floor(num(t.id, 0)),
@@ -107,6 +131,7 @@ export function sanitize(raw: unknown): GameState {
       totalWorkoutSeconds: num(g.totalWorkoutSeconds, 0, 0),
       totalXpEarned: num(g.totalXpEarned, 0, 0),
     },
+    workout,
     unlockedLocations: ['gym'],
     flags: isObj(raw.flags) ? Object.fromEntries(Object.entries(raw.flags).filter(([, v]) => typeof v === 'boolean')) as Record<string, boolean> : {},
   };

@@ -7,7 +7,6 @@ import {
   colorDumbbellRack,
   createBench,
   createRack,
-  kettlebells,
   plant,
   plateTree,
   powerRackBack,
@@ -23,7 +22,7 @@ import { Batch } from './batch';
 export const BENCH = {
   padTop: 0.46,
   pelvisX: 0.38,
-  rackX: -0.3,
+  rackX: -0.16,
   hookY: 1.1,
 } as const;
 
@@ -31,8 +30,8 @@ export const BENCH = {
  * The station is rotated about Y so the camera sees it three-quarter on, like the
  * reference art: the bar runs across the screen with a plate on each side.
  */
-export const STATION_YAW = 1.4;
-export const STATION_POS: [number, number, number] = [0.45, 0, 0.15];
+export const STATION_YAW = -0.93;
+export const STATION_POS: [number, number, number] = [0.15, 0.02, 0.1];
 
 export interface GymScene extends LocationScene {
   /** Parent of bench, rack, barbell and the character rig (station-local coordinates). */
@@ -90,7 +89,7 @@ export function createGymScene(): GymScene {
 
   // --- Layer 1: back-row equipment ---
   const rackBack = powerRackBack();
-  rackBack.position.set(0.5, 0, -2.75);
+  rackBack.position.set(-1.0, 0, -3.0);
   root.add(rackBack);
   const bag = punchingBag();
   bag.position.set(-2.05, 0, -2.9);
@@ -115,7 +114,7 @@ export function createGymScene(): GymScene {
     root.add(t);
   }
   const tree = plateTree();
-  tree.position.set(-0.95, 0, -2.5);
+  tree.position.set(-2.9, 0, -2.7);
   root.add(tree);
   const pl = plant();
   pl.position.set(-3.1, 0, -2.0);
@@ -127,27 +126,24 @@ export function createGymScene(): GymScene {
   station.rotation.y = STATION_YAW;
   root.add(station);
   // Lifting mat: dark rubber with yellow edge lines grounds the station.
-  const rubber = outlined(new THREE.BoxGeometry(2.5, 0.025, 1.9), 0x2a2d35, 0.006);
-  rubber.position.set(0.1, 0.0125, 0);
+  const rubber = outlined(new THREE.BoxGeometry(2.5, 0.02, 1.9), 0x2a2d35, 0.006);
+  rubber.position.set(0.1, -0.01, 0);
   station.add(rubber);
   for (const z of [0.9, -0.9]) {
     const line = new THREE.Mesh(new THREE.BoxGeometry(2.46, 0.004, 0.025), new THREE.MeshBasicMaterial({ color: 0xe3a91a }));
-    line.position.set(0.1, 0.027, z);
+    line.position.set(0.1, 0.003, z);
     station.add(line);
   }
   station.add(createBench());
   station.add(createRack(BENCH.hookY, BENCH.rackX));
   const barbell = new Barbell();
   barbell.position.set(BENCH.rackX + 0.04, BENCH.hookY, 0);
+  barbell.userData.bar = true;
   station.add(barbell);
 
   // Foreground clutter near the station for grounding.
-  const kb = kettlebells();
-  kb.position.set(-1.1, 0, 0.9);
-  kb.scale.setScalar(0.9);
-  root.add(kb);
   const bottle = waterBottle();
-  bottle.position.set(-0.55, 0, 0.75);
+  bottle.position.set(-0.9, 0, 1.0);
   root.add(bottle);
 
   // Soft contact shadows
@@ -194,7 +190,7 @@ export function createGymScene(): GymScene {
   clutter.add(new THREE.SphereGeometry(0.1, 12, 10), 0xd8332f, { pos: [0.9, 0.1, -0.5], scale: [1.1, 0.8, 0.9] });
   clutter.add(new THREE.SphereGeometry(0.1, 12, 10), 0xd8332f, { pos: [1.12, 0.1, -0.45], scale: [1.1, 0.8, 0.9] });
   const clutterMesh = clutter.build();
-  clutterMesh.position.set(-0.9, 0, 0.1);
+  clutterMesh.position.set(-2.4, 0, -1.2);
   root.add(clutterMesh);
   // Window glow spilling into the room.
   const winGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.4), new THREE.MeshBasicMaterial({ map: tex(poolTexture()), opacity: 0.55, ...additive }));
@@ -244,7 +240,7 @@ export function createGymScene(): GymScene {
     root,
     station,
     barbell,
-    camera: { target: [0.5, 0.78, 0], fov: 38, yaw: 12, elevation: 17, fitWidth: 1.95, fitHeight: 1.8, uiBottomFraction: 0.3 },
+    camera: { target: [0.12, 0.82, 0], fov: 38, yaw: 12, elevation: 19, fitWidth: 2.2, fitHeight: 1.9, uiBottomFraction: 0.32 },
     update: () => {},
     dispose() {
       disposables.forEach((t) => t.dispose());

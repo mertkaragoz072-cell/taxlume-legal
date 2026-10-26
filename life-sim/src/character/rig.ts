@@ -71,11 +71,16 @@ interface Limb {
   elbow: THREE.Group;
   lower: OutlinedMesh;
   end: OutlinedMesh;
+  /** Rounded joints so limbs read as smooth continuous forms. */
+  jointTop: OutlinedMesh;
+  jointMid: OutlinedMesh;
+  /** Elbow/knee position (rig coordinates) after the last IK solve. */
+  mid: V2;
   l1: number;
   l2: number;
 }
 
-const SKIN = 0xf3f1ea;
+const SKIN = 0xf4f4f2;
 const SHOE = 0x2a2d35;
 
 /** Two-bone IK in 2D. Returns pivot rotation and relative joint rotation (limb hangs down at 0). */
@@ -134,7 +139,7 @@ export class StickmanRig {
   };
 
   constructor() {
-    const mat = toon(SKIN, 0x33322e);
+    const mat = toon(SKIN, 0x1f1f1f);
     this.pelvisMesh = new OutlinedMesh(new THREE.SphereGeometry(0.11, 20, 14), mat, 0.026);
     this.root.add(this.pelvisMesh, this.spine);
 
@@ -166,10 +171,12 @@ export class StickmanRig {
       } else {
         end.position.set(0, -l2, 0);
       }
-      pivot.add(upper, elbow);
-      elbow.add(lower, end);
+      const jointTop = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
+      const jointMid = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
+      pivot.add(upper, elbow, jointTop);
+      elbow.add(lower, end, jointMid);
       this.root.add(pivot);
-      return { pivot, upper, elbow, lower, end, l1, l2 };
+      return { pivot, upper, elbow, lower, end, jointTop, jointMid, l1, l2, mid: [0, 0] };
     };
     this.arms = { near: mk(0.22, BODY.upperArm, BODY.foreArm, 'hand'), far: mk(-0.22, BODY.upperArm, BODY.foreArm, 'hand') };
     this.legs = { near: mk(0.1, BODY.thigh, BODY.shin, 'foot'), far: mk(-0.1, BODY.thigh, BODY.shin, 'foot') };
@@ -217,6 +224,8 @@ export class StickmanRig {
       l.upper.position.y = -l.l1 / 2;
       l.lower.setGeometry(seg(r2, l.l2 + 0.02));
       l.lower.position.y = -l.l2 / 2;
+      l.jointTop.setGeometry(new THREE.SphereGeometry(r1 * 1.02, 16, 12));
+      l.jointMid.setGeometry(new THREE.SphereGeometry(Math.max(r1, r2) * 0.98, 16, 12));
     };
     for (const a of [this.arms.near, this.arms.far]) limb(a, 0.05 + 0.03 * m, 0.042 + 0.022 * m);
     for (const l of [this.legs.near, this.legs.far]) limb(l, 0.07 + 0.04 * m, 0.055 + 0.025 * m);
@@ -244,6 +253,17 @@ export class StickmanRig {
   }
   private reachError = 0;
 
+  /** Key joint positions in rig (station-local) coordinates, for tests and occlusion checks. */
+  joints(): { pelvis: V2; shoulder: V2; head: V2; elbowNear: V2; elbowFar: V2; kneeNear: V2; footNear: V2; handNear: V2; handFar: V2 } {
+    const p = this.pose;
+    const len = BODY.torso + BODY.neck + BODY.headR * 0.9;
+    const c = Math.cos(p.torso);
+    const sn = Math.sin(p.torso);
+    const head: V2 = [p.pelvis[0] + p.headLift * c - len * sn, p.pelvis[1] + p.headLift * sn + len * c];
+    const h = this.hands();
+    return { pelvis: p.pelvis, shoulder: this.shoulder(), head, elbowNear: this.arms.near.mid, elbowFar: this.arms.far.mid, kneeNear: this.legs.near.mid, footNear: p.footNear, handNear: h.near, handFar: h.far };
+  }
+
   applyPose(p: Pose): void {
     this.pose = p;
     this.pelvisMesh.position.set(p.pelvis[0], p.pelvis[1], 0);
@@ -261,13 +281,21 @@ export class StickmanRig {
       l.pivot.position.y = origin[1];
       l.pivot.rotation.z = r.a1;
       l.elbow.rotation.z = r.a2;
+      l.mid = [origin[0] + Math.sin(r.a1) * l.l1, origin[1] - Math.cos(r.a1) * l.l1];
     };
     solveInto(this.arms.near, sh, [sh[0] + p.handNear[0], sh[1] + p.handNear[1]], p.elbowBend);
     solveInto(this.arms.far, sh, [sh[0] + p.handFar[0], sh[1] + p.handFar[1]], p.elbowBend);
     solveInto(this.legs.near, p.pelvis, p.footNear, p.kneeBend);
     solveInto(this.legs.far, p.pelvis, p.footFar, p.kneeBend);
     // Feet stay flat: orient the shoe in world space regardless of shin angle.
-    for (const l of [this.legs.near, this.legs.far]) l.end.rotation.z = -Math.PI / 2 - (l.pivot.rotation.z + l.elbow.rotation.z);
+    for (const l of [this.legs.near, this.legs.far]) {
+      const theta = l.pivot.rotation.z + l.elbow.rotation.z; // shin orientation in rig space
+      l.end.rotation.z = -Math.PI / 2 - theta;
+      // Keep the shoe centre at a fixed WORLD offset from the ankle (forward 6 cm, down 2 cm), not rotating with the shin.
+      const wx = 0.06;
+      const wy = -0.02;
+      l.end.position.set(wx * Math.cos(theta) + wy * Math.sin(theta), -l.l2 - wx * Math.sin(theta) + wy * Math.cos(theta), 0);
+    }
   }
 }
 

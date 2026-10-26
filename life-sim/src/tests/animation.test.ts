@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { BenchPressAnimator, type RepReport } from '../animation/benchPress';
 import { BODY, solveTwoBone, StickmanRig } from '../character/rig';
 import { BENCH } from '../world/gymScene';
-import { Barbell, platesFor } from '../world/props';
+import { Barbell, BAR_HALF, PLATE_SPEC, platesFor, RACK_UPRIGHT, RACK_Z } from '../world/props';
 
 type Frame = { t: number };
 
@@ -81,7 +81,7 @@ describe('bench press animation', () => {
     const track = () => (worst = Math.max(worst, rig.hands().reachError));
     void a.prepareSet();
     await run(a, 3.6, track);
-    void a.finishSet();
+    void a.sitUp();
     await run(a, 4, track);
     expect(worst).toBeLessThan(1e-6);
   });
@@ -102,7 +102,7 @@ describe('bench press animation', () => {
       await run(a, 3.6, step);
       void a.playRep('success');
       await run(a, 3.6, step);
-      void a.finishSet();
+      void a.sitUp();
       await run(a, 4, step);
       expect(worstPelvis).toBeLessThan(0.02); // metres per 1/30 s frame
       expect(worstHand).toBeLessThan(0.05);
@@ -118,7 +118,7 @@ describe('bench press animation', () => {
     };
     void a.prepareSet();
     await run(a, 3.6, rec);
-    void a.finishSet();
+    void a.sitUp();
     await run(a, 4, rec);
     expect(feet.size).toBe(1);
   });
@@ -177,7 +177,7 @@ describe('bench press animation', () => {
     await run(a, 3.6);
     expect(a.isLying).toBe(true);
     let finished = false;
-    void a.finishSet().then(() => (finished = true));
+    void a.sitUp().then(() => (finished = true));
     await run(a, 4);
     expect(finished).toBe(true);
     expect(a.isLying).toBe(false);
@@ -209,5 +209,148 @@ describe('bench press animation', () => {
     const h = rig.hands();
     // near hand pivot is offset in local z by the arm offset; compare in x/y only
     expect(Math.hypot(h.near[0] - bar.position.x, h.near[1] - bar.position.y)).toBeLessThan(1e-6);
+  });
+});
+
+describe('bench press state machine (never flips upright mid-exercise)', () => {
+  it('stays lying through unrack → reps → rack → rest → next set; only sitUp() lifts the torso', async () => {
+    const { rig, a } = setup();
+    const modes = new Set<string>();
+    const badTorso: number[] = [];
+    const watch = () => {
+      modes.add(a.bodyMode);
+      if (a.bodyMode === 'lying' && Math.abs(rig.currentPose.torso - Math.PI / 2) > 1e-9) badTorso.push(rig.currentPose.torso);
+    };
+    void a.prepareSet();
+    await run(a, 3.6, watch);
+    for (let set = 0; set < 3; set++) {
+      for (let r = 0; r < 2; r++) {
+        void a.playRep('success');
+        await run(a, 3.4, watch);
+      }
+      void a.rackBar();
+      await run(a, 1.2, watch);
+      expect(a.bodyMode).toBe('lying');
+      expect(a.barHeld).toBe(false);
+      await run(a, 1.0, watch); // resting on the bench
+      void a.prepareSet(); // next set: bar comes off the hooks, no lie-back needed
+      await run(a, 1.2, watch);
+    }
+    expect(modes.has('seated')).toBe(false);
+    expect(modes.has('lyingToSeated')).toBe(false);
+    expect(badTorso).toEqual([]);
+    void a.sitUp();
+    await run(a, 4, watch);
+    expect(a.bodyMode).toBe('seated');
+  });
+
+  it('torso stays within the transition window: π/2 lying, ~0 seated, nothing else outside transitions', async () => {
+    const { rig, a } = setup();
+    void a.prepareSet();
+    const seen: Array<[string, number]> = [];
+    await run(a, 3.6, () => seen.push([a.bodyMode, rig.currentPose.torso]));
+    for (const [mode, torso] of seen) {
+      if (mode === 'seated') expect(torso).toBeLessThan(0.15);
+      if (mode === 'lying') expect(torso).toBeCloseTo(Math.PI / 2, 9);
+      expect(torso).toBeGreaterThanOrEqual(0); // never rotates the wrong way round
+      expect(torso).toBeLessThanOrEqual(Math.PI / 2 + 1e-9);
+    }
+  });
+
+  it('the bar never enters the torso or the bench, and travels on a near-vertical path', async () => {
+    for (const m of [0, 1]) {
+      const { rig, bar, a } = setup(m);
+      void a.prepareSet();
+      await run(a, 3.6);
+      let minClear = Infinity;
+      let minX = Infinity;
+      let maxX = -Infinity;
+      void a.playRep('success');
+      await run(a, 3.6, () => {
+        const j = rig.joints();
+        const x = bar.position.x;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        // torso is a capsule along y at the pelvis line from the hips to the shoulders (x in [shoulder, pelvis])
+        if (x <= j.pelvis[0] && x >= j.shoulder[0] - 0.05) minClear = Math.min(minClear, bar.position.y - 0.016 - (j.pelvis[1] + rig.torsoRadius));
+        expect(bar.position.y - 0.016).toBeGreaterThan(BENCH.padTop); // never below the pad surface
+      });
+      expect(minClear).toBeGreaterThanOrEqual(-0.002);
+      expect(maxX - minX).toBeLessThan(0.08); // ≤ 8 cm horizontal drift over the whole rep
+    }
+  });
+
+  it('rack uprights stay clear of the lifter, the hands and the loaded plates (even at 200 kg)', () => {
+    const upright = RACK_Z + RACK_UPRIGHT / 2;
+    expect(RACK_Z).toBeGreaterThan(0.22 + 0.056 + 0.05); // outside the hands (grip z=0.22, hand radius 0.056) and arms
+    // heaviest legal load: 90 kg per side
+    const stack = platesFor(200).reduce((sum, kg) => sum + PLATE_SPEC.find((p) => p.kg === kg)!.t, 0);
+    const innerFace = BAR_HALF - 0.03 - stack - 0.01;
+    expect(innerFace).toBeGreaterThan(upright);
+  });
+
+  it('after stopping, the pose is stable (no drift) and the bar rests on the hooks', async () => {
+    const { rig, bar, a } = setup();
+    void a.prepareSet();
+    await run(a, 3.6);
+    void a.playRep('success');
+    await run(a, 3.6);
+    void a.rackBar();
+    await run(a, 1.2);
+    const before = rig.joints();
+    await run(a, 3);
+    const after = rig.joints();
+    expect(Math.hypot(after.pelvis[0] - before.pelvis[0], after.pelvis[1] - before.pelvis[1])).toBeLessThan(0.01);
+    expect(Math.hypot(after.handNear[0] - before.handNear[0], after.handNear[1] - before.handNear[1])).toBeLessThan(0.02);
+    expect(bar.position.y).toBeCloseTo(BENCH.hookY, 6);
+    expect(rig.hands().reachError).toBeLessThan(1e-6);
+  });
+
+  it('restoreLying() snaps to a valid lying pose with hands on the racked bar', () => {
+    const { rig, bar, a } = setup(0.7);
+    a.restoreLying();
+    expect(a.bodyMode).toBe('lying');
+    expect(rig.currentPose.torso).toBeCloseTo(Math.PI / 2, 9);
+    const h = rig.hands();
+    expect(Math.hypot(h.near[0] - bar.position.x, h.near[1] - bar.position.y)).toBeLessThan(1e-6);
+    expect(h.reachError).toBeLessThan(1e-6);
+  });
+
+  it('keeps head, shoulders, hips and feet in a consistent order along the bench during reps', async () => {
+    const { rig, a } = setup();
+    void a.prepareSet();
+    await run(a, 3.6);
+    void a.playRep('success');
+    const spread: number[] = [];
+    await run(a, 3.6, () => {
+      const j = rig.joints();
+      expect(j.head[0]).toBeLessThan(j.shoulder[0]); // head beyond the shoulders, toward the rack
+      expect(j.shoulder[0]).toBeLessThan(j.pelvis[0]);
+      expect(j.pelvis[0]).toBeLessThan(j.footNear[0]);
+      expect(Math.abs(j.head[1] - j.shoulder[1])).toBeLessThan(0.1); // head and shoulders at one height on the pad
+      spread.push(j.pelvis[0]);
+    });
+    expect(Math.max(...spread) - Math.min(...spread)).toBeLessThan(1e-9); // hips do not move at all during reps
+  });
+});
+
+describe('no clipping through the floor/mat', () => {
+  it('no part of the body ever goes below the mat surface, in any pose or physique', async () => {
+    for (const m of [0, 1]) {
+      const { rig, a } = setup(m);
+      let lowest = Infinity;
+      const probe = () => {
+        rig.root.updateMatrixWorld(true);
+        lowest = Math.min(lowest, new THREE.Box3().setFromObject(rig.root).min.y);
+      };
+      probe();
+      void a.prepareSet();
+      await run(a, 3.6, probe);
+      void a.playRep('success');
+      await run(a, 3.6, probe);
+      void a.sitUp();
+      await run(a, 4, probe);
+      expect(lowest).toBeGreaterThanOrEqual(-0.004);
+    }
   });
 });
