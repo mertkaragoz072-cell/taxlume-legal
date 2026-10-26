@@ -29,6 +29,23 @@ export const PRODUCTS = {
   coffee: { name: 'Kahve', icon: '☕', station: 'coffee', time: 16, ingredients: { beans: 1, milk: 1 }, price: 34, start: 0 },   // time/price tuned so coffee earns ~1.1 gold/s like the oven items (it was 1.9)
 };
 
+/**
+ * Recipes the player buys in the shop (see SHOP_ITEMS, category 'recipes'). They join the products above when the Shop attaches to the game
+ * (Shop constructor) and can neither be made nor ordered by guests until bought. Net gold per second of production rises with the tier
+ * (about 1.2 -> 1.9) so a new recipe is worth the price, but only for a player who has the capacity to keep it busy.
+ */
+export const RECIPES = {
+  simit: { name: 'Simit', icon: '🥯', station: 'oven', time: 25, ingredients: { flour: 2, sugar: 1 }, price: 52, start: 0 },
+  latte: { name: 'Latte', icon: '🧋', station: 'coffee', time: 22, ingredients: { beans: 1, milk: 2 }, price: 52, start: 0 },
+  kurabiye: { name: 'Kurabiye', icon: '🍪', station: 'oven', time: 45, ingredients: { flour: 2, butter: 1, sugar: 1, egg: 1 }, price: 105, start: 0 },
+  mocha: { name: 'Mocha', icon: '🍫', station: 'coffee', time: 30, ingredients: { beans: 1, milk: 1, sugar: 2 }, price: 80, start: 0 },
+  muffin: { name: 'Muffin', icon: '🧁', station: 'oven', time: 55, ingredients: { flour: 2, sugar: 2, egg: 1, milk: 1 }, price: 130, start: 0 },
+  waffle: { name: 'Waffle', icon: '🧇', station: 'oven', time: 65, ingredients: { flour: 2, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 170, start: 0 },
+};
+
+/** Ingredient storage (only enforced once the Shop is attached): units of each ingredient that can be bought and kept. Rewards are never refused. */
+export const STORAGE = { base: 60 };
+
 /** Quantities offered by the "buy" buttons in the storeroom panel. */
 export const BUY_AMOUNTS = [1, 5];
 
@@ -54,7 +71,7 @@ export const CAFE = {
   eatSec: 5,                    // a served guest stays at the table this long eating (the table is not free meanwhile); 0 = the guest leaves at once
   cleanSec: 1.5,                // after the guest has gone the table is cleared this long before the next guest may sit
   maxStepSec: 2,                // longest time one tick may advance patience (a hidden tab never burns patience)
-  orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4 },   // how likely each product is ordered
+  orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4, simit: 3, latte: 3, kurabiye: 2, mocha: 2, muffin: 2, waffle: 1 },   // how likely each product is ordered (recipes not bought yet are never ordered)
   history: 20,                  // closed orders kept for reference
 };
 
@@ -89,7 +106,7 @@ export const UPGRADES = {
     describe: (v) => `Vitrin her üründen ${v} adet tutar`,
   },
   cafeTables: {
-    name: 'Kafe masaları', icon: '🪑', costs: [1800, 6500], values: [2, 3, 4],
+    name: 'Kafe masaları', icon: '🪑', costs: [1800, 6500], values: [2, 3, 4], minLevels: [2, 4],   // minLevels[i]: player level needed for level i+1 (enforced once progression exists)
     describe: (v) => `Kafede ${v} masa var, müşteri sayısı masalarla artar`,
   },
 };
@@ -132,8 +149,8 @@ export const DAILY = [
  *  - LEVEL_REWARD: given automatically once for every level reached (gold each level, ingredients every Nth level)
  */
 export const XP = {
-  produce: { bread: 5, croissant: 8, cake: 20, coffee: 4 },     // per finished unit
-  sale: { bread: 3, croissant: 5, cake: 12, coffee: 3 },        // per unit sold (showcase or customer)
+  produce: { bread: 5, croissant: 8, cake: 20, coffee: 4, simit: 6, latte: 5, kurabiye: 14, mocha: 8, muffin: 22, waffle: 28 },     // per finished unit
+  sale: { bread: 3, croissant: 5, cake: 12, coffee: 3, simit: 4, latte: 4, kurabiye: 9, mocha: 6, muffin: 13, waffle: 16 },        // per unit sold (showcase or customer)
   upgrade: { base: 50, perLevel: 25 },                           // base + perLevel * (new upgrade level)
   quest: { default: 40, byId: { produceTen: 80 } },              // per quest reward collected
   research: { base: 40, perLevel: 20 },                          // base + perLevel * (new research level)
@@ -232,3 +249,105 @@ export const EXPLORE = [
     rewards: { gold: [1800, 2700], xp: [400, 500], ingredients: [{ id: 'butter', amount: [3, 6], chance: 1 }, { id: 'beans', amount: [3, 6], chance: 0.8 }], gems: { amount: [2, 5], chance: 0.4 } },
   },
 ];
+
+// ======================================================================================================================================
+// SHOP (Mağaza): everything the player buys with gold besides ingredients, upgrades, town buildings and research. Prices, level gates and
+// effects live ONLY here (src/game/shop.js applies them, the UI only shows them).
+// ======================================================================================================================================
+
+export const SHOP_CATEGORIES = [
+  { id: 'ingredients', name: 'Malzeme', icon: '🛒' },
+  { id: 'equipment', name: 'Ekipman', icon: '🔥' },
+  { id: 'furniture', name: 'Mobilya', icon: '🪑' },
+  { id: 'recipes', name: 'Tarifler', icon: '📖' },
+  { id: 'expansion', name: 'Genişletme', icon: '🏠' },
+  { id: 'special', name: 'Özel', icon: '⭐' },
+];
+
+/**
+ * How decoration turns into game effects. Every placed decoration adds its `appeal` points (shown in the shop); the sum
+ *   - shortens the gap between arriving guests by arrivalPerPoint per point (at most arrivalMax),
+ *   - gives every paying guest a tipChance (tipPerPoint per point, at most tipMax) of leaving a tip of tipShare of the bill.
+ */
+export const APPEAL = { arrivalPerPoint: 0.01, arrivalMax: 0.3, tipPerPoint: 0.007, tipMax: 0.25, tipShare: 0.2 };
+
+/**
+ * Cafe stages. A stage is reached when ALL of its `need` conditions hold (checked after every change; the reward is paid once). Conditions:
+ *   level (player level), spent (lifetime gold spent), items (shop items owned), upgrades (café upgrades bought), tables (open tables),
+ *   recipes (shop recipes owned), research (research levels bought).
+ * Shop items with `stage: n` stay locked until that stage.
+ */
+export const STAGES = [
+  { id: 1, name: 'Küçük Kafe', note: 'Temel fırın, birkaç masa, sınırlı tarifler.' },
+  { id: 2, name: 'Gelişen Kafe', note: 'Daha iyi ekipman, yeni masalar, daha çok müşteri.', need: { level: 4, spent: 4000, items: 3, upgrades: 2 }, reward: { gold: 1500, xp: 150 } },
+  { id: 3, name: 'Popüler Kafe', note: 'Geniş ürün yelpazesi, güzel dekor, yüksek müşteri kapasitesi.', need: { level: 8, spent: 25000, items: 10, tables: 3, recipes: 3 }, reward: { gold: 6000, xp: 400 } },
+  { id: 4, name: 'Ünlü Kedi Kafesi', note: 'Premium ekipman, özel tarifler, nadir ziyaretçiler.', need: { level: 13, spent: 90000, items: 22, tables: 4, recipes: 5, research: 4 }, reward: { gold: 25000, xp: 1200 } },
+];
+
+/**
+ * Shop items.
+ *  - kind 'equipment' (line + tier): the highest owned tier of a line is the one in force, so a tier replaces the one below it (never stacks with it)
+ *  - kind 'decor'  (slot, appeal): drawn at the slot (see DECOR_SLOTS in scene/interior-layout.js) once owned; 'tableTop' and 'theme' are shared slots: the latest bought is placed, the others can be placed again from the shop
+ *  - kind 'recipe' (recipe): unlocks a product from RECIPES
+ *  - kind 'upgrade' (upgrade + level): the café upgrade of that name, sold here too (the price comes from UPGRADES, one list)
+ *  - kind 'special': guests and themes
+ *  - effect: speed{station: fraction}, capacity{station: +jobs}, showcase +units, storage (units of each ingredient), refund fraction, queue +waiting places, vip{chance, mult}, tableTop, theme
+ *  - requires: [{ item }] owned item, [{ upgrade, level }] café upgrade level
+ *  - art.image: the picture name in assets/interior (preview and scene)
+ */
+const T = (id, line, tier, name, price, minLevel, effect, extra = {}) => ({ id, category: 'equipment', kind: 'equipment', line, tier, name, price, minLevel, effect, requires: tier > 2 ? [{ item: `${line}T${tier - 1}` }] : [], art: { image: line === 'counter' ? 'counter' : line }, ...extra });
+export const SHOP_ITEMS = [
+  // ---- equipment: oven (speed), coffee machine (capacity + speed), prep counter (ingredient refund), showcase (capacity), storage (ingredient capacity)
+  T('ovenT2', 'oven', 2, 'Taş Fırın Pro', 3200, 3, { speed: { oven: 0.08 } }, { desc: 'Pirinç kaplamalı, daha iyi ısı tutan fırın.' }),
+  T('ovenT3', 'oven', 3, 'Altın Fırın', 12000, 7, { speed: { oven: 0.16 } }, { desc: 'Altın kaplama kapı, çok hızlı pişirme.', stage: 2 }),
+  T('ovenT4', 'oven', 4, 'Usta Taş Fırın', 40000, 12, { speed: { oven: 0.25 } }, { desc: 'Ünlü fırıncıların fırını.', stage: 3 }),
+  T('coffeeT2', 'coffee', 2, 'Barista Kahve Makinesi', 2800, 3, { capacity: { coffee: 1 }, speed: { coffee: 0.05 } }, { desc: 'İki kahve aynı anda hazırlanır.' }),
+  T('coffeeT3', 'coffee', 3, 'Espresso Pro', 11000, 7, { capacity: { coffee: 2 }, speed: { coffee: 0.12 } }, { desc: 'Üç kahve aynı anda, daha hızlı.', stage: 2 }),
+  T('coffeeT4', 'coffee', 4, 'Kristal Espresso Bar', 36000, 13, { capacity: { coffee: 3 }, speed: { coffee: 0.2 } }, { desc: 'Dört kahve aynı anda.', stage: 3 }),
+  T('counterT2', 'counter', 2, 'Mermer Hamur Tezgâhı', 2400, 2, { refund: 0.05 }, { desc: 'Hamur israfı azalır: malzemenin bir kısmı geri döner.' }),
+  T('counterT3', 'counter', 3, 'Usta Hamur Tezgâhı', 9500, 6, { refund: 0.1 }, { desc: 'Her üretimde daha çok malzeme tasarrufu.', stage: 2 }),
+  T('counterT4', 'counter', 4, 'Şef Tezgâhı', 30000, 12, { refund: 0.15 }, { desc: 'Neredeyse hiç israf yok.', stage: 3 }),
+  T('showcaseT2', 'showcase', 2, 'Cam Pasta Vitrini', 2000, 2, { showcase: 10 }, { desc: 'Vitrine her üründen 10 adet daha sığar.' }),
+  T('showcaseT3', 'showcase', 3, 'Panoramik Vitrin', 8000, 5, { showcase: 25 }, { desc: 'Geniş camlı vitrin: +25 adet.', stage: 2 }),
+  T('showcaseT4', 'showcase', 4, 'Kristal Vitrin', 26000, 11, { showcase: 50 }, { desc: 'Her üründen 50 adet daha.', stage: 3 }),
+  T('storageT2', 'storage', 2, 'Geniş Depo Rafları', 1800, 2, { storage: 120 }, { desc: 'Her malzemeden 120 adet saklanır.' }),
+  T('storageT3', 'storage', 3, 'Soğuk Depo', 7000, 5, { storage: 250 }, { desc: 'Her malzemeden 250 adet.', stage: 2 }),
+  T('storageT4', 'storage', 4, 'Büyük Ambar', 22000, 10, { storage: 500 }, { desc: 'Her malzemeden 500 adet.', stage: 3 }),
+
+  // ---- furniture and decoration (each placed piece adds appeal points)
+  { id: 'matPaw', category: 'furniture', kind: 'decor', name: 'Pati Paspası', desc: 'Girişte misafirleri karşılar.', price: 350, minLevel: 1, slot: 'doormat', appeal: 1, art: { image: 'mat-paw' } },
+  { id: 'plantA', category: 'furniture', kind: 'decor', name: 'Çiçekli Saksı', desc: 'Servis alanının soluna taze bir köşe.', price: 450, minLevel: 1, slot: 'edge-left', appeal: 2, art: { image: 'plant-1' } },
+  { id: 'rugAisle', category: 'furniture', kind: 'decor', name: 'Koridor Halısı', desc: 'Masaların arasındaki yolu yumuşatır.', price: 700, minLevel: 2, slot: 'rug-aisle', appeal: 2, art: { image: 'rug-green' } },
+  { id: 'shelfPlants', category: 'furniture', kind: 'decor', name: 'Raflı Bitki', desc: 'Duvara asılan küçük bir bitki rafı.', price: 1100, minLevel: 3, slot: 'wall-r1', appeal: 3, art: { image: 'shelf-plants' } },
+  { id: 'plantB', category: 'furniture', kind: 'decor', name: 'Pembe Çiçekli Saksı', desc: 'Sağ köşeye renk katar.', price: 900, minLevel: 4, slot: 'edge-right', appeal: 3, art: { image: 'plant-2' } },
+  { id: 'lampA', category: 'furniture', kind: 'decor', name: 'Bakır Sarkıt Lamba', desc: 'Koridora sıcak bir ışık havuzu.', price: 1200, minLevel: 4, slot: 'lamp-1', appeal: 4, art: { image: 'lamp' } },
+  { id: 'shelfBread', category: 'furniture', kind: 'decor', name: 'Ekmek Rafı', desc: 'Sepetler ve taze ekmekler.', price: 1800, minLevel: 5, slot: 'wall-r2', appeal: 3, art: { image: 'shelf' } },
+  { id: 'tableCake', category: 'furniture', kind: 'decor', name: 'Pastalı Masa Takımı', desc: 'Boş masalar çilekli pasta ile süslenir. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, slot: 'tableTop', appeal: 4, effect: { tableTop: 'cake' }, art: { image: 'table-cake' } },
+  { id: 'tableCup', category: 'furniture', kind: 'decor', name: 'Fincanlı Masa Takımı', desc: 'Boş masalarda buğulu kahve fincanı. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, slot: 'tableTop', appeal: 4, effect: { tableTop: 'cup' }, art: { image: 'table-cup' } },
+  { id: 'rugRunner', category: 'furniture', kind: 'decor', name: 'Kırmızı Yolluk', desc: 'Koridora ikinci bir halı.', price: 1600, minLevel: 6, slot: 'rug-aisle-2', appeal: 3, art: { image: 'rug-runner' } },
+  { id: 'plantC', category: 'furniture', kind: 'decor', name: 'Sarkık Bitki', desc: 'Koridorun başında sarmaşıklı saksı.', price: 1500, minLevel: 6, slot: 'aisle-top', appeal: 3, art: { image: 'plant-3' } },
+  { id: 'lampB', category: 'furniture', kind: 'decor', name: 'İkinci Bakır Lamba', desc: 'Koridorun sonuna ikinci lamba.', price: 2400, minLevel: 8, slot: 'lamp-2', appeal: 4, requires: [{ item: 'lampA' }], art: { image: 'lamp' } },
+
+  // ---- recipes
+  { id: 'recipeSimit', category: 'recipes', kind: 'recipe', recipe: 'simit', name: 'Simit Tarifi', desc: 'Susamlı, çıtır halka ekmek.', price: 600, minLevel: 1, art: { icon: 'simit' } },
+  { id: 'recipeLatte', category: 'recipes', kind: 'recipe', recipe: 'latte', name: 'Latte Tarifi', desc: 'Sütlü, kremsi kahve.', price: 900, minLevel: 3, art: { icon: 'latte' } },
+  { id: 'recipeKurabiye', category: 'recipes', kind: 'recipe', recipe: 'kurabiye', name: 'Kurabiye Tarifi', desc: 'Tereyağlı kurabiye.', price: 1500, minLevel: 4, requires: [{ item: 'recipeSimit' }], art: { icon: 'kurabiye' } },
+  { id: 'recipeMocha', category: 'recipes', kind: 'recipe', recipe: 'mocha', name: 'Mocha Tarifi', desc: 'Çikolatalı kahve.', price: 2400, minLevel: 6, requires: [{ item: 'recipeLatte' }], art: { icon: 'mocha' } },
+  { id: 'recipeMuffin', category: 'recipes', kind: 'recipe', recipe: 'muffin', name: 'Muffin Tarifi', desc: 'Yumuşacık minik kek.', price: 3200, minLevel: 7, requires: [{ item: 'recipeKurabiye' }], art: { icon: 'muffin' } },
+  { id: 'recipeWaffle', category: 'recipes', kind: 'recipe', recipe: 'waffle', name: 'Waffle Tarifi', desc: 'Kafenin en gösterişli tatlısı.', price: 6500, minLevel: 10, stage: 3, requires: [{ item: 'recipeMuffin' }], art: { icon: 'waffle' } },
+
+  // ---- café expansion: tables are the existing café upgrade (price from UPGRADES), the waiting area is new
+  { id: 'table3', category: 'expansion', kind: 'upgrade', upgrade: 'cafeTables', level: 1, name: '3. Masa Takımı', desc: 'Aynı anda bir misafir daha oturur; müşteri akışı hızlanır.', art: { image: 'table' } },
+  { id: 'table4', category: 'expansion', kind: 'upgrade', upgrade: 'cafeTables', level: 2, name: '4. Masa Takımı', desc: 'Salon tamamen dolar.', art: { image: 'table' } },
+  { id: 'waitingA', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 2, name: 'Bekleme Köşesi', desc: 'Vitrinin önünde bir misafir daha bekleyebilir. Halat ve direkler eklenir.', price: 2500, minLevel: 3, effect: { queue: 1 }, art: { image: 'rug-runner' } },
+  { id: 'waitingB', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 3, name: 'Geniş Bekleme Alanı', desc: 'İki misafir daha bekleyebilir.', price: 9000, minLevel: 8, stage: 2, effect: { queue: 2 }, requires: [{ item: 'waitingA' }], art: { image: 'rug-runner' } },
+
+  // ---- special content: VIP guests and themes
+  { id: 'vip1', category: 'special', kind: 'special', name: 'VIP Misafirler', desc: 'Bazı misafirler VIP gelir: altın taçlı, daha çok öder.', price: 9000, minLevel: 8, stage: 3, effect: { vip: { chance: 0.1, mult: 1.6 } }, line: 'vip', tier: 2, art: { icon: 'vip' } },
+  { id: 'vip2', category: 'special', kind: 'special', name: 'Ünlü Ziyaretçiler', desc: 'VIP misafir sıklığı ve ödemesi artar.', price: 30000, minLevel: 13, stage: 4, effect: { vip: { chance: 0.2, mult: 2 } }, line: 'vip', tier: 3, requires: [{ item: 'vip1' }], art: { icon: 'vip' } },
+  { id: 'themeSpring', category: 'special', kind: 'decor', name: 'Bahar Teması', desc: 'Pembe çiçek yaprakları süzülür. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, slot: 'theme', appeal: 5, effect: { theme: 'spring' }, art: { icon: 'spring' } },
+  { id: 'themeCozy', category: 'special', kind: 'decor', name: 'Kış Köşesi Teması', desc: 'Sıcak ışık ve kar taneleri. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, slot: 'theme', appeal: 5, effect: { theme: 'cozy' }, art: { icon: 'cozy' } },
+];
+
+/** Decoration is drawn in these places (interior-layout.js DECOR_SLOTS holds their positions); shared slots hold one of several items. */
+export const SHARED_SLOTS = ['tableTop', 'theme'];

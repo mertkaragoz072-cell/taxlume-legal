@@ -56,7 +56,7 @@ export class Research {
     if (expectedLevel != null && expectedLevel !== level) return { ok: false, reason: 'stale', message: `${this.defs[id].name} zaten seviye ${level}. Satın alma tekrarlanmadı.` };
     if (block) return { ok: false, ...block };
     const cost = this.nextCost(id);
-    this.game.player.gold -= cost;
+    this.game.spend(cost);
     this.levels[id] = level + 1;
     this.game.stats.researchBought += 1;
     this.game.progression?.award('research', level + 1);

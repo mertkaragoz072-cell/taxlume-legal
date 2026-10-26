@@ -6,7 +6,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, shopBought: 0 };
 }
 
 export class Game {
@@ -40,6 +40,29 @@ export class Game {
   emit(event, payload) { for (const fn of this.listeners[event] ?? []) fn(payload); }
 
   get gold() { return this.player.gold; }
+
+  /**
+   * The ONE place gold is paid out (café upgrades, ingredients, town, research, shop all call it): refuses what the player cannot afford and
+   * counts the lifetime gold spent (stage conditions read it). Returns true when the gold was taken.
+   */
+  spend(amount) {
+    if (!Number.isFinite(amount) || amount < 0 || this.player.gold < amount) return false;
+    this.player.gold -= amount;
+    this.stats.goldSpent += amount;
+    return true;
+  }
+
+  /** Adds a product after construction (the Shop registers its recipes this way): stock, statistics and the product table follow. */
+  registerProduct(id, def) {
+    if (this.productsDef[id]) return;
+    this.productsDef = { ...this.productsDef, [id]: def };            // a copy: the shared table of the module is never touched
+    this.products[id] = def.start ?? 0;
+    this.stats.produced[id] ??= 0;
+    this.stats.sold[id] ??= 0;
+  }
+
+  /** False for a shop recipe the player has not bought yet (every product is unlocked when there is no shop). */
+  isUnlocked(id) { return !this.shop || this.shop.recipeUnlocked(id); }
 
   // ---- production -----------------------------------------------------------------------------
   /** Ingredients still missing for one unit of `id`: [{ id, need, have }] (empty when producible). */
@@ -79,10 +102,15 @@ export class Game {
   /** How many jobs a station can run at the same time. */
   capacity(station) {
     const up = this.stationsDef[station]?.capacityUpgrade;
-    return up ? this.effect(up) : 1;
+    return (up ? this.effect(up) : 1) + (this.shop?.capacityBonus(station) ?? 0);    // + the better coffee machines
+  }
+  /** The most jobs a station could ever run (a save is checked against it). */
+  maxCapacity(station) {
+    const up = this.stationsDef[station]?.capacityUpgrade;
+    return (up ? Math.max(...this.upgradesDef[up].values) : 1) + (this.shop?.maxCapacityBonus(station) ?? 0);
   }
   /** Production time of a product with the current speed upgrade (seconds). */
-  duration(id) { return Math.max(1, Math.round(this.productsDef[id].time * this.effect('productionSpeed') * (1 - this.bonus('productionTime')) * 10) / 10); }
+  duration(id) { return Math.max(1, Math.round(this.productsDef[id].time * this.effect('productionSpeed') * (1 - this.bonus('productionTime')) * (1 - (this.shop?.speedBonus(this.productsDef[id].station) ?? 0)) * 10) / 10); }   // upgrade x research x equipment: three separate sources, each applied once
 
   // ---- research bonuses (src/game/research.js): each one is applied in exactly one place below -------------------
   /** Current bonus fraction of a research effect (0 when there is no research system or nothing bought). */
@@ -111,11 +139,13 @@ export class Game {
 
   /** Gold refunded when starting `id`: the Verimli Üretim share of the ingredient value, rounded to the nearest gold (never above the cost). */
   ingredientRebate(id) {
-    const b = this.bonus('ingredientCost'), value = this.ingredientCost(id);
+    const b = this.bonus('ingredientCost') + (this.shop?.refundBonus() ?? 0), value = this.ingredientCost(id);     // research + the prep counter: one sum, applied here only
     return b ? Math.min(value, Math.round(value * b)) : 0;
   }
   /** How many finished units of each product the showcase can hold. */
-  showcaseLimit() { return this.effect('showcaseCapacity'); }
+  showcaseLimit() { return this.effect('showcaseCapacity') + (this.shop?.showcaseBonus() ?? 0); }
+  /** Units of each ingredient the storeroom can hold (unlimited until the Shop exists). */
+  ingredientCap() { return this.shop ? this.shop.ingredientCap() : Infinity; }
   /** Units of `id` in stock plus units still being made (these will land in the showcase). */
   committed(id) {
     return this.products[id] + (this.jobs[this.productsDef[id].station] ?? []).filter((j) => j.product === id).length;
@@ -125,6 +155,7 @@ export class Game {
   blockReason(id) {
     const def = this.productsDef[id];
     if (!def) return { reason: 'unknown', message: 'Bilinmeyen ürün.' };
+    if (!this.isUnlocked(id)) return { reason: 'locked', message: `${def.name} tarifi henüz açılmadı. Mağazadan satın al.` };
     const running = this.jobsOf(def.station), cap = this.capacity(def.station), st = this.stationsDef[def.station].name;
     if (running.length >= cap) {
       const next = this.nextJob(def.station), name = this.productsDef[next.product].name;
@@ -201,9 +232,11 @@ export class Game {
     if (requestId != null && this.handledRequests.has(requestId)) return bad('duplicate', 'Bu satın alma zaten uygulandı.');
     if (expectedLevel != null && expectedLevel !== level) return bad('stale', `${def.name} zaten seviye ${level}. Satın alma tekrarlanmadı.`);
     if (level >= this.maxLevel(id)) return bad('max', `${def.name} en yüksek seviyede.`);
+    const needLevel = def.minLevels?.[level];
+    if (needLevel && this.progression && this.progression.level < needLevel) return bad('level', `${def.name} için Seviye ${needLevel} gerekli (şu an ${this.progression.level}).`);
     const cost = this.nextCost(id);
     if (this.player.gold < cost) return bad('gold', `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.`);
-    this.player.gold -= cost;
+    this.spend(cost);
     this.upgrades[id] = level + 1;
     this.stats.upgradesBought += 1;
     this.progression?.award('upgrade', level + 1);   // XP grows with the upgrade level bought
@@ -230,6 +263,7 @@ export class Game {
       ...(this.town ? { town: this.town.exportState() } : {}),
       ...(this.research ? { research: this.research.exportState() } : {}),
       ...(this.exploration ? { exploration: this.exploration.exportState() } : {}),
+      ...(this.shop ? { shop: this.shop.exportState() } : {}),
     };
   }
 
@@ -248,6 +282,7 @@ export class Game {
     this.town?.importState(state.town);
     this.research?.importState(state.research);
     this.exploration?.importState(state.exploration);
+    this.shop?.importState(state.shop);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -268,6 +303,7 @@ export class Game {
       town: { opened: [], levels: {} },
       research: { levels: {} },
       exploration: { active: null, done: {} },
+      shop: { owned: [], placed: {}, introduced: [], stage: 1 },
     };
   }
 
@@ -277,10 +313,11 @@ export class Game {
     const def = this.ingredientsDef[id];
     if (!def || !Number.isSafeInteger(qty) || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satın alma.' };
     const cost = def.price * qty;
-    if (this.player.gold < cost) {
+    const room = this.ingredientCap() - this.ingredients[id];
+    if (qty > room) return { ok: false, reason: 'storage', message: room > 0 ? `Depoda ${def.name} için ${room} adetlik yer var. Depoyu genişlet.` : `Depo dolu: ${def.name} ${this.ingredients[id]}/${this.ingredientCap()}. Depoyu genişlet.` };
+    if (!this.spend(cost)) {
       return { ok: false, reason: 'gold', message: `Yetersiz altın: ${fmtGold(cost)} gerekli, ${fmtGold(this.player.gold)} var.` };
     }
-    this.player.gold -= cost;
     this.ingredients[id] += qty;
     if (fromMarket) this.stats.marketPurchases += 1;   // counted before the change event, so the autosave includes it
     this.emit('change', { type: 'buy', ingredient: id, qty });

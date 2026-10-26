@@ -98,6 +98,27 @@ export const sitCutY = (index) => seatTop(TABLES[index]) + 24;
 /** Depth key (the y of the line an object stands on): what is further back is drawn first. Tables are judged by their front edge a bit above the chair feet. */
 export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id === 'upgrades' ? a.y + a.h : a.y + a.h);
 
+/**
+ * Where shop decoration stands (see SHOP_ITEMS in data/economy.js: an item names its slot). Sizes are at the first table row's scale and grow with perspScale.
+ *   flat  : lies on the floor, drawn under people and furniture (x, y = its centre, w = width)
+ *   stand : stands on the floor line y (h = height), drawn depth-sorted with the people
+ *   hang  : a pendant lamp whose lower end is at y (h = lamp height), hung from a fading cord, drawn above everything
+ *   wall  : fixed on the back wall (x centre, y = its lower edge, w = width)
+ * All of them sit in the central aisle or at the edges, clear of the walking lanes (guests use the gaps at x 350 and 550, the waiter lane is above y 740).
+ */
+export const DECOR_SLOTS = {
+  'doormat': { x: 450, y: 1335, kind: 'flat', w: 150 },
+  'rug-aisle': { x: 450, y: 1185, kind: 'flat', w: 250 },
+  'rug-aisle-2': { x: 450, y: 1010, kind: 'flat', w: 250 },
+  'edge-left': { x: 52, y: 885, kind: 'stand', h: 128 },
+  'edge-right': { x: 848, y: 890, kind: 'stand', h: 128 },
+  'aisle-top': { x: 450, y: 940, kind: 'stand', h: 135 },
+  'lamp-1': { x: 450, y: 1085, kind: 'hang', h: 105 },
+  'lamp-2': { x: 450, y: 1290, kind: 'hang', h: 105 },
+  'wall-r1': { x: 806, y: 335, kind: 'wall', w: 150 },
+  'wall-r2': { x: 806, y: 452, kind: 'wall', w: 150 },
+};
+
 /** Waiting spots in front of the showcase (centre 422), one body width apart. */
 export const QUEUE_SPOTS = [{ x: 422, y: QUEUE_Y }, { x: 282, y: QUEUE_Y }, { x: 562, y: QUEUE_Y }];
 

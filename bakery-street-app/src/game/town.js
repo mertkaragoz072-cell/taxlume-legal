@@ -65,7 +65,7 @@ export class Town {
     if (d.comingSoon) return fail('soon', `${d.name} henüz açılamıyor.`);
     const n = this.need(this.unlocks[id]);
     if (!n.ok) return fail(n.missingLevel ? 'level' : 'gold', `${d.name} açılamadı: ${this.missingText(n)}.`);
-    this.game.player.gold -= n.gold;
+    this.game.spend(n.gold);
     this.opened.add(id);
     this.game.stats.buildingsOpened += 1;
     const xp = this.rewards[id]?.open?.xp ?? 0;
@@ -85,7 +85,7 @@ export class Town {
     if (level >= this.maxLevel(id)) return fail('max', `${d.name} en yüksek seviyede.`);
     const n = this.need(this.unlocks[id]?.levels?.[level]);
     if (!n.ok) return fail(n.missingLevel ? 'level' : 'gold', `${d.name} geliştirilemedi: ${this.missingText(n)}.`);
-    this.game.player.gold -= n.gold;
+    this.game.spend(n.gold);
     this.levels[id] = level + 1;
     this.game.stats.buildingUpgrades += 1;
     const xp = this.rewards[id]?.levels?.[level]?.xp ?? 0;

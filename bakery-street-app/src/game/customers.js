@@ -86,7 +86,7 @@ export class Cafe {
     this.spawnIn -= dt;
     if (this.spawnIn <= 0) {
       this.spawnIn = this.nextInterval();
-      if (this.queued().length < this.cfg.queueMax) { this.arrive(); changed = true; }
+      if (this.queued().length < this.queueCap()) { this.arrive(); changed = true; }
     }
     if (this.seatQueued()) changed = true;
     if (changed) this.game.emit('change', { type: 'cafe' });
@@ -95,7 +95,16 @@ export class Cafe {
   nextInterval() {
     const [a, b] = this.cfg.spawnEverySec;
     const pace = this.cfg.tablesUpgrade ? Math.min(1, this.cfg.baseTables / this.tableCount()) : 1;   // more tables, shorter gaps
-    return ms((a + this.rng() * (b - a)) * pace);
+    return ms((a + this.rng() * (b - a)) * pace * (this.game.shop?.arrivalFactor() ?? 1));    // decoration makes guests come a little more often
+  }
+
+  /** Guests that may wait outside for a table: the café's own limit plus the waiting-area expansion. */
+  queueCap() { return this.cfg.queueMax + (this.game.shop?.queueBonus() ?? 0); }
+
+  /** VIP guests (shop special content): decided once on arrival; the random number is only drawn when VIPs exist, so nothing changes without them. */
+  rollVip() {
+    const v = this.game.shop?.vip();
+    return !!v && this.rng() < v.chance;
   }
 
   /** A look nobody in the cafe has right now (so two guests never look like copies), unless every look is taken. */
@@ -107,6 +116,7 @@ export class Cafe {
 
   arrive() {
     const c = { id: this.nextId++, look: this.pickLook(), state: 'queued', table: null, orderId: null, patience: ms(this.cfg.queuePatienceSec) };
+    if (this.rollVip()) c.vip = true;
     this.customers.push(c);
     this.game.emit('customer', { type: 'arrive', id: c.id });
     return c;
@@ -129,7 +139,7 @@ export class Cafe {
   }
 
   makeOrder(c) {
-    const ids = Object.keys(this.game.productsDef);
+    const ids = Object.keys(this.game.productsDef).filter((id) => this.game.isUnlocked(id));     // recipes the player has not bought are never ordered
     const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1));
     let r = this.rng() * weights.reduce((s, w) => s + w, 0), product = ids[ids.length - 1];
     for (let i = 0; i < ids.length; i++) { r -= weights[i]; if (r < 0) { product = ids[i]; break; } }
@@ -164,16 +174,21 @@ export class Cafe {
     const def = this.game.productsDef[order.product];
     if (this.game.products[order.product] < 1) return fail('stock', `Stokta ${def.name} yok. Önce üret.`);
     this.game.products[order.product] -= 1;
-    const income = this.game.unitEconomics(order.product, order.price).customer;   // order.price stays the base price; the research bonus is applied once, inside unitEconomics
-    this.game.player.gold += income;
+    let income = this.game.unitEconomics(order.product, order.price).customer;   // order.price stays the base price; the research bonus is applied once, inside unitEconomics
+    const vip = c.vip ? this.game.shop?.vip() : null;
+    if (vip) income = Math.round(income * vip.mult);                                // VIP guests pay more (shop special content)
+    let tip = 0;
+    const tipChance = this.game.shop?.tipChance() ?? 0;                             // decoration: some guests leave a tip (the random number is only drawn when there is a chance)
+    if (tipChance > 0 && this.rng() < tipChance) tip = Math.max(1, Math.round(income * this.game.shop.tipShare()));
+    this.game.player.gold += income + tip;
     this.game.recordSold(order.product, 1);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);
     if (this.holdSec() > 0) this.holds[c.table] = ms(this.holdSec());     // the guest eats (the scene keeps them at the table), then the table is cleared
-    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income, product: order.product, eatSec: this.cfg.eatSec ?? 0, holdSec: this.holdSec() });
+    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income: income + tip, tip, vip: !!c.vip, product: order.product, eatSec: this.cfg.eatSec ?? 0, holdSec: this.holdSec() });
     this.seatQueued();
-    this.game.emit('change', { type: 'sale', product: order.product, price: income });
-    return { ok: true, income, product: order.product, orderId: order.id, customerId: c.id };
+    this.game.emit('change', { type: 'sale', product: order.product, price: income + tip });
+    return { ok: true, income: income + tip, tip, product: order.product, orderId: order.id, customerId: c.id };
   }
 
   deliverToCustomer(customerId) {
@@ -186,7 +201,7 @@ export class Cafe {
   exportState() {
     return {
       nextId: this.nextId,
-      customers: this.customers.map((c) => ({ id: c.id, look: c.look, state: c.state, table: c.table, orderId: c.orderId, patience: Math.round(c.patience) })),
+      customers: this.customers.map((c) => ({ id: c.id, look: c.look, state: c.state, table: c.table, orderId: c.orderId, patience: Math.round(c.patience), ...(c.vip ? { vip: true } : {}) })),
       orders: this.orders.map((o) => ({ id: o.id, product: o.product, price: o.price, status: o.status, customerId: o.customerId })),
     };
   }
@@ -211,7 +226,7 @@ const fail = (reason, message) => ({ ok: false, reason, message });
  * open order (otherwise they go back to the queue); open orders without a seated owner are cancelled; paid or cancelled
  * orders can no longer have a waiting customer; crowd size is capped.
  */
-export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS) {
+export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS, queueMax = cfg.queueMax) {
   let repaired = 0;
   const empty = { state: { nextId: 1, customers: [], orders: [] }, repaired: 0 };
   if (raw == null) return empty;
@@ -228,7 +243,7 @@ export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS) {
   }
 
   const customers = [], custIds = new Set(), usedTables = new Set(), claimed = new Set();
-  const maxCrowd = cfg.tables + cfg.queueMax;
+  const maxCrowd = cfg.tables + queueMax;
   for (const c of Array.isArray(raw.customers) ? raw.customers : []) {
     if (!c || !isId(c.id) || custIds.has(c.id) || customers.length >= maxCrowd) { repaired++; continue; }
     const look = looks.includes(c.look) ? c.look : looks[0];
@@ -246,11 +261,11 @@ export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS) {
     }
     const patience = Number.isFinite(c.patience) && c.patience > 0 ? Math.min(c.patience, max(state)) : max(state);
     custIds.add(c.id);
-    customers.push({ id: c.id, look, state, table, orderId, patience });
+    customers.push({ id: c.id, look, state, table, orderId, patience, ...(c.vip === true ? { vip: true } : {}) });
   }
   // queue overflow is trimmed in arrival order
   const queued = customers.filter((c) => c.state === 'queued');
-  for (const c of queued.slice(cfg.queueMax)) { customers.splice(customers.indexOf(c), 1); repaired++; }
+  for (const c of queued.slice(queueMax)) { customers.splice(customers.indexOf(c), 1); repaired++; }
   // open orders must belong to a seated customer that references them
   for (const o of orders) {
     if (o.status === 'open' && !customers.some((c) => c.state === 'seated' && c.orderId === o.id)) { o.status = 'cancelled'; repaired++; }
