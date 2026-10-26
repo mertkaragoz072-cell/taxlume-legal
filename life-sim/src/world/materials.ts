@@ -26,6 +26,13 @@ export function toon(color: number, emissive = 0x000000): THREE.MeshToonMaterial
   return m;
 }
 
+let vertexToon: THREE.MeshToonMaterial | null = null;
+/** Shared toon material for batched meshes that carry per-vertex colour. */
+export function toonVertexColor(): THREE.MeshToonMaterial {
+  vertexToon ??= new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonGradient() });
+  return vertexToon;
+}
+
 const outlineCache = new Map<number, THREE.ShaderMaterial>();
 /** Outline material: pushes vertices along their normals, renders back faces only. */
 export function outlineMaterial(thickness: number): THREE.ShaderMaterial {

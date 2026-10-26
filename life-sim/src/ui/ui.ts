@@ -8,7 +8,7 @@ import { PHYSIQUE_STAGES, xpForNextLevel } from '../fitness/progression';
 import { baseOneRM, currentOneRM, energyPerRep, intensityOf, maxRepsAt, performance } from '../fitness/workout';
 import type { Game } from '../app/game';
 import { DEFAULT_CONFIG } from '../simulation/config';
-import { DAY, formatClock, formatDuration, HOUR } from '../simulation/time';
+import { DAY, formatDuration, HOUR, readClock } from '../simulation/time';
 
 type Tab = 'gym' | 'status' | 'bank' | 'map' | 'menu';
 
@@ -67,7 +67,7 @@ export class UI {
     const g = this.game;
     const act = el.dataset.act!;
     const arg = el.dataset.arg ?? '';
-    const s = g.session;
+    const s = g.workout.session;
     switch (act) {
       case 'tab':
         this.tab = arg as Tab;
@@ -82,27 +82,27 @@ export class UI {
       case 'start': {
         const d = EXERCISES.bench!;
         const w = g.state.gym.lifts.bench?.lastWeight || 25;
-        g.startWorkout(Math.max(d.minWeight, w), 8);
+        g.workout.startWorkout(Math.max(d.minWeight, w), 8);
         return;
       }
       case 'weight':
-        if (s) g.setWeight(s.weight + Number(arg));
+        if (s) g.workout.setWeight(s.weight + Number(arg));
         return;
       case 'reps':
-        if (s) g.setTargetReps(s.targetReps + Number(arg));
+        if (s) g.workout.setTargetReps(s.targetReps + Number(arg));
         return;
       case 'set':
-        void g.performSet();
+        void g.workout.performSet();
         return;
       case 'stop':
-        g.stopSet();
+        g.workout.stopSet();
         el.setAttribute('disabled', '');
         return;
       case 'rest':
-        void g.rest(Number(arg) || 90);
+        void g.workout.rest(Number(arg) || 90);
         return;
       case 'end':
-        void g.endWorkout();
+        void g.workout.endWorkout();
         return;
       case 'wait':
         g.passTime(Number(arg) * HOUR);
@@ -151,28 +151,25 @@ export class UI {
   private hud(): string {
     const st = this.game.state;
     const c = st.character;
-    const bar = (label: string, v: number, good: boolean, color: string, warnLow: boolean) =>
-      `<div class="need ${warnLow ? 'low' : ''}">${label}<b>${pct(v)}</b><div class="bar"><i style="width:${pct(v)}%;background:${good ? color : 'var(--bad)'}"></i></div></div>`;
     const cfg = DEFAULT_CONFIG;
-    const alerts: string[] = [];
-    if (c.energy <= cfg.energyWarn) alerts.push('⚡ Low energy');
-    if (c.hunger >= cfg.hungerWarn) alerts.push('🍽️ Hungry');
-    if (c.hydration <= cfg.hydrationWarn) alerts.push('💧 Thirsty');
-    if (c.sleepiness >= cfg.sleepinessWarn) alerts.push('😴 Sleepy');
-    if (c.health < 40) alerts.push('❤️ Poor health');
-    if (st.gym.fatigue > 70) alerts.push('🔥 Overtrained');
+    // Compact meter strip: icon + thin bar. Exact numbers live in the Status tab.
+    const meter = (icon: string, label: string, v: number, low: boolean, color: string) =>
+      `<div class="m ${low ? 'low' : ''}" role="img" aria-label="${label} ${pct(v)}"><span>${icon}</span><div class="mb"><i style="width:${pct(v)}%;background:${low ? 'var(--bad)' : color}"></i></div></div>`;
     return `<div class="hud">
-      <div class="hud-row"><span class="clock">${formatClock(st.time)}</span><span class="money">${formatMoney(st.money)}</span></div>
-      <div class="level"><span class="lv">LV ${c.level}</span><div class="xpbar"><i style="width:${pct((c.xp / xpForNextLevel(c.level)) * 100)}%"></i></div><span class="muted small">${Math.floor(c.xp)}/${xpForNextLevel(c.level)} XP</span></div>
-      <div class="needs">
-        ${bar('Health', c.health, c.health > 35, 'var(--good)', c.health <= 35)}
-        ${bar('Energy', c.energy, c.energy > cfg.energyWarn, 'var(--accent)', c.energy <= cfg.energyWarn)}
-        ${bar('Food', 100 - c.hunger, c.hunger < cfg.hungerWarn, 'var(--warn)', c.hunger >= cfg.hungerWarn)}
-        ${bar('Water', c.hydration, c.hydration > cfg.hydrationWarn, '#4db8ff', c.hydration <= cfg.hydrationWarn)}
-        ${bar('Rested', 100 - c.sleepiness, c.sleepiness < cfg.sleepinessWarn, '#a68bff', c.sleepiness >= cfg.sleepinessWarn)}
-        ${bar('Mood', c.happiness, c.happiness > 25, '#ff7ab8', c.happiness <= 25)}
+      <div class="hud-row">
+        <span class="lv">LV ${c.level}</span>
+        <div class="xpbar"><i style="width:${pct((c.xp / xpForNextLevel(c.level)) * 100)}%"></i></div>
+        <span class="clock">${formatClockCompact(st.time)}</span>
+        <span class="money">${formatMoney(st.money)}</span>
       </div>
-      ${alerts.length ? `<div class="alerts">${alerts.map((a) => `<span class="alert">${a}</span>`).join('')}</div>` : ''}
+      <div class="meters">
+        ${meter('❤️', 'Health', c.health, c.health <= 35, 'var(--good)')}
+        ${meter('⚡', 'Energy', c.energy, c.energy <= cfg.energyWarn, 'var(--accent)')}
+        ${meter('🍽️', 'Food', 100 - c.hunger, c.hunger >= cfg.hungerWarn, 'var(--warn)')}
+        ${meter('💧', 'Water', c.hydration, c.hydration <= cfg.hydrationWarn, '#4db8ff')}
+        ${meter('😴', 'Rested', 100 - c.sleepiness, c.sleepiness >= cfg.sleepinessWarn, '#a68bff')}
+        ${meter('😊', 'Mood', c.happiness, c.happiness <= 25, '#ff7ab8')}
+      </div>
     </div>`;
   }
 
@@ -198,51 +195,52 @@ export class UI {
 
   private gymTab(): string {
     const g = this.game;
+    const w = g.workout;
     const st = g.state;
-    const s = g.session;
+    const s = w.session;
     const d = EXERCISES.bench!;
     const member = hasMembership(st);
     const remain = membershipRemaining(st);
-    const memberCard = `<div class="card"><div class="row"><div><b>Membership</b><div class="muted">${
-      member ? `Active · ${remain >= DAY ? `${Math.ceil(remain / DAY)} days left` : `${formatDuration(remain)} left`}` : 'None — buy a pass to train'
-    }</div></div><span class="pill ${member ? 'good' : 'bad'}">${member ? 'ACTIVE' : 'EXPIRED'}</span></div>
-      <div class="btns"><button class="btn alt" data-act="buy" data-arg="dayPass">Day pass<br><small>${formatMoney(GYM_PRICES.dayPass)}</small></button>
-      <button class="btn alt" data-act="buy" data-arg="monthly">Monthly<br><small>${formatMoney(GYM_PRICES.monthly)}</small></button></div></div>`;
+    const left = member ? (remain >= DAY ? `${Math.ceil(remain / DAY)} days left` : `${formatDuration(remain)} left`) : 'No active pass';
 
     if (!s) {
       const lift = st.gym.lifts.bench;
-      const summary = g.lastSummary;
-      return `${summary ? `<div class="card"><b>Workout complete</b><div class="muted">${summary.sets} ${summary.sets === 1 ? 'set' : 'sets'} · ${summary.reps} reps · ${formatDuration(summary.seconds)}<br>+${summary.xp} XP · −${summary.energySpent} energy · strength +${summary.strengthGain}${summary.levelsGained ? ` · <b style="color:var(--accent)">Level up!</b>` : ''}</div></div>` : ''}
-      ${memberCard}
-      <div class="card"><div class="row"><div><b>${d.name}</b><div class="muted">${lift ? `Best ${lift.bestWeight} kg · ${lift.totalReps} reps in ${lift.totalSets} sets` : 'Not tried yet'}</div><div class="muted small">Today's max ≈ ${Math.floor(currentOneRM(st, 'bench'))} kg (1 rep)</div></div></div>
-      <button class="btn block" style="margin-top:10px" data-act="start" ${member ? '' : 'disabled'}>${member ? 'Start workout' : 'Membership required'}</button></div>
-      <p class="muted small">Squat, deadlift, pull-ups, curls and cardio arrive in Milestone 6. Their machines are already in the gym.</p>`;
+      const summary = w.lastSummary;
+      return `${summary ? `<div class="card"><b>Workout complete</b><div class="muted small">${summary.sets} ${summary.sets === 1 ? 'set' : 'sets'} · ${summary.reps} reps · ${formatDuration(summary.seconds)} · +${summary.xp} XP · −${summary.energySpent} energy · strength +${summary.strengthGain}${summary.levelsGained ? ' · <b style="color:var(--accent)">Level up!</b>' : ''}</div></div>` : ''}
+      <div class="card"><div class="row"><div><b>Membership</b> <span class="pill ${member ? 'good' : 'bad'}">${member ? 'ACTIVE' : 'NONE'}</span><div class="muted small">${left}</div></div>
+        <div class="mini-btns"><button class="btn alt sm" data-act="buy" data-arg="dayPass">Day ${formatMoney(GYM_PRICES.dayPass)}</button><button class="btn alt sm" data-act="buy" data-arg="monthly">Month ${formatMoney(GYM_PRICES.monthly)}</button></div></div></div>
+      <div class="card"><div class="row"><div><b>${d.name}</b><div class="muted small">${lift ? `Best ${lift.bestWeight} kg · ${lift.totalReps} reps · ${lift.totalSets} sets` : 'Not tried yet'} · today's max ≈ ${Math.floor(currentOneRM(st, 'bench'))} kg</div></div></div>
+        <button class="btn block" style="margin-top:8px" data-act="start" ${member ? '' : 'disabled'}>${member ? 'Start workout' : 'Buy a pass to train'}</button></div>
+      <p class="muted small">Squat, deadlift, pull-ups, curls and cardio arrive in a later milestone.</p>`;
     }
 
-    const lifting = g.phase === 'lifting';
+    const lifting = w.phase === 'lifting';
     const base = baseOneRM(st, 'bench');
     const today = currentOneRM(st, 'bench');
     const intensity = intensityOf(st, 'bench', s.weight);
     const capacity = maxRepsAt(today, s.weight);
-    const verdict = capacity === 0 ? ['Too heavy right now', 'bad'] : capacity < s.targetReps ? [`Likely to fail near rep ${capacity}`, 'warn'] : intensity < 0.35 ? ['Too light to build strength', 'warn'] : ['Good working weight', 'good'];
+    const verdict: [string, string] = capacity === 0 ? ['Too heavy now', 'bad'] : capacity < s.targetReps ? [`May fail near rep ${capacity}`, 'warn'] : intensity < 0.35 ? ['Too light to build strength', 'warn'] : ['Good working weight', 'good'];
     const cost = energyPerRep(st, 'bench', s.weight);
+    const dis = w.busy ? 'disabled' : '';
 
     if (lifting) {
-      return `<div class="big-count"><b>${s.setReps}</b><span> / ${s.targetReps}</span><div class="muted">Set ${s.completedSets + 1} · ${s.weight} kg</div></div>
+      return `<div class="lift-live">
+        <div class="big-count"><b>${s.setReps}</b><span>/${s.targetReps}</span></div>
+        <div style="flex:1"><div class="row small"><b>${d.name} · ${s.weight} kg</b><span class="muted">Set ${s.completedSets + 1}</span></div>
         <div class="progress"><i style="width:${(s.setReps / s.targetReps) * 100}%"></i></div>
-        <div class="row muted small"><span>Energy ${pct(st.character.energy)}</span><span>+${s.xpEarned.toFixed(1)} XP</span></div>
-        <button class="btn alt block" style="margin-top:12px" data-act="stop">Stop after this rep</button>`;
-    }
-    return `<div class="row"><h2>${d.name}</h2><span class="pill">Set ${s.completedSets + 1}</span></div>
-      <div class="row card">
-        <div class="stepper"><button data-act="weight" data-arg="-${d.step * 2}" ${g.busy ? 'disabled' : ''}>−</button><div class="val">${s.weight}<small>kg</small></div><button data-act="weight" data-arg="${d.step * 2}" ${g.busy ? 'disabled' : ''}>+</button></div>
-        <div class="stepper"><button data-act="reps" data-arg="-1" ${g.busy ? 'disabled' : ''}>−</button><div class="val">${s.targetReps}<small>reps</small></div><button data-act="reps" data-arg="1" ${g.busy ? 'disabled' : ''}>+</button></div>
+        <div class="row muted small"><span>Energy ${pct(st.character.energy)}</span><span>+${s.xpEarned.toFixed(1)} XP</span></div></div>
       </div>
-      <div class="row small"><span class="pill ${verdict[1]}">${verdict[0]}</span><span class="muted">${cost.toFixed(1)} energy/rep · max ${Math.floor(today)}/${Math.floor(base)} kg</span></div>
-      <div class="row small muted" style="margin-top:6px"><span>Recovery debt ${pct(st.gym.fatigue)}%</span><span>${s.completedSets} ${s.completedSets === 1 ? 'set' : 'sets'} · ${s.totalReps} reps · +${s.xpEarned.toFixed(0)} XP</span></div>
-      <div class="btns"><button class="btn" data-act="set" ${g.busy ? 'disabled' : ''}>${g.busy ? 'Resting…' : 'Start set'}</button>
-      <button class="btn alt" data-act="rest" data-arg="${d.restSeconds}" ${g.busy ? 'disabled' : ''}>Rest ${d.restSeconds}s</button></div>
-      <button class="btn danger block" style="margin-top:8px" data-act="end" ${g.busy ? 'disabled' : ''}>End workout</button>`;
+      <button class="btn danger block" data-act="stop">■ Stop after this rep</button>`;
+    }
+    return `<div class="row steppers">
+        <div class="stepper"><button data-act="weight" data-arg="-${d.step * 2}" ${dis}>−</button><div class="val">${s.weight}<small>kg</small></div><button data-act="weight" data-arg="${d.step * 2}" ${dis}>+</button></div>
+        <div class="stepper"><button data-act="reps" data-arg="-1" ${dis}>−</button><div class="val">${s.targetReps}<small>reps</small></div><button data-act="reps" data-arg="1" ${dis}>+</button></div>
+      </div>
+      <div class="row small" style="margin:8px 0 2px"><span class="pill ${verdict[1]}">${verdict[0]}</span><span class="muted">${cost.toFixed(1)} energy/rep · max ${Math.floor(today)}/${Math.floor(base)} kg</span></div>
+      <div class="row small muted"><span>Set ${s.completedSets + 1} · ${s.totalReps} reps done · +${s.xpEarned.toFixed(0)} XP</span><span>Recovery debt ${pct(st.gym.fatigue)}%</span></div>
+      <div class="btns3"><button class="btn" data-act="set" ${dis}>${w.busy ? 'Resting…' : 'Start set'}</button>
+      <button class="btn alt" data-act="rest" data-arg="${d.restSeconds}" ${dis}>Rest ${d.restSeconds}s</button>
+      <button class="btn danger" data-act="end" ${dis}>End</button></div>`;
   }
 
   private statusTab(): string {
@@ -252,7 +250,10 @@ export class UI {
       `<div class="stat"><div class="row"><span>${label}</span><b>${v.toFixed(1)}</b></div><div class="progress"><i style="width:${pct(v)}%;background:${color}"></i></div></div>`;
     const stage = PHYSIQUE_STAGES[this.game.physiqueStage]!;
     const next = PHYSIQUE_STAGES[this.game.physiqueStage + 1];
+    const need = (label: string, v: number, color: string) =>
+      `<div class="stat"><div class="row"><span>${label}</span><b>${Math.round(v)}</b></div><div class="progress"><i style="width:${pct(v)}%;background:${color}"></i></div></div>`;
     return `<h2>Your character</h2>
+      <h3>Needs</h3>${need('Health', c.health, 'var(--good)')}${need('Energy', c.energy, 'var(--accent)')}${need('Fullness (100 = not hungry)', 100 - c.hunger, 'var(--warn)')}${need('Hydration', c.hydration, '#4db8ff')}${need('Rested (100 = fresh)', 100 - c.sleepiness, '#a68bff')}
       <div class="card"><div class="row"><span>Physique</span><b>${stage.name}</b></div><div class="muted small">${next ? `Next stage at strength ${next.minStrength}` : 'Maximum physique reached'}</div></div>
       <h3>Training</h3>${stat('Strength', c.strength, 'var(--accent)')}${stat('Endurance', c.endurance, '#4db8ff')}${stat('Fitness', c.fitness, 'var(--good)')}
       <div class="stat"><div class="row"><span>Recovery debt</span><b>${st.gym.fatigue.toFixed(0)}%</b></div><div class="progress"><i style="width:${pct(st.gym.fatigue)}%;background:var(--warn)"></i></div></div>
@@ -297,6 +298,11 @@ export class UI {
     if (!c) return '';
     return `<div class="modal-bg"><div class="modal"><h2>${esc(c.title)}</h2><p>${esc(c.body)}</p><div class="btns"><button class="btn alt" data-act="no">Cancel</button><button class="btn ${c.danger ? 'danger' : ''}" data-act="yes">${esc(c.yes)}</button></div></div></div>`;
   }
+}
+
+function formatClockCompact(seconds: number): string {
+  const c = readClock(seconds);
+  return `${c.weekday} ${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;
 }
 
 function formatClockShort(seconds: number): string {

@@ -4,6 +4,7 @@ export interface CameraSetup {
   /** Point the camera looks at (metres). */
   target: [number, number, number];
   /** Camera offset from target direction: yaw degrees (about Y) and elevation degrees. */
+  fov: number;
   yaw: number;
   elevation: number;
   /** Horizontal world width (m) that must stay visible on narrow screens. */

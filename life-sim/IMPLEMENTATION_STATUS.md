@@ -1,34 +1,55 @@
 # Implementation Status
 
-## Milestone 1 — Playable foundation: COMPLETE (verified)
+## Milestone 1 — Playable foundation: COMPLETE, then polished (this update)
 
-Verified: `npm test` (34 tests pass), `npm run build` (typecheck + bundle OK), and a headless-Chromium
-end-to-end run at 390×844 (buy pass → start workout → full 8-rep set → rest screen → tabs → reload keeps progress).
+Verified by: `npm test` (57 tests pass), `npm run build` (typecheck + bundle OK), and headless-Chromium
+end-to-end runs at 390×844, 360×640 and 430×932 (buy pass → start workout → full set → rest → tabs → reload keeps
+progress; no horizontal overflow or clipped elements detected).
 
-Working:
-- Project: Vite + strict TypeScript + Three.js + Vitest, IndexedDB saves, Capacitor config file.
-- 2.5D gym scene: textured rubber floor, panelled wall, mirrors, neon sign, LED strips, shadows; bench station with
-  rack, plate-loaded Olympic barbell (colored plates follow the selected weight); background squat rack,
-  dumbbell rack, treadmill, plate tree, kettlebells, deadlift platform (visual only for now).
-- Stickman rig: separate parts, thick outlines, IK limbs, face, muscle-scaled physique (5 stages, same model).
-- Bench press: sit → lie back → unrack → lower/pause/press reps → rerack → sit. Failed-rep variant. Hands are IK-bound
-  to the bar (tested to 1e-9).
-- Simulation: clock, needs decay/recovery, health/mood penalties, deterministic.
-- Workout: weight, reps, sets, energy, XP, levels, strength/endurance/fitness gains, recovery debt, overtraining,
-  partial-set banking on interruption, lift records.
-- Economy: central `earn`/`spend`, transaction history, gym day pass / monthly membership with expiry.
-- Save: versioned, migrated, sanitized, backup + corruption recovery; autosave on set/purchase/background/interval.
-- Mobile UI: HUD (clock, money, level/XP, 6 need meters, alerts), Gym, Status, Bank, Map, Menu tabs, confirm dialogs, toasts.
+### Changed in this update
+**Animation (Priority 1)**
+- Bench station is rotated three-quarter to the fixed camera (as in the reference): bar across the screen, plate each side.
+- New pose model: hands are shoulder-relative IK targets (always attached), feet planted at fixed points, head rests on
+  the pad (`headLift`), pelvis/torso height follows the live muscle-dependent torso radius → no clipping at any physique.
+- Smooth, slower lie-back / sit-up with eased body and arced hands; per-frame motion is bounded by a test.
+- Removed a real bug found by the new tests: idle breathing moved the shoulders but not the bar (2 mm hand detachment).
+- Rep validity: `playRep` returns `{chestReached, lockout}`; only a complete cycle is committed.
+- Chunkier character proportions and thicker outlines, readable face with the head tilted toward the viewer.
+
+**Environment (Priority 2)**
+- New dark industrial gym: layered back wall, steel columns/beam, skyline window, sign, power rack, punching bag,
+  black and colour dumbbell racks, treadmills, plate tree, kettlebells, lifting mat, hanging lamps, tiled floor,
+  contact-shadow blobs, soft shadow radius, wider-FOV camera for parallax.
+- Background props are batched into single meshes (one draw call each); only hero objects carry outline hulls.
+
+**UI (Priority 3)**
+- HUD reduced from ~20% to ~8% of the screen: level/XP, clock, money, and a thin 6-meter strip (low values turn red and pulse).
+  Exact values moved to the Status tab.
+- Workout dock is three compact rows (steppers / info / Start·Rest·End); live set view is one row plus Stop.
+- Camera reserves space for the dock so the character and bar stay visible; bottom nav unchanged.
+
+**Logic and tests (Priority 4)**
+- Workout flow extracted to `WorkoutController` with an animation port, so it is tested without a renderer.
+- An expired pass now blocks starting the next set even mid-workout.
+- New tests: membership price/deduction/expiry boundary/stacking/insufficient funds, access gating, full-set progression,
+  invalid-cycle reps not counted, too-heavy failure, multi-set accumulation + rest, interruption (partial set banked
+  proportionally and persisted to the save), exhaustion, level-up events, hands/feet/clipping/continuity of the animation.
+
+### Still working from Milestone 1
+Clock, needs decay, economy service, gym membership, progression, versioned saves with backup/recovery, IndexedDB autosave.
 
 ## Known limitations / honest notes
-- Only the gym is playable; the Map lists other locations as "Milestone N" (not clickable). There is no food,
-  sleep or income yet, so money and hunger are one-way in this milestone (by design; M2–M4 close the loop).
-- Only bench press has data + animation; other exercises are listed as coming later.
-- No `references/` directory exists in the repo, so visuals follow the written art direction only.
-- Tested visually only with software WebGL (≈10 fps); real-device performance is a Milestone 7 task.
-- Capacitor native platforms (android/ios) are not generated yet.
-- Gym screen has no automated UI tests; covered by manual/headless E2E only.
+- Only the gym is playable. The Map tab lists other locations as "Milestone N" (not clickable).
+- No food, sleep or income yet, so money and hunger move one way until the home/jobs/food milestones are built.
+- Only bench press has data and animation.
+- The seated rest pose faces along the bench (away from the camera); only the head turns toward the viewer.
+- Visuals were checked with software WebGL (~10 fps). Real-device performance is untested (Milestone 7). Bundle is ~550 KB
+  (three.js); not yet code-split.
+- The elbow flare of a real bench press (lateral motion) is not modelled; the rig animates in the sagittal plane.
+- Capacitor native projects are not generated; only `capacitor.config.json` exists.
+- No automated UI/E2E tests in the repo (headless checks were run manually).
+- The repository's unrelated Expo game (`town-economy/`) is untouched.
 
-## Existing project note
-The repository already contains an unrelated Expo game (`town-economy/`, "Golden Town") with its own CI.
-It was left untouched; Life Simulator lives in `life-sim/`.
+## Not implemented (do not treat as done)
+Home rooms, sleep/eating/hydration actions, jobs/shifts/wages/promotions, rent and bills, grocery/cooking/cafés/restaurants,
+city navigation and travel, social/leisure, clothing/barber/tattoos/customization, other exercises. See `GAME_DESIGN.md` plan.

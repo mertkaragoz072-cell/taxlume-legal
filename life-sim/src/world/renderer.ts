@@ -50,6 +50,8 @@ export class GameRenderer {
 
   /** Fixed camera: keeps the required world rectangle visible at any aspect ratio. */
   private placeCamera(c: CameraSetup): void {
+    this.camera.fov = c.fov;
+    this.camera.updateProjectionMatrix();
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const free = 1 - c.uiBottomFraction;
     // Visible vertical span must contain fitHeight inside the free (non-UI) part of the screen.

@@ -3,7 +3,7 @@
 A mobile-first life simulator: a white stickman, a fixed side-view 2.5D camera, and a deterministic
 simulation of needs, money, training and (in later milestones) work, food, leisure and customization.
 
-> Status: **Milestone 1 (playable foundation)** is complete. See `IMPLEMENTATION_STATUS.md`.
+> Status: **Milestone 1 (playable foundation)** is complete and polished. See `IMPLEMENTATION_STATUS.md`.
 
 ## Run it
 
@@ -26,7 +26,7 @@ Open the dev URL in a portrait phone-sized window (or browser device emulation) 
 
 1. **Gym tab → buy a Day pass ($8) or Monthly ($45)** — every purchase goes through the economy service and appears in **Bank**.
 2. **Start workout** → pick weight and reps → **Start set**. The stickman lies back, unracks, and performs real reps.
-3. A rep succeeds only if your *current* capacity allows it (strength, energy, recovery debt, hunger, thirst, sleepiness).
+3. A rep counts only if the full movement (chest touch → lockout) is completed and if your *current* capacity allows it (strength, energy, recovery debt, hunger, thirst, sleepiness).
    Too heavy → the rep fails and the set ends. Pick a weight shown as "Good working weight".
 4. **Rest** between sets (game time passes, energy returns). **End workout** at any time — completed reps and partial sets are banked.
 5. Progress autosaves (IndexedDB) after every set/purchase and when the app is backgrounded. Reload to verify.

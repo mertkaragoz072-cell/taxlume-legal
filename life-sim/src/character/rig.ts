@@ -8,7 +8,7 @@ export type V2 = [number, number];
 export const BODY = {
   torso: 0.52,
   neck: 0.07,
-  headR: 0.125,
+  headR: 0.15,
   upperArm: 0.3,
   foreArm: 0.28,
   thigh: 0.42,
@@ -27,6 +27,11 @@ export interface Pose {
   torso: number;
   /** Head tilt relative to spine. */
   head: number;
+  /** Extra head offset along the facing direction (up when lying) so the head rests ON a pad. */
+  headLift: number;
+  /** Head turn about the vertical axis of the head (looking toward the camera when resting). */
+  headYaw?: number;
+  /** Hand targets as offsets from the shoulder, so hands can never detach from the body. */
   handNear: V2;
   handFar: V2;
   footNear: V2;
@@ -42,6 +47,8 @@ export function lerpPose(a: Pose, b: Pose, t: number): Pose {
     pelvis: l2(a.pelvis, b.pelvis),
     torso: lerp(a.torso, b.torso, t),
     head: lerp(a.head, b.head, t),
+    headLift: lerp(a.headLift, b.headLift, t),
+    headYaw: lerp(a.headYaw ?? 0, b.headYaw ?? 0, t),
     handNear: l2(a.handNear, b.handNear),
     handFar: l2(a.handFar, b.handFar),
     footNear: l2(a.footNear, b.footNear),
@@ -49,6 +56,13 @@ export function lerpPose(a: Pose, b: Pose, t: number): Pose {
     elbowBend: t < 0.5 ? a.elbowBend : b.elbowBend,
     kneeBend: t < 0.5 ? a.kneeBend : b.kneeBend,
   };
+}
+
+export const SHOULDER_ALONG = BODY.torso - 0.02;
+
+/** Shoulder joint position for a pose (spine rotated CCW by `torso` from straight up). */
+export function shoulderOf(p: Pose): V2 {
+  return [p.pelvis[0] - Math.sin(p.torso) * SHOULDER_ALONG, p.pelvis[1] + Math.cos(p.torso) * SHOULDER_ALONG];
 }
 
 interface Limb {
@@ -110,8 +124,9 @@ export class StickmanRig {
     pelvis: [0, 0.84],
     torso: 0,
     head: 0,
-    handNear: [0, 0.3],
-    handFar: [0, 0.3],
+    headLift: 0,
+    handNear: [0.05, -0.5],
+    handFar: [0.05, -0.5],
     footNear: [0, 0.04],
     footFar: [0, 0.04],
     elbowBend: -1,
@@ -120,13 +135,13 @@ export class StickmanRig {
 
   constructor() {
     const mat = toon(SKIN, 0x4a4944);
-    this.pelvisMesh = new OutlinedMesh(new THREE.SphereGeometry(0.1, 20, 14), mat, 0.022);
+    this.pelvisMesh = new OutlinedMesh(new THREE.SphereGeometry(0.11, 20, 14), mat, 0.026);
     this.root.add(this.pelvisMesh, this.spine);
 
-    this.torsoMesh = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.022);
-    this.shoulderMesh = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.022);
-    this.neckMesh = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.02);
-    this.head = new OutlinedMesh(new THREE.SphereGeometry(BODY.headR, 28, 20), mat, 0.024);
+    this.torsoMesh = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
+    this.shoulderMesh = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
+    this.neckMesh = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
+    this.head = new OutlinedMesh(new THREE.SphereGeometry(BODY.headR, 28, 20), mat, 0.028);
     this.spine.add(this.torsoMesh, this.shoulderMesh, this.neckMesh, this.headPivot);
     this.headPivot.position.set(0, BODY.torso + BODY.neck + BODY.headR * 0.9, 0);
     this.headPivot.add(this.head, this.face);
@@ -135,13 +150,13 @@ export class StickmanRig {
     const mk = (z: number, l1: number, l2: number, endShape: 'hand' | 'foot'): Limb => {
       const pivot = new THREE.Group();
       pivot.position.z = z;
-      const upper = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.02);
+      const upper = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
       const elbow = new THREE.Group();
       elbow.position.y = -l1;
-      const lower = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.02);
+      const lower = new OutlinedMesh(new THREE.BufferGeometry(), mat, 0.026);
       const endMat = endShape === 'foot' ? toon(SHOE) : mat;
       const end = new OutlinedMesh(
-        endShape === 'hand' ? new THREE.SphereGeometry(0.042, 14, 10) : new THREE.CapsuleGeometry(0.05, BODY.footLen - 0.1, 6, 12),
+        endShape === 'hand' ? new THREE.SphereGeometry(0.056, 14, 10) : new THREE.CapsuleGeometry(0.062, BODY.footLen - 0.05, 6, 12),
         endMat,
         0.02,
       );
@@ -156,29 +171,29 @@ export class StickmanRig {
       this.root.add(pivot);
       return { pivot, upper, elbow, lower, end, l1, l2 };
     };
-    this.arms = { near: mk(0.19, BODY.upperArm, BODY.foreArm, 'hand'), far: mk(-0.19, BODY.upperArm, BODY.foreArm, 'hand') };
+    this.arms = { near: mk(0.22, BODY.upperArm, BODY.foreArm, 'hand'), far: mk(-0.22, BODY.upperArm, BODY.foreArm, 'hand') };
     this.legs = { near: mk(0.1, BODY.thigh, BODY.shin, 'foot'), far: mk(-0.1, BODY.thigh, BODY.shin, 'foot') };
     this.setMuscle(0);
     this.applyPose(this.pose);
   }
 
   private buildFace(): void {
-    const eyeGeo = new THREE.SphereGeometry(0.02, 10, 8);
+    const eyeGeo = new THREE.SphereGeometry(0.03, 10, 8);
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0x14161b });
     for (const z of [0.05, -0.05]) {
       const e = new THREE.Mesh(eyeGeo, eyeMat);
-      e.position.set(0.1, 0.02, z);
+      e.position.set(0.125, 0.025, z * 1.3);
       e.scale.set(0.7, 1.3, 1);
       this.face.add(e);
     }
     const brow = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.012, 0.05), eyeMat);
-    brow.position.set(0.108, 0.06, 0.05);
+    brow.position.set(0.133, 0.075, 0.065);
     this.face.add(brow);
     const brow2 = brow.clone();
-    brow2.position.z = -0.05;
+    brow2.position.z = -0.065;
     this.face.add(brow2);
     const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.045), eyeMat);
-    mouth.position.set(0.115, -0.05, 0);
+    mouth.position.set(0.14, -0.06, 0);
     this.face.add(mouth);
   }
 
@@ -187,11 +202,11 @@ export class StickmanRig {
     if (Math.abs(m - this.muscle) < 0.004) return;
     this.muscle = m;
     const seg = (r: number, len: number) => new THREE.CapsuleGeometry(r, Math.max(0.001, len - 2 * r), 6, 14);
-    const tR = 0.082 + 0.05 * m;
+    const tR = 0.1 + 0.05 * m;
     this.torsoMesh.setGeometry(seg(tR, BODY.torso + 0.04));
     this.torsoMesh.position.y = BODY.torso / 2;
     // Shoulder girdle: broader with training.
-    this.shoulderMesh.setGeometry(new THREE.SphereGeometry(0.075 + 0.045 * m, 16, 12));
+    this.shoulderMesh.setGeometry(new THREE.SphereGeometry(0.09 + 0.045 * m, 16, 12));
     this.shoulderMesh.position.y = BODY.torso - 0.02;
     this.shoulderMesh.scale.set(0.9, 0.8, 1.0 + 0.85 * m + 0.35);
     this.neckMesh.setGeometry(seg(0.035 + 0.012 * m, BODY.neck + 0.12));
@@ -203,8 +218,8 @@ export class StickmanRig {
       l.lower.setGeometry(seg(r2, l.l2 + 0.02));
       l.lower.position.y = -l.l2 / 2;
     };
-    for (const a of [this.arms.near, this.arms.far]) limb(a, 0.036 + 0.028 * m, 0.03 + 0.02 * m);
-    for (const l of [this.legs.near, this.legs.far]) limb(l, 0.056 + 0.04 * m, 0.042 + 0.024 * m);
+    for (const a of [this.arms.near, this.arms.far]) limb(a, 0.05 + 0.03 * m, 0.042 + 0.022 * m);
+    for (const l of [this.legs.near, this.legs.far]) limb(l, 0.07 + 0.04 * m, 0.055 + 0.025 * m);
   }
 
   get currentPose(): Pose {
@@ -213,10 +228,21 @@ export class StickmanRig {
 
   /** World-space (rig-local) shoulder point for the current pose. */
   shoulder(): V2 {
-    const t = this.pose.torso;
-    const h = BODY.torso - 0.02;
-    return [this.pose.pelvis[0] - Math.sin(t) * h, this.pose.pelvis[1] + Math.cos(t) * h];
+    return shoulderOf(this.pose);
   }
+
+  /** Radius of the torso at the current muscle level (for resting it on surfaces). */
+  get torsoRadius(): number {
+    return 0.1 + 0.05 * Math.max(0, this.muscle);
+  }
+
+  /** Where the hands were asked to be, and the worst miss between target and what IK reached. */
+  hands(): { near: V2; far: V2; reachError: number } {
+    const sh = this.shoulder();
+    const p = this.pose;
+    return { near: [sh[0] + p.handNear[0], sh[1] + p.handNear[1]], far: [sh[0] + p.handFar[0], sh[1] + p.handFar[1]], reachError: this.reachError };
+  }
+  private reachError = 0;
 
   applyPose(p: Pose): void {
     this.pose = p;
@@ -224,16 +250,20 @@ export class StickmanRig {
     this.spine.position.set(p.pelvis[0], p.pelvis[1], 0);
     this.spine.rotation.z = p.torso;
     this.headPivot.rotation.z = p.head;
+    this.headPivot.position.x = p.headLift;
+    this.headPivot.rotation.y = p.headYaw ?? 0;
     const sh = this.shoulder();
+    this.reachError = 0;
     const solveInto = (l: Limb, origin: V2, target: V2, bend: 1 | -1) => {
       const r = solveTwoBone(origin, target, l.l1, l.l2, bend);
+      this.reachError = Math.max(this.reachError, Math.hypot(r.reach[0] - target[0], r.reach[1] - target[1]));
       l.pivot.position.x = origin[0];
       l.pivot.position.y = origin[1];
       l.pivot.rotation.z = r.a1;
       l.elbow.rotation.z = r.a2;
     };
-    solveInto(this.arms.near, sh, p.handNear, p.elbowBend);
-    solveInto(this.arms.far, sh, p.handFar, p.elbowBend);
+    solveInto(this.arms.near, sh, [sh[0] + p.handNear[0], sh[1] + p.handNear[1]], p.elbowBend);
+    solveInto(this.arms.far, sh, [sh[0] + p.handFar[0], sh[1] + p.handFar[1]], p.elbowBend);
     solveInto(this.legs.near, p.pelvis, p.footNear, p.kneeBend);
     solveInto(this.legs.far, p.pelvis, p.footFar, p.kneeBend);
     // Feet stay flat: orient the shoe in world space regardless of shin angle.

@@ -1,14 +1,16 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { Batch } from './batch';
 import { OutlinedMesh, outlined, toon } from './materials';
 
-/** Reusable procedural props shared by every location. */
+/** Reusable procedural props. Hero props (bench station) are outlined; background props are batched. */
 
 export const PLATE_SPEC = [
-  { kg: 20, r: 0.225, t: 0.05, color: 0x2f6fe0 },
-  { kg: 10, r: 0.2, t: 0.04, color: 0x2fb457 },
-  { kg: 5, r: 0.165, t: 0.032, color: 0xf2f2f2 },
-  { kg: 2.5, r: 0.13, t: 0.026, color: 0xe5483f },
-  { kg: 1.25, r: 0.105, t: 0.02, color: 0xf0c541 },
+  { kg: 20, r: 0.225, t: 0.062, color: 0x2459d6 },
+  { kg: 10, r: 0.2, t: 0.054, color: 0xd8332f },
+  { kg: 5, r: 0.165, t: 0.044, color: 0xf2c230 },
+  { kg: 2.5, r: 0.13, t: 0.036, color: 0xefefe8 },
+  { kg: 1.25, r: 0.105, t: 0.028, color: 0x8b919c },
 ] as const;
 
 export const BAR_KG = 20;
@@ -26,69 +28,74 @@ export function platesFor(totalKg: number): number[] {
   return out;
 }
 
-const darkMetal = () => toon(0x3b3f48);
+const STEEL = 0x24272e;
+const STEEL_LIGHT = 0x3a3f4a;
+const YELLOW = 0xe3a91a;
 
-/** Olympic barbell lying along z (seen end-on from the side camera). Origin = bar centre. */
+/** Olympic barbell lying along z. Origin = bar centre. */
 export class Barbell extends THREE.Group {
   private plates = new THREE.Group();
-  readonly halfLength = 0.62;
+  readonly halfLength = 0.72;
   constructor() {
     super();
-    const bar = outlined(new THREE.CylinderGeometry(0.014, 0.014, this.halfLength * 2, 12), 0xcfd4dc, 0.006);
+    const bar = outlined(new THREE.CylinderGeometry(0.016, 0.016, this.halfLength * 2, 14), 0xd5dae2, 0.008);
     bar.rotation.x = Math.PI / 2;
     this.add(bar);
     for (const s of [1, -1]) {
-      const sleeve = outlined(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 14), 0xaeb4bf, 0.006);
+      const sleeve = outlined(new THREE.CylinderGeometry(0.028, 0.028, 0.4, 16), 0xb6bcc7, 0.008);
       sleeve.rotation.x = Math.PI / 2;
-      sleeve.position.z = s * (this.halfLength - 0.21);
+      sleeve.position.z = s * (this.halfLength - 0.2);
       this.add(sleeve);
     }
     this.add(this.plates);
   }
 
   setLoad(totalKg: number): void {
-    while (this.plates.children.length) {
-      const c = this.plates.children[0] as OutlinedMesh;
+    for (const c of [...this.plates.children]) {
       this.plates.remove(c);
-      c.fill?.geometry?.dispose?.();
+      (c as OutlinedMesh).fill?.geometry.dispose();
     }
     for (const s of [1, -1]) {
-      let z = this.halfLength - 0.04;
+      let z = this.halfLength - 0.03;
       for (const kg of platesFor(totalKg)) {
         const spec = PLATE_SPEC.find((p) => p.kg === kg)!;
-        const plate = outlined(new THREE.CylinderGeometry(spec.r, spec.r, spec.t, 28), spec.color, 0.01);
+        const plate = new THREE.Group();
+        const disc = outlined(new THREE.CylinderGeometry(spec.r, spec.r, spec.t, 32), spec.color, 0.012);
+        const hub = outlined(new THREE.CylinderGeometry(spec.r * 0.42, spec.r * 0.42, spec.t + 0.008, 20), 0x1c1f25, 0.006);
+        plate.add(disc, hub);
         plate.rotation.x = Math.PI / 2;
-        z -= spec.t / 2 + 0.003;
+        z -= spec.t / 2 + 0.002;
         plate.position.z = s * z;
         z -= spec.t / 2;
         this.plates.add(plate);
       }
-      // Collar
-      const collar = outlined(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 12), 0x23262c, 0.006);
+      const collar = outlined(new THREE.CylinderGeometry(0.04, 0.04, 0.035, 14), 0x15171b, 0.006);
       collar.rotation.x = Math.PI / 2;
-      collar.position.z = s * (z - 0.02);
+      collar.position.z = s * (z - 0.022);
       this.plates.add(collar);
     }
   }
 }
 
-/** Padded flat bench. Local origin on the floor under the bench centre, runs along x. */
+/** Padded flat bench. Local origin on the floor under the bench; pad top at y = 0.46, spans x -0.52…0.72. */
 export function createBench(): THREE.Group {
   const g = new THREE.Group();
-  const pad = outlined(new THREE.BoxGeometry(1.25, 0.1, 0.3, 1, 1, 1), 0x1d2128, 0.012);
-  pad.position.set(0.1, 0.46 - 0.05 + 0.0, 0);
+  const pad = new OutlinedMesh(new RoundedBoxGeometry(1.25, 0.1, 0.32, 4, 0.04), toon(0x1b1e24), 0.012);
+  pad.position.set(0.1, 0.41, 0);
   g.add(pad);
-  const stitch = outlined(new THREE.BoxGeometry(1.2, 0.012, 0.26), 0xd8a31a, 0.004);
-  stitch.position.set(0.1, 0.46 + 0.002, 0);
+  const stitch = outlined(new THREE.BoxGeometry(1.15, 0.006, 0.02), YELLOW, 0.002);
+  stitch.position.set(0.1, 0.4615, 0);
   g.add(stitch);
-  const frame = darkMetal();
-  for (const x of [-0.35, 0.55]) {
-    const leg = new OutlinedMesh(new THREE.BoxGeometry(0.06, 0.36, 0.5), frame, 0.01);
+  for (const x of [-0.3, 0.55]) {
+    const leg = new OutlinedMesh(new RoundedBoxGeometry(0.07, 0.36, 0.56, 2, 0.015), toon(STEEL_LIGHT), 0.012);
     leg.position.set(x, 0.18, 0);
     g.add(leg);
+    const foot = new OutlinedMesh(new RoundedBoxGeometry(0.1, 0.03, 0.7, 2, 0.01), toon(STEEL), 0.01);
+    foot.position.set(x, 0.015, 0);
+    g.add(foot);
   }
-  const spine = new OutlinedMesh(new THREE.BoxGeometry(1.1, 0.05, 0.06), frame, 0.008);
-  spine.position.set(0.1, 0.34, 0);
+  const spine = new OutlinedMesh(new RoundedBoxGeometry(1.1, 0.06, 0.08, 2, 0.015), toon(STEEL_LIGHT), 0.01);
+  spine.position.set(0.1, 0.33, 0);
   g.add(spine);
   return g;
 }
@@ -96,138 +103,146 @@ export function createBench(): THREE.Group {
 /** Bench-press rack uprights with J-hooks at the head end. */
 export function createRack(hookY: number, x: number): THREE.Group {
   const g = new THREE.Group();
-  const frame = new THREE.MeshToonMaterial({ color: 0xd9a21b });
+  const frame = toon(STEEL);
   for (const z of [0.5, -0.5]) {
-    const up = new OutlinedMesh(new THREE.BoxGeometry(0.07, 1.5, 0.07), frame, 0.01);
-    up.position.set(x, 0.75, z);
+    const up = new OutlinedMesh(new RoundedBoxGeometry(0.09, 1.55, 0.09, 2, 0.02), frame, 0.012);
+    up.position.set(x, 0.775, z);
     g.add(up);
-    const base = new OutlinedMesh(new THREE.BoxGeometry(0.9, 0.05, 0.07), frame, 0.01);
+    const base = new OutlinedMesh(new RoundedBoxGeometry(0.95, 0.05, 0.09, 2, 0.012), frame, 0.01);
     base.position.set(x - 0.2, 0.025, z);
     g.add(base);
-    const hook = new OutlinedMesh(new THREE.BoxGeometry(0.1, 0.03, 0.06), darkMetal(), 0.008);
-    hook.position.set(x + 0.05, hookY - 0.04, z);
+    const hook = new OutlinedMesh(new RoundedBoxGeometry(0.12, 0.035, 0.07, 2, 0.01), toon(YELLOW), 0.008);
+    hook.position.set(x + 0.06, hookY - 0.04, z);
     g.add(hook);
-    const safety = new OutlinedMesh(new THREE.BoxGeometry(0.4, 0.03, 0.05), darkMetal(), 0.008);
-    safety.position.set(x + 0.2, 0.52, z);
+    const hookLip = new OutlinedMesh(new RoundedBoxGeometry(0.03, 0.06, 0.07, 2, 0.01), toon(YELLOW), 0.008);
+    hookLip.position.set(x + 0.115, hookY - 0.015, z);
+    g.add(hookLip);
+    const safety = new OutlinedMesh(new RoundedBoxGeometry(0.42, 0.035, 0.06, 2, 0.01), toon(YELLOW), 0.008);
+    safety.position.set(x + 0.21, 0.5, z);
     g.add(safety);
   }
-  const cross = new OutlinedMesh(new THREE.BoxGeometry(0.06, 0.06, 1.07), frame, 0.01);
-  cross.position.set(x, 1.5, 0);
+  const cross = new OutlinedMesh(new RoundedBoxGeometry(0.08, 0.08, 1.09, 2, 0.015), frame, 0.012);
+  cross.position.set(x, 1.55, 0);
   g.add(cross);
   return g;
 }
 
-export function createSquatRack(): THREE.Group {
-  const g = new THREE.Group();
-  const frame = new THREE.MeshToonMaterial({ color: 0xc23b2b });
-  for (const [x, z] of [[-0.6, 0.45], [-0.6, -0.45], [0.6, 0.45], [0.6, -0.45]] as const) {
-    const up = new OutlinedMesh(new THREE.BoxGeometry(0.08, 2.3, 0.08), frame, 0.01);
-    up.position.set(x, 1.15, z);
-    g.add(up);
+// ---------- Batched background props (one draw call each) ----------
+
+/** Large steel power rack standing behind the bench station. */
+export function powerRackBack(): THREE.Mesh {
+  const b = new Batch();
+  for (const [x, z] of [[-0.75, 0.55], [-0.75, -0.55], [0.75, 0.55], [0.75, -0.55]] as const) b.box(0.1, 2.45, 0.1, STEEL, { pos: [x, 1.225, z] }, 0.02);
+  for (const y of [2.4, 1.5]) for (const z of [0.55, -0.55]) b.box(1.6, 0.08, 0.1, STEEL_LIGHT, { pos: [0, y, z] }, 0.02);
+  for (const x of [-0.75, 0.75]) b.box(0.1, 0.08, 1.2, STEEL_LIGHT, { pos: [x, 2.4, 0] }, 0.02);
+  // hole strips
+  for (const [x, z] of [[-0.75, 0.6], [0.75, 0.6]] as const) for (let i = 0; i < 14; i++) b.cyl(0.012, 0.012, 0.02, 0x0b0c0f, { pos: [x, 0.3 + i * 0.15, z], rot: [Math.PI / 2, 0, 0] }, 8);
+  // pull-up bar + bar with plates racked at the left
+  b.cyl(0.025, 0.025, 1.6, 0xd5dae2, { pos: [0, 2.2, 0.55], rot: [0, 0, Math.PI / 2] });
+  b.cyl(0.016, 0.016, 1.7, 0xd5dae2, { pos: [0, 1.15, 0], rot: [Math.PI / 2, 0, 0] }, 8);
+  for (const [z, s] of [[0.5, 1], [-0.5, -1]] as const) {
+    b.cyl(0.225, 0.225, 0.06, 0x2459d6, { pos: [0, 1.15, z + s * 0.0], rot: [Math.PI / 2, 0, 0] }, 24);
+    b.cyl(0.2, 0.2, 0.05, 0xd8332f, { pos: [0, 1.15, z + s * 0.06], rot: [Math.PI / 2, 0, 0] }, 24);
   }
-  for (const y of [2.3, 0.1]) {
-    for (const z of [0.45, -0.45]) {
-      const b = new OutlinedMesh(new THREE.BoxGeometry(1.28, 0.07, 0.07), frame, 0.01);
-      b.position.set(0, y, z);
-      g.add(b);
+  return b.build();
+}
+
+/** Two-shelf rack of black rubber dumbbells (matches the reference's left wall). */
+export function blackDumbbellRack(): THREE.Mesh {
+  const b = new Batch();
+  for (const y of [0.45, 0.95]) b.box(2.0, 0.05, 0.42, STEEL_LIGHT, { pos: [0, y, 0] }, 0.012);
+  for (const x of [-0.95, 0.95]) b.box(0.07, 1.0, 0.42, STEEL, { pos: [x, 0.5, 0] }, 0.012);
+  b.box(2.0, 0.05, 0.42, STEEL_LIGHT, { pos: [0, 0.09, 0] }, 0.012);
+  for (const [row, y] of [[0, 0.475], [1, 0.975]] as const)
+    for (let i = 0; i < 8; i++) {
+      const x = -0.82 + i * 0.235;
+      const r = 0.055 + ((i + row) % 4) * 0.007;
+      b.cyl(0.012, 0.012, 0.2, 0xcfd4dc, { pos: [x, y + r, 0], rot: [0, 0, Math.PI / 2] }, 8);
+      for (const s of [-1, 1]) b.cyl(r, r, 0.07, 0x15171b, { pos: [x + s * 0.1, y + r, 0], rot: [0, 0, Math.PI / 2] }, 6);
+    }
+  return b.build();
+}
+
+/** Tiered A-frame rack of colourful hex dumbbells. */
+export function colorDumbbellRack(): THREE.Mesh {
+  const b = new Batch();
+  const colors = [0xd8332f, 0xf2c230, 0x37b26a, 0x2459d6, 0x9b4fd1, 0xf08a2e];
+  for (const [i, y] of ([0.35, 0.8, 1.25] as const).entries()) {
+    b.box(1.2 - i * 0.12, 0.05, 0.5, STEEL_LIGHT, { pos: [0, y, 0] }, 0.012);
+    for (let k = 0; k < 5 - i; k++) {
+      const x = -0.5 + i * 0.05 + k * (0.24 + i * 0.01);
+      const r = 0.06 + ((k + i) % 3) * 0.008;
+      const c = colors[(k + i * 2) % colors.length]!;
+      b.cyl(0.012, 0.012, 0.19, 0xcfd4dc, { pos: [x, y + 0.03 + r, 0], rot: [0, 0, Math.PI / 2] }, 8);
+      for (const s of [-1, 1]) b.cyl(r, r, 0.075, c, { pos: [x + s * 0.1, y + 0.03 + r, 0], rot: [0, 0, Math.PI / 2] }, 6);
     }
   }
-  const pullbar = new OutlinedMesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 10), toon(0xcfd4dc), 0.006);
-  pullbar.rotation.x = Math.PI / 2;
-  pullbar.position.set(0.3, 2.15, 0);
-  g.add(pullbar);
-  const bar = new Barbell();
-  bar.setLoad(60);
-  bar.position.set(-0.6, 1.45, 0);
-  g.add(bar);
-  return g;
+  for (const x of [-0.55, 0.55]) b.box(0.06, 1.3, 0.5, STEEL, { pos: [x, 0.65, 0] }, 0.012);
+  return b.build();
 }
 
-export function createDumbbellRack(): THREE.Group {
-  const g = new THREE.Group();
-  const frame = darkMetal();
-  for (const y of [0.35, 0.75]) {
-    const shelf = new OutlinedMesh(new THREE.BoxGeometry(1.7, 0.05, 0.4), frame, 0.008);
-    shelf.position.set(0, y, 0);
-    g.add(shelf);
-  }
-  for (const x of [-0.8, 0.8]) {
-    const leg = new OutlinedMesh(new THREE.BoxGeometry(0.06, 0.8, 0.4), frame, 0.008);
-    leg.position.set(x, 0.4, 0);
-    g.add(leg);
-  }
-  const colors = [0xe5483f, 0xf0c541, 0x2fb457, 0x2f6fe0, 0xb04fd8, 0xf28a2e];
-  for (const [row, y] of [[0, 0.375], [1, 0.775]] as const) {
-    for (let i = 0; i < 6; i++) {
-      const d = new THREE.Group();
-      const handle = outlined(new THREE.CylinderGeometry(0.012, 0.012, 0.16, 8), 0xcfd4dc, 0.005);
-      handle.rotation.z = Math.PI / 2;
-      d.add(handle);
-      for (const s of [-1, 1]) {
-        const head = outlined(new THREE.CylinderGeometry(0.05 + i * 0.006, 0.05 + i * 0.006, 0.08, 6), colors[(i + row * 2) % colors.length]!, 0.006);
-        head.rotation.z = Math.PI / 2;
-        head.position.x = s * 0.1;
-        d.add(head);
-      }
-      d.position.set(-0.65 + i * 0.26, y + 0.07 + i * 0.006, 0);
-      g.add(d);
-    }
-  }
-  return g;
+export function treadmill(): THREE.Mesh {
+  const b = new Batch();
+  b.box(1.7, 0.16, 0.68, STEEL, { pos: [0, 0.2, 0] }, 0.03);
+  b.box(1.45, 0.025, 0.5, 0x0b0c0f, { pos: [0.03, 0.29, 0] }, 0.005);
+  for (const z of [0.34, -0.34]) b.box(0.06, 1.1, 0.06, STEEL_LIGHT, { pos: [-0.72, 0.78, z], rot: [0, 0, -0.1] }, 0.012);
+  b.box(0.22, 0.2, 0.78, STEEL, { pos: [-0.8, 1.3, 0], rot: [0, 0, 0.35] }, 0.03);
+  b.box(0.02, 0.13, 0.4, 0x4de1ff, { pos: [-0.72, 1.34, 0], rot: [0, 0, 0.35] }, 0);
+  for (const z of [0.4, -0.4]) b.box(1.3, 0.04, 0.05, YELLOW, { pos: [0.05, 0.34, z] }, 0.01);
+  return b.build();
 }
 
-export function createTreadmill(): THREE.Group {
-  const g = new THREE.Group();
-  const base = outlined(new THREE.BoxGeometry(1.6, 0.14, 0.62), 0x23262c, 0.01);
-  base.position.set(0, 0.17, 0);
-  g.add(base);
-  const belt = outlined(new THREE.BoxGeometry(1.42, 0.02, 0.5), 0x0e0f12, 0.004);
-  belt.position.set(0.02, 0.255, 0);
-  g.add(belt);
-  for (const z of [0.3, -0.3]) {
-    const post = outlined(new THREE.BoxGeometry(0.05, 1.05, 0.05), 0x3b3f48, 0.008);
-    post.position.set(-0.7, 0.7, z);
-    post.rotation.z = -0.12;
-    g.add(post);
-  }
-  const console_ = outlined(new THREE.BoxGeometry(0.2, 0.18, 0.7), 0x23262c, 0.008);
-  console_.position.set(-0.78, 1.2, 0);
-  console_.rotation.z = 0.3;
-  g.add(console_);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.12), new THREE.MeshBasicMaterial({ color: 0x4de1ff }));
-  screen.position.set(-0.69, 1.23, 0.0);
-  screen.rotation.y = Math.PI / 2;
-  g.add(screen);
-  return g;
-}
-
-export function createPlateTree(): THREE.Group {
-  const g = new THREE.Group();
-  const post = outlined(new THREE.CylinderGeometry(0.03, 0.03, 1.3, 10), 0x3b3f48, 0.008);
-  post.position.y = 0.65;
-  g.add(post);
-  const base = outlined(new THREE.CylinderGeometry(0.28, 0.3, 0.05, 16), 0x23262c, 0.008);
-  base.position.y = 0.025;
-  g.add(base);
+export function plateTree(): THREE.Mesh {
+  const b = new Batch();
+  b.cyl(0.03, 0.03, 1.3, STEEL_LIGHT, { pos: [0, 0.65, 0] });
+  b.cyl(0.3, 0.32, 0.05, STEEL, { pos: [0, 0.025, 0] }, 20);
   PLATE_SPEC.forEach((p, i) => {
-    for (let k = 0; k < 2; k++) {
-      const plate = outlined(new THREE.CylinderGeometry(p.r, p.r, p.t, 24), p.color, 0.008);
-      plate.rotation.x = Math.PI / 2;
-      plate.position.set(0, 0.25 + i * 0.2 + k * 0.045, 0.1 + k * 0.06);
-      g.add(plate);
-    }
+    for (let k = 0; k < 2; k++) b.cyl(p.r, p.r, p.t, p.color, { pos: [0, 0.32 + i * 0.2 + k * 0.05, 0.1 + k * 0.07], rot: [Math.PI / 2, 0, 0] }, 24);
   });
-  return g;
+  return b.build();
 }
 
-export function createKettlebells(): THREE.Group {
-  const g = new THREE.Group();
-  [0xe5483f, 0x2f6fe0, 0xf0c541].forEach((c, i) => {
-    const body = outlined(new THREE.SphereGeometry(0.1 + i * 0.012, 16, 12), c, 0.008);
-    body.position.set(i * 0.28, 0.1 + i * 0.012, 0);
-    const handle = outlined(new THREE.TorusGeometry(0.06, 0.016, 8, 16), c, 0.006);
-    handle.position.set(i * 0.28, 0.24 + i * 0.015, 0);
-    g.add(body, handle);
+export function kettlebells(): THREE.Mesh {
+  const b = new Batch();
+  [0xd8332f, 0x2459d6, 0xf2c230].forEach((c, i) => {
+    b.add(new THREE.SphereGeometry(0.1 + i * 0.012, 16, 12), c, { pos: [i * 0.28, 0.1 + i * 0.012, 0] });
+    b.add(new THREE.TorusGeometry(0.06, 0.017, 8, 16), c, { pos: [i * 0.28, 0.25 + i * 0.015, 0] });
   });
-  return g;
+  return b.build();
+}
+
+export function punchingBag(): THREE.Mesh {
+  const b = new Batch();
+  b.cyl(0.02, 0.02, 1.0, 0x777d88, { pos: [0, 3.3, 0] }, 6);
+  b.cyl(0.19, 0.17, 1.1, 0x15171b, { pos: [0, 2.2, 0] }, 20);
+  b.cyl(0.192, 0.192, 0.05, 0xc23b2b, { pos: [0, 2.7, 0] }, 20);
+  b.cyl(0.172, 0.172, 0.05, 0xc23b2b, { pos: [0, 1.7, 0] }, 20);
+  return b.build();
+}
+
+export function plant(): THREE.Mesh {
+  const b = new Batch();
+  b.cyl(0.17, 0.12, 0.3, 0x3a3f4a, { pos: [0, 0.15, 0] }, 14);
+  const greens = [0x2f8f4e, 0x3aa35c, 0x246f3d];
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2;
+    b.add(new THREE.ConeGeometry(0.08, 0.7 + (i % 3) * 0.12, 6), greens[i % 3]!, { pos: [Math.cos(a) * 0.12, 0.62, Math.sin(a) * 0.12], rot: [Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4] });
+  }
+  return b.build();
+}
+
+export function waterBottle(): THREE.Mesh {
+  const b = new Batch();
+  b.cyl(0.04, 0.04, 0.24, 0x3ba0e6, { pos: [0, 0.12, 0] }, 12);
+  b.cyl(0.025, 0.04, 0.05, 0x2a6ea0, { pos: [0, 0.265, 0] }, 12);
+  b.cyl(0.026, 0.026, 0.03, 0x15171b, { pos: [0, 0.305, 0] }, 12);
+  return b.build();
+}
+
+/** Floor-to-ceiling steel column. */
+export function steelColumn(height = 6): THREE.Mesh {
+  const b = new Batch();
+  b.box(0.3, height, 0.3, STEEL, { pos: [0, height / 2, 0] }, 0.02);
+  b.box(0.36, 0.1, 0.36, STEEL_LIGHT, { pos: [0, 0.05, 0] }, 0.02);
+  return b.build();
 }

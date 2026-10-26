@@ -112,3 +112,90 @@ export const neonSign = (text: string, color = '#ffcf33'): THREE.CanvasTexture =
     g.fillStyle = '#fff6cf';
     g.fillText(text, 512, 135);
   });
+
+/** Dusk city skyline for gym windows: gradient sky, sun glow, two building layers with lit windows. */
+export const skylineTexture = (): THREE.CanvasTexture =>
+  canvasTexture(512, 512, (g) => {
+    const sky = g.createLinearGradient(0, 0, 0, 512);
+    sky.addColorStop(0, '#2c4a86');
+    sky.addColorStop(0.5, '#7d6aa6');
+    sky.addColorStop(0.75, '#f3a15a');
+    sky.addColorStop(1, '#ffd08a');
+    g.fillStyle = sky;
+    g.fillRect(0, 0, 512, 512);
+    const sun = g.createRadialGradient(330, 380, 4, 330, 380, 150);
+    sun.addColorStop(0, 'rgba(255,240,200,0.95)');
+    sun.addColorStop(1, 'rgba(255,200,120,0)');
+    g.fillStyle = sun;
+    g.fillRect(0, 0, 512, 512);
+    const r = noise(5);
+    const layer = (base: number, color: string, winColor: string, hMin: number, hMax: number) => {
+      let x = -10;
+      while (x < 520) {
+        const w = 34 + r() * 50;
+        const h = hMin + r() * (hMax - hMin);
+        g.fillStyle = color;
+        g.fillRect(x, base - h, w, h + 200);
+        g.fillStyle = winColor;
+        for (let wy = base - h + 8; wy < base - 6; wy += 14) for (let wx = x + 6; wx < x + w - 8; wx += 12) if (r() > 0.55) g.fillRect(wx, wy, 5, 7);
+        x += w + 2 + r() * 6;
+      }
+    };
+    layer(430, '#3a3f66', 'rgba(255,214,140,0.55)', 60, 170);
+    layer(480, '#1d2038', 'rgba(255,224,160,0.9)', 50, 190);
+  });
+
+export const gymSign = (): THREE.CanvasTexture =>
+  canvasTexture(512, 384, (g) => {
+    g.fillStyle = '#1b1d22';
+    g.fillRect(0, 0, 512, 384);
+    g.strokeStyle = '#0c0d10';
+    g.lineWidth = 14;
+    g.strokeRect(0, 0, 512, 384);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = '900 78px system-ui, Arial Black, sans-serif';
+    ['TRAIN', 'HARDER', 'GET', 'STRONGER'].forEach((w, i) => {
+      g.fillStyle = i < 2 ? '#e9e4d6' : '#ffcf33';
+      g.fillText(w, 256, 62 + i * 88);
+    });
+  });
+
+/** Dark reflective tile floor with warm glow pooled in the centre. */
+export const tileFloor = (): THREE.CanvasTexture =>
+  canvasTexture(
+    512,
+    512,
+    (g) => {
+      const r = noise(21);
+      g.fillStyle = '#2b2e36';
+      g.fillRect(0, 0, 512, 512);
+      for (let ty = 0; ty < 2; ty++)
+        for (let tx = 0; tx < 2; tx++) {
+          const v = 40 + r() * 12;
+          g.fillStyle = `rgb(${v},${v + 3},${v + 10})`;
+          g.fillRect(tx * 256 + 3, ty * 256 + 3, 250, 250);
+          const grad = g.createLinearGradient(tx * 256, ty * 256, tx * 256 + 256, ty * 256 + 256);
+          grad.addColorStop(0, 'rgba(255,255,255,0.07)');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          g.fillStyle = grad;
+          g.fillRect(tx * 256 + 3, ty * 256 + 3, 250, 250);
+        }
+      g.fillStyle = '#15171c';
+      g.fillRect(0, 0, 512, 4);
+      g.fillRect(0, 254, 512, 4);
+      g.fillRect(0, 0, 4, 512);
+      g.fillRect(254, 0, 4, 512);
+    },
+    [14, 10],
+  );
+
+/** Soft round shadow/glow blob used under objects for cheap grounding. */
+export const blobTexture = (): THREE.CanvasTexture =>
+  canvasTexture(128, 128, (g) => {
+    const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+    grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+  });
