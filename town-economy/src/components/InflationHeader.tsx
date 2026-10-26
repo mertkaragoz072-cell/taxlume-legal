@@ -226,12 +226,6 @@ export function InflationHeader({
               {townName.toUpperCase()}
             </Text>
           </View>
-          {/* Off on its own rather than trailing the name inline — inline,
-              its width pulled the name itself left of true center, which
-              is exactly the "centered" look this is meant to fix. */}
-          <Text style={styles.editHint} pointerEvents="none">
-            ✏️
-          </Text>
         </Pressable>
         <View style={styles.controls}>
           <Pressable
@@ -401,10 +395,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
     height: PLATE_HEIGHT,
   },
+  // The same inset on both sides (the wider of the two caps) rather than
+  // each cap's own width — the caps differ by a couple of pixels, and using
+  // them as-is left the text area, and so the name, imperceptibly off
+  // center.
   plateTextWrap: {
     position: "absolute",
-    left: PLATE_CAP_LEFT_W,
-    right: PLATE_CAP_RIGHT_W,
+    left: Math.max(PLATE_CAP_LEFT_W, PLATE_CAP_RIGHT_W),
+    right: Math.max(PLATE_CAP_LEFT_W, PLATE_CAP_RIGHT_W),
     top: 0,
     bottom: 0,
     justifyContent: "center",
@@ -416,13 +414,6 @@ const styles = StyleSheet.create({
     fontSize: TYPE.caption,
     letterSpacing: 0.2,
     textAlign: "center",
-  },
-  editHint: {
-    position: "absolute",
-    right: PLATE_CAP_RIGHT_W - 4,
-    top: "50%",
-    marginTop: -7,
-    fontSize: 11,
   },
   streakBadge: {
     backgroundColor: "#2a2016",
