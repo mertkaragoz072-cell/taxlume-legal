@@ -99,7 +99,7 @@ const PAGE_HELPERS = () => {
 
   // --- aggregate the per-frame samples ---------------------------------------
   const post = await drain(); const samples = [...pre.s, ...post.s], fit = [...pre.f, ...post.f];
-  const classify = t => t > 1.5 ? 'LYING' : t < 0.2 ? 'SEATED' : 'TRANSITION';
+  const classify = t => t > 0.72 ? 'RECLINED' : t < 0.2 ? 'SEATED' : 'TRANSITION';
   const seq = []; samples.forEach(s => { const c = classify(s.torso); if (seq.at(-1) !== c) seq.push(c); });
   res.poseSequence = seq;
   res.rackBlockedFrames = samples.filter(s => Object.keys(s.blockers).length).length + '/' + samples.length;

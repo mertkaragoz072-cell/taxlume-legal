@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { BenchPressAnimator, type RepReport } from '../animation/benchPress';
 import { BODY, solveTwoBone, StickmanRig } from '../character/rig';
-import { BENCH } from '../world/gymScene';
+import { BENCH, chestFor, HOOK, pelvisFor, SPINE_N, SPINE_U } from '../world/benchGeometry';
 import { Barbell, BAR_HALF, PLATE_SPEC, platesFor, RACK_UPRIGHT, RACK_Z } from '../world/props';
 
 type Frame = { t: number };
@@ -123,23 +123,34 @@ describe('bench press animation', () => {
     expect(feet.size).toBe(1);
   });
 
-  it('rests the torso and head ON the pad (no clipping) at every muscle level', async () => {
+  it('sits on the seat and rests the torso and head ON the incline pad (no clipping) at every muscle level', async () => {
+    const refP = pelvisFor(BENCH.refTorsoR);
+    const planeD = refP[0] * SPINE_N[0] + refP[1] * SPINE_N[1] - BENCH.refTorsoR; // pad surface: p·N = D
     for (const m of [0, 0.5, 1]) {
       const { rig, a } = setup(m);
-      let minClear = Infinity;
+      let worstSeat = 0;
+      let worstBack = 0;
+      let minHeadClear = Infinity;
+      let frames = 0;
       const check = () => {
         const p = rig.currentPose;
-        if (p.torso < Math.PI / 2 - 0.05) return; // only while (almost) fully lying
-        minClear = Math.min(minClear, p.pelvis[1] - rig.torsoRadius - BENCH.padTop);
-        // head centre height above pad = spine height + lift; its radius must clear the pad
-        const headBottom = p.pelvis[1] + p.headLift - BODY.headR;
-        minClear = Math.min(minClear, headBottom - BENCH.padTop);
+        if (p.torso < BENCH.incline - 1e-6) return; // only while fully reclined
+        frames++;
+        const r = rig.torsoRadius;
+        worstSeat = Math.max(worstSeat, Math.abs(p.pelvis[1] - r - BENCH.seatTop - BENCH.seatGap));
+        // distance of the torso axis from the pad plane must equal the torso radius (touching, not inside)
+        worstBack = Math.max(worstBack, Math.abs(p.pelvis[0] * SPINE_N[0] + p.pelvis[1] * SPINE_N[1] - planeD - r));
+        const j = rig.joints();
+        minHeadClear = Math.min(minHeadClear, j.head[0] * SPINE_N[0] + j.head[1] * SPINE_N[1] - planeD - BODY.headR);
       };
       void a.prepareSet();
       await run(a, 3.6, check);
       void a.playRep('success');
       await run(a, 3.6, check);
-      expect(minClear).toBeGreaterThanOrEqual(-0.001);
+      expect(frames).toBeGreaterThan(50);
+      expect(worstSeat).toBeLessThan(1e-9);
+      expect(worstBack).toBeLessThan(1e-9);
+      expect(minHeadClear).toBeGreaterThanOrEqual(-0.006); // head rests on the pad, never inside it
     }
   });
 
@@ -192,10 +203,10 @@ describe('bench press animation', () => {
     void a.playRep('failed').then((r) => (report = r));
     let max = 0;
     await run(a, 4, (f) => {
-      if (f.t > 1.7) max = Math.max(max, bar.position.y - 0.7);
+      if (f.t > 1.7) max = Math.max(max, bar.position.y - chestFor(0.1)[1]);
     });
     expect(report).toEqual({ chestReached: true, lockout: false });
-    expect(max).toBeLessThan((top - 0.7) * 0.5);
+    expect(max).toBeLessThan((top - chestFor(0.1)[1]) * 0.5);
   });
 
   it('bar and character share one coordinate frame (rig parented to a rotated station keeps hands on bar)', async () => {
@@ -219,7 +230,7 @@ describe('bench press state machine (never flips upright mid-exercise)', () => {
     const badTorso: number[] = [];
     const watch = () => {
       modes.add(a.bodyMode);
-      if (a.bodyMode === 'lying' && Math.abs(rig.currentPose.torso - Math.PI / 2) > 1e-9) badTorso.push(rig.currentPose.torso);
+      if (a.bodyMode === 'lying' && Math.abs(rig.currentPose.torso - BENCH.incline) > 1e-9) badTorso.push(rig.currentPose.torso);
     };
     void a.prepareSet();
     await run(a, 3.6, watch);
@@ -244,39 +255,47 @@ describe('bench press state machine (never flips upright mid-exercise)', () => {
     expect(a.bodyMode).toBe('seated');
   });
 
-  it('torso stays within the transition window: π/2 lying, ~0 seated, nothing else outside transitions', async () => {
+  it('torso stays within the transition window: bench incline when lying, ~0 seated, nothing else outside transitions', async () => {
     const { rig, a } = setup();
     void a.prepareSet();
     const seen: Array<[string, number]> = [];
     await run(a, 3.6, () => seen.push([a.bodyMode, rig.currentPose.torso]));
     for (const [mode, torso] of seen) {
       if (mode === 'seated') expect(torso).toBeLessThan(0.15);
-      if (mode === 'lying') expect(torso).toBeCloseTo(Math.PI / 2, 9);
+      if (mode === 'lying') expect(torso).toBeCloseTo(BENCH.incline, 9);
       expect(torso).toBeGreaterThanOrEqual(0); // never rotates the wrong way round
-      expect(torso).toBeLessThanOrEqual(Math.PI / 2 + 1e-9);
+      expect(torso).toBeLessThanOrEqual(BENCH.incline + 1e-9);
     }
   });
 
-  it('the bar never enters the torso or the bench, and travels on a near-vertical path', async () => {
+  it('the bar never enters the torso or head, and travels on a vertical path', async () => {
     for (const m of [0, 1]) {
       const { rig, bar, a } = setup(m);
       void a.prepareSet();
       await run(a, 3.6);
       let minClear = Infinity;
+      let minHead = Infinity;
       let minX = Infinity;
       let maxX = -Infinity;
       void a.playRep('success');
       await run(a, 3.6, () => {
         const j = rig.joints();
         const x = bar.position.x;
+        const y = bar.position.y;
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
-        // torso is a capsule along y at the pelvis line from the hips to the shoulders (x in [shoulder, pelvis])
-        if (x <= j.pelvis[0] && x >= j.shoulder[0] - 0.05) minClear = Math.min(minClear, bar.position.y - 0.016 - (j.pelvis[1] + rig.torsoRadius));
-        expect(bar.position.y - 0.016).toBeGreaterThan(BENCH.padTop); // never below the pad surface
+        // distance from the bar centre to the torso axis segment (pelvis → shoulder, extended to the neck)
+        const a0 = j.pelvis;
+        const a1: [number, number] = [j.pelvis[0] + SPINE_U[0] * 0.58, j.pelvis[1] + SPINE_U[1] * 0.58];
+        const dx = a1[0] - a0[0];
+        const dy = a1[1] - a0[1];
+        const t = Math.max(0, Math.min(1, ((x - a0[0]) * dx + (y - a0[1]) * dy) / (dx * dx + dy * dy)));
+        minClear = Math.min(minClear, Math.hypot(x - (a0[0] + t * dx), y - (a0[1] + t * dy)) - rig.torsoRadius - 0.016);
+        minHead = Math.min(minHead, Math.hypot(x - j.head[0], y - j.head[1]) - BODY.headR - 0.016);
       });
       expect(minClear).toBeGreaterThanOrEqual(-0.002);
-      expect(maxX - minX).toBeLessThan(0.08); // ≤ 8 cm horizontal drift over the whole rep
+      expect(minHead).toBeGreaterThan(0.05);
+      expect(maxX - minX).toBeLessThan(0.02); // a straight vertical bar path
     }
   });
 
@@ -302,7 +321,8 @@ describe('bench press state machine (never flips upright mid-exercise)', () => {
     const after = rig.joints();
     expect(Math.hypot(after.pelvis[0] - before.pelvis[0], after.pelvis[1] - before.pelvis[1])).toBeLessThan(0.01);
     expect(Math.hypot(after.handNear[0] - before.handNear[0], after.handNear[1] - before.handNear[1])).toBeLessThan(0.02);
-    expect(bar.position.y).toBeCloseTo(BENCH.hookY, 6);
+    expect(bar.position.x).toBeCloseTo(HOOK[0], 6);
+    expect(bar.position.y).toBeCloseTo(HOOK[1], 6);
     expect(rig.hands().reachError).toBeLessThan(1e-6);
   });
 
@@ -310,7 +330,7 @@ describe('bench press state machine (never flips upright mid-exercise)', () => {
     const { rig, bar, a } = setup(0.7);
     a.restoreLying();
     expect(a.bodyMode).toBe('lying');
-    expect(rig.currentPose.torso).toBeCloseTo(Math.PI / 2, 9);
+    expect(rig.currentPose.torso).toBeCloseTo(BENCH.incline, 9);
     const h = rig.hands();
     expect(Math.hypot(h.near[0] - bar.position.x, h.near[1] - bar.position.y)).toBeLessThan(1e-6);
     expect(h.reachError).toBeLessThan(1e-6);
@@ -327,7 +347,8 @@ describe('bench press state machine (never flips upright mid-exercise)', () => {
       expect(j.head[0]).toBeLessThan(j.shoulder[0]); // head beyond the shoulders, toward the rack
       expect(j.shoulder[0]).toBeLessThan(j.pelvis[0]);
       expect(j.pelvis[0]).toBeLessThan(j.footNear[0]);
-      expect(Math.abs(j.head[1] - j.shoulder[1])).toBeLessThan(0.1); // head and shoulders at one height on the pad
+      expect(j.head[1] - j.shoulder[1]).toBeGreaterThan(0.05); // head above the shoulders on the incline
+      expect(j.head[1] - j.shoulder[1]).toBeLessThan(0.35);
       spread.push(j.pelvis[0]);
     });
     expect(Math.max(...spread) - Math.min(...spread)).toBeLessThan(1e-9); // hips do not move at all during reps

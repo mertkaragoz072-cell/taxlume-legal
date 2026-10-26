@@ -62,7 +62,18 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 | Clothing / tattoos / hair | NOT STARTED | |
 | Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## What was done this round (files)
+## Gym staging matched to the reference panel (latest)
+- Bench is now an **incline bench** (`world/benchGeometry.ts` is the single source of truth for seat, pad plane, spine angle, chest/lockout/hook points).
+  The lifter sits facing the camera and leans back; the bar is horizontal, its path is exactly vertical (≤ 2 cm drift, tested); the torso axis is
+  placed exactly one torso-radius in front of the pad plane for every physique, the pelvis on the seat, the head resting on the pad.
+- Camera: frontal (yaw 0, elevation 9°, fov 34°), framed on the station; rack uprights stand behind the lifter and flank the bar (0 occluded frames).
+- Room: sign "TRAIN HARDER GET STRONGER" at left, black dumbbell rack left, colour dumbbell rack right, power-rack frame behind, punching bag,
+  skyline window right, treadmills, hanging lamps, plants, lifting mat, dark tile floor.
+- Tests updated for the incline (pad contact, vertical path, bar vs torso/head clearance); 140 passing; e2e gym scenarios re-run at 390×844 and 360×640: all pass.
+- Not matched: the reference is wide landscape; in portrait only the centre of the room is visible (sign, racks, window edge). The seated resting posture
+  has straight lower legs; knees are not splayed like the painting.
+
+## What was done in the previous round (files)
 - **Reference**: copied to `references/life-simulator-reference.jpg`; analysed; `VISUAL_STYLE_GUIDE.md` written (all panels).
 - **Simulation**: `simulation/activities.ts`, `simulation/actions.ts` (single `executeAction` + side-effect-free `dryRun`), `simulation/needs.ts`
   (sleeping mode, well-being drift), `simulation/config.ts`, `inventory/inventory.ts`, `navigation/travel.ts`, `fitness/access.ts`

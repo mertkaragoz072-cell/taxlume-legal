@@ -1,13 +1,13 @@
 import { easeInOut, lerp } from '../core/math';
 import { BODY, lerpPose, shoulderOf, type Pose, type StickmanRig, type V2 } from '../character/rig';
-import { BENCH } from '../world/gymScene';
+import { BENCH, chestFor, HOOK, lockoutFor, pelvisFor } from '../world/benchGeometry';
 import type { Barbell } from '../world/props';
 
 type Seg = { dur: number; fn: (t: number) => void; start?: () => void; done?: () => void };
 
 /**
  * Explicit body state. The torso angle may change ONLY while `mode` is a transition;
- * in `lying` it is exactly π/2 and in `seated` exactly its seated value (plus tiny breathing).
+ * in `lying` it is exactly BENCH.incline and in `seated` exactly its seated value (plus tiny breathing).
  */
 export type BodyMode = 'seated' | 'lying' | 'seatedToLying' | 'lyingToSeated';
 
@@ -23,16 +23,16 @@ export type RepResult = 'success' | 'failed';
 
 const FLOOR_Y = 0.085; // ankle height: shoe radius (0.062) + ankle-to-shoe-centre offset (0.02) above the mat
 /** Feet stay planted at the same spot in every pose, so they never slide during transitions. */
-const FOOT_NEAR: V2 = [0.95, FLOOR_Y];
-const FOOT_FAR: V2 = [0.85, FLOOR_Y];
+const FOOT_NEAR: V2 = [0.52, FLOOR_Y];
+const FOOT_FAR: V2 = [0.42, FLOOR_Y];
 /** Hands resting on the thighs when seated (relative to the shoulder). */
-const SIT_HAND: V2 = [0.25, -0.35];
+const SIT_HAND: V2 = [0.25, -0.4];
 /** Arc control for the hands while reaching: forward and slightly up, clear of the torso. */
 const REACH_CTRL: V2 = [0.45, 0.1];
 /** While resting the head turns toward the viewer (the body faces along the bench, away from the camera). */
 const SIT_HEAD_YAW = 0;
-const LIE_HEAD_TILT = -0.35;
-const ARM_REACH = BODY.upperArm + BODY.foreArm;
+/** Head tilt relative to the spine: the face looks up and forward toward the bar and the viewer. */
+const LIE_HEAD_TILT = -0.25;
 
 const smooth = (t: number): number => easeInOut(Math.min(1, Math.max(0, t)));
 const bez = (a: V2, c: V2, b: V2, t: number): V2 => {
@@ -87,28 +87,23 @@ export class BenchPressAnimator {
 
   // ----- Geometry anchors (depend on the current physique) -----
 
-  private seatY(): number {
-    return BENCH.padTop + this.rig.torsoRadius + 0.012;
-  }
   private hook(): V2 {
-    return [BENCH.rackX + 0.04, BENCH.hookY];
+    return [HOOK[0], HOOK[1]];
   }
   private lockout(): V2 {
-    const [sx, sy] = shoulderOf(this.lyingBase());
-    return [sx + 0.05, sy + ARM_REACH * 0.93];
+    return lockoutFor(this.rig.torsoRadius);
   }
+  /** Bar touches the upper chest straight below lockout: a vertical bar path. */
   private chest(): V2 {
-    // Bar touches the lower chest, only ~5 cm further toward the hips than lockout: a near-vertical path.
-    const [sx] = shoulderOf(this.lyingBase());
-    return [sx + 0.1, BENCH.padTop + 2 * this.rig.torsoRadius + 0.03];
+    return chestFor(this.rig.torsoRadius);
   }
 
+  /** Reclined on the incline pad: spine at the bench angle, pelvis on the seat, head resting on the pad. */
   private lyingBase(): Pose {
     const tr = this.rig.torsoRadius;
     return {
-      pelvis: [BENCH.pelvisX, this.seatY()],
-      torso: Math.PI / 2,
-      // chin tilted back toward the camera so the face stays readable
+      pelvis: pelvisFor(tr),
+      torso: BENCH.incline,
       head: LIE_HEAD_TILT,
       headLift: BODY.headR - tr + 0.005,
       handNear: [0, 0],
@@ -130,7 +125,7 @@ export class BenchPressAnimator {
 
   private sitPose(): Pose {
     return {
-      pelvis: [0.58, this.seatY()],
+      pelvis: pelvisFor(this.rig.torsoRadius),
       torso: 0.06,
       head: 0,
       headLift: 0,

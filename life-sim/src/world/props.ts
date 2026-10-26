@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { Batch } from './batch';
+import { BENCH, SPINE_N, backPad } from './benchGeometry';
 import { OutlinedMesh, outlined, toon } from './materials';
 
 /** Reusable procedural props. Hero props (bench station) are outlined; background props are batched. */
@@ -82,26 +83,39 @@ export class Barbell extends THREE.Group {
   }
 }
 
-/** Padded flat bench. Local origin on the floor under the bench; pad top at y = 0.46, spans x -0.52…0.72. */
+/** Incline bench: padded seat, inclined back pad on a steel frame. Geometry comes from `benchGeometry.ts`. */
 export function createBench(): THREE.Group {
   const g = new THREE.Group();
-  const pad = new OutlinedMesh(new RoundedBoxGeometry(1.25, 0.1, 0.32, 4, 0.04), toon(0x1b1e24), 0.012);
-  pad.position.set(0.1, 0.41, 0);
-  g.add(pad);
-  const stitch = outlined(new THREE.BoxGeometry(1.15, 0.006, 0.02), YELLOW, 0.002);
-  stitch.position.set(0.1, 0.4615, 0);
+  const frame = toon(STEEL_LIGHT);
+  const seat = new OutlinedMesh(new RoundedBoxGeometry(0.52, 0.1, 0.32, 4, 0.04), toon(0x1b1e24), 0.012);
+  seat.position.set(0.16, BENCH.seatTop - 0.05, 0);
+  g.add(seat);
+  const bp = backPad();
+  const back = new OutlinedMesh(new RoundedBoxGeometry(bp.thickness, bp.length, 0.34, 4, 0.04), toon(0x1b1e24), 0.012);
+  back.position.set(bp.center[0], bp.center[1], 0);
+  back.rotation.z = BENCH.incline;
+  g.add(back);
+  const stitch = outlined(new THREE.BoxGeometry(0.006, bp.length * 0.9, 0.02), YELLOW, 0.002);
+  stitch.position.set(bp.center[0] + SPINE_N[0] * (bp.thickness / 2 + 0.002), bp.center[1] + SPINE_N[1] * (bp.thickness / 2 + 0.002), 0);
+  stitch.rotation.z = BENCH.incline;
   g.add(stitch);
-  for (const x of [-0.3, 0.55]) {
-    const leg = new OutlinedMesh(new RoundedBoxGeometry(0.07, 0.36, 0.56, 2, 0.015), toon(STEEL_LIGHT), 0.012);
-    leg.position.set(x, 0.18, 0);
-    g.add(leg);
-    const foot = new OutlinedMesh(new RoundedBoxGeometry(0.1, 0.03, 0.7, 2, 0.01), toon(STEEL), 0.01);
+  // frame: front and rear legs, floor feet, and a diagonal brace under the back pad
+  const leg = (x: number, h: number) => {
+    const m = new OutlinedMesh(new RoundedBoxGeometry(0.07, h, 0.06, 2, 0.015), frame, 0.012);
+    m.position.set(x, h / 2, 0);
+    g.add(m);
+  };
+  leg(0.38, BENCH.seatTop - 0.1);
+  leg(-0.04, BENCH.seatTop - 0.1);
+  for (const x of [0.38, -0.05]) {
+    const foot = new OutlinedMesh(new RoundedBoxGeometry(0.1, 0.03, 0.62, 2, 0.01), toon(STEEL), 0.01);
     foot.position.set(x, 0.015, 0);
     g.add(foot);
   }
-  const spine = new OutlinedMesh(new RoundedBoxGeometry(1.1, 0.06, 0.08, 2, 0.015), toon(STEEL_LIGHT), 0.01);
-  spine.position.set(0.1, 0.33, 0);
-  g.add(spine);
+  const brace = new OutlinedMesh(new RoundedBoxGeometry(0.05, 0.62, 0.06, 2, 0.01), frame, 0.01);
+  brace.position.set(-0.16, 0.5, 0);
+  brace.rotation.z = 0.35;
+  g.add(brace);
   return g;
 }
 

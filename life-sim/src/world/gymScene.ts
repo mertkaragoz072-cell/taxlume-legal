@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { LocationScene } from './locationScene';
+import { HOOK, RACK_X } from './benchGeometry';
 import { outlined, surface } from './materials';
 import {
   Barbell,
@@ -18,20 +19,13 @@ import {
 import { blobTexture, gymSign, poolTexture, posterTexture, shaftTexture, skylineTexture, tileFloor, wallPanels } from './textures';
 import { Batch } from './batch';
 
-/** Bench-press station anchors, in the station's own (unrotated) coordinates, metres. */
-export const BENCH = {
-  padTop: 0.46,
-  pelvisX: 0.38,
-  rackX: -0.16,
-  hookY: 1.1,
-} as const;
-
 /**
- * The station is rotated about Y so the camera sees it three-quarter on, like the
- * reference art: the bar runs across the screen with a plate on each side.
+ * The incline bench is turned so the lifter sits facing the camera (feet toward the viewer, leaning back
+ * against the pad) and the bar runs horizontally across the screen — the staging of the reference art.
+ * A small extra yaw gives a gentle 3/4 depth cue. The rack stands BEHIND the lifter.
  */
-export const STATION_YAW = -0.93;
-export const STATION_POS: [number, number, number] = [0.15, 0.02, 0.1];
+export const STATION_YAW = -1.45;
+export const STATION_POS: [number, number, number] = [0, 0.02, 0.2];
 
 export interface GymScene extends LocationScene {
   /** Parent of bench, rack, barbell and the character rig (station-local coordinates). */
@@ -51,21 +45,21 @@ export function createGymScene(): GymScene {
   root.add(wall);
 
   const winFrame = outlined(new THREE.BoxGeometry(2.3, 2.1, 0.1), 0x0e0f12, 0.01);
-  winFrame.position.set(2.0, 2.15, -3.55);
+  winFrame.position.set(2.7, 2.15, -3.55);
   root.add(winFrame);
   const skyline = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 1.9), new THREE.MeshBasicMaterial({ map: tex(skylineTexture()) }));
-  skyline.position.set(2.0, 2.15, -3.49);
+  skyline.position.set(2.7, 2.15, -3.49);
   root.add(skyline);
-  for (const [x, y, w, h] of [[2.0, 2.15, 0.06, 1.9], [2.0, 2.15, 2.1, 0.06]] as const) {
+  for (const [x, y, w, h] of [[2.7, 2.15, 0.06, 1.9], [2.7, 2.15, 2.1, 0.06]] as const) {
     const bar = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.05), new THREE.MeshBasicMaterial({ color: 0x0e0f12 }));
     bar.position.set(x, y, -3.45);
     root.add(bar);
   }
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.86), new THREE.MeshBasicMaterial({ map: tex(gymSign()) }));
-  sign.position.set(-1.35, 2.35, -3.52);
+  sign.position.set(-1.1, 2.4, -3.52);
   root.add(sign);
   const signFrame = outlined(new THREE.BoxGeometry(1.25, 0.96, 0.06), 0x0e0f12, 0.008);
-  signFrame.position.set(-1.35, 2.35, -3.56);
+  signFrame.position.set(-1.1, 2.4, -3.56);
   root.add(signFrame);
 
   // Steel columns frame the scene and add depth cues.
@@ -89,20 +83,18 @@ export function createGymScene(): GymScene {
 
   // --- Layer 1: back-row equipment ---
   const rackBack = powerRackBack();
-  rackBack.position.set(-1.0, 0, -3.0);
+  rackBack.position.set(0.3, 0, -3.1);
   root.add(rackBack);
   const bag = punchingBag();
-  bag.position.set(-2.05, 0, -2.9);
+  bag.position.set(2.0, 0, -2.9);
   root.add(bag);
   const colorRack = colorDumbbellRack();
-  colorRack.position.set(2.55, 0, -2.55);
-  colorRack.rotation.y = -0.15;
+  colorRack.position.set(1.15, 0, -3.0);
   root.add(colorRack);
   const darkRack = blackDumbbellRack();
-  darkRack.position.set(-2.2, 0, -2.0);
-  darkRack.rotation.y = 0.18;
+  darkRack.position.set(-1.7, 0, -3.0);
   root.add(darkRack);
-  for (const [x, z] of [[3.3, -1.5], [3.6, -0.6]] as const) {
+  for (const [x, z] of [[3.2, -1.7], [3.6, -0.9]] as const) {
     const t = treadmill();
     t.position.set(x, 0, z);
     t.rotation.y = -0.5;
@@ -114,10 +106,10 @@ export function createGymScene(): GymScene {
     root.add(t);
   }
   const tree = plateTree();
-  tree.position.set(-2.9, 0, -2.7);
+  tree.position.set(-2.9, 0, -2.9);
   root.add(tree);
   const pl = plant();
-  pl.position.set(-3.1, 0, -2.0);
+  pl.position.set(-2.55, 0, -2.6);
   root.add(pl);
 
   // --- Layer 2: bench-press station (hero) ---
@@ -135,15 +127,15 @@ export function createGymScene(): GymScene {
     station.add(line);
   }
   station.add(createBench());
-  station.add(createRack(BENCH.hookY, BENCH.rackX));
+  station.add(createRack(HOOK[1], RACK_X));
   const barbell = new Barbell();
-  barbell.position.set(BENCH.rackX + 0.04, BENCH.hookY, 0);
+  barbell.position.set(HOOK[0], HOOK[1], 0);
   barbell.userData.bar = true;
   station.add(barbell);
 
   // Foreground clutter near the station for grounding.
   const bottle = waterBottle();
-  bottle.position.set(-0.9, 0, 1.0);
+  bottle.position.set(-1.15, 0, 0.5);
   root.add(bottle);
 
   // Soft contact shadows
@@ -154,10 +146,10 @@ export function createGymScene(): GymScene {
     m.position.set(x, 0.004, z);
     root.add(m);
   };
-  addBlob(STATION_POS[0], STATION_POS[2], 2.2, 2.6, 0.17);
-  addBlob(0.5, -2.75, 2.4, 1.8);
-  addBlob(-2.2, -2.0, 2.6, 0.9);
-  addBlob(2.55, -2.55, 1.8, 0.9);
+  addBlob(STATION_POS[0], STATION_POS[2], 2.6, 2.2, 0.12);
+  addBlob(0.3, -3.1, 2.4, 1.2);
+  addBlob(-1.7, -3.0, 2.6, 1.0);
+  addBlob(1.15, -3.0, 1.8, 1.0);
 
   // --- Atmosphere & detail ---
   // Ceiling pipes, duct and a yellow LED strip along the wall.
@@ -212,7 +204,7 @@ export function createGymScene(): GymScene {
   const shaftMat = new THREE.MeshBasicMaterial({ map: tex(shaftTexture()), opacity: 0.22, ...additive });
   const poolMat = new THREE.MeshBasicMaterial({ map: tex(poolTexture()), opacity: 0.9, ...additive });
   const lampMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff0cf).multiplyScalar(3.2) });
-  for (const x of [-1.6, 0.5, 2.5]) {
+  for (const x of [-2.0, -0.55, 0.9, 2.35]) {
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.22), lampMat);
     lamp.position.set(x, 3.95, -1.2);
     root.add(lamp);
@@ -240,7 +232,7 @@ export function createGymScene(): GymScene {
     root,
     station,
     barbell,
-    camera: { target: [0.12, 0.82, 0], fov: 38, yaw: 12, elevation: 19, fitWidth: 2.2, fitHeight: 1.9, uiBottomFraction: 0.32 },
+    camera: { target: [0, 1.12, 0.2], fov: 34, yaw: 0, elevation: 9, fitWidth: 2.6, fitHeight: 2.4, uiBottomFraction: 0.32 },
     update: () => {},
     dispose() {
       disposables.forEach((t) => t.dispose());
