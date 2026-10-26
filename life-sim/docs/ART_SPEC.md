@@ -29,9 +29,14 @@ shading ramp (`world/materials.ts`) should be tuned to match painted backdrops.
 - To replace the art: overwrite `public/art/gym-backdrop.webp` (keep the portrait aspect; the floor should occupy the lower ~55%; leave the centre of
   the floor open for the station).
 
-## Slot reserved for the supplied bench-station asset
-The bench station currently in the middle is the procedural placeholder (`world/props.ts → createBench/createRack`, geometry in
-`world/benchGeometry.ts`). A supplied asset replaces it at the station group (`gymScene.ts → station`, origin at the seat, +x toward the viewer's
-feet side). Accepted: a GLB/GLTF model (preferred: separate bar, bench, rack, with the bar centred at its own origin and sized in metres), or
-transparent PNG/WebP sprites (bench + rack as a back layer, bar + plates as a separate layer, an optional front layer) — sprites keep the animated
-stickman between the layers.
+## Implemented: bench-station sprite (`public/art/bench-station.webp`)
+- Supplied asset: transparent WebP (cropped to 1168×1182) of a flat bench with a rack (two uprights with J-hooks), drawn in a 3/4 view from the foot end.
+- It is a **camera-facing layer just behind the 3D lifter and bar** (`world/gymScene.ts`, `SPRITE`, `placeSprite`): the stickman and the barbell stay real 3D
+  and animated; the sprite provides the bench and rack art. If the file is missing the procedural bench/rack is used.
+- The gym staging was **calibrated to the sprite** (not the other way round): `scripts/calibrate-bench-sprite.py` least-squares fits station yaw (−55°),
+  camera elevation (13°), scale (860 px/m), sprite offset, pad extent (−0.72…+0.58 m), hook position (x −0.50, y 0.83) and upright spacing (±0.44 m)
+  from points measured on the sprite (rms ≈ 4.5 cm). The bench is therefore **flat** again (torso exactly horizontal on the pad).
+- Limits: the sprite is a flat picture, so the near upright cannot pass *in front of* the lifter; hooks and uprights in the art are lower and chunkier
+  than a real rack, so the racked bar sits beyond the lifter's head and travels to the chest on unrack.
+- Debug: add `&proc=1` (with `&debug=1`) to the URL to show the 3D fallback bench over the sprite for alignment checks.
+- To replace the sprite: keep a transparent background and the same camera angle, measure the key points again, run the calibration script, copy the printed values.

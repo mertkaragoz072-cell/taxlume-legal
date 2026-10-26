@@ -62,7 +62,15 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 | Clothing / tattoos / hair | NOT STARTED | |
 | Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## Gym painted backdrop (latest)
+## Bench-station sprite (latest)
+- The supplied bench asset (`public/art/bench-station.webp`, transparent) is placed in the middle of the painted gym as a layer behind the 3D lifter and bar.
+  The 3D station, camera angle and pad/hook geometry were calibrated to it (script `scripts/calibrate-bench-sprite.py`, rms ≈ 4.5 cm); the bench is **flat** again
+  (this replaces the incline staging below, which was only a stand-in). Procedural bench remains as fallback.
+- Re-verified: 140 unit tests, gym end-to-end scenarios at 390×844, 360×640, 430×932 (results in the final report of this round).
+- Known visual limits: sprite is a 2D layer (near upright cannot overlap the lifter), art proportions are chunkier than the 3D rig, the sprite is dark on a dark
+  painting. Visual match checked by eye at 390×844 only.
+
+## Gym painted backdrop
 - The owner-supplied painting `public/art/gym-backdrop.webp` is now the gym's background (full-screen, cover-fitted, no tone mapping); the 3D bench station
   stands in the centre of its floor with a contact shadow. Procedural background kept as fallback. See `docs/ART_SPEC.md` (also the slot for the bench asset).
 - Checked visually at 390×844 and re-ran the gym e2e scenarios (see below). Not yet checked at other aspect ratios beyond the automatic cover fit.

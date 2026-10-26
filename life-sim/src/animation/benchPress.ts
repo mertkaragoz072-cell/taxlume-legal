@@ -23,8 +23,9 @@ export type RepResult = 'success' | 'failed';
 
 const FLOOR_Y = 0.085; // ankle height: shoe radius (0.062) + ankle-to-shoe-centre offset (0.02) above the mat
 /** Feet stay planted at the same spot in every pose, so they never slide during transitions. */
-const FOOT_NEAR: V2 = [0.52, FLOOR_Y];
-const FOOT_FAR: V2 = [0.42, FLOOR_Y];
+const FOOT_X0 = pelvisFor(BENCH.refTorsoR)[0];
+const FOOT_NEAR: V2 = [FOOT_X0 + 0.57, FLOOR_Y];
+const FOOT_FAR: V2 = [FOOT_X0 + 0.47, FLOOR_Y];
 /** Hands resting on the thighs when seated (relative to the shoulder). */
 const SIT_HAND: V2 = [0.25, -0.4];
 /** Arc control for the hands while reaching: forward and slightly up, clear of the torso. */
@@ -32,7 +33,7 @@ const REACH_CTRL: V2 = [0.45, 0.1];
 /** While resting the head turns toward the viewer (the body faces along the bench, away from the camera). */
 const SIT_HEAD_YAW = 0;
 /** Head tilt relative to the spine: the face looks up and forward toward the bar and the viewer. */
-const LIE_HEAD_TILT = -0.25;
+const LIE_HEAD_TILT = -0.35;
 
 const smooth = (t: number): number => easeInOut(Math.min(1, Math.max(0, t)));
 const bez = (a: V2, c: V2, b: V2, t: number): V2 => {

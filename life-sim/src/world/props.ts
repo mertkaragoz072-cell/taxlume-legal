@@ -18,7 +18,7 @@ export const BAR_KG = 20;
 /** Half length of the bar; plates stack inward from here and never come closer to centre than RACK_Z + upright half-width. */
 export const BAR_HALF = 0.82;
 /** Rack uprights stand this far from the bench centre line (inside the plates, outside the lifter's hands). */
-export const RACK_Z = 0.42;
+export const RACK_Z = 0.44;
 export const RACK_UPRIGHT = 0.06;
 
 /** Greedy plate loading per side for a total barbell weight. */
@@ -83,8 +83,28 @@ export class Barbell extends THREE.Group {
   }
 }
 
+/** Flat bench (fallback when the supplied sprite is missing): one long pad on a steel frame. */
+function createFlatBench(): THREE.Group {
+  const g = new THREE.Group();
+  const len = BENCH.padFootX - BENCH.padHeadX;
+  const cx = (BENCH.padFootX + BENCH.padHeadX) / 2;
+  const pad = new OutlinedMesh(new RoundedBoxGeometry(len, 0.1, 0.32, 4, 0.04), toon(0x1b1e24), 0.012);
+  pad.position.set(cx, BENCH.seatTop - 0.05, 0);
+  g.add(pad);
+  for (const x of [BENCH.padFootX - 0.2, BENCH.padHeadX + 0.25]) {
+    const leg = new OutlinedMesh(new RoundedBoxGeometry(0.07, BENCH.seatTop - 0.1, 0.06, 2, 0.015), toon(STEEL_LIGHT), 0.012);
+    leg.position.set(x, (BENCH.seatTop - 0.1) / 2, 0);
+    g.add(leg);
+    const foot = new OutlinedMesh(new RoundedBoxGeometry(0.1, 0.03, 0.62, 2, 0.01), toon(STEEL), 0.01);
+    foot.position.set(x, 0.015, 0);
+    g.add(foot);
+  }
+  return g;
+}
+
 /** Incline bench: padded seat, inclined back pad on a steel frame. Geometry comes from `benchGeometry.ts`. */
 export function createBench(): THREE.Group {
+  if (Math.cos(BENCH.incline) < 1e-3) return createFlatBench();
   const g = new THREE.Group();
   const frame = toon(STEEL_LIGHT);
   const seat = new OutlinedMesh(new RoundedBoxGeometry(0.52, 0.1, 0.32, 4, 0.04), toon(0x1b1e24), 0.012);

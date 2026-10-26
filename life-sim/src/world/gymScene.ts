@@ -24,8 +24,15 @@ import { Batch } from './batch';
  * against the pad) and the bar runs horizontally across the screen — the staging of the reference art.
  * A small extra yaw gives a gentle 3/4 depth cue. The rack stands BEHIND the lifter.
  */
-export const STATION_YAW = -1.45;
+export const STATION_YAW = -0.953;
 export const STATION_POS: [number, number, number] = [0, 0.02, 0.2];
+
+/**
+ * Placement of the supplied sprite relative to the station, in metres at the station's depth:
+ * width of the whole sprite, offset of its centre from the station anchor (right/up in screen space),
+ * and how far behind the lifter it sits.
+ */
+export const SPRITE = { widthM: 1.358, ox: -0.141, oy: 0.479, behind: 0.3 };
 
 export interface GymScene extends LocationScene {
   /** Parent of bench, rack, barbell and the character rig (station-local coordinates). */
@@ -124,15 +131,17 @@ export function createGymScene(): GymScene {
   const rubber = outlined(new THREE.BoxGeometry(2.5, 0.02, 1.9), 0x2a2d35, 0.006);
   rubber.position.set(0.1, -0.01, 0);
   const matGroup = new THREE.Group();
-  station.add(matGroup);
   matGroup.add(rubber);
   for (const z of [0.9, -0.9]) {
     const line = new THREE.Mesh(new THREE.BoxGeometry(2.46, 0.004, 0.025), new THREE.MeshBasicMaterial({ color: 0xe3a91a }));
     line.position.set(0.1, 0.003, z);
     matGroup.add(line);
   }
-  station.add(createBench());
-  station.add(createRack(HOOK[1], RACK_X));
+  const proc = new THREE.Group(); // procedural bench + rack: fallback, hidden once the supplied sprite is loaded
+  station.add(proc);
+  proc.add(matGroup);
+  proc.add(createBench());
+  proc.add(createRack(HOOK[1], RACK_X));
   const barbell = new Barbell();
   barbell.position.set(HOOK[0], HOOK[1], 0);
   barbell.userData.bar = true;
@@ -238,6 +247,46 @@ export function createGymScene(): GymScene {
   stationBlob.position.set(STATION_POS[0], 0.003, STATION_POS[2] - 0.05);
   root.add(stationBlob);
 
+  // --- Supplied bench-station sprite (art/bench-station.webp): camera-facing layer just behind the 3D lifter and bar ---
+  const sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, opacity: 0 }));
+  sprite.visible = false;
+  sprite.renderOrder = -1;
+  sprite.userData.ignoreFloor = true; // its transparent lower part extends below the floor plane; not a real object
+  root.add(sprite);
+  const showProc = typeof location !== 'undefined' && new URLSearchParams(location.search).has('proc'); // debug: keep the 3D bench visible for alignment
+  let spriteAspect = 1;
+  const placeSprite = (cam: THREE.Camera): void => {
+    if (!sprite.visible) return;
+    const p = new THREE.Vector3(STATION_POS[0], STATION_POS[1], STATION_POS[2]);
+    const fwd = cam.getWorldDirection(new THREE.Vector3());
+    const D = p.clone().sub(cam.position).dot(fwd);
+    const d = D + SPRITE.behind;
+    const k = d / D; // keep the apparent size while sitting slightly behind the lifter
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion);
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
+    sprite.quaternion.copy(cam.quaternion);
+    sprite.position.copy(cam.position).addScaledVector(fwd, d).addScaledVector(right, SPRITE.ox * k).addScaledVector(up, SPRITE.oy * k);
+    sprite.scale.set(SPRITE.widthM * k, (SPRITE.widthM / spriteAspect) * k, 1);
+  };
+  new THREE.TextureLoader().load(
+    `${import.meta.env.BASE_URL}art/bench-station.webp`,
+    (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      spriteAspect = (tex.image as { width: number; height: number }).width / (tex.image as { width: number; height: number }).height;
+      const m = sprite.material as THREE.MeshBasicMaterial;
+      m.map = tex;
+      m.opacity = 1;
+      m.needsUpdate = true;
+      sprite.visible = true;
+      if (!showProc) proc.visible = false;
+      scene.onBackdrop?.(); // makes the renderer re-run camera placement, which positions the sprite
+    },
+    undefined,
+    () => {
+      /* missing: the procedural bench stays */
+    },
+  );
+
   // --- Painted backdrop (art/gym-backdrop.webp): full-screen layer behind the 3D station -------------------
   // Shadow catcher: the painted floor is flat, so a transparent plane receives the station's soft shadows.
   const catcher = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.ShadowMaterial({ opacity: 0.55 }));
@@ -252,8 +301,9 @@ export function createGymScene(): GymScene {
     root,
     station,
     barbell,
-    camera: { target: [0, 1.12, 0.2], fov: 34, yaw: 0, elevation: 9, fitWidth: 2.6, fitHeight: 2.4, uiBottomFraction: 0.32 },
+    camera: { target: [0, 0.75, 0.2], fov: 34, yaw: 0, elevation: 13, fitWidth: 2.3, fitHeight: 2.4, uiBottomFraction: 0.32 },
     backdrop: null,
+    updateForCamera: placeSprite,
     update: () => {},
     dispose() {
       scene.backdrop?.dispose();

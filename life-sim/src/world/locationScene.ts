@@ -26,6 +26,8 @@ export interface LocationScene {
   id: string;
   root: THREE.Group;
   camera: CameraSetup;
+  /** Optional: called after the camera is (re)placed, e.g. to position camera-facing sprites. */
+  updateForCamera?: (camera: THREE.Camera) => void;
   /** Optional: the camera tracks this x (room scenes follow the character). */
   focusX?: () => number;
   update(dt: number, elapsed: number): void;

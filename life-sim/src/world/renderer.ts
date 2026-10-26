@@ -103,7 +103,10 @@ export class GameRenderer {
     }
     this.location = loc;
     this.scene.add(loc.root);
-    loc.onBackdrop = () => this.applyBackdrop();
+    loc.onBackdrop = () => {
+      this.applyBackdrop();
+      this.resize();
+    };
     this.applyBackdrop();
     const r = loc.camera.followRange;
     this.followX = r && loc.focusX ? Math.min(r[1], Math.max(r[0], loc.focusX())) : loc.camera.target[0];
@@ -176,6 +179,8 @@ export class GameRenderer {
     const lift = (c.uiBottomFraction * visibleH) / 2;
     this.camera.position.set(tx + Math.sin(yaw) * Math.cos(el) * dist, ty - lift + Math.sin(el) * dist, tz + Math.cos(yaw) * Math.cos(el) * dist);
     this.camera.lookAt(tx, ty - lift, tz);
+    this.camera.updateMatrixWorld();
+    this.location?.updateForCamera?.(this.camera);
   }
 
   start(): void {

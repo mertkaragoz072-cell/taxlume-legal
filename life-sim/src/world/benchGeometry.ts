@@ -8,9 +8,14 @@ import { BODY, type V2 } from '../character/rig';
  * is always placed exactly one torso-radius in front of it, so every physique rests on it without clipping.
  */
 export const BENCH = {
-  seatTop: 0.45,
-  /** Torso angle from upright (rad). 0.75 ≈ a 47° incline above horizontal — the reference pose. */
-  incline: 0.75,
+  seatTop: 0.46,
+  /** Torso angle from upright (rad): π/2 = flat bench (the supplied sprite), 0.75 ≈ a 47° incline. */
+  incline: Math.PI / 2,
+  /** Pelvis x on a flat bench. */
+  flatPelvisX: 0.15,
+  /** Flat pad extent along x (matches the supplied sprite after calibration). */
+  padHeadX: -0.72,
+  padFootX: 0.58,
   /** Torso radius the pad was modelled for. */
   refTorsoR: 0.125,
   /** Seat-contact allowance (pelvis centre above seat = torso radius + this). */
@@ -21,6 +26,8 @@ export const BENCH = {
   lockoutReach: 0.9,
 } as const;
 
+const FLAT = Math.cos(BENCH.incline) < 1e-3;
+
 /** Unit vector along the spine toward the head, and the unit normal pointing out of the chest. */
 export const SPINE_U: V2 = [-Math.sin(BENCH.incline), Math.cos(BENCH.incline)];
 export const SPINE_N: V2 = [Math.cos(BENCH.incline), Math.sin(BENCH.incline)];
@@ -30,6 +37,7 @@ const SHOULDER_ALONG = BODY.torso - 0.02;
 
 /** Pelvis centre for a torso radius: on the seat, and exactly r in front of the pad plane. */
 export function pelvisFor(r: number): V2 {
+  if (FLAT) return [BENCH.flatPelvisX, BENCH.seatTop + r + BENCH.seatGap];
   const refY = BENCH.seatTop + BENCH.refTorsoR + BENCH.seatGap;
   const planeD = 0 * SPINE_N[0] + refY * SPINE_N[1] - BENCH.refTorsoR; // plane: p·N = D
   const y = BENCH.seatTop + r + BENCH.seatGap;
@@ -59,6 +67,9 @@ export function lockoutFor(r: number): V2 {
 
 /** Rack hooks: just above and slightly head-ward of lockout, for the reference physique. */
 export const HOOK: V2 = (() => {
+  // Flat bench: the uprights stand at the head end and the hooks sit beyond the head, 0.37 m above the pad (positions fitted to the supplied art);
+  // the unrack then lifts the bar a little and carries it over the chest.
+  if (FLAT) return [-0.5, 0.83];
   const l = lockoutFor(BENCH.refTorsoR);
   return [l[0] - 0.08, l[1] + 0.03];
 })();

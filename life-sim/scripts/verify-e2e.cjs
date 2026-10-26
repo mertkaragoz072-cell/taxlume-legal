@@ -20,6 +20,7 @@ const PAGE_HELPERS = () => {
       for (const h of rc.intersectObjects(scene.children, true)) {
         if (h.distance > dist - 0.04) break;
         if (isRig(h.object)) continue;               // own body parts are fine
+        { let hid = false; for (let q = h.object; q; q = q.parent) if (q.visible === false) hid = true; if (hid) continue; } // hidden fallback geometry does not occlude
         if (h.object.userData.rack) { blockers[name] = 'RACK'; break; }
       }
     }
@@ -29,7 +30,7 @@ const PAGE_HELPERS = () => {
     const barEnds = bar ? [bar.localToWorld(new T.Vector3(0, 0, -0.82)), bar.localToWorld(new T.Vector3(0, 0, 0.82))].map(proj) : [];
     return { blockers, scr, barEnds, torso: g.rig.currentPose.torso };
   };
-  window.__floor = () => { const bad = []; scene = window.__scene; scene.traverse(o => { if (o.isMesh && o.geometry) { const b = new T.Box3().setFromObject(o); if (b.min.y < -0.004 && isFinite(b.min.y)) bad.push((o.parent && o.parent.type) + ':' + b.min.y.toFixed(3)); } }); return bad; };
+  window.__floor = () => { const bad = []; scene = window.__scene; scene.traverse(o => { if (o.isMesh && o.geometry && !o.userData.ignoreFloor) { const b = new T.Box3().setFromObject(o); if (b.min.y < -0.004 && isFinite(b.min.y)) bad.push((o.parent && o.parent.type) + ':' + b.min.y.toFixed(3)); } }); return bad; };
 };
 
 (async () => {
