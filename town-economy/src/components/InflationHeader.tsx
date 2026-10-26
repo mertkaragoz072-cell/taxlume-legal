@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import headerMarketImage from "../../assets/ui/header-market.webp";
+import titleplateLeft from "../../assets/ui/titleplate3-left.png";
+import titleplateMid from "../../assets/ui/titleplate3-mid.png";
+import titleplateRight from "../../assets/ui/titleplate3-right.png";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
@@ -73,6 +76,18 @@ function dayTintColor(tick: number): string {
   const b = Math.round(b1 + (b2 - b1) * localT);
   return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
+
+// The plate's caps are fixed-width (the wheat-and-ivy ends) and the middle
+// is a thin stretchable slice of its own blank wood grain — a 9-slice, not
+// one static image, because the town's name is player-edited and can't be
+// baked into the art. The mid tile is flex:1 rather than a fixed width: a
+// fixed plate wide enough for a long English name pushed the six control
+// circles half off the screen on an earlier pass, and one narrow enough to
+// keep them on screen truncated "Golden Town" — flexing to whatever room
+// is actually left of the controls is the only width that's never both.
+const PLATE_HEIGHT = 34;
+const PLATE_CAP_LEFT_W = 24;
+const PLATE_CAP_RIGHT_W = 26;
 
 export function InflationHeader({
   townName,
@@ -195,14 +210,26 @@ export function InflationHeader({
           accessibilityRole="button"
           accessibilityLabel={t("a11y.editTownName")}
         >
-          {/* Shrink to fit rather than truncate. Six 26px controls leave the
-              name about 180px, and the default town name spent it all: the
-              header read "ALTIN KASAB…", which makes the player's own town
-              look like a bug. A name too long for the line now scales down
-              to 70% instead of losing its last letters. */}
-          <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-            <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
-          </Text>
+          <Image
+            source={titleplateLeft}
+            style={{ width: PLATE_CAP_LEFT_W, height: PLATE_HEIGHT }}
+            resizeMode="stretch"
+          />
+          <Image
+            source={titleplateMid}
+            style={{ flex: 1, minWidth: 0, height: PLATE_HEIGHT, marginHorizontal: -1 }}
+            resizeMode="stretch"
+          />
+          <Image
+            source={titleplateRight}
+            style={{ width: PLATE_CAP_RIGHT_W, height: PLATE_HEIGHT }}
+            resizeMode="stretch"
+          />
+          <View style={styles.plateTextWrap} pointerEvents="none">
+            <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+              <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
+            </Text>
+          </View>
         </Pressable>
         <View style={styles.controls}>
           <Pressable
@@ -365,12 +392,26 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     marginBottom: SPACING.sm,
   },
-  townNamePressable: { flexShrink: 1 },
+  townNamePressable: {
+    flexDirection: "row",
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    height: PLATE_HEIGHT,
+  },
+  plateTextWrap: {
+    position: "absolute",
+    left: PLATE_CAP_LEFT_W - 2,
+    right: PLATE_CAP_RIGHT_W - 6,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
   town: {
     color: "#ffd75e",
     fontFamily: FONT.display,
-    fontSize: TYPE.title,
-    letterSpacing: 0.5,
+    fontSize: TYPE.caption,
+    letterSpacing: 0.2,
     textShadowColor: "rgba(255, 200, 90, 0.55)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
