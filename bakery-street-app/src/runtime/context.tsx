@@ -9,7 +9,11 @@ export interface Actions {
   sfx: (name: string) => void;
   buzz: (pattern?: number | number[]) => void;
   go: (id: SceneId) => void;
-  openOverlay: (id: "quests" | "daily" | "settings" | "town" | null) => void;
+  openOverlay: (id: "quests" | "daily" | "settings" | "town" | "shop" | null) => void;
+  /** Opens the shop (optionally on a tab: goal | ingredients | equipment | furniture | recipes | expansion | special). */
+  openShop: (tab?: string) => void;
+  /** Hides the shop sheet for a moment so a new item can be seen in the café. */
+  peek: (ms?: number) => void;
   closePanel: () => void;
 }
 const Ctx = createContext<{ world: World; act: Actions } | null>(null);

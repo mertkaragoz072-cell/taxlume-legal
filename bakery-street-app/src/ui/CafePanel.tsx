@@ -26,7 +26,7 @@ export function CafePanel({ id, side }: { id: string; side: "left" | "right" }) 
   const u = useU();
   const stationNote = game.stationsDef[id] ? ` Aynı anda en fazla ${game.capacity(id)} ürün hazırlanır.` : "";
 
-  const products = (Object.entries(game.productsDef) as [string, any][]).filter(([, d]) => id === "counter" || d.station === id);
+  const products = (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => game.isUnlocked(pid) && (id === "counter" || d.station === id));
   return (
     <Sheet title={TITLE[id]} hint={HINT[id] + stationNote} side={side} lowered={side === "left"} onClose={act.closePanel}>
       {id === "showcase" ? <Showcase /> : id === "storage" ? <Storage /> : id === "upgrades" ? <Upgrades /> : products.map(([pid, d]) => <Recipe key={pid} pid={pid} d={d} />)}
@@ -64,7 +64,7 @@ function Showcase() {
   const game = world.game, u = useU();
   return (
     <>
-      {(Object.entries(game.productsDef) as [string, any][]).map(([pid, d]) => (
+      {(Object.entries(game.productsDef) as [string, any][]).filter(([pid]) => game.isUnlocked(pid)).map(([pid, d]) => (
         <Card key={pid} left={<EmojiIcon emoji={d.icon} size={u * 7} />}
           right={<View style={{ gap: u * 0.6 }}>
             <Btn small label="Sat" onPress={() => { const r = game.sellProduct(pid, 1); if (!r.ok) act.warn(r.message); }} />
@@ -86,7 +86,7 @@ function Storage() {
       {(Object.entries(game.ingredientsDef) as [string, any][]).map(([id, d]) => (
         <Card key={id} left={<EmojiIcon emoji={d.icon} size={u * 7} />}
           right={<View style={{ gap: u * 0.6 }}>{(BUY_AMOUNTS as number[]).map((q) => <Btn key={q} small label={`+${q}`} sub={`${fmt(d.price * q)}`} onPress={() => { const r = game.buyIngredient(id, q); if (!r.ok) act.warn(r.message); }} />)}</View>}>
-          <Title name={d.name} note={`Stok: ${game.ingredients[id]}`} />
+          <Title name={d.name} note={`Stok: ${game.ingredients[id]}${Number.isFinite(game.ingredientCap()) ? `/${game.ingredientCap()}` : ""}`} />
           <Meta text={`💰 ${fmt(d.price)} / adet`} />
         </Card>
       ))}
@@ -101,9 +101,10 @@ function Upgrades() {
     <>
       {(Object.entries(game.upgradesDef) as [string, any][]).map(([id, up]) => {
         const lvl = game.upgrades[id], max = game.maxLevel(id), cost = game.nextCost(id), maxed = cost === null;
+        const gate = up.minLevels?.[lvl] as number | undefined, gated = !maxed && !!gate && world.progression.level < gate;
         return (
           <Card key={id} left={<EmojiIcon emoji={up.icon} size={u * 7} />}
-            right={<Btn label={maxed ? "Maksimum" : "Geliştir"} sub={maxed ? undefined : `💰 ${fmt(cost)}`} disabled={maxed} variant={!maxed && game.gold < cost ? "lack" : "go"}
+            right={<Btn label={maxed ? "Maksimum" : gated ? `Seviye ${gate}` : "Geliştir"} sub={maxed ? undefined : `💰 ${fmt(cost)}`} disabled={maxed} variant={gated || (!maxed && game.gold < cost) ? "lack" : "go"}
               onPress={() => { const r = game.buyUpgrade(id, lvl); if (r.ok) act.toast(`${up.icon} ${up.name} seviye ${r.level} · −${fmt(r.cost)} altın`, 2200); else act.warn(r.message); }} />}>
             <Title name={up.name} note={`Seviye ${lvl}/${max}`} />
             <Pips level={lvl} max={max} />

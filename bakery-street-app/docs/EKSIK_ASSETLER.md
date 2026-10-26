@@ -30,6 +30,16 @@ Gerçek animasyon sayfaları gelene kadar bunlar çalışır; sayfa gelince ilgi
 | Sabrı biten müşterinin yüzü | Sabrı %30'un altına inince kedi yana doğru titrer, azaldıkça hızlanır (`CustomerLayer.shake`) | Somurtkan/sinirli yüz kareleri |
 | Şef sevinç sıçraması (E7) | Mevcut sevinç kareleri + zıplama | E7 sayfası |
 
+## Ekonomi sistemi için eksik sanat (şimdilik kodla yedeklenmiş)
+| Eksik | Şimdiki yedek | Gerçeği için gereken |
+|---|---|---|
+| Ekipman kademeleri (fırın, kahve makinesi, hamur tezgâhı, vitrin, depo × 3 kademe) | Aynı resim: büyüme + renk tonu + parlama + yıldızlı plaka (`interior-decor.js`) | Her kademe için ayrı şeffaf resim (mevcut resimle aynı boyut ve taban çizgisi) |
+| 6 yeni tarifin ikonları | `scripts/make_recipe_icons.py` ile çizilmiş basit ikonlar | ChatGPT ile diğer ikonlarla aynı stilde 256 px simit, latte, kurabiye, mocha, muffin, waffle |
+| VIP / nadir misafir görünümü | Altın taç + altın ışık | Ayrı kedi sayfaları (örn. şapkalı/atkılı özel kediler) |
+| Yeni mobilya çeşitleri (sandalye, farklı masa, bank) | Yok: yalnız eldeki resimler (saksı, lamba, raf, halı, masa süsü) | Yeni sandalye/masa/bank resimleri |
+| Yeni iç mekân bölümleri (teras, ikinci salon) | Koridor cilası ve duvar panosu (vektör) | Bölüm resimleri + sahne düzeni |
+| Bekleme alanı direkleri/halatı | Vektör (pirinç direk, kırmızı halat) | İstenirse resim |
+
 ## Sıra (görünürlüğe göre)
 E9 (masadaki kediler yarım duruyor, en çok göze çarpan) → E1, E2, E3 → E4–E8 → E10, E11.
 

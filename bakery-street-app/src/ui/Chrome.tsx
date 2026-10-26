@@ -147,6 +147,28 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "set
   );
 }
 
+/** A small, calm chip under the top bar: the next thing worth saving for, how far away it is. Tapping it opens the shop on that item's tab. */
+export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
+  const { world } = useWorld(), u = useU();
+  useRefresh();
+  const a = useAppear(220, 140);
+  const g = world.shop.nextGoal();
+  if (!g.item) return null;
+  const ready = g.kind === "ready", tab = g.item.category;
+  return (
+    <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }] }}>
+      <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 52, minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
+        <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
+        <View style={{ flexShrink: 1, gap: u * 0.4 }}>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
+          <View style={{ height: u * 1, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}><View style={{ width: `${Math.round(g.progress * 100)}%`, height: "100%", backgroundColor: ready ? C.green : C.honey }} /></View>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.1) }}>{g.kind === "level" ? g.text.split(": ")[1] : ready ? `${fmt(g.price)} altın` : `${fmt(g.missingGold)} altın kaldı`}</Text>
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 export type NavId = "cafe" | "town" | "explore" | "market";
 
 /** Fixed bottom navigation: Fırın & Kafe, Kasaba, Keşif, Mağaza (picture buttons, the active one gets the cat-ear frame). Reaches the screen's bottom edge, home indicator included. */
@@ -181,7 +203,7 @@ export function Toast({ text, seq }: { text: string; seq: number }) {
   const o = useRef(new Animated.Value(0)).current;
   useEffect(() => { if (text) { o.setValue(1); } else Animated.timing(o, { toValue: 0, duration: 200, useNativeDriver: true }).start(); }, [text, seq, o]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: "absolute", top: u * 12.4, alignSelf: "center", opacity: o, maxWidth: "90%", paddingHorizontal: u * 3.6, paddingVertical: u * 1.6, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.cream, zIndex: 30 }}>
+    <Animated.View pointerEvents="none" style={{ position: "absolute", top: u * 23, alignSelf: "center", opacity: o, maxWidth: "90%", paddingHorizontal: u * 3.6, paddingVertical: u * 1.6, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.cream, zIndex: 30 }}>
       <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.8), textAlign: "center" }}>{text}</Text>
     </Animated.View>
   );

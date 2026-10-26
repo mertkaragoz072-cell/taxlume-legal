@@ -3,7 +3,7 @@
 import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, depthScale, sitFeetY, sitCutY, seatRect } from './interior-layout.js';
 import { drawSprite, hasSitFrames } from '../characters/sprites.js';
 import { getImage } from '../assets.js';
-import { INK, rrect, poly, paint, label, clamp } from '../util.js';
+import { INK, rrect, poly, paint, label, clamp, glowAt } from '../util.js';
 import { PAL } from '../palette.js';
 import { drawIcon } from '../assets.js';
 
@@ -215,6 +215,10 @@ export class CustomerLayer {
       out.push({
         y: table ? depthOf(table) + (hasSitFrames(v.look) ? -2 : 1) : v.y,
         draw: (ctx0) => this.shaken(ctx0, this.shake(v, c, t), (ctx) => {
+          if (c?.vip && !v.leaving) {                                // a VIP guest stands in a soft golden light
+            const gx = this.bodyX(v, c), gy = this.drawY(v, c);
+            ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, gx, gy - bodyH(gy) * 0.4, 120, '255,212,96', 0.26 + 0.06 * Math.sin(t * 3 + v.id)); ctx.globalCompositeOperation = 'source-over';
+          }
           ctx.globalAlpha = clamp((EXIT.y - v.y) / 60, 0, 1);       // fades in and out at the bottom edge
           const y = this.drawY(v, c), art = table && this.seatArt(v, c), seated = table && v.sit >= 0.999 && !art;
           if (art) { if (v.sit >= 0.999) { ctx.globalAlpha = 1; return; } ctx.globalAlpha *= 1 - v.sit; }       // the seated picture (drawn with the table) takes over
@@ -250,6 +254,7 @@ export class CustomerLayer {
       if (k !== 1) { ctx.translate(w.x, ay); ctx.scale(k, k); ctx.translate(-w.x, -ay); }
       if (c.state === 'seated') this.orderBubble(ctx, w, c, t);
       else this.waitBubble(ctx, v, c, t);
+      if (c.vip) this.crown(ctx, w.x + (c.state === 'seated' ? 38 : 22), ay - (c.state === 'seated' ? 66 : 50), t);
       ctx.restore();
     }
     for (const c of this.coins) {
@@ -266,6 +271,16 @@ export class CustomerLayer {
       drawIcon(ctx, 'coin', p.x - 14 + ctx.measureText(p.text).width / 2 + 24, py, 36);
     }
     ctx.globalAlpha = 1;
+  }
+
+  /** A little gold crown marking a VIP guest. */
+  crown(ctx, x, y, t) {
+    const b = Math.sin(t * 4) * 1.5;
+    ctx.save(); ctx.translate(x, y + b); ctx.rotate(0.15);
+    ctx.beginPath(); ctx.moveTo(-14, 10); ctx.lineTo(-16, -8); ctx.lineTo(-7, 0); ctx.lineTo(0, -12); ctx.lineTo(7, 0); ctx.lineTo(16, -8); ctx.lineTo(14, 10); ctx.closePath();
+    ctx.fillStyle = '#F4C542'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = PAL.brownDark; ctx.stroke();
+    for (const [dx, dy] of [[-16, -8], [0, -12], [16, -8]]) { ctx.beginPath(); ctx.arc(dx, dy, 3, 0, 7); ctx.fillStyle = '#FFF3B0'; ctx.fill(); }
+    ctx.restore();
   }
 
   orderBubble(ctx, v, c, t) {

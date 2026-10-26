@@ -36,12 +36,14 @@ for (const name of PROPS) MANIFEST[`prop-${name}`] = `assets/props/${name}.webp`
 // its own drawing. Names that are not listed are never requested (no 404 noise). Possible names: wall, floor, oven, counter, showcase,
 // coffee, storage, upgrades, table, chair (see assets/interior/README.md).
 export const INTERIOR_ART = ['oven', 'counter', 'showcase', 'coffee', 'storage', 'upgrades', 'table', 'wall', 'floor',
-  'window-arch', 'window-shutter', 'shelf', 'door', 'rack', 'beam', 'chair-left', 'chair-right', 'room', 'lamp', 'rug-green', 'rug-runner', 'table-plain'];   // the last six are wall decoration (see InteriorScene.decor)
+  'window-arch', 'window-shutter', 'shelf', 'door', 'rack', 'beam', 'chair-left', 'chair-right', 'room', 'lamp', 'rug-green', 'rug-runner', 'table-plain',
+  'plant-1', 'plant-2', 'plant-3', 'shelf-plants', 'mat-paw', 'table-cake', 'table-cup'];     // the last seven are shop decoration (see interior-decor.js)   // the last six are wall decoration (see InteriorScene.decor)
 for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`;
 
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
 // fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().
-export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butter', 'sugar', 'egg', 'milk', 'beans'];
+export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butter', 'sugar', 'egg', 'milk', 'beans',
+  'simit', 'latte', 'kurabiye', 'mocha', 'muffin', 'waffle'];     // the last six are the shop recipes (stand-in pictures from scripts/make_recipe_icons.py until real art arrives)
 /** Currency / status pictures (coin, XP star, gem, gift, lock, stopwatch, check, up-arrow, basket) and the upgrade, building (b-), region (r-) and order-bar (o-) pictures; the upgrade (u-), research (r-) and quest (q-) pictures. */
 export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket',
   'u-oven', 'u-speed', 'u-showcase', 'u-tables', 'r-knowledge', 'r-efficient', 'r-seller', 'r-culture', 'r-equipment', 'q-target', 'q-line', 'q-explorer',
@@ -102,5 +104,16 @@ export function drawIcon(ctx, id, x, y, size) {
   if (!img) return false;
   const k = size / Math.max(img.width, img.height), w = img.width * k, h = img.height * k;
   ctx.drawImage(img, x - w / 2, y - h / 2, w, h);
+  return true;
+}
+
+/** The icon picture of `id`, or its emoji when there is no picture (recipes bought in the shop have no picture yet). Draws nothing without either. */
+export function drawIconOrEmoji(ctx, id, emoji, x, y, size) {
+  if (drawIcon(ctx, id, x, y, size)) return true;
+  if (!emoji) return false;
+  ctx.save();
+  ctx.font = `${Math.round(size * 0.82)}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, x, y + size * 0.04);
+  ctx.restore();
   return true;
 }

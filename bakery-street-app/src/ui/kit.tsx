@@ -134,7 +134,7 @@ export function Pips({ level, max }: { level: number; max: number }) {
 }
 
 /** A side panel: title row with an optional close button, a hint line and a scrolling body. `side` picks which edge it sticks to. */
-export function Sheet({ title, hint, onClose, side = "right", lowered, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; children: React.ReactNode }) {
+export function Sheet({ title, hint, onClose, side = "right", lowered, header, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; header?: React.ReactNode; children: React.ReactNode }) {
   const u = useU();
   const { width, height } = useWindowDimensions();
   const portrait = height >= width;
@@ -155,6 +155,7 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, children 
         ) : null}
       </View>
       {hint ? <Rich text={hint} size={fs(u, 2.5)} style={{ color: C.brown, paddingHorizontal: u * 2.2, paddingBottom: u }} /> : null}
+      {header}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: u * 1.6, paddingBottom: u * 1.6, gap: u * 1.2 }}>{children}</ScrollView>
     </>
   );

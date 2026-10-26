@@ -2,7 +2,7 @@
 // is replaced by the supplied picture (the same mapping the web version used).
 import React from "react";
 import { Image, StyleProp, Text, TextStyle } from "react-native";
-import { PRODUCTS, INGREDIENTS } from "../data/economy.js";
+import { PRODUCTS, INGREDIENTS, RECIPES } from "../data/economy.js";
 import { ICON_IDS } from "../assets.js";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { FONT } from "./theme";
@@ -14,7 +14,7 @@ const EMOJI: Record<string, string> = {
   "🔥": "u-oven", "⚡": "u-speed", "🗄": "u-showcase", "🪑": "u-tables", "📖": "r-knowledge", "🧺": "r-efficient", "🏷": "r-seller", "🎭": "r-culture",
   "🛠": "r-equipment", "🎯": "q-target", "🏭": "q-line", "🧭": "q-explorer",
 };
-for (const [id, d] of Object.entries({ ...PRODUCTS, ...INGREDIENTS } as Record<string, { icon?: string }>)) if ((ICON_IDS as string[]).includes(id) && d.icon) EMOJI[bare(d.icon)] = id;
+for (const [id, d] of Object.entries({ ...PRODUCTS, ...RECIPES, ...INGREDIENTS } as Record<string, { icon?: string }>)) if ((ICON_IDS as string[]).includes(id) && d.icon) EMOJI[bare(d.icon)] = id;
 const RE = new RegExp(`((?:${Object.keys(EMOJI).join("|")})\\uFE0F?)`, "u");
 /** Pictures that are wide scenes rather than square symbols: shown larger. */
 const WIDE = new Set(["b-bakery", "b-market", "b-bookshop", "b-plot", "r-meadow", "r-forest", "r-ruins"]);

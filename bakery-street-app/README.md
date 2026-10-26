@@ -14,7 +14,7 @@ WebView yok, tarayıcı yok. Oyun tamamen yerel çalışır:
 ```bash
 npm ci
 npm run typecheck        # TypeScript
-npm test                 # oyun mantığı + sahne testleri (252)
+npm test                 # oyun mantığı + sahne testleri
 npm start                # Expo; Expo Go yerine development build gerekir (Skia yerel modül)
 node scripts/gen-assets.mjs   # assets/game altına resim ekleyip çıkarınca (Metro için resim listesi)
 node scripts/gen-sounds.mjs   # sesleri yeniden üretir
@@ -55,7 +55,7 @@ Gizlilik politikası adresi gerekir (repodaki `privacy.html` bu oyuna göre uyar
 
 ## Dürüst durum
 
-- **Gerçek cihazda hiç çalıştırılmadı.** Doğrulananlar: TypeScript denetimi, 252 test (oyun mantığı + varlıksız sahne duman testi), iOS ve Android için `expo export` (Metro + Hermes paketleri), ve Skia'nın web çalışma zamanında alınan ekran görüntüleri (sokak, kafe, market, keşif, tüm paneller). Yerel Skia'da performans (kare hızı), `PictureRecorder` her kare yeni resim üretmesinin maliyeti, ses ve dokunma hissi ilk TestFlight'ta telefonda kontrol edilmeli.
+- **Gerçek cihazda hiç çalıştırılmadı.** Doğrulananlar: TypeScript denetimi, 282 test (oyun mantığı, mağaza, kayıt ve varlıksız sahne duman testleri), iOS ve Android için `expo export` (Metro + Hermes paketleri), ve Skia'nın web çalışma zamanında alınan ekran görüntüleri (sokak, kafe, market, keşif, tüm paneller). Yerel Skia'da performans (kare hızı), `PictureRecorder` her kare yeni resim üretmesinin maliyeti, ses ve dokunma hissi ilk TestFlight'ta telefonda kontrol edilmeli.
 - Gökyüzü kenar renkleri sabit tonlar (resim piksellerini geri okumuyoruz); fark küçük.
 - Yazı tipi Nunito (web'deki Trebuchet'e yakın, yuvarlak).
 - `../bakery-street` (eski web sürümü) yerinde duruyor; oyun kuralları iki yerde kopya olduğu için yeni özellikler `bakery-street-app`'e eklenmeli. Web sürümü artık dağıtılmıyor, silinebilir.
@@ -245,3 +245,6 @@ Zemin resminin fayans genişliği ölçüldü (duvarda 74 px, önde 128 px; `til
 **Test.** `tests/scene-smoke.test.js`: hiçbir resim yüklü değilken sahne 40 sn boyunca çizilip oynatılır (varlık yoksa vektör yedeği / çizmeme), garson servis eder, hiçbir masada iki misafir olmaz, hiçbir sipariş iki kez ödenmez.
 
 **Eksik animasyonlar için yedek hareketler.** Kasada ödeme: kedi kalkarken 3 altın masadan vitrin tezgâhına (kasa noktası) uçar, tezgâh sıçrar, "+N" kasada çıkar (yeme bitince; satışın kendisi, altın ve XP teslimde işlenmeye devam eder). Garsonun başının üstünde taşıdığı siparişin ikonu gösterilir (tepsi resmi hep fincan + pasta). Masa boşalınca kıvılcım çıkar. Sabrı %30'un altına düşen müşteri titrer. Masa üstü efektleri (tik, kıvılcım) uzun ekranlarda masanın kayması kadar aşağı alındı. Hepsi `docs/EKSIK_ASSETLER.md` içinde "yedek hareketler" tablosunda; gerçek sayfa gelince kaldırılacak.
+
+### Ekonomi ve gelişim sistemi
+Mağaza (ekipman kademeleri, mobilya/dekor, 6 yeni tarif, kafe genişletmesi, VIP misafirler ve temalar), 4 kafe aşaması, sıradaki hedef çipi ve tek bir para katmanı (`Game.spend`) eklendi. Ayrıntılar, fiyat/denge tablosu, kayıt biçimi ve eksikler: `docs/EKONOMI.md`. Fiyatlar yalnız `src/data/economy.js` içinde; `node scripts/balance-shop.mjs` denge tablosunu üretir.

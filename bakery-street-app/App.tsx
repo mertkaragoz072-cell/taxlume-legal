@@ -16,10 +16,11 @@ import { WorldProvider, useRefresh, type Actions } from "./src/runtime/context";
 import { GameView } from "./src/runtime/GameView";
 import { NativeStorage } from "./src/runtime/storage";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
-import { Hud, Nav, Toast, type NavId } from "./src/ui/Chrome";
+import { GoalPill, Hud, Nav, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
 import { Present } from "./src/ui/kit";
 import { MarketPanel } from "./src/ui/MarketPanel";
+import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
 import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
 import { C, FONT, fmt } from "./src/ui/theme";
 
@@ -58,7 +59,7 @@ export default function App() {
   );
 }
 
-type Overlay = "quests" | "daily" | "settings" | "town";
+type Overlay = "quests" | "daily" | "settings" | "town" | "shop";
 
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
@@ -66,6 +67,9 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   const [sceneId, setSceneId] = useState<SceneId>("interior");
   const [panel, setPanel] = useState<{ id: string; side: "left" | "right" } | null>(null);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
+  const [shopReq, setShopReq] = useState<{ tab: ShopTab; n: number }>({ tab: "goal", n: 0 });
+  const [peeking, setPeeking] = useState(false);          // the shop sheet is tucked away for a moment so a new piece can be seen in the café
+  const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toast, setToast] = useState({ text: "", seq: 0 });
   const [saveWarn, setSaveWarn] = useState<string | null>(problems[problems.length - 1] ?? null);
   const [exploreSel, setExploreSel] = useState<string | null>(null);
@@ -96,13 +100,25 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     });
   }, [fade, world]);
 
+  const peek = useCallback((ms = 2600) => {
+    setPeeking(true);
+    if (peekTimer.current) clearTimeout(peekTimer.current);
+    peekTimer.current = setTimeout(() => setPeeking(false), ms);
+  }, []);
+  useEffect(() => () => { if (peekTimer.current) clearTimeout(peekTimer.current); }, []);
+
   const act: Actions = useMemo(() => ({
     toast: showToast, warn,
     sfx: (n) => feedback.sfx(n), buzz: (p) => feedback.buzz(p),
     go,
-    openOverlay: (id) => setOverlay((cur) => (id === cur ? null : id)),
+    openOverlay: (id) => { setPeeking(false); setOverlay((cur) => (id === cur ? null : id)); },
+    openShop: (tab = "goal") => {
+      const open = () => { setPanel(null); world.scenes.interior.select(null); setPeeking(false); setShopReq((r) => ({ tab: tab as ShopTab, n: r.n + 1 })); setOverlay("shop"); };
+      if (sceneRef.current === "interior") open(); else { go("interior"); setTimeout(open, 520); }       // the shop opens over the café
+    },
+    peek,
     closePanel: () => { setPanel(null); world.scenes.interior.select(null); },
-  }), [showToast, warn, feedback, go, world]);
+  }), [showToast, warn, feedback, go, world, peek]);
 
   // ---- game events: toasts, sounds, vibration ---------------------------------------------------------------------------------------
   useEffect(() => {
@@ -121,6 +137,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income) showToast(`${game.productsDef[e.product].icon} satıldı · +${fmt(e.income)} altın`, 1400); }));   // sold: by a tap or by the waiter
     offs.push(game.on("complete", ({ product }: any) => showToast(`${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600)));
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
+    offs.push(game.on("stage", ({ stage }: any) => { const next = world.shop.nextStage(); showToast(`🏆 Aşama ${stage.id}: ${stage.name}!${stage.reward ? ` Ödül: 💰 ${fmt(stage.reward.gold)}` : ""}${next ? `\nSıradaki aşama: ${next.name}` : "\nEn yüksek aşamaya ulaştın!"}`, 4600); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
+    offs.push(game.on("shop", () => feedback.sfx("buy")));
     offs.push(game.on("exploreReady", ({ region }: any) => { showToast(`🎁 ${region.name} keşfi tamamlandı — ödülünü al!`, 4000); feedback.sfx("done"); feedback.buzz(40); }));
     let levelUps: any[] = [];                                // one action can pass several levels: show a single summary
     offs.push(game.on("levelUp", (e: any) => {
@@ -195,10 +213,11 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     }
   }, [act, feedback, game, go, showToast, world]);
 
-  if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast };   // development screenshots only
+  if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast, openShop: act.openShop, peek: act.peek };   // development screenshots only
   const navSelect = (id: NavId) => {
     feedback.sfx("tap");
     if (id === "town") { setOverlay((o) => (o === "town" ? null : "town")); return; }
+    if (id === "market") { if (overlay === "shop") setOverlay(null); else act.openShop(shopReq.tab === "ingredients" ? "goal" : shopReq.tab); return; }     // the shop opens over the café
     setOverlay(null);
     go(id === "cafe" ? "interior" : id);
   };
@@ -209,6 +228,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes[sceneRef.current]?.setLook?.(n)} />
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
           <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />
+          <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /></Present>
           <Present show={sceneId === "interior" && !!panel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</Present>
           {sceneId === "market" ? <MarketPanel /> : null}
           {sceneId === "bookshop" ? <ResearchPanel /> : null}
@@ -216,6 +236,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Present show={overlay === "quests"}><QuestPanel /></Present>
           <Present show={overlay === "daily"}><DailyPanel /></Present>
           <Present show={overlay === "settings"}><SettingsPanel onReset={reset} /></Present>
+          <Present show={overlay === "shop" && !peeking}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></Present>
           <Present show={overlay === "town"}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></Present>
           <Toast text={toast.text} seq={toast.seq} />
           {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
@@ -232,7 +253,7 @@ function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId;
   useRefresh(5000);
   const badges = { quests: world.quests.claimable().length > 0, daily: world.daily.status().canClaim };
   const toggle = (o: Overlay) => setOverlay(overlay === o ? null : o);
-  const active: NavId | null = overlay === "town" ? "town" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
+  const active: NavId | null = overlay === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (
     <>
       <Hud badges={badges} onOpen={(id) => toggle(id === "daily" ? "daily" : id)} />

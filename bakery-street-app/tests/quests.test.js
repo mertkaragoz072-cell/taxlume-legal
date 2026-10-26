@@ -26,7 +26,7 @@ function make(gold = 100_000) {
 const produce = (ctx, pid) => { assert.ok(ctx.game.startProduction(pid).ok); ctx.advance(PRODUCTS[pid].time); };
 
 test('the requested quests exist with valid goals and rewards', () => {
-  assert.deepEqual(QUESTS.map((q) => q.id), ['firstBread', 'firstSale', 'marketTrip', 'sellFive', 'firstUpgrade', 'produceTen', 'openBookshop', 'firstExplore']);
+  assert.deepEqual(QUESTS.map((q) => q.id), ['firstBread', 'firstSale', 'marketTrip', 'sellFive', 'firstUpgrade', 'produceTen', 'openBookshop', 'firstExplore', 'firstShop', 'shopFive', 'spendBig']);
   assert.equal(new Set(QUESTS.map((q) => q.id)).size, QUESTS.length);
   const byId = Object.fromEntries(QUESTS.map((q) => [q.id, q]));
   assert.deepEqual([byId.firstBread.stat, byId.firstBread.target], ['produced.bread', 1]);
@@ -179,7 +179,7 @@ test('claiming a completed quest adds exactly its gold and ingredients to the sh
 
 test('every quest reward can be collected and matches its definition', () => {
   const c = make(0);
-  c.game.stats = { produced: { bread: 99, croissant: 99, cake: 99, coffee: 99 }, sold: { bread: 99, croissant: 99, cake: 99, coffee: 99 }, producedTotal: 999, soldTotal: 999, marketPurchases: 9, upgradesBought: 9, buildingsOpened: 1, buildingUpgrades: 0, explorationsDone: 1 };
+  c.game.stats = { produced: { bread: 99, croissant: 99, cake: 99, coffee: 99 }, sold: { bread: 99, croissant: 99, cake: 99, coffee: 99 }, producedTotal: 999, soldTotal: 999, marketPurchases: 9, upgradesBought: 9, buildingsOpened: 1, buildingUpgrades: 0, explorationsDone: 1, goldSpent: 99999, shopBought: 99 };
   for (const q of QUESTS) {
     const gold = c.player.gold, inv = { ...c.game.ingredients };
     assert.ok(c.quests.claim(q.id).ok, q.id);

@@ -23,7 +23,13 @@ export class Shop {
     this.stats = { lastGoal: null };
     game.shop = this;
     for (const [id, def] of Object.entries(recipes)) game.registerProduct(id, def);
-    game.on('change', (e) => { if (e?.type !== 'load') this.checkStage(); });
+    game.on('change', (e) => {
+      if (!e || e.type === 'load' || e.type === 'shopIntro') return;
+      this.checkStage();
+      if (e.type === 'start') { this.introduce(game.productsDef[e.product]?.station); this.introduce('counter'); }   // first use of a better oven / machine / prep counter
+      else if (e.type === 'sale' || e.type === 'sell') this.introduce('showcase');
+      else if (e.type === 'buy') this.introduce('storage');
+    });
   }
 
   // ---- catalogue ------------------------------------------------------------------------------
@@ -332,6 +338,7 @@ export function describeEffect(d, game) {
   if (e.refund) parts.push(`Üretimde malzemenin %${Math.round(e.refund * 100)}'i geri döner`);
   if (e.queue) parts.push(`+${e.queue} bekleme yeri`);
   if (e.vip) parts.push(`Misafirlerin %${Math.round(e.vip.chance * 100)}'i VIP, %${Math.round((e.vip.mult - 1) * 100)} fazla öder`);
+  if (e.area) parts.push(e.area === 'aisle' ? 'Koridora halı, lamba ve bitki yerleştirilebilir' : 'Duvara raf yerleştirilebilir');
   if (d.kind === 'recipe') parts.push('Yeni ürün: üretilir, siparişte istenir');
   if (d.appeal) parts.push(`Çekicilik +${d.appeal}`);
   return parts.join(' · ');

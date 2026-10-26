@@ -7,7 +7,7 @@
 // XP, order paid), the product lands on the table and the guest eats. Tapping a guest still serves at once, unless the waiter is already bringing
 // that order (see claims()). No stock = the waiter does not go, the order stays open and the guest keeps waiting.
 import { drawSprite, hasHandFrames, hasOvenFrames, hasCoffeeFrames } from '../characters/sprites.js';
-import { drawIcon } from '../assets.js';
+import { drawIconOrEmoji } from '../assets.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
@@ -187,14 +187,14 @@ export class StaffLayer {
       const eaten = pl.eat > 0 ? Math.min(1, pl.t / pl.eat) : 1, fade = pl.eat > 0 ? Math.min(1, Math.max(0, 1 - (pl.t - pl.eat) / 0.7)) : Math.min(1, Math.max(0, (pl.hold - pl.t) / 0.35)), cx = a.x + a.w / 2, cy = a.y + a.h * 0.26;
       ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35)); ctx.globalAlpha = fade;
       this.plate(ctx, cx, cy);
-      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIcon(ctx, pl.product, 0, -8 / k, 34); ctx.restore(); }
+      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIconOrEmoji(ctx, pl.product, this.game.productsDef[pl.product]?.icon, 0, -8 / k, 34); ctx.restore(); }
       else { ctx.fillStyle = 'rgba(121,82,56,.5)'; for (const [dx, dy] of [[-9, 0], [4, 2], [11, -1]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 1.8, 0, 7); ctx.fill(); } }     // crumbs
       ctx.restore();
     }
     if (this.phase === 'hand' && this.carry && !hasHandFrames()) {                // the icon is carried from the hands toward the table while handing over
       const w = this.waiter, a = AREAS.find((x) => x.id === this.job.table), k = Math.min(1, this.handT / HAND_SEC);
       const wy = this.warp(w.y), ty = this.warp(a.y + a.h - 35);
-      drawIcon(ctx, this.carry, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, wy + w.y - 108 + (ty + a.y + a.h * 0.26 - 12 - (wy + w.y - 108)) * k, 36);
+      drawIconOrEmoji(ctx, this.carry, this.game.productsDef[this.carry]?.icon, w.x + w.dir * 40 + (a.x + a.w / 2 - (w.x + w.dir * 40)) * k, wy + w.y - 108 + (ty + a.y + a.h * 0.26 - 12 - (wy + w.y - 108)) * k, 36);
     }
   }
 
@@ -244,7 +244,7 @@ export class StaffLayer {
       const my = y - 250 * depthScale(y) - 20 + Math.sin(t * 7) * 3;
       ctx.beginPath(); ctx.arc(x, my, 26, 0, 7); ctx.fillStyle = '#FFF8EA'; ctx.fill();
       ctx.lineWidth = 3; ctx.strokeStyle = '#795238'; ctx.stroke();
-      drawIcon(ctx, this.carry, x, my, 34);
+      drawIconOrEmoji(ctx, this.carry, this.game.productsDef[this.carry]?.icon, x, my, 34);
     }
     ctx.globalAlpha = 1;
   }

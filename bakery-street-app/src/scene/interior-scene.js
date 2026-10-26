@@ -4,9 +4,10 @@ import { PAL } from '../palette.js';
 import { AREAS, DRAW_ORDER, FLOOR_Y, FLOOR_K, ROOM_JOIN, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect, perspScale } from './interior-layout.js';
 import { drawProp } from './props.js';
 import { formatTime } from '../game/game.js';
-import { getImage, drawIcon } from '../assets.js';
+import { getImage, drawIcon, drawIconOrEmoji } from '../assets.js';
 import { CustomerLayer, setEntryY } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
+import { DecorLayer } from './interior-decor.js';
 import { hasSitFrames } from '../characters/sprites.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
@@ -41,6 +42,7 @@ export class InteriorScene {
     this.cam = { zoom: 0.4, tx: 0, ty: 0, wl: 0, wr: 900, wt: 0, wb: 1600 };   // portrait camera, see resize()
     this.customers = new CustomerLayer(game, game.cafe);
     this.staff = new StaffLayer(game);
+    this.shopDecor = new DecorLayer(this);        // what the player bought (decoration, equipment tiers, themes, reveals)
     this.staff.guests = () => this.customers.v.values();
     this.staff.seated = (id) => { const v = this.customers.v.get(id); return !!v && v.sit >= 0.999 && !v.moving; };
     this.customers.warp = this.staff.warp = (y) => this.warpAt(y);
@@ -143,6 +145,7 @@ export class InteriorScene {
 
   update(dt) {
     this.t += dt;
+    this.shopDecor.update(dt);
     // the look follows the finger and eases back to a slow idle sway, so the depth is visible without touching
     const idle = Math.sin(this.t * 0.35) * 0.45;
     this.lk += ((this.look !== 0 ? this.look : idle) - this.lk) * Math.min(1, dt * 3);
@@ -167,7 +170,7 @@ export class InteriorScene {
 
     this.cachedRoom(ctx, x0 - 60, w + 120, yTop, yBot, this.shift('wall'));   // wall and floor, cached (a little wider than the screen for the sway)
     ctx.save(); ctx.translate(this.shift('deco'), 0); this.decor(ctx); ctx.restore();
-    this.shifted(ctx, 'floor', () => { this.rug(ctx); this.tableRugs(ctx); });
+    this.shifted(ctx, 'floor', () => { this.rug(ctx); this.tableRugs(ctx); this.shopDecor.drawFlat(ctx); });
     // Everything that stands on the floor is drawn back to front by the line it stands on (its base y), so people pass in front of
     // or behind counters and tables correctly. Ties keep the DRAW_ORDER of the furniture.
     const items = [];
@@ -182,11 +185,13 @@ export class InteriorScene {
       const i = +a.id.slice(5) - 1, owner = this.customers.ownerAt(i), v = owner ? this.customers.v.get(owner.id) : null;
       if (v && v.sit > 0 && hasSitFrames(v.look)) items.push({ y: depthOf(a) - 3, draw: () => this.shifted(ctx, 'floor', () => this.guestChair(ctx, a, v)) });
     }
+    for (const it of this.shopDecor.items()) items.push({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) });
     items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => { const d = this.warpAt(it.y); ctx.save(); ctx.translate(0, d); it.draw(ctx); ctx.restore(); });
     this.shifted(ctx, 'floor', () => this.staff.drawServed(ctx));
     for (const a of AREAS) if (this.tableOpen(a)) { ctx.save(); ctx.translate(0, this.warpAt(depthOf(a))); this.shifted(ctx, this.planeOf(a), () => this.overlay(ctx, a)); ctx.restore(); }
     this.shifted(ctx, 'floor', () => this.customers.drawBubbles(ctx, t));
+    this.shifted(ctx, 'floor', () => this.shopDecor.drawHang(ctx));
     this.shifted(ctx, 'deco', () => this.light(ctx));
     this.shifted(ctx, 'front', () => this.frontDecor(ctx));
 
@@ -200,12 +205,14 @@ export class InteriorScene {
         continue;
       }
       label(ctx, p.text, p.x - (p.icon ? 18 : 0), p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: PAL.cream, lw: 5 });
-      if (p.icon) drawIcon(ctx, p.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
+      if (p.icon) drawIconOrEmoji(ctx, p.icon, this.game.productsDef[p.icon]?.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
     }
     ctx.globalCompositeOperation = 'lighter';
     for (const p of this.sparks) { ctx.fillStyle = `rgba(255,222,150,${clamp(p.life, 0, 1) * 0.9})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, 7); ctx.fill(); }
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
+    this.shopDecor.drawTheme(ctx);
+    this.shopDecor.drawFx(ctx);
     gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
     textFloor.px = floorPx;
   }
@@ -332,7 +339,8 @@ export class InteriorScene {
    * showcase stock) are drawn on top so the machines still show what they are doing.
    */
   areaAsset(ctx, a) {
-    const img = getImage(`int-${a.id.startsWith('table') ? 'table' : a.id}`);
+    const top = a.id.startsWith('table') ? this.game.shop?.tableTop() : null;      // the shop's table set: cake or cup instead of the vase
+    const img = getImage(`int-${a.id.startsWith('table') ? (top && getImage(`int-table-${top}`) ? `table-${top}` : 'table') : a.id}`);
     if (!img) return false;
     const isTable = a.id.startsWith('table') && getImage('int-chair-left') && getImage('int-chair-right');
     let w, h, dx, dy;
@@ -349,7 +357,7 @@ export class InteriorScene {
     this.rects[a.id] = { x: dx, y: dy, w, h };
     if (isTable) this.tableSet(ctx, a, img, dx, dy, w, h);
     else if (a.flip) { ctx.save(); ctx.translate(dx + w, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, dy, w, h); ctx.restore(); }
-    else ctx.drawImage(img, dx, dy, w, h);
+    else this.shopDecor.drawTiered(ctx, a, img, dx, dy, w, h);
     const busy = !!(a.station && this.game.jobs[a.station]);
     if (a.id === 'oven' && !busy) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.62, a.w * 0.42, '255,140,50', 0.09 + 0.03 * Math.sin(this.t * 3)); ctx.globalCompositeOperation = 'source-over'; }   // embers
     if (a.id === 'oven') {                                       // embers and a thin smoke rising from the oven
@@ -389,6 +397,7 @@ export class InteriorScene {
     // soft floor shadow where the wall meets the kitchen floor
     ctx.fillStyle = vgrad(ctx, wall, wall + 30, [[0, 'rgba(70,48,32,.28)'], [1, 'rgba(70,48,32,0)']]);
     ctx.fillRect(this.cam.wl - 100, wall, this.cam.wr - this.cam.wl + 200, 30);
+    this.shopDecor.drawWall(ctx);
   }
 
   /**
@@ -419,7 +428,7 @@ export class InteriorScene {
   light(ctx) {
     ctx.globalCompositeOperation = 'lighter';
     for (const lx of LAMPS) {
-      const f = 0.9 + 0.1 * Math.sin(this.t * 2.1 + lx);
+      const f = (0.9 + 0.1 * Math.sin(this.t * 2.1 + lx)) * (1 + 0.07 * ((this.game.shop?.stageId ?? 1) - 1));       // the café glows warmer as it grows
       glowAt(ctx, lx, 330, 170, '255,196,110', 0.10 * f);
       glowAt(ctx, lx, 690, 210, '255,190,100', 0.075 * f);
     }

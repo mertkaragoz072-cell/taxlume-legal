@@ -281,6 +281,8 @@ test('new recipes are balanced above the old ones per gold of ingredients, and e
 test('decoration: placed items add appeal; guests come faster and sometimes tip; a shared slot holds one at a time', () => {
   const c = make({ level: 6, gold: 200_000, cafeCfg: { tablesUpgrade: null, tables: 4 } });
   assert.equal(c.shop.appeal(), 0); assert.equal(c.shop.arrivalFactor(), 1); assert.equal(c.shop.tipChance(), 0);
+  assert.equal(c.shop.status('rugAisle'), 'locked');                 // the aisle must be opened first
+  assert.ok(c.shop.buy('areaAisle').ok);
   for (const id of ['matPaw', 'plantA', 'rugAisle']) assert.ok(c.shop.buy(id).ok, id);
   assert.equal(c.shop.appeal(), 1 + 2 + 2);
   assert.ok(Math.abs(c.shop.arrivalFactor() - (1 - 5 * APPEAL.arrivalPerPoint)) < 1e-9);
@@ -304,6 +306,7 @@ test('tips: a guest with a tip pays the bill plus the tip once; without appeal n
   assert.equal(r0.income, PRODUCTS.bread.price); assert.equal(r0.tip, 0); assert.equal(draws, 0);
   assert.equal(plain.player.gold, gold0 + PRODUCTS.bread.price);
   const c = make({ level: 6, gold: 100_000, rng, cafeCfg: { orderWeights: { bread: 1, croissant: 0, cake: 0, coffee: 0 } } });
+  c.shop.buy('areaAisle');
   for (const id of ['matPaw', 'plantA', 'rugAisle']) c.shop.buy(id);
   c.game.products.bread = 5;
   const g = c.cafe.arrive(); c.cafe.seatQueued();
@@ -399,7 +402,7 @@ test('save v10: validateShop repairs garbage and never loses an owned decoration
 test('everything bought and where it stands survives a reload; reset starts clean', () => {
   const storage = new FakeStorage(), clock = { now: T0 };
   const a = make({ level: 8, gold: 300_000, storage, clock });
-  for (const id of ['matPaw', 'plantA', 'lampA', 'tableCake', 'ovenT2', 'storageT2', 'waitingA', 'recipeSimit']) assert.ok(a.shop.buy(id).ok, id);
+  for (const id of ['matPaw', 'plantA', 'areaAisle', 'areaWall', 'lampA', 'shelfPlants', 'tableCake', 'ovenT2', 'storageT2', 'waitingA', 'recipeSimit']) assert.ok(a.shop.buy(id).ok, id);
   a.shop.stageId = 2;
   a.game.emit('change', { type: 'cafe' });
   const saved = JSON.parse(storage.getItem(SAVE_KEY));
