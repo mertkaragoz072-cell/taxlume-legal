@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import skylineImage from "../../assets/ui/header-skyline.webp";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
@@ -164,164 +165,178 @@ export function InflationHeader({
   const dailyInflationPct = (Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100;
 
   return (
-    <View style={styles.wrap}>
-      <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
-      />
-      <View style={styles.goldLine} />
-      {/* Name and controls share a line; the chips get one of their own.
+    <View style={styles.outer}>
+      {/* The town's own skyline, cropped from the reskin reference sheet —
+          a decorative band sitting above the control panel rather than
+          behind it, the same layering the reference itself uses: this busy
+          a daytime painting behind the gold stat numbers and six small
+          control icons would have wrecked their contrast. */}
+      <Image source={skylineImage} style={styles.skyline} resizeMode="cover" />
+      <View style={styles.wrap}>
+        <GradientFill colors={["#3a2a16", "#1c140c"]} x1="0" y1="0" x2="0" y2="1" />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
+        />
+        <View style={styles.goldLine} />
+        {/* Name and controls share a line; the chips get one of their own.
           They used to sit in a single row with the chip strip allowed to
           wrap, and on a phone it broke into three ragged lines beside a
           block of six circles — the town's own name being the thing that
           lost the width. */}
-      <View style={styles.topRow}>
-        <Pressable
-          onPress={onEditName}
-          style={styles.townNamePressable}
-          accessibilityRole="button"
-          accessibilityLabel={t("a11y.editTownName")}
-        >
-          {/* Shrink to fit rather than truncate. Six 26px controls leave the
+        <View style={styles.topRow}>
+          <Pressable
+            onPress={onEditName}
+            style={styles.townNamePressable}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.editTownName")}
+          >
+            {/* Shrink to fit rather than truncate. Six 26px controls leave the
               name about 180px, and the default town name spent it all: the
               header read "ALTIN KASAB…", which makes the player's own town
               look like a bug. A name too long for the line now scales down
               to 70% instead of losing its last letters. */}
-          <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-            <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
-          </Text>
-        </Pressable>
-        <View style={styles.controls}>
-          <Pressable
-            onPress={onToggleLanguage}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.toggleLanguage")}
-          >
-            <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
+            <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+              <Text style={{ textShadowColor: emblemColor }}>{emblem}</Text> {townName.toUpperCase()} ✏️
+            </Text>
           </Pressable>
-          <SpeedBoostButton onPress={onOpenSpeedBoost} />
-          <Pressable
-            onPress={onHelp}
-            style={[styles.iconBtn, { backgroundColor: withAlpha("#6fb8f2", 0.22) }]}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.help")}
-          >
-            <Text style={styles.iconBtnText}>❓</Text>
-          </Pressable>
-          <Pressable
-            onPress={onToggleMuted}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel={muted ? t("a11y.unmute") : t("a11y.mute")}
-          >
-            <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
-          </Pressable>
-          <Pressable
-            onPress={onTogglePause}
-            style={[styles.iconBtn, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
-            accessibilityRole="button"
-            accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
-          >
-            <Text style={styles.iconBtnText}>{paused ? "▶" : "⏸"}</Text>
-          </Pressable>
-          <Pressable
-            onPress={onReset}
-            style={[styles.iconBtn, { backgroundColor: withAlpha("#f0776a", 0.22) }]}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.newGame")}
-          >
-            <Text style={styles.iconBtnText}>⟳</Text>
-          </Pressable>
+          <View style={styles.controls}>
+            <Pressable
+              onPress={onToggleLanguage}
+              style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t("a11y.toggleLanguage")}
+            >
+              <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
+            </Pressable>
+            <SpeedBoostButton onPress={onOpenSpeedBoost} />
+            <Pressable
+              onPress={onHelp}
+              style={[styles.iconBtn, { backgroundColor: withAlpha("#6fb8f2", 0.22) }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("a11y.help")}
+            >
+              <Text style={styles.iconBtnText}>❓</Text>
+            </Pressable>
+            <Pressable
+              onPress={onToggleMuted}
+              style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={muted ? t("a11y.unmute") : t("a11y.mute")}
+            >
+              <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
+            </Pressable>
+            <Pressable
+              onPress={onTogglePause}
+              style={[styles.iconBtn, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
+              accessibilityRole="button"
+              accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
+            >
+              <Text style={styles.iconBtnText}>{paused ? "▶" : "⏸"}</Text>
+            </Pressable>
+            <Pressable
+              onPress={onReset}
+              style={[styles.iconBtn, { backgroundColor: withAlpha("#f0776a", 0.22) }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("a11y.newGame")}
+            >
+              <Text style={styles.iconBtnText}>⟳</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.chipRow}>
-        <View
-          style={[styles.streakBadge, styles.streakBadgeRow, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
-        >
-          <Text style={styles.streakBadgeText}>
-            {rankIcon} {rankTitle}
-          </Text>
-        </View>
-        <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
-          <Text style={styles.streakBadgeText}>
-            {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
-          </Text>
-        </View>
-        <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
-          <Text style={styles.streakBadgeText}>
-            {seasonFromTick(tick).icon} {t(seasonFromTick(tick).nameKey)} ·{" "}
-            {t("header.day", { day: gameDay })}
-          </Text>
-        </View>
-        {streakCount > 0 && (
+        <View style={styles.chipRow}>
           <View
             style={[
               styles.streakBadge,
               styles.streakBadgeRow,
-              { backgroundColor: withAlpha("#f0776a", 0.22) },
+              { backgroundColor: withAlpha("#e8c777", 0.22) },
             ]}
           >
-            <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
-              🔥
-            </Animated.Text>
-            <Text style={styles.streakBadgeText}>{streakCount}</Text>
+            <Text style={styles.streakBadgeText}>
+              {rankIcon} {rankTitle}
+            </Text>
           </View>
-        )}
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statLabel}>{t("header.cash")}</Text>
-          <AnimatedNumber value={cash} formatter={formatCoins} style={styles.statValue} />
-        </View>
-        <View style={styles.stat}>
-          <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
-          <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
-        </View>
-        <SpotlightTarget
-          id="inflation"
-          style={[styles.stat, styles.inflationStat, hot && glowShadow("#e0693f")]}
-        >
-          {hot && (
-            <Animated.View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, styles.hotGlow, { opacity: hotGlowOpacity }]}
-            />
+          <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
+            <Text style={styles.streakBadgeText}>
+              {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
+            </Text>
+          </View>
+          <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
+            <Text style={styles.streakBadgeText}>
+              {seasonFromTick(tick).icon} {t(seasonFromTick(tick).nameKey)} ·{" "}
+              {t("header.day", { day: gameDay })}
+            </Text>
+          </View>
+          {streakCount > 0 && (
+            <View
+              style={[
+                styles.streakBadge,
+                styles.streakBadgeRow,
+                { backgroundColor: withAlpha("#f0776a", 0.22) },
+              ]}
+            >
+              <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
+                🔥
+              </Animated.Text>
+              <Text style={styles.streakBadgeText}>{streakCount}</Text>
+            </View>
           )}
-          <View style={styles.inflationTextCol}>
-            <Text style={styles.statLabel}>{t("header.inflation")}</Text>
-            {/* The daily rate is its own line rather than a small Text nested
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>{t("header.cash")}</Text>
+            <AnimatedNumber value={cash} formatter={formatCoins} style={styles.statValue} />
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
+            <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
+          </View>
+          <SpotlightTarget
+            id="inflation"
+            style={[styles.stat, styles.inflationStat, hot && glowShadow("#e0693f")]}
+          >
+            {hot && (
+              <Animated.View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.hotGlow, { opacity: hotGlowOpacity }]}
+              />
+            )}
+            <View style={styles.inflationTextCol}>
+              <Text style={styles.statLabel}>{t("header.inflation")}</Text>
+              {/* The daily rate is its own line rather than a small Text nested
                 inside the index. Inline, it wrapped wherever it ran out of
                 room — on a narrow phone the closing bracket ended up alone on
                 a third line, under the sparkline. */}
-            <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
-              {formatNumber(inflationIndex, language, 1)}
-            </Text>
-            <Text style={[styles.inflationRate, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
-              {"("}
-              {dailyInflationPct >= 0 ? "+" : ""}
-              {formatPercent(dailyInflationPct, language, 2)}
-              {t("header.perTurn")}
-              {")"}
-            </Text>
-          </View>
-          <PriceChart
-            history={inflationHistory}
-            color={hot ? "#ff8a5c" : "#e8c777"}
-            width={70}
-            height={30}
-            strokeWidth={1.5}
-          />
-        </SpotlightTarget>
+              <Text style={[styles.statValue, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
+                {formatNumber(inflationIndex, language, 1)}
+              </Text>
+              <Text style={[styles.inflationRate, { color: hot ? "#ff8a5c" : "#e8c777" }]} numberOfLines={1}>
+                {"("}
+                {dailyInflationPct >= 0 ? "+" : ""}
+                {formatPercent(dailyInflationPct, language, 2)}
+                {t("header.perTurn")}
+                {")"}
+              </Text>
+            </View>
+            <PriceChart
+              history={inflationHistory}
+              color={hot ? "#ff8a5c" : "#e8c777"}
+              width={70}
+              height={30}
+              strokeWidth={1.5}
+            />
+          </SpotlightTarget>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outer: { overflow: "hidden" },
+  skyline: { width: "100%", height: 52 },
   wrap: {
     paddingTop: 8,
     paddingBottom: 10,
