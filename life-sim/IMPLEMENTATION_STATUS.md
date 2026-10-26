@@ -28,6 +28,14 @@ progress; no horizontal overflow or clipped elements detected).
 - Workout dock is three compact rows (steppers / info / Start·Rest·End); live set view is one row plus Stop.
 - Camera reserves space for the dock so the character and bar stay visible; bottom nav unchanged.
 
+**Visual quality pass (reference-board target)**
+- Post-processing: bloom limited to emissive things (lamps, treadmill screens, LED strip), warm/teal grade, vignette.
+  Graphics setting in Menu (Auto / High / Low); Auto turns effects off if the device can't hold ~25 fps.
+- Light shafts and warm floor pools under lamps, window glow, ceiling pipes/duct, LED strip, wall shelf, posters,
+  gym bag, gloves; lifted steel palette.
+- Honest gap: the references are painted illustrations. Hand-painted surface detail needs authored art; see
+  `docs/ART_SPEC.md` for the exact plates and the integration point.
+
 **Logic and tests (Priority 4)**
 - Workout flow extracted to `WorkoutController` with an animation port, so it is tested without a renderer.
 - An expired pass now blocks starting the next set even mid-workout.

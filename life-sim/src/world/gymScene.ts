@@ -16,7 +16,8 @@ import {
   treadmill,
   waterBottle,
 } from './props';
-import { blobTexture, gymSign, skylineTexture, tileFloor, wallPanels } from './textures';
+import { blobTexture, gymSign, poolTexture, posterTexture, shaftTexture, skylineTexture, tileFloor, wallPanels } from './textures';
+import { Batch } from './batch';
 
 /** Bench-press station anchors, in the station's own (unrotated) coordinates, metres. */
 export const BENCH = {
@@ -43,6 +44,7 @@ export function createGymScene(): GymScene {
   const root = new THREE.Group();
   const disposables: THREE.Texture[] = [];
   const tex = <T extends THREE.Texture>(t: T): T => (disposables.push(t), t);
+  const additive = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending } as const;
 
   // --- Layer 0: far wall, window with skyline, sign ---
   const wall = surface(new THREE.PlaneGeometry(40, 8), new THREE.MeshStandardMaterial({ map: tex(wallPanels()), roughness: 0.92, color: 0xcfd3dc }));
@@ -106,6 +108,10 @@ export function createGymScene(): GymScene {
     t.position.set(x, 0, z);
     t.rotation.y = -0.5;
     t.scale.setScalar(0.9);
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.13, 0.4), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x4de1ff).multiplyScalar(2.2) }));
+    screen.position.set(-0.7, 1.35, 0);
+    screen.rotation.z = 0.35;
+    t.add(screen);
     root.add(t);
   }
   const tree = plateTree();
@@ -121,7 +127,7 @@ export function createGymScene(): GymScene {
   station.rotation.y = STATION_YAW;
   root.add(station);
   // Lifting mat: dark rubber with yellow edge lines grounds the station.
-  const rubber = outlined(new THREE.BoxGeometry(2.5, 0.025, 1.9), 0x1a1c21, 0.006);
+  const rubber = outlined(new THREE.BoxGeometry(2.5, 0.025, 1.9), 0x2a2d35, 0.006);
   rubber.position.set(0.1, 0.0125, 0);
   station.add(rubber);
   for (const z of [0.9, -0.9]) {
@@ -157,9 +163,47 @@ export function createGymScene(): GymScene {
   addBlob(-2.2, -2.0, 2.6, 0.9);
   addBlob(2.55, -2.55, 1.8, 0.9);
 
+  // --- Atmosphere & detail ---
+  // Ceiling pipes, duct and a yellow LED strip along the wall.
+  const ceil = new Batch();
+  for (const [y, z, r] of [[3.9, -3.0, 0.07], [3.75, -2.7, 0.05]] as const) ceil.cyl(r, r, 30, 0x2f333c, { pos: [0, y, z], rot: [0, 0, Math.PI / 2] }, 10);
+  ceil.box(30, 0.3, 0.45, 0x23262c, { pos: [0, 4.0, -2.2] }, 0.02);
+  for (let x = -6; x <= 6; x += 1.5) ceil.box(0.06, 0.4, 0.5, 0x15171b, { pos: [x, 3.98, -2.2] }, 0.01);
+  root.add(ceil.build(false));
+  const led = new THREE.Mesh(new THREE.BoxGeometry(30, 0.04, 0.03), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffc23a).multiplyScalar(2.4) }));
+  led.position.set(0, 3.7, -3.5);
+  root.add(led);
+  // Wall shelf with medicine balls / kettlebells, posters.
+  const shelf = new Batch();
+  shelf.box(2.2, 0.05, 0.3, 0x3a3f4a, { pos: [0, 0, 0] }, 0.012);
+  [0xd8332f, 0x2459d6, 0xf2c230, 0x37b26a, 0xd8332f, 0x2459d6].forEach((c, i) => shelf.add(new THREE.SphereGeometry(0.1, 14, 10), c, { pos: [-0.9 + i * 0.36, 0.15, 0] }));
+  const shelfMesh = shelf.build();
+  shelfMesh.position.set(-1.7, 1.2, -3.38);
+  root.add(shelfMesh);
+  const poster = (kind: 'anatomy' | 'abstract', x: number): void => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.66), new THREE.MeshBasicMaterial({ map: tex(posterTexture(kind)) }));
+    m.position.set(x, 1.85, -3.5);
+    root.add(m);
+  };
+  poster('anatomy', 0.35);
+  poster('abstract', -0.3);
+  // Floor clutter: gym bag, towel on the bench, boxing gloves by the bag.
+  const clutter = new Batch();
+  clutter.box(0.55, 0.22, 0.26, 0x2459d6, { pos: [0, 0.11, 0], rot: [0, 0.4, 0] }, 0.06);
+  clutter.box(0.4, 0.02, 0.08, 0xe3a91a, { pos: [0, 0.23, 0], rot: [0, 0.4, 0] }, 0.01);
+  clutter.add(new THREE.SphereGeometry(0.1, 12, 10), 0xd8332f, { pos: [0.9, 0.1, -0.5], scale: [1.1, 0.8, 0.9] });
+  clutter.add(new THREE.SphereGeometry(0.1, 12, 10), 0xd8332f, { pos: [1.12, 0.1, -0.45], scale: [1.1, 0.8, 0.9] });
+  const clutterMesh = clutter.build();
+  clutterMesh.position.set(-0.9, 0, 0.1);
+  root.add(clutterMesh);
+  // Window glow spilling into the room.
+  const winGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.4), new THREE.MeshBasicMaterial({ map: tex(poolTexture()), opacity: 0.55, ...additive }));
+  winGlow.position.set(2.0, 2.15, -3.4);
+  root.add(winGlow);
+
   // --- Lighting: soft sky fill, warm key with soft shadows, hanging lamp pools, window rim ---
-  root.add(new THREE.HemisphereLight(0xc4d2ec, 0x3a3a40, 1.35));
-  const key = new THREE.DirectionalLight(0xffe6c2, 2.2);
+  root.add(new THREE.HemisphereLight(0xc4d2ec, 0x4a4a52, 2.2));
+  const key = new THREE.DirectionalLight(0xffe6c2, 2.0);
   key.position.set(2.0, 6.5, 5);
   key.target.position.set(0.3, 0.5, 0);
   key.castShadow = true;
@@ -169,7 +213,9 @@ export function createGymScene(): GymScene {
   key.shadow.bias = -0.0006;
   key.shadow.normalBias = 0.02;
   root.add(key, key.target);
-  const lampMat = new THREE.MeshBasicMaterial({ color: 0xfff0cf });
+  const shaftMat = new THREE.MeshBasicMaterial({ map: tex(shaftTexture()), opacity: 0.22, ...additive });
+  const poolMat = new THREE.MeshBasicMaterial({ map: tex(poolTexture()), opacity: 0.9, ...additive });
+  const lampMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff0cf).multiplyScalar(3.2) });
   for (const x of [-1.6, 0.5, 2.5]) {
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.22), lampMat);
     lamp.position.set(x, 3.95, -1.2);
@@ -177,8 +223,16 @@ export function createGymScene(): GymScene {
     const chain = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.4, 0.02), new THREE.MeshBasicMaterial({ color: 0x15171b }));
     chain.position.set(x, 4.17, -1.2);
     root.add(chain);
+    // light shaft + warm pool on the floor under each lamp
+    const shaft = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3.8), shaftMat);
+    shaft.position.set(x, 2.05, -1.25);
+    root.add(shaft);
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.2), poolMat);
+    pool.rotation.x = -Math.PI / 2;
+    pool.position.set(x, 0.006, -1.0);
+    root.add(pool);
   }
-  const warm = new THREE.PointLight(0xffc98a, 14, 8, 1.4);
+  const warm = new THREE.PointLight(0xffc98a, 7, 8, 1.4);
   warm.position.set(0.3, 3.3, 1.0);
   root.add(warm);
   const win = new THREE.PointLight(0xff9a55, 9, 7, 1.6);

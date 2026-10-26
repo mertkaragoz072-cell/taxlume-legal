@@ -7,7 +7,7 @@ import { SaveManager } from '../persistence/save';
 import { advanceTime } from '../simulation/needs';
 import { createNewGame, type GameState } from '../simulation/state';
 import { createGymScene } from '../world/gymScene';
-import { GameRenderer } from '../world/renderer';
+import { GameRenderer, type GraphicsQuality } from '../world/renderer';
 import { WorkoutController } from './workoutController';
 
 /** Wires the simulation, renderer and animation together; the UI talks only to this. */
@@ -56,6 +56,15 @@ export class Game {
   private refreshBody(): void {
     const c = this.state.character;
     this.rig.setMuscle(muscleAmount(c.strength, c.endurance));
+  }
+
+  get graphics(): GraphicsQuality {
+    return this.renderer.graphics;
+  }
+
+  setGraphics(q: GraphicsQuality): void {
+    this.renderer.setGraphics(q);
+    this.changed();
   }
 
   get physiqueStage(): number {

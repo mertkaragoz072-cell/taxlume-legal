@@ -7,6 +7,7 @@ import { hasMembership, membershipRemaining, type MembershipPlan } from '../fitn
 import { PHYSIQUE_STAGES, xpForNextLevel } from '../fitness/progression';
 import { baseOneRM, currentOneRM, energyPerRep, intensityOf, maxRepsAt, performance } from '../fitness/workout';
 import type { Game } from '../app/game';
+import type { GraphicsQuality } from '../world/renderer';
 import { DEFAULT_CONFIG } from '../simulation/config';
 import { DAY, formatDuration, HOUR, readClock } from '../simulation/time';
 
@@ -123,6 +124,9 @@ export class UI {
         URL.revokeObjectURL(a.href);
         return;
       }
+      case 'gfx':
+        g.setGraphics(arg as GraphicsQuality);
+        return;
       case 'reset':
         this.ask({ title: 'Start a new game?', body: 'This permanently deletes your current progress.', yes: 'Delete & restart', danger: true, run: () => void g.resetGame() });
         return;
@@ -289,6 +293,8 @@ export class UI {
     return `<h2>Menu</h2>
       <div class="card"><b>Save</b><div class="muted small">Autosaves after every set, purchase and when the app goes to the background.${this.lastSaved ? ` Last manual save ${new Date(this.lastSaved).toLocaleTimeString()}.` : ''}</div>
       <div class="btns"><button class="btn" data-act="save">Save now</button><button class="btn alt" data-act="export">Export</button></div></div>
+      <div class="card"><b>Graphics</b><div class="muted small">Glow, light shafts and colour grading. Auto turns them off if your device runs slowly.</div>
+      <div class="btns3" style="grid-template-columns:repeat(3,1fr)">${(['auto', 'high', 'low'] as GraphicsQuality[]).map((q) => `<button class="btn ${this.game.graphics === q ? '' : 'alt'} sm" data-act="gfx" data-arg="${q}">${q[0]!.toUpperCase() + q.slice(1)}</button>`).join('')}</div></div>
       <div class="card"><b>New game</b><div class="muted small">Delete progress and start over.</div><button class="btn danger block" style="margin-top:8px" data-act="reset">Start new game…</button></div>
       <p class="muted small">Life Simulator · Milestone 1 build</p>`;
   }

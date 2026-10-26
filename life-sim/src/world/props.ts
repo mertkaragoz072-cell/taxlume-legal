@@ -28,8 +28,8 @@ export function platesFor(totalKg: number): number[] {
   return out;
 }
 
-const STEEL = 0x24272e;
-const STEEL_LIGHT = 0x3a3f4a;
+const STEEL = 0x353a45;
+const STEEL_LIGHT = 0x555c6a;
 const YELLOW = 0xe3a91a;
 
 /** Olympic barbell lying along z. Origin = bar centre. */

@@ -199,3 +199,61 @@ export const blobTexture = (): THREE.CanvasTexture =>
     g.fillStyle = grad;
     g.fillRect(0, 0, 128, 128);
   });
+
+/** Vertical fade (opaque at top → transparent at bottom) for light shafts. */
+export const shaftTexture = (): THREE.CanvasTexture =>
+  canvasTexture(64, 256, (g) => {
+    const grad = g.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, 'rgba(255,225,170,0.85)');
+    grad.addColorStop(1, 'rgba(255,225,170,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 256);
+    const side = g.createLinearGradient(0, 0, 64, 0);
+    side.addColorStop(0, 'rgba(0,0,0,1)');
+    side.addColorStop(0.5, 'rgba(0,0,0,0)');
+    side.addColorStop(1, 'rgba(0,0,0,1)');
+    g.globalCompositeOperation = 'destination-out';
+    g.fillStyle = side;
+    g.fillRect(0, 0, 64, 256);
+  });
+
+/** Warm radial pool of light for the floor under lamps. */
+export const poolTexture = (): THREE.CanvasTexture =>
+  canvasTexture(128, 128, (g) => {
+    const grad = g.createRadialGradient(64, 64, 2, 64, 64, 62);
+    grad.addColorStop(0, 'rgba(255,205,140,0.55)');
+    grad.addColorStop(0.6, 'rgba(255,170,90,0.16)');
+    grad.addColorStop(1, 'rgba(255,170,90,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+  });
+
+export const posterTexture = (kind: 'anatomy' | 'abstract'): THREE.CanvasTexture =>
+  canvasTexture(256, 340, (g) => {
+    g.fillStyle = kind === 'anatomy' ? '#1f3a4d' : '#3a2a4d';
+    g.fillRect(0, 0, 256, 340);
+    g.strokeStyle = kind === 'anatomy' ? '#6fc3e8' : '#f0b45a';
+    g.lineWidth = 5;
+    if (kind === 'anatomy') {
+      g.beginPath();
+      g.arc(128, 80, 28, 0, Math.PI * 2);
+      g.moveTo(128, 108);
+      g.lineTo(128, 220);
+      g.moveTo(70, 140);
+      g.lineTo(186, 140);
+      g.moveTo(128, 220);
+      g.lineTo(90, 310);
+      g.moveTo(128, 220);
+      g.lineTo(166, 310);
+      g.stroke();
+    } else {
+      for (let i = 0; i < 6; i++) {
+        g.beginPath();
+        g.arc(128, 170, 30 + i * 18, Math.PI * 0.1 * i, Math.PI * (1.2 + 0.1 * i));
+        g.stroke();
+      }
+    }
+    g.strokeStyle = '#0c0d10';
+    g.lineWidth = 14;
+    g.strokeRect(0, 0, 256, 340);
+  });

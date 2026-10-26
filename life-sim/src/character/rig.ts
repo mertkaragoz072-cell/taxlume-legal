@@ -134,7 +134,7 @@ export class StickmanRig {
   };
 
   constructor() {
-    const mat = toon(SKIN, 0x4a4944);
+    const mat = toon(SKIN, 0x33322e);
     this.pelvisMesh = new OutlinedMesh(new THREE.SphereGeometry(0.11, 20, 14), mat, 0.026);
     this.root.add(this.pelvisMesh, this.spine);
 
