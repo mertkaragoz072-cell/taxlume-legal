@@ -13,6 +13,12 @@ export interface CameraSetup {
   fitHeight: number;
   /** Fraction (0–1) of screen height the bottom UI sheet covers; target is lifted into the free area. */
   uiBottomFraction: number;
+  /**
+   * Painted-backdrop mode: the camera is placed so that `world` lands exactly on `image` (u,v fractions of the painted art,
+   * v measured from the top) wherever the art is laid out on screen. `fitWidth` then means the world width visible across the
+   * full screen width at that depth, so the 3D objects keep a constant size relative to the painting on every phone.
+   */
+  anchor?: { world: [number, number, number]; image: [number, number] };
   /** If set, the camera target x follows `focusX()` clamped to this range. */
   followRange?: [number, number];
 }

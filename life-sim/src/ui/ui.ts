@@ -35,6 +35,14 @@ export class UI {
   private options: ActionOption[] = [];
   private confirm: Confirm | null = null;
   private lastSaved = 0;
+  /** Sheet folded down to the tab bar so the whole scene is visible (a per-viewer preference, not game state). */
+  private collapsed = ((): boolean => {
+    try {
+      return localStorage.getItem('lifesim.sheetCollapsed') === '1';
+    } catch {
+      return false;
+    }
+  })();
 
   constructor(
     private root: HTMLElement,
@@ -175,6 +183,14 @@ export class UI {
         this.ask({ title: `Walk to ${name}?`, body: `${mins} min on foot, a little energy.${pending}`, yes: 'Go', run: () => void g.travelTo(to) });
         return;
       }
+      case 'sheet':
+        this.collapsed = !this.collapsed;
+        try {
+          localStorage.setItem('lifesim.sheetCollapsed', this.collapsed ? '1' : '0');
+        } catch {
+          /* ignore */
+        }
+        break;
       case 'gfx':
         g.setGraphics(arg as GraphicsQuality);
         return;
@@ -199,7 +215,9 @@ export class UI {
 
   render(): void {
     const toasts = this.root.querySelector('.toasts');
-    this.root.innerHTML = `${this.hud()}<div class="sheet"><div class="sheet-body">${this.sheet()}</div>${this.tabs()}</div>${this.modal()}`;
+    // The panel never folds away while a set is running: the Stop button must stay reachable.
+    const folded = this.collapsed && this.game.workout?.phase !== 'lifting';
+    this.root.innerHTML = `${this.hud()}<div class="sheet ${folded ? 'folded' : ''}"><button class="grab" data-act="sheet" aria-label="${folded ? 'Show panel' : 'Hide panel'}" aria-expanded="${!folded}"></button><div class="sheet-body">${this.sheet()}</div>${this.tabs()}</div>${this.modal()}`;
     if (toasts) this.root.appendChild(toasts);
   }
 

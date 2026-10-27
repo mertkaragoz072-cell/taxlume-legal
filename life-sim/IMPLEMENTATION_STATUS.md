@@ -140,3 +140,20 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 - Capacitor Android/iOS projects not generated.
 - End-to-end scripts are manual (not in CI); unit tests are.
 - `town-economy/` (unrelated Expo game in this repository) is untouched.
+
+## Portrait gym layout + compact mobile UI (latest round)
+
+**Changed**
+- `world/backdropLayout.ts` (pure, unit-tested) + `world/backdropLayer.ts`: the painted gym is a screen-space static layer drawn at its true aspect ratio. Screens narrower than the art (every phone) are width-fitted and top-anchored, so no sideways crop; wider screens are height-fitted and centred. Camera `anchor` mode places the camera so the bench station lands on a chosen image point (`gymScene`: image (0.5, 0.58), above the workout dock).
+- Bench station, barbell/plates and lifter remain separate 3D/sprite objects over the static layer; the procedural background is hidden when the painting loads, so no equipment is duplicated behind the bench. `bench-station.webp` alpha re-cleaned (no baked checkerboard, lossless alpha).
+- Mobile UI: sheet padding/cards tightened, `max-height` min(36vh, 330px), drag-handle button folds the panel to the tab bar (preference stored per viewer; never folds during a running set), safe-area left/right insets, extra compaction for ≤700px-tall screens.
+
+**Verified (this round)**
+- `tsc` clean, `vite build` ok, 144 unit tests pass (4 new for layout).
+- Screenshots 360×640, 390×844, 412×915, 430×932: whole painting width visible, sign/racks/window uncropped, station on the painted floor with contact shadow; at 360×640 the lying lifter and bar sit fully above the dock.
+- `scripts/verify-e2e.cjs`: single lie-down/sit-up, states RECLINED→TRANSITION→SEATED, rack-blocked frames 0/461, character+bar bbox inside the free area, no errors.
+
+**Remaining / unverified**
+- Software-WebGL headless run only (~10 fps); no real-device check. `home-e2e.cjs` needs >2 min under software GL (see result noted in commit if it completed).
+- Toasts still overlay the top of the scene briefly; the workout dock covers the lower ~30% while open (use the handle to fold it outside sets).
+- Character shading is a flat tint; not a full match to the painting's lighting.

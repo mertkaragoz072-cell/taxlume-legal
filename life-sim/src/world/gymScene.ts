@@ -370,7 +370,7 @@ export function createGymScene(): GymScene {
     root,
     station,
     barbell,
-    camera: { target: [0, 0.88, 0.2], fov: 34, yaw: 0, elevation: 13, fitWidth: 2.85, fitHeight: 2.9, uiBottomFraction: 0.32 },
+    camera: { target: [0, 0.88, 0.2], fov: 34, yaw: 0, elevation: 13, fitWidth: 3.4, fitHeight: 2.9, uiBottomFraction: 0.32, anchor: { world: [STATION_POS[0], STATION_POS[1], STATION_POS[2]], image:[0.5,0.58] } },
     // body tint: slightly warm and dimmer so the white figure belongs to the amber painting instead of glowing on it
     skin: { color: 0xdcd8d0, emissive: 0x0a0908 },
     backdrop: null,

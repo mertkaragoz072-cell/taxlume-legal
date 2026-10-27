@@ -4,6 +4,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { BackdropLayer } from './backdropLayer';
+import { imagePointToNdc } from './backdropLayout';
 import type { CameraSetup, LocationScene } from './locationScene';
 
 export type GraphicsQuality = 'auto' | 'high' | 'low';
@@ -44,6 +46,7 @@ export class GameRenderer {
   private quality: GraphicsQuality = 'auto';
   private slowFrames = 0;
   private followX = 0;
+  private backdropLayer = new BackdropLayer();
   private frames = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
@@ -54,6 +57,7 @@ export class GameRenderer {
     this.three.toneMapping = THREE.ACESFilmicToneMapping;
     this.three.toneMappingExposure = 1.35;
     this.scene.background = new THREE.Color(0x14161b);
+    this.scene.add(this.backdropLayer.mesh);
     try {
       const q = new URLSearchParams(location.search).get('fx') ?? localStorage.getItem(QUALITY_KEY);
       if (q === 'high' || q === 'low' || q === 'auto') this.quality = q;
@@ -114,13 +118,14 @@ export class GameRenderer {
   }
 
   /**
-   * A painted backdrop is drawn exactly as authored (no filmic tone mapping), cover-fitted and centred;
-   * scenes without one use the dark default and the filmic look.
+   * A painted backdrop is drawn exactly as authored, in screen space (BackdropLayer): no filmic tone mapping, never cropped
+   * sideways (see backdropLayout.ts). Scenes without one use the dark default and the filmic look.
    */
   private applyBackdrop(): void {
     const tex = this.location?.backdrop ?? null;
+    this.backdropLayer.setTexture(tex);
     if (tex) {
-      this.scene.background = tex;
+      this.scene.background = new THREE.Color(0x120f0d); // base colour for any slack around the art
       this.three.toneMapping = THREE.NoToneMapping;
       this.three.toneMappingExposure = 1;
       this.fitBackdrop();
@@ -132,20 +137,7 @@ export class GameRenderer {
   }
 
   private fitBackdrop(): void {
-    const tex = this.location?.backdrop;
-    const img = tex?.image as { width: number; height: number } | undefined;
-    if (!tex || !img) return;
-    const ia = img.width / img.height;
-    const sa = this.camera.aspect;
-    if (sa < ia) {
-      const rx = sa / ia; // screen is narrower than the art: crop the sides
-      tex.repeat.set(rx, 1);
-      tex.offset.set((1 - rx) / 2, 0);
-    } else {
-      const ry = ia / sa; // screen is wider: crop top and bottom (keep the floor)
-      tex.repeat.set(1, ry);
-      tex.offset.set(0, 0);
-    }
+    if (this.location?.backdrop) this.backdropLayer.fit(this.camera.aspect);
   }
 
   resize(): void {
@@ -157,9 +149,9 @@ export class GameRenderer {
     this.composer?.setSize(w, h);
     this.bloom?.resolution.set(w / 2, h / 2);
     this.camera.aspect = w / h;
+    this.fitBackdrop(); // the camera anchor depends on where the art sits on screen
     if (this.location) this.placeCamera(this.location.camera);
     this.camera.updateProjectionMatrix();
-    this.fitBackdrop();
   }
 
   /** Fixed camera: keeps the required world rectangle visible at any aspect ratio. */
@@ -167,6 +159,24 @@ export class GameRenderer {
     this.camera.fov = c.fov;
     this.camera.updateProjectionMatrix();
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    if (c.anchor && this.location?.backdrop) {
+      // Painted-backdrop mode: constant world width across the screen, and the anchor lands on its spot in the painting.
+      const d = c.fitWidth / 2 / (tanHalf * this.camera.aspect);
+      const yawA = THREE.MathUtils.degToRad(c.yaw);
+      const elA = THREE.MathUtils.degToRad(c.elevation);
+      const [ax, ay, az] = c.anchor.world;
+      this.camera.position.set(ax + Math.sin(yawA) * Math.cos(elA) * d, ay + Math.sin(elA) * d, az + Math.cos(yawA) * Math.cos(elA) * d);
+      this.camera.lookAt(ax, ay, az);
+      this.camera.updateMatrixWorld();
+      const [nx, ny] = imagePointToNdc(this.backdropLayer.rect, c.anchor.image[0], c.anchor.image[1]);
+      const hh = d * tanHalf;
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+      this.camera.position.addScaledVector(right, -nx * hh * this.camera.aspect).addScaledVector(up, -ny * hh);
+      this.camera.updateMatrixWorld();
+      this.location.updateForCamera?.(this.camera);
+      return;
+    }
     const free = 1 - c.uiBottomFraction;
     // Visible vertical span must contain fitHeight inside the free (non-UI) part of the screen.
     const dist = Math.max(c.fitWidth / 2 / (tanHalf * this.camera.aspect), c.fitHeight / free / 2 / tanHalf);
