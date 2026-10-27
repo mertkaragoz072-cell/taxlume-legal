@@ -276,18 +276,32 @@ export function InflationHeader({
 
       <View style={styles.chipRow}>
         <View
-          style={[styles.streakBadge, styles.streakBadgeRow, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
+          style={[
+            styles.streakBadge,
+            styles.streakBadgeRow,
+            { backgroundColor: withAlpha("#e8c777", 0.18), borderColor: withAlpha("#e8c777", 0.7) },
+          ]}
         >
           <Text style={styles.streakBadgeText}>
             {rankIcon} {rankTitle}
           </Text>
         </View>
-        <View style={[styles.streakBadge, { backgroundColor: withAlpha("#6fb8f2", 0.18) }]}>
+        <View
+          style={[
+            styles.streakBadge,
+            { backgroundColor: withAlpha("#6fb8f2", 0.15), borderColor: withAlpha("#6fb8f2", 0.7) },
+          ]}
+        >
           <Text style={styles.streakBadgeText}>
             {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
           </Text>
         </View>
-        <View style={[styles.streakBadge, { backgroundColor: withAlpha("#e8c777", 0.18) }]}>
+        <View
+          style={[
+            styles.streakBadge,
+            { backgroundColor: withAlpha("#7fcf8a", 0.15), borderColor: withAlpha("#7fcf8a", 0.7) },
+          ]}
+        >
           <Text style={styles.streakBadgeText}>
             {seasonFromTick(tick).icon} {t(seasonFromTick(tick).nameKey)} ·{" "}
             {t("header.day", { day: gameDay })}
@@ -298,7 +312,7 @@ export function InflationHeader({
             style={[
               styles.streakBadge,
               styles.streakBadgeRow,
-              { backgroundColor: withAlpha("#f0776a", 0.22) },
+              { backgroundColor: withAlpha("#f0776a", 0.18), borderColor: withAlpha("#f0776a", 0.7) },
             ]}
           >
             <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
@@ -440,9 +454,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     textAlign: "center",
   },
+  // The dark fallback color never actually shows: every call site passes
+  // its own translucent backgroundColor/borderColor so the scene behind
+  // the header shows through, same as the reference's own glass-like
+  // chips — this only matters if a future caller forgets to.
   streakBadge: {
     backgroundColor: "#2a2016",
     borderRadius: RADIUS.chip,
+    borderWidth: 1,
+    borderColor: "transparent",
     paddingHorizontal: SPACING.sm,
     paddingVertical: 3,
     flexShrink: 1,
