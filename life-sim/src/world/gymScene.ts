@@ -204,8 +204,8 @@ export function createGymScene(): GymScene {
   bg.add(winGlow);
 
   // --- Lighting: soft sky fill, warm key with soft shadows, hanging lamp pools, window rim ---
-  root.add(new THREE.HemisphereLight(0xffffff, 0x3a2a20, 1.2));
-  const key = new THREE.DirectionalLight(0xfff3e6, 1.5);
+  root.add(new THREE.HemisphereLight(0xfff0e0, 0x2a1d16, 0.95));
+  const key = new THREE.DirectionalLight(0xfff0e0, 1.25);
   key.position.set(2.0, 6.5, 5);
   key.target.position.set(0.3, 0.5, 0);
   key.castShadow = true;
@@ -234,21 +234,38 @@ export function createGymScene(): GymScene {
     pool.position.set(x, 0.006, -1.0);
     bg.add(pool);
   }
-  const warm = new THREE.PointLight(0xffc98a, 7, 8, 1.4);
+  const warm = new THREE.PointLight(0xffe0c0, 2.5, 8, 1.4);
   warm.position.set(0.3, 3.3, 1.0);
   root.add(warm);
-  const win = new THREE.PointLight(0xff9a55, 9, 7, 1.6);
+  const win = new THREE.PointLight(0xff9a55, 3, 7, 1.6);
   win.position.set(2.4, 2.3, -2.2);
   root.add(win);
+  // Window rim light from the right/back: warm orange edge on the lifter, like the painted light.
+  const rim = new THREE.DirectionalLight(0xff9a55, 0.8);
+  rim.position.set(3.5, 2.2, -1.5);
+  rim.target.position.set(0, 0.8, 0.2);
+  root.add(rim, rim.target);
 
-  // Contact shadow directly under the station (visible on both the painted and the procedural floor).
-  const stationBlob = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.9), new THREE.MeshBasicMaterial({ map: tex(blobTexture()), transparent: true, opacity: 0.85, depthWrite: false }));
-  stationBlob.rotation.x = -Math.PI / 2;
-  stationBlob.position.set(STATION_POS[0], 0.003, STATION_POS[2] - 0.05);
-  root.add(stationBlob);
+  // Grounding: soft shadows on the painted floor, rotated with the station. Drawn before the sprite so they sit under it.
+  // Light comes from the ceiling lamps and the window on the right, so shadows fall slightly left and backward.
+  const shadowGroup = new THREE.Group();
+  shadowGroup.position.set(STATION_POS[0], 0.004, STATION_POS[2]);
+  shadowGroup.rotation.y = STATION_YAW;
+  root.add(shadowGroup);
+  const shadowTex = tex(blobTexture());
+  const addShadow = (w: number, d: number, ox: number, oz: number, opacity: number): void => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(ox, 0, oz);
+    m.renderOrder = -3;
+    shadowGroup.add(m);
+  };
+  addShadow(2.9, 1.9, -0.16, -0.08, 0.7); // wide soft falloff
+  addShadow(1.7, 1.05, -0.08, -0.04, 0.95); // dense core under the frame and feet
+  addShadow(0.5, 0.5, 0.08, 0.0, 0.7); // under the lifter's shoes
 
   // --- Supplied bench-station sprite (art/bench-station.webp): camera-facing layer just behind the 3D lifter and bar ---
-  const sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, opacity: 0 }));
+  const sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, opacity: 0, color: new THREE.Color(0.92, 0.9, 0.88) }));
   sprite.visible = false;
   sprite.renderOrder = -1;
   sprite.userData.ignoreFloor = true; // its transparent lower part extends below the floor plane; not a real object
@@ -301,7 +318,9 @@ export function createGymScene(): GymScene {
     root,
     station,
     barbell,
-    camera: { target: [0, 0.75, 0.2], fov: 34, yaw: 0, elevation: 13, fitWidth: 2.3, fitHeight: 2.4, uiBottomFraction: 0.32 },
+    camera: { target: [0, 0.88, 0.2], fov: 34, yaw: 0, elevation: 13, fitWidth: 2.85, fitHeight: 2.9, uiBottomFraction: 0.32 },
+    // body tint: slightly warm and dimmer so the white figure belongs to the amber painting instead of glowing on it
+    skin: { color: 0xdcd8d0, emissive: 0x0a0908 },
     backdrop: null,
     updateForCamera: placeSprite,
     update: () => {},

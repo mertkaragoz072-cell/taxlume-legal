@@ -80,7 +80,7 @@ interface Limb {
   l2: number;
 }
 
-const SKIN = 0xf4f4f2;
+export const DEFAULT_SKIN = { color: 0xf4f4f2, emissive: 0x1f1f1f };
 const SHOE = 0x2a2d35;
 
 /** Two-bone IK in 2D. Returns pivot rotation and relative joint rotation (limb hangs down at 0). */
@@ -125,6 +125,7 @@ export class StickmanRig {
   private arms: { near: Limb; far: Limb };
   private legs: { near: Limb; far: Limb };
   private muscle = -1;
+  private skinMat: THREE.MeshToonMaterial;
   private pose: Pose = {
     pelvis: [0, 0.84],
     torso: 0,
@@ -139,7 +140,8 @@ export class StickmanRig {
   };
 
   constructor() {
-    const mat = toon(SKIN, 0x1f1f1f);
+    const mat = toon(DEFAULT_SKIN.color, DEFAULT_SKIN.emissive);
+    this.skinMat = mat;
     this.pelvisMesh = new OutlinedMesh(new THREE.SphereGeometry(0.11, 20, 14), mat, 0.026);
     this.root.add(this.pelvisMesh, this.spine);
 
@@ -202,6 +204,12 @@ export class StickmanRig {
     const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.045), eyeMat);
     mouth.position.set(0.14, -0.06, 0);
     this.face.add(mouth);
+  }
+
+  /** Per-scene body tint so the white stickman sits in the lighting of each painted backdrop. */
+  setSkin(skin: { color: number; emissive: number }): void {
+    this.skinMat.color.setHex(skin.color);
+    this.skinMat.emissive.setHex(skin.emissive);
   }
 
   /** Scale body thickness by muscle amount 0–1. Same figure, more mass. */

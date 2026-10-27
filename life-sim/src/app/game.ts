@@ -2,7 +2,7 @@ import type * as THREE from 'three';
 import { BenchPressAnimator, type RepReport, type RepResult } from '../animation/benchPress';
 import { Actor } from '../character/actor';
 import type { ActionKind } from '../character/poses';
-import { StickmanRig } from '../character/rig';
+import { DEFAULT_SKIN, StickmanRig } from '../character/rig';
 import { EventBus } from '../core/events';
 import type { HomeRoom, LocationId } from '../core/types';
 import { objectById, ROOMS } from '../data/homeObjects';
@@ -141,12 +141,14 @@ export class Game {
     if (this.state.location === 'gym') {
       const gym: GymScene = createGymScene();
       this.station = gym.station;
+      this.rig.setSkin(gym.skin ?? DEFAULT_SKIN);
       gym.station.add(this.rig.root);
       const animator = new BenchPressAnimator(this.rig, gym.barbell);
       this.proxy.target = animator;
       this.renderer.loadLocation(gym);
       this.renderer.setFrameHandler((dt) => animator.update(dt));
     } else {
+      this.rig.setSkin(DEFAULT_SKIN);
       const room = createHomeScene(this.state.room);
       this.roomScene = room;
       room.actorRoot.add(this.actor.group);

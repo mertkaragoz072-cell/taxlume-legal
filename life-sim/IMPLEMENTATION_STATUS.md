@@ -62,7 +62,13 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 | Clothing / tattoos / hair | NOT STARTED | |
 | Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## Bench-station sprite (latest)
+## Station integrated into the painting (latest)
+- Station scaled down relative to the backdrop (camera fitWidth 2.3 → 2.85) and lowered onto the floor; layered soft ground shadows under the sprite (rendered before it);
+  warm-neutral body tint for the lifter (`StickmanRig.setSkin`, per-scene `skin`), warm window rim light, softer fill and key; sprite lightly tinted.
+- Verified: 140 tests; gym e2e at 390×844 passes (rack 0/494 occluded frames, no floor clipping, fits the screen). Judged visually at 390×844 only; the shadow is subtle
+  on the dark painted floor, there is no floor reflection of the bench.
+
+## Bench-station sprite
 - The supplied bench asset (`public/art/bench-station.webp`, transparent) is placed in the middle of the painted gym as a layer behind the 3D lifter and bar.
   The 3D station, camera angle and pad/hook geometry were calibrated to it (script `scripts/calibrate-bench-sprite.py`, rms ≈ 4.5 cm); the bench is **flat** again
   (this replaces the incline staging below, which was only a stand-in). Procedural bench remains as fallback.
