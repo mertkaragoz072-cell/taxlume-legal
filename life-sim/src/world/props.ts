@@ -42,6 +42,7 @@ const YELLOW = 0xe3a91a;
 export class Barbell extends THREE.Group {
   private plates = new THREE.Group();
   readonly halfLength = BAR_HALF;
+
   constructor() {
     super();
     const bar = outlined(new THREE.CylinderGeometry(0.016, 0.016, this.halfLength * 2, 14), 0xd5dae2, 0.008);

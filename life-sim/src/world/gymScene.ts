@@ -16,7 +16,7 @@ import {
   treadmill,
   waterBottle,
 } from './props';
-import { blobTexture, gymSign, poolTexture, posterTexture, shaftTexture, skylineTexture, tileFloor, wallPanels } from './textures';
+import { blobTexture, reflectionFade, gymSign, poolTexture, posterTexture, shaftTexture, skylineTexture, tileFloor, wallPanels } from './textures';
 import { Batch } from './batch';
 
 /**
@@ -32,12 +32,14 @@ export const STATION_POS: [number, number, number] = [0, 0.02, 0.2];
  * width of the whole sprite, offset of its centre from the station anchor (right/up in screen space),
  * and how far behind the lifter it sits.
  */
-export const SPRITE = { widthM: 1.358, ox: -0.141, oy: 0.479, behind: 0.3 };
+export const SPRITE = { widthM: 1.358, ox: -0.141, oy: 0.479, behind: 0.3, reflectGap: 0.0, reflectHeight: 0.55 };
 
 export interface GymScene extends LocationScene {
   /** Parent of bench, rack, barbell and the character rig (station-local coordinates). */
   station: THREE.Group;
   barbell: Barbell;
+  /** Turns the floor reflection of the bench art on/off (off on slow devices). */
+  setReflections(on: boolean): void;
 }
 
 export function createGymScene(): GymScene {
@@ -265,13 +267,45 @@ export function createGymScene(): GymScene {
   addShadow(0.5, 0.5, 0.08, 0.0, 0.7); // under the lifter's shoes
 
   // --- Supplied bench-station sprite (art/bench-station.webp): camera-facing layer just behind the 3D lifter and bar ---
-  const sprite = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, opacity: 0, color: new THREE.Color(0.92, 0.9, 0.88) }));
+  const spriteGeo = new THREE.PlaneGeometry(1, 1, 1, 3);
+  {
+    // Painted-in lighting: bright from the ceiling lamps at the top, darker toward the floor (ambient occlusion),
+    // brighter on the window side (right), a touch darker on the left.
+    const rows = [1.12, 1.02, 0.86, 0.6];
+    const cols = [0.9, 1.06];
+    const colors: number[] = [];
+    for (const r of rows) for (const c of cols) colors.push(r * c * 0.92, r * c * 0.9, r * c * 0.87);
+    spriteGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+  }
+  const sprite = new THREE.Mesh(spriteGeo, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, opacity: 0, vertexColors: true }));
   sprite.visible = false;
   sprite.renderOrder = -1;
   sprite.userData.ignoreFloor = true; // its transparent lower part extends below the floor plane; not a real object
   root.add(sprite);
+  // Lamp glow: the same art drawn again additively with a warm tint that is strongest at the top, so the pad tops and
+  // upright caps catch the ceiling lamps' light.
+  const glowGeo = new THREE.PlaneGeometry(1, 1, 1, 3);
+  {
+    const rows = [0.42, 0.26, 0.1, 0];
+    const colors: number[] = [];
+    for (const r of rows) for (let c = 0; c < 2; c++) colors.push(r * (c ? 1.15 : 0.85), r * 0.72 * (c ? 1.15 : 0.85), r * 0.42 * (c ? 1.15 : 0.85));
+    glowGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+  }
+  const glow = new THREE.Mesh(glowGeo, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, vertexColors: true, blending: THREE.AdditiveBlending }));
+  glow.visible = false;
+  glow.renderOrder = -0.9;
+  glow.userData.ignoreFloor = true;
+  root.add(glow);
+
+  // Floor reflection of the sprite: the same art flipped below its contact edge, fading out (the painted floor is glossy).
+  const reflect = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, opacity: 0, color: 0xd8c4ad, alphaMap: tex(reflectionFade()) }));
+  reflect.visible = false;
+  reflect.renderOrder = -2;
+  reflect.userData.ignoreFloor = true;
+  root.add(reflect);
   const showProc = typeof location !== 'undefined' && new URLSearchParams(location.search).has('proc'); // debug: keep the 3D bench visible for alignment
   let spriteAspect = 1;
+  let reflectionsOn = true;
   const placeSprite = (cam: THREE.Camera): void => {
     if (!sprite.visible) return;
     const p = new THREE.Vector3(STATION_POS[0], STATION_POS[1], STATION_POS[2]);
@@ -283,7 +317,15 @@ export function createGymScene(): GymScene {
     const up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
     sprite.quaternion.copy(cam.quaternion);
     sprite.position.copy(cam.position).addScaledVector(fwd, d).addScaledVector(right, SPRITE.ox * k).addScaledVector(up, SPRITE.oy * k);
-    sprite.scale.set(SPRITE.widthM * k, (SPRITE.widthM / spriteAspect) * k, 1);
+    const w = SPRITE.widthM * k;
+    const h = (SPRITE.widthM / spriteAspect) * k;
+    sprite.scale.set(w, h, 1);
+    glow.quaternion.copy(sprite.quaternion);
+    glow.position.copy(sprite.position).addScaledVector(fwd, -0.002);
+    glow.scale.copy(sprite.scale);
+    reflect.quaternion.copy(sprite.quaternion);
+    reflect.position.copy(sprite.position).addScaledVector(up, -h * (0.5 + SPRITE.reflectHeight / 2 + SPRITE.reflectGap));
+    reflect.scale.set(w, -h * SPRITE.reflectHeight, 1);
   };
   new THREE.TextureLoader().load(
     `${import.meta.env.BASE_URL}art/bench-station.webp`,
@@ -293,8 +335,16 @@ export function createGymScene(): GymScene {
       const m = sprite.material as THREE.MeshBasicMaterial;
       m.map = tex;
       m.opacity = 1;
+      const rm = reflect.material as THREE.MeshBasicMaterial;
+      rm.map = tex;
+      rm.opacity = 0.5;
+      rm.needsUpdate = true;
+      reflect.visible = reflectionsOn;
       m.needsUpdate = true;
       sprite.visible = true;
+      (glow.material as THREE.MeshBasicMaterial).map = tex;
+      (glow.material as THREE.MeshBasicMaterial).needsUpdate = true;
+      glow.visible = true;
       if (!showProc) proc.visible = false;
       scene.onBackdrop?.(); // makes the renderer re-run camera placement, which positions the sprite
     },
@@ -313,6 +363,8 @@ export function createGymScene(): GymScene {
   catcher.visible = false;
   root.add(catcher);
 
+  (catcher.material as THREE.ShadowMaterial).depthWrite = false; // must not hide the floor reflection of the sprite
+
   const scene: GymScene = {
     id: 'gym',
     root,
@@ -323,6 +375,10 @@ export function createGymScene(): GymScene {
     skin: { color: 0xdcd8d0, emissive: 0x0a0908 },
     backdrop: null,
     updateForCamera: placeSprite,
+    setReflections(on: boolean) {
+      reflectionsOn = on;
+      reflect.visible = on && sprite.visible;
+    },
     update: () => {},
     dispose() {
       scene.backdrop?.dispose();

@@ -371,3 +371,14 @@ export const dropTexture = (): THREE.CanvasTexture =>
     g.fillStyle = grad;
     g.fillRect(0, 0, 32, 32);
   });
+
+/** Alpha ramp for floor reflections: opaque at the contact edge (bottom of the source art) fading away from it. */
+export const reflectionFade = (): THREE.CanvasTexture =>
+  canvasTexture(4, 128, (g) => {
+    const grad = g.createLinearGradient(0, 0, 0, 128);
+    grad.addColorStop(0, '#000000'); // top row = uv.y 1 (far edge)
+    grad.addColorStop(0.55, '#202020');
+    grad.addColorStop(1, '#ffffff'); // bottom row = uv.y 0 (contact edge)
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 4, 128);
+  });

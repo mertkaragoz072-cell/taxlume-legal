@@ -55,6 +55,7 @@ export class Game {
   readonly rig = new StickmanRig();
   readonly actor = new Actor(this.rig);
   station: THREE.Group | null = null;
+  private gymScene: GymScene | null = null;
   workout!: WorkoutController;
   /** The interactable object selected in the current room (tap or list). */
   selected: string | null = null;
@@ -121,6 +122,7 @@ export class Game {
   }
   setGraphics(q: GraphicsQuality): void {
     this.renderer.setGraphics(q);
+    this.gymScene?.setReflections(q !== 'low');
     this.changed();
   }
 
@@ -137,9 +139,12 @@ export class Game {
     this.proxy.target = null;
     this.roomScene = null;
     this.station = null;
+    this.gymScene = null;
     this.selected = null;
     if (this.state.location === 'gym') {
       const gym: GymScene = createGymScene();
+      this.gymScene = gym;
+      gym.setReflections(this.renderer.graphics !== 'low');
       this.station = gym.station;
       this.rig.setSkin(gym.skin ?? DEFAULT_SKIN);
       gym.station.add(this.rig.root);

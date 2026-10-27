@@ -62,7 +62,13 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 | Clothing / tattoos / hair | NOT STARTED | |
 | Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## Backdrop fidelity fix (latest)
+## Bench lit like the gym (latest)
+- The bench art now carries painted-in lighting (vertex-colour falloff: bright and warm at the top, dark toward the floor, brighter on the window side), an additive warm
+  lamp glow on its upper surfaces and a faint floor reflection of the art; plus the earlier grounding shadows and body tint.
+- Tried and removed: a mirrored 3D reflection of the lifter and bar. It floated far below the bench (the lifter lies 0.6 m above the floor) and looked like translucent blobs.
+- The sprite reflection is very faint on the dark painted floor; no real planar reflection exists. Judged visually at 390×844 only; gym e2e at 390×844 passes.
+
+## Backdrop fidelity fix
 - Cause of the "lower quality than my image" report (measured): the painted backdrop went through the post-processing stack (colour grade, contrast, vignette, bloom) and the
   half-resolution composer (pixel ratio ≤ 1.5). Measured against the source at the art's own aspect: brightness −17 %, edge sharpness 60 %, PSNR 23.5 dB.
 - Fix: while a painted backdrop is active the post stack is bypassed (scene drawn directly, no filmic tone mapping, pixel ratio up to 2.5) and the texture uses plain bilinear
