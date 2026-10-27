@@ -1,5 +1,8 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import ribbonLeft from "../../assets/ui/ribbon2-left.png";
+import ribbonMid from "../../assets/ui/ribbon2-mid.png";
+import ribbonRight from "../../assets/ui/ribbon2-right.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
 import { COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
@@ -13,6 +16,15 @@ interface Props {
    * somewhere they already are */
   activeScreen: ScreenId;
 }
+
+// The ribbon's caps are fixed-width (the wheat-sheaf scroll end, the
+// pointed gold tip) and the middle a stretchable slice of its own green
+// fill — a 9-slice, not one static image, because "FIRST STEPS" is a
+// translated string (German/Turkish run longer than English) that can't be
+// baked into the art.
+const RIBBON_HEIGHT = 32;
+const RIBBON_CAP_LEFT_W = 29;
+const RIBBON_CAP_RIGHT_W = 12;
 
 /** One task at a time, across the top of every screen, until the guided
  * first session is done.
@@ -47,7 +59,28 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
       accessibilityLabel={t(step.titleKey)}
     >
       <View style={styles.head}>
-        <Text style={styles.eyebrow}>{t("onboarding.banner")}</Text>
+        <View style={styles.ribbonRow}>
+          <Image
+            source={ribbonLeft}
+            style={{ width: RIBBON_CAP_LEFT_W, height: RIBBON_HEIGHT }}
+            resizeMode="stretch"
+          />
+          <Image
+            source={ribbonMid}
+            style={{ width: 130, height: RIBBON_HEIGHT, marginHorizontal: -1 }}
+            resizeMode="stretch"
+          />
+          <Image
+            source={ribbonRight}
+            style={{ width: RIBBON_CAP_RIGHT_W, height: RIBBON_HEIGHT }}
+            resizeMode="stretch"
+          />
+          <View style={styles.ribbonTextWrap} pointerEvents="none">
+            <Text style={styles.eyebrow} numberOfLines={1}>
+              {t("onboarding.banner")}
+            </Text>
+          </View>
+        </View>
         <Text style={styles.progress}>
           {t("onboarding.progress", {
             done: String(state.onboardingStep),
@@ -110,8 +143,17 @@ const styles = StyleSheet.create({
     gap: SPACING.xs + 2,
   },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  ribbonRow: { flexDirection: "row", alignItems: "center", height: RIBBON_HEIGHT },
+  ribbonTextWrap: {
+    position: "absolute",
+    left: RIBBON_CAP_LEFT_W + 6,
+    right: RIBBON_CAP_RIGHT_W + 4,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
   eyebrow: {
-    color: COLORS.accent,
+    color: "#f4e8ce",
     fontFamily: FONT.bold,
     fontSize: TYPE.caption,
     letterSpacing: 1.2,
