@@ -1,11 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import headerMarketImage from "../../assets/ui/header-market.webp";
-import languageBadge from "../../assets/ui/controls2/language.png";
-import helpBadge from "../../assets/ui/controls2/help.png";
-import pauseBadge from "../../assets/ui/controls2/pause.png";
-import resetBadge from "../../assets/ui/controls2/reset.png";
-import settingsBadge from "../../assets/ui/controls2/settings.png";
 import titleplateLeft from "../../assets/ui/titleplate3-left.png";
 import titleplateMid from "../../assets/ui/titleplate3-mid.png";
 import titleplateRight from "../../assets/ui/titleplate3-right.png";
@@ -235,57 +230,44 @@ export function InflationHeader({
         <View style={styles.controls}>
           <Pressable
             onPress={onToggleLanguage}
-            style={[styles.iconBtn, language !== "tr" && styles.iconBtnFallback]}
+            style={styles.iconBtn}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.toggleLanguage")}
           >
-            {language === "tr" ? (
-              <Image source={languageBadge} style={styles.iconBtnImage} resizeMode="contain" />
-            ) : (
-              <Text style={styles.langBtnText}>EN</Text>
-            )}
+            <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
           </Pressable>
           <SpeedBoostButton onPress={onOpenSpeedBoost} />
           <Pressable
             onPress={onHelp}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: withAlpha("#6fb8f2", 0.22) }]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.help")}
           >
-            <Image source={helpBadge} style={styles.iconBtnImage} resizeMode="contain" />
+            <Text style={styles.iconBtnText}>❓</Text>
           </Pressable>
-          {/* The reference set's fourth badge is a gear, which reads as
-              "settings" rather than "mute" — this game has no settings
-              screen, so it's standing in for the mute toggle here. It
-              doesn't change between muted and unmuted (there's no second
-              badge for that in the set), unlike the pause button below. */}
           <Pressable
             onPress={onToggleMuted}
             style={styles.iconBtn}
             accessibilityRole="button"
             accessibilityLabel={muted ? t("a11y.unmute") : t("a11y.mute")}
           >
-            <Image source={settingsBadge} style={styles.iconBtnImage} resizeMode="contain" />
+            <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
           </Pressable>
           <Pressable
             onPress={onTogglePause}
-            style={[styles.iconBtn, paused && styles.iconBtnFallback]}
+            style={[styles.iconBtn, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
             accessibilityRole="button"
             accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
           >
-            {paused ? (
-              <Text style={styles.iconBtnText}>▶</Text>
-            ) : (
-              <Image source={pauseBadge} style={styles.iconBtnImage} resizeMode="contain" />
-            )}
+            <Text style={styles.iconBtnText}>{paused ? "▶" : "⏸"}</Text>
           </Pressable>
           <Pressable
             onPress={onReset}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: withAlpha("#f0776a", 0.22) }]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.newGame")}
           >
-            <Image source={resetBadge} style={styles.iconBtnImage} resizeMode="contain" />
+            <Text style={styles.iconBtnText}>⟳</Text>
           </Pressable>
         </View>
       </View>
@@ -452,17 +434,13 @@ const styles = StyleSheet.create({
   // spaced twice over and the name paid for it in width.
   controls: { flexDirection: "row", alignItems: "center", gap: SPACING.xs },
   iconBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#2a2016",
     alignItems: "center",
     justifyContent: "center",
   },
-  iconBtnImage: { width: 28, height: 28 },
-  // Only the two toggles that have a state the reference set didn't draw a
-  // second badge for (EN, and "paused" showing ▶ to resume) fall back to a
-  // plain circle — everything else always has real art.
-  iconBtnFallback: { backgroundColor: "#2a2016" },
   iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.caption, lineHeight: 18 },
   langBtnText: {
     color: COLORS.accent,

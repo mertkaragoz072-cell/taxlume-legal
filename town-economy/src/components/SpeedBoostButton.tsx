@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text } from "react-native";
-import speedBadge from "../../assets/ui/controls2/speed.png";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { FONT, WEIGHT } from "../theme";
+import { FONT, TYPE, WEIGHT } from "../theme";
 
 /** h:mm:ss once there is an hour or more left, m:ss below that. The boost
  * runs for a whole day, so a minutes-only clock would count down from
@@ -81,11 +80,7 @@ export function SpeedBoostButton({ onPress }: Props) {
       accessibilityRole="button"
       accessibilityLabel={active ? t("a11y.speedBoostActive", { time: badgeText }) : t("a11y.speedBoost")}
     >
-      <Animated.Image
-        source={speedBadge}
-        style={[styles.icon, active && { transform: [{ scale }] }]}
-        resizeMode="contain"
-      />
+      <Animated.Text style={[styles.icon, active && { transform: [{ scale }] }]}>⚡</Animated.Text>
       {active && <Text style={styles.badge}>{badgeText}</Text>}
     </Pressable>
   );
@@ -103,6 +98,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   iconBtnActive: { backgroundColor: "rgba(255, 215, 94, 0.28)" },
-  icon: { width: 24, height: 24 },
+  icon: { fontSize: TYPE.body },
   badge: { color: "#ffd75e", fontSize: 10, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginLeft: 3 },
 });
