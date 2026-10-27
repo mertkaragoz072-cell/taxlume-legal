@@ -17,13 +17,21 @@ interface Props {
   activeScreen: ScreenId;
 }
 
-// The ribbon's caps are fixed-width (the wheat-sheaf scroll end, the
+// The ribbon's caps are fixed-size (the wheat-sheaf scroll end, the
 // pointed gold tip) and the middle a stretchable slice of its own green
 // fill — a 9-slice, not one static image, because "FIRST STEPS" is a
 // translated string (German/Turkish run longer than English) that can't be
 // baked into the art.
 const RIBBON_HEIGHT = 32;
-const RIBBON_CAP_LEFT_W = 29;
+// The wheat sprig's own art is taller than the plain band (it flares out
+// above and below it), so stretching it to RIBBON_HEIGHT like the other two
+// pieces squashed it and left a visible seam where its now-wrong aspect
+// ratio met the band. Sized and let overflow the row instead, at the same
+// scale the mid tile's own crop maps to the band (its cropped height, 333,
+// is what RIBBON_HEIGHT stands in for).
+const RIBBON_LEFT_SCALE = RIBBON_HEIGHT / 333;
+const RIBBON_CAP_LEFT_W = Math.round(414 * RIBBON_LEFT_SCALE);
+const RIBBON_CAP_LEFT_H = Math.round(449 * RIBBON_LEFT_SCALE);
 const RIBBON_CAP_RIGHT_W = 12;
 
 /** One task at a time, across the top of every screen, until the guided
@@ -62,8 +70,13 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
         <View style={styles.ribbonRow}>
           <Image
             source={ribbonLeft}
-            style={{ width: RIBBON_CAP_LEFT_W, height: RIBBON_HEIGHT }}
-            resizeMode="stretch"
+            style={{
+              width: RIBBON_CAP_LEFT_W,
+              height: RIBBON_CAP_LEFT_H,
+              marginTop: -(RIBBON_CAP_LEFT_H - RIBBON_HEIGHT) / 2,
+              marginBottom: -(RIBBON_CAP_LEFT_H - RIBBON_HEIGHT) / 2,
+            }}
+            resizeMode="contain"
           />
           <Image
             source={ribbonMid}
