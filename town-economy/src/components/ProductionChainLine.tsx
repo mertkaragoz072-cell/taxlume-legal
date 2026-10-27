@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
-import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { FONT, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { Good } from "../economy/types";
 
 /** What this good is made from, and whether that is currently a problem.
@@ -25,7 +25,7 @@ export function ProductionChainLine({ good }: { good: Good }) {
         const input = GOODS_BY_ID[id];
         const ratio = state.goods[id].supply / input.baseSupply;
         const scarce = ratio < 0.85;
-        const tint = scarce ? COLORS.negative : COLORS.positive;
+        const tint = scarce ? PARCHMENT.negative : PARCHMENT.positive;
         return (
           <View
             key={id}
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     marginTop: SPACING.sm,
   },
-  label: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
+  label: { color: PARCHMENT.inkMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
   chip: {
     flexDirection: "row",
     alignItems: "center",
@@ -67,6 +67,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   chipIcon: { fontSize: TYPE.caption },
-  chipName: { color: COLORS.textPrimary, fontFamily: FONT.medium, fontSize: TYPE.caption },
+  chipName: { color: PARCHMENT.ink, fontFamily: FONT.medium, fontSize: TYPE.caption },
   chipState: { fontFamily: FONT.bold, fontWeight: WEIGHT.bold, fontSize: TYPE.micro },
 });

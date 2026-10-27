@@ -2,7 +2,8 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
-import { COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
+import { COLORS, FONT, GOLD_GRADIENT, PARCHMENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
+import { BannerLabel } from "./BannerLabel";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
@@ -12,6 +13,12 @@ interface Props {
   /** the tab the player is looking at, so the banner does not send them
    * somewhere they already are */
   activeScreen: ScreenId;
+  /** "dark" (default) is the app's original card theme; "parchment" is the
+   * paper/timber reskin — App.tsx passes this in only while the active
+   * screen has itself moved over (Market, for now), since the banner floats
+   * above whichever screen is showing and a light card over a still-dark
+   * one would read as a mistake rather than a theme. */
+  variant?: "dark" | "parchment";
 }
 
 /** One task at a time, across the top of every screen, until the guided
@@ -26,10 +33,11 @@ interface Props {
  * Nothing here blocks play. A player who wants to ignore it and trade can,
  * and the steps will tick off behind them.
  */
-export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
+export function OnboardingBanner({ onGoToScreen, activeScreen, variant = "dark" }: Props) {
   const { state, t } = useEconomyContext();
   const step = currentOnboardingStep(state);
   if (!step) return null;
+  const parchment = variant === "parchment";
 
   // "Go to the Market tab", read while standing on the Market tab, and a
   // press that lands you exactly where you were. It works, which is worse
@@ -40,21 +48,25 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
 
   return (
     <ScalePressable
-      style={styles.card}
+      style={[styles.card, parchment && styles.cardParchment]}
       onPress={() => onGoToScreen(step.screen)}
       disabled={alreadyHere}
       scaleTo={alreadyHere ? 1 : 0.985}
       accessibilityLabel={t(step.titleKey)}
     >
-      <View style={styles.head}>
-        <Text style={styles.eyebrow}>{t("onboarding.banner")}</Text>
-        <Text style={styles.progress}>
-          {t("onboarding.progress", {
-            done: String(state.onboardingStep),
-            total: String(ONBOARDING_STEPS.length),
-          })}
-        </Text>
-      </View>
+      {parchment ? (
+        <BannerLabel text={t("onboarding.banner")} />
+      ) : (
+        <View style={styles.head}>
+          <Text style={styles.eyebrow}>{t("onboarding.banner")}</Text>
+          <Text style={styles.progress}>
+            {t("onboarding.progress", {
+              done: String(state.onboardingStep),
+              total: String(ONBOARDING_STEPS.length),
+            })}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.row}>
         <Text style={styles.icon}>{step.icon}</Text>
@@ -65,26 +77,34 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
               instruction should not cost more room than the thing it is
               instructing about. */}
           <View style={styles.titleLine}>
-            <Text style={styles.title} numberOfLines={1}>
+            <Text style={[styles.title, parchment && styles.titleParchment]} numberOfLines={1}>
               {t(step.titleKey)}
             </Text>
-            <Text style={styles.reward}>+{step.reward} 🪙</Text>
+            <Text style={[styles.reward, parchment && styles.rewardParchment]}>+{step.reward} 🪙</Text>
           </View>
-          <Text style={styles.description}>
+          <Text style={[styles.description, parchment && styles.descriptionParchment]}>
             {t(step.descriptionKey)}
             {!alreadyHere && (
-              <Text style={styles.goTo}>
+              <Text style={[styles.goTo, parchment && styles.rewardParchment]}>
                 {" "}
                 {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })} ›
               </Text>
             )}
           </Text>
+          {parchment && (
+            <Text style={styles.progressParchment}>
+              {t("onboarding.progress", {
+                done: String(state.onboardingStep),
+                total: String(ONBOARDING_STEPS.length),
+              })}
+            </Text>
+          )}
         </View>
       </View>
 
       {/* A bar rather than a number, because eight steps is short enough
           that "nearly done" is the useful signal, not the exact count. */}
-      <View style={styles.track}>
+      <View style={[styles.track, parchment && styles.trackParchment]}>
         <View style={[styles.fill, { width: `${(state.onboardingStep / ONBOARDING_STEPS.length) * 100}%` }]}>
           <GradientFill colors={GOLD_GRADIENT} />
         </View>
@@ -109,6 +129,16 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha("#e8c777", 0.08),
     gap: SPACING.xs + 2,
   },
+  cardParchment: {
+    borderWidth: 1.5,
+    borderColor: PARCHMENT.wood,
+    backgroundColor: PARCHMENT.paper,
+    shadowColor: PARCHMENT.woodDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   eyebrow: {
     color: COLORS.accent,
@@ -117,6 +147,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   progress: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
+  progressParchment: {
+    color: PARCHMENT.inkMuted,
+    fontFamily: FONT.medium,
+    fontSize: TYPE.micro,
+    marginTop: 2,
+  },
 
   row: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm + 2 },
   icon: { fontSize: 22, lineHeight: 26 },
@@ -128,14 +164,17 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   title: { color: COLORS.textPrimary, fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
+  titleParchment: { color: PARCHMENT.ink },
   description: {
     color: COLORS.textMuted,
     fontFamily: FONT.regular,
     fontSize: TYPE.caption,
     lineHeight: 16,
   },
+  descriptionParchment: { color: PARCHMENT.inkMuted },
   goTo: { color: COLORS.accent, fontFamily: FONT.medium },
   reward: { color: COLORS.accent, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  rewardParchment: { color: PARCHMENT.gold },
 
   track: {
     height: 4,
@@ -143,5 +182,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: withAlpha("#000000", 0.35),
   },
+  trackParchment: { backgroundColor: withAlpha(PARCHMENT.woodDark, 0.25) },
   fill: { height: "100%", borderRadius: 2, overflow: "hidden" },
 });

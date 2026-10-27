@@ -9,6 +9,7 @@ import {
   FONT,
   GREEN_GRADIENT,
   glowShadow,
+  PARCHMENT,
   RADIUS,
   RED_GRADIENT,
   SPACING,
@@ -31,11 +32,14 @@ interface Props {
   onTrade: (side: "buy" | "sell", qty: number) => void;
   /** total round-trip bid/ask spread as a fraction of the quoted price (e.g. 0.03 = 3%); omit for no spread */
   spreadPct?: number;
+  /** see GoodCard's own note on this same prop */
+  variant?: "dark" | "parchment";
 }
 
 type Qty = 1 | 5 | "ALL";
 
-export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Props) {
+export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0, variant = "dark" }: Props) {
+  const parchment = variant === "parchment";
   const { t, formatCoins, state: economyState } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   // Only for a player who has never traded — `totalTrades` is a lifetime
@@ -58,8 +62,12 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
   const disabled = resolvedQty <= 0 || (side === "buy" ? total > cash + 0.001 : resolvedQty > state.holding);
 
   return (
-    <View style={styles.wrap}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+    <View style={[styles.wrap, parchment && styles.wrapParchment]}>
+      {parchment ? (
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: PARCHMENT.paper }]} />
+      ) : (
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      )}
       {tradeStreak >= 2 && (
         <View style={styles.streakBadge}>
           <Text style={styles.streakBadgeText}>
@@ -67,12 +75,18 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
           </Text>
         </View>
       )}
-      <View style={styles.sideToggle}>
+      <View style={[styles.sideToggle, parchment && styles.sideToggleParchment]}>
         <Pressable
           style={[styles.sideBtn, side === "buy" && styles.sideBtnActiveBuy]}
           onPress={() => setSide("buy")}
         >
-          <Text style={[styles.sideBtnText, side === "buy" && styles.sideBtnTextActive]}>
+          <Text
+            style={[
+              styles.sideBtnText,
+              parchment && { color: PARCHMENT.inkMuted },
+              side === "buy" && styles.sideBtnTextActive,
+            ]}
+          >
             {t("market.buyShort")}
           </Text>
         </Pressable>
@@ -80,7 +94,13 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
           style={[styles.sideBtn, side === "sell" && styles.sideBtnActiveSell]}
           onPress={() => setSide("sell")}
         >
-          <Text style={[styles.sideBtnText, side === "sell" && styles.sideBtnTextActive]}>
+          <Text
+            style={[
+              styles.sideBtnText,
+              parchment && { color: PARCHMENT.inkMuted },
+              side === "sell" && styles.sideBtnTextActive,
+            ]}
+          >
             {t("market.sellShort")}
           </Text>
         </Pressable>
@@ -90,19 +110,27 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
         {([1, 5, "ALL"] as Qty[]).map((q) => (
           <Pressable
             key={String(q)}
-            style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
+            style={[
+              styles.qtyBtn,
+              parchment && styles.qtyBtnParchment,
+              qtyOption === q && { borderColor: good.color, borderWidth: 2 },
+            ]}
             onPress={() => setQtyOption(q)}
           >
-            <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
+            <Text style={[styles.qtyBtnText, parchment && { color: PARCHMENT.ink }]}>
+              {q === "ALL" ? t("common.all") : q}
+            </Text>
           </Pressable>
         ))}
       </View>
 
       <View style={styles.summaryRow}>
-        <Text style={styles.summaryLabel}>
+        <Text style={[styles.summaryLabel, parchment && { color: PARCHMENT.inkMuted }]}>
           {resolvedQty} x {t(good.nameKey)} @ {execPrice.toFixed(2)}
         </Text>
-        <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
+        <Text style={[styles.summaryTotal, parchment && { color: PARCHMENT.woodDark }]}>
+          {formatCoins(total)}
+        </Text>
       </View>
 
       {/* A ring around the trade button until the player has made their
@@ -137,6 +165,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
+  wrapParchment: {
+    borderWidth: 2,
+    borderColor: PARCHMENT.wood,
+    shadowColor: PARCHMENT.woodDark,
+  },
   streakBadge: {
     alignSelf: "center",
     backgroundColor: withAlpha("#f0776a", 0.16),
@@ -158,6 +191,7 @@ const styles = StyleSheet.create({
     padding: 3,
     marginBottom: SPACING.md - 2,
   },
+  sideToggleParchment: { backgroundColor: PARCHMENT.paperDark },
   sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
   sideBtnActiveBuy: { backgroundColor: COLORS.positive },
   sideBtnActiveSell: { backgroundColor: COLORS.negative },
@@ -179,6 +213,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     marginRight: SPACING.sm,
   },
+  qtyBtnParchment: { backgroundColor: PARCHMENT.paperDark },
   qtyBtnText: {
     color: COLORS.textPrimary,
     fontWeight: WEIGHT.bold,
