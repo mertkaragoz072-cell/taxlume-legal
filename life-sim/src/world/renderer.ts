@@ -151,7 +151,7 @@ export class GameRenderer {
   resize(): void {
     const w = this.canvas.clientWidth || window.innerWidth;
     const h = this.canvas.clientHeight || window.innerHeight;
-    this.three.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.three.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
     this.three.setSize(w, h, false);
     this.composer?.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.composer?.setSize(w, h);
@@ -191,7 +191,8 @@ export class GameRenderer {
       this.onFrame(dt);
       this.location?.update(dt, this.elapsed);
       this.followCamera(dt);
-      if (this.fxOn && this.composer) this.composer.render(dt);
+      // A painted backdrop is shown exactly as authored: no grade, vignette or bloom, and no half-resolution post buffers.
+      if (this.fxOn && this.composer && !this.location?.backdrop) this.composer.render(dt);
       else this.three.render(this.scene, this.camera);
       this.adaptQuality(dt);
       this.raf = requestAnimationFrame(tick);

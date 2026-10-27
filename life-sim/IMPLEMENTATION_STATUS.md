@@ -62,7 +62,15 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 | Clothing / tattoos / hair | NOT STARTED | |
 | Graphics: bloom/grade + Graphics setting | IN PROGRESS | Works; real-device performance untested. |
 
-## Station integrated into the painting (latest)
+## Backdrop fidelity fix (latest)
+- Cause of the "lower quality than my image" report (measured): the painted backdrop went through the post-processing stack (colour grade, contrast, vignette, bloom) and the
+  half-resolution composer (pixel ratio ≤ 1.5). Measured against the source at the art's own aspect: brightness −17 %, edge sharpness 60 %, PSNR 23.5 dB.
+- Fix: while a painted backdrop is active the post stack is bypassed (scene drawn directly, no filmic tone mapping, pixel ratio up to 2.5) and the texture uses plain bilinear
+  sampling without mipmaps. After: brightness equal to source, edge sharpness 86 %, PSNR 33.9 dB. Tools: `scripts/backdrop-quality.cjs` + `scripts/backdrop-compare.py`.
+- Gym e2e re-run at 390×844: all scenarios pass. Home rooms still use the post stack (no painted backdrop there).
+- Remaining softness comes from the 941×1672 source being magnified on high-density phones; a higher-resolution export of the art would be sharper.
+
+## Station integrated into the painting
 - Station scaled down relative to the backdrop (camera fitWidth 2.3 → 2.85) and lowered onto the floor; layered soft ground shadows under the sprite (rendered before it);
   warm-neutral body tint for the lifter (`StickmanRig.setSkin`, per-scene `skin`), warm window rim light, softer fill and key; sprite lightly tinted.
 - Verified: 140 tests; gym e2e at 390×844 passes (rack 0/494 occluded frames, no floor clipping, fits the screen). Judged visually at 390×844 only; the shadow is subtle

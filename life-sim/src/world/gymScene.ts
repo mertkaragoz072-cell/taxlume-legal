@@ -338,6 +338,11 @@ export function createGymScene(): GymScene {
     (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+      // Crisp, unfiltered-by-mipmaps painting: the art is magnified on phones, so use plain bilinear sampling.
+      tex.generateMipmaps = false;
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = 1;
       scene.backdrop = tex;
       bg.visible = false;
       matGroup.visible = false;
