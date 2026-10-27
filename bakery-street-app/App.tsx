@@ -24,7 +24,6 @@ import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
 import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
 import { C, FONT, fmt } from "./src/ui/theme";
 
-SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /** Start-up diagnostics: any error (also in render or outside React) is shown on screen instead of leaving the splash screen forever. */
 let reportCrash: (m: string) => void = () => {};
@@ -36,6 +35,7 @@ try {
 
 class Boundary extends React.Component<{ children: React.ReactNode }, { err: string | null }> {
   state = { err: null as string | null };
+  componentDidCatch() { SplashScreen.hideAsync().catch(() => {}); }
   static getDerivedStateFromError(e: any) { return { err: `${String(e?.message ?? e)}\n${String(e?.stack ?? "").split("\n").slice(0, 6).join("\n")}` }; }
   render() { return this.state.err ? <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun çöktü.{"\n"}{this.state.err}</Text></View> : this.props.children; }
 }

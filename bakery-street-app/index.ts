@@ -1,9 +1,11 @@
 import { registerRootComponent } from "expo";
 import React from "react";
 import { Platform, Text, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 
 /** Shows what went wrong when the app cannot even load its code (otherwise the splash screen would just stay). */
 function Failure({ message }: { message: string }) {
+  React.useEffect(() => { SplashScreen.hideAsync().catch(() => {}); }, []);
   return React.createElement(View, { style: { flex: 1, backgroundColor: "#463020", alignItems: "center", justifyContent: "center", padding: 24 } },
     React.createElement(Text, { style: { color: "#F5E6C8", fontSize: 14 } }, `Açılış hatası:\n${message}`));
 }
