@@ -67,7 +67,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
           />
           <Image
             source={ribbonMid}
-            style={{ width: 130, height: RIBBON_HEIGHT, marginHorizontal: -1 }}
+            style={{ flex: 1, minWidth: 0, height: RIBBON_HEIGHT, marginHorizontal: -1 }}
             resizeMode="stretch"
           />
           <Image
@@ -81,7 +81,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
             </Text>
           </View>
         </View>
-        <Text style={styles.progress}>
+        <Text style={styles.progress} numberOfLines={1}>
           {t("onboarding.progress", {
             done: String(state.onboardingStep),
             total: String(ONBOARDING_STEPS.length),
@@ -142,8 +142,15 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha("#e8c777", 0.08),
     gap: SPACING.xs + 2,
   },
-  head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  ribbonRow: { flexDirection: "row", alignItems: "center", height: RIBBON_HEIGHT },
+  head: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+  ribbonRow: {
+    flexDirection: "row",
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    alignItems: "center",
+    height: RIBBON_HEIGHT,
+  },
   ribbonTextWrap: {
     position: "absolute",
     left: RIBBON_CAP_LEFT_W + 6,
@@ -158,7 +165,7 @@ const styles = StyleSheet.create({
     fontSize: TYPE.caption,
     letterSpacing: 1.2,
   },
-  progress: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
+  progress: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption, flexShrink: 0 },
 
   row: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm + 2 },
   icon: { fontSize: 22, lineHeight: 26 },
