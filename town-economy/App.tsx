@@ -10,7 +10,8 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, SafeAreaView, StyleSheet, View } from "react-native";
+import { Image, Platform, SafeAreaView, StyleSheet, View } from "react-native";
+import appBackgroundImage from "./assets/ui/app-background.webp";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ComboBanner } from "./src/components/ComboBanner";
 import { CrisisWarningBanner } from "./src/components/CrisisWarningBanner";
@@ -43,7 +44,7 @@ import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
 import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
-import { CONTENT_MAX_WIDTH, seasonalBackgroundGradient } from "./src/theme";
+import { CONTENT_MAX_WIDTH, seasonalBackgroundGradient, withAlpha } from "./src/theme";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { InvestScreen } from "./src/screens/InvestScreen";
@@ -359,7 +360,26 @@ function Game() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
+      {/* The town's own scenery behind the whole app rather than a flat
+          gradient — most of it sits under opaque cards and only shows at
+          the gaps and scroll overscroll, but it's there everywhere instead
+          of just the header. The seasonal mood gradient used to be the
+          background itself (solid, no alpha); now it's a translucent scrim
+          over the photo instead, at the same two stops, so it still darkens
+          toward the bottom and still shifts with the season without simply
+          hiding the image it sits on. */}
+      <Image
+        source={appBackgroundImage}
+        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+        resizeMode="cover"
+      />
+      <GradientFill
+        colors={seasonalBackgroundGradient().map((c) => withAlpha(c, 0.82)) as [string, string]}
+        x1="0"
+        y1="0"
+        x2="0"
+        y2="1"
+      />
       <AmbientGlow />
       <SpotlightProvider style={styles.content}>
         <SpotlightTarget id="inflation">
