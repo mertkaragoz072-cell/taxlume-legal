@@ -9,7 +9,6 @@ import {
   COLORS,
   FONT,
   glowShadow,
-  PARCHMENT,
   RADIUS,
   SPACING,
   TYPE,
@@ -35,11 +34,6 @@ interface Props {
   /** optional corner tag, e.g. the demand cycle marking this good as sought
    * after or glutted — kept generic so the invest screen can leave it off */
   badge?: { text: string; color: string };
-  /** "dark" (default) is the app's original card theme; "parchment" is the
-   * paper/timber reskin, opted into one screen at a time (see theme.ts's
-   * PARCHMENT comment) — InvestScreen hasn't moved over yet, so it never
-   * passes this and keeps getting the dark card unchanged. */
-  variant?: "dark" | "parchment";
 }
 
 function pctChange(history: number[]): number {
@@ -50,13 +44,11 @@ function pctChange(history: number[]): number {
   return ((curr - prev) / prev) * 100;
 }
 
-export function GoodCard({ good, state, selected, onPress, badge, variant = "dark" }: Props) {
+export function GoodCard({ good, state, selected, onPress, badge }: Props) {
   const { state: economy, t } = useEconomyContext();
   const change = pctChange(state.history);
   const positive = change >= 0;
   const { opacity, flashColor } = usePriceFlash(state.price);
-  const parchment = variant === "parchment";
-  const ink = parchment ? PARCHMENT.ink : COLORS.textPrimary;
 
   return (
     // The shadow lives on this plain, never-animated View rather than on
@@ -71,27 +63,16 @@ export function GoodCard({ good, state, selected, onPress, badge, variant = "dar
     <View
       style={[
         styles.card,
-        parchment && styles.cardParchment,
-        selected && { borderColor: parchment ? PARCHMENT.gold : good.color, borderWidth: 2 },
+        selected && { borderColor: good.color, borderWidth: 2 },
         selected && glowShadow(good.color),
       ]}
     >
       <ScalePressable onPress={onPress} style={styles.cardInner}>
-        {parchment ? (
-          <View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: PARCHMENT.paper }]}
-          />
-        ) : (
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        )}
+        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         {selected && (
           <View
             pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: withAlpha(good.color, parchment ? 0.1 : 0.16) },
-            ]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
           />
         )}
         <View
@@ -105,13 +86,7 @@ export function GoodCard({ good, state, selected, onPress, badge, variant = "dar
           style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
         />
         {badge && (
-          <View
-            style={[
-              styles.badge,
-              parchment ? styles.badgeParchment : null,
-              { backgroundColor: withAlpha(badge.color, 0.9) },
-            ]}
-          >
+          <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.9) }]}>
             <Text style={styles.badgeText} numberOfLines={1}>
               {badge.text}
             </Text>
@@ -119,26 +94,13 @@ export function GoodCard({ good, state, selected, onPress, badge, variant = "dar
         )}
         <View style={styles.topRow}>
           <GoodIcon id={good.id ?? ""} fallback={good.icon} size={TYPE.heading} />
-          <Text
-            style={[
-              styles.change,
-              {
-                color: positive
-                  ? parchment
-                    ? PARCHMENT.positive
-                    : COLORS.positive
-                  : parchment
-                    ? PARCHMENT.negative
-                    : COLORS.negative,
-              },
-            ]}
-          >
+          <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
             {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
             {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
         <PriceChart history={state.history} color={good.color} width={76} height={34} strokeWidth={1.5} />
-        <Text style={[styles.name, { color: ink }]} numberOfLines={1}>
+        <Text style={styles.name} numberOfLines={1}>
           {t(good.nameKey)}
         </Text>
         {/* Who makes it, in the same breath as the price — a card is no
@@ -146,13 +108,11 @@ export function GoodCard({ good, state, selected, onPress, badge, variant = "dar
             about the good before you even tap into it. Assets (gold, oil...)
             have no producer, so this quietly disappears for them. */}
         {good.producerKey && (
-          <Text style={[styles.producer, parchment && { color: PARCHMENT.inkMuted }]} numberOfLines={1}>
+          <Text style={styles.producer} numberOfLines={1}>
             {t(good.producerKey)}
           </Text>
         )}
-        <Text style={[styles.price, parchment && { color: PARCHMENT.woodDark }]}>
-          {state.price.toFixed(2)} 🪙
-        </Text>
+        <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
         {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
       </ScalePressable>
     </View>
@@ -171,7 +131,6 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
-  badgeParchment: { borderBottomLeftRadius: RADIUS.card, borderWidth: 1, borderColor: PARCHMENT.woodDark },
   // Narrower than it used to be (108 → 92) so a horizontal row shows
   // roughly 3.5–4 cards at once instead of ~3 — most of the row reads at
   // a glance without scrolling, and the next card still peeks in at the
@@ -183,11 +142,6 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     marginRight: SPACING.sm,
     ...cardShadow,
-  },
-  cardParchment: {
-    borderColor: PARCHMENT.wood,
-    borderWidth: 1.5,
-    shadowColor: PARCHMENT.woodDark,
   },
   cardInner: {
     borderRadius: RADIUS.card,

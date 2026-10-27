@@ -3,7 +3,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GoodGroup } from "../economy/goods";
 import { daysUntilNextSeason, nextSeasonFromTick, seasonFromTick } from "../economy/seasons";
-import { FONT, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { GradientFill } from "./GradientFill";
 
 const GROUP_LABEL: Record<GoodGroup, string> = {
   food: "season.groupFood",
@@ -39,6 +40,8 @@ export function SeasonStrip() {
 
   return (
     <View style={styles.card}>
+      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+
       <View style={styles.headRow}>
         <Text style={styles.title}>
           {season.icon} {t(season.nameKey)}
@@ -52,7 +55,7 @@ export function SeasonStrip() {
 
       <View style={styles.chips}>
         {effects.map(({ group, pct }) => {
-          const tint = pct > 0 ? PARCHMENT.positive : PARCHMENT.negative;
+          const tint = pct > 0 ? COLORS.positive : COLORS.negative;
           return (
             <View
               key={group}
@@ -75,26 +78,20 @@ export function SeasonStrip() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: PARCHMENT.paper,
     borderRadius: RADIUS.card,
-    borderWidth: 2,
-    borderColor: PARCHMENT.wood,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    shadowColor: PARCHMENT.woodDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    overflow: "hidden",
+    ...cardShadow,
   },
   headRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   title: {
-    color: PARCHMENT.ink,
+    color: COLORS.textPrimary,
     fontFamily: FONT.bold,
     fontWeight: WEIGHT.bold,
     fontSize: TYPE.body,
   },
-  countdown: { color: PARCHMENT.inkMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
+  countdown: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs, marginTop: SPACING.sm },
   chip: {
     borderWidth: 1,

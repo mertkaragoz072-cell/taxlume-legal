@@ -91,6 +91,19 @@ export const COLORS = {
   warning: "#d1a25c",
 } as const;
 
+// A small cream/wood palette for the handful of surfaces that sit on real
+// parchment/timber art (the header's stat card) rather than the dark theme's
+// own gradient cards — not a second full theme, just the tokens those
+// surfaces need so their colors live here instead of as hex literals.
+export const PARCHMENT = {
+  paper: "#ead9ae",
+  wood: "#6b4426",
+  woodDark: "#3d2415",
+  ink: "#3d2415",
+  inkMuted: "#7a5c3e",
+  negative: "#a33f3a",
+} as const;
+
 /** shared warm gradient stops for the app's dark-brown card background,
  * used with GradientFill so cards read as gently lit rather than flat */
 export const CARD_GRADIENT: [string, string] = ["#332619", "#211a11"];
@@ -167,43 +180,6 @@ export function glowShadow(color: string): ViewStyle {
     elevation: 6,
   };
 }
-
-// --- Parchment theme (in progress) ------------------------------------
-// A second palette, laid on top of the dark theme above rather than
-// replacing it: the app is mid-reskin toward an illustrated storybook/
-// parchment-and-timber look (see the mockup this was built from), rolled
-// out one screen at a time so nothing in progress ever ships half-broken.
-// A screen opts in by importing from here instead of COLORS/CARD_GRADIENT
-// above; a screen that hasn't been touched yet keeps working exactly as
-// it did, unaffected, until its own turn comes.
-export const PARCHMENT = {
-  // The paper itself — warm aged cream, darker toward the card edges so a
-  // flat color still reads as a surface rather than a UI fill.
-  paper: "#ead9ae",
-  paperDark: "#d9c08c",
-  paperShadow: "rgba(92, 62, 32, 0.35)",
-  // Carved/painted timber framing every panel and button.
-  wood: "#6b4426",
-  woodDark: "#3d2415",
-  woodLight: "#8a5a35",
-  // The dark forest-green ribbon banners section labels sit on, trimmed
-  // in the same gold the rest of the app already uses for "earned/active".
-  ribbon: "#2b4530",
-  ribbonDark: "#1a2c1e",
-  gold: "#d1a04f",
-  goldLight: "#f0d494",
-  // Text: near-black ink on paper, a lighter brown for secondary/meta text,
-  // cream for text that sits on the dark ribbon/wood instead of the paper.
-  ink: "#3d2415",
-  inkMuted: "#7a5c3e",
-  onDark: "#f4e8ce",
-  positive: "#2f7d4f",
-  negative: "#a33f3a",
-} as const;
-
-export const PARCHMENT_GRADIENT: [string, string] = [PARCHMENT.paper, PARCHMENT.paperDark];
-export const WOOD_GRADIENT: [string, string] = [PARCHMENT.woodLight, PARCHMENT.woodDark];
-export const RIBBON_GRADIENT: [string, string] = [PARCHMENT.ribbon, PARCHMENT.ribbonDark];
 
 /** hex ("#rrggbb") to an rgba() string at the given alpha — used to tint a
  * card's gradient with a good's own color without hand-picking new hexes
