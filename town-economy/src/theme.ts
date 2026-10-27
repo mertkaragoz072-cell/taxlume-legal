@@ -91,6 +91,19 @@ export const COLORS = {
   warning: "#d1a25c",
 } as const;
 
+// A small cream/wood palette for the handful of surfaces that sit on real
+// parchment/timber art (the header's stat card) rather than the dark theme's
+// own gradient cards — not a second full theme, just the tokens those
+// surfaces need so their colors live here instead of as hex literals.
+export const PARCHMENT = {
+  paper: "#ead9ae",
+  wood: "#6b4426",
+  woodDark: "#3d2415",
+  ink: "#3d2415",
+  inkMuted: "#7a5c3e",
+  negative: "#a33f3a",
+} as const;
+
 /** shared warm gradient stops for the app's dark-brown card background,
  * used with GradientFill so cards read as gently lit rather than flat */
 export const CARD_GRADIENT: [string, string] = ["#332619", "#211a11"];

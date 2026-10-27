@@ -371,7 +371,6 @@ function Game() {
             netWorth={netWorth}
             inflationIndex={state.inflationIndex}
             inflationRate={state.inflationRate}
-            inflationHistory={state.inflationHistory}
             paused={state.paused}
             muted={sounds.muted}
             streakCount={state.streak.count}
