@@ -4,8 +4,8 @@ import headerMarketImage from "../../assets/ui/header-market.webp";
 import statBarChart from "../../assets/ui/statpanel2/barchart.png";
 import statCoinBullet from "../../assets/ui/statpanel2/coinbullet.png";
 import statCoins from "../../assets/ui/statpanel2/coins.png";
-import statCorner from "../../assets/ui/statpanel2/corner.png";
 import statMoneyBag from "../../assets/ui/statpanel2/moneybag.png";
+import statPanelBg from "../../assets/ui/statpanel2/panel-bg.png";
 import titleplateLeft from "../../assets/ui/titleplate3-left.png";
 import titleplateMid from "../../assets/ui/titleplate3-mid.png";
 import titleplateRight from "../../assets/ui/titleplate3-right.png";
@@ -324,22 +324,22 @@ export function InflationHeader({
       </View>
 
       {/* A parchment inset within the header's own dark wood, matching the
-          reference's own layering. The two corner clasps are one cropped
-          image, the right one just the left one mirrored in code (transform
-          scaleX: -1), since the source art only drew one corner. */}
+          reference's own layering — the whole card's background (paper,
+          border and all four corner clasps) is one real cropped image now,
+          stretched to fill, rather than a CSS-drawn fill plus one corner
+          image mirrored for the second corner. */}
       <View style={[styles.statsCard, hot && glowShadow("#e0693f")]}>
+        <Image
+          source={statPanelBg}
+          style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+          resizeMode="stretch"
+        />
         {hot && (
           <Animated.View
             pointerEvents="none"
             style={[StyleSheet.absoluteFill, styles.hotGlow, { opacity: hotGlowOpacity }]}
           />
         )}
-        <Image source={statCorner} style={styles.statCorner} resizeMode="contain" />
-        <Image
-          source={statCorner}
-          style={[styles.statCorner, styles.statCornerRight, { transform: [{ scaleX: -1 }] }]}
-          resizeMode="contain"
-        />
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Image source={statCoins} style={styles.statIcon} resizeMode="contain" />
@@ -498,16 +498,11 @@ const styles = StyleSheet.create({
   // clasps sit just inside the card's edge, one image mirrored for the
   // second corner since the source only drew one.
   statsCard: {
-    backgroundColor: PARCHMENT.paper,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: PARCHMENT.wood,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     overflow: "hidden",
   },
-  statCorner: { position: "absolute", top: -2, left: -2, width: 20, height: 20 },
-  statCornerRight: { left: undefined, right: -2 },
   statsRow: { flexDirection: "row", alignItems: "center" },
   stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
   statIcon: { width: 22, height: 22 },
