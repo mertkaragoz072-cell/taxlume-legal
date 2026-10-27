@@ -16,6 +16,7 @@ import { COLORS, FONT, glowShadow, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, wit
 import { formatCoins as formatCoinsUtil, formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
+import { PriceChart } from "./PriceChart";
 import { seasonFromTick } from "../economy/seasons";
 import { SpotlightTarget } from "./Spotlight";
 import { SpeedBoostButton } from "./SpeedBoostButton";
@@ -28,6 +29,7 @@ interface Props {
   netWorth: number;
   inflationIndex: number;
   inflationRate: number;
+  inflationHistory: number[];
   paused: boolean;
   muted: boolean;
   streakCount: number;
@@ -98,6 +100,7 @@ export function InflationHeader({
   netWorth,
   inflationIndex,
   inflationRate,
+  inflationHistory,
   paused,
   muted,
   streakCount,
@@ -388,6 +391,16 @@ export function InflationHeader({
                 {")"}
               </Text>
             </View>
+            {/* A trend line rather than another number — at this size a
+                second figure next to the index would just be noise, but the
+                shape of it (climbing, flat, falling) reads at a glance. */}
+            <PriceChart
+              history={inflationHistory}
+              color={hot ? PARCHMENT.negative : "#9c6b1f"}
+              width={30}
+              height={26}
+              strokeWidth={1.5}
+            />
           </SpotlightTarget>
         </View>
       </View>
