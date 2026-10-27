@@ -154,6 +154,6 @@ Last verified: `npm test` → **140 passing**, `npm run build` OK, headless-Chro
 - `scripts/verify-e2e.cjs`: single lie-down/sit-up, states RECLINED→TRANSITION→SEATED, rack-blocked frames 0/461, character+bar bbox inside the free area, no errors.
 
 **Remaining / unverified**
-- Software-WebGL headless run only (~10 fps); no real-device check. `home-e2e.cjs` needs >2 min under software GL (see result noted in commit if it completed).
+- Software-WebGL headless run only (~10 fps); no real-device check. `home-e2e.cjs` needs >2 min under software GL; it completed with no errors (leave-with-workout banks reps, reload restores state).
 - Toasts still overlay the top of the scene briefly; the workout dock covers the lower ~30% while open (use the handle to fold it outside sets).
 - Character shading is a flat tint; not a full match to the painting's lighting.
