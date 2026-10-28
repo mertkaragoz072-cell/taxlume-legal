@@ -397,8 +397,8 @@ export function InflationHeader({
             <PriceChart
               history={inflationHistory}
               color={hot ? PARCHMENT.negative : "#9c6b1f"}
-              width={30}
-              height={26}
+              width={24}
+              height={22}
               strokeWidth={1.5}
             />
           </SpotlightTarget>
@@ -516,31 +516,31 @@ const styles = StyleSheet.create({
     // floating narrower than the art it sits on.
     marginHorizontal: -14,
     borderRadius: 10,
-    paddingVertical: 10,
+    paddingVertical: 20,
     paddingHorizontal: 14,
     overflow: "hidden",
   },
   statsRow: { flexDirection: "row", alignItems: "center" },
-  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
-  statIcon: { width: 22, height: 22 },
+  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+  statIcon: { width: 32, height: 32 },
   statDivider: { width: 1, height: "80%", backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3) },
-  statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.micro, marginBottom: 2 },
-  statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  statBullet: { width: 12, height: 12 },
+  statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.label, marginBottom: 2 },
+  statValueRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  statBullet: { width: 16, height: 16 },
   statValue: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.body,
+    fontSize: TYPE.heading,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
   inflationStat: {
-    flex: 1.3,
+    flex: 1.6,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
     gap: 4,
   },
   inflationTextCol: { flex: 1 },
-  inflationRate: { fontSize: 10, fontFamily: FONT.medium },
+  inflationRate: { fontSize: TYPE.caption, fontFamily: FONT.medium },
   hotGlow: { backgroundColor: "#e0693f", borderRadius: 10 },
 });
