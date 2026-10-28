@@ -1,11 +1,9 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import ribbonLeft from "../../assets/ui/ribbon2-left.png";
-import ribbonMid from "../../assets/ui/ribbon2-mid.png";
-import ribbonRight from "../../assets/ui/ribbon2-right.png";
+import questPanelBg from "../../assets/ui/quest-panel-bg.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
-import { COLORS, FONT, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
+import { FONT, GOLD_GRADIENT, SPACING, TYPE } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
@@ -17,22 +15,16 @@ interface Props {
   activeScreen: ScreenId;
 }
 
-// The ribbon's caps are fixed-size (the wheat-sheaf scroll end, the
-// pointed gold tip) and the middle a stretchable slice of its own green
-// fill — a 9-slice, not one static image, because "FIRST STEPS" is a
-// translated string (German/Turkish run longer than English) that can't be
-// baked into the art.
-const RIBBON_HEIGHT = 32;
-// The wheat sprig's own art is taller than the plain band (it flares out
-// above and below it), so stretching it to RIBBON_HEIGHT like the other two
-// pieces squashed it and left a visible seam where its now-wrong aspect
-// ratio met the band. Sized and let overflow the row instead, at the same
-// scale the mid tile's own crop maps to the band (its cropped height, 333,
-// is what RIBBON_HEIGHT stands in for).
-const RIBBON_LEFT_SCALE = RIBBON_HEIGHT / 333;
-const RIBBON_CAP_LEFT_W = Math.round(414 * RIBBON_LEFT_SCALE);
-const RIBBON_CAP_LEFT_H = Math.round(449 * RIBBON_LEFT_SCALE);
-const RIBBON_CAP_RIGHT_W = 12;
+// The whole card is one illustrated panel now (frame, ribbon, cart, arrow
+// and an empty progress track all baked into a single image) rather than a
+// plain color card with a separate ribbon glued on top of it. Every
+// position below is that image's own layout, read off its pixels and
+// expressed as a fraction of its 1991x658 size — the card is pinned to
+// that same aspect ratio (see `card` below) so the fractions still line up
+// with the art at any screen width, and the image itself is never
+// resized out of its own proportions.
+const PANEL_ASPECT_RATIO = 1991 / 658;
+const pct = (px: number, of: "w" | "h") => `${(px / (of === "w" ? 1991 : 658)) * 100}%` as const;
 
 /** One task at a time, across the top of every screen, until the guided
  * first session is done.
@@ -57,6 +49,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   // and they conclude the button is broken. On the screen the task is
   // about, the banner is a standing instruction and nothing more.
   const alreadyHere = step.screen === activeScreen;
+  const progressPct = (state.onboardingStep / ONBOARDING_STEPS.length) * 100;
 
   return (
     <ScalePressable
@@ -66,34 +59,21 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
       scaleTo={alreadyHere ? 1 : 0.985}
       accessibilityLabel={t(step.titleKey)}
     >
-      <View style={styles.head}>
-        <View style={styles.ribbonRow}>
-          <Image
-            source={ribbonLeft}
-            style={{
-              width: RIBBON_CAP_LEFT_W,
-              height: RIBBON_CAP_LEFT_H,
-              marginTop: -(RIBBON_CAP_LEFT_H - RIBBON_HEIGHT) / 2,
-              marginBottom: -(RIBBON_CAP_LEFT_H - RIBBON_HEIGHT) / 2,
-            }}
-            resizeMode="contain"
-          />
-          <Image
-            source={ribbonMid}
-            style={{ flex: 1, minWidth: 0, height: RIBBON_HEIGHT, marginHorizontal: -1 }}
-            resizeMode="stretch"
-          />
-          <Image
-            source={ribbonRight}
-            style={{ width: RIBBON_CAP_RIGHT_W, height: RIBBON_HEIGHT }}
-            resizeMode="stretch"
-          />
-          <View style={styles.ribbonTextWrap} pointerEvents="none">
-            <Text style={styles.eyebrow} numberOfLines={1}>
-              {t("onboarding.banner")}
-            </Text>
-          </View>
-        </View>
+      <Image
+        source={questPanelBg}
+        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+        resizeMode="stretch"
+      />
+
+      {/* The ribbon shape is baked into the panel; only the label (a
+          translated string) is still code — same reasoning as every other
+          piece of ribbon art this session. */}
+      <View style={styles.ribbonTextWrap} pointerEvents="none">
+        <Text style={styles.eyebrow} numberOfLines={1}>
+          {t("onboarding.banner")}
+        </Text>
+      </View>
+      <View style={styles.progressWrap} pointerEvents="none">
         <Text style={styles.progress} numberOfLines={1}>
           {t("onboarding.progress", {
             done: String(state.onboardingStep),
@@ -102,37 +82,31 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
         </Text>
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.icon}>{step.icon}</Text>
-        <View style={styles.text}>
-          {/* Title and reward share a line, and the tab hint rides on the end
-              of the description. The three used to have a row each, which put
-              the banner at a third of the screen on every tab — a standing
-              instruction should not cost more room than the thing it is
-              instructing about. */}
-          <View style={styles.titleLine}>
-            <Text style={styles.title} numberOfLines={1}>
-              {t(step.titleKey)}
-            </Text>
-            <Text style={styles.reward}>+{step.reward} 🪙</Text>
-          </View>
-          <Text style={styles.description}>
-            {t(step.descriptionKey)}
-            {!alreadyHere && (
-              <Text style={styles.goTo}>
-                {" "}
-                {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })} ›
-              </Text>
-            )}
+      {/* The step's own icon used to sit here as an emoji; the panel's
+          cart illustration now fills that same corner, so there's nothing
+          left to draw a second icon over. */}
+      <View style={styles.textWrap}>
+        <View style={styles.titleLine}>
+          <Text style={styles.title} numberOfLines={1}>
+            {t(step.titleKey)}
           </Text>
+          <Text style={styles.reward}>+{step.reward} 🪙</Text>
         </View>
+        <Text style={styles.description} numberOfLines={3}>
+          {t(step.descriptionKey)}
+          {!alreadyHere && (
+            <Text style={styles.goTo}> {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })}</Text>
+          )}
+        </Text>
       </View>
 
-      {/* A bar rather than a number, because eight steps is short enough
-          that "nearly done" is the useful signal, not the exact count. */}
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${(state.onboardingStep / ONBOARDING_STEPS.length) * 100}%` }]}>
-          <GradientFill colors={GOLD_GRADIENT} />
+      {/* The track itself is baked into the panel (the dark groove with a
+          gold cap at its left end); only the gold fill is still drawn,
+          sized to the player's actual progress and positioned over that
+          same groove. */}
+      <View style={styles.trackWrap} pointerEvents="none">
+        <View style={[styles.fill, { width: `${progressPct}%` }]}>
+          {progressPct > 0 && <GradientFill colors={GOLD_GRADIENT} />}
         </View>
       </View>
     </ScalePressable>
@@ -147,29 +121,15 @@ const styles = StyleSheet.create({
     // exactly the crowded look this was reported for.
     marginTop: SPACING.md,
     marginBottom: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm + 2,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.accent, 0.35),
-    backgroundColor: withAlpha("#e8c777", 0.08),
-    gap: SPACING.xs + 2,
-  },
-  head: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-  ribbonRow: {
-    flexDirection: "row",
-    flexGrow: 1,
-    flexShrink: 1,
-    minWidth: 0,
-    alignItems: "center",
-    height: RIBBON_HEIGHT,
+    aspectRatio: PANEL_ASPECT_RATIO,
+    overflow: "hidden",
   },
   ribbonTextWrap: {
     position: "absolute",
-    left: RIBBON_CAP_LEFT_W + 6,
-    right: RIBBON_CAP_RIGHT_W + 4,
-    top: 0,
-    bottom: 0,
+    left: pct(230, "w"),
+    right: `${100 - (815 / 1991) * 100}%`,
+    top: pct(65, "h"),
+    bottom: `${100 - (210 / 658) * 100}%`,
     justifyContent: "center",
   },
   eyebrow: {
@@ -178,32 +138,52 @@ const styles = StyleSheet.create({
     fontSize: TYPE.caption,
     letterSpacing: 1.2,
   },
-  progress: { color: COLORS.textMuted, fontFamily: FONT.medium, fontSize: TYPE.caption, flexShrink: 0 },
-
-  row: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm + 2 },
-  icon: { fontSize: 22, lineHeight: 26 },
-  text: { flex: 1, gap: 1 },
+  progressWrap: {
+    position: "absolute",
+    right: "9%",
+    top: pct(150, "h"),
+    bottom: `${100 - (210 / 658) * 100}%`,
+    justifyContent: "center",
+    alignItems: "flex-end",
+  },
+  progress: {
+    color: "#8a5a1f",
+    fontFamily: FONT.medium,
+    fontSize: TYPE.caption,
+  },
+  textWrap: {
+    position: "absolute",
+    left: pct(430, "w"),
+    right: "9%",
+    top: pct(225, "h"),
+    bottom: `${100 - (420 / 658) * 100}%`,
+    justifyContent: "center",
+    gap: 2,
+  },
   titleLine: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: SPACING.sm,
   },
-  title: { color: COLORS.textPrimary, fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
+  title: { color: "#3d2415", fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
   description: {
-    color: COLORS.textMuted,
+    color: "#6b5436",
     fontFamily: FONT.regular,
     fontSize: TYPE.caption,
-    lineHeight: 16,
+    lineHeight: 15,
   },
-  goTo: { color: COLORS.accent, fontFamily: FONT.medium },
-  reward: { color: COLORS.accent, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  goTo: { color: "#8a5a1f", fontFamily: FONT.medium },
+  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.caption },
 
-  track: {
-    height: 4,
-    borderRadius: 2,
+  trackWrap: {
+    position: "absolute",
+    left: pct(475, "w"),
+    right: pct(95, "w"),
+    top: pct(428, "h"),
+    bottom: `${100 - (462 / 658) * 100}%`,
+    borderRadius: 999,
     overflow: "hidden",
-    backgroundColor: withAlpha("#000000", 0.35),
   },
-  fill: { height: "100%", borderRadius: 2, overflow: "hidden" },
+  fill: { height: "100%", borderRadius: 999, overflow: "hidden" },
 });
