@@ -511,6 +511,10 @@ const styles = StyleSheet.create({
   // clasps sit just inside the card's edge, one image mirrored for the
   // second corner since the source only drew one.
   statsCard: {
+    // Breaks out of wrap's own 14px side padding so this card runs flush
+    // with the screen edges, the same as the banner below it, instead of
+    // floating narrower than the art it sits on.
+    marginHorizontal: -14,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
