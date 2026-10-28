@@ -115,7 +115,10 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: SPACING.lg,
+    // Nearly edge to edge — this is the one feature banner on screen, and
+    // the reference it's built from runs it almost flush with the screen's
+    // own sides rather than inset like an ordinary card.
+    marginHorizontal: SPACING.xs,
     // EventBanner/ComboBanner above it carry no bottom margin of their own,
     // so without this the two sit flush against each other with no seam —
     // exactly the crowded look this was reported for.
