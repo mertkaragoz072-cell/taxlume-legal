@@ -341,7 +341,7 @@ export function MarketScreen({ sounds }: Props) {
                 {/* The good's own icon, full size and in its own color
                     rather than greyed out — this is a preview of a reward,
                     not a dead slot, so it should look like one. */}
-                <GoodIcon id={g.id} fallback={g.icon} size={TYPE.heading} style={styles.lockedIcon} />
+                <GoodIcon id={g.id} fallback={g.icon} size={26} style={styles.lockedIcon} />
                 <Text style={styles.lockedName} numberOfLines={1}>
                   {t(g.nameKey)}
                 </Text>
@@ -636,10 +636,11 @@ const styles = StyleSheet.create({
   holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
   holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   goodsRow: { marginBottom: SPACING.lg + 2 },
-  // Matches GoodCard's own width/gap (80 / sm) so both rows fit the same
-  // number of cards edge to edge before either needs to scroll.
+  // Matches GoodCard's own width/gap (112 / sm) so both rows read at the
+  // same scale; a phone-width row won't fit every good at once, and that's
+  // fine — it scrolls, the same as the unlocked row above it.
   lockedCard: {
-    width: 80,
+    width: 112,
     borderRadius: RADIUS.card,
     borderWidth: 1,
     padding: SPACING.sm,
@@ -663,7 +664,7 @@ const styles = StyleSheet.create({
   lockedIcon: { opacity: 0.75 },
   lockedName: {
     color: COLORS.textPrimary,
-    fontSize: TYPE.label,
+    fontSize: TYPE.title,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
     marginTop: 6,

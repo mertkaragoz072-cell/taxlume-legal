@@ -93,13 +93,13 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
           </View>
         )}
         <View style={styles.topRow}>
-          <GoodIcon id={good.id ?? ""} fallback={good.icon} size={TYPE.heading} />
+          <GoodIcon id={good.id ?? ""} fallback={good.icon} size={26} />
           <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
             {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
             {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
-        <PriceChart history={state.history} color={good.color} width={64} height={34} strokeWidth={1.5} />
+        <PriceChart history={state.history} color={good.color} width={88} height={42} strokeWidth={2} />
         <Text style={styles.name} numberOfLines={1}>
           {t(good.nameKey)}
         </Text>
@@ -131,12 +131,8 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
-  // Narrow enough that a phone-width row's 4 early-game goods fit edge to
-  // edge without the last one being clipped by the row's own container —
-  // at 92 the 4th card sat half off-screen; more goods unlock later and
-  // scroll normally once a row no longer fits in one view.
   card: {
-    width: 80,
+    width: 112,
     borderRadius: RADIUS.card,
     borderWidth: 2,
     borderColor: "transparent",
@@ -145,8 +141,8 @@ const styles = StyleSheet.create({
   },
   cardInner: {
     borderRadius: RADIUS.card,
-    padding: SPACING.sm,
-    paddingTop: SPACING.sm + 2,
+    padding: SPACING.md,
+    paddingTop: SPACING.md,
     alignItems: "center",
     overflow: "hidden",
   },
@@ -166,16 +162,16 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 2,
   },
-  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  change: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   name: {
     color: COLORS.textPrimary,
-    fontSize: TYPE.label,
+    fontSize: TYPE.title,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
     marginTop: SPACING.xs,
   },
-  producer: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 1 },
-  price: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  producer: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1 },
+  price: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,
