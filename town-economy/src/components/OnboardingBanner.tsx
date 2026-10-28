@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: "#f4e8ce",
     fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
+    fontSize: TYPE.label,
     letterSpacing: 1.2,
   },
   progressWrap: {
@@ -173,15 +173,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: SPACING.sm,
   },
-  title: { color: "#3d2415", fontFamily: FONT.bold, fontSize: 11, flexShrink: 1 },
+  title: { color: "#3d2415", fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
   description: {
     color: "#6b5436",
     fontFamily: FONT.regular,
-    fontSize: 9,
-    lineHeight: 10,
+    fontSize: TYPE.caption,
+    lineHeight: 13,
   },
   goTo: { color: "#8a5a1f", fontFamily: FONT.medium },
-  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: 9 },
+  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.caption },
 
   trackWrap: {
     position: "absolute",
