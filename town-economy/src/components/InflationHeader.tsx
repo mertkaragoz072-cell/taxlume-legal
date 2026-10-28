@@ -13,7 +13,7 @@ import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
 import { COLORS, FONT, glowShadow, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
-import { formatCoins as formatCoinsUtil, formatNumber, formatPercent } from "../utils/formatNumber";
+import { formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
@@ -120,7 +120,12 @@ export function InflationHeader({
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
-  const formatCoins = (v: number) => formatCoinsUtil(v, language);
+  // The stat row already shows a coin-bullet image right after each value
+  // — stacking formatCoins's own 🪙 emoji on top of that doubled up the
+  // "this is money" marker and, at this card's larger text size, wrapped
+  // the emoji onto its own line. formatNumber alone leaves the image to
+  // carry that meaning by itself.
+  const formatCash = (v: number) => formatNumber(v, language, 1);
 
   // A slow breathing glow on the inflation card while it's running hot, and
   // a gentle flicker on the streak flame — motion that reads as "alive"
@@ -346,10 +351,10 @@ export function InflationHeader({
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Image source={statCoins} style={styles.statIcon} resizeMode="contain" />
-            <View>
+            <View style={styles.statTextCol}>
               <Text style={styles.statLabel}>{t("header.cash")}</Text>
               <View style={styles.statValueRow}>
-                <AnimatedNumber value={cash} formatter={formatCoins} style={styles.statValue} />
+                <AnimatedNumber value={cash} formatter={formatCash} style={styles.statValue} />
                 <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />
               </View>
             </View>
@@ -357,10 +362,10 @@ export function InflationHeader({
           <View style={styles.statDivider} />
           <View style={styles.stat}>
             <Image source={statMoneyBag} style={styles.statIcon} resizeMode="contain" />
-            <View>
+            <View style={styles.statTextCol}>
               <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
               <View style={styles.statValueRow}>
-                <AnimatedNumber value={netWorth} formatter={formatCoins} style={styles.statValue} />
+                <AnimatedNumber value={netWorth} formatter={formatCash} style={styles.statValue} />
                 <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />
               </View>
             </View>
@@ -521,15 +526,25 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   statsRow: { flexDirection: "row", alignItems: "center" },
-  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
-  statIcon: { width: 32, height: 32 },
-  statDivider: { width: 1, height: "80%", backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3) },
+  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 },
+  statIcon: { width: 26, height: 26 },
+  // Margin on the divider itself, not just left to whatever space a
+  // column's content doesn't use — at the bigger icon/text sizes above,
+  // a column could fill its whole flex share and butt straight into the
+  // next column's icon with no gap at all.
+  statDivider: {
+    width: 1,
+    height: "80%",
+    marginHorizontal: 6,
+    backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3),
+  },
+  statTextCol: { flexShrink: 1, minWidth: 0 },
   statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.label, marginBottom: 2 },
-  statValueRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  statBullet: { width: 16, height: 16 },
+  statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  statBullet: { width: 13, height: 13 },
   statValue: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.heading,
+    fontSize: TYPE.title,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
