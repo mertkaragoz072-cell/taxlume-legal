@@ -636,10 +636,10 @@ const styles = StyleSheet.create({
   holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
   holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   goodsRow: { marginBottom: SPACING.lg + 2 },
-  // Matches GoodCard's own width/gap (92 / sm) so both rows show the same
-  // ~3.5-4 cards per screen instead of ~3.
+  // Matches GoodCard's own width/gap (80 / sm) so both rows fit the same
+  // number of cards edge to edge before either needs to scroll.
   lockedCard: {
-    width: 92,
+    width: 80,
     borderRadius: RADIUS.card,
     borderWidth: 1,
     padding: SPACING.sm,

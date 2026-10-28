@@ -99,7 +99,7 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
             {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
-        <PriceChart history={state.history} color={good.color} width={76} height={34} strokeWidth={1.5} />
+        <PriceChart history={state.history} color={good.color} width={64} height={34} strokeWidth={1.5} />
         <Text style={styles.name} numberOfLines={1}>
           {t(good.nameKey)}
         </Text>
@@ -131,12 +131,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
-  // Narrower than it used to be (108 → 92) so a horizontal row shows
-  // roughly 3.5–4 cards at once instead of ~3 — most of the row reads at
-  // a glance without scrolling, and the next card still peeks in at the
-  // edge as a scroll hint.
+  // Narrow enough that a phone-width row's 4 early-game goods fit edge to
+  // edge without the last one being clipped by the row's own container —
+  // at 92 the 4th card sat half off-screen; more goods unlock later and
+  // scroll normally once a row no longer fits in one view.
   card: {
-    width: 92,
+    width: 80,
     borderRadius: RADIUS.card,
     borderWidth: 2,
     borderColor: "transparent",
