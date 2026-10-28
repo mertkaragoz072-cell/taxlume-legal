@@ -92,7 +92,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
           </Text>
           <Text style={styles.reward}>+{step.reward} 🪙</Text>
         </View>
-        <Text style={styles.description} numberOfLines={3}>
+        <Text style={styles.description} numberOfLines={2}>
           {t(step.descriptionKey)}
           {!alreadyHere && (
             <Text style={styles.goTo}> {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })}</Text>
@@ -155,10 +155,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: pct(430, "w"),
     right: "9%",
-    top: pct(225, "h"),
-    bottom: `${100 - (420 / 658) * 100}%`,
+    // The baked ribbon art fills this column down to ~y=210, and the baked
+    // progress groove starts at ~y=430 — this band is already as tall as
+    // the art allows, so the font sizes below are tuned to fit inside it
+    // (not the app's usual TYPE scale) rather than the other way around.
+    top: pct(215, "h"),
+    bottom: `${100 - (428 / 658) * 100}%`,
     justifyContent: "center",
-    gap: 2,
+    // A safety net, not the fit itself: on a screen narrow enough that two
+    // lines of a long description still don't fit this band, clip rather
+    // than let it spill text over the baked progress groove below.
+    overflow: "hidden",
   },
   titleLine: {
     flexDirection: "row",
@@ -166,15 +173,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: SPACING.sm,
   },
-  title: { color: "#3d2415", fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
+  title: { color: "#3d2415", fontFamily: FONT.bold, fontSize: 11, flexShrink: 1 },
   description: {
     color: "#6b5436",
     fontFamily: FONT.regular,
-    fontSize: TYPE.caption,
-    lineHeight: 15,
+    fontSize: 9,
+    lineHeight: 10,
   },
   goTo: { color: "#8a5a1f", fontFamily: FONT.medium },
-  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.caption },
+  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: 9 },
 
   trackWrap: {
     position: "absolute",
