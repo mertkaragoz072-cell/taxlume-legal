@@ -1,25 +1,33 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { DemandCycle } from "../economy/demandCycles";
 import { GOODS_BY_ID } from "../economy/goods";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
+import blueLeft from "../../assets/ui/demandpill/blue-left.png";
+import blueMid from "../../assets/ui/demandpill/blue-mid.png";
+import blueRight from "../../assets/ui/demandpill/blue-right.png";
+import tanLeft from "../../assets/ui/demandpill/tan-left.png";
+import tanMid from "../../assets/ui/demandpill/tan-mid.png";
+import tanRight from "../../assets/ui/demandpill/tan-right.png";
 
 // Row-label colors (unchanged — these sit on the dark card, not the pill).
 const HOT = "#f0a04b";
 const GLUT = "#6fb8f2";
-// Pill fills, sampled straight off the reference art's own two chip colors
-// (a muted earthy tan and a mid blue) rather than reusing HOT/GLUT above —
-// those read as a bright orange and a pale blue, too saturated once they're
-// the chip's whole fill instead of just a thin tinted border.
-const HOT_PILL = "#6b4610";
-const GLUT_PILL = "#3f6f98";
-// The same crop also showed a bright gold rim around the pill, not the
-// plain dark outline this had — the carved-gold-trim look the rest of the
-// app's panels already use (the stat card, the quest banner).
-const PILL_RIM = "#d9a441";
+
+// A CSS-painted fill/rim came close to the reference's two chip colors, but
+// not close enough — this crops the real pill art instead (its own gold rim
+// and fill baked in), the same left-cap/stretchy-middle/right-cap pattern
+// as the title plate and the quest ribbon. Each cap keeps the source art's
+// own aspect ratio at a fixed render height, so a long good name just makes
+// the middle stretch wider rather than distorting the rounded ends.
+const CAP_HEIGHT = 26;
+const PILL_TONES = {
+  hot: { left: tanLeft, mid: tanMid, right: tanRight, capAspect: 81 / 109 },
+  glut: { left: blueLeft, mid: blueMid, right: blueRight, capAspect: 113 / 109 },
+} as const;
 
 interface Props {
   cycle: DemandCycle;
@@ -27,11 +35,26 @@ interface Props {
   tick: number;
 }
 
-function GoodChip({ goodId, pill, t }: { goodId: string; pill: string; t: (k: string) => string }) {
+function GoodChip({
+  goodId,
+  tone,
+  t,
+}: {
+  goodId: string;
+  tone: keyof typeof PILL_TONES;
+  t: (k: string) => string;
+}) {
   const good = GOODS_BY_ID[goodId as keyof typeof GOODS_BY_ID];
   if (!good) return null;
+  const { left, mid, right, capAspect } = PILL_TONES[tone];
+  const capWidth = Math.round(CAP_HEIGHT * capAspect);
   return (
-    <View style={[styles.chip, { backgroundColor: pill }]}>
+    <View style={styles.chip}>
+      <View style={[StyleSheet.absoluteFill, styles.chipBg]} pointerEvents="none">
+        <Image source={left} style={{ width: capWidth, height: CAP_HEIGHT }} resizeMode="stretch" />
+        <Image source={mid} style={{ flex: 1, height: CAP_HEIGHT }} resizeMode="stretch" />
+        <Image source={right} style={{ width: capWidth, height: CAP_HEIGHT }} resizeMode="stretch" />
+      </View>
       <Text aria-hidden style={styles.chipIcon}>
         {good.icon}
       </Text>
@@ -67,7 +90,7 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
         <Text style={[styles.rowLabel, { color: HOT }]}>▲ {t("market.demand.hotLabel")}</Text>
         <View style={styles.chips}>
           {cycle.hotGoodIds.map((id) => (
-            <GoodChip key={id} goodId={id} pill={HOT_PILL} t={t} />
+            <GoodChip key={id} goodId={id} tone="hot" t={t} />
           ))}
         </View>
       </View>
@@ -75,7 +98,7 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
       <View style={styles.row}>
         <Text style={[styles.rowLabel, { color: GLUT }]}>▼ {t("market.demand.glutLabel")}</Text>
         <View style={styles.chips}>
-          <GoodChip goodId={cycle.gluttedGoodId} pill={GLUT_PILL} t={t} />
+          <GoodChip goodId={cycle.gluttedGoodId} tone="glut" t={t} />
         </View>
       </View>
 
@@ -84,9 +107,9 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
           <Text style={styles.nextLabel}>{t("market.demand.nextLabel")}</Text>
           <View style={styles.chips}>
             {next.hotGoodIds.map((id) => (
-              <GoodChip key={id} goodId={id} pill={HOT_PILL} t={t} />
+              <GoodChip key={id} goodId={id} tone="hot" t={t} />
             ))}
-            <GoodChip goodId={next.gluttedGoodId} pill={GLUT_PILL} t={t} />
+            <GoodChip goodId={next.gluttedGoodId} tone="glut" t={t} />
           </View>
         </View>
       )}
@@ -126,19 +149,16 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   chips: { flexDirection: "row", flexWrap: "wrap", flex: 1, gap: SPACING.xs },
-  // A full stadium pill with a solid fill, not the thin tinted-border chip
-  // this used to be — matches the reference's own two chip colors (see
-  // HOT_PILL/GLUT_PILL above) painted as solid shapes, not a tint over the
-  // dark card.
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: PILL_RIM,
-    borderRadius: 999,
-    paddingHorizontal: SPACING.sm + 2,
-    paddingVertical: 5,
+    height: CAP_HEIGHT,
+    paddingHorizontal: SPACING.sm + 4,
   },
+  // The 3-slice pill art behind the icon/text — a plain row so the two caps
+  // and the stretchy middle lay out left to right, sized to match the chip
+  // exactly via absoluteFill on this wrapper.
+  chipBg: { flexDirection: "row" },
   chipIcon: { fontSize: 13, marginRight: 5 },
   chipText: { color: "#f4e8ce", fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   nextBlock: {
