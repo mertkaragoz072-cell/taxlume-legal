@@ -23,7 +23,7 @@ interface Props {
 // that same aspect ratio (see `card` below) so the fractions still line up
 // with the art at any screen width, and the image itself is never
 // resized out of its own proportions.
-const PANEL_ASPECT_RATIO = 1991 / 658;
+const PANEL_ASPECT_RATIO = 2.6;
 const pct = (px: number, of: "w" | "h") => `${(px / (of === "w" ? 1991 : 658)) * 100}%` as const;
 
 /** One task at a time, across the top of every screen, until the guided
