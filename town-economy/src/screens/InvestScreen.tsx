@@ -36,6 +36,10 @@ export function InvestScreen({ sounds }: Props) {
   // MarketScreen for why.
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
+  // All 4 assets fit the row at once — see MarketScreen's goodCardWidth
+  // for why this is computed rather than a fixed guess.
+  const assetsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SPACING.lg * 2;
+  const assetCardWidth = (assetsRowWidth - SPACING.sm * 3) / 4;
   const formatPrice = (v: number) => formatCoins(v, 2);
   const [selectedId, setSelectedId] = useState<AssetId>(ASSETS[0].id);
   const selected = ASSETS.find((a) => a.id === selectedId)!;
@@ -137,6 +141,7 @@ export function InvestScreen({ sounds }: Props) {
             state={state.assets[a.id]}
             selected={a.id === selectedId}
             onPress={() => setSelectedId(a.id)}
+            width={assetCardWidth}
           />
         ))}
       </ScrollView>

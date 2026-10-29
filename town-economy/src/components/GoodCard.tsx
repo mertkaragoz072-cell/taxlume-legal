@@ -34,6 +34,11 @@ interface Props {
   /** optional corner tag, e.g. the demand cycle marking this good as sought
    * after or glutted — kept generic so the invest screen can leave it off */
   badge?: { text: string; color: string };
+  /** Card width in px. The caller works out how wide a card can be while
+   * still fitting its usual count (4, early on) across the screen without
+   * scrolling — this component has no idea how wide its own row is.
+   * Defaults to the old fixed size for any caller that doesn't pass one. */
+  width?: number;
 }
 
 function pctChange(history: number[]): number {
@@ -44,11 +49,22 @@ function pctChange(history: number[]): number {
   return ((curr - prev) / prev) * 100;
 }
 
-export function GoodCard({ good, state, selected, onPress, badge }: Props) {
+const BASE_WIDTH = 112;
+
+export function GoodCard({ good, state, selected, onPress, badge, width = BASE_WIDTH }: Props) {
   const { state: economy, t } = useEconomyContext();
   const change = pctChange(state.history);
   const positive = change >= 0;
   const { opacity, flashColor } = usePriceFlash(state.price);
+  // Everything inside scales off the same factor as the card itself, so a
+  // narrower row (more goods unlocked, a smaller phone) shrinks as one
+  // piece instead of the icon/chart staying fixed-size and overflowing a
+  // card that got smaller around them.
+  const scale = width / BASE_WIDTH;
+  const cardPadding = Math.round(SPACING.md * scale);
+  const iconSize = Math.round(26 * scale);
+  const chartWidth = Math.max(32, Math.round(88 * scale));
+  const chartHeight = Math.max(16, Math.round(42 * scale));
 
   return (
     // The shadow lives on this plain, never-animated View rather than on
@@ -63,11 +79,12 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
     <View
       style={[
         styles.card,
+        { width },
         selected && { borderColor: good.color, borderWidth: 2 },
         selected && glowShadow(good.color),
       ]}
     >
-      <ScalePressable onPress={onPress} style={styles.cardInner}>
+      <ScalePressable onPress={onPress} style={[styles.cardInner, { padding: cardPadding }]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         {selected && (
           <View
@@ -93,13 +110,19 @@ export function GoodCard({ good, state, selected, onPress, badge }: Props) {
           </View>
         )}
         <View style={styles.topRow}>
-          <GoodIcon id={good.id ?? ""} fallback={good.icon} size={26} />
+          <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
           <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
             {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
             {formatPercent(change, economy.language, 1)}
           </Text>
         </View>
-        <PriceChart history={state.history} color={good.color} width={88} height={42} strokeWidth={2} />
+        <PriceChart
+          history={state.history}
+          color={good.color}
+          width={chartWidth}
+          height={chartHeight}
+          strokeWidth={2}
+        />
         <Text style={styles.name} numberOfLines={1}>
           {t(good.nameKey)}
         </Text>
@@ -132,7 +155,6 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
-    width: 112,
     borderRadius: RADIUS.card,
     borderWidth: 2,
     borderColor: "transparent",

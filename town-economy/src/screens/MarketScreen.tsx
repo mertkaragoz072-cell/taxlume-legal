@@ -80,6 +80,14 @@ export function MarketScreen({ sounds }: Props) {
   // card blank.
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
+  // Early on there are exactly 4 unlocked goods, and the reference this
+  // screen is built from shows all 4 filling the row edge to edge with no
+  // scroll — so the card width is derived from the screen, not a fixed
+  // guess, the same way chartWidth above is. More goods unlocking later
+  // just makes the row scroll past this same card size, same as any other
+  // horizontal list here.
+  const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SPACING.lg * 2;
+  const goodCardWidth = (goodsRowWidth - SPACING.sm * 3) / 4;
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -316,6 +324,7 @@ export function MarketScreen({ sounds }: Props) {
             state={state.goods[g.id]}
             selected={g.id === state.selectedGood}
             onPress={() => selectGood(g.id)}
+            width={goodCardWidth}
             badge={
               isHot(state.demandCycle, g.id)
                 ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
@@ -332,7 +341,10 @@ export function MarketScreen({ sounds }: Props) {
           <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
             {lockedGoods.map((g) => (
-              <View key={g.id} style={[styles.lockedCard, { borderColor: withAlpha(g.color, 0.3) }]}>
+              <View
+                key={g.id}
+                style={[styles.lockedCard, { width: goodCardWidth, borderColor: withAlpha(g.color, 0.3) }]}
+              >
                 <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
                 <View style={[styles.lockedAccentStripe, { backgroundColor: withAlpha(g.color, 0.5) }]} />
                 <View style={styles.lockedBadge}>
@@ -341,7 +353,12 @@ export function MarketScreen({ sounds }: Props) {
                 {/* The good's own icon, full size and in its own color
                     rather than greyed out — this is a preview of a reward,
                     not a dead slot, so it should look like one. */}
-                <GoodIcon id={g.id} fallback={g.icon} size={26} style={styles.lockedIcon} />
+                <GoodIcon
+                  id={g.id}
+                  fallback={g.icon}
+                  size={Math.round(26 * (goodCardWidth / 112))}
+                  style={styles.lockedIcon}
+                />
                 <Text style={styles.lockedName} numberOfLines={1}>
                   {t(g.nameKey)}
                 </Text>
@@ -636,11 +653,10 @@ const styles = StyleSheet.create({
   holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
   holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   goodsRow: { marginBottom: SPACING.lg + 2 },
-  // Matches GoodCard's own width/gap (112 / sm) so both rows read at the
-  // same scale; a phone-width row won't fit every good at once, and that's
-  // fine — it scrolls, the same as the unlocked row above it.
+  // Width comes from the same goodCardWidth calc as the unlocked row above
+  // it (passed inline), so the two rows read at the same scale and both
+  // fit their usual 4 cards across the screen with no scroll needed.
   lockedCard: {
-    width: 112,
     borderRadius: RADIUS.card,
     borderWidth: 1,
     padding: SPACING.sm,
