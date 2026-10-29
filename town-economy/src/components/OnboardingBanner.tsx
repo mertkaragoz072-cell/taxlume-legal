@@ -21,9 +21,11 @@ interface Props {
 // position below is that image's own layout, read off its pixels and
 // expressed as a fraction of its 1991x658 size — the card is pinned to
 // that same aspect ratio (see `card` below) so the fractions still line up
-// with the art at any screen width, and the image itself is never
-// resized out of its own proportions.
-const PANEL_ASPECT_RATIO = 2.6;
+// with the art at any screen width. It's pinned looser than the image's
+// own 3.03:1 (eased down in steps, per direct request each time) — this
+// is the one feature banner on screen, so growing it takes priority over
+// keeping the background pixel-exact.
+const PANEL_ASPECT_RATIO = 2.0;
 const pct = (px: number, of: "w" | "h") => `${(px / (of === "w" ? 1991 : 658)) * 100}%` as const;
 
 /** One task at a time, across the top of every screen, until the guided
