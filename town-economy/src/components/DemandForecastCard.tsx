@@ -4,7 +4,7 @@ import { DemandCycle } from "../economy/demandCycles";
 import { GOODS_BY_ID } from "../economy/goods";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { GradientFill } from "./GradientFill";
 
 // Row-label colors (unchanged — these sit on the dark card, not the pill).
@@ -16,6 +16,10 @@ const GLUT = "#6fb8f2";
 // the chip's whole fill instead of just a thin tinted border.
 const HOT_PILL = "#6b4610";
 const GLUT_PILL = "#3f6f98";
+// The same crop also showed a bright gold rim around the pill, not the
+// plain dark outline this had — the carved-gold-trim look the rest of the
+// app's panels already use (the stat card, the quest banner).
+const PILL_RIM = "#d9a441";
 
 interface Props {
   cycle: DemandCycle;
@@ -27,7 +31,7 @@ function GoodChip({ goodId, pill, t }: { goodId: string; pill: string; t: (k: st
   const good = GOODS_BY_ID[goodId as keyof typeof GOODS_BY_ID];
   if (!good) return null;
   return (
-    <View style={[styles.chip, { backgroundColor: pill, borderColor: withAlpha("#000000", 0.25) }]}>
+    <View style={[styles.chip, { backgroundColor: pill }]}>
       <Text aria-hidden style={styles.chipIcon}>
         {good.icon}
       </Text>
@@ -129,7 +133,8 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 2,
+    borderColor: PILL_RIM,
     borderRadius: 999,
     paddingHorizontal: SPACING.sm + 2,
     paddingVertical: 5,
