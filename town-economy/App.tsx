@@ -11,7 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { Image, Platform, SafeAreaView, StyleSheet, View } from "react-native";
-import appBackgroundImage from "./assets/ui/app-background.webp";
+import appBackgroundImage from "./assets/ui/app-background-wood.webp";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ComboBanner } from "./src/components/ComboBanner";
 import { CrisisWarningBanner } from "./src/components/CrisisWarningBanner";
@@ -360,14 +360,15 @@ function Game() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      {/* The town's own scenery behind the whole app rather than a flat
-          gradient — most of it sits under opaque cards and only shows at
-          the gaps and scroll overscroll, but it's there everywhere instead
-          of just the header. The seasonal mood gradient used to be the
-          background itself (solid, no alpha); now it's a translucent scrim
-          over the photo instead, at the same two stops, so it still darkens
-          toward the bottom and still shifts with the season without simply
-          hiding the image it sits on. */}
+      {/* A weathered wood-plank backdrop behind the whole app rather than a
+          flat gradient — most of it sits under opaque cards and only shows
+          at the gaps and scroll overscroll, but it's there everywhere
+          instead of just the header (which draws its own market-street
+          scene on top of this, same as before). The seasonal mood gradient
+          used to be the background itself (solid, no alpha); now it's a
+          translucent scrim over the wood instead, at the same two stops,
+          so it still darkens toward the bottom and still shifts with the
+          season without simply hiding the texture it sits on. */}
       <Image
         source={appBackgroundImage}
         style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
