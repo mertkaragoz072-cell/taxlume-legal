@@ -25,7 +25,7 @@ const GLUT = "#6fb8f2";
 // the middle stretch wider rather than distorting the rounded ends.
 const CAP_HEIGHT = 26;
 const PILL_TONES = {
-  hot: { left: tanLeft, mid: tanMid, right: tanRight, capAspect: 81 / 109 },
+  hot: { left: tanLeft, mid: tanMid, right: tanRight, capAspect: 230 / 295 },
   glut: { left: blueLeft, mid: blueMid, right: blueRight, capAspect: 113 / 109 },
 } as const;
 
