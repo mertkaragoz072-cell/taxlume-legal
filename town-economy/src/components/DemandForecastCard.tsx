@@ -7,8 +7,15 @@ import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { GradientFill } from "./GradientFill";
 
+// Row-label colors (unchanged — these sit on the dark card, not the pill).
 const HOT = "#f0a04b";
 const GLUT = "#6fb8f2";
+// Pill fills, sampled straight off the reference art's own two chip colors
+// (a muted earthy tan and a mid blue) rather than reusing HOT/GLUT above —
+// those read as a bright orange and a pale blue, too saturated once they're
+// the chip's whole fill instead of just a thin tinted border.
+const HOT_PILL = "#6b4610";
+const GLUT_PILL = "#3f6f98";
 
 interface Props {
   cycle: DemandCycle;
@@ -16,17 +23,15 @@ interface Props {
   tick: number;
 }
 
-function GoodChip({ goodId, tint, t }: { goodId: string; tint: string; t: (k: string) => string }) {
+function GoodChip({ goodId, pill, t }: { goodId: string; pill: string; t: (k: string) => string }) {
   const good = GOODS_BY_ID[goodId as keyof typeof GOODS_BY_ID];
   if (!good) return null;
   return (
-    <View
-      style={[styles.chip, { borderColor: withAlpha(tint, 0.5), backgroundColor: withAlpha(tint, 0.12) }]}
-    >
+    <View style={[styles.chip, { backgroundColor: pill, borderColor: withAlpha("#000000", 0.25) }]}>
       <Text aria-hidden style={styles.chipIcon}>
         {good.icon}
       </Text>
-      <Text style={[styles.chipText, { color: tint }]} numberOfLines={1}>
+      <Text style={styles.chipText} numberOfLines={1}>
         {t(good.nameKey)}
       </Text>
     </View>
@@ -58,7 +63,7 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
         <Text style={[styles.rowLabel, { color: HOT }]}>▲ {t("market.demand.hotLabel")}</Text>
         <View style={styles.chips}>
           {cycle.hotGoodIds.map((id) => (
-            <GoodChip key={id} goodId={id} tint={HOT} t={t} />
+            <GoodChip key={id} goodId={id} pill={HOT_PILL} t={t} />
           ))}
         </View>
       </View>
@@ -66,7 +71,7 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
       <View style={styles.row}>
         <Text style={[styles.rowLabel, { color: GLUT }]}>▼ {t("market.demand.glutLabel")}</Text>
         <View style={styles.chips}>
-          <GoodChip goodId={cycle.gluttedGoodId} tint={GLUT} t={t} />
+          <GoodChip goodId={cycle.gluttedGoodId} pill={GLUT_PILL} t={t} />
         </View>
       </View>
 
@@ -75,9 +80,9 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
           <Text style={styles.nextLabel}>{t("market.demand.nextLabel")}</Text>
           <View style={styles.chips}>
             {next.hotGoodIds.map((id) => (
-              <GoodChip key={id} goodId={id} tint={HOT} t={t} />
+              <GoodChip key={id} goodId={id} pill={HOT_PILL} t={t} />
             ))}
-            <GoodChip goodId={next.gluttedGoodId} tint={GLUT} t={t} />
+            <GoodChip goodId={next.gluttedGoodId} pill={GLUT_PILL} t={t} />
           </View>
         </View>
       )}
@@ -117,16 +122,20 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   chips: { flexDirection: "row", flexWrap: "wrap", flex: 1, gap: SPACING.xs },
+  // A full stadium pill with a solid fill, not the thin tinted-border chip
+  // this used to be — matches the reference's own two chip colors (see
+  // HOT_PILL/GLUT_PILL above) painted as solid shapes, not a tint over the
+  // dark card.
   chip: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: RADIUS.chip,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
+    borderRadius: 999,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: 5,
   },
-  chipIcon: { fontSize: 12, marginRight: 4 },
-  chipText: { fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  chipIcon: { fontSize: 13, marginRight: 5 },
+  chipText: { color: "#f4e8ce", fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   nextBlock: {
     flexDirection: "row",
     alignItems: "center",
