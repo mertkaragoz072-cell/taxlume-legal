@@ -176,12 +176,7 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
                     app's own light text tone on an inactive one's faint
                     tint, the same contrast rule the badge's border below
                     already follows. */}
-                <TabIcon
-                  id={tab.id}
-                  color={isActive ? COLORS.onLight : COLORS.textPrimary}
-                  size={19}
-                  bg={isActive ? tab.color : withAlpha(tab.color, 0.22)}
-                />
+                <TabIcon id={tab.id} size={26} active={isActive} />
               </Animated.View>
             </View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
