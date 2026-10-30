@@ -208,9 +208,12 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
-    backgroundColor: "#1a1410",
+    // Transparent rather than a solid dark bar — the app's own wood
+    // background shows straight through, the same as the gaps between
+    // every other card on screen.
+    backgroundColor: "transparent",
     borderTopWidth: 1,
-    borderTopColor: "#3a2d1e",
+    borderTopColor: withAlpha("#3a2d1e", 0.6),
     paddingBottom: 6,
     paddingTop: 8,
   },
