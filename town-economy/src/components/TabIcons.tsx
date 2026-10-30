@@ -2,45 +2,47 @@ import React from "react";
 import { Image } from "react-native";
 import type { ScreenId } from "./TabBar";
 
-import achievementsIcon from "../../assets/ui/tabicons/achievements.png";
-import inventoryIcon from "../../assets/ui/tabicons/inventory.png";
-import investIcon from "../../assets/ui/tabicons/invest.png";
-import marketIcon from "../../assets/ui/tabicons/market.png";
-import researchIcon from "../../assets/ui/tabicons/research.png";
-import townIcon from "../../assets/ui/tabicons/town.png";
-import tradeIcon from "../../assets/ui/tabicons/trade.png";
+import achievementsBadge from "../../assets/ui/tabbadges/achievements.png";
+import inventoryBadge from "../../assets/ui/tabbadges/inventory.png";
+import investBadge from "../../assets/ui/tabbadges/invest.png";
+import marketBadge from "../../assets/ui/tabbadges/market.png";
+import researchBadge from "../../assets/ui/tabbadges/research.png";
+import townBadge from "../../assets/ui/tabbadges/town.png";
+import tradeBadge from "../../assets/ui/tabbadges/trade.png";
 
 interface Props {
   id: ScreenId;
   size: number;
-  /** Full opacity on the active tab, dimmed at rest — these are painted
-   * illustrations with their own fixed palette (gold scales, a blue swap
-   * arrow...), not a flat glyph that could be recoloured to contrast with
-   * the badge behind it the way the single-colour SVG set this replaced
-   * did. Opacity is the one state change that still applies to a raster
-   * icon without fighting its own art. */
+  /** Full opacity on the active tab, dimmed at rest. These are complete
+   * painted badges — carved-corner panel and icon baked into one image,
+   * each already in its own tab's color — not a flat glyph TabBar can
+   * recolor or gradient-fill itself, so TabBar no longer draws any panel
+   * of its own behind this; opacity is the one state change left for it
+   * to apply. */
   active: boolean;
 }
 
-const ICONS: Record<ScreenId, number> = {
-  market: marketIcon,
-  inventory: inventoryIcon,
-  trade: tradeIcon,
-  town: townIcon,
-  research: researchIcon,
-  invest: investIcon,
-  achievements: achievementsIcon,
+const BADGES: Record<ScreenId, number> = {
+  market: marketBadge,
+  inventory: inventoryBadge,
+  trade: tradeBadge,
+  town: townBadge,
+  research: researchBadge,
+  invest: investBadge,
+  achievements: achievementsBadge,
 };
 
-/** One painted illustration per tab, cropped from a reference sheet sent
- * for this exact purpose — replaces the flat-filled SVG glyph set this
- * file used to hand-draw (see git history for that approach's own notes on
- * what it tried and why). */
+/** One complete painted badge per tab (panel + icon baked together),
+ * cropped from a reference sheet sent for this exact purpose. Replaces the
+ * earlier two-piece version of this file — a flat SVG glyph laid over a
+ * separately-drawn CSS badge in TabBar — now that the badge art itself
+ * carries the per-tab color and the carved-panel look that CSS was
+ * standing in for. */
 export function TabIcon({ id, size, active }: Props) {
   return (
     <Image
-      source={ICONS[id]}
-      style={{ width: size, height: size, opacity: active ? 1 : 0.6 }}
+      source={BADGES[id]}
+      style={{ width: size, height: size, opacity: active ? 1 : 0.68 }}
       resizeMode="contain"
     />
   );

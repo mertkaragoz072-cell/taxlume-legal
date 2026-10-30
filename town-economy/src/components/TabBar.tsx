@@ -2,8 +2,7 @@ import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { COLORS, FONT, glowShadow, lighten, TYPE, WEIGHT, withAlpha } from "../theme";
-import { GradientFill } from "./GradientFill";
+import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 import { TabIcon } from "./TabIcons";
 
@@ -139,60 +138,25 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
                 ]}
               />
             )}
-            {/* Every tab carries its own colour on a badge behind the icon
-                now, not just the active one — a plain emoji glyph reads
-                differently (and often flatly) across platforms, where a
-                colour badge we draw ourselves reads the same everywhere and
-                is what actually makes the bar feel designed rather than a
-                row of system emoji. Genuinely tinted even at rest — the
-                first version of this only saturated on tap and read as
-                muddy the rest of the time — then goes to a fully solid
-                fill plus a glow in its own colour.
-                The badge itself is a plain, unanimated View on purpose: an
-                earlier version put the spring "pop" and the shadow on the
-                very same native-driven layer, and on a real phone that
-                left the active badge permanently soft/blurry — two known
-                iOS quirks compounding (a shadowed view gets its own
-                offscreen render pass, and a view that has ever been
-                natively transformed can stay promoted to a GPU layer whose
-                resolution doesn't always end up matching the screen's).
-                Keeping the shadow on a static view and moving the bounce to
-                the small inner wrapper below — which carries no shadow of
-                its own — keeps both effects without stacking them on one
+            {/* The badge is a complete painted asset now (panel, carved
+                corners and icon all baked into one image — see TabIcons)
+                rather than a glyph laid over a panel this file drew itself,
+                so there is nothing left for this wrapper to fill, tint or
+                border — just a plain, unanimated View to carry the active
+                tab's glow shadow. An earlier version put that shadow and
+                the spring "pop" on the very same native-driven layer, and
+                on a real phone that left the active badge permanently
+                soft/blurry — two known iOS quirks compounding (a shadowed
+                view gets its own offscreen render pass, and a view that
+                has ever been natively transformed can stay promoted to a
+                GPU layer whose resolution doesn't always end up matching
+                the screen's). Keeping the shadow here and the bounce on
+                the inner wrapper below, which carries no shadow of its
+                own, keeps both effects without stacking them on one
                 layer. */}
-            <View
-              style={[
-                styles.iconBadge,
-                { borderColor: withAlpha(tab.color, isActive ? 0.9 : 0.32) },
-                isActive && styles.iconBadgeActive,
-                isActive && glowShadow(tab.color),
-                isActive && { shadowOpacity: 0.65, shadowRadius: 14 },
-              ]}
-            >
-              {/* A lit top-to-base gradient in the tab's own color, not a
-                  flat fill — reads as a lit panel rather than a color
-                  swatch, and is what lets the active tab's own color (not
-                  just the shadow around it) carry the "glowing" look the
-                  bar is meant to have. */}
-              <GradientFill
-                colors={
-                  isActive
-                    ? [lighten(tab.color, 0.55), tab.color]
-                    : [withAlpha(tab.color, 0.3), withAlpha(tab.color, 0.14)]
-                }
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              />
-              <Animated.View style={{ transform: [{ scale: badgeScale[i] }], opacity: isActive ? 1 : 0.75 }}>
-                {/* Decoration for a label that is already read out — see
-                    TabIcon's own comment for why this isn't the emoji it
-                    used to be. Dark on an active tab's solid fill, the
-                    app's own light text tone on an inactive one's faint
-                    tint, the same contrast rule the badge's border below
-                    already follows. */}
-                <TabIcon id={tab.id} size={26} active={isActive} />
+            <View style={[styles.iconBadge, isActive && glowShadow(tab.color)]}>
+              <Animated.View style={{ transform: [{ scale: badgeScale[i] }] }}>
+                <TabIcon id={tab.id} size={40} active={isActive} />
               </Animated.View>
             </View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
@@ -242,15 +206,12 @@ const styles = StyleSheet.create({
   // boundary, reads as an intentional choice instead of whatever an emoji
   // font happened to draw.
   iconBadge: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 13,
-    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
   },
-  iconBadgeActive: { borderWidth: 2 },
   label: {
     fontSize: TYPE.micro,
     color: COLORS.textMuted,

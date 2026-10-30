@@ -191,17 +191,3 @@ export function withAlpha(hex: string, alpha: number): string {
   const b = parseInt(clean.substring(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
-
-/** Blends a hex color toward white by the given fraction — a lit, slightly
- * glowing top stop for a two-tone gradient built from a single base color
- * (e.g. the tab bar's per-tab badges), rather than hand-picking a second
- * hex for every color this ever gets used with. */
-export function lighten(hex: string, fraction: number): string {
-  const clean = hex.replace("#", "");
-  const r = parseInt(clean.substring(0, 2), 16);
-  const g = parseInt(clean.substring(2, 4), 16);
-  const b = parseInt(clean.substring(4, 6), 16);
-  const mix = (c: number) => Math.round(c + (255 - c) * fraction);
-  const toHex = (c: number) => c.toString(16).padStart(2, "0");
-  return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
-}
