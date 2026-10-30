@@ -12,6 +12,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { Image, Platform, SafeAreaView, StyleSheet, View } from "react-native";
 import appBackgroundImage from "./assets/ui/app-background-wood.webp";
+import townMarketBackgroundImage from "./assets/backgrounds/town_market_background.png";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ComboBanner } from "./src/components/ComboBanner";
 import { CrisisWarningBanner } from "./src/components/CrisisWarningBanner";
@@ -360,17 +361,19 @@ function Game() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      {/* A weathered wood-plank backdrop behind the whole app rather than a
-          flat gradient — most of it sits under opaque cards and only shows
-          at the gaps and scroll overscroll, but it's there everywhere
-          instead of just the header (which draws its own market-street
-          scene on top of this, same as before). The seasonal mood gradient
-          used to be the background itself (solid, no alpha); now it's a
-          translucent scrim over the wood instead, at the same two stops,
-          so it still darkens toward the bottom and still shifts with the
-          season without simply hiding the texture it sits on. */}
+      {/* The market screen (the app's default/main view) gets its own
+          illustrated town-square backdrop; every other screen keeps the
+          plain wood-plank one. Most of either sits under opaque cards and
+          only shows at the gaps and scroll overscroll, but it's there
+          everywhere behind the content, not just the header (which draws
+          its own market-street scene on top of this, same as before). The
+          seasonal mood gradient used to be the background itself (solid,
+          no alpha); now it's a translucent scrim over whichever image is
+          behind it instead, at the same two stops, so it still darkens
+          toward the bottom and still shifts with the season without
+          simply hiding the art it sits on. */}
       <Image
-        source={appBackgroundImage}
+        source={screen === "market" ? townMarketBackgroundImage : appBackgroundImage}
         style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
         resizeMode="cover"
       />
