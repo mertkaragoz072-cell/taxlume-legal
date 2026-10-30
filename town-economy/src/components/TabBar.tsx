@@ -2,7 +2,8 @@ import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, lighten, TYPE, WEIGHT, withAlpha } from "../theme";
+import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { TabIcon } from "./TabIcons";
 
@@ -162,13 +163,28 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
             <View
               style={[
                 styles.iconBadge,
-                {
-                  backgroundColor: isActive ? tab.color : withAlpha(tab.color, 0.22),
-                  borderColor: withAlpha(tab.color, isActive ? 0.9 : 0.32),
-                },
+                { borderColor: withAlpha(tab.color, isActive ? 0.9 : 0.32) },
+                isActive && styles.iconBadgeActive,
                 isActive && glowShadow(tab.color),
+                isActive && { shadowOpacity: 0.65, shadowRadius: 14 },
               ]}
             >
+              {/* A lit top-to-base gradient in the tab's own color, not a
+                  flat fill — reads as a lit panel rather than a color
+                  swatch, and is what lets the active tab's own color (not
+                  just the shadow around it) carry the "glowing" look the
+                  bar is meant to have. */}
+              <GradientFill
+                colors={
+                  isActive
+                    ? [lighten(tab.color, 0.55), tab.color]
+                    : [withAlpha(tab.color, 0.3), withAlpha(tab.color, 0.14)]
+                }
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              />
               <Animated.View style={{ transform: [{ scale: badgeScale[i] }], opacity: isActive ? 1 : 0.75 }}>
                 {/* Decoration for a label that is already read out — see
                     TabIcon's own comment for why this isn't the emoji it
@@ -229,7 +245,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  iconBadgeActive: { borderWidth: 2 },
   label: {
     fontSize: TYPE.micro,
     color: COLORS.textMuted,
