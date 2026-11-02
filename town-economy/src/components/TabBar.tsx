@@ -187,7 +187,11 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     borderTopWidth: 1,
     borderTopColor: withAlpha("#3a2d1e", 0.6),
-    paddingBottom: 6,
+    // Pushes the whole row up off the bottom edge — the leaf band's own
+    // art has the stone path running along its last ~15%, and the label
+    // text was landing right on top of that seam instead of staying on
+    // the wood above it.
+    paddingBottom: 26,
     paddingTop: 8,
     overflow: "hidden",
   },
