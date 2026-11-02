@@ -177,6 +177,69 @@ export function MarketScreen({ sounds }: Props) {
       onScroll={(e) => (scrollOffsetRef.current = e.nativeEvent.contentOffset.y)}
       scrollEventThrottle={16}
     >
+      {/* Right under the quest banner — a player who just finished reading
+          "buy any good in the market" lands straight on the grid they'd
+          buy it from, instead of scrolling past the pulse/chart cards
+          first to find it. */}
+      <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+        {unlockedGoods.map((g) => (
+          <GoodCard
+            key={g.id}
+            good={g}
+            state={state.goods[g.id]}
+            selected={g.id === state.selectedGood}
+            onPress={() => selectGood(g.id)}
+            width={goodCardWidth}
+            badge={
+              isHot(state.demandCycle, g.id)
+                ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
+                : isGlutted(state.demandCycle, g.id)
+                  ? { text: t("market.demand.glutBadge"), color: "#6fb8f2" }
+                  : undefined
+            }
+          />
+        ))}
+      </ScrollView>
+
+      {lockedGoods.length > 0 && (
+        <>
+          <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+            {lockedGoods.map((g) => (
+              <View
+                key={g.id}
+                style={[styles.lockedCard, { width: goodCardWidth, borderColor: withAlpha(g.color, 0.3) }]}
+              >
+                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+                <View style={[styles.lockedAccentStripe, { backgroundColor: withAlpha(g.color, 0.5) }]} />
+                <View style={styles.lockedBadge}>
+                  <Text style={styles.lockedBadgeText}>🔒</Text>
+                </View>
+                {/* The good's own icon, full size and in its own color
+                    rather than greyed out — this is a preview of a reward,
+                    not a dead slot, so it should look like one. */}
+                <GoodIcon
+                  id={g.id}
+                  fallback={g.icon}
+                  size={Math.round(26 * (goodCardWidth / 112))}
+                  style={styles.lockedIcon}
+                />
+                <Text style={styles.lockedName} numberOfLines={1}>
+                  {t(g.nameKey)}
+                </Text>
+                <View style={[styles.lockedRankChip, { borderColor: withAlpha(g.color, 0.4) }]}>
+                  <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
+                  <Text style={styles.lockedRankText} numberOfLines={1}>
+                    {t(townRankNameKey(g.unlockRank ?? 0))}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
+
       {/* Market Pulse: the town square image used to open this screen, but
           it said nothing about the market and only lived here because the
           game had no Town tab yet to send it to. This says something —
@@ -253,11 +316,10 @@ export function MarketScreen({ sounds }: Props) {
         </View>
       )}
 
-      {/* The selected good's own detail chart, at the top where a player
-          lands first — the "Kasaba Piyasası" grid it was picked from sits
-          directly below it (no season/demand cards in between), so picking
-          a different good from the grid and seeing its chart update feels
-          like one motion rather than a scroll away. */}
+      {/* The selected good's own detail chart — picking a different good
+          from the "Kasaba Piyasası" grid above updates this in place, so
+          it reads as one motion (pick, then look down) rather than a
+          separate screen. */}
       <View style={[styles.chartCard, { borderColor: withAlpha(selected.color, 0.4) }]}>
         <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
         <View
@@ -314,65 +376,6 @@ export function MarketScreen({ sounds }: Props) {
           </View>
         )}
       </View>
-
-      <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
-        {unlockedGoods.map((g) => (
-          <GoodCard
-            key={g.id}
-            good={g}
-            state={state.goods[g.id]}
-            selected={g.id === state.selectedGood}
-            onPress={() => selectGood(g.id)}
-            width={goodCardWidth}
-            badge={
-              isHot(state.demandCycle, g.id)
-                ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
-                : isGlutted(state.demandCycle, g.id)
-                  ? { text: t("market.demand.glutBadge"), color: "#6fb8f2" }
-                  : undefined
-            }
-          />
-        ))}
-      </ScrollView>
-
-      {lockedGoods.length > 0 && (
-        <>
-          <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
-            {lockedGoods.map((g) => (
-              <View
-                key={g.id}
-                style={[styles.lockedCard, { width: goodCardWidth, borderColor: withAlpha(g.color, 0.3) }]}
-              >
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.lockedAccentStripe, { backgroundColor: withAlpha(g.color, 0.5) }]} />
-                <View style={styles.lockedBadge}>
-                  <Text style={styles.lockedBadgeText}>🔒</Text>
-                </View>
-                {/* The good's own icon, full size and in its own color
-                    rather than greyed out — this is a preview of a reward,
-                    not a dead slot, so it should look like one. */}
-                <GoodIcon
-                  id={g.id}
-                  fallback={g.icon}
-                  size={Math.round(26 * (goodCardWidth / 112))}
-                  style={styles.lockedIcon}
-                />
-                <Text style={styles.lockedName} numberOfLines={1}>
-                  {t(g.nameKey)}
-                </Text>
-                <View style={[styles.lockedRankChip, { borderColor: withAlpha(g.color, 0.4) }]}>
-                  <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
-                  <Text style={styles.lockedRankText} numberOfLines={1}>
-                    {t(townRankNameKey(g.unlockRank ?? 0))}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </>
-      )}
 
       {/* The year above the week: the season sets the backdrop the demand
           cycle plays out against, and reading them together is what turns a
