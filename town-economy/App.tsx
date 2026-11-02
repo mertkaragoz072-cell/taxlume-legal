@@ -378,8 +378,12 @@ function Game() {
         style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
         resizeMode="cover"
       />
+      {/* Eased from 0.82 — that strength was tuned for the much brighter
+          sky/castle photo this used to sit over; stacked on the wood
+          background's own already-dark brown, it read as muddy rather
+          than moody. */}
       <GradientFill
-        colors={seasonalBackgroundGradient().map((c) => withAlpha(c, 0.82)) as [string, string]}
+        colors={seasonalBackgroundGradient().map((c) => withAlpha(c, 0.4)) as [string, string]}
         x1="0"
         y1="0"
         x2="0"
