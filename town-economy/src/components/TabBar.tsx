@@ -1,6 +1,7 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import leafBand from "../../assets/ui/tabbar-leaf-band.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
@@ -96,6 +97,15 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
 
   return (
     <View style={styles.wrap} accessibilityRole="tablist">
+      {/* The bar's own backdrop — cropped from the wood background's own
+          bottom edge (the leaf vines, barrels and stone path it already
+          carried) — rather than just staying transparent over whatever the
+          active screen's background happens to be. The market screen swaps
+          in its own illustrated scene above this (see App.tsx), which has
+          no matching leaf/stone treatment at its own bottom edge, so the
+          bar needs this to look the same — leaves at the corners — no
+          matter which screen is open. */}
+      <Image source={leafBand} style={[StyleSheet.absoluteFill, styles.leafBand]} resizeMode="cover" />
       {/* A slim underline riding above the tabs rather than a pill sitting
           behind one — each tab now carries its own colour on its icon badge
           below, so a second full-width colour wash back there just muddied
@@ -172,15 +182,16 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
-    // Transparent rather than a solid dark bar — the app's own wood
-    // background shows straight through, the same as the gaps between
-    // every other card on screen.
+    // Transparent rather than a solid dark bar — see leafBand below for
+    // what actually shows behind the tabs now.
     backgroundColor: "transparent",
     borderTopWidth: 1,
     borderTopColor: withAlpha("#3a2d1e", 0.6),
     paddingBottom: 6,
     paddingTop: 8,
+    overflow: "hidden",
   },
+  leafBand: { width: "100%", height: "100%" },
   indicatorSlot: {
     position: "absolute",
     top: 0,
