@@ -213,10 +213,10 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 4,
   },
-  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
+  change: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
   name: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.title,
+    fontSize: TYPE.heading,
     fontFamily: FONT.serif,
   },
   producer: {
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  coin: { width: 16, height: 16 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.title, fontFamily: FONT.serif },
+  coin: { width: 18, height: 18 },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.heading, fontFamily: FONT.serif },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,

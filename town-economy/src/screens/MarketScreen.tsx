@@ -80,12 +80,12 @@ export function MarketScreen({ sounds }: Props) {
   // card blank.
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
-  // Three full cards and just over half of the fourth, running to the
+  // Two full cards and most of a third, running to the
   // screen's edge — the half-hidden card is the cue that this row scrolls
   // sideways to more goods. Wide cards rather than four squeezed across
   // keeps the icon, move and name readable.
   const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SPACING.lg * 2;
-  const goodCardWidth = (goodsRowWidth + SPACING.lg - SPACING.sm * 3) / 3.55;
+  const goodCardWidth = (goodsRowWidth + SPACING.lg - SPACING.sm * 2) / 2.8;
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
