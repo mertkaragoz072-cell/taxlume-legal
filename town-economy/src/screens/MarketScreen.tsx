@@ -80,14 +80,12 @@ export function MarketScreen({ sounds }: Props) {
   // card blank.
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
-  // Early on there are exactly 4 unlocked goods, and the reference this
-  // screen is built from shows all 4 filling the row edge to edge with no
-  // scroll — so the card width is derived from the screen, not a fixed
-  // guess, the same way chartWidth above is. More goods unlocking later
-  // just makes the row scroll past this same card size, same as any other
-  // horizontal list here.
+  // Three full cards and just over half of the fourth, running to the
+  // screen's edge — the half-hidden card is the cue that this row scrolls
+  // sideways to more goods. Wide cards rather than four squeezed across
+  // keeps the icon, move and name readable.
   const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SPACING.lg * 2;
-  const goodCardWidth = (goodsRowWidth - SPACING.sm * 3) / 4;
+  const goodCardWidth = (goodsRowWidth + SPACING.lg - SPACING.sm * 3) / 3.55;
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -182,7 +180,12 @@ export function MarketScreen({ sounds }: Props) {
           buy it from, instead of scrolling past the pulse/chart cards
           first to find it. */}
       <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.goodsRow}
+        contentContainerStyle={styles.goodsRowContent}
+      >
         {unlockedGoods.map((g) => (
           <GoodCard
             key={g.id}
@@ -205,7 +208,12 @@ export function MarketScreen({ sounds }: Props) {
       {lockedGoods.length > 0 && (
         <>
           <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goodsRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.goodsRow}
+            contentContainerStyle={styles.goodsRowContent}
+          >
             {lockedGoods.map((g) => (
               <View
                 key={g.id}
@@ -655,10 +663,14 @@ const styles = StyleSheet.create({
   },
   holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
   holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  goodsRow: { marginBottom: SPACING.lg + 2 },
+  // Bleeds past the screen body's own padding so a half-visible card
+  // reaches the screen edge instead of being cut off short of it, while
+  // the first card still lines up with the content above.
+  goodsRow: { marginBottom: SPACING.lg + 2, marginHorizontal: -SPACING.lg },
+  goodsRowContent: { paddingHorizontal: SPACING.lg },
   // Width comes from the same goodCardWidth calc as the unlocked row above
   // it (passed inline), so the two rows read at the same scale and both
-  // fit their usual 4 cards across the screen with no scroll needed.
+  // scroll the same way.
   lockedCard: {
     borderRadius: RADIUS.card,
     borderWidth: 1,
