@@ -9,12 +9,20 @@ import {
   COLORS,
   FONT,
   glowShadow,
+  PARCHMENT,
   RADIUS,
   SPACING,
   TYPE,
   WEIGHT,
   withAlpha,
 } from "../theme";
+
+// The card's own gold trim — not tied to any one good's color, matching
+// the reference's border (plain bronze at rest, a brighter gold glow once
+// selected) rather than the good's own accent color, which the badge and
+// chart already carry.
+const GOLD_BORDER = "#a9793f";
+const GOLD_BORDER_SELECTED = "#f0d494";
 import { GoodIcon } from "./GoodIcon";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
@@ -79,64 +87,68 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
     <View
       style={[
         styles.card,
-        { width },
-        selected && { borderColor: good.color, borderWidth: 2 },
-        selected && glowShadow(good.color),
+        { width, borderColor: selected ? GOLD_BORDER_SELECTED : GOLD_BORDER },
+        selected && { borderWidth: 2 },
+        selected && glowShadow(GOLD_BORDER_SELECTED),
       ]}
     >
-      <ScalePressable onPress={onPress} style={[styles.cardInner, { padding: cardPadding }]}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        {selected && (
-          <View
+      <ScalePressable onPress={onPress} style={styles.cardInner}>
+        {/* The data half — icon, today's move, the trend — on the app's
+            usual dark card, same as before. */}
+        <View style={[styles.topZone, { padding: cardPadding }]}>
+          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+          {selected && (
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
+            />
+          )}
+          <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity }]}
           />
-        )}
-        <View
-          style={[
-            styles.accentStripe,
-            { backgroundColor: selected ? good.color : withAlpha(good.color, 0.4) },
-          ]}
-        />
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: flashColor, opacity }]}
-        />
-        {badge && (
-          <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.9) }]}>
-            <Text style={styles.badgeText} numberOfLines={1}>
-              {badge.text}
+          {badge && (
+            <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.95) }]}>
+              <Text style={styles.badgeText} numberOfLines={1}>
+                {badge.text}
+              </Text>
+            </View>
+          )}
+          <View style={styles.topRow}>
+            <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
+            <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
+              {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
+              {formatPercent(change, economy.language, 1)}
             </Text>
           </View>
-        )}
-        <View style={styles.topRow}>
-          <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
-          <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
-            {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
-            {formatPercent(change, economy.language, 1)}
-          </Text>
+          <PriceChart
+            history={state.history}
+            color={good.color}
+            width={chartWidth}
+            height={chartHeight}
+            strokeWidth={2}
+          />
         </View>
-        <PriceChart
-          history={state.history}
-          color={good.color}
-          width={chartWidth}
-          height={chartHeight}
-          strokeWidth={2}
-        />
-        <Text style={styles.name} numberOfLines={1}>
-          {t(good.nameKey)}
-        </Text>
-        {/* Who makes it, in the same breath as the price — a card is no
-            longer just a number with a squiggle under it, it says something
-            about the good before you even tap into it. Assets (gold, oil...)
-            have no producer, so this quietly disappears for them. */}
-        {good.producerKey && (
-          <Text style={styles.producer} numberOfLines={1}>
-            {t(good.producerKey)}
+        {/* The identity half — name, who makes it, the price — on a cream
+            parchment strip instead of the same dark card, matching the
+            reference's two-tone card rather than one uniform dark panel. */}
+        <View style={[styles.bottomZone, { paddingHorizontal: cardPadding, paddingBottom: cardPadding }]}>
+          <Text style={styles.name} numberOfLines={1}>
+            {t(good.nameKey)}
           </Text>
-        )}
-        <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
-        {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
+          {/* Who makes it, in the same breath as the price — a card is no
+              longer just a number with a squiggle under it, it says
+              something about the good before you even tap into it. Assets
+              (gold, oil...) have no producer, so this quietly disappears
+              for them. */}
+          {good.producerKey && (
+            <Text style={styles.producer} numberOfLines={1}>
+              {t(good.producerKey)}
+            </Text>
+          )}
+          <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
+          {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
+        </View>
       </ScalePressable>
     </View>
   );
@@ -156,27 +168,24 @@ const styles = StyleSheet.create({
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     borderRadius: RADIUS.card,
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
     marginRight: SPACING.sm,
     ...cardShadow,
   },
+  // No padding or alignment of its own — the card is two differently
+  // colored zones now (see topZone/bottomZone below), each owning its
+  // own padding, clipped to the card's rounded corners by this wrapper.
   cardInner: {
     borderRadius: RADIUS.card,
-    padding: SPACING.md,
-    paddingTop: SPACING.md,
-    alignItems: "center",
     overflow: "hidden",
   },
-  accentStripe: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-  },
-  flashOverlay: {
-    borderRadius: RADIUS.card,
+  topZone: { alignItems: "center" },
+  // The identity half — cream parchment, matching the reference's
+  // two-tone card instead of one uniform dark panel.
+  bottomZone: {
+    alignItems: "center",
+    backgroundColor: PARCHMENT.paper,
+    paddingTop: SPACING.xs + 2,
   },
   topRow: {
     flexDirection: "row",
@@ -186,19 +195,18 @@ const styles = StyleSheet.create({
   },
   change: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   name: {
-    color: COLORS.textPrimary,
+    color: PARCHMENT.ink,
     fontSize: TYPE.title,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-    marginTop: SPACING.xs,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
   },
-  producer: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1 },
-  price: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  producer: { color: PARCHMENT.inkMuted, fontSize: TYPE.caption, marginTop: 1 },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.title, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,
-    color: COLORS.onLight,
-    backgroundColor: COLORS.accent,
+    color: "#fff",
+    backgroundColor: PARCHMENT.ink,
     borderRadius: 8,
     paddingHorizontal: SPACING.xs + 2,
     paddingVertical: 1,
