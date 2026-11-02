@@ -18,7 +18,7 @@ interface Props {
 // banner's ribbon and the title plate — one real cropped image, not a
 // CSS-drawn bar, so a longer section label just stretches the middle
 // instead of distorting the wheat sprig or the gold tip.
-const RIBBON_HEIGHT = 24;
+const RIBBON_HEIGHT = 30;
 const LEFT_CAP_ASPECT = 460 / 475;
 const RIGHT_CAP_ASPECT = 168 / 475;
 const LEFT_CAP_WIDTH = Math.round(RIBBON_HEIGHT * LEFT_CAP_ASPECT);
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   bg: { flexDirection: "row" },
   label: {
     color: "#f4e8ce",
-    fontSize: TYPE.caption,
+    fontSize: TYPE.title,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     letterSpacing: 1,
