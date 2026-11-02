@@ -3,7 +3,7 @@ import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { CRISIS_TEMPLATES_BY_ID, ScheduledCrisis } from "../economy/crises";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
-import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, RADIUS, SCREEN_PADDING, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 const ALERT = "#f0776a";
 
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: SPACING.lg,
+    marginHorizontal: SCREEN_PADDING,
     marginBottom: SPACING.sm,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,

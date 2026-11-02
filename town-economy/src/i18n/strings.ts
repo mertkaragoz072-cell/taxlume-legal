@@ -154,12 +154,14 @@ export const STRINGS = {
       tradeWar: {
         title: "ticaret savaşı",
         warningTitle: "Sınırda Gerginlik",
-        advice: "Komşu krallıklar gümrükleri sıkılaştırıyor. Baharat, ipek ve mücevherini şimdi sat ya da sakla.",
+        advice:
+          "Komşu krallıklar gümrükleri sıkılaştırıyor. Baharat, ipek ve mücevherini şimdi sat ya da sakla.",
       },
       royalDecree: {
         title: "kraliyet vergisi",
         warningTitle: "Saraydan Haberciler",
-        advice: "Kraliyet, başarının payını istiyor. Halk bu haberi iyi karşılamayacak; vergiyi düşürmek yardımcı olabilir.",
+        advice:
+          "Kraliyet, başarının payını istiyor. Halk bu haberi iyi karşılamayacak; vergiyi düşürmek yardımcı olabilir.",
       },
     },
     flashDeal: {
@@ -1591,12 +1593,14 @@ export const STRINGS = {
       tradeWar: {
         title: "a trade war",
         warningTitle: "Tension at the Border",
-        advice: "Neighboring kingdoms are tightening customs. Sell or stockpile your spice, silk and jewelry now.",
+        advice:
+          "Neighboring kingdoms are tightening customs. Sell or stockpile your spice, silk and jewelry now.",
       },
       royalDecree: {
         title: "a royal levy",
         warningTitle: "Messengers from the Palace",
-        advice: "The crown wants its share of your success. The people won't take this well — cutting tax now might help.",
+        advice:
+          "The crown wants its share of your success. The people won't take this well — cutting tax now might help.",
       },
     },
     flashDeal: {

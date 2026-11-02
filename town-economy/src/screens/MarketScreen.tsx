@@ -31,6 +31,7 @@ import {
   CARD_GRADIENT,
   COLORS,
   CONTENT_MAX_WIDTH,
+  SCREEN_PADDING,
   FONT,
   GOLD_GRADIENT,
   GREEN_GRADIENT,
@@ -79,13 +80,13 @@ export function MarketScreen({ sounds }: Props) {
   // it used to cap at a phone-sized 420 and leave the rest of a much wider
   // card blank.
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
   // Two full cards and most of a third, running to the
   // screen's edge — the half-hidden card is the cue that this row scrolls
   // sideways to more goods. Wide cards rather than four squeezed across
   // keeps the icon, move and name readable.
-  const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SPACING.lg * 2;
-  const goodCardWidth = (goodsRowWidth + SPACING.lg - SPACING.sm * 2) / 2.8;
+  const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2;
+  const goodCardWidth = (goodsRowWidth + SCREEN_PADDING - SPACING.sm * 2) / 2.8;
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -548,7 +549,7 @@ export function MarketScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   pulseCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md + 2,
@@ -666,8 +667,8 @@ const styles = StyleSheet.create({
   // Bleeds past the screen body's own padding so a half-visible card
   // reaches the screen edge instead of being cut off short of it, while
   // the first card still lines up with the content above.
-  goodsRow: { marginBottom: SPACING.lg + 2, marginHorizontal: -SPACING.lg },
-  goodsRowContent: { paddingHorizontal: SPACING.lg },
+  goodsRow: { marginBottom: SPACING.lg + 2, marginHorizontal: -SCREEN_PADDING },
+  goodsRowContent: { paddingHorizontal: SCREEN_PADDING },
   // Width comes from the same goodCardWidth calc as the unlocked row above
   // it (passed inline), so the two rows read at the same scale and both
   // scroll the same way.

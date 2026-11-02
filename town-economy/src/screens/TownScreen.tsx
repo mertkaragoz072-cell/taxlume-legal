@@ -41,6 +41,7 @@ import {
   cardShadow,
   COLORS,
   CONTENT_MAX_WIDTH,
+  SCREEN_PADDING,
   FONT,
   glowShadow,
   GOLD_GRADIENT,
@@ -86,7 +87,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   // MarketScreen for why (iPad: charts used to stop partway across a much
   // wider card instead of filling it).
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
@@ -764,7 +765,7 @@ const styles = StyleSheet.create({
   doctrineBtn: { borderRadius: 12, paddingVertical: 10, alignItems: "center", overflow: "hidden" },
   doctrineBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 13 },
   doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   moodCard: {
     flexDirection: "row",
     alignItems: "center",

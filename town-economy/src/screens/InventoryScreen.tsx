@@ -7,7 +7,18 @@ import { SectionLabel } from "../components/SectionLabel";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { storageCapacity, totalGoodsHolding } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  RADIUS,
+  SCREEN_PADDING,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
@@ -97,7 +108,7 @@ export function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   summaryCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,

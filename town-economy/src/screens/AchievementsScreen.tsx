@@ -32,6 +32,7 @@ import {
   cardShadow,
   COLORS,
   CONTENT_MAX_WIDTH,
+  SCREEN_PADDING,
   FONT,
   GOLD_GRADIENT,
   RADIUS,
@@ -52,7 +53,7 @@ export function AchievementsScreen() {
   // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
   // MarketScreen for why.
   const { width: screenWidth } = useWindowDimensions();
-  const netWorthChartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
+  const netWorthChartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
   const unlockedCount = state.unlockedAchievements.length;
   const completedQuestCount = state.dailyQuests.filter((q) => q.completed).length;
   const miniQuest = state.activeMiniQuest;
@@ -563,7 +564,7 @@ export function AchievementsScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   summaryCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,

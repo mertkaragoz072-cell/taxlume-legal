@@ -4,7 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { FlashDealInstance, flashDealMultiplier } from "../economy/flashDeals";
 import { GOODS_BY_ID } from "../economy/goods";
 import { TICK_MS } from "../economy/useEconomy";
-import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, RADIUS, SCREEN_PADDING, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 const ACCENT = "#ffd75e";
 
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: SPACING.lg,
+    marginHorizontal: SCREEN_PADDING,
     marginBottom: SPACING.sm,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,

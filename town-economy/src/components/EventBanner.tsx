@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text } from "react-native";
 import { EconomyEvent } from "../economy/types";
 import { Language, resolveEventMessage } from "../i18n/t";
+import { SCREEN_PADDING } from "../theme";
 
 interface Props {
   event: EconomyEvent | null;
@@ -69,7 +70,7 @@ export function EventBanner({ event, language }: Props) {
 
 const styles = StyleSheet.create({
   banner: {
-    marginHorizontal: 14,
+    marginHorizontal: SCREEN_PADDING,
     marginTop: 10,
     borderRadius: 10,
     paddingVertical: 8,

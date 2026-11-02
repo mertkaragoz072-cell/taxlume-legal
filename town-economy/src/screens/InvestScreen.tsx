@@ -14,6 +14,7 @@ import {
   CARD_GRADIENT,
   COLORS,
   CONTENT_MAX_WIDTH,
+  SCREEN_PADDING,
   FONT,
   RADIUS,
   SPACING,
@@ -35,10 +36,10 @@ export function InvestScreen({ sounds }: Props) {
   // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
   // MarketScreen for why.
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - 48;
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
   // All 4 assets fit the row at once — see MarketScreen's goodCardWidth
   // for why this is computed rather than a fixed guess.
-  const assetsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SPACING.lg * 2;
+  const assetsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2;
   const assetCardWidth = (assetsRowWidth - SPACING.sm * 3) / 4;
   const formatPrice = (v: number) => formatCoins(v, 2);
   const [selectedId, setSelectedId] = useState<AssetId>(ASSETS[0].id);
@@ -161,7 +162,7 @@ export function InvestScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   portfolioCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md + 2,

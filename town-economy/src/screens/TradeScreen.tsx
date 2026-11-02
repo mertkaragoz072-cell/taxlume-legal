@@ -38,6 +38,7 @@ import {
   FONT,
   GREEN_GRADIENT,
   RADIUS,
+  SCREEN_PADDING,
   SPACING,
   TYPE,
   WEIGHT,
@@ -854,7 +855,7 @@ function clamp01(v: number): number {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   roadBanner: {
     borderRadius: RADIUS.card,
     padding: SPACING.md,

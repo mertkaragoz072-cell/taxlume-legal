@@ -13,6 +13,7 @@ import {
   FONT,
   GOLD_GRADIENT,
   RADIUS,
+  SCREEN_PADDING,
   SPACING,
   TYPE,
   WEIGHT,
@@ -113,7 +114,7 @@ export function ResearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, lineHeight: 17 },
   goodGroup: { marginBottom: SPACING.lg + 2 },
   goodHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm },

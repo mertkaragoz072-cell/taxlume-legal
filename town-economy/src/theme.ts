@@ -10,6 +10,10 @@ import { ViewStyle } from "react-native";
 // thin, and is a no-op on every phone, which is already narrower than this.
 export const CONTENT_MAX_WIDTH = 680;
 
+/** Side/top padding of every screen's scroll body. Kept small so cards and
+ * panels run nearly edge to edge and the screen reads as full. */
+export const SCREEN_PADDING = 6;
+
 // --- Design tokens ---------------------------------------------------------
 // A single small scale for text size/weight and spacing so every screen
 // draws from the same ruler instead of each one picking its own numbers —
