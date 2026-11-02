@@ -55,6 +55,10 @@ export function SectionLabel({ text }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     height: RIBBON_HEIGHT,
+    // Sized to its text, not stretched to the screen's full width — the
+    // reference shows this ribbon running only as wide as the label
+    // needs, not edge to edge like the quest banner above it.
+    alignSelf: "flex-start",
     justifyContent: "center",
     paddingLeft: LEFT_CAP_WIDTH + 6,
     paddingRight: RIGHT_CAP_WIDTH + 10,
