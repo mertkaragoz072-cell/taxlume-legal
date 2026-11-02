@@ -13,10 +13,14 @@ import { GoodId } from "./types";
 // isn't in GoodId at all) just keeps showing its emoji, no code change
 // needed when this list is partial.
 export const GOOD_IMAGES: Partial<Record<GoodId, number>> = {
-  grain: require("../../assets/goods/grain.png"),
-  wool: require("../../assets/goods/wool.png"),
-  sand: require("../../assets/goods/sand.png"),
-  bread: require("../../assets/goods/bread.png"),
+  // Newer, higher-resolution art for these four, cropped from a reference
+  // sheet sent for that purpose — same role as every entry below, this
+  // file is still the one place GoodIcon looks up art, just pointed at
+  // the newer source for these.
+  grain: require("../../assets/resources/wheat.png"),
+  wool: require("../../assets/resources/cotton.png"),
+  sand: require("../../assets/resources/sand_sack.png"),
+  bread: require("../../assets/resources/bread.png"),
   milk: require("../../assets/goods/milk.png"),
   wood: require("../../assets/goods/wood.png"),
   iron: require("../../assets/goods/iron.png"),
