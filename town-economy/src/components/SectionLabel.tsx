@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import ribbonLeft from "../../assets/ui/sectionribbon/left.png";
 import ribbonMid from "../../assets/ui/sectionribbon/mid.png";
 import ribbonRight from "../../assets/ui/sectionribbon/right.png";
-import { FONT, TYPE, WEIGHT } from "../theme";
+import { FONT, TYPE } from "../theme";
 
 interface Props {
   text: string;
@@ -69,8 +69,11 @@ const styles = StyleSheet.create({
   label: {
     color: "#f4e8ce",
     fontSize: TYPE.title,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
+    // The app's one decorative flourish (see FONT.display's own comment in
+    // theme.ts) rather than the plain body sans — this sits on carved
+    // ribbon art the same way the town name sits on its carved sign, where
+    // that extra flourish reads as part of the engraving.
+    fontFamily: FONT.display,
     letterSpacing: 1,
   },
 });
