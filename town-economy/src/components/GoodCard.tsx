@@ -1,6 +1,7 @@
 import React from "react";
 import { formatPercent } from "../utils/formatNumber";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import {
@@ -70,9 +71,9 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   // card that got smaller around them.
   const scale = width / BASE_WIDTH;
   const cardPadding = Math.round(SPACING.md * scale);
-  const iconSize = Math.round(26 * scale);
+  const iconSize = Math.round(52 * scale);
   const chartWidth = Math.max(32, Math.round(88 * scale));
-  const chartHeight = Math.max(16, Math.round(42 * scale));
+  const chartHeight = Math.max(20, Math.round(56 * scale));
 
   return (
     // The shadow lives on this plain, never-animated View rather than on
@@ -146,7 +147,12 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
               {t(good.producerKey)}
             </Text>
           )}
-          <Text style={styles.price}>{state.price.toFixed(2)} 🪙</Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.price} numberOfLines={1}>
+              {state.price.toFixed(2)}
+            </Text>
+            <Image source={coinIcon} style={styles.coin} resizeMode="contain" />
+          </View>
           {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
         </View>
       </ScalePressable>
@@ -187,21 +193,26 @@ const styles = StyleSheet.create({
     backgroundColor: PARCHMENT.paper,
     paddingTop: SPACING.xs + 2,
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginBottom: 2,
-  },
-  change: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  // Icon above the move rather than beside it — at four cards across there
+  // isn't room for a big icon and a readable "▲ +1.4%" on one line.
+  topRow: { alignItems: "center", width: "100%", marginBottom: 4 },
+  change: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginTop: 2 },
   name: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.title,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
+    fontSize: TYPE.heading,
+    fontWeight: WEIGHT.black,
+    fontFamily: FONT.black,
   },
-  producer: { color: PARCHMENT.inkMuted, fontSize: TYPE.caption, marginTop: 1 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.title, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  producer: {
+    color: PARCHMENT.inkMuted,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+    marginTop: 1,
+  },
+  priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  coin: { width: 16, height: 16 },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,
