@@ -10,6 +10,9 @@ interface Props {
   strokeWidth?: number;
   /** the gradient area fill under the curve — off gives a plain, airier line */
   filled?: boolean;
+  /** false draws straight segments between ticks instead of the rounded
+   * curve — the jagged, candle-ish look of the market cards */
+  smooth?: boolean;
   /** shows min/max price labels and enables a press-and-drag crosshair —
    * meant for the big standalone charts, not the small sparklines on cards */
   interactive?: boolean;
@@ -46,6 +49,7 @@ export function PriceChart({
   height,
   strokeWidth = 2.5,
   filled = true,
+  smooth = true,
   interactive = false,
 }: Props) {
   // Wrapped in a plain View rather than returning the <Svg> bare: on web,
@@ -95,7 +99,9 @@ export function PriceChart({
     y: height - padY - ((value - min) / span) * (height - padY * 2),
   }));
 
-  const linePath = smoothLinePath(points);
+  const linePath = smooth
+    ? smoothLinePath(points)
+    : `M ${points.map((pt) => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(" L ")}`;
   // Same curve, closed down to the baseline — a soft gradient fill under
   // the line is what makes a chart read as "financial" rather than a bare
   // line plot (Robinhood/Yahoo Finance-style area chart).

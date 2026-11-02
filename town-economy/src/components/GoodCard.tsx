@@ -100,7 +100,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           {selected && (
             <View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.16) }]}
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.24) }]}
             />
           )}
           <Animated.View
@@ -116,25 +116,39 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           )}
           <View style={styles.topRow}>
             <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
-            <Text
-              numberOfLines={1}
-              style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}
-            >
-              {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
-              {formatPercent(change, economy.language, 1)}
-            </Text>
+            <View style={styles.changeWrap}>
+              {change !== 0 && (
+                <Text style={[styles.arrow, { color: positive ? COLORS.positive : COLORS.negative }]}>
+                  {positive ? "▲" : "▼"}
+                </Text>
+              )}
+              <Text
+                numberOfLines={1}
+                style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}
+              >
+                {positive ? "+" : ""}
+                {formatPercent(change, economy.language, 1)}
+              </Text>
+            </View>
           </View>
-          <PriceChart
-            history={state.history}
-            color={good.color}
-            width={chartWidth}
-            height={chartHeight}
-            strokeWidth={2}
-          />
+          <View style={[styles.chartBox, { backgroundColor: withAlpha(good.color, 0.12) }]}>
+            <PriceChart
+              history={state.history}
+              color={good.color}
+              width={chartWidth}
+              height={chartHeight}
+              strokeWidth={1.5}
+              smooth={false}
+            />
+          </View>
         </View>
         {/* The identity half — name, who makes it, the price — on a cream
             parchment strip instead of the same dark card, matching the
             reference's two-tone card rather than one uniform dark panel. */}
+        <View pointerEvents="none" style={[styles.rivet, { top: 4, left: 4 }]} />
+        <View pointerEvents="none" style={[styles.rivet, { top: 4, right: 4 }]} />
+        <View pointerEvents="none" style={[styles.rivet, { bottom: 4, left: 4 }]} />
+        <View pointerEvents="none" style={[styles.rivet, { bottom: 4, right: 4 }]} />
         <View style={styles.bottomFrame}>
           <View style={styles.bottomZone}>
             <Text style={styles.name} numberOfLines={1}>
@@ -171,11 +185,11 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopRightRadius: RADIUS.card,
     borderBottomLeftRadius: RADIUS.card,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    zIndex: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    zIndex: 4,
   },
-  badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  badgeText: { color: "#1a1410", fontSize: TYPE.caption, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     borderRadius: RADIUS.card,
     // Same width selected or not, so picking a card never shifts its contents.
@@ -201,16 +215,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: PARCHMENT.paper,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#c9a66b",
+    borderWidth: 2,
+    borderColor: "#b88a4a",
     paddingVertical: SPACING.xs + 1,
     paddingHorizontal: 4,
   },
+  rivet: {
+    position: "absolute",
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#c9a05a",
+    borderWidth: 1,
+    borderColor: "#6b4520",
+    zIndex: 3,
+  },
+  chartBox: {
+    borderRadius: 4,
+    overflow: "hidden",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.12)",
+  },
+  changeWrap: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
+  arrow: { fontSize: TYPE.label },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
+    // Room for the corner badge above the move on every card, badge or
+    // not, so cards in a row keep the same height and alignment.
+    marginTop: 12,
     marginBottom: 4,
   },
   change: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
