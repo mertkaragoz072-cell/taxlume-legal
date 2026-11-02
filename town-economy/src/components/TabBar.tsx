@@ -166,7 +166,7 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
                 layer. */}
             <View style={[styles.iconBadge, isActive && glowShadow(tab.color)]}>
               <Animated.View style={{ transform: [{ scale: badgeScale[i] }] }}>
-                <TabIcon id={tab.id} size={40} active={isActive} />
+                <TabIcon id={tab.id} size={44} active={isActive} />
               </Animated.View>
             </View>
             <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
@@ -217,16 +217,16 @@ const styles = StyleSheet.create({
   // boundary, reads as an intentional choice instead of whatever an emoji
   // font happened to draw.
   iconBadge: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
   },
   label: {
-    fontSize: TYPE.micro,
-    color: COLORS.textMuted,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
+    fontSize: TYPE.caption,
+    color: COLORS.textPrimary,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
   },
 });

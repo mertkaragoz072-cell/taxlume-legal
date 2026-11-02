@@ -13,12 +13,14 @@ import tradeBadge from "../../assets/ui/tabbadges/trade.png";
 interface Props {
   id: ScreenId;
   size: number;
-  /** Full opacity on the active tab, dimmed at rest. These are complete
-   * painted badges — carved-corner panel and icon baked into one image,
-   * each already in its own tab's color — not a flat glyph TabBar can
-   * recolor or gradient-fill itself, so TabBar no longer draws any panel
-   * of its own behind this; opacity is the one state change left for it
-   * to apply. */
+  /** Full opacity on the active tab, only lightly dimmed at rest — enough
+   * to still read as "not the current tab" without the badge's own color
+   * washing out against a busy background. These are complete painted
+   * badges — carved-corner panel and icon baked into one image, each
+   * already in its own tab's color — not a flat glyph TabBar can recolor
+   * or gradient-fill itself, so TabBar no longer draws any panel of its
+   * own behind this; opacity is the one state change left for it to
+   * apply. */
   active: boolean;
 }
 
@@ -42,7 +44,7 @@ export function TabIcon({ id, size, active }: Props) {
   return (
     <Image
       source={BADGES[id]}
-      style={{ width: size, height: size, opacity: active ? 1 : 0.68 }}
+      style={{ width: size, height: size, opacity: active ? 1 : 0.92 }}
       resizeMode="contain"
     />
   );
