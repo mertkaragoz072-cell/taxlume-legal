@@ -1,5 +1,6 @@
 import { Cinzel_700Bold } from "@expo-google-fonts/cinzel";
 import { CinzelDecorative_900Black } from "@expo-google-fonts/cinzel-decorative";
+import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display";
 import {
   Manrope_500Medium,
   Manrope_600SemiBold,
@@ -546,6 +547,7 @@ export default function App() {
   const [fontsLoaded, fontError] = useFonts({
     Cinzel_700Bold,
     CinzelDecorative_900Black,
+    PlayfairDisplay_700Bold,
     Manrope_500Medium,
     Manrope_600SemiBold,
     Manrope_700Bold,

@@ -70,10 +70,10 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   // piece instead of the icon/chart staying fixed-size and overflowing a
   // card that got smaller around them.
   const scale = width / BASE_WIDTH;
-  const cardPadding = Math.round(SPACING.md * scale);
-  const iconSize = Math.round(52 * scale);
+  const cardPadding = Math.round(SPACING.sm * scale) + 2;
+  const iconSize = Math.round(38 * scale);
   const chartWidth = Math.max(32, Math.round(88 * scale));
-  const chartHeight = Math.max(20, Math.round(56 * scale));
+  const chartHeight = Math.max(20, Math.round(44 * scale));
 
   return (
     // The shadow lives on this plain, never-animated View rather than on
@@ -89,7 +89,6 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
       style={[
         styles.card,
         { width, borderColor: selected ? GOLD_BORDER_SELECTED : GOLD_BORDER },
-        selected && { borderWidth: 2 },
         selected && glowShadow(GOLD_BORDER_SELECTED),
       ]}
     >
@@ -117,7 +116,10 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           )}
           <View style={styles.topRow}>
             <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
-            <Text style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}>
+            <Text
+              numberOfLines={1}
+              style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}
+            >
               {change === 0 ? "" : positive ? "▲" : "▼"} {positive ? "+" : ""}
               {formatPercent(change, economy.language, 1)}
             </Text>
@@ -133,27 +135,29 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
         {/* The identity half — name, who makes it, the price — on a cream
             parchment strip instead of the same dark card, matching the
             reference's two-tone card rather than one uniform dark panel. */}
-        <View style={[styles.bottomZone, { paddingHorizontal: cardPadding, paddingBottom: cardPadding }]}>
-          <Text style={styles.name} numberOfLines={1}>
-            {t(good.nameKey)}
-          </Text>
-          {/* Who makes it, in the same breath as the price — a card is no
+        <View style={styles.bottomFrame}>
+          <View style={styles.bottomZone}>
+            <Text style={styles.name} numberOfLines={1}>
+              {t(good.nameKey)}
+            </Text>
+            {/* Who makes it, in the same breath as the price — a card is no
               longer just a number with a squiggle under it, it says
               something about the good before you even tap into it. Assets
               (gold, oil...) have no producer, so this quietly disappears
               for them. */}
-          {good.producerKey && (
-            <Text style={styles.producer} numberOfLines={1}>
-              {t(good.producerKey)}
-            </Text>
-          )}
-          <View style={styles.priceRow}>
-            <Text style={styles.price} numberOfLines={1}>
-              {state.price.toFixed(2)}
-            </Text>
-            <Image source={coinIcon} style={styles.coin} resizeMode="contain" />
+            {good.producerKey && (
+              <Text style={styles.producer} numberOfLines={1}>
+                {t(good.producerKey)}
+              </Text>
+            )}
+            <View style={styles.priceRow}>
+              <Text style={styles.price} numberOfLines={1}>
+                {state.price.toFixed(2)}
+              </Text>
+              <Image source={coinIcon} style={styles.coin} resizeMode="contain" />
+            </View>
+            {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
           </View>
-          {state.holding > 0 && <Text style={styles.holding}>x{state.holding}</Text>}
         </View>
       </ScalePressable>
     </View>
@@ -174,7 +178,8 @@ const styles = StyleSheet.create({
   badgeText: { color: "#1a1410", fontSize: 8, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     borderRadius: RADIUS.card,
-    borderWidth: 1,
+    // Same width selected or not, so picking a card never shifts its contents.
+    borderWidth: 2,
     marginRight: SPACING.sm,
     ...cardShadow,
   },
@@ -184,24 +189,35 @@ const styles = StyleSheet.create({
   cardInner: {
     borderRadius: RADIUS.card,
     overflow: "hidden",
+    backgroundColor: "#2b1b10",
   },
   topZone: { alignItems: "center" },
+  // Dark wood frame around the parchment, so the cream label reads as a
+  // plate inset in the card rather than the card's own bottom half.
+  bottomFrame: { paddingHorizontal: 5, paddingBottom: 5 },
   // The identity half — cream parchment, matching the reference's
   // two-tone card instead of one uniform dark panel.
   bottomZone: {
     alignItems: "center",
     backgroundColor: PARCHMENT.paper,
-    paddingTop: SPACING.xs + 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#c9a66b",
+    paddingVertical: SPACING.xs + 1,
+    paddingHorizontal: 4,
   },
-  // Icon above the move rather than beside it — at four cards across there
-  // isn't room for a big icon and a readable "▲ +1.4%" on one line.
-  topRow: { alignItems: "center", width: "100%", marginBottom: 4 },
-  change: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginTop: 2 },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 4,
+  },
+  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
   name: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.heading,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
+    fontSize: TYPE.title,
+    fontFamily: FONT.serif,
   },
   producer: {
     color: PARCHMENT.inkMuted,
@@ -212,7 +228,7 @@ const styles = StyleSheet.create({
   },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   coin: { width: 16, height: 16 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.heading, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.title, fontFamily: FONT.serif },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,

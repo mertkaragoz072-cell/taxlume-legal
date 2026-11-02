@@ -50,6 +50,9 @@ export const FONT = {
   // plain card background, where the extra flourish reads as part of the
   // engraving instead of just a heavier weight.
   signage: "CinzelDecorative_900Black",
+  // A readable lowercase serif (Cinzel only has capitals) for names and
+  // prices on parchment, where the cards read as printed labels.
+  serif: "PlayfairDisplay_700Bold",
 } as const;
 
 export const SPACING = {
