@@ -131,14 +131,16 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
               </Text>
             </View>
           </View>
-          <View style={[styles.chartBox, { backgroundColor: withAlpha(good.color, 0.12) }]}>
+          <View style={styles.chartBox}>
             <PriceChart
               history={state.history}
               color={good.color}
               width={chartWidth}
               height={chartHeight}
-              strokeWidth={1.5}
+              strokeWidth={2}
               smooth={false}
+              filled={false}
+              baseline={false}
             />
           </View>
         </View>
@@ -230,14 +232,9 @@ const styles = StyleSheet.create({
     borderColor: "#6b4520",
     zIndex: 3,
   },
-  chartBox: {
-    borderRadius: 4,
-    overflow: "hidden",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.12)",
-  },
+  chartBox: { overflow: "hidden" },
   changeWrap: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
-  arrow: { fontSize: TYPE.label },
+  arrow: { fontSize: TYPE.caption },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -248,7 +245,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
   },
-  change: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
+  change: { fontSize: TYPE.label, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
   name: {
     color: PARCHMENT.ink,
     fontSize: TYPE.heading,

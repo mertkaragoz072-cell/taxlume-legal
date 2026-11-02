@@ -13,6 +13,8 @@ interface Props {
   /** false draws straight segments between ticks instead of the rounded
    * curve — the jagged, candle-ish look of the market cards */
   smooth?: boolean;
+  /** the faint dashed line at the latest price — off for a bare line */
+  baseline?: boolean;
   /** shows min/max price labels and enables a press-and-drag crosshair —
    * meant for the big standalone charts, not the small sparklines on cards */
   interactive?: boolean;
@@ -50,6 +52,7 @@ export function PriceChart({
   strokeWidth = 2.5,
   filled = true,
   smooth = true,
+  baseline = true,
   interactive = false,
 }: Props) {
   // Wrapped in a plain View rather than returning the <Svg> bare: on web,
@@ -143,16 +146,18 @@ export function PriceChart({
             <Path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
           </>
         )}
-        <Line
-          x1={0}
-          y1={lastY}
-          x2={width}
-          y2={lastY}
-          stroke={color}
-          strokeWidth={1}
-          strokeDasharray="3,4"
-          opacity={0.25}
-        />
+        {baseline && (
+          <Line
+            x1={0}
+            y1={lastY}
+            x2={width}
+            y2={lastY}
+            stroke={color}
+            strokeWidth={1}
+            strokeDasharray="3,4"
+            opacity={0.25}
+          />
+        )}
         <Path
           d={linePath}
           fill="none"
