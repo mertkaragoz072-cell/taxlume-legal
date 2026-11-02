@@ -18,7 +18,7 @@ interface Props {
 // banner's ribbon and the title plate — one real cropped image, not a
 // CSS-drawn bar, so a longer section label just stretches the middle
 // instead of distorting the wheat sprig or the gold tip.
-const RIBBON_HEIGHT = 30;
+const RIBBON_HEIGHT = 40;
 const LEFT_CAP_ASPECT = 460 / 475;
 const RIGHT_CAP_ASPECT = 168 / 475;
 const LEFT_CAP_WIDTH = Math.round(RIBBON_HEIGHT * LEFT_CAP_ASPECT);
@@ -62,13 +62,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingLeft: LEFT_CAP_WIDTH + 6,
     paddingRight: RIGHT_CAP_WIDTH + 10,
-    marginBottom: 6,
+    // Sits directly on the panel below it — no gap.
+    marginBottom: 0,
     marginTop: 2,
   },
   bg: { flexDirection: "row" },
   label: {
     color: "#f4e8ce",
-    fontSize: TYPE.title,
+    fontSize: TYPE.heading + 2,
     // The app's one decorative flourish (see FONT.display's own comment in
     // theme.ts) rather than the plain body sans — this sits on carved
     // ribbon art the same way the town name sits on its carved sign, where
