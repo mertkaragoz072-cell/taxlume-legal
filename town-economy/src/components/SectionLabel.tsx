@@ -62,8 +62,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingLeft: LEFT_CAP_WIDTH + 6,
     paddingRight: RIGHT_CAP_WIDTH + 10,
-    // Sits directly on the panel below it — no gap.
-    marginBottom: 0,
+    // Tucks over the top edge of the panel below, like the reference's
+    // ribbons overlapping the cards they title.
+    marginBottom: -8,
+    zIndex: 2,
     marginTop: 2,
   },
   bg: { flexDirection: "row" },
