@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingLeft: LEFT_CAP_WIDTH + 6,
     paddingRight: RIGHT_CAP_WIDTH + 10,
-    marginBottom: 10,
-    marginTop: 6,
+    marginBottom: 6,
+    marginTop: 2,
   },
   bg: { flexDirection: "row" },
   label: {

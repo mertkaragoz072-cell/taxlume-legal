@@ -13,6 +13,7 @@ import {
   COLORS,
   FONT,
   RADIUS,
+  PANEL_GAP,
   SCREEN_PADDING,
   SPACING,
   TYPE,
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
   storageCard: {
     borderRadius: RADIUS.card,
     padding: SPACING.md,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },

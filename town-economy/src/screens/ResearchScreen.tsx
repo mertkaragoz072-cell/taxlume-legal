@@ -13,6 +13,7 @@ import {
   FONT,
   GOLD_GRADIENT,
   RADIUS,
+  PANEL_GAP,
   SCREEN_PADDING,
   SPACING,
   TYPE,
@@ -115,8 +116,8 @@ export function ResearchScreen() {
 
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, lineHeight: 17 },
-  goodGroup: { marginBottom: SPACING.lg + 2 },
+  sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: PANEL_GAP, lineHeight: 17 },
+  goodGroup: { marginBottom: PANEL_GAP },
   goodHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm },
   goodHeaderIcon: { fontSize: TYPE.heading, marginRight: SPACING.sm },
   goodHeaderName: {

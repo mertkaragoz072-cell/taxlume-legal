@@ -41,6 +41,7 @@ import {
   cardShadow,
   COLORS,
   CONTENT_MAX_WIDTH,
+  PANEL_GAP,
   SCREEN_PADDING,
   FONT,
   glowShadow,
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
   doctrineCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -771,7 +772,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -791,7 +792,7 @@ const styles = StyleSheet.create({
   factorsCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -814,7 +815,7 @@ const styles = StyleSheet.create({
   taxCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -849,7 +850,7 @@ const styles = StyleSheet.create({
   prestigeCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -924,7 +925,7 @@ const styles = StyleSheet.create({
   bankCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -975,7 +976,7 @@ const styles = StyleSheet.create({
   workersLockedCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -1025,7 +1026,7 @@ const styles = StyleSheet.create({
   chartCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -1040,7 +1041,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: SPACING.sm + 2,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
   },
   buildingCard: {
     width: "31%",

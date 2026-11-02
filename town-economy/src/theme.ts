@@ -14,6 +14,10 @@ export const CONTENT_MAX_WIDTH = 680;
  * panels run nearly edge to edge and the screen reads as full. */
 export const SCREEN_PADDING = 6;
 
+/** Gap between stacked panels/cards on a screen — kept tight so the screen
+ * reads as one dense, full layout instead of floating boxes. */
+export const PANEL_GAP = 8;
+
 // --- Design tokens ---------------------------------------------------------
 // A single small scale for text size/weight and spacing so every screen
 // draws from the same ruler instead of each one picking its own numbers —

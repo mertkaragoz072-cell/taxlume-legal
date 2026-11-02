@@ -416,7 +416,7 @@ export function InflationHeader({
 const styles = StyleSheet.create({
   wrap: {
     paddingTop: 8,
-    paddingBottom: 10,
+    paddingBottom: 4,
     paddingHorizontal: 14,
     overflow: "hidden",
   },

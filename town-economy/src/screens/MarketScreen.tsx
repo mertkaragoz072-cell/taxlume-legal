@@ -31,6 +31,7 @@ import {
   CARD_GRADIENT,
   COLORS,
   CONTENT_MAX_WIDTH,
+  PANEL_GAP,
   SCREEN_PADDING,
   FONT,
   GOLD_GRADIENT,
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
   pulseCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md + 2,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -600,7 +601,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: RADIUS.feature,
     padding: SPACING.md + 2,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -629,7 +630,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.feature,
     borderWidth: 1.5,
     padding: SPACING.lg,
-    marginBottom: SPACING.lg + 2,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -667,7 +668,7 @@ const styles = StyleSheet.create({
   // Bleeds past the screen body's own padding so a half-visible card
   // reaches the screen edge instead of being cut off short of it, while
   // the first card still lines up with the content above.
-  goodsRow: { marginBottom: SPACING.lg + 2, marginHorizontal: -SCREEN_PADDING },
+  goodsRow: { marginBottom: PANEL_GAP, marginHorizontal: -SCREEN_PADDING },
   goodsRowContent: { paddingHorizontal: SCREEN_PADDING },
   // Width comes from the same goodCardWidth calc as the unlocked row above
   // it (passed inline), so the two rows read at the same scale and both
@@ -721,7 +722,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   gameOverBox: {
-    marginTop: SPACING.lg + 2,
+    marginTop: PANEL_GAP,
     backgroundColor: "#3a1f1a",
     borderRadius: RADIUS.card,
     padding: SPACING.lg,
@@ -739,7 +740,7 @@ const styles = StyleSheet.create({
   autoTradePanel: {
     borderRadius: RADIUS.card,
     padding: SPACING.md + 2,
-    marginBottom: SPACING.lg + 2,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },

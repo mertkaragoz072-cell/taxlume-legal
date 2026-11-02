@@ -32,6 +32,7 @@ import {
   cardShadow,
   COLORS,
   CONTENT_MAX_WIDTH,
+  PANEL_GAP,
   SCREEN_PADDING,
   FONT,
   GOLD_GRADIENT,
@@ -568,7 +569,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -586,7 +587,7 @@ const styles = StyleSheet.create({
   statsCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -599,7 +600,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.black,
   },
   statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, textAlign: "center", marginTop: 2 },
-  hallOfFameRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.xl - 4 },
+  hallOfFameRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: PANEL_GAP },
   hallOfFameChip: {
     flex: 1,
     borderRadius: RADIUS.card,
@@ -618,7 +619,7 @@ const styles = StyleSheet.create({
   netWorthChartCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -643,7 +644,7 @@ const styles = StyleSheet.create({
   compendiumCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },

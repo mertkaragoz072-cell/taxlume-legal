@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
     // EventBanner/ComboBanner above it carry no bottom margin of their own,
     // so without this the two sit flush against each other with no seam —
     // exactly the crowded look this was reported for.
-    marginTop: SPACING.md,
-    marginBottom: SPACING.sm,
+    marginTop: SPACING.xs,
+    marginBottom: SPACING.xs,
     aspectRatio: PANEL_ASPECT_RATIO,
     overflow: "hidden",
   },

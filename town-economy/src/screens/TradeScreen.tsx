@@ -38,6 +38,7 @@ import {
   FONT,
   GREEN_GRADIENT,
   RADIUS,
+  PANEL_GAP,
   SCREEN_PADDING,
   SPACING,
   TYPE,
@@ -859,7 +860,7 @@ const styles = StyleSheet.create({
   roadBanner: {
     borderRadius: RADIUS.card,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -885,7 +886,7 @@ const styles = StyleSheet.create({
     fontSize: TYPE.body,
     textAlign: "center",
     lineHeight: 18,
-    marginBottom: SPACING.lg + 2,
+    marginBottom: PANEL_GAP,
   },
   lockedTrack: {
     width: "100%",
@@ -907,7 +908,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: RADIUS.feature,
     padding: SPACING.md + 2,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -931,7 +932,7 @@ const styles = StyleSheet.create({
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
-  townRow: { marginBottom: SPACING.xl - 4 },
+  townRow: { marginBottom: PANEL_GAP },
   townPill: {
     borderRadius: RADIUS.card,
     padding: SPACING.md,
@@ -955,7 +956,7 @@ const styles = StyleSheet.create({
   heatmapCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.sm + 2,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
@@ -1003,7 +1004,7 @@ const styles = StyleSheet.create({
   panel: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
-    marginBottom: SPACING.xl - 4,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
