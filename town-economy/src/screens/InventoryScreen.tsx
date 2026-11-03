@@ -4,7 +4,6 @@ import { Image, ScrollView, StyleSheet, View } from "react-native";
 import bagImg from "../../assets/ui/inventory/bag.png";
 import coinsImg from "../../assets/ui/inventory/coins.png";
 import crateImg from "../../assets/ui/inventory/crate.png";
-import stonesImg from "../../assets/ui/inventory/stones.png";
 import sceneImg from "../../assets/ui/inventory/scene.png";
 import storageImg from "../../assets/ui/inventory/storage.png";
 import summaryImg from "../../assets/ui/inventory/summary.png";
@@ -37,7 +36,7 @@ export function InventoryScreen() {
   const storagePct = capacity > 0 ? Math.min(1, usedStorage / capacity) : 0;
 
   return (
-    <ScrollView contentContainerStyle={[styles.body, { flexGrow: 1 }]} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <BeamTitle title={t("tabs.inventory")} />
       <FixedPanel source={summaryImg} aspect={764 / 398} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
         {(w) => (
@@ -101,24 +100,18 @@ export function InventoryScreen() {
 
       <AssetRibbon text={t("inventory.sectionLabel")} />
       {holdings.length === 0 && (
-        <View style={styles.emptyWrap}>
-          {/* The scene without its bottom beam, melting into a dark floor that
-              carries the caption and runs down to the tab bar, with the mossy
-              stone wall along its foot — one continuous picture like the
-              reference rather than a scene with a box under it. */}
-          <FixedPanel source={sceneImg} aspect={933 / 425}>
-            {() => (
-              <View style={styles.emptyMelt}>
-                <GradientFill colors={["rgba(24,14,7,0)", "#180e07"]} x1="0" y1="0" x2="0" y2="1" />
-              </View>
-            )}
-          </FixedPanel>
-          <View style={styles.emptyFloor}>
-            <Text style={styles.emptyText}>{t("inventory.emptyTitle")}</Text>
-            <Text style={styles.emptySub}>{t("inventory.emptySubtitle")}</Text>
-          </View>
-          <Image source={stonesImg} style={styles.emptyStones} resizeMode="stretch" />
-        </View>
+        <FixedPanel source={sceneImg} aspect={933 / 425} style={{ marginBottom: PANEL_GAP }}>
+          {(w) => (
+            // Printed straight on the scene's own cobbled floor, under the
+            // chest — no panel or tint behind the words.
+            <View style={styles.emptyCaption}>
+              <Text style={[styles.emptyText, { fontSize: w * 0.036 }]}>{t("inventory.emptyTitle")}</Text>
+              <Text style={[styles.emptySub, { fontSize: w * 0.025 }]} numberOfLines={1}>
+                {t("inventory.emptySubtitle")}
+              </Text>
+            </View>
+          )}
+        </FixedPanel>
       )}
       {holdings.map(({ good, gs }) => {
         const value = gs.holding * gs.price;
@@ -198,21 +191,29 @@ const styles = StyleSheet.create({
     color: COLORS.negative,
     fontSize: TYPE.micro,
   },
-  emptyWrap: {
-    flexGrow: 1,
-    minHeight: 330,
-    marginBottom: PANEL_GAP,
-    backgroundColor: "#180e07",
-    borderRadius: RADIUS.card,
-    borderWidth: 2,
-    borderColor: "#5a3a1e",
-    overflow: "hidden",
+  emptyCaption: {
+    position: "absolute",
+    left: "7%",
+    right: "7%",
+    bottom: "4%",
+    alignItems: "center",
   },
-  emptyMelt: { position: "absolute", left: 0, right: 0, bottom: 0, height: "9%" },
-  emptyFloor: { paddingHorizontal: 18, marginTop: -6, alignItems: "center", zIndex: 2 },
-  emptyText: { color: "#f4e8ce", fontFamily: FONT.bold, fontSize: TYPE.heading, textAlign: "center" },
-  emptySub: { color: "#cdbb98", fontSize: TYPE.body, textAlign: "center", marginTop: 3 },
-  emptyStones: { position: "absolute", left: 0, right: 0, bottom: 0, width: "100%", height: 44 },
+  emptyText: {
+    color: "#f6ead0",
+    fontFamily: FONT.bold,
+    textAlign: "center",
+    textShadowColor: "rgba(10,5,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  emptySub: {
+    color: "#e2d2ae",
+    textAlign: "center",
+    marginTop: 1,
+    textShadowColor: "rgba(10,5,0,0.95)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
