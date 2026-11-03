@@ -105,8 +105,8 @@ export function InventoryScreen() {
             // Printed straight on the scene's own cobbled floor, under the
             // chest — no panel or tint behind the words.
             <View style={styles.emptyCaption}>
-              <Text style={[styles.emptyText, { fontSize: w * 0.036 }]}>{t("inventory.emptyTitle")}</Text>
-              <Text style={[styles.emptySub, { fontSize: w * 0.025 }]} numberOfLines={1}>
+              <Text style={[styles.emptyText, { fontSize: w * 0.046 }]}>{t("inventory.emptyTitle")}</Text>
+              <Text style={[styles.emptySub, { fontSize: w * 0.0255 }]} numberOfLines={1}>
                 {t("inventory.emptySubtitle")}
               </Text>
             </View>
@@ -199,20 +199,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#f6ead0",
-    fontFamily: FONT.bold,
+    color: "#fff3d6",
+    fontFamily: FONT.serif,
     textAlign: "center",
-    textShadowColor: "rgba(10,5,0,0.95)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowColor: "rgba(0,0,0,1)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
   emptySub: {
-    color: "#e2d2ae",
+    color: "#f4e6c4",
+    fontFamily: FONT.bold,
     textAlign: "center",
-    marginTop: 1,
-    textShadowColor: "rgba(10,5,0,0.95)",
+    marginTop: 2,
+    textShadowColor: "rgba(0,0,0,1)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 5,
   },
   row: {
     flexDirection: "row",
