@@ -6,6 +6,7 @@ import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
 import { FONT, GOLD_GRADIENT, PARCHMENT, SPACING, TYPE } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
+import { RibbonLabel } from "./SectionLabel";
 import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
 
 interface Props {
@@ -53,11 +54,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
         accessibilityLabel={t(step.titleKey)}
       >
         <View style={styles.topLine}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText} numberOfLines={1}>
-              {t("onboarding.banner")}
-            </Text>
-          </View>
+          <RibbonLabel text={t("onboarding.banner")} height={28} fontSize={TYPE.label} />
           <Text style={styles.title} numberOfLines={1}>
             {t(step.titleKey)}
           </Text>
@@ -120,15 +117,6 @@ const styles = StyleSheet.create({
   },
   main: { flex: 1, paddingVertical: 6, paddingLeft: 8, paddingRight: 2 },
   topLine: { flexDirection: "row", alignItems: "center", gap: 8 },
-  tag: {
-    backgroundColor: "#2f5a2f",
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: "#c9a05a",
-  },
-  tagText: { color: "#f4e8ce", fontFamily: FONT.display, fontSize: TYPE.caption, letterSpacing: 0.8 },
   title: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.bold, fontSize: TYPE.body },
   rewardWrap: { flexDirection: "row", alignItems: "center", gap: 3 },
   reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.label },
