@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
 import { NG_PLUS_MODIFIERS, ngPlusBonusPrestigePoints } from "../economy/ngPlusModifiers";

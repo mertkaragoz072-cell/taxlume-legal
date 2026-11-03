@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import ribbonLeft from "../../assets/ui/sectionribbon/left.png";
 import ribbonMid from "../../assets/ui/sectionribbon/mid.png";
 import ribbonRight from "../../assets/ui/sectionribbon/right.png";

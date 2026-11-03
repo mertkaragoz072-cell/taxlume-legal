@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
-import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";

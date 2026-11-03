@@ -1,5 +1,6 @@
 import React from "react";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";

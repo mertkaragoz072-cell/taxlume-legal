@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { FONT, TYPE, WEIGHT } from "../theme";
 

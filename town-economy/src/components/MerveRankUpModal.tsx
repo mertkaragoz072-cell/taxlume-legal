@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Modal, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import {

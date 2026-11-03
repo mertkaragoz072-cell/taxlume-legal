@@ -1,14 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import {
-  Animated,
-  Easing,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "../components/AppText";
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from "react-native-svg";
 import logoIllustratedEn from "../../assets/logo/logo-illustrated-en-1000.webp";
 import logoIllustratedTr from "../../assets/logo/logo-illustrated-tr-1000.webp";

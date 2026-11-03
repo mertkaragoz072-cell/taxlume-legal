@@ -1,6 +1,7 @@
 import React from "react";
 import { formatPercent } from "../utils/formatNumber";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "../components/AppText";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { SectionLabel } from "../components/SectionLabel";

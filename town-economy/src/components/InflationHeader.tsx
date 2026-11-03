@@ -1,14 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import {
-  Animated,
-  Easing,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "./AppText";
 import headerMarketImage from "../../assets/ui/header-market.webp";
 import statBarChart from "../../assets/ui/statpanel2/barchart.png";
 import statCoinBullet from "../../assets/ui/statpanel2/coinbullet.png";

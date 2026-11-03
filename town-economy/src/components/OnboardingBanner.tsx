@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import Svg, { Circle } from "react-native-svg";
 import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
 import { useEconomyContext } from "../economy/EconomyContext";

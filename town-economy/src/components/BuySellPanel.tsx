@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { HOT_STREAK_BONUS_PER_TRADE, HOT_STREAK_MAX_BONUS } from "../economy/useEconomy";
 import {

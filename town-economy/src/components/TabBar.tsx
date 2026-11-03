@@ -1,6 +1,7 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
-import { Animated, Image, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Animated, Image, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "./AppText";
 import leafBand from "../../assets/ui/tabbar-leaf-band.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { COLORS, CONTENT_MAX_WIDTH, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";

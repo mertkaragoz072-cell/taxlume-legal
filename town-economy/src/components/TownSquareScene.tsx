@@ -3,12 +3,12 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  Text,
   View,
   Image,
   ImageSourcePropType,
   LayoutChangeEvent,
 } from "react-native";
+import { Text } from "./AppText";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
 import happyMarketplaceImage from "../../assets/happy-marketplace.webp";

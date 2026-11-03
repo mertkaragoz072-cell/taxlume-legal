@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, Text } from "react-native";
+import { Image } from "react-native";
+import { Text } from "./AppText";
 import { AchievementId } from "../economy/achievements";
 import { ACHIEVEMENT_IMAGES } from "../economy/achievementImages";
 

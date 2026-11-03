@@ -1,5 +1,6 @@
 import React from "react";
-import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { OfflineSummary } from "../economy/types";
 import { resolveEventMessage } from "../i18n/t";

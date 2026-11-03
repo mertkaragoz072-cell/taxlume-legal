@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, Text } from "react-native";
+import { Image } from "react-native";
+import { Text } from "./AppText";
 import { GOOD_IMAGES } from "../economy/goodImages";
 import { GoodId } from "../economy/types";
 

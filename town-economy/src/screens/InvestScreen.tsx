@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ASSETS, AssetId } from "../economy/assets";

@@ -4,11 +4,11 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text } from "../components/AppText";
 import * as Clipboard from "expo-clipboard";
 import { AchievementIcon } from "../components/AchievementIcon";
 import { GoodIcon } from "../components/GoodIcon";

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, Text } from "react-native";
+import { Animated, StyleSheet } from "react-native";
+import { Text } from "./AppText";
 import { EconomyEvent } from "../economy/types";
 import { Language, resolveEventMessage } from "../i18n/t";
 import { SCREEN_PADDING } from "../theme";

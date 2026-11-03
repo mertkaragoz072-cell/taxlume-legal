@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { SPEED_BOOST_MULTIPLIER, todayString } from "../economy/useEconomy";

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { BargainingModal } from "../components/BargainingModal";
 import { CaravanRoad } from "../components/CaravanRoad";

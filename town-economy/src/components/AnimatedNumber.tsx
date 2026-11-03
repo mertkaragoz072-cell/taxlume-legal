@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextProps } from "react-native";
+import { TextProps } from "react-native";
+import { Text } from "./AppText";
 
 interface Props extends TextProps {
   value: number;

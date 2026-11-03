@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-native-svg";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";

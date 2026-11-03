@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { Doctrine, DOCTRINES } from "../economy/doctrines";
 import { useEconomyContext } from "../economy/EconomyContext";
 import {

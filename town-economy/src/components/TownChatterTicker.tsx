@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import type { EconomyState } from "../economy/types";
 import { pickTownChatterKey } from "../economy/townChatter";
 import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, PANEL_GAP } from "../theme";

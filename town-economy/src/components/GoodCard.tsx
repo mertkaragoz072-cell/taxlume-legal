@@ -1,6 +1,7 @@
 import React from "react";
 import { formatPercent } from "../utils/formatNumber";
-import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { usePriceFlash } from "../hooks/usePriceFlash";

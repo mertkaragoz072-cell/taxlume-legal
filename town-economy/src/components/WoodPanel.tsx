@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, ImageSourcePropType, StyleSheet, Text, View } from "react-native";
+import { Image, ImageSourcePropType, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { cardShadow, FONT, RADIUS, TYPE } from "../theme";
 import { ParchmentBackground } from "./ParchmentBackground";
 

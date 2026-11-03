@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, Text } from "react-native";
+import { Image } from "react-native";
+import { Text } from "./AppText";
 import { upgradeTierForLevel, UPGRADE_IMAGES } from "../economy/upgradeImages";
 import { UpgradeId } from "../economy/types";
 

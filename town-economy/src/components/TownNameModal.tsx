@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { EMBLEM_COLORS, isEmblemUnlocked, TOWN_EMBLEMS } from "../economy/emblems";
 import { TOWN_NAME_MAX_LENGTH } from "../economy/useEconomy";

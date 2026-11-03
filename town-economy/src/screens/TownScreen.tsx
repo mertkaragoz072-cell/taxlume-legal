@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { formatPercent } from "../utils/formatNumber";
-import { Animated, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Text } from "../components/AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { resolveEventMessage } from "../i18n/t";
 import { GOODS } from "../economy/goods";

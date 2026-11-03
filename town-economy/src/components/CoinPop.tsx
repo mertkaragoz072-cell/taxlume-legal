@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
+import silverCoin from "../../assets/ui/statpanel2/coinbullet.png";
 
 const PARTICLE_COUNT = 6;
 
@@ -8,7 +9,7 @@ interface Props {
   trigger: number;
 }
 
-/** A small "🪙" pop meant to sit as an absolute overlay directly on top of
+/** A small silver-coin pop meant to sit as an absolute overlay directly on top of
  * a buy/sell confirm button — unlike ConfettiBurst (a rare, full-screen
  * "big win" moment), this is light enough to replay on every single trade
  * without feeling like spam. */
@@ -59,15 +60,15 @@ export function CoinPop({ trigger }: Props) {
           outputRange: ["0deg", `${p.rotate}deg`],
         });
         return (
-          <Animated.Text
+          <Animated.Image
             key={i}
+            source={silverCoin}
             style={[
               styles.coin,
               { opacity, transform: [{ translateX }, { translateY }, { scale }, { rotate }] },
             ]}
-          >
-            🪙
-          </Animated.Text>
+            resizeMode="contain"
+          />
         );
       })}
     </View>
@@ -84,5 +85,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 10,
   },
-  coin: { position: "absolute", fontSize: 16 },
+  coin: { position: "absolute", width: 18, height: 18 },
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Modal, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
