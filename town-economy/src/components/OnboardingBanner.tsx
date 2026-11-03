@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
@@ -43,6 +44,55 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   // about, the banner is a standing instruction and nothing more.
   const alreadyHere = step.screen === activeScreen;
   const progressPct = (state.onboardingStep / ONBOARDING_STEPS.length) * 100;
+
+  // Off the Market tab the task shrinks to one slim pill — progress ring,
+  // the task's name and a chevron — so it stays one tap away without
+  // pushing every other screen's content down. Where the task is done it
+  // opens its description in place; anywhere else a tap goes to the task.
+  if (activeScreen !== "market") {
+    const R = 11;
+    const C = 2 * Math.PI * R;
+    return (
+      <View style={styles.pillWrap}>
+        <Pressable
+          style={styles.pill}
+          onPress={() => (alreadyHere ? setExpanded((v) => !v) : onGoToScreen(step.screen))}
+          accessibilityRole="button"
+          accessibilityLabel={t(step.titleKey)}
+          accessibilityState={{ expanded }}
+        >
+          <View style={styles.ring}>
+            <Svg width={28} height={28} viewBox="0 0 28 28">
+              <Circle cx={14} cy={14} r={R} stroke="rgba(244,232,206,0.18)" strokeWidth={3} fill="none" />
+              <Circle
+                cx={14}
+                cy={14}
+                r={R}
+                stroke="#e8c777"
+                strokeWidth={3}
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={`${(C * Math.max(progressPct, 6)) / 100} ${C}`}
+                transform="rotate(-90 14 14)"
+              />
+            </Svg>
+            <Text style={styles.ringText}>{state.onboardingStep}</Text>
+          </View>
+          <Text style={styles.pillTitle} numberOfLines={1}>
+            {t(step.titleKey)}
+          </Text>
+          <Text style={styles.pillReward}>+{step.reward}</Text>
+          <Image source={coinIcon} style={styles.pillCoin} resizeMode="contain" />
+          <Text style={styles.pillChevron}>{alreadyHere ? (expanded ? "▴" : "▾") : "›"}</Text>
+        </Pressable>
+        {alreadyHere && expanded && (
+          <View style={styles.pillNote}>
+            <Text style={styles.pillNoteText}>{t(step.descriptionKey)}</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.card}>
@@ -103,6 +153,46 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
 }
 
 const styles = StyleSheet.create({
+  pillWrap: { alignItems: "flex-end", marginHorizontal: 6, marginTop: SPACING.xs, marginBottom: SPACING.xs },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    maxWidth: "100%",
+    gap: 7,
+    paddingVertical: 4,
+    paddingLeft: 5,
+    paddingRight: 11,
+    borderRadius: 999,
+    backgroundColor: "rgba(36,22,12,0.88)",
+    borderWidth: 1.5,
+    borderColor: "rgba(232,199,119,0.65)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  ring: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
+  ringText: {
+    position: "absolute",
+    color: "#f4e8ce",
+    fontFamily: FONT.black,
+    fontSize: TYPE.caption,
+  },
+  pillTitle: { flexShrink: 1, color: "#f4e8ce", fontFamily: FONT.bold, fontSize: TYPE.label },
+  pillReward: { color: "#e8c777", fontFamily: FONT.bold, fontSize: TYPE.label },
+  pillCoin: { width: 13, height: 13, marginLeft: -4 },
+  pillChevron: { color: "#e8c777", fontFamily: FONT.bold, fontSize: TYPE.title, marginTop: -1 },
+  pillNote: {
+    marginTop: 4,
+    alignSelf: "stretch",
+    padding: SPACING.sm,
+    borderRadius: 12,
+    backgroundColor: "rgba(36,22,12,0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(232,199,119,0.35)",
+  },
+  pillNoteText: { color: "#e9dcc0", fontFamily: FONT.regular, fontSize: TYPE.label, lineHeight: 16 },
   card: {
     flexDirection: "row",
     alignItems: "flex-start",
