@@ -22,8 +22,20 @@ import {
 // the reference's border (plain bronze at rest, a brighter gold glow once
 // selected) rather than the good's own accent color, which the badge and
 // chart already carry.
-const GOLD_BORDER = "#a9793f";
-const GOLD_BORDER_SELECTED = "#f0d494";
+const GOLD_BORDER = "#6f4e2e";
+const GOLD_BORDER_SELECTED = "#ffd24a";
+
+// Light/dark ends of the corner ribbon, derived from the badge color the
+// caller passes (orange for sought-after, blue for glutted).
+function shade(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(amount >= 0 ? v + (255 - v) * amount : v * (1 + amount))));
+  const r = ch((n >> 16) & 255);
+  const g = ch((n >> 8) & 255);
+  const b = ch(n & 255);
+  return `rgb(${r},${g},${b})`;
+}
 import { GoodIcon } from "./GoodIcon";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
@@ -89,7 +101,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
       style={[
         styles.card,
         { width, borderColor: selected ? GOLD_BORDER_SELECTED : GOLD_BORDER },
-        selected && glowShadow(GOLD_BORDER_SELECTED),
+        selected && { ...glowShadow(GOLD_BORDER_SELECTED), shadowOpacity: 0.85, shadowRadius: 12 },
       ]}
     >
       <ScalePressable onPress={onPress} style={styles.cardInner}>
@@ -109,7 +121,14 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
             style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity }]}
           />
           {badge && (
-            <View style={[styles.badge, { backgroundColor: withAlpha(badge.color, 0.95) }]}>
+            <View style={styles.badge}>
+              <GradientFill
+                colors={[shade(badge.color, 0.3), shade(badge.color, -0.12)]}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              />
               <Text style={styles.badgeText} numberOfLines={1}>
                 {badge.text}
               </Text>
@@ -148,10 +167,11 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
         {/* The identity half — name, who makes it, the price — on a cream
             parchment strip instead of the same dark card, matching the
             reference's two-tone card rather than one uniform dark panel. */}
-        <View pointerEvents="none" style={[styles.rivet, { top: 4, left: 4 }]} />
-        <View pointerEvents="none" style={[styles.rivet, { top: 4, right: 4 }]} />
-        <View pointerEvents="none" style={[styles.rivet, { bottom: 4, left: 4 }]} />
-        <View pointerEvents="none" style={[styles.rivet, { bottom: 4, right: 4 }]} />
+        <View pointerEvents="none" style={styles.innerFrame} />
+        <View pointerEvents="none" style={[styles.bracket, styles.bracketTL]} />
+        {!badge && <View pointerEvents="none" style={[styles.bracket, styles.bracketTR]} />}
+        <View pointerEvents="none" style={[styles.bracket, styles.bracketBL]} />
+        <View pointerEvents="none" style={[styles.bracket, styles.bracketBR]} />
         <View style={styles.bottomFrame}>
           <View style={styles.bottomZone}>
             <Text style={styles.name} numberOfLines={1}>
@@ -186,13 +206,18 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     right: 0,
-    borderTopRightRadius: RADIUS.card,
-    borderBottomLeftRadius: RADIUS.card,
-    paddingHorizontal: 7,
+    borderTopRightRadius: RADIUS.card - 2,
+    borderBottomLeftRadius: 12,
+    paddingLeft: 10,
+    paddingRight: 7,
     paddingVertical: 2,
+    overflow: "hidden",
+    borderBottomWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: "rgba(60,30,8,0.45)",
     zIndex: 4,
   },
-  badgeText: { color: "#1a1410", fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  badgeText: { color: "#2a1608", fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     borderRadius: RADIUS.card,
     // Same width selected or not, so picking a card never shifts its contents.
@@ -206,7 +231,7 @@ const styles = StyleSheet.create({
   cardInner: {
     borderRadius: RADIUS.card,
     overflow: "hidden",
-    backgroundColor: "#2b1b10",
+    backgroundColor: "#3a2615",
   },
   topZone: { alignItems: "center" },
   // Dark wood frame around the parchment, so the cream label reads as a
@@ -217,22 +242,30 @@ const styles = StyleSheet.create({
   bottomZone: {
     alignItems: "center",
     backgroundColor: PARCHMENT.paper,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "#b88a4a",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#8a5f33",
     paddingVertical: 2,
     paddingHorizontal: 3,
   },
-  rivet: {
+  // A thin lighter bevel line just inside the card's wood border, and an
+  // L-shaped bronze bracket in each corner, like the reference's frame.
+  innerFrame: {
     position: "absolute",
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#a77a3c",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: RADIUS.card - 2,
     borderWidth: 1,
-    borderColor: "#3b2410",
+    borderColor: "rgba(214,170,110,0.35)",
     zIndex: 3,
   },
+  bracket: { position: "absolute", width: 9, height: 9, borderColor: "#b88a4a", zIndex: 5 },
+  bracketTL: { top: 1, left: 1, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 5 },
+  bracketTR: { top: 1, right: 1, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 5 },
+  bracketBL: { bottom: 1, left: 1, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 5 },
+  bracketBR: { bottom: 1, right: 1, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 5 },
   chartBox: { overflow: "hidden" },
   changeWrap: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
   arrow: { fontSize: 8 },
