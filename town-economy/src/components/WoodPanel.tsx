@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, ImageSourcePropType, StyleSheet, Text, View } from "react-native";
-import { cardShadow, FONT, PARCHMENT, RADIUS, TYPE } from "../theme";
+import { cardShadow, FONT, RADIUS, TYPE } from "../theme";
+import { ParchmentBackground } from "./ParchmentBackground";
 
 interface Props {
   /** an emoji, or a real icon image, shown before the title */
@@ -36,11 +37,8 @@ export function WoodPanel({ icon, title, right, children, style }: Props) {
         </View>
       </View>
       <View style={styles.paper}>
+        <ParchmentBackground />
         {children}
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketTL]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketTR]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketBL]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketBR]} />
       </View>
     </View>
   );
@@ -62,18 +60,10 @@ const styles = StyleSheet.create({
   right: { flex: 1, alignItems: "flex-end" },
   rightText: { color: "#f4e8ce", fontFamily: FONT.medium, fontSize: TYPE.label },
   paper: {
-    backgroundColor: PARCHMENT.paper,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#8a5f33",
-    marginHorizontal: 5,
-    marginBottom: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    marginHorizontal: 4,
+    marginBottom: 4,
+    // Clear of the sheet's own border and corner ornaments.
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
-  bracket: { position: "absolute", width: 9, height: 9, borderColor: "#b88a4a" },
-  bracketTL: { top: 1, left: 1, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 4 },
-  bracketTR: { top: 1, right: 1, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 4 },
-  bracketBL: { bottom: 1, left: 1, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 4 },
-  bracketBR: { bottom: 1, right: 1, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 4 },
 });
