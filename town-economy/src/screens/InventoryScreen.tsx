@@ -4,6 +4,7 @@ import { Image, ScrollView, StyleSheet, View } from "react-native";
 import bagImg from "../../assets/ui/inventory/bag.png";
 import coinsImg from "../../assets/ui/inventory/coins.png";
 import crateImg from "../../assets/ui/inventory/crate.png";
+import stonesImg from "../../assets/ui/inventory/stones.png";
 import sceneImg from "../../assets/ui/inventory/scene.png";
 import storageImg from "../../assets/ui/inventory/storage.png";
 import summaryImg from "../../assets/ui/inventory/summary.png";
@@ -100,15 +101,20 @@ export function InventoryScreen() {
 
       <AssetRibbon text={t("inventory.sectionLabel")} />
       {holdings.length === 0 && (
-        <FixedPanel source={sceneImg} aspect={933 / 425} style={{ marginBottom: PANEL_GAP }}>
-          {(w) => (
-            <View style={styles.emptyOverlay}>
-              <GradientFill colors={["rgba(14,8,3,0)", "rgba(14,8,3,0.86)"]} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={[styles.emptyText, { fontSize: w * 0.042 }]}>{t("inventory.emptyTitle")}</Text>
-              <Text style={[styles.emptySub, { fontSize: w * 0.03 }]}>{t("inventory.emptySubtitle")}</Text>
-            </View>
-          )}
-        </FixedPanel>
+        <View style={{ marginBottom: PANEL_GAP }}>
+          <FixedPanel source={sceneImg} aspect={933 / 425}>
+            {() => null}
+          </FixedPanel>
+          {/* The caption sits on a dark floor under the scene, with the mossy
+              stone wall running along its bottom, so the words read under
+              the chest rather than over it. */}
+          <View style={styles.emptyFloor}>
+            <GradientFill colors={["#2a190d", "#140b05"]} x1="0" y1="0" x2="0" y2="1" />
+            <Text style={styles.emptyText}>{t("inventory.emptyTitle")}</Text>
+            <Text style={styles.emptySub}>{t("inventory.emptySubtitle")}</Text>
+            <Image source={stonesImg} style={styles.emptyStones} resizeMode="stretch" />
+          </View>
+        </View>
       )}
       {holdings.map(({ good, gs }) => {
         const value = gs.holding * gs.price;
@@ -188,18 +194,20 @@ const styles = StyleSheet.create({
     color: COLORS.negative,
     fontSize: TYPE.micro,
   },
-  emptyOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "46%",
+  emptyFloor: {
+    marginTop: -3,
+    paddingTop: 12,
+    paddingBottom: 46,
+    paddingHorizontal: 18,
     alignItems: "center",
-    justifyContent: "flex-end",
-    paddingBottom: "5%",
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderColor: "#5a3a1e",
+    overflow: "hidden",
   },
-  emptyText: { color: "#f4e8ce", fontFamily: FONT.bold, textAlign: "center" },
-  emptySub: { color: "#cdbb98", textAlign: "center", marginTop: 2 },
+  emptyText: { color: "#f4e8ce", fontFamily: FONT.bold, fontSize: TYPE.heading, textAlign: "center" },
+  emptySub: { color: "#cdbb98", fontSize: TYPE.body, textAlign: "center", marginTop: 3 },
+  emptyStones: { position: "absolute", left: 0, right: 0, bottom: 0, width: "100%", height: 40 },
   row: {
     flexDirection: "row",
     alignItems: "center",
