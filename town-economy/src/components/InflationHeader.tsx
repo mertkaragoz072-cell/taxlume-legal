@@ -463,10 +463,13 @@ const styles = StyleSheet.create({
   // center.
   plateTextWrap: {
     position: "absolute",
-    left: Math.max(PLATE_CAP_LEFT_W, PLATE_CAP_RIGHT_W),
-    right: Math.max(PLATE_CAP_LEFT_W, PLATE_CAP_RIGHT_W),
+    // Nudged right and up a couple of px: the wood board the name sits on
+    // runs a little past the laurels on the right, and its visual middle is
+    // above the plate image's own box middle.
+    left: Math.max(PLATE_CAP_LEFT_W, PLATE_CAP_RIGHT_W) + 2,
+    right: Math.max(PLATE_CAP_LEFT_W, PLATE_CAP_RIGHT_W) - 2,
     top: 0,
-    bottom: 0,
+    bottom: 5,
     justifyContent: "center",
     alignItems: "center",
   },
