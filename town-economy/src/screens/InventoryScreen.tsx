@@ -4,7 +4,7 @@ import { Image, ScrollView, StyleSheet, View } from "react-native";
 import bagImg from "../../assets/ui/inventory/bag.png";
 import coinsImg from "../../assets/ui/inventory/coins.png";
 import crateImg from "../../assets/ui/inventory/crate.png";
-import sceneImg from "../../assets/ui/inventory/scene.png";
+import sceneImg from "../../assets/ui/inventory/scene_tall.png";
 import storageImg from "../../assets/ui/inventory/storage.png";
 import summaryImg from "../../assets/ui/inventory/summary.png";
 import { Text } from "../components/AppText";
@@ -100,7 +100,7 @@ export function InventoryScreen() {
 
       <AssetRibbon text={t("inventory.sectionLabel")} />
       {holdings.length === 0 && (
-        <FixedPanel source={sceneImg} aspect={933 / 425} style={{ marginBottom: PANEL_GAP }}>
+        <FixedPanel source={sceneImg} aspect={933 / 505} style={{ marginBottom: PANEL_GAP }}>
           {(w) => (
             // Printed straight on the scene's own cobbled floor, under the
             // chest — no panel or tint behind the words.
@@ -193,9 +193,9 @@ const styles = StyleSheet.create({
   },
   emptyCaption: {
     position: "absolute",
-    left: "7%",
-    right: "7%",
-    bottom: "4%",
+    left: "12%",
+    right: "12%",
+    bottom: "22%",
     alignItems: "center",
   },
   emptyText: {
