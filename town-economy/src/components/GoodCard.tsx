@@ -171,8 +171,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
         <View pointerEvents="none" style={styles.innerFrame} />
         <View pointerEvents="none" style={[styles.bracket, styles.bracketTL]} />
         {!badge && <View pointerEvents="none" style={[styles.bracket, styles.bracketTR]} />}
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketBL]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketBR]} />
+
         <View style={styles.bottomFrame}>
           <View style={styles.bottomZone}>
             <Text style={styles.name} numberOfLines={1}>
@@ -237,7 +236,7 @@ const styles = StyleSheet.create({
   topZone: { alignItems: "center" },
   // Dark wood frame around the parchment, so the cream label reads as a
   // plate inset in the card rather than the card's own bottom half.
-  bottomFrame: { paddingHorizontal: 4, paddingBottom: 3 },
+  bottomFrame: { paddingHorizontal: 5, paddingBottom: 5 },
   // The identity half — cream parchment, matching the reference's
   // two-tone card instead of one uniform dark panel.
   bottomZone: {
@@ -246,7 +245,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: "#8a5f33",
-    paddingVertical: 2,
+    paddingTop: 3,
+    paddingBottom: 5,
     paddingHorizontal: 3,
   },
   // A thin lighter bevel line just inside the card's wood border, and an
@@ -265,8 +265,6 @@ const styles = StyleSheet.create({
   bracket: { position: "absolute", width: 9, height: 9, borderColor: "#b88a4a", zIndex: 5 },
   bracketTL: { top: 1, left: 1, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 5 },
   bracketTR: { top: 1, right: 1, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 5 },
-  bracketBL: { bottom: 1, left: 1, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 5 },
-  bracketBR: { bottom: 1, right: 1, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 5 },
   chartBox: { overflow: "hidden" },
   changeWrap: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
   arrow: { fontSize: 8 },
@@ -295,9 +293,15 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     marginTop: 0,
   },
-  priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  coin: { width: 16, height: 16 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.title, fontFamily: FONT.serif, lineHeight: 18 },
+  priceRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  coin: { width: 15, height: 15 },
+  price: {
+    color: PARCHMENT.ink,
+    fontSize: TYPE.title,
+    fontFamily: FONT.serif,
+    lineHeight: 20,
+    fontVariant: ["lining-nums"],
+  },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,
