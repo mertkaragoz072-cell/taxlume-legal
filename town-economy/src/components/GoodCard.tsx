@@ -73,7 +73,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   const cardPadding = Math.round(SPACING.sm * scale) + 2;
   const iconSize = Math.round(38 * scale);
   const chartWidth = Math.max(32, Math.round(88 * scale));
-  const chartHeight = Math.max(20, Math.round(44 * scale));
+  const chartHeight = Math.max(20, Math.round(20 * scale));
 
   return (
     // The shadow lives on this plain, never-animated View rather than on
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   topZone: { alignItems: "center" },
   // Dark wood frame around the parchment, so the cream label reads as a
   // plate inset in the card rather than the card's own bottom half.
-  bottomFrame: { paddingHorizontal: 5, paddingBottom: 5 },
+  bottomFrame: { paddingHorizontal: 4, paddingBottom: 4 },
   // The identity half — cream parchment, matching the reference's
   // two-tone card instead of one uniform dark panel.
   bottomZone: {
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: "#b88a4a",
-    paddingVertical: SPACING.xs + 1,
-    paddingHorizontal: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 3,
   },
   rivet: {
     position: "absolute",
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   chartBox: { overflow: "hidden" },
   changeWrap: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
-  arrow: { fontSize: TYPE.caption },
+  arrow: { fontSize: TYPE.micro },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -242,25 +242,27 @@ const styles = StyleSheet.create({
     width: "100%",
     // Room for the corner badge above the move on every card, badge or
     // not, so cards in a row keep the same height and alignment.
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 3,
+    marginBottom: 1,
   },
-  change: { fontSize: TYPE.label, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
+  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
   name: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.heading,
+    fontSize: TYPE.title - 2,
     fontFamily: FONT.serif,
+    lineHeight: 17,
   },
   producer: {
     color: PARCHMENT.inkMuted,
-    fontSize: TYPE.label,
+    fontSize: TYPE.caption,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
-    marginTop: 1,
+    lineHeight: 13,
+    marginTop: 0,
   },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  coin: { width: 18, height: 18 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.heading, fontFamily: FONT.serif },
+  coin: { width: 15, height: 15 },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.title - 2, fontFamily: FONT.serif, lineHeight: 17 },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,

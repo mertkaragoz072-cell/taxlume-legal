@@ -88,9 +88,9 @@ function dayTintColor(tick: number): string {
 // circles half off the screen on an earlier pass, and one narrow enough to
 // keep them on screen truncated "Golden Town" — flexing to whatever room
 // is actually left of the controls is the only width that's never both.
-const PLATE_HEIGHT = 34;
-const PLATE_CAP_LEFT_W = 24;
-const PLATE_CAP_RIGHT_W = 26;
+const PLATE_HEIGHT = 52;
+const PLATE_CAP_LEFT_W = 36;
+const PLATE_CAP_RIGHT_W = 39;
 
 export function InflationHeader({
   townName,
@@ -352,7 +352,9 @@ export function InflationHeader({
           <View style={styles.stat}>
             <Image source={statCoins} style={styles.statIcon} resizeMode="contain" />
             <View style={styles.statTextCol}>
-              <Text style={styles.statLabel}>{t("header.cash")}</Text>
+              <Text style={styles.statLabel} numberOfLines={1}>
+                {t("header.cash")}
+              </Text>
               <View style={styles.statValueRow}>
                 <AnimatedNumber value={cash} formatter={formatCash} style={styles.statValue} />
                 <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />
@@ -363,7 +365,9 @@ export function InflationHeader({
           <View style={styles.stat}>
             <Image source={statMoneyBag} style={styles.statIcon} resizeMode="contain" />
             <View style={styles.statTextCol}>
-              <Text style={styles.statLabel}>{t("header.netWorth")}</Text>
+              <Text style={styles.statLabel} numberOfLines={1}>
+                {t("header.netWorth")}
+              </Text>
               <View style={styles.statValueRow}>
                 <AnimatedNumber value={netWorth} formatter={formatCash} style={styles.statValue} />
                 <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />
@@ -374,7 +378,9 @@ export function InflationHeader({
           <SpotlightTarget id="inflation" style={[styles.stat, styles.inflationStat]}>
             <Image source={statBarChart} style={styles.statIcon} resizeMode="contain" />
             <View style={styles.inflationTextCol}>
-              <Text style={styles.statLabel}>{t("header.inflation")}</Text>
+              <Text style={styles.statLabel} numberOfLines={1}>
+                {t("header.inflation")}
+              </Text>
               {/* The daily rate is its own line rather than a small Text
                   nested inside the index. Inline, it wrapped wherever it ran
                   out of room — on a narrow phone the closing bracket ended up
@@ -415,7 +421,8 @@ export function InflationHeader({
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingTop: 8,
+    // Headroom above the title row so the market-street scene shows.
+    paddingTop: 46,
     paddingBottom: 4,
     paddingHorizontal: 14,
     overflow: "hidden",
@@ -521,13 +528,13 @@ const styles = StyleSheet.create({
     // floating narrower than the art it sits on.
     marginHorizontal: -14,
     borderRadius: 10,
-    paddingVertical: 20,
+    paddingVertical: 5,
     paddingHorizontal: 14,
     overflow: "hidden",
   },
   statsRow: { flexDirection: "row", alignItems: "center" },
   stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 },
-  statIcon: { width: 26, height: 26 },
+  statIcon: { width: 32, height: 32 },
   // Margin on the divider itself, not just left to whatever space a
   // column's content doesn't use — at the bigger icon/text sizes above,
   // a column could fill its whole flex share and butt straight into the
@@ -539,7 +546,7 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3),
   },
   statTextCol: { flexShrink: 1, minWidth: 0 },
-  statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.label, marginBottom: 2 },
+  statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.caption, marginBottom: 2 },
   statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   statBullet: { width: 13, height: 13 },
   statValue: {

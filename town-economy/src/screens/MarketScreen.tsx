@@ -87,7 +87,7 @@ export function MarketScreen({ sounds }: Props) {
   // sideways to more goods. Wide cards rather than four squeezed across
   // keeps the icon, move and name readable.
   const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2;
-  const goodCardWidth = (goodsRowWidth + SCREEN_PADDING - SPACING.sm * 2) / 2.8;
+  const goodCardWidth = (goodsRowWidth - SPACING.sm * 3) / 4;
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -232,7 +232,7 @@ export function MarketScreen({ sounds }: Props) {
                 <GoodIcon
                   id={g.id}
                   fallback={g.icon}
-                  size={Math.round(26 * (goodCardWidth / 112))}
+                  size={Math.round(36 * (goodCardWidth / 112))}
                   style={styles.lockedIcon}
                 />
                 <Text style={styles.lockedName} numberOfLines={1}>
@@ -676,8 +676,8 @@ const styles = StyleSheet.create({
   lockedCard: {
     borderRadius: RADIUS.card,
     borderWidth: 1,
-    padding: SPACING.sm,
-    paddingTop: SPACING.sm + 2,
+    padding: SPACING.xs + 2,
+    paddingTop: SPACING.sm,
     marginRight: SPACING.sm,
     alignItems: "center",
     overflow: "hidden",
@@ -697,18 +697,18 @@ const styles = StyleSheet.create({
   lockedIcon: { opacity: 0.75 },
   lockedName: {
     color: COLORS.textPrimary,
-    fontSize: TYPE.title,
+    fontSize: TYPE.body,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
-    marginTop: 6,
+    marginTop: 3,
   },
   lockedRankChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    marginTop: SPACING.xs + 2,
+    marginTop: 3,
     paddingHorizontal: SPACING.xs + 2,
-    paddingVertical: 2,
+    paddingVertical: 1,
     borderRadius: RADIUS.chip,
     borderWidth: 1,
     backgroundColor: withAlpha("#000000", 0.25),

@@ -18,7 +18,7 @@ interface Props {
 // one real cropped image, not a CSS-drawn bar, so a longer label just
 // stretches the middle instead of distorting the wheat sprig or the gold
 // tip.
-const RIBBON_HEIGHT = 40;
+const RIBBON_HEIGHT = 28;
 const LEFT_CAP_ASPECT = 460 / 475;
 const RIGHT_CAP_ASPECT = 168 / 475;
 
@@ -32,7 +32,7 @@ interface RibbonProps {
 /** The green/gold wheat ribbon with its label, sized to the text and with
  * no margins of its own — SectionLabel adds the screen-header spacing, the
  * quest strip drops it in as is. */
-export function RibbonLabel({ text, height = RIBBON_HEIGHT, fontSize = TYPE.heading + 2 }: RibbonProps) {
+export function RibbonLabel({ text, height = RIBBON_HEIGHT, fontSize = TYPE.body }: RibbonProps) {
   const leftCap = Math.round(height * LEFT_CAP_ASPECT);
   const rightCap = Math.round(height * RIGHT_CAP_ASPECT);
   return (
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     // Tucks over the top edge of the panel below, like the reference's
     // ribbons overlapping the cards they title.
-    marginBottom: -8,
+    marginBottom: -5,
     zIndex: 2,
     marginTop: 2,
   },
