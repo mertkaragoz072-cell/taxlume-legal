@@ -1,19 +1,22 @@
 import React from "react";
 import { formatPercent } from "../utils/formatNumber";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
+import chestImg from "../../assets/ui/inventory/chest.png";
+import crateImg from "../../assets/ui/inventory/crate.png";
+import sceneImg from "../../assets/ui/inventory/scene.png";
+import storageImg from "../../assets/ui/inventory/storage.png";
+import summaryImg from "../../assets/ui/inventory/summary.png";
 import statCoins from "../../assets/ui/statpanel2/coins.png";
 import statMoneyBag from "../../assets/ui/statpanel2/moneybag.png";
 import { Text } from "../components/AppText";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
-import { PlaquePanel } from "../components/PlaquePanel";
-import { SectionLabel } from "../components/SectionLabel";
+import { AssetRibbon, BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { storageCapacity, totalGoodsHolding } from "../economy/useEconomy";
 import {
   CARD_GRADIENT,
-  cardShadow,
   PARCHMENT,
   COLORS,
   FONT,
@@ -35,69 +38,79 @@ export function InventoryScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <PlaquePanel title={t("tabs.inventory")} style={{ marginBottom: PANEL_GAP }}>
-        <View style={styles.sumRow}>
-          <Image source={statCoins} style={styles.sumIcon} resizeMode="contain" />
-          <Text style={styles.sumLabel}>{t("header.cash")}</Text>
-          <Text style={styles.sumValue}>{formatCoins(state.cash)}</Text>
-        </View>
-        <View style={styles.sumRow}>
-          {/* Placeholder glyph until the crate art arrives. */}
-          <Text style={styles.sumIconGlyph}>📦</Text>
-          <Text style={styles.sumLabel}>{t("inventory.portfolioValue")}</Text>
-          <Text style={styles.sumValue}>{formatCoins(portfolioValue)}</Text>
-        </View>
-        <View style={styles.sumDivider}>
-          <View style={styles.sumLine} />
-          <Text style={styles.sumOrnament}>❖</Text>
-          <View style={styles.sumLine} />
-        </View>
-        <View style={styles.sumRow}>
-          <Image source={statMoneyBag} style={styles.sumIcon} resizeMode="contain" />
-          <Text style={[styles.sumLabel, styles.sumLabelStrong]}>{t("header.netWorth")}</Text>
-          <Text style={[styles.sumValue, styles.sumValueStrong]}>{formatCoins(netWorth)}</Text>
-        </View>
-      </PlaquePanel>
+      <BeamTitle title={t("tabs.inventory")} />
+      <FixedPanel source={summaryImg} aspect={767 / 397} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
+        {(w) => (
+          <>
+            {[
+              { y: 26.7, icon: statCoins, label: t("header.cash"), value: state.cash, strong: false },
+              {
+                y: 50.4,
+                icon: crateImg,
+                label: t("inventory.portfolioValue"),
+                value: portfolioValue,
+                strong: false,
+              },
+              { y: 77, icon: statMoneyBag, label: t("header.netWorth"), value: netWorth, strong: true },
+            ].map((row) => (
+              <View key={row.label} style={[styles.sumRow, { top: `${row.y - 10}%` }]}>
+                <Image
+                  source={row.icon}
+                  style={[styles.sumIcon, { width: w * 0.115 }]}
+                  resizeMode="contain"
+                />
+                <Text style={[styles.sumLabel, { fontSize: w * 0.044 }]} numberOfLines={1}>
+                  {row.label}
+                </Text>
+                <Text
+                  style={[styles.sumValue, { fontSize: w * (row.strong ? 0.054 : 0.05) }]}
+                  numberOfLines={1}
+                >
+                  {formatCoins(row.value)}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+      </FixedPanel>
 
-      <View style={styles.storageCard}>
-        <GradientFill colors={["#3b2616", "#2a1a0e"]} x1="0" y1="0" x2="0" y2="1" />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketTL]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketTR]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketBL]} />
-        <View pointerEvents="none" style={[styles.bracket, styles.bracketBR]} />
-        {/* Placeholder glyph until the chest art arrives. */}
-        <Text style={styles.storageIcon}>🧰</Text>
-        <View style={styles.storageMain}>
-          <View style={styles.storageHeaderRow}>
-            <Text style={styles.storageLabel}>{t("inventory.storageLabel")}</Text>
-            <Text style={styles.storageValue}>
+      <FixedPanel source={storageImg} aspect={736 / 149} style={{ marginBottom: PANEL_GAP }}>
+        {(w) => (
+          <>
+            <Image source={chestImg} style={styles.storageChest} resizeMode="contain" />
+            <Text style={[styles.storageLabel, { fontSize: w * 0.044 }]} numberOfLines={1}>
+              {t("inventory.storageLabel")}
+            </Text>
+            <Text style={[styles.storageValue, { fontSize: w * 0.05 }]} numberOfLines={1}>
               {t("inventory.storageUsage", { used: Math.round(usedStorage), capacity: Math.round(capacity) })}
             </Text>
-          </View>
-          <View style={styles.storageTrack}>
-            <View
-              style={[
-                styles.storageFill,
-                {
-                  width: `${storagePct * 100}%`,
-                  backgroundColor: storagePct >= 1 ? COLORS.negative : "#e8c777",
-                },
-              ]}
-            />
-          </View>
-          {storagePct >= 1 && <Text style={styles.storageFullNote}>{t("inventory.storageFull")}</Text>}
-        </View>
-      </View>
+            <View style={styles.storageTrack}>
+              <View
+                style={[
+                  styles.storageFill,
+                  {
+                    width: `${storagePct * 100}%`,
+                    backgroundColor: storagePct >= 1 ? COLORS.negative : "#e8b84a",
+                  },
+                ]}
+              />
+            </View>
+            {storagePct >= 1 && <Text style={styles.storageFullNote}>{t("inventory.storageFull")}</Text>}
+          </>
+        )}
+      </FixedPanel>
 
-      <SectionLabel text={t("inventory.sectionLabel")} color={COLORS.accent} />
+      <AssetRibbon text={t("inventory.sectionLabel")} />
       {holdings.length === 0 && (
-        <View style={styles.emptyBox}>
-          <GradientFill colors={["#2c1d12", "#1a110a"]} x1="0" y1="0" x2="0" y2="1" />
-          {/* Placeholder for the cellar scene with the open chest. */}
-          <Text style={styles.emptyGlyph}>🧰</Text>
-          <Text style={styles.emptyText}>{t("inventory.emptyTitle")}</Text>
-          <Text style={styles.emptySub}>{t("inventory.emptySubtitle")}</Text>
-        </View>
+        <FixedPanel source={sceneImg} aspect={934 / 428} style={{ marginBottom: PANEL_GAP }}>
+          {(w) => (
+            <View style={styles.emptyOverlay}>
+              <GradientFill colors={["rgba(14,8,3,0)", "rgba(14,8,3,0.86)"]} x1="0" y1="0" x2="0" y2="1" />
+              <Text style={[styles.emptyText, { fontSize: w * 0.042 }]}>{t("inventory.emptyTitle")}</Text>
+              <Text style={[styles.emptySub, { fontSize: w * 0.03 }]}>{t("inventory.emptySubtitle")}</Text>
+            </View>
+          )}
+        </FixedPanel>
       )}
       {holdings.map(({ good, gs }) => {
         const value = gs.holding * gs.price;
@@ -133,60 +146,63 @@ export function InventoryScreen() {
 
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  sumRow: { flexDirection: "row", alignItems: "center", paddingVertical: 4 },
-  sumIcon: { width: 44, height: 44, marginRight: SPACING.md },
-  sumIconGlyph: { width: 44, fontSize: 30, textAlign: "center", marginRight: SPACING.md },
-  sumLabel: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.medium, fontSize: TYPE.title },
-  sumLabelStrong: { fontFamily: FONT.bold },
-  sumValue: { color: PARCHMENT.ink, fontFamily: FONT.black, fontSize: TYPE.title },
-  sumValueStrong: { fontSize: TYPE.heading },
-  sumDivider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 2 },
-  sumLine: { flex: 1, height: 1, backgroundColor: "rgba(61,36,21,0.3)" },
-  sumOrnament: { color: "#a77a3c", fontSize: TYPE.label },
-  storageCard: {
+  sumRow: {
+    position: "absolute",
+    left: "10%",
+    right: "6.5%",
+    height: "20%",
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: RADIUS.card,
-    borderWidth: 2,
-    borderColor: "#6f4e2e",
-    paddingVertical: SPACING.sm + 2,
-    paddingHorizontal: SPACING.md,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
   },
-  bracket: { position: "absolute", width: 9, height: 9, borderColor: "#b88a4a" },
-  bracketTL: { top: 1, left: 1, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 5 },
-  bracketTR: { top: 1, right: 1, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 5 },
-  bracketBL: { bottom: 1, left: 1, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 5 },
-  bracketBR: { bottom: 1, right: 1, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 5 },
-  storageIcon: { fontSize: 30, marginRight: SPACING.md },
-  storageMain: { flex: 1 },
-  storageHeaderRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.xs },
-  storageLabel: { color: "#d9c7a3", fontFamily: FONT.medium, fontSize: TYPE.body },
-  storageValue: { color: "#f4e8ce", fontFamily: FONT.black, fontSize: TYPE.body },
-  storageTrack: { height: 10, borderRadius: 5, backgroundColor: "#140d07", overflow: "hidden" },
-  storageFill: { height: "100%", borderRadius: 5 },
-  storageFullNote: { color: COLORS.negative, fontSize: TYPE.micro, marginTop: SPACING.xs },
-  emptyBox: {
-    borderRadius: RADIUS.card,
-    borderWidth: 2,
-    borderColor: "#6f4e2e",
-    paddingVertical: SPACING.xl + 8,
-    paddingHorizontal: SPACING.lg,
+  sumIcon: { aspectRatio: 1, marginRight: "3%" },
+  sumLabel: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.serif },
+  sumValue: { color: PARCHMENT.ink, fontFamily: FONT.serif, fontVariant: ["lining-nums"] },
+  storageChest: { position: "absolute", left: "5.2%", top: "17%", width: "13%", height: "66%" },
+  storageLabel: {
+    position: "absolute",
+    left: "21.5%",
+    top: "14%",
+    color: "#f1e3c4",
+    fontFamily: FONT.serif,
+  },
+  storageValue: {
+    position: "absolute",
+    right: "8%",
+    top: "11%",
+    color: "#fff6e0",
+    fontFamily: FONT.serif,
+    fontVariant: ["lining-nums"],
+  },
+  storageTrack: {
+    position: "absolute",
+    left: "20.4%",
+    width: "72.2%",
+    top: "52.5%",
+    height: "20%",
+    borderRadius: 999,
+    overflow: "hidden",
+    padding: 2,
+  },
+  storageFill: { height: "100%", borderRadius: 999 },
+  storageFullNote: {
+    position: "absolute",
+    right: "8%",
+    bottom: "2%",
+    color: COLORS.negative,
+    fontSize: TYPE.micro,
+  },
+  emptyOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "46%",
     alignItems: "center",
-    overflow: "hidden",
-    marginBottom: PANEL_GAP,
+    justifyContent: "flex-end",
+    paddingBottom: "5%",
   },
-  emptyGlyph: { fontSize: 64, marginBottom: SPACING.sm },
-  emptyText: {
-    color: "#f4e8ce",
-    fontFamily: FONT.bold,
-    fontSize: TYPE.heading,
-    marginBottom: SPACING.xs,
-    textAlign: "center",
-  },
-  emptySub: { color: "#bfae8c", fontSize: TYPE.body, textAlign: "center" },
+  emptyText: { color: "#f4e8ce", fontFamily: FONT.bold, textAlign: "center" },
+  emptySub: { color: "#cdbb98", textAlign: "center", marginTop: 2 },
   row: {
     flexDirection: "row",
     alignItems: "center",
