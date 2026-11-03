@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(60,30,8,0.45)",
     zIndex: 4,
   },
-  badgeText: { color: "#2a1608", fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  badgeText: { color: "#2a1608", fontSize: 8.5, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     borderRadius: RADIUS.card,
     // Same width selected or not, so picking a card never shifts its contents.
