@@ -236,15 +236,17 @@ const styles = StyleSheet.create({
   topZone: { alignItems: "center" },
   // Dark wood frame around the parchment, so the cream label reads as a
   // plate inset in the card rather than the card's own bottom half.
-  bottomFrame: { paddingHorizontal: 5, paddingBottom: 5 },
+  bottomFrame: {},
   // The identity half — cream parchment, matching the reference's
   // two-tone card instead of one uniform dark panel.
   bottomZone: {
     alignItems: "center",
     backgroundColor: PARCHMENT.paper,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#8a5f33",
+    // Spans the card's full width and sits on its bottom edge, so it is
+    // exactly as wide as the dark zone above it.
+    borderRadius: 0,
+    borderTopWidth: 2,
+    borderTopColor: "#8a5f33",
     paddingTop: 3,
     paddingBottom: 5,
     paddingHorizontal: 3,
