@@ -97,12 +97,13 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
             usual dark card, same as before. */}
         <View style={[styles.topZone, { padding: cardPadding }]}>
           <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          {selected && (
-            <View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.24) }]}
-            />
-          )}
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: withAlpha(good.color, selected ? 0.36 : 0.16) },
+            ]}
+          />
           <Animated.View
             pointerEvents="none"
             style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity }]}
