@@ -414,7 +414,7 @@ export function InflationHeader({
                 {")"}
               </Text>
             </View>
-            {!compact && (
+            {screenWidth >= 420 && (
               <PriceChart
                 history={inflationHistory}
                 color={hot ? PARCHMENT.negative : "#8a5a14"}
@@ -558,8 +558,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   statsRow: { flexDirection: "row", alignItems: "center" },
-  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 },
-  statIcon: { width: 32, height: 32 },
+  stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, minWidth: 0 },
+  statIcon: { width: 30, height: 30 },
   statIconCompact: { width: 24, height: 24 },
   // Margin on the divider itself, not just left to whatever space a
   // column's content doesn't use — at the bigger icon/text sizes above,
@@ -568,23 +568,23 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: "80%",
-    marginHorizontal: 6,
+    marginHorizontal: 9,
     backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3),
   },
   statTextCol: { flexShrink: 1, minWidth: 0 },
   statLabel: { color: "#5c3f26", fontFamily: FONT.bold, fontSize: TYPE.caption, marginBottom: 2 },
   statValueCompact: { fontSize: TYPE.title },
   statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  statBullet: { width: 13, height: 13 },
+  statBullet: { width: 12, height: 12 },
   statValue: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.heading,
+    fontSize: TYPE.title + 1,
     fontVariant: ["tabular-nums"],
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
   inflationStat: {
-    flex: 1.6,
+    flex: 1.35,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
