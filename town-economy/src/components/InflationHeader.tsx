@@ -88,9 +88,9 @@ function dayTintColor(tick: number): string {
 // circles half off the screen on an earlier pass, and one narrow enough to
 // keep them on screen truncated "Golden Town" — flexing to whatever room
 // is actually left of the controls is the only width that's never both.
-const PLATE_HEIGHT = 52;
-const PLATE_CAP_LEFT_W = 36;
-const PLATE_CAP_RIGHT_W = 39;
+const PLATE_HEIGHT = 56;
+const PLATE_CAP_LEFT_W = 39;
+const PLATE_CAP_RIGHT_W = 42;
 
 export function InflationHeader({
   townName,
@@ -198,7 +198,7 @@ export function InflationHeader({
         style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
         resizeMode="cover"
       />
-      <GradientFill colors={["rgba(15,10,5,0.3)", "rgba(15,10,5,0.88)"]} x1="0" y1="0" x2="0" y2="1" />
+      <GradientFill colors={["rgba(15,10,5,0)", "rgba(15,10,5,0.88)"]} x1="0" y1="0" x2="0" y2="1" />
       <View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
@@ -231,6 +231,9 @@ export function InflationHeader({
             style={{ width: PLATE_CAP_RIGHT_W, height: PLATE_HEIGHT }}
             resizeMode="stretch"
           />
+          <Text style={styles.pencil} pointerEvents="none">
+            ✎
+          </Text>
           <View style={styles.plateTextWrap} pointerEvents="none">
             <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
               {townName.toUpperCase()}
@@ -249,7 +252,7 @@ export function InflationHeader({
           <SpeedBoostButton onPress={onOpenSpeedBoost} />
           <Pressable
             onPress={onHelp}
-            style={[styles.iconBtn, { backgroundColor: withAlpha("#6fb8f2", 0.22) }]}
+            style={styles.iconBtn}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.help")}
           >
@@ -265,7 +268,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onTogglePause}
-            style={[styles.iconBtn, { backgroundColor: withAlpha("#e8c777", 0.22) }]}
+            style={[styles.iconBtn, { borderColor: "#6fb8f2", backgroundColor: "#1d3550" }]}
             accessibilityRole="button"
             accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
           >
@@ -273,7 +276,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onReset}
-            style={[styles.iconBtn, { backgroundColor: withAlpha("#f0776a", 0.22) }]}
+            style={styles.iconBtn}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.newGame")}
           >
@@ -287,29 +290,19 @@ export function InflationHeader({
           style={[
             styles.streakBadge,
             styles.streakBadgeRow,
-            { backgroundColor: withAlpha("#e8c777", 0.18), borderColor: withAlpha("#e8c777", 0.7) },
+            { backgroundColor: "#5a3a1a", borderColor: "#d1a860" },
           ]}
         >
           <Text style={styles.streakBadgeText}>
             {rankIcon} {rankTitle}
           </Text>
         </View>
-        <View
-          style={[
-            styles.streakBadge,
-            { backgroundColor: withAlpha("#6fb8f2", 0.15), borderColor: withAlpha("#6fb8f2", 0.7) },
-          ]}
-        >
+        <View style={[styles.streakBadge, { backgroundColor: "#1f4a78", borderColor: "#7db8ea" }]}>
           <Text style={styles.streakBadgeText}>
             {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
           </Text>
         </View>
-        <View
-          style={[
-            styles.streakBadge,
-            { backgroundColor: withAlpha("#7fcf8a", 0.15), borderColor: withAlpha("#7fcf8a", 0.7) },
-          ]}
-        >
+        <View style={[styles.streakBadge, { backgroundColor: "#2e5a2e", borderColor: "#8fd698" }]}>
           <Text style={styles.streakBadgeText}>
             {seasonFromTick(tick).icon} {t(seasonFromTick(tick).nameKey)} ·{" "}
             {t("header.day", { day: gameDay })}
@@ -320,7 +313,7 @@ export function InflationHeader({
             style={[
               styles.streakBadge,
               styles.streakBadgeRow,
-              { backgroundColor: withAlpha("#f0776a", 0.18), borderColor: withAlpha("#f0776a", 0.7) },
+              { backgroundColor: "#6b1f1f", borderColor: "#f0776a" },
             ]}
           >
             <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
@@ -422,7 +415,7 @@ export function InflationHeader({
 const styles = StyleSheet.create({
   wrap: {
     // Headroom above the title row so the market-street scene shows.
-    paddingTop: 46,
+    paddingTop: 56,
     paddingBottom: 4,
     paddingHorizontal: 14,
     overflow: "hidden",
@@ -441,7 +434,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: SPACING.sm,
-    marginBottom: SPACING.sm,
+    // The plate art has transparent padding top and bottom, so the chip
+    // row below can start inside the row's own height.
+    marginBottom: -6,
   },
   // One line, and it stays one line. A chip that runs out of room shrinks
   // its own label rather than starting a second row and pushing everything
@@ -449,8 +444,8 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.xs,
-    marginBottom: SPACING.sm,
+    gap: 6,
+    marginBottom: SPACING.xs,
   },
   townNamePressable: {
     flexDirection: "row",
@@ -486,9 +481,9 @@ const styles = StyleSheet.create({
   streakBadge: {
     backgroundColor: "#2a2016",
     borderRadius: RADIUS.chip,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "transparent",
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: 10,
     paddingVertical: 3,
     flexShrink: 1,
   },
@@ -502,19 +497,22 @@ const styles = StyleSheet.create({
   flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
   // gap alone. Every button also carried a marginLeft, so the row was
   // spaced twice over and the name paid for it in width.
-  controls: { flexDirection: "row", alignItems: "center", gap: SPACING.xs },
+  controls: { flexDirection: "row", alignItems: "center", gap: 3 },
   iconBtn: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: "#2a2016",
+    backgroundColor: "#2b1a0e",
+    borderWidth: 2,
+    borderColor: "#b88a4a",
     alignItems: "center",
     justifyContent: "center",
   },
-  iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.caption, lineHeight: 18 },
+  iconBtnText: { color: COLORS.textPrimary, fontSize: TYPE.body, lineHeight: 16 },
+  pencil: { position: "absolute", right: 14, top: 18, color: "#ffd75e", fontSize: TYPE.title },
   langBtnText: {
     color: COLORS.accent,
-    fontSize: TYPE.micro,
+    fontSize: TYPE.label,
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
   },
@@ -528,7 +526,7 @@ const styles = StyleSheet.create({
     // floating narrower than the art it sits on.
     marginHorizontal: -14,
     borderRadius: 10,
-    paddingVertical: 5,
+    paddingVertical: 7,
     paddingHorizontal: 14,
     overflow: "hidden",
   },
