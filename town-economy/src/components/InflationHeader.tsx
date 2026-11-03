@@ -88,6 +88,7 @@ function dayTintColor(tick: number): string {
 // circles half off the screen on an earlier pass, and one narrow enough to
 // keep them on screen truncated "Golden Town" — flexing to whatever room
 // is actually left of the controls is the only width that's never both.
+const SCENE_HEIGHT = 150;
 const PLATE_HEIGHT = 56;
 const PLATE_CAP_LEFT_W = 39;
 const PLATE_CAP_RIGHT_W = 42;
@@ -187,22 +188,18 @@ export function InflationHeader({
 
   return (
     <View style={styles.wrap}>
-      {/* The town's own market street, standing in for the flat wood
-          gradient this used to be — a real scene behind the header rather
-          than a color. A dark scrim sits over it (transparent at the top,
-          solid by the stat row) so the gold title, the chip text and the
-          cash/net worth/inflation numbers all still read the way they did
-          against the old solid background. */}
-      <Image
-        source={headerMarketImage}
-        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
-        resizeMode="cover"
-      />
-      <GradientFill colors={["rgba(15,10,5,0)", "rgba(15,10,5,0.88)"]} x1="0" y1="0" x2="0" y2="1" />
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.1) }]}
-      />
+      {/* The town's own market street as a bright, undimmed scene across
+          the top of the header, fading into the dark wood below it (where
+          the stat row sits) rather than a scrim over the whole header —
+          the scene is the point, the controls and chips carry their own
+          solid backgrounds so they read without any darkening. */}
+      <View style={styles.scene} pointerEvents="none">
+        <Image source={headerMarketImage} style={styles.sceneImage} resizeMode="cover" />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.08) }]} />
+        <View style={styles.sceneFade}>
+          <GradientFill colors={["rgba(42,26,14,0)", "rgba(42,26,14,1)"]} x1="0" y1="0" x2="0" y2="1" />
+        </View>
+      </View>
       <View style={styles.goldLine} />
       {/* Name and controls share a line; the chips get one of their own.
           They used to sit in a single row with the chip strip allowed to
@@ -419,7 +416,13 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     paddingHorizontal: 14,
     overflow: "hidden",
+    backgroundColor: "#2a1a0e",
   },
+  scene: { position: "absolute", top: 0, left: 0, right: 0, height: SCENE_HEIGHT, overflow: "hidden" },
+  // Taller than the box and shifted up so the sky is cropped away and the
+  // rooftops and market awnings land behind the title row.
+  sceneFade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 50 },
+  sceneImage: { position: "absolute", top: -40, left: 0, width: "100%", height: SCENE_HEIGHT + 40 },
   goldLine: {
     position: "absolute",
     left: 0,
