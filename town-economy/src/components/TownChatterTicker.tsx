@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import type { EconomyState } from "../economy/types";
 import { pickTownChatterKey } from "../economy/townChatter";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, PANEL_GAP } from "../theme";
 import { GradientFill } from "./GradientFill";
 
 interface Props {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     paddingVertical: SPACING.sm + 2,
     paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },

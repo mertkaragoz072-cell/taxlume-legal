@@ -83,7 +83,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   // card that got smaller around them.
   const scale = width / BASE_WIDTH;
   const cardPadding = Math.round(SPACING.sm * scale);
-  const iconSize = Math.round(32 * scale);
+  const iconSize = Math.round(40 * scale);
   const chartWidth = Math.max(32, Math.round(88 * scale));
   const chartHeight = Math.max(20, Math.round(30 * scale));
 
@@ -137,7 +137,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           <View style={styles.topRow}>
             <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
             <View style={styles.changeWrap}>
-              {change !== 0 && (
+              {change !== 0 && width >= 88 && (
                 <Text style={[styles.arrow, { color: positive ? COLORS.positive : COLORS.negative }]}>
                   {positive ? "▲" : "▼"}
                 </Text>
@@ -153,7 +153,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           </View>
           <View style={styles.chartBox}>
             <PriceChart
-              history={state.history}
+              history={state.history.slice(-24)}
               color={good.color}
               width={chartWidth}
               height={chartHeight}
@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
     width: "100%",
     // Room for the corner badge above the move on every card, badge or
     // not, so cards in a row keep the same height and alignment.
-    marginTop: 3,
-    marginBottom: 1,
+    marginTop: 6,
+    marginBottom: 2,
   },
   change: { fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
   name: {
@@ -295,8 +295,8 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  coin: { width: 15, height: 15 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.title - 2, fontFamily: FONT.serif, lineHeight: 15 },
+  coin: { width: 16, height: 16 },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.title, fontFamily: FONT.serif, lineHeight: 18 },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,

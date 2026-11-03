@@ -54,7 +54,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
         accessibilityLabel={t(step.titleKey)}
       >
         <View style={styles.topLine}>
-          <RibbonLabel text={t("onboarding.banner")} height={28} fontSize={TYPE.label} />
+          <RibbonLabel text={t("onboarding.banner")} height={24} fontSize={TYPE.caption} />
           <Text style={styles.title} numberOfLines={1}>
             {t(step.titleKey)}
           </Text>
@@ -115,16 +115,16 @@ const styles = StyleSheet.create({
     backgroundColor: PARCHMENT.paper,
     overflow: "hidden",
   },
-  main: { flex: 1, paddingVertical: 6, paddingLeft: 8, paddingRight: 2 },
+  main: { flex: 1, paddingVertical: 4, paddingLeft: 8, paddingRight: 2 },
   topLine: { flexDirection: "row", alignItems: "center", gap: 8 },
   title: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.bold, fontSize: TYPE.body },
   rewardWrap: { flexDirection: "row", alignItems: "center", gap: 3 },
   reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.label },
   coin: { width: 15, height: 15 },
-  barLine: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 5 },
+  barLine: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 3 },
   track: {
     flex: 1,
-    height: 7,
+    height: 6,
     borderRadius: 999,
     backgroundColor: "rgba(61,36,21,0.55)",
     overflow: "hidden",

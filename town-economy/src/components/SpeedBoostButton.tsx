@@ -17,12 +17,14 @@ export function formatCountdown(ms: number): string {
 
 interface Props {
   onPress: () => void;
+  /** circle diameter in px, so the header can shrink all its controls together */
+  size?: number;
 }
 
 /** Header icon for the daily speed boost — a plain lightning bolt when idle,
  * or a pulsing pill with a live countdown while a boost is active. Tapping
  * either state opens SpeedBoostModal. */
-export function SpeedBoostButton({ onPress }: Props) {
+export function SpeedBoostButton({ onPress, size = 26 }: Props) {
   const { state, t } = useEconomyContext();
   const active = state.speedBoostExpiresAt !== null;
   // The clock is state the ticker owns, not something read during render:
@@ -76,7 +78,11 @@ export function SpeedBoostButton({ onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.iconBtn, active && styles.iconBtnActive]}
+      style={[
+        styles.iconBtn,
+        { minWidth: size, height: size, borderRadius: size / 2 },
+        active && styles.iconBtnActive,
+      ]}
       accessibilityRole="button"
       accessibilityLabel={active ? t("a11y.speedBoostActive", { time: badgeText }) : t("a11y.speedBoost")}
     >

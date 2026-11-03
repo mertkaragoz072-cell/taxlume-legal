@@ -89,7 +89,9 @@ export function MarketScreen({ sounds }: Props) {
   // sideways to more goods. Wide cards rather than four squeezed across
   // keeps the icon, move and name readable.
   const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2;
-  const goodCardWidth = (goodsRowWidth - SPACING.sm * 3) / 4;
+  // Four across where they fit, but never narrower than a card can stay
+  // readable — on a small phone the row scrolls instead of squeezing.
+  const goodCardWidth = Math.max(84, (goodsRowWidth - SPACING.sm * 3) / 4);
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -211,6 +213,54 @@ export function MarketScreen({ sounds }: Props) {
         ))}
       </ScrollView>
 
+      {/* Market Pulse: the town square image used to open this screen, but
+          it said nothing about the market and only lived here because the
+          game had no Town tab yet to send it to. This says something —
+          overall mood plus whoever moved the most, in either direction,
+          this tick — and it updates every tick instead of sitting still. */}
+      <WoodPanel
+        icon="📈"
+        title={t("market.pulse.title")}
+        right={
+          <Text style={[styles.pulseSentiment, { color: marketPulse.sentiment.color }]}>
+            {marketPulse.sentiment.icon} {t(`market.sentiment.${marketPulse.sentiment.key}`)}
+          </Text>
+        }
+        style={{ marginTop: -PANEL_GAP, marginBottom: PANEL_GAP }}
+        compact
+      >
+        {marketPulse.topGainer && marketPulse.topLoser ? (
+          <View style={styles.pulseCols}>
+            <View style={styles.pulseCol}>
+              <Text style={[styles.pulseRowLabel, { color: "#2f7a3a" }]} numberOfLines={1}>
+                ▲ {t("market.pulse.topGainer")}
+              </Text>
+              <View style={styles.pulseLine}>
+                <GoodChip goodId={marketPulse.topGainer.good.id} tone="hot" t={t} />
+                <Text style={[styles.pulseMoverPct, { color: "#2f7a3a" }]} numberOfLines={1}>
+                  {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
+                  {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.pulseDivider} />
+            <View style={styles.pulseCol}>
+              <Text style={[styles.pulseRowLabel, { color: PARCHMENT.negative }]} numberOfLines={1}>
+                ▼ {t("market.pulse.topLoser")}
+              </Text>
+              <View style={styles.pulseLine}>
+                <GoodChip goodId={marketPulse.topLoser.good.id} tone="glut" t={t} />
+                <Text style={[styles.pulseMoverPct, { color: PARCHMENT.negative }]} numberOfLines={1}>
+                  {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.pulseEmpty}>{t(`market.sentiment.${marketPulse.sentiment.key}`)}</Text>
+        )}
+      </WoodPanel>
+
       {lockedGoods.length > 0 && (
         <>
           <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
@@ -253,48 +303,6 @@ export function MarketScreen({ sounds }: Props) {
           </ScrollView>
         </>
       )}
-
-      {/* Market Pulse: the town square image used to open this screen, but
-          it said nothing about the market and only lived here because the
-          game had no Town tab yet to send it to. This says something —
-          overall mood plus whoever moved the most, in either direction,
-          this tick — and it updates every tick instead of sitting still. */}
-      <WoodPanel
-        icon="📈"
-        title={t("market.pulse.title")}
-        right={
-          <Text style={[styles.pulseSentiment, { color: marketPulse.sentiment.color }]}>
-            {marketPulse.sentiment.icon} {t(`market.sentiment.${marketPulse.sentiment.key}`)}
-          </Text>
-        }
-        style={{ marginBottom: PANEL_GAP }}
-      >
-        {marketPulse.topGainer && marketPulse.topLoser ? (
-          <>
-            <View style={styles.pulseRow}>
-              <Text style={[styles.pulseRowLabel, { color: "#2f7a3a" }]}>
-                ▲ {t("market.pulse.topGainer")}
-              </Text>
-              <GoodChip goodId={marketPulse.topGainer.good.id} tone="hot" t={t} />
-              <Text style={[styles.pulseMoverPct, { color: "#2f7a3a" }]}>
-                {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
-                {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
-              </Text>
-            </View>
-            <View style={styles.pulseRow}>
-              <Text style={[styles.pulseRowLabel, { color: PARCHMENT.negative }]}>
-                ▼ {t("market.pulse.topLoser")}
-              </Text>
-              <GoodChip goodId={marketPulse.topLoser.good.id} tone="glut" t={t} />
-              <Text style={[styles.pulseMoverPct, { color: PARCHMENT.negative }]}>
-                {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
-              </Text>
-            </View>
-          </>
-        ) : (
-          <Text style={styles.pulseEmpty}>{t(`market.sentiment.${marketPulse.sentiment.key}`)}</Text>
-        )}
-      </WoodPanel>
 
       {state.activeSeasonalEvent && seasonalTemplate && (
         <View style={styles.seasonalCard}>
@@ -545,9 +553,16 @@ export function MarketScreen({ sounds }: Props) {
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   pulseSentiment: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
-  pulseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginBottom: SPACING.xs + 2 },
+  pulseCols: { flexDirection: "row", alignItems: "center" },
+  pulseCol: { flex: 1, minWidth: 0 },
+  pulseLine: { flexDirection: "row", alignItems: "center", gap: SPACING.xs + 2, marginTop: 3 },
+  pulseDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    backgroundColor: "rgba(61,36,21,0.25)",
+    marginHorizontal: SPACING.sm,
+  },
   pulseRowLabel: {
-    width: 96,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,

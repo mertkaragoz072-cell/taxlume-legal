@@ -1,9 +1,9 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef } from "react";
-import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import leafBand from "../../assets/ui/tabbar-leaf-band.png";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { COLORS, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, CONTENT_MAX_WIDTH, FONT, glowShadow, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 import { TabIcon } from "./TabIcons";
 
@@ -42,6 +42,12 @@ interface Props {
 
 export function TabBar({ active, onChange, spotlight = null, muted = false }: Props) {
   const { t } = useEconomyContext();
+  // Seven tabs share the width, so on a narrow phone the badges and labels
+  // shrink together instead of the labels running into each other.
+  const { width: windowWidth } = useWindowDimensions();
+  const slot = Math.min(windowWidth, CONTENT_MAX_WIDTH) / TABS.length;
+  const badgeSize = Math.max(34, Math.min(44, Math.floor(slot - 4)));
+  const labelSize = slot < 50 ? 9 : slot < 54 ? TYPE.micro : TYPE.caption;
   // A slow breath rather than a blink: the tour holds on one tab for as
   // long as the player takes to read a sentence, and anything faster turns
   // into a flicker sitting under the text they are reading.
@@ -164,12 +170,21 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
                 the inner wrapper below, which carries no shadow of its
                 own, keeps both effects without stacking them on one
                 layer. */}
-            <View style={[styles.iconBadge, isActive && glowShadow(tab.color)]}>
+            <View
+              style={[
+                styles.iconBadge,
+                { width: badgeSize, height: badgeSize },
+                isActive && glowShadow(tab.color),
+              ]}
+            >
               <Animated.View style={{ transform: [{ scale: badgeScale[i] }] }}>
-                <TabIcon id={tab.id} size={44} active={isActive} />
+                <TabIcon id={tab.id} size={badgeSize} active={isActive} />
               </Animated.View>
             </View>
-            <Text style={[styles.label, isActive && { color: tab.color, fontFamily: FONT.bold }]}>
+            <Text
+              numberOfLines={1}
+              style={[styles.label, { fontSize: labelSize }, isActive && { color: tab.color }]}
+            >
               {t(tab.labelKey)}
             </Text>
           </ScalePressable>

@@ -15,7 +15,7 @@ import Svg, {
 import { TOWN_EMBLEMS_BY_ID } from "../economy/emblems";
 import { ForeignTown, TownId } from "../economy/towns";
 import { Caravan } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE } from "../theme";
+import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, PANEL_GAP } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     alignItems: "center",
     ...cardShadow,

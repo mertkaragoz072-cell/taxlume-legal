@@ -1,5 +1,14 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import headerMarketImage from "../../assets/ui/header-market.webp";
 import statBarChart from "../../assets/ui/statpanel2/barchart.png";
 import statCoinBullet from "../../assets/ui/statpanel2/coinbullet.png";
@@ -12,7 +21,18 @@ import titleplateRight from "../../assets/ui/titleplate3-right.png";
 import { DIFFICULTIES, DifficultyId } from "../economy/difficulty";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
 import { Language } from "../i18n/t";
-import { COLORS, FONT, glowShadow, PARCHMENT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  COLORS,
+  CONTENT_MAX_WIDTH,
+  FONT,
+  glowShadow,
+  PARCHMENT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+} from "../theme";
 import { formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
@@ -88,10 +108,13 @@ function dayTintColor(tick: number): string {
 // circles half off the screen on an earlier pass, and one narrow enough to
 // keep them on screen truncated "Golden Town" — flexing to whatever room
 // is actually left of the controls is the only width that's never both.
-const SCENE_HEIGHT = 150;
-const PLATE_HEIGHT = 56;
-const PLATE_CAP_LEFT_W = 39;
-const PLATE_CAP_RIGHT_W = 42;
+const SCENE_HEIGHT = 112;
+const PLATE_HEIGHT = 46;
+const PLATE_CAP_LEFT_W = 32;
+const PLATE_CAP_RIGHT_W = 35;
+// Below this width the header drops its optional extras (sparkline, coin
+// bullets) and tightens the controls so nothing truncates or wraps.
+const COMPACT_WIDTH = 380;
 
 export function InflationHeader({
   townName,
@@ -118,6 +141,20 @@ export function InflationHeader({
   onEditName,
   onOpenSpeedBoost,
 }: Props) {
+  const { width: windowWidth } = useWindowDimensions();
+  const screenWidth = Math.min(windowWidth, CONTENT_MAX_WIDTH);
+  const compact = screenWidth < COMPACT_WIDTH;
+  // The town name is player-edited and the plate has a fixed amount of
+  // room between the laurels, so size the lettering to fit it rather than
+  // letting it truncate (adjustsFontSizeToFit does nothing on web).
+  const btnSize = screenWidth < 340 ? 22 : compact ? 24 : 26;
+  const btnStyle = { width: btnSize, height: btnSize, borderRadius: btnSize / 2 };
+  const controlsWidth = 6 * btnSize + 5 * 3;
+  const narrow = screenWidth < 340;
+  const capLeft = narrow ? 22 : compact ? 26 : PLATE_CAP_LEFT_W;
+  const capRight = narrow ? 24 : compact ? 28 : PLATE_CAP_RIGHT_W;
+  const nameRoom = screenWidth - 24 - controlsWidth - SPACING.sm - capLeft - capRight - 8;
+  const nameFontSize = Math.max(7, Math.min(TYPE.label, nameRoom / (Math.max(townName.length, 6) * 0.9)));
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -215,7 +252,7 @@ export function InflationHeader({
         >
           <Image
             source={titleplateLeft}
-            style={{ width: PLATE_CAP_LEFT_W, height: PLATE_HEIGHT }}
+            style={{ width: capLeft, height: PLATE_HEIGHT }}
             resizeMode="stretch"
           />
           <Image
@@ -225,14 +262,20 @@ export function InflationHeader({
           />
           <Image
             source={titleplateRight}
-            style={{ width: PLATE_CAP_RIGHT_W, height: PLATE_HEIGHT }}
+            style={{ width: capRight, height: PLATE_HEIGHT }}
             resizeMode="stretch"
           />
           <Text style={styles.pencil} pointerEvents="none">
             ✎
           </Text>
-          <View style={styles.plateTextWrap} pointerEvents="none">
-            <Text style={styles.town} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+          <View
+            style={[
+              styles.plateTextWrap,
+              { left: Math.max(capLeft, capRight) + 2, right: Math.max(capLeft, capRight) - 2 },
+            ]}
+            pointerEvents="none"
+          >
+            <Text style={[styles.town, { fontSize: nameFontSize }]} numberOfLines={1}>
               {townName.toUpperCase()}
             </Text>
           </View>
@@ -240,16 +283,16 @@ export function InflationHeader({
         <View style={styles.controls}>
           <Pressable
             onPress={onToggleLanguage}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, btnStyle]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.toggleLanguage")}
           >
             <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
           </Pressable>
-          <SpeedBoostButton onPress={onOpenSpeedBoost} />
+          <SpeedBoostButton onPress={onOpenSpeedBoost} size={btnSize} />
           <Pressable
             onPress={onHelp}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, btnStyle]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.help")}
           >
@@ -257,7 +300,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onToggleMuted}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, btnStyle]}
             accessibilityRole="button"
             accessibilityLabel={muted ? t("a11y.unmute") : t("a11y.mute")}
           >
@@ -265,7 +308,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onTogglePause}
-            style={[styles.iconBtn, { borderColor: "#6fb8f2", backgroundColor: "#1d3550" }]}
+            style={[styles.iconBtn, btnStyle, { borderColor: "#6fb8f2", backgroundColor: "#1d3550" }]}
             accessibilityRole="button"
             accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
           >
@@ -273,7 +316,7 @@ export function InflationHeader({
           </Pressable>
           <Pressable
             onPress={onReset}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, btnStyle]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.newGame")}
           >
@@ -290,19 +333,18 @@ export function InflationHeader({
             { backgroundColor: "#5a3a1a", borderColor: "#d1a860" },
           ]}
         >
-          <Text style={styles.streakBadgeText}>
+          <Text style={styles.streakBadgeText} numberOfLines={1}>
             {rankIcon} {rankTitle}
           </Text>
         </View>
         <View style={[styles.streakBadge, { backgroundColor: "#1f4a78", borderColor: "#7db8ea" }]}>
-          <Text style={styles.streakBadgeText}>
+          <Text style={styles.streakBadgeText} numberOfLines={1}>
             {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
           </Text>
         </View>
         <View style={[styles.streakBadge, { backgroundColor: "#2e5a2e", borderColor: "#8fd698" }]}>
-          <Text style={styles.streakBadgeText}>
-            {seasonFromTick(tick).icon} {t(seasonFromTick(tick).nameKey)} ·{" "}
-            {t("header.day", { day: gameDay })}
+          <Text style={styles.streakBadgeText} numberOfLines={1}>
+            {seasonFromTick(tick).icon} {t("header.day", { day: gameDay })}
           </Text>
         </View>
         {streakCount > 0 && (
@@ -316,7 +358,9 @@ export function InflationHeader({
             <Animated.Text style={[styles.flameEmoji, { transform: [{ scale: flameScale }] }]}>
               🔥
             </Animated.Text>
-            <Text style={styles.streakBadgeText}>{streakCount}</Text>
+            <Text style={styles.streakBadgeText} numberOfLines={1}>
+              {streakCount}
+            </Text>
           </View>
         )}
       </View>
@@ -340,33 +384,41 @@ export function InflationHeader({
         )}
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Image source={statCoins} style={styles.statIcon} resizeMode="contain" />
+            {!compact && <Image source={statCoins} style={styles.statIcon} resizeMode="contain" />}
             <View style={styles.statTextCol}>
               <Text style={styles.statLabel} numberOfLines={1}>
                 {t("header.cash")}
               </Text>
               <View style={styles.statValueRow}>
-                <AnimatedNumber value={cash} formatter={formatCash} style={styles.statValue} />
-                <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />
+                <AnimatedNumber
+                  value={cash}
+                  formatter={formatCash}
+                  style={[styles.statValue, compact && styles.statValueCompact]}
+                />
+                {!compact && <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />}
               </View>
             </View>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
-            <Image source={statMoneyBag} style={styles.statIcon} resizeMode="contain" />
+            {!compact && <Image source={statMoneyBag} style={styles.statIcon} resizeMode="contain" />}
             <View style={styles.statTextCol}>
               <Text style={styles.statLabel} numberOfLines={1}>
                 {t("header.netWorth")}
               </Text>
               <View style={styles.statValueRow}>
-                <AnimatedNumber value={netWorth} formatter={formatCash} style={styles.statValue} />
-                <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />
+                <AnimatedNumber
+                  value={netWorth}
+                  formatter={formatCash}
+                  style={[styles.statValue, compact && styles.statValueCompact]}
+                />
+                {!compact && <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />}
               </View>
             </View>
           </View>
           <View style={styles.statDivider} />
           <SpotlightTarget id="inflation" style={[styles.stat, styles.inflationStat]}>
-            <Image source={statBarChart} style={styles.statIcon} resizeMode="contain" />
+            {!compact && <Image source={statBarChart} style={styles.statIcon} resizeMode="contain" />}
             <View style={styles.inflationTextCol}>
               <Text style={styles.statLabel} numberOfLines={1}>
                 {t("header.inflation")}
@@ -376,7 +428,11 @@ export function InflationHeader({
                   out of room — on a narrow phone the closing bracket ended up
                   alone on a third line, under the sparkline. */}
               <Text
-                style={[styles.statValue, { color: hot ? PARCHMENT.negative : "#9c6b1f" }]}
+                style={[
+                  styles.statValue,
+                  compact && styles.statValueCompact,
+                  { color: hot ? PARCHMENT.negative : "#8a5a14" },
+                ]}
                 numberOfLines={1}
               >
                 {formatNumber(inflationIndex, language, 1)}
@@ -392,16 +448,15 @@ export function InflationHeader({
                 {")"}
               </Text>
             </View>
-            {/* A trend line rather than another number — at this size a
-                second figure next to the index would just be noise, but the
-                shape of it (climbing, flat, falling) reads at a glance. */}
-            <PriceChart
-              history={inflationHistory}
-              color={hot ? PARCHMENT.negative : "#9c6b1f"}
-              width={24}
-              height={22}
-              strokeWidth={1.5}
-            />
+            {!compact && (
+              <PriceChart
+                history={inflationHistory}
+                color={hot ? PARCHMENT.negative : "#8a5a14"}
+                width={24}
+                height={22}
+                strokeWidth={1.5}
+              />
+            )}
           </SpotlightTarget>
         </View>
       </View>
@@ -412,9 +467,9 @@ export function InflationHeader({
 const styles = StyleSheet.create({
   wrap: {
     // Headroom above the title row so the market-street scene shows.
-    paddingTop: 56,
+    paddingTop: 30,
     paddingBottom: 4,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     overflow: "hidden",
     backgroundColor: "#2a1a0e",
   },
@@ -489,7 +544,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.chip,
     borderWidth: 2,
     borderColor: "transparent",
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 3,
     flexShrink: 1,
   },
@@ -530,7 +585,7 @@ const styles = StyleSheet.create({
     // Breaks out of wrap's own 14px side padding so this card runs flush
     // with the screen edges, the same as the banner below it, instead of
     // floating narrower than the art it sits on.
-    marginHorizontal: -14,
+    marginHorizontal: -12,
     borderRadius: 10,
     paddingVertical: 7,
     paddingHorizontal: 14,
@@ -539,6 +594,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: "row", alignItems: "center" },
   stat: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 },
   statIcon: { width: 32, height: 32 },
+  statIconCompact: { width: 24, height: 24 },
   // Margin on the divider itself, not just left to whatever space a
   // column's content doesn't use — at the bigger icon/text sizes above,
   // a column could fill its whole flex share and butt straight into the
@@ -550,12 +606,14 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3),
   },
   statTextCol: { flexShrink: 1, minWidth: 0 },
-  statLabel: { color: PARCHMENT.inkMuted, fontSize: TYPE.caption, marginBottom: 2 },
+  statLabel: { color: "#5c3f26", fontFamily: FONT.bold, fontSize: TYPE.caption, marginBottom: 2 },
+  statValueCompact: { fontSize: TYPE.title },
   statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   statBullet: { width: 13, height: 13 },
   statValue: {
     color: PARCHMENT.ink,
-    fontSize: TYPE.title,
+    fontSize: TYPE.heading,
+    fontVariant: ["tabular-nums"],
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
@@ -567,6 +625,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   inflationTextCol: { flex: 1 },
-  inflationRate: { fontSize: TYPE.caption, fontFamily: FONT.medium },
+  inflationRate: { fontSize: TYPE.caption, fontFamily: FONT.bold },
   hotGlow: { backgroundColor: "#e0693f", borderRadius: 10 },
 });

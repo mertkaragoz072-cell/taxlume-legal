@@ -3,7 +3,18 @@ import { StyleSheet, Text, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GoodGroup } from "../economy/goods";
 import { daysUntilNextSeason, nextSeasonFromTick, seasonFromTick } from "../economy/seasons";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+  PANEL_GAP,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 
 const GROUP_LABEL: Record<GoodGroup, string> = {
@@ -80,7 +91,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: RADIUS.card,
     padding: SPACING.md,
-    marginBottom: SPACING.md,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },

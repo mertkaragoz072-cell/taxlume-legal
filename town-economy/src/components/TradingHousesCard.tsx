@@ -4,7 +4,18 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { TOWNS_BY_ID } from "../economy/towns";
 import { TRADING_HOUSES_BY_ID, TradingHouseActivity } from "../economy/tradingHouses";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  WEIGHT,
+  withAlpha,
+  PANEL_GAP,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 
 const BUYING = "#f0a04b";
@@ -72,7 +83,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
