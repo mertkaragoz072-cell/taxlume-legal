@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import hourglassIcon from "../../assets/ui/hourglass.png";
 import { DemandCycle } from "../economy/demandCycles";
 import { GOODS_BY_ID } from "../economy/goods";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -76,7 +77,7 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
 
   return (
     <WoodPanel
-      icon="⏳"
+      icon={hourglassIcon}
       title={t("market.demand.sectionLabel")}
       right={daysLeft <= 1 ? t("market.demand.lastDay") : t("market.demand.daysLeft", { days: daysLeft })}
       style={{ marginBottom: PANEL_GAP }}

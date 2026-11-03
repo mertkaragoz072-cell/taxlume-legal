@@ -1,10 +1,10 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, ImageSourcePropType, StyleSheet, Text, View } from "react-native";
 import { cardShadow, FONT, PARCHMENT, RADIUS, TYPE } from "../theme";
 
 interface Props {
-  /** emoji shown before the title */
-  icon: string;
+  /** an emoji, or a real icon image, shown before the title */
+  icon: string | ImageSourcePropType;
   title: string;
   /** right end of the header bar — plain text or any node */
   right?: React.ReactNode;
@@ -21,9 +21,13 @@ export function WoodPanel({ icon, title, right, children, style }: Props) {
   return (
     <View style={[styles.frame, style]}>
       <View style={styles.header}>
-        <Text aria-hidden style={styles.icon}>
-          {icon}
-        </Text>
+        {typeof icon === "string" ? (
+          <Text aria-hidden style={styles.icon}>
+            {icon}
+          </Text>
+        ) : (
+          <Image source={icon} style={styles.iconImage} resizeMode="contain" accessibilityElementsHidden />
+        )}
         <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
           {title}
         </Text>
@@ -53,6 +57,7 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 7 },
   icon: { fontSize: TYPE.heading },
+  iconImage: { width: 19, height: 28 },
   title: { color: "#f4e8ce", fontFamily: FONT.display, fontSize: TYPE.body, letterSpacing: 1, flexShrink: 1 },
   right: { flex: 1, alignItems: "flex-end" },
   rightText: { color: "#f4e8ce", fontFamily: FONT.medium, fontSize: TYPE.label },
