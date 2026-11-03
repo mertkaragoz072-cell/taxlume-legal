@@ -146,6 +146,12 @@ export function InflationHeader({
   const capRight = narrow ? 24 : compact ? 28 : PLATE_CAP_RIGHT_W;
   const nameRoom = screenWidth - 24 - controlsWidth - SPACING.sm - capLeft - capRight - 8;
   const nameFontSize = Math.max(7, Math.min(TYPE.body, nameRoom / (Math.max(townName.length, 6) * 0.9)));
+  // The plate hugs its lettering instead of stretching across the whole row:
+  // signage lettering runs roughly 0.85em per capital, plus a little air.
+  const plateWidth = Math.min(
+    nameRoom + capLeft + capRight,
+    Math.round(townName.length * nameFontSize * 0.85 + 2 * Math.max(capLeft, capRight) + 14)
+  );
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -237,7 +243,7 @@ export function InflationHeader({
       <View style={styles.topRow}>
         <Pressable
           onPress={onEditName}
-          style={styles.townNamePressable}
+          style={[styles.townNamePressable, { width: plateWidth }]}
           accessibilityRole="button"
           accessibilityLabel={t("a11y.editTownName")}
         >
@@ -467,7 +473,7 @@ const styles = StyleSheet.create({
   },
   townNamePressable: {
     flexDirection: "row",
-    flexGrow: 1,
+    flexGrow: 0,
     flexShrink: 1,
     minWidth: 0,
     height: PLATE_HEIGHT,
