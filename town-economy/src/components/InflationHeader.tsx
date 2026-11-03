@@ -31,7 +31,7 @@ import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
 import { seasonFromTick } from "../economy/seasons";
 import { SpotlightTarget } from "./Spotlight";
-import { SpeedBoostButton } from "./SpeedBoostButton";
+import { SettingsMenu } from "./SettingsMenu";
 
 interface Props {
   townName: string;
@@ -139,14 +139,13 @@ export function InflationHeader({
   // The town name is player-edited and the plate has a fixed amount of
   // room between the laurels, so size the lettering to fit it rather than
   // letting it truncate (adjustsFontSizeToFit does nothing on web).
-  const btnSize = screenWidth < 340 ? 22 : compact ? 24 : 26;
-  const btnStyle = { width: btnSize, height: btnSize, borderRadius: btnSize / 2 };
-  const controlsWidth = 6 * btnSize + 5 * 3;
+  const btnSize = compact ? 34 : 38;
+  const controlsWidth = btnSize;
   const narrow = screenWidth < 340;
   const capLeft = narrow ? 22 : compact ? 26 : PLATE_CAP_LEFT_W;
   const capRight = narrow ? 24 : compact ? 28 : PLATE_CAP_RIGHT_W;
   const nameRoom = screenWidth - 24 - controlsWidth - SPACING.sm - capLeft - capRight - 8;
-  const nameFontSize = Math.max(7, Math.min(TYPE.label, nameRoom / (Math.max(townName.length, 6) * 0.9)));
+  const nameFontSize = Math.max(7, Math.min(TYPE.body, nameRoom / (Math.max(townName.length, 6) * 0.9)));
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -272,49 +271,18 @@ export function InflationHeader({
             </Text>
           </View>
         </Pressable>
-        <View style={styles.controls}>
-          <Pressable
-            onPress={onToggleLanguage}
-            style={[styles.iconBtn, btnStyle]}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.toggleLanguage")}
-          >
-            <Text style={styles.langBtnText}>{language === "tr" ? "TR" : "EN"}</Text>
-          </Pressable>
-          <SpeedBoostButton onPress={onOpenSpeedBoost} size={btnSize} />
-          <Pressable
-            onPress={onHelp}
-            style={[styles.iconBtn, btnStyle]}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.help")}
-          >
-            <Text style={styles.iconBtnText}>❓</Text>
-          </Pressable>
-          <Pressable
-            onPress={onToggleMuted}
-            style={[styles.iconBtn, btnStyle]}
-            accessibilityRole="button"
-            accessibilityLabel={muted ? t("a11y.unmute") : t("a11y.mute")}
-          >
-            <Text style={styles.iconBtnText}>{muted ? "🔇" : "🔊"}</Text>
-          </Pressable>
-          <Pressable
-            onPress={onTogglePause}
-            style={[styles.iconBtn, btnStyle, { borderColor: "#6fb8f2", backgroundColor: "#1d3550" }]}
-            accessibilityRole="button"
-            accessibilityLabel={paused ? t("a11y.resume") : t("a11y.pause")}
-          >
-            <Text style={styles.iconBtnText}>{paused ? "▶" : "⏸"}</Text>
-          </Pressable>
-          <Pressable
-            onPress={onReset}
-            style={[styles.iconBtn, btnStyle]}
-            accessibilityRole="button"
-            accessibilityLabel={t("a11y.newGame")}
-          >
-            <Text style={styles.iconBtnText}>⟳</Text>
-          </Pressable>
-        </View>
+        <SettingsMenu
+          size={btnSize}
+          language={language}
+          muted={muted}
+          paused={paused}
+          onToggleLanguage={onToggleLanguage}
+          onOpenSpeedBoost={onOpenSpeedBoost}
+          onHelp={onHelp}
+          onToggleMuted={onToggleMuted}
+          onTogglePause={onTogglePause}
+          onReset={onReset}
+        />
       </View>
 
       <View style={styles.chipRow}>
