@@ -37,7 +37,7 @@ export function InventoryScreen() {
   const storagePct = capacity > 0 ? Math.min(1, usedStorage / capacity) : 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={[styles.body, { flexGrow: 1 }]} showsVerticalScrollIndicator={false}>
       <BeamTitle title={t("tabs.inventory")} />
       <FixedPanel source={summaryImg} aspect={764 / 398} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
         {(w) => (
@@ -101,19 +101,23 @@ export function InventoryScreen() {
 
       <AssetRibbon text={t("inventory.sectionLabel")} />
       {holdings.length === 0 && (
-        <View style={{ marginBottom: PANEL_GAP }}>
+        <View style={styles.emptyWrap}>
+          {/* The scene without its bottom beam, melting into a dark floor that
+              carries the caption and runs down to the tab bar, with the mossy
+              stone wall along its foot — one continuous picture like the
+              reference rather than a scene with a box under it. */}
           <FixedPanel source={sceneImg} aspect={933 / 425}>
-            {() => null}
+            {() => (
+              <View style={styles.emptyMelt}>
+                <GradientFill colors={["rgba(24,14,7,0)", "#180e07"]} x1="0" y1="0" x2="0" y2="1" />
+              </View>
+            )}
           </FixedPanel>
-          {/* The caption sits on a dark floor under the scene, with the mossy
-              stone wall running along its bottom, so the words read under
-              the chest rather than over it. */}
           <View style={styles.emptyFloor}>
-            <GradientFill colors={["#2a190d", "#140b05"]} x1="0" y1="0" x2="0" y2="1" />
             <Text style={styles.emptyText}>{t("inventory.emptyTitle")}</Text>
             <Text style={styles.emptySub}>{t("inventory.emptySubtitle")}</Text>
-            <Image source={stonesImg} style={styles.emptyStones} resizeMode="stretch" />
           </View>
+          <Image source={stonesImg} style={styles.emptyStones} resizeMode="stretch" />
         </View>
       )}
       {holdings.map(({ good, gs }) => {
@@ -194,20 +198,21 @@ const styles = StyleSheet.create({
     color: COLORS.negative,
     fontSize: TYPE.micro,
   },
-  emptyFloor: {
-    marginTop: -3,
-    paddingTop: 12,
-    paddingBottom: 46,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    borderLeftWidth: 4,
-    borderRightWidth: 4,
+  emptyWrap: {
+    flexGrow: 1,
+    minHeight: 330,
+    marginBottom: PANEL_GAP,
+    backgroundColor: "#180e07",
+    borderRadius: RADIUS.card,
+    borderWidth: 2,
     borderColor: "#5a3a1e",
     overflow: "hidden",
   },
+  emptyMelt: { position: "absolute", left: 0, right: 0, bottom: 0, height: "9%" },
+  emptyFloor: { paddingHorizontal: 18, marginTop: -6, alignItems: "center", zIndex: 2 },
   emptyText: { color: "#f4e8ce", fontFamily: FONT.bold, fontSize: TYPE.heading, textAlign: "center" },
   emptySub: { color: "#cdbb98", fontSize: TYPE.body, textAlign: "center", marginTop: 3 },
-  emptyStones: { position: "absolute", left: 0, right: 0, bottom: 0, width: "100%", height: 40 },
+  emptyStones: { position: "absolute", left: 0, right: 0, bottom: 0, width: "100%", height: 44 },
   row: {
     flexDirection: "row",
     alignItems: "center",
