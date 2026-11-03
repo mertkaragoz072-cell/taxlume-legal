@@ -196,11 +196,13 @@ export function MarketScreen({ sounds }: Props) {
             selected={g.id === state.selectedGood}
             onPress={() => selectGood(g.id)}
             width={goodCardWidth}
+            // One ribbon color for both states, like the reference — the word
+            // on it says which.
             badge={
               isHot(state.demandCycle, g.id)
                 ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
                 : isGlutted(state.demandCycle, g.id)
-                  ? { text: t("market.demand.glutBadge"), color: "#6fb8f2" }
+                  ? { text: t("market.demand.glutBadge"), color: "#f0a04b" }
                   : undefined
             }
           />

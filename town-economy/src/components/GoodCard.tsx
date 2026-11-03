@@ -123,7 +123,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           {badge && (
             <View style={styles.badge}>
               <GradientFill
-                colors={[shade(badge.color, 0.3), shade(badge.color, -0.12)]}
+                colors={[shade(badge.color, 0.1), shade(badge.color, -0.1)]}
                 x1="0"
                 y1="0"
                 x2="0"
