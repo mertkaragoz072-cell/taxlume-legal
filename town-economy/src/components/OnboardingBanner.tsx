@@ -1,9 +1,9 @@
-import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
-import questPanelBg from "../../assets/ui/quest-panel-bg.png";
+import React, { useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
-import { FONT, GOLD_GRADIENT, SPACING, TYPE } from "../theme";
+import { FONT, GOLD_GRADIENT, PARCHMENT, SPACING, TYPE } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
@@ -15,20 +15,6 @@ interface Props {
   activeScreen: ScreenId;
 }
 
-// The whole card is one illustrated panel now (frame, ribbon, cart, arrow
-// and an empty progress track all baked into a single image) rather than a
-// plain color card with a separate ribbon glued on top of it. Every
-// position below is that image's own layout, read off its pixels and
-// expressed as a fraction of its 1991x658 size — the card is pinned to
-// that same aspect ratio (see `card` below) so the fractions still line up
-// with the art at any screen width. A full reference screenshot of the
-// target screen (not just this one card) showed this banner as a clearly
-// wide, shortish strip — close to the image's own native 3.03:1, not the
-// much taller 2:1 an earlier, blinder size pass had settled on. Eased
-// only slightly off native rather than snapped back to it exactly.
-const PANEL_ASPECT_RATIO = 3.0;
-const pct = (px: number, of: "w" | "h") => `${(px / (of === "w" ? 1991 : 658)) * 100}%` as const;
-
 /** One task at a time, across the top of every screen, until the guided
  * first session is done.
  *
@@ -38,11 +24,14 @@ const pct = (px: number, of: "w" | "h") => `${(px / (of === "w" ? 1991 : 658)) *
  * also means a player who has no idea what "send a caravan" means can still
  * find the screen that does it.
  *
- * Nothing here blocks play. A player who wants to ignore it and trade can,
- * and the steps will tick off behind them.
+ * Collapsed it is one compact strip (title, reward, progress); the arrow at
+ * its right end opens the full description. Nothing here blocks play. A
+ * player who wants to ignore it and trade can, and the steps will tick off
+ * behind them.
  */
 export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   const { state, t } = useEconomyContext();
+  const [expanded, setExpanded] = useState(false);
   const step = currentOnboardingStep(state);
   if (!step) return null;
 
@@ -55,147 +44,113 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   const progressPct = (state.onboardingStep / ONBOARDING_STEPS.length) * 100;
 
   return (
-    <ScalePressable
-      style={styles.card}
-      onPress={() => onGoToScreen(step.screen)}
-      disabled={alreadyHere}
-      scaleTo={alreadyHere ? 1 : 0.985}
-      accessibilityLabel={t(step.titleKey)}
-    >
-      <Image
-        source={questPanelBg}
-        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
-        resizeMode="stretch"
-      />
-
-      {/* The ribbon shape is baked into the panel; only the label (a
-          translated string) is still code — same reasoning as every other
-          piece of ribbon art this session. */}
-      <View style={styles.ribbonTextWrap} pointerEvents="none">
-        <Text style={styles.eyebrow} numberOfLines={1}>
-          {t("onboarding.banner")}
-        </Text>
-      </View>
-      <View style={styles.progressWrap} pointerEvents="none">
-        <Text style={styles.progress} numberOfLines={1}>
-          {t("onboarding.progress", {
-            done: String(state.onboardingStep),
-            total: String(ONBOARDING_STEPS.length),
-          })}
-        </Text>
-      </View>
-
-      {/* The step's own icon used to sit here as an emoji; the panel's
-          cart illustration now fills that same corner, so there's nothing
-          left to draw a second icon over. */}
-      <View style={styles.textWrap}>
-        <View style={styles.titleLine}>
+    <View style={styles.card}>
+      <ScalePressable
+        style={styles.main}
+        onPress={() => onGoToScreen(step.screen)}
+        disabled={alreadyHere}
+        scaleTo={alreadyHere ? 1 : 0.985}
+        accessibilityLabel={t(step.titleKey)}
+      >
+        <View style={styles.topLine}>
+          <View style={styles.tag}>
+            <Text style={styles.tagText} numberOfLines={1}>
+              {t("onboarding.banner")}
+            </Text>
+          </View>
           <Text style={styles.title} numberOfLines={1}>
             {t(step.titleKey)}
           </Text>
-          <Text style={styles.reward}>+{step.reward} 🪙</Text>
+          <View style={styles.rewardWrap}>
+            <Text style={styles.reward}>+{step.reward}</Text>
+            <Image source={coinIcon} style={styles.coin} resizeMode="contain" />
+          </View>
         </View>
-        <Text style={styles.description} numberOfLines={2}>
-          {t(step.descriptionKey)}
-          {!alreadyHere && (
-            <Text style={styles.goTo}> {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })}</Text>
-          )}
-        </Text>
-      </View>
-
-      {/* The track itself is baked into the panel (the dark groove with a
-          gold cap at its left end); only the gold fill is still drawn,
-          sized to the player's actual progress and positioned over that
-          same groove. */}
-      <View style={styles.trackWrap} pointerEvents="none">
-        <View style={[styles.fill, { width: `${progressPct}%` }]}>
-          {progressPct > 0 && <GradientFill colors={GOLD_GRADIENT} />}
+        <View style={styles.barLine}>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${progressPct}%` }]}>
+              {progressPct > 0 && <GradientFill colors={GOLD_GRADIENT} />}
+            </View>
+          </View>
+          <Text style={styles.progress} numberOfLines={1}>
+            {t("onboarding.progress", {
+              done: String(state.onboardingStep),
+              total: String(ONBOARDING_STEPS.length),
+            })}
+          </Text>
         </View>
-      </View>
-    </ScalePressable>
+        {expanded && (
+          <Text style={styles.description}>
+            {t(step.descriptionKey)}
+            {!alreadyHere && (
+              <Text style={styles.goTo}>
+                {" "}
+                {t("onboarding.goTo", { tab: t(TAB_LABEL_KEYS[step.screen]) })}
+              </Text>
+            )}
+          </Text>
+        )}
+      </ScalePressable>
+      <Pressable
+        style={styles.toggle}
+        onPress={() => setExpanded((v) => !v)}
+        accessibilityRole="button"
+        accessibilityLabel={t(step.descriptionKey)}
+        accessibilityState={{ expanded }}
+        hitSlop={6}
+      >
+        <Text style={styles.chevron}>{expanded ? "▴" : "▾"}</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    // Flush with the screen's own sides — this is the one feature banner
-    // on screen, not an ordinary inset card.
-    marginHorizontal: 0,
-    // EventBanner/ComboBanner above it carry no bottom margin of their own,
-    // so without this the two sit flush against each other with no seam —
-    // exactly the crowded look this was reported for.
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginTop: SPACING.xs,
     marginBottom: SPACING.xs,
-    aspectRatio: PANEL_ASPECT_RATIO,
+    marginHorizontal: 6,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#b88a4a",
+    backgroundColor: PARCHMENT.paper,
     overflow: "hidden",
   },
-  ribbonTextWrap: {
-    position: "absolute",
-    left: pct(230, "w"),
-    right: `${100 - (815 / 1991) * 100}%`,
-    top: pct(65, "h"),
-    bottom: `${100 - (210 / 658) * 100}%`,
-    justifyContent: "center",
+  main: { flex: 1, paddingVertical: 6, paddingLeft: 8, paddingRight: 2 },
+  topLine: { flexDirection: "row", alignItems: "center", gap: 8 },
+  tag: {
+    backgroundColor: "#2f5a2f",
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: "#c9a05a",
   },
-  eyebrow: {
-    color: "#f4e8ce",
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-    letterSpacing: 1.2,
-  },
-  progressWrap: {
-    position: "absolute",
-    right: "9%",
-    top: pct(150, "h"),
-    bottom: `${100 - (210 / 658) * 100}%`,
-    justifyContent: "center",
-    alignItems: "flex-end",
-  },
-  progress: {
-    color: "#8a5a1f",
-    fontFamily: FONT.medium,
-    fontSize: TYPE.caption,
-  },
-  textWrap: {
-    position: "absolute",
-    left: pct(430, "w"),
-    right: "9%",
-    // The baked ribbon art fills this column down to ~y=210, and the baked
-    // progress groove starts at ~y=430 — this band is already as tall as
-    // the art allows, so the font sizes below are tuned to fit inside it
-    // (not the app's usual TYPE scale) rather than the other way around.
-    top: pct(215, "h"),
-    bottom: `${100 - (428 / 658) * 100}%`,
-    justifyContent: "center",
-    // A safety net, not the fit itself: on a screen narrow enough that two
-    // lines of a long description still don't fit this band, clip rather
-    // than let it spill text over the baked progress groove below.
-    overflow: "hidden",
-  },
-  titleLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: SPACING.sm,
-  },
-  title: { color: "#3d2415", fontFamily: FONT.bold, fontSize: TYPE.body, flexShrink: 1 },
-  description: {
-    color: "#6b5436",
-    fontFamily: FONT.regular,
-    fontSize: TYPE.caption,
-    lineHeight: 13,
-  },
-  goTo: { color: "#8a5a1f", fontFamily: FONT.medium },
-  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.caption },
-
-  trackWrap: {
-    position: "absolute",
-    left: pct(475, "w"),
-    right: pct(95, "w"),
-    top: pct(428, "h"),
-    bottom: `${100 - (462 / 658) * 100}%`,
+  tagText: { color: "#f4e8ce", fontFamily: FONT.display, fontSize: TYPE.caption, letterSpacing: 0.8 },
+  title: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.bold, fontSize: TYPE.body },
+  rewardWrap: { flexDirection: "row", alignItems: "center", gap: 3 },
+  reward: { color: "#8a5a1f", fontFamily: FONT.bold, fontSize: TYPE.label },
+  coin: { width: 15, height: 15 },
+  barLine: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 5 },
+  track: {
+    flex: 1,
+    height: 7,
     borderRadius: 999,
+    backgroundColor: "rgba(61,36,21,0.55)",
     overflow: "hidden",
   },
   fill: { height: "100%", borderRadius: 999, overflow: "hidden" },
+  progress: { color: "#8a5a1f", fontFamily: FONT.medium, fontSize: TYPE.caption },
+  description: {
+    color: "#6b5436",
+    fontFamily: FONT.regular,
+    fontSize: TYPE.label,
+    lineHeight: 16,
+    marginTop: 5,
+  },
+  goTo: { color: "#8a5a1f", fontFamily: FONT.medium },
+  toggle: { paddingHorizontal: 10, paddingVertical: 6, alignSelf: "stretch", justifyContent: "center" },
+  chevron: { color: "#8a5a1f", fontSize: TYPE.title },
 });
