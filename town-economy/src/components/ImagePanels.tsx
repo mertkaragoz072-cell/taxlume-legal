@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   // Explicit 100% too: on web an absolutely-positioned Image otherwise
   // falls back to its natural pixel size.
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
-  beam: { aspectRatio: 1307 / 142, justifyContent: "center", alignItems: "center", zIndex: 2 },
+  beam: { aspectRatio: 1310 / 135, justifyContent: "center", alignItems: "center", zIndex: 2 },
   beamText: {
     fontFamily: FONT.display,
     color: GOLD_TEXT,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   ribbonRow: { flexDirection: "row", marginTop: 6, marginBottom: 2 },
-  ribbon: { aspectRatio: 724 / 136, justifyContent: "center", paddingLeft: "19%", paddingRight: "9%" },
+  ribbon: { aspectRatio: 719 / 131, justifyContent: "center", paddingLeft: "19%", paddingRight: "9%" },
   ribbonText: {
     fontFamily: FONT.bold,
     color: GOLD_TEXT,

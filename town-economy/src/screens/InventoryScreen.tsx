@@ -1,13 +1,12 @@
 import React from "react";
 import { formatPercent } from "../utils/formatNumber";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import chestImg from "../../assets/ui/inventory/chest.png";
+import bagImg from "../../assets/ui/inventory/bag.png";
+import coinsImg from "../../assets/ui/inventory/coins.png";
 import crateImg from "../../assets/ui/inventory/crate.png";
 import sceneImg from "../../assets/ui/inventory/scene.png";
 import storageImg from "../../assets/ui/inventory/storage.png";
 import summaryImg from "../../assets/ui/inventory/summary.png";
-import statCoins from "../../assets/ui/statpanel2/coins.png";
-import statMoneyBag from "../../assets/ui/statpanel2/moneybag.png";
 import { Text } from "../components/AppText";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
@@ -39,19 +38,19 @@ export function InventoryScreen() {
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <BeamTitle title={t("tabs.inventory")} />
-      <FixedPanel source={summaryImg} aspect={767 / 397} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
+      <FixedPanel source={summaryImg} aspect={764 / 398} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
         {(w) => (
           <>
             {[
-              { y: 26.7, icon: statCoins, label: t("header.cash"), value: state.cash, strong: false },
+              { y: 27.4, icon: coinsImg, label: t("header.cash"), value: state.cash, strong: false },
               {
-                y: 50.4,
+                y: 51.1,
                 icon: crateImg,
                 label: t("inventory.portfolioValue"),
                 value: portfolioValue,
                 strong: false,
               },
-              { y: 77, icon: statMoneyBag, label: t("header.netWorth"), value: netWorth, strong: true },
+              { y: 77.7, icon: bagImg, label: t("header.netWorth"), value: netWorth, strong: true },
             ].map((row) => (
               <View key={row.label} style={[styles.sumRow, { top: `${row.y - 10}%` }]}>
                 <Image
@@ -74,10 +73,9 @@ export function InventoryScreen() {
         )}
       </FixedPanel>
 
-      <FixedPanel source={storageImg} aspect={736 / 149} style={{ marginBottom: PANEL_GAP }}>
+      <FixedPanel source={storageImg} aspect={733 / 147} style={{ marginBottom: PANEL_GAP }}>
         {(w) => (
           <>
-            <Image source={chestImg} style={styles.storageChest} resizeMode="contain" />
             <Text style={[styles.storageLabel, { fontSize: w * 0.044 }]} numberOfLines={1}>
               {t("inventory.storageLabel")}
             </Text>
@@ -102,7 +100,7 @@ export function InventoryScreen() {
 
       <AssetRibbon text={t("inventory.sectionLabel")} />
       {holdings.length === 0 && (
-        <FixedPanel source={sceneImg} aspect={934 / 428} style={{ marginBottom: PANEL_GAP }}>
+        <FixedPanel source={sceneImg} aspect={933 / 425} style={{ marginBottom: PANEL_GAP }}>
           {(w) => (
             <View style={styles.emptyOverlay}>
               <GradientFill colors={["rgba(14,8,3,0)", "rgba(14,8,3,0.86)"]} x1="0" y1="0" x2="0" y2="1" />
@@ -157,7 +155,6 @@ const styles = StyleSheet.create({
   sumIcon: { aspectRatio: 1, marginRight: "3%" },
   sumLabel: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.serif },
   sumValue: { color: PARCHMENT.ink, fontFamily: FONT.serif, fontVariant: ["lining-nums"] },
-  storageChest: { position: "absolute", left: "5.2%", top: "17%", width: "13%", height: "66%" },
   storageLabel: {
     position: "absolute",
     left: "21.5%",
