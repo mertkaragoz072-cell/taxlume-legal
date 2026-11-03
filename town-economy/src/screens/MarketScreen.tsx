@@ -16,7 +16,8 @@ import {
 import { townRankIcon, townRankNameKey } from "../economy/townRanks";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { BuySellPanel } from "../components/BuySellPanel";
-import { DemandForecastCard } from "../components/DemandForecastCard";
+import { DemandForecastCard, GoodChip } from "../components/DemandForecastCard";
+import { WoodPanel } from "../components/WoodPanel";
 import { SeasonStrip } from "../components/SeasonStrip";
 import { GoodCard } from "../components/GoodCard";
 import { GoodIcon } from "../components/GoodIcon";
@@ -32,6 +33,7 @@ import {
   COLORS,
   CONTENT_MAX_WIDTH,
   PANEL_GAP,
+  PARCHMENT,
   SCREEN_PADDING,
   FONT,
   GOLD_GRADIENT,
@@ -257,53 +259,42 @@ export function MarketScreen({ sounds }: Props) {
           game had no Town tab yet to send it to. This says something —
           overall mood plus whoever moved the most, in either direction,
           this tick — and it updates every tick instead of sitting still. */}
-      <View style={styles.pulseCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View style={styles.pulseHeaderRow}>
-          <Text style={styles.pulseTitle}>{t("market.pulse.title")}</Text>
+      <WoodPanel
+        icon="📈"
+        title={t("market.pulse.title")}
+        right={
           <Text style={[styles.pulseSentiment, { color: marketPulse.sentiment.color }]}>
             {marketPulse.sentiment.icon} {t(`market.sentiment.${marketPulse.sentiment.key}`)}
           </Text>
-        </View>
-        {marketPulse.topGainer && marketPulse.topLoser && (
-          <View style={styles.pulseMoversRow}>
-            <View style={styles.pulseMover}>
-              <Text style={styles.pulseMoverLabel}>{t("market.pulse.topGainer")}</Text>
-              <View style={styles.pulseMoverRow}>
-                <GoodIcon
-                  id={marketPulse.topGainer.good.id}
-                  fallback={marketPulse.topGainer.good.icon}
-                  size={TYPE.title}
-                />
-                <Text style={styles.pulseMoverGood} numberOfLines={1}>
-                  {t(marketPulse.topGainer.good.nameKey)}
-                </Text>
-              </View>
-              <Text style={[styles.pulseMoverPct, { color: COLORS.positive }]}>
+        }
+        style={{ marginBottom: PANEL_GAP }}
+      >
+        {marketPulse.topGainer && marketPulse.topLoser ? (
+          <>
+            <View style={styles.pulseRow}>
+              <Text style={[styles.pulseRowLabel, { color: "#2f7a3a" }]}>
+                ▲ {t("market.pulse.topGainer")}
+              </Text>
+              <GoodChip goodId={marketPulse.topGainer.good.id} tone="hot" t={t} />
+              <Text style={[styles.pulseMoverPct, { color: "#2f7a3a" }]}>
                 {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
                 {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
               </Text>
             </View>
-            <View style={styles.pulseMoverDivider} />
-            <View style={styles.pulseMover}>
-              <Text style={styles.pulseMoverLabel}>{t("market.pulse.topLoser")}</Text>
-              <View style={styles.pulseMoverRow}>
-                <GoodIcon
-                  id={marketPulse.topLoser.good.id}
-                  fallback={marketPulse.topLoser.good.icon}
-                  size={TYPE.title}
-                />
-                <Text style={styles.pulseMoverGood} numberOfLines={1}>
-                  {t(marketPulse.topLoser.good.nameKey)}
-                </Text>
-              </View>
-              <Text style={[styles.pulseMoverPct, { color: COLORS.negative }]}>
+            <View style={styles.pulseRow}>
+              <Text style={[styles.pulseRowLabel, { color: PARCHMENT.negative }]}>
+                ▼ {t("market.pulse.topLoser")}
+              </Text>
+              <GoodChip goodId={marketPulse.topLoser.good.id} tone="glut" t={t} />
+              <Text style={[styles.pulseMoverPct, { color: PARCHMENT.negative }]}>
                 {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
               </Text>
             </View>
-          </View>
+          </>
+        ) : (
+          <Text style={styles.pulseEmpty}>{t(`market.sentiment.${marketPulse.sentiment.key}`)}</Text>
         )}
-      </View>
+      </WoodPanel>
 
       {state.activeSeasonalEvent && seasonalTemplate && (
         <View style={styles.seasonalCard}>
@@ -553,51 +544,16 @@ export function MarketScreen({ sounds }: Props) {
 
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  pulseCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md + 2,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  pulseHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  pulseTitle: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
+  pulseSentiment: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
+  pulseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginBottom: SPACING.xs + 2 },
+  pulseRowLabel: {
+    width: 96,
+    fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
-    letterSpacing: 1,
   },
-  pulseSentiment: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
-  pulseMoversRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: SPACING.md,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: "#3a2d1e",
-  },
-  pulseMover: { flex: 1 },
-  pulseMoverDivider: {
-    width: 1,
-    alignSelf: "stretch",
-    backgroundColor: "#3a2d1e",
-    marginHorizontal: SPACING.md,
-  },
-  pulseMoverLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: 3 },
-  pulseMoverRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  pulseMoverGood: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-    flexShrink: 1,
-  },
-  pulseMoverPct: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginTop: 2 },
+  pulseMoverPct: { fontSize: TYPE.body, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  pulseEmpty: { color: PARCHMENT.inkMuted, fontSize: TYPE.label, textAlign: "center" },
   seasonalCard: {
     flexDirection: "row",
     alignItems: "center",

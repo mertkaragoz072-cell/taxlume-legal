@@ -4,8 +4,9 @@ import { DemandCycle } from "../economy/demandCycles";
 import { GOODS_BY_ID } from "../economy/goods";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
-import { GradientFill } from "./GradientFill";
+import { FONT, PANEL_GAP, PARCHMENT, SPACING, TYPE, WEIGHT } from "../theme";
+import { GoodIcon } from "./GoodIcon";
+import { WoodPanel } from "./WoodPanel";
 import blueLeft from "../../assets/ui/demandpill/blue-left.png";
 import blueMid from "../../assets/ui/demandpill/blue-mid.png";
 import blueRight from "../../assets/ui/demandpill/blue-right.png";
@@ -14,8 +15,8 @@ import tanMid from "../../assets/ui/demandpill/tan-mid.png";
 import tanRight from "../../assets/ui/demandpill/tan-right.png";
 
 // Row-label colors (unchanged — these sit on the dark card, not the pill).
-const HOT = "#f0a04b";
-const GLUT = "#6fb8f2";
+const HOT = "#c2652a";
+const GLUT = "#2f6fb5";
 
 // A CSS-painted fill/rim came close to the reference's two chip colors, but
 // not close enough — this crops the real pill art instead (its own gold rim
@@ -35,7 +36,7 @@ interface Props {
   tick: number;
 }
 
-function GoodChip({
+export function GoodChip({
   goodId,
   tone,
   t,
@@ -55,9 +56,7 @@ function GoodChip({
         <Image source={mid} style={{ flex: 1, height: CAP_HEIGHT }} resizeMode="stretch" />
         <Image source={right} style={{ width: capWidth, height: CAP_HEIGHT }} resizeMode="stretch" />
       </View>
-      <Text aria-hidden style={styles.chipIcon}>
-        {good.icon}
-      </Text>
+      <GoodIcon id={good.id} fallback={good.icon} size={16} style={{ marginRight: 5 }} />
       <Text style={styles.chipText} numberOfLines={1}>
         {t(good.nameKey)}
       </Text>
@@ -76,16 +75,12 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
   const daysLeft = Math.ceil(ticksLeft / TICKS_PER_GAME_DAY);
 
   return (
-    <View style={styles.card}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-
-      <View style={styles.headRow}>
-        <Text style={styles.title}>{t("market.demand.sectionLabel")}</Text>
-        <Text style={styles.countdown}>
-          {daysLeft <= 1 ? t("market.demand.lastDay") : t("market.demand.daysLeft", { days: daysLeft })}
-        </Text>
-      </View>
-
+    <WoodPanel
+      icon="⏳"
+      title={t("market.demand.sectionLabel")}
+      right={daysLeft <= 1 ? t("market.demand.lastDay") : t("market.demand.daysLeft", { days: daysLeft })}
+      style={{ marginBottom: PANEL_GAP }}
+    >
       <View style={styles.row}>
         <Text style={[styles.rowLabel, { color: HOT }]}>▲ {t("market.demand.hotLabel")}</Text>
         <View style={styles.chips}>
@@ -115,32 +110,11 @@ export function DemandForecastCard({ cycle, next, tick }: Props) {
       )}
 
       <Text style={styles.hint}>{t("market.demand.hint")}</Text>
-    </View>
+    </WoodPanel>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  headRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: SPACING.sm,
-  },
-  title: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 1,
-  },
-  countdown: { color: COLORS.accent, fontSize: TYPE.micro, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   row: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.xs + 2 },
   rowLabel: {
     width: 82,
@@ -167,14 +141,20 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: "#3a2d1e",
+    borderTopColor: "rgba(61,36,21,0.25)",
   },
   nextLabel: {
     width: 82,
-    color: COLORS.textMuted,
+    color: PARCHMENT.inkMuted,
     fontSize: TYPE.micro,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
-  hint: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.sm, lineHeight: 15 },
+  hint: {
+    color: PARCHMENT.inkMuted,
+    fontSize: TYPE.micro,
+    marginTop: SPACING.sm,
+    lineHeight: 15,
+    textAlign: "center",
+  },
 });
