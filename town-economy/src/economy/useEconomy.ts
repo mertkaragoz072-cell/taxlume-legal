@@ -1,3 +1,4 @@
+import { backfillHistory } from "./priceHistory";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ACHIEVEMENTS } from "./achievements";
 import { ASSETS, ASSETS_BY_ID, AssetId } from "./assets";
@@ -269,7 +270,7 @@ type Action =
 function makeInitialGoodState(good: Good): GoodState {
   return {
     price: good.basePrice,
-    history: [good.basePrice],
+    history: backfillHistory(good.id, good.basePrice),
     supply: good.baseSupply,
     holding: 0,
     avgCost: 0,
@@ -277,7 +278,12 @@ function makeInitialGoodState(good: Good): GoodState {
   };
 }
 function makeInitialAssetState(asset: (typeof ASSETS)[number]): EconomyState["assets"][AssetId] {
-  return { price: asset.basePrice, history: [asset.basePrice], holding: 0, avgCost: 0 };
+  return {
+    price: asset.basePrice,
+    history: backfillHistory(asset.id, asset.basePrice),
+    holding: 0,
+    avgCost: 0,
+  };
 }
 function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   const town = TOWNS_BY_ID[townId];

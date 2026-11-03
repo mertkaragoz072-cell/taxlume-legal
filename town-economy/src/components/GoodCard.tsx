@@ -70,10 +70,10 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   // piece instead of the icon/chart staying fixed-size and overflowing a
   // card that got smaller around them.
   const scale = width / BASE_WIDTH;
-  const cardPadding = Math.round(SPACING.sm * scale) + 2;
-  const iconSize = Math.round(38 * scale);
+  const cardPadding = Math.round(SPACING.sm * scale);
+  const iconSize = Math.round(32 * scale);
   const chartWidth = Math.max(32, Math.round(88 * scale));
-  const chartHeight = Math.max(20, Math.round(20 * scale));
+  const chartHeight = Math.max(20, Math.round(30 * scale));
 
   return (
     // The shadow lives on this plain, never-animated View rather than on
@@ -138,7 +138,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
               color={good.color}
               width={chartWidth}
               height={chartHeight}
-              strokeWidth={2}
+              strokeWidth={1.5}
               smooth={false}
               filled={false}
               baseline={false}
@@ -188,11 +188,11 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopRightRadius: RADIUS.card,
     borderBottomLeftRadius: RADIUS.card,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     zIndex: 4,
   },
-  badgeText: { color: "#1a1410", fontSize: TYPE.caption, fontWeight: WEIGHT.black, fontFamily: FONT.black },
+  badgeText: { color: "#1a1410", fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   card: {
     borderRadius: RADIUS.card,
     // Same width selected or not, so picking a card never shifts its contents.
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   topZone: { alignItems: "center" },
   // Dark wood frame around the parchment, so the cream label reads as a
   // plate inset in the card rather than the card's own bottom half.
-  bottomFrame: { paddingHorizontal: 4, paddingBottom: 4 },
+  bottomFrame: { paddingHorizontal: 4, paddingBottom: 3 },
   // The identity half — cream parchment, matching the reference's
   // two-tone card instead of one uniform dark panel.
   bottomZone: {
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: "#b88a4a",
-    paddingVertical: 3,
+    paddingVertical: 2,
     paddingHorizontal: 3,
   },
   rivet: {
@@ -228,14 +228,14 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#c9a05a",
+    backgroundColor: "#a77a3c",
     borderWidth: 1,
-    borderColor: "#6b4520",
+    borderColor: "#3b2410",
     zIndex: 3,
   },
   chartBox: { overflow: "hidden" },
   changeWrap: { flexDirection: "row", alignItems: "center", gap: 3, flexShrink: 1 },
-  arrow: { fontSize: TYPE.micro },
+  arrow: { fontSize: 8 },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -246,24 +246,24 @@ const styles = StyleSheet.create({
     marginTop: 3,
     marginBottom: 1,
   },
-  change: { fontSize: TYPE.caption, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
+  change: { fontSize: TYPE.micro, fontWeight: WEIGHT.black, fontFamily: FONT.black, flexShrink: 1 },
   name: {
     color: PARCHMENT.ink,
     fontSize: TYPE.title - 2,
     fontFamily: FONT.serif,
-    lineHeight: 17,
+    lineHeight: 15,
   },
   producer: {
     color: PARCHMENT.inkMuted,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
-    lineHeight: 13,
+    lineHeight: 12,
     marginTop: 0,
   },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   coin: { width: 15, height: 15 },
-  price: { color: PARCHMENT.ink, fontSize: TYPE.title - 2, fontFamily: FONT.serif, lineHeight: 17 },
+  price: { color: PARCHMENT.ink, fontSize: TYPE.title - 2, fontFamily: FONT.serif, lineHeight: 15 },
   holding: {
     marginTop: 2,
     fontSize: TYPE.micro,
