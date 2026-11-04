@@ -104,6 +104,7 @@ export function MarketScreen({ sounds }: Props) {
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
   const selectedState = state.goods[selected.id];
   const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetRef = useRef<View>(null);
   // While the guided tour is pointing at the buy button it has to be on the
   // page itself (that is what it dims around and scrolls to); every other
   // time, tapping a good opens the same panel as a sheet.
@@ -432,8 +433,27 @@ export function MarketScreen({ sounds }: Props) {
         animationType="fade"
         onRequestClose={() => setSheetOpen(false)}
       >
-        <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
+        <Pressable
+          style={styles.sheetBackdrop}
+          onPress={(e) => {
+            // A tap anywhere that is not on the painted card closes the
+            // dialog. Taps on the card also reach this handler (they bubble
+            // up from its children), so it checks where the tap landed
+            // against the card's on-screen rectangle first.
+            const { pageX, pageY } = e.nativeEvent;
+            const card = sheetRef.current;
+            if (!card) return setSheetOpen(false);
+            card.measureInWindow((x, y, w, h) => {
+              const onCard =
+                pageX >= x + w * 0.025 &&
+                pageX <= x + w * 0.965 &&
+                pageY >= y + h * 0.065 &&
+                pageY <= y + h * 0.975;
+              if (!onCard) setSheetOpen(false);
+            });
+          }}
+        >
+          <View ref={sheetRef} collapsable={false} style={styles.sheet}>
             <BuySellPanel
               dialog
               goodId={selected.id}
@@ -448,7 +468,7 @@ export function MarketScreen({ sounds }: Props) {
                 else sounds.playSell();
               }}
             />
-          </Pressable>
+          </View>
         </Pressable>
       </Modal>
 
