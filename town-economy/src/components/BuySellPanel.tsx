@@ -79,7 +79,6 @@ export function BuySellPanel({
       <TradeDialog
         good={good}
         goodId={goodId ?? ""}
-        price={state.price}
         holding={state.holding}
         side={side}
         setSide={setSide}

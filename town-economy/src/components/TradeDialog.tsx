@@ -27,7 +27,6 @@ type Qty = number | "ALL";
 interface Props {
   good: { nameKey: string; icon: string; color: string };
   goodId: string;
-  price: number;
   holding: number;
   side: "buy" | "sell";
   setSide: (s: "buy" | "sell") => void;
@@ -116,7 +115,7 @@ export function TradeDialog(p: Props) {
         {t(p.good.nameKey)}
       </Text>
       <View style={styles.meta}>
-        <Text style={[styles.metaText, { fontSize: f(0.062) }]}>{p.price.toFixed(2)} 🪙</Text>
+        <Text style={[styles.metaText, { fontSize: f(0.062) }]}>{p.execPrice.toFixed(2)} 🪙</Text>
         <Image
           source={crateImg}
           style={{ width: f(0.07), height: f(0.062), marginLeft: f(0.03) }}
@@ -206,9 +205,6 @@ export function TradeDialog(p: Props) {
           >
             <Text style={[styles.stepText, { fontSize: f(0.06) }]}>+</Text>
           </Pressable>
-          <Text style={[styles.sumText, { fontSize: f(0.04), marginLeft: f(0.02) }]} numberOfLines={1}>
-            {t("market.unitPrice", { price: p.execPrice.toFixed(2) })}
-          </Text>
         </View>
         <Text style={[styles.sumTotal, { fontSize: f(0.062) }]} numberOfLines={1}>
           {formatCoins(p.total)}
