@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
-import { Animated, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Animated, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -103,6 +103,11 @@ export function MarketScreen({ sounds }: Props) {
   const lockedGoods = GOODS.filter((g) => !isGoodUnlocked(g, state));
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
   const selectedState = state.goods[selected.id];
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // While the guided tour is pointing at the buy button it has to be on the
+  // page itself (that is what it dims around and scrolls to); every other
+  // time, tapping a good opens the same panel as a sheet.
+  const tourBuyBeat = currentMentorStep(state.mentorStep)?.spotlight === "buy";
   const { opacity: flashOpacity, flashColor } = usePriceFlash(selectedState.price);
   const seasonalTemplate = state.activeSeasonalEvent
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[state.activeSeasonalEvent.templateId]
@@ -202,7 +207,10 @@ export function MarketScreen({ sounds }: Props) {
             good={g}
             state={state.goods[g.id]}
             selected={g.id === state.selectedGood}
-            onPress={() => selectGood(g.id)}
+            onPress={() => {
+              selectGood(g.id);
+              if (!tourBuyBeat) setSheetOpen(true);
+            }}
             width={goodCardWidth}
             // One ribbon color for both states, like the reference — the word
             // on it says which.
@@ -398,21 +406,65 @@ export function MarketScreen({ sounds }: Props) {
           cycle plays out against, and reading them together is what turns a
           reaction into a plan. Outside the conditional below because the
           season is always running, cycle or no cycle. */}
-      <SpotlightTarget id="buy">
-        <View ref={panelRef} collapsable={false}>
-          <BuySellPanel
-            good={selected}
-            state={selectedState}
-            cash={state.cash}
-            spreadPct={marketSpreadPct}
-            onTrade={(side, qty) => {
-              trade(selected.id, side, qty);
-              if (side === "buy") sounds.playBuy();
-              else sounds.playSell();
-            }}
-          />
-        </View>
-      </SpotlightTarget>
+      {tourBuyBeat && (
+        <SpotlightTarget id="buy">
+          <View ref={panelRef} collapsable={false}>
+            <BuySellPanel
+              good={selected}
+              state={selectedState}
+              cash={state.cash}
+              spreadPct={marketSpreadPct}
+              onTrade={(side, qty) => {
+                trade(selected.id, side, qty);
+                if (side === "buy") sounds.playBuy();
+                else sounds.playSell();
+              }}
+            />
+          </View>
+        </SpotlightTarget>
+      )}
+
+      {/* Tapping a good opens this: the buy / sell panel for it, over the
+          market, so the player does not have to scroll to find it. */}
+      <Modal
+        transparent
+        visible={sheetOpen && !tourBuyBeat}
+        animationType="slide"
+        onRequestClose={() => setSheetOpen(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.sheetHead}>
+              <GoodIcon id={selected.id} fallback={selected.icon} size={34} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sheetName}>{t(selected.nameKey)}</Text>
+                <Text style={styles.sheetSub}>
+                  {selectedState.price.toFixed(2)} 🪙 · x{selectedState.holding}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setSheetOpen(false)}
+                style={styles.sheetClose}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+              >
+                <Text style={styles.sheetCloseText}>✕</Text>
+              </Pressable>
+            </View>
+            <BuySellPanel
+              good={selected}
+              state={selectedState}
+              cash={state.cash}
+              spreadPct={marketSpreadPct}
+              onTrade={(side, qty) => {
+                trade(selected.id, side, qty);
+                if (side === "buy") sounds.playBuy();
+                else sounds.playSell();
+              }}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <SectionLabel text={t("market.autoTrade.sectionLabel")} color={selected.color} />
       <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>
@@ -552,6 +604,37 @@ export function MarketScreen({ sounds }: Props) {
 
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  sheet: {
+    width: "100%",
+    maxWidth: CONTENT_MAX_WIDTH,
+    backgroundColor: "#2b1a0e",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    borderColor: "#b88a4a",
+    padding: SPACING.md,
+    paddingBottom: SPACING.lg + 8,
+  },
+  sheetHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginBottom: SPACING.sm },
+  sheetName: { color: "#f4e8ce", fontFamily: FONT.serif, fontSize: TYPE.heading },
+  sheetSub: { color: "#d9c7a3", fontFamily: FONT.bold, fontSize: TYPE.label, marginTop: 1 },
+  sheetClose: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: "#b88a4a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetCloseText: { color: "#f4e8ce", fontSize: TYPE.label },
   pulseSentiment: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   pulseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginBottom: SPACING.xs + 2 },
   pulseRowLabel: {
