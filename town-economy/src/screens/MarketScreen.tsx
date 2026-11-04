@@ -257,6 +257,8 @@ export function MarketScreen({ sounds }: Props) {
         </>
       )}
 
+      <SeasonStrip />
+
       {/* Market Pulse: the town square image used to open this screen, but
           it said nothing about the market and only lived here because the
           game had no Town tab yet to send it to. This says something —
@@ -387,8 +389,6 @@ export function MarketScreen({ sounds }: Props) {
           cycle plays out against, and reading them together is what turns a
           reaction into a plan. Outside the conditional below because the
           season is always running, cycle or no cycle. */}
-      <SeasonStrip />
-
       {state.demandCycle && (
         <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
       )}
