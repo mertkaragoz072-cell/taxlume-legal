@@ -96,6 +96,10 @@ export function MarketScreen({ sounds }: Props) {
   // Four across where they fit, but never narrower than a card can stay
   // readable — on a small phone the row scrolls instead of squeezing.
   const goodCardWidth = Math.max(84, (goodsRowWidth - SPACING.sm * 3) / 4);
+  // The locked cards run wider so the Coming Soon row always overflows a
+  // little: the last card peeks past the edge and the row slides sideways
+  // like Town Market's, even while only four goods are still locked.
+  const lockedCardWidth = Math.round(goodCardWidth * 1.3);
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -238,7 +242,7 @@ export function MarketScreen({ sounds }: Props) {
             {lockedGoods.map((g) => (
               <View
                 key={g.id}
-                style={[styles.lockedCard, { width: goodCardWidth, borderColor: withAlpha(g.color, 0.3) }]}
+                style={[styles.lockedCard, { width: lockedCardWidth, borderColor: withAlpha(g.color, 0.3) }]}
               >
                 <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
                 <View style={[styles.lockedAccentStripe, { backgroundColor: withAlpha(g.color, 0.5) }]} />
@@ -251,7 +255,7 @@ export function MarketScreen({ sounds }: Props) {
                 <GoodIcon
                   id={g.id}
                   fallback={g.icon}
-                  size={Math.round(36 * (goodCardWidth / 112))}
+                  size={Math.round(36 * (lockedCardWidth / 112))}
                   style={styles.lockedIcon}
                 />
                 <Text style={styles.lockedName} numberOfLines={1}>
