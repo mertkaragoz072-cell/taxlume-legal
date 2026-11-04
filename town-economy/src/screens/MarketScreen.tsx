@@ -48,6 +48,9 @@ import {
 } from "../theme";
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
+// Market Pulse is parked for now — flip to bring the panel back.
+const SHOW_MARKET_PULSE = false;
+
 const formatPrice = (v: number) => `${v.toFixed(2)} 🪙`;
 
 interface Props {
@@ -259,47 +262,53 @@ export function MarketScreen({ sounds }: Props) {
 
       <SeasonStrip />
 
+      {state.demandCycle && (
+        <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
+      )}
+
       {/* Market Pulse: the town square image used to open this screen, but
           it said nothing about the market and only lived here because the
           game had no Town tab yet to send it to. This says something —
           overall mood plus whoever moved the most, in either direction,
           this tick — and it updates every tick instead of sitting still. */}
-      <WoodPanel
-        icon="📈"
-        title={t("market.pulse.title")}
-        right={
-          <Text style={[styles.pulseSentiment, { color: marketPulse.sentiment.color }]}>
-            {marketPulse.sentiment.icon} {t(`market.sentiment.${marketPulse.sentiment.key}`)}
-          </Text>
-        }
-        style={{ marginBottom: PANEL_GAP }}
-      >
-        {marketPulse.topGainer && marketPulse.topLoser ? (
-          <>
-            <View style={styles.pulseRow}>
-              <Text style={[styles.pulseRowLabel, { color: "#2f7a3a" }]}>
-                ▲ {t("market.pulse.topGainer")}
-              </Text>
-              <GoodChip goodId={marketPulse.topGainer.good.id} tone="hot" t={t} />
-              <Text style={[styles.pulseMoverPct, { color: "#2f7a3a" }]}>
-                {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
-                {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
-              </Text>
-            </View>
-            <View style={styles.pulseRow}>
-              <Text style={[styles.pulseRowLabel, { color: PARCHMENT.negative }]}>
-                ▼ {t("market.pulse.topLoser")}
-              </Text>
-              <GoodChip goodId={marketPulse.topLoser.good.id} tone="glut" t={t} />
-              <Text style={[styles.pulseMoverPct, { color: PARCHMENT.negative }]}>
-                {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
-              </Text>
-            </View>
-          </>
-        ) : (
-          <Text style={styles.pulseEmpty}>{t(`market.sentiment.${marketPulse.sentiment.key}`)}</Text>
-        )}
-      </WoodPanel>
+      {SHOW_MARKET_PULSE && (
+        <WoodPanel
+          icon="📈"
+          title={t("market.pulse.title")}
+          right={
+            <Text style={[styles.pulseSentiment, { color: marketPulse.sentiment.color }]}>
+              {marketPulse.sentiment.icon} {t(`market.sentiment.${marketPulse.sentiment.key}`)}
+            </Text>
+          }
+          style={{ marginBottom: PANEL_GAP }}
+        >
+          {marketPulse.topGainer && marketPulse.topLoser ? (
+            <>
+              <View style={styles.pulseRow}>
+                <Text style={[styles.pulseRowLabel, { color: "#2f7a3a" }]}>
+                  ▲ {t("market.pulse.topGainer")}
+                </Text>
+                <GoodChip goodId={marketPulse.topGainer.good.id} tone="hot" t={t} />
+                <Text style={[styles.pulseMoverPct, { color: "#2f7a3a" }]}>
+                  {marketPulse.topGainer.fraction >= 0 ? "+" : ""}
+                  {formatPercent(marketPulse.topGainer.fraction * 100, state.language, 1)}
+                </Text>
+              </View>
+              <View style={styles.pulseRow}>
+                <Text style={[styles.pulseRowLabel, { color: PARCHMENT.negative }]}>
+                  ▼ {t("market.pulse.topLoser")}
+                </Text>
+                <GoodChip goodId={marketPulse.topLoser.good.id} tone="glut" t={t} />
+                <Text style={[styles.pulseMoverPct, { color: PARCHMENT.negative }]}>
+                  {formatPercent(marketPulse.topLoser.fraction * 100, state.language, 1)}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.pulseEmpty}>{t(`market.sentiment.${marketPulse.sentiment.key}`)}</Text>
+          )}
+        </WoodPanel>
+      )}
 
       {state.activeSeasonalEvent && seasonalTemplate && (
         <View style={styles.seasonalCard}>
@@ -389,10 +398,6 @@ export function MarketScreen({ sounds }: Props) {
           cycle plays out against, and reading them together is what turns a
           reaction into a plan. Outside the conditional below because the
           season is always running, cycle or no cycle. */}
-      {state.demandCycle && (
-        <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
-      )}
-
       <SpotlightTarget id="buy">
         <View ref={panelRef} collapsable={false}>
           <BuySellPanel
