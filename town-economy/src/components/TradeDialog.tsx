@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Image, ImageSourcePropType, LayoutChangeEvent, Pressable, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { Text } from "./AppText";
 import closeImg from "../../assets/ui/trade/close.png";
 import confirmImg from "../../assets/ui/trade/confirm.png";
@@ -14,7 +22,7 @@ import { FONT } from "../theme";
 import { CoinPop } from "./CoinPop";
 import { GoodIcon } from "./GoodIcon";
 
-type Qty = 1 | 5 | "ALL";
+type Qty = number | "ALL";
 
 interface Props {
   good: { nameKey: string; icon: string; color: string };
@@ -90,11 +98,12 @@ export function TradeDialog(p: Props) {
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
   const buy = p.side === "buy";
   const f = (k: number) => Math.round(w * k);
-  const qtys: { q: Qty; left: number; width: number; art: ImageSourcePropType; aspect: number }[] = [
-    { q: 1, left: 11, width: 28.1, art: qtyGoldImg, aspect: 308 / 116 },
-    { q: 5, left: 40.6, width: 23.5, art: qtyBrownImg, aspect: 257 / 108 },
-    { q: "ALL", left: 65.5, width: 24.9, art: qtyBrownImg, aspect: 273 / 109 },
-  ];
+  const qtys: { q: 1 | 5 | "ALL"; left: number; width: number; art: ImageSourcePropType; aspect: number }[] =
+    [
+      { q: 1, left: 11, width: 28.1, art: qtyBrownImg, aspect: 308 / 116 },
+      { q: 5, left: 40.6, width: 23.5, art: qtyBrownImg, aspect: 257 / 108 },
+      { q: "ALL", left: 65.5, width: 24.9, art: qtyBrownImg, aspect: 273 / 109 },
+    ];
 
   return (
     <View style={styles.panel} onLayout={onLayout}>
@@ -167,9 +176,40 @@ export function TradeDialog(p: Props) {
       })}
 
       <View style={styles.summary}>
-        <Text style={[styles.sumText, { fontSize: f(0.05) }]} numberOfLines={1}>
-          {p.resolvedQty} x {t(p.good.nameKey)} @ {p.execPrice.toFixed(2)}
-        </Text>
+        <View style={styles.stepper}>
+          <Pressable
+            onPress={() => p.setQtyOption(Math.max(1, p.resolvedQty - 1))}
+            style={[styles.stepBtn, { width: f(0.075), height: f(0.075) }]}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease"
+          >
+            <Text style={[styles.stepText, { fontSize: f(0.06) }]}>−</Text>
+          </Pressable>
+          <TextInput
+            value={p.qtyOption === 0 ? "" : String(p.resolvedQty)}
+            onChangeText={(v) => {
+              const digits = v.replace(/[^0-9]/g, "").slice(0, 5);
+              p.setQtyOption(digits === "" ? 0 : parseInt(digits, 10));
+            }}
+            keyboardType="number-pad"
+            inputMode="numeric"
+            selectTextOnFocus
+            maxLength={5}
+            accessibilityLabel="Quantity"
+            style={[styles.qtyInput, { width: f(0.15), fontSize: f(0.055) }]}
+          />
+          <Pressable
+            onPress={() => p.setQtyOption(p.resolvedQty + 1)}
+            style={[styles.stepBtn, { width: f(0.075), height: f(0.075) }]}
+            accessibilityRole="button"
+            accessibilityLabel="Increase"
+          >
+            <Text style={[styles.stepText, { fontSize: f(0.06) }]}>+</Text>
+          </Pressable>
+          <Text style={[styles.sumText, { fontSize: f(0.04), marginLeft: f(0.02) }]} numberOfLines={1}>
+            @ {p.execPrice.toFixed(2)}
+          </Text>
+        </View>
         <Text style={[styles.sumTotal, { fontSize: f(0.062) }]} numberOfLines={1}>
           {formatCoins(p.total)}
         </Text>
@@ -227,6 +267,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  stepper: { flexDirection: "row", alignItems: "center", flexShrink: 1 },
+  stepBtn: {
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: "#c9a05a",
+    backgroundColor: "#5a3a1e",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepText: { color: CREAM, fontFamily: FONT.bold, marginTop: -2 },
+  qtyInput: {
+    color: INK,
+    fontFamily: FONT.serif,
+    textAlign: "center",
+    paddingVertical: 0,
+    marginHorizontal: 4,
+    borderBottomWidth: 1.5,
+    borderBottomColor: "rgba(61,36,21,0.5)",
   },
   sumText: { color: INK, fontFamily: FONT.serif, flexShrink: 1 },
   sumTotal: { color: INK, fontFamily: FONT.serif },

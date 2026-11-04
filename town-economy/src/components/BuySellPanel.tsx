@@ -39,7 +39,9 @@ interface Props {
   onClose?: () => void;
 }
 
-type Qty = 1 | 5 | "ALL";
+// A number is any amount the player typed or stepped to; the dark card only
+// ever offers 1, 5 and ALL, the dialog also takes a free amount.
+type Qty = number | "ALL";
 
 export function BuySellPanel({
   good,
