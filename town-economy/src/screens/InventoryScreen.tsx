@@ -5,26 +5,22 @@ import bagImg from "../../assets/ui/inventory/bag.png";
 import coinsImg from "../../assets/ui/inventory/coins.png";
 import crateImg from "../../assets/ui/inventory/crate.png";
 import sceneImg from "../../assets/ui/inventory/scene_tall.png";
-import storageImg from "../../assets/ui/inventory/storage.png";
+import chipDown from "../../assets/ui/inv2/chip_down.png";
+import chipUp from "../../assets/ui/inv2/chip_up.png";
+import qtyPill from "../../assets/ui/inv2/qty_pill.png";
+import rowBrown from "../../assets/ui/inv2/row_brown.png";
+import rowGold from "../../assets/ui/inv2/row_gold.png";
+import rowGreen from "../../assets/ui/inv2/row_green.png";
+import storageFull from "../../assets/ui/inv2/store_full.png";
+import storageNormal from "../../assets/ui/inv2/store_normal.png";
 import summaryImg from "../../assets/ui/inventory/summary.png";
 import { Text } from "../components/AppText";
 import { GoodIcon } from "../components/GoodIcon";
-import { GradientFill } from "../components/GradientFill";
 import { AssetRibbon, BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { storageCapacity, totalGoodsHolding } from "../economy/useEconomy";
-import {
-  PARCHMENT,
-  COLORS,
-  FONT,
-  RADIUS,
-  PANEL_GAP,
-  SCREEN_PADDING,
-  SPACING,
-  TYPE,
-  withAlpha,
-} from "../theme";
+import { PARCHMENT, FONT, PANEL_GAP, SCREEN_PADDING } from "../theme";
 
 export function InventoryScreen() {
   const { state, portfolioValue, netWorth, t, formatCoins } = useEconomyContext();
@@ -71,30 +67,46 @@ export function InventoryScreen() {
         )}
       </FixedPanel>
 
-      <FixedPanel source={storageImg} aspect={733 / 147} style={{ marginBottom: PANEL_GAP }}>
-        {(w) => (
-          <>
-            <Text style={[styles.storageLabel, { fontSize: w * 0.044 }]} numberOfLines={1}>
-              {t("inventory.storageLabel")}
-            </Text>
-            <Text style={[styles.storageValue, { fontSize: w * 0.05 }]} numberOfLines={1}>
-              {t("inventory.storageUsage", { used: Math.round(usedStorage), capacity: Math.round(capacity) })}
-            </Text>
-            <View style={styles.storageTrack}>
-              <View
-                style={[
-                  styles.storageFill,
-                  {
-                    width: `${storagePct * 100}%`,
-                    backgroundColor:
-                      storagePct >= 1 ? COLORS.negative : storagePct >= 0.8 ? "#e8873a" : "#e8b84a",
-                  },
-                ]}
-              />
-            </View>
-            {storagePct >= 1 && <Text style={styles.storageFullNote}>{t("inventory.storageFull")}</Text>}
-          </>
-        )}
+      {/* The crate turns into the warning one (red badge) from 90% full. */}
+      <FixedPanel
+        source={storagePct >= 0.9 ? storageFull : storageNormal}
+        aspect={storagePct >= 0.9 ? 839 / 123 : 838 / 151}
+        style={{ marginBottom: PANEL_GAP }}
+      >
+        {(w) => {
+          const warn = storagePct >= 0.9;
+          return (
+            <>
+              <Text
+                style={[styles.storageLabel, { fontSize: w * 0.044, top: warn ? "9%" : "8%" }]}
+                numberOfLines={1}
+              >
+                {t("inventory.storageLabel")}
+              </Text>
+              <Text
+                style={[styles.storageValue, { fontSize: w * 0.05, top: warn ? "6%" : "5%" }]}
+                numberOfLines={1}
+              >
+                {t("inventory.storageUsage", {
+                  used: Math.round(usedStorage),
+                  capacity: Math.round(capacity),
+                })}
+              </Text>
+              <View style={[styles.storageTrack, warn ? styles.storageTrackFull : styles.storageTrackNormal]}>
+                <View
+                  style={[
+                    styles.storageFill,
+                    {
+                      width: `${storagePct * 100}%`,
+                      backgroundColor:
+                        storagePct >= 1 ? "#f0574a" : storagePct >= 0.8 ? "#f2993a" : "#f7d66a",
+                    },
+                  ]}
+                />
+              </View>
+            </>
+          );
+        }}
       </FixedPanel>
 
       <AssetRibbon text={t("inventory.sectionLabel")} />
@@ -118,48 +130,60 @@ export function InventoryScreen() {
         // Unrealised profit on what is held: today's price against what the
         // player paid on average. Nothing is shown until there is a cost basis.
         const hasCost = gs.avgCost > 0;
-        const pnl = hasCost ? (gs.price - gs.avgCost) * gs.holding : 0;
         const pnlPct = hasCost ? (gs.price / gs.avgCost - 1) * 100 : 0;
-        const up = pnl >= 0;
+        const up = pnlPct >= 0;
+        // Green board when the stock is in profit, brown when it is under
+        // water, gold while there is nothing to compare against yet.
+        const frame = !hasCost ? rowGold : up ? rowGreen : rowBrown;
         return (
-          <View key={good.id} style={styles.row}>
-            <GradientFill colors={["#3b2616", "#24150b"]} x1="0" y1="0" x2="0" y2="1" />
-            <View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.14) }]}
-            />
-            <View style={styles.iconPlate}>
-              <GoodIcon id={good.id} fallback={good.icon} size={40} />
-            </View>
-            <View style={styles.rowMain}>
-              <View style={styles.rowTop}>
-                <Text style={styles.rowName} numberOfLines={1}>
-                  {t(good.nameKey)}
-                </Text>
-                <View style={styles.qtyChip}>
-                  <Text style={styles.qtyChipText}>×{gs.holding}</Text>
+          <FixedPanel key={good.id} source={frame} aspect={824 / 180} style={{ marginBottom: PANEL_GAP }}>
+            {(w) => (
+              <>
+                <View style={styles.rowIcon}>
+                  <GoodIcon id={good.id} fallback={good.icon} size={w * 0.125} />
                 </View>
-              </View>
-              <Text style={styles.rowSub}>
-                {t("inventory.rowSub", { qty: gs.holding, price: gs.price.toFixed(2) })}
-              </Text>
-              <View style={styles.barTrack}>
-                <View style={[styles.barFill, { width: `${share}%`, backgroundColor: good.color }]} />
-              </View>
-            </View>
-            <View style={styles.rowRight}>
-              <Text style={styles.rowValue}>{formatCoins(value)}</Text>
-              {hasCost && (
-                <View style={[styles.pnlChip, up ? styles.pnlUp : styles.pnlDown]}>
-                  <Text style={[styles.pnlText, { color: up ? "#8fe0a3" : "#ff9d94" }]}>
-                    {up ? "▲" : "▼"} {up ? "+" : ""}
-                    {formatPercent(pnlPct, state.language, 1)}
+                <View style={styles.rowTextCol}>
+                  <View style={styles.rowTop}>
+                    <Text style={[styles.rowName, { fontSize: w * 0.05 }]} numberOfLines={1}>
+                      {t(good.nameKey)}
+                    </Text>
+                    <View style={{ width: w * 0.115, aspectRatio: 146 / 77 }}>
+                      <Image source={qtyPill} style={styles.fillImg} resizeMode="stretch" />
+                      <View style={styles.centerAll}>
+                        <Text style={[styles.qtyText, { fontSize: w * 0.034 }]}>×{gs.holding}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={[styles.rowSub, { fontSize: w * 0.032 }]} numberOfLines={1}>
+                    {t("inventory.rowSub", { qty: gs.holding, price: gs.price.toFixed(2) })} ·{" "}
+                    {formatPercent(share, state.language)}
                   </Text>
+                  <View style={styles.barTrack}>
+                    <View style={[styles.barFill, { width: `${share}%`, backgroundColor: good.color }]} />
+                  </View>
                 </View>
-              )}
-              <Text style={styles.rowShare}>{formatPercent(share, state.language)}</Text>
-            </View>
-          </View>
+                <View style={styles.rowRight}>
+                  <Text style={[styles.rowValue, { fontSize: w * 0.05 }]} numberOfLines={1}>
+                    {formatCoins(value)}
+                  </Text>
+                  {hasCost && (
+                    <View style={{ width: w * 0.215, aspectRatio: 216 / 85 }}>
+                      <Image source={up ? chipUp : chipDown} style={styles.fillImg} resizeMode="stretch" />
+                      <View style={styles.chipTextWrap}>
+                        <Text
+                          style={[styles.pnlText, { fontSize: w * 0.032, color: up ? "#b6f0c3" : "#ffb3ab" }]}
+                          numberOfLines={1}
+                        >
+                          {up ? "+" : ""}
+                          {formatPercent(pnlPct, state.language, 1)}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
+          </FixedPanel>
         );
       })}
     </ScrollView>
@@ -179,39 +203,25 @@ const styles = StyleSheet.create({
   sumIcon: { aspectRatio: 1, marginRight: "3%" },
   sumLabel: { flex: 1, color: PARCHMENT.ink, fontFamily: FONT.serif },
   sumValue: { color: PARCHMENT.ink, fontFamily: FONT.serif, fontVariant: ["lining-nums"] },
-  storageLabel: {
-    position: "absolute",
-    left: "21.5%",
-    top: "14%",
-    color: "#f1e3c4",
-    fontFamily: FONT.serif,
-  },
+  storageLabel: { position: "absolute", left: "21.5%", color: "#f1e3c4", fontFamily: FONT.serif },
   storageValue: {
     position: "absolute",
     right: "8%",
-    top: "11%",
     color: "#fff6e0",
     fontFamily: FONT.serif,
     fontVariant: ["lining-nums"],
   },
   storageTrack: {
     position: "absolute",
-    left: "20.4%",
-    width: "72.2%",
-    top: "52.5%",
-    height: "20%",
+    left: "22.6%",
+    width: "69.6%",
     borderRadius: 999,
     overflow: "hidden",
     padding: 2,
   },
+  storageTrackNormal: { top: "46.5%", height: "24%" },
+  storageTrackFull: { top: "53%", height: "28%" },
   storageFill: { height: "100%", borderRadius: 999 },
-  storageFullNote: {
-    position: "absolute",
-    right: "8%",
-    bottom: "2%",
-    color: COLORS.negative,
-    fontSize: TYPE.micro,
-  },
   emptyCaption: {
     position: "absolute",
     left: "12%",
@@ -236,45 +246,56 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 5,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.card,
-    borderWidth: 2,
-    borderColor: "#8a5f33",
-    padding: SPACING.sm + 2,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-  },
-  iconPlate: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "rgba(246,231,196,0.12)",
-    borderWidth: 1.5,
-    borderColor: "rgba(201,160,90,0.6)",
+  fillImg: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  centerAll: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: SPACING.md,
   },
-  rowMain: { flex: 1, marginRight: SPACING.sm + 2, minWidth: 0 },
+  rowIcon: {
+    position: "absolute",
+    left: "3.9%",
+    top: "11.8%",
+    width: "16.1%",
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rowTextCol: {
+    position: "absolute",
+    left: "22%",
+    top: "10%",
+    right: "30%",
+    bottom: "12%",
+    justifyContent: "space-between",
+  },
   rowTop: { flexDirection: "row", alignItems: "center", gap: 6 },
-  rowName: { color: "#f6e7c4", fontFamily: FONT.serif, fontSize: TYPE.heading, flexShrink: 1 },
-  qtyChip: {
-    backgroundColor: "#f6d36a",
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-  },
-  qtyChipText: { color: "#3d2415", fontFamily: FONT.black, fontSize: TYPE.caption },
-  rowSub: { color: "#cdbb98", fontSize: TYPE.caption, marginTop: 2, marginBottom: SPACING.sm - 2 },
-  barTrack: { height: 6, borderRadius: 3, backgroundColor: "#140d07", overflow: "hidden" },
+  rowName: { color: "#f6e7c4", fontFamily: FONT.serif, flexShrink: 1 },
+  qtyText: { color: "#3d2415", fontFamily: FONT.black },
+  rowSub: { color: "#e2d2ae" },
+  barTrack: { height: 6, borderRadius: 3, backgroundColor: "rgba(20,13,7,0.85)", overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 3 },
-  rowRight: { alignItems: "flex-end", gap: 3 },
-  rowValue: { color: "#f6e7c4", fontFamily: FONT.serif, fontSize: TYPE.title },
-  pnlChip: { borderRadius: 999, paddingHorizontal: 7, paddingVertical: 1, borderWidth: 1 },
-  pnlUp: { backgroundColor: "rgba(47,138,77,0.28)", borderColor: "rgba(143,224,163,0.6)" },
-  pnlDown: { backgroundColor: "rgba(168,69,61,0.3)", borderColor: "rgba(255,157,148,0.6)" },
-  pnlText: { fontFamily: FONT.bold, fontSize: TYPE.caption },
-  rowShare: { color: "#a99877", fontSize: TYPE.micro },
+  rowRight: {
+    position: "absolute",
+    right: "4%",
+    top: "10%",
+    bottom: "12%",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  rowValue: { color: "#fff3d6", fontFamily: FONT.serif },
+  chipTextWrap: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: "36%",
+    right: "8%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pnlText: { fontFamily: FONT.black },
 });
