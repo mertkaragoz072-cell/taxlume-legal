@@ -217,7 +217,7 @@ crash on a device is the likeliest one here, for the reason in step 1.
 
 ## Version bookkeeping
 
-`app.json` holds 1.0.0 / buildNumber 1 / versionCode 1 as the starting point.
+`app.json` started at 1.0.0 / buildNumber 1 / versionCode 1 and is now at 1.1.0 (the UI overhaul release; 1.0.0 is already approved on the App Store).
 For the next release bump `version` — the marketing number is a decision, so
 no script touches it. The build numbers underneath it are a counter and are
 handled for you: Codemagic stamps `$BUILD_NUMBER` in via
