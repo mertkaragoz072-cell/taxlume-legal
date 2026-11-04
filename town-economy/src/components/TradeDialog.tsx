@@ -207,7 +207,7 @@ export function TradeDialog(p: Props) {
             <Text style={[styles.stepText, { fontSize: f(0.06) }]}>+</Text>
           </Pressable>
           <Text style={[styles.sumText, { fontSize: f(0.04), marginLeft: f(0.02) }]} numberOfLines={1}>
-            @ {p.execPrice.toFixed(2)}
+            {t("market.unitPrice", { price: p.execPrice.toFixed(2) })}
           </Text>
         </View>
         <Text style={[styles.sumTotal, { fontSize: f(0.062) }]} numberOfLines={1}>
