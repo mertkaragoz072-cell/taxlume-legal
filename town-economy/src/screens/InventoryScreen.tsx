@@ -15,7 +15,6 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { storageCapacity, totalGoodsHolding } from "../economy/useEconomy";
 import {
-  CARD_GRADIENT,
   PARCHMENT,
   COLORS,
   FONT,
@@ -24,7 +23,6 @@ import {
   SCREEN_PADDING,
   SPACING,
   TYPE,
-  WEIGHT,
   withAlpha,
 } from "../theme";
 
@@ -88,7 +86,8 @@ export function InventoryScreen() {
                   styles.storageFill,
                   {
                     width: `${storagePct * 100}%`,
-                    backgroundColor: storagePct >= 1 ? COLORS.negative : "#e8b84a",
+                    backgroundColor:
+                      storagePct >= 1 ? COLORS.negative : storagePct >= 0.8 ? "#e8873a" : "#e8b84a",
                   },
                 ]}
               />
@@ -116,17 +115,31 @@ export function InventoryScreen() {
       {holdings.map(({ good, gs }) => {
         const value = gs.holding * gs.price;
         const share = portfolioValue > 0 ? (value / portfolioValue) * 100 : 0;
+        // Unrealised profit on what is held: today's price against what the
+        // player paid on average. Nothing is shown until there is a cost basis.
+        const hasCost = gs.avgCost > 0;
+        const pnl = hasCost ? (gs.price - gs.avgCost) * gs.holding : 0;
+        const pnlPct = hasCost ? (gs.price / gs.avgCost - 1) * 100 : 0;
+        const up = pnl >= 0;
         return (
           <View key={good.id} style={styles.row}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+            <GradientFill colors={["#3b2616", "#24150b"]} x1="0" y1="0" x2="0" y2="1" />
             <View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.1) }]}
+              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.14) }]}
             />
-            <View style={[styles.accentStripe, { backgroundColor: good.color }]} />
-            <GoodIcon id={good.id} fallback={good.icon} size={36} style={{ marginRight: SPACING.md }} />
+            <View style={styles.iconPlate}>
+              <GoodIcon id={good.id} fallback={good.icon} size={40} />
+            </View>
             <View style={styles.rowMain}>
-              <Text style={styles.rowName}>{t(good.nameKey)}</Text>
+              <View style={styles.rowTop}>
+                <Text style={styles.rowName} numberOfLines={1}>
+                  {t(good.nameKey)}
+                </Text>
+                <View style={styles.qtyChip}>
+                  <Text style={styles.qtyChipText}>×{gs.holding}</Text>
+                </View>
+              </View>
               <Text style={styles.rowSub}>
                 {t("inventory.rowSub", { qty: gs.holding, price: gs.price.toFixed(2) })}
               </Text>
@@ -134,8 +147,16 @@ export function InventoryScreen() {
                 <View style={[styles.barFill, { width: `${share}%`, backgroundColor: good.color }]} />
               </View>
             </View>
-            <View style={{ alignItems: "flex-end" }}>
+            <View style={styles.rowRight}>
               <Text style={styles.rowValue}>{formatCoins(value)}</Text>
+              {hasCost && (
+                <View style={[styles.pnlChip, up ? styles.pnlUp : styles.pnlDown]}>
+                  <Text style={[styles.pnlText, { color: up ? "#8fe0a3" : "#ff9d94" }]}>
+                    {up ? "▲" : "▼"} {up ? "+" : ""}
+                    {formatPercent(pnlPct, state.language, 1)}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.rowShare}>{formatPercent(share, state.language)}</Text>
             </View>
           </View>
@@ -220,23 +241,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: RADIUS.card,
     borderWidth: 2,
-    borderColor: "#6f4e2e",
-    padding: SPACING.md,
-    paddingLeft: SPACING.md + 3,
+    borderColor: "#8a5f33",
+    padding: SPACING.sm + 2,
     marginBottom: PANEL_GAP,
     overflow: "hidden",
   },
-  accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
-  rowMain: { flex: 1, marginRight: SPACING.sm + 2 },
-  rowName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.title,
+  iconPlate: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: "rgba(246,231,196,0.12)",
+    borderWidth: 1.5,
+    borderColor: "rgba(201,160,90,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: SPACING.md,
   },
-  rowSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1, marginBottom: SPACING.sm - 2 },
-  barTrack: { height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, overflow: "hidden" },
+  rowMain: { flex: 1, marginRight: SPACING.sm + 2, minWidth: 0 },
+  rowTop: { flexDirection: "row", alignItems: "center", gap: 6 },
+  rowName: { color: "#f6e7c4", fontFamily: FONT.serif, fontSize: TYPE.heading, flexShrink: 1 },
+  qtyChip: {
+    backgroundColor: "#f6d36a",
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+  },
+  qtyChipText: { color: "#3d2415", fontFamily: FONT.black, fontSize: TYPE.caption },
+  rowSub: { color: "#cdbb98", fontSize: TYPE.caption, marginTop: 2, marginBottom: SPACING.sm - 2 },
+  barTrack: { height: 6, borderRadius: 3, backgroundColor: "#140d07", overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 3 },
-  rowValue: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.body },
-  rowShare: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
+  rowRight: { alignItems: "flex-end", gap: 3 },
+  rowValue: { color: "#f6e7c4", fontFamily: FONT.serif, fontSize: TYPE.title },
+  pnlChip: { borderRadius: 999, paddingHorizontal: 7, paddingVertical: 1, borderWidth: 1 },
+  pnlUp: { backgroundColor: "rgba(47,138,77,0.28)", borderColor: "rgba(143,224,163,0.6)" },
+  pnlDown: { backgroundColor: "rgba(168,69,61,0.3)", borderColor: "rgba(255,157,148,0.6)" },
+  pnlText: { fontFamily: FONT.bold, fontSize: TYPE.caption },
+  rowShare: { color: "#a99877", fontSize: TYPE.micro },
 });

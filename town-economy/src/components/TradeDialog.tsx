@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Image,
   ImageSourcePropType,
   LayoutChangeEvent,
@@ -96,6 +98,27 @@ export function TradeDialog(p: Props) {
   const [w, setW] = useState(380);
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
   const buy = p.side === "buy";
+  // After a trade the held amount pops and a +N / -N floats up from it, so
+  // the player sees the result land without reading the number change.
+  const prevHolding = useRef(p.holding);
+  const pop = useRef(new Animated.Value(0)).current;
+  const [delta, setDelta] = useState(0);
+  useEffect(() => {
+    const d = p.holding - prevHolding.current;
+    prevHolding.current = p.holding;
+    if (d === 0) return;
+    setDelta(d);
+    pop.setValue(0);
+    Animated.timing(pop, {
+      toValue: 1,
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [p.holding, pop]);
+  const popScale = pop.interpolate({ inputRange: [0, 0.2, 1], outputRange: [1, 1.35, 1] });
+  const floatY = pop.interpolate({ inputRange: [0, 1], outputRange: [0, -26] });
+  const floatOpacity = pop.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 1, 1, 0] });
   const f = (k: number) => Math.round(w * k);
   const qtys: { q: 1 | 5 | "ALL"; left: number; width: number; art: ImageSourcePropType; aspect: number }[] =
     [
@@ -121,7 +144,26 @@ export function TradeDialog(p: Props) {
           style={{ width: f(0.07), height: f(0.062), marginLeft: f(0.03) }}
           resizeMode="contain"
         />
-        <Text style={[styles.metaText, { fontSize: f(0.062) }]}>×{p.holding}</Text>
+        <Animated.Text style={[styles.metaText, { fontSize: f(0.062), transform: [{ scale: popScale }] }]}>
+          ×{p.holding}
+        </Animated.Text>
+        {delta !== 0 && (
+          <Animated.Text
+            pointerEvents="none"
+            style={[
+              styles.delta,
+              {
+                fontSize: f(0.06),
+                color: delta > 0 ? "#1f7a3f" : "#a33f3a",
+                opacity: floatOpacity,
+                transform: [{ translateY: floatY }],
+              },
+            ]}
+          >
+            {delta > 0 ? "+" : "−"}
+            {Math.abs(delta)}
+          </Animated.Text>
+        )}
       </View>
       <Pressable
         onPress={p.onClose}
@@ -250,6 +292,7 @@ const styles = StyleSheet.create({
   headIcon: { position: "absolute", left: "9%", top: "9.5%" },
   name: { position: "absolute", left: "31%", top: "10.5%", right: "20%", color: INK, fontFamily: FONT.serif },
   meta: { position: "absolute", left: "31%", top: "21%", flexDirection: "row", alignItems: "center" },
+  delta: { position: "absolute", left: "100%", marginLeft: 6, top: -2, fontFamily: FONT.black },
   metaText: { color: INK, fontFamily: FONT.serif },
   close: { position: "absolute", left: "85.5%", top: "9.2%", width: "10.5%", aspectRatio: 1 },
   tabText: { color: CREAM, fontFamily: FONT.display, letterSpacing: 1 },

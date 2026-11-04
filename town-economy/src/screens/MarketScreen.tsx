@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import * as Haptics from "expo-haptics";
 import { currentMentorStep } from "../economy/mentor";
 import { SpotlightTarget } from "../components/Spotlight";
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
@@ -423,6 +424,7 @@ export function MarketScreen({ sounds }: Props) {
                 trade(selected.id, side, qty);
                 if (side === "buy") sounds.playBuy();
                 else sounds.playSell();
+                if (!sounds.muted) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
               }}
             />
           </View>
