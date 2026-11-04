@@ -429,29 +429,15 @@ export function MarketScreen({ sounds }: Props) {
       <Modal
         transparent
         visible={sheetOpen && !tourBuyBeat}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setSheetOpen(false)}
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setSheetOpen(false)}>
           <Pressable style={styles.sheet} onPress={() => {}}>
-            <View style={styles.sheetHead}>
-              <GoodIcon id={selected.id} fallback={selected.icon} size={34} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.sheetName}>{t(selected.nameKey)}</Text>
-                <Text style={styles.sheetSub}>
-                  {selectedState.price.toFixed(2)} 🪙 · x{selectedState.holding}
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => setSheetOpen(false)}
-                style={styles.sheetClose}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-              >
-                <Text style={styles.sheetCloseText}>✕</Text>
-              </Pressable>
-            </View>
             <BuySellPanel
+              dialog
+              goodId={selected.id}
+              onClose={() => setSheetOpen(false)}
               good={selected}
               state={selectedState}
               cash={state.cash}
@@ -606,35 +592,12 @@ const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "flex-end",
-    alignItems: "center",
-  },
-  sheet: {
-    width: "100%",
-    maxWidth: CONTENT_MAX_WIDTH,
-    backgroundColor: "#2b1a0e",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderWidth: 2,
-    borderBottomWidth: 0,
-    borderColor: "#b88a4a",
-    padding: SPACING.md,
-    paddingBottom: SPACING.lg + 8,
-  },
-  sheetHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginBottom: SPACING.sm },
-  sheetName: { color: "#f4e8ce", fontFamily: FONT.serif, fontSize: TYPE.heading },
-  sheetSub: { color: "#d9c7a3", fontFamily: FONT.bold, fontSize: TYPE.label, marginTop: 1 },
-  sheetClose: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: "#b88a4a",
-    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
+    alignItems: "center",
+    padding: SPACING.md,
   },
-  sheetCloseText: { color: "#f4e8ce", fontSize: TYPE.label },
+  sheet: { width: "100%", maxWidth: 430 },
   pulseSentiment: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   pulseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginBottom: SPACING.xs + 2 },
   pulseRowLabel: {

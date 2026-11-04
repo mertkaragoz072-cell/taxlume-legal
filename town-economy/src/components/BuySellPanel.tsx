@@ -20,6 +20,7 @@ import {
 import { CoinPop } from "./CoinPop";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
+import { TradeDialog } from "./TradeDialog";
 import { SpotlightTarget } from "./Spotlight";
 
 // Loosened to the fields this panel actually needs (rather than the full
@@ -32,11 +33,24 @@ interface Props {
   onTrade: (side: "buy" | "sell", qty: number) => void;
   /** total round-trip bid/ask spread as a fraction of the quoted price (e.g. 0.03 = 3%); omit for no spread */
   spreadPct?: number;
+  /** render as the painted trade dialog (panel art, plaque buttons) instead of the dark card; needs goodId and onClose */
+  dialog?: boolean;
+  goodId?: string;
+  onClose?: () => void;
 }
 
 type Qty = 1 | 5 | "ALL";
 
-export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Props) {
+export function BuySellPanel({
+  good,
+  state,
+  cash,
+  onTrade,
+  spreadPct = 0,
+  dialog = false,
+  goodId,
+  onClose,
+}: Props) {
   const { t, formatCoins, state: economyState } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   // Only for a player who has never traded — `totalTrades` is a lifetime
@@ -57,6 +71,31 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
   const resolvedQty = qtyOption === "ALL" ? (side === "buy" ? affordableAll : state.holding) : qtyOption;
   const total = resolvedQty * execPrice;
   const disabled = resolvedQty <= 0 || (side === "buy" ? total > cash + 0.001 : resolvedQty > state.holding);
+
+  if (dialog) {
+    return (
+      <TradeDialog
+        good={good}
+        goodId={goodId ?? ""}
+        price={state.price}
+        holding={state.holding}
+        side={side}
+        setSide={setSide}
+        qtyOption={qtyOption}
+        setQtyOption={setQtyOption}
+        resolvedQty={resolvedQty}
+        execPrice={execPrice}
+        total={total}
+        disabled={disabled}
+        onClose={onClose}
+        onConfirm={() => {
+          onTrade(side, resolvedQty);
+          setCoinPopTrigger((n) => n + 1);
+        }}
+        coinPopTrigger={coinPopTrigger}
+      />
+    );
+  }
 
   return (
     <View style={styles.wrap}>
