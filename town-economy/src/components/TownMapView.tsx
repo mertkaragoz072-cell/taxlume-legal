@@ -16,7 +16,17 @@ import Svg, {
 import { TOWN_EMBLEMS_BY_ID } from "../economy/emblems";
 import { ForeignTown, TownId } from "../economy/towns";
 import { Caravan } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, PANEL_GAP } from "../theme";
+import {
+  CARD_GRADIENT,
+  cardShadow,
+  COLORS,
+  FONT,
+  RADIUS,
+  SPACING,
+  TYPE,
+  PANEL_GAP,
+  WOOD_RIM,
+} from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
@@ -508,6 +518,7 @@ export function TownMapView({
 
 const styles = StyleSheet.create({
   card: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
     marginBottom: PANEL_GAP,

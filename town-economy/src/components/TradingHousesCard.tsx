@@ -16,6 +16,7 @@ import {
   WEIGHT,
   withAlpha,
   PANEL_GAP,
+  WOOD_RIM,
 } from "../theme";
 import { GradientFill } from "./GradientFill";
 
@@ -82,6 +83,7 @@ export function TradingHousesCard({ activities }: Props) {
 
 const styles = StyleSheet.create({
   card: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
     marginBottom: PANEL_GAP,

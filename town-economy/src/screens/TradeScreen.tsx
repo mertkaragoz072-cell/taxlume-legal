@@ -7,6 +7,8 @@ import { CaravanRoad } from "../components/CaravanRoad";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
+import { BeamTitle } from "../components/ImagePanels";
+import { ParchmentBackground } from "../components/ParchmentBackground";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
 import { TownMapView } from "../components/TownMapView";
@@ -45,6 +47,8 @@ import {
   TYPE,
   WEIGHT,
   withAlpha,
+  WOOD_RIM,
+  glowShadow,
 } from "../theme";
 
 interface Props {
@@ -123,27 +127,33 @@ export function TradeScreen({ sounds, compactMap }: Props) {
   } | null>(null);
   const spotlightScroll = useSpotlightScroll();
 
-  if (!state.tradeUnlocked) {
+  if (
+    !state.tradeUnlocked &&
+    !(typeof window !== "undefined" && window.location.search.includes("previewTrade"))
+  ) {
     const target = effectiveTradeUnlockNetWorth(state);
     const pct = Math.max(0, Math.min(1, netWorth / target));
     return (
       <ScrollView contentContainerStyle={styles.lockedBody} showsVerticalScrollIndicator={false}>
+        <BeamTitle title={t("tabs.trade")} />
         <View style={styles.lockedCard}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.lockedIcon}>🔒</Text>
-          <Text style={styles.lockedTitle}>{t("trade.locked.title")}</Text>
-          <Text style={styles.lockedDesc}>
-            {t("trade.locked.description", { target: Math.round(target) })}
-          </Text>
-          <View style={styles.lockedTrack}>
-            <View style={[styles.lockedFill, { width: `${pct * 100}%` }]} />
+          <View style={styles.lockedInner}>
+            <ParchmentBackground />
+            <Text style={styles.lockedIcon}>🔒</Text>
+            <Text style={styles.lockedTitle}>{t("trade.locked.title")}</Text>
+            <Text style={styles.lockedDesc}>
+              {t("trade.locked.description", { target: Math.round(target) })}
+            </Text>
+            <View style={styles.lockedTrack}>
+              <View style={[styles.lockedFill, { width: `${pct * 100}%` }]} />
+            </View>
+            <Text style={styles.lockedProgress}>
+              {t("trade.locked.progress", {
+                current: Math.floor(netWorth),
+                target: Math.round(target),
+              })}
+            </Text>
           </View>
-          <Text style={styles.lockedProgress}>
-            {t("trade.locked.progress", {
-              current: Math.floor(netWorth),
-              target: Math.round(target),
-            })}
-          </Text>
         </View>
       </ScrollView>
     );
@@ -177,6 +187,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
         contentContainerStyle={styles.body}
         showsVerticalScrollIndicator={false}
       >
+        <BeamTitle title={t("tabs.trade")} />
         {state.caravans.length > 0 && (
           <View style={styles.roadBanner}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -859,23 +870,28 @@ function clamp01(v: number): number {
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   roadBanner: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.card,
     padding: SPACING.md,
     marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
-  lockedBody: { flexGrow: 1, padding: SPACING.lg, justifyContent: "center" },
+  lockedBody: { flexGrow: 1, padding: SCREEN_PADDING, justifyContent: "flex-start" },
   lockedCard: {
+    borderWidth: 3,
+    borderColor: "#6f4e2e",
+    backgroundColor: "#3a2615",
     borderRadius: 20,
-    padding: 28,
-    alignItems: "center",
+    marginTop: SPACING.md,
+    padding: 4,
     overflow: "hidden",
     ...cardShadow,
   },
-  lockedIcon: { fontSize: 40, marginBottom: SPACING.sm + 2 },
+  lockedInner: { paddingVertical: 32, paddingHorizontal: 26, alignItems: "center" },
+  lockedIcon: { fontSize: 56, marginBottom: SPACING.sm + 2 },
   lockedTitle: {
-    color: COLORS.textPrimary,
+    color: "#3d2415",
     fontSize: TYPE.heading,
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
@@ -883,7 +899,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   lockedDesc: {
-    color: COLORS.textMuted,
+    color: "#6b4a2e",
     fontSize: TYPE.body,
     textAlign: "center",
     lineHeight: 18,
@@ -893,18 +909,19 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.onLight,
+    backgroundColor: "rgba(61,36,21,0.55)",
     overflow: "hidden",
     marginBottom: SPACING.sm,
   },
-  lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
+  lockedFill: { height: "100%", backgroundColor: "#f2b630", borderRadius: 4 },
   lockedProgress: {
-    color: COLORS.accent,
+    color: "#8a5a14",
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
   metropolLockedCard: {
+    ...WOOD_RIM,
     flexDirection: "row",
     alignItems: "center",
     borderRadius: RADIUS.feature,
@@ -939,12 +956,11 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginRight: SPACING.sm + 2,
     width: 128,
-    borderWidth: 2,
-    borderColor: "transparent",
+    ...WOOD_RIM,
     overflow: "hidden",
     ...cardShadow,
   },
-  townPillActive: { borderColor: COLORS.accent },
+  townPillActive: { borderColor: "#f6d36a", ...glowShadow("#f6d36a") },
   townIcon: { fontSize: 22, marginBottom: SPACING.xs },
   townName: {
     color: COLORS.textPrimary,
@@ -955,6 +971,7 @@ const styles = StyleSheet.create({
   townMeta: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs },
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
   heatmapCard: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.feature,
     padding: SPACING.sm + 2,
     marginBottom: PANEL_GAP,
@@ -1003,6 +1020,7 @@ const styles = StyleSheet.create({
   },
   heatmapLockIcon: { fontSize: TYPE.label, opacity: 0.4 },
   panel: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
     marginBottom: PANEL_GAP,
@@ -1095,6 +1113,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm + 2,
   },
   caravanCard: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.card,
     padding: SPACING.md,
     paddingLeft: SPACING.md + 3,
