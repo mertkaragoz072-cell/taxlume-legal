@@ -4,6 +4,7 @@ import { Text } from "./AppText";
 import headerImg from "../../assets/ui/inventory/header.png";
 import ribbonImg from "../../assets/ui/inventory/ribbon.png";
 import { FONT } from "../theme";
+import { BeamRow } from "./BeamRow";
 
 /** Width of the nearest laid-out box, so type and positions inside a
  * fixed-aspect painted panel scale with it. */
@@ -53,16 +54,18 @@ export function AssetRibbon({ text, widthPct: widthOverride }: { text: string; w
   }
   return (
     <View style={styles.ribbonRow} onLayout={onLayout}>
-      <View style={[styles.ribbon, { width: widthPx }]}>
-        <Image source={ribbonImg} style={styles.fill} resizeMode="stretch" />
-        <Text
-          style={[styles.ribbonText, { fontSize: Math.round(fontSize), letterSpacing }]}
-          numberOfLines={1}
-          accessibilityRole="header"
-        >
-          {text}
-        </Text>
-      </View>
+      <BeamRow>
+        <View style={[styles.ribbon, { width: widthPx }]}>
+          <Image source={ribbonImg} style={styles.fill} resizeMode="stretch" />
+          <Text
+            style={[styles.ribbonText, { fontSize: Math.round(fontSize), letterSpacing }]}
+            numberOfLines={1}
+            accessibilityRole="header"
+          >
+            {text}
+          </Text>
+        </View>
+      </BeamRow>
     </View>
   );
 }
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     marginTop: -2,
   },
-  ribbonRow: { flexDirection: "row", justifyContent: "center", marginTop: 6, marginBottom: 6 },
+  ribbonRow: { width: "100%", marginTop: 4, marginBottom: 4 },
   ribbon: { aspectRatio: 719 / 131, justifyContent: "center", paddingLeft: "19%", paddingRight: "9%" },
   ribbonText: {
     fontFamily: FONT.bold,

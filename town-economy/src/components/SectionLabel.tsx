@@ -5,6 +5,7 @@ import ribbonLeft from "../../assets/ui/sectionribbon/left.png";
 import ribbonMid from "../../assets/ui/sectionribbon/mid.png";
 import ribbonRight from "../../assets/ui/sectionribbon/right.png";
 import { FONT, TYPE } from "../theme";
+import { BeamRow } from "./BeamRow";
 
 interface Props {
   text: string;
@@ -62,7 +63,9 @@ export function RibbonLabel({ text, height = RIBBON_HEIGHT, fontSize = TYPE.body
 export function SectionLabel({ text }: Props) {
   return (
     <View style={styles.wrap}>
-      <RibbonLabel text={text} />
+      <BeamRow>
+        <RibbonLabel text={text} />
+      </BeamRow>
     </View>
   );
 }
@@ -75,7 +78,7 @@ const styles = StyleSheet.create({
   },
   wrap: {
     // Centred over its panel, like the Inventory beam title.
-    alignSelf: "center",
+    alignSelf: "stretch",
     // Tucks over the top edge of the panel below, like the reference's
     // ribbons overlapping the cards they title.
     marginBottom: 3,
