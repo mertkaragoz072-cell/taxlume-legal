@@ -127,10 +127,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
   } | null>(null);
   const spotlightScroll = useSpotlightScroll();
 
-  if (
-    !state.tradeUnlocked &&
-    !(typeof window !== "undefined" && window.location.search.includes("previewTrade"))
-  ) {
+  if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
     const pct = Math.max(0, Math.min(1, netWorth / target));
     return (
