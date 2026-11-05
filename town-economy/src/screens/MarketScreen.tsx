@@ -256,7 +256,7 @@ export function MarketScreen({ sounds }: Props) {
                 <GoodIcon
                   id={g.id}
                   fallback={g.icon}
-                  size={Math.round(36 * (lockedCardWidth / 112))}
+                  size={Math.round(48 * (lockedCardWidth / 112))}
                   style={styles.lockedIcon}
                 />
                 <Text style={styles.lockedName} numberOfLines={1}>

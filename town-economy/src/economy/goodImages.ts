@@ -1,8 +1,8 @@
 import { GoodId } from "./types";
 
-// Painted item-icon art for a subset of goods (commissioned via an AI image
-// tool, cut out from a flat chroma-key background — see assets/goods/README
-// if one exists, or the git history around when this file was added).
+// Painted item-icon art for every good: the first four from the resource
+// sheet (assets/resources), the rest cut from the later icon sheet
+// (assets/goods2).
 // Deliberately a *lookup*, not a field on Good itself: `good.icon` stays the
 // plain emoji every text/notification context already interpolates it into
 // (villager requests, caravan labels, achievement descriptions...), and only
@@ -13,26 +13,22 @@ import { GoodId } from "./types";
 // isn't in GoodId at all) just keeps showing its emoji, no code change
 // needed when this list is partial.
 export const GOOD_IMAGES: Partial<Record<GoodId, number>> = {
-  // Newer, higher-resolution art for these four, cropped from a reference
-  // sheet sent for that purpose — same role as every entry below, this
-  // file is still the one place GoodIcon looks up art, just pointed at
-  // the newer source for these.
   grain: require("../../assets/resources/wheat.png"),
   wool: require("../../assets/resources/cotton.png"),
   sand: require("../../assets/resources/sand_sack.png"),
   bread: require("../../assets/resources/bread.png"),
-  milk: require("../../assets/goods/milk.png"),
-  wood: require("../../assets/goods/wood.png"),
-  iron: require("../../assets/goods/iron.png"),
-  cloth: require("../../assets/goods/cloth.png"),
-  fish: require("../../assets/goods/fish.png"),
-  wine: require("../../assets/goods/wine.png"),
-  leather: require("../../assets/goods/leather.png"),
-  spice: require("../../assets/goods/spice.png"),
-  silk: require("../../assets/goods/silk.png"),
-  jewelry: require("../../assets/goods/jewelry.png"),
-  honey: require("../../assets/goods/honey.png"),
-  cheese: require("../../assets/goods/cheese.png"),
-  paper: require("../../assets/goods/paper.png"),
-  glass: require("../../assets/goods/glass.png"),
+  milk: require("../../assets/goods2/milk.png"),
+  wood: require("../../assets/goods2/wood.png"),
+  iron: require("../../assets/goods2/iron.png"),
+  cloth: require("../../assets/goods2/cloth.png"),
+  fish: require("../../assets/goods2/fish.png"),
+  wine: require("../../assets/goods2/wine.png"),
+  leather: require("../../assets/goods2/leather.png"),
+  spice: require("../../assets/goods2/spice.png"),
+  silk: require("../../assets/goods2/silk.png"),
+  jewelry: require("../../assets/goods2/jewelry.png"),
+  honey: require("../../assets/goods2/honey.png"),
+  cheese: require("../../assets/goods2/cheese.png"),
+  paper: require("../../assets/goods2/paper.png"),
+  glass: require("../../assets/goods2/glass.png"),
 };
