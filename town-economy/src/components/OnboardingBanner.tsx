@@ -8,6 +8,7 @@ import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
 import { FONT, GOLD_GRADIENT, PARCHMENT, SPACING, TYPE } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
+import { QuestHub } from "./QuestHub";
 import { RibbonLabel } from "./SectionLabel";
 import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
 
@@ -36,6 +37,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   const { state, t } = useEconomyContext();
   const { width: windowWidth } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
+  const [hubOpen, setHubOpen] = useState(false);
   const step = currentOnboardingStep(state);
   if (!step) return null;
 
@@ -63,7 +65,13 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
           accessibilityLabel={t(step.titleKey)}
           accessibilityState={{ expanded }}
         >
-          <View style={styles.ring}>
+          <Pressable
+            style={styles.ring}
+            onPress={() => setHubOpen(true)}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={t("onboarding.hubTitle")}
+          >
             <Svg width={28} height={28} viewBox="0 0 28 28">
               <Circle cx={14} cy={14} r={R} stroke="rgba(244,232,206,0.18)" strokeWidth={3} fill="none" />
               <Circle
@@ -79,7 +87,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
               />
             </Svg>
             <Text style={styles.ringText}>{state.onboardingStep}</Text>
-          </View>
+          </Pressable>
           <Text style={styles.pillTitle} numberOfLines={1}>
             {t(step.titleKey)}
           </Text>
@@ -92,6 +100,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
             <Text style={styles.pillNoteText}>{t(step.descriptionKey)}</Text>
           </View>
         )}
+        <QuestHub visible={hubOpen} onClose={() => setHubOpen(false)} />
       </View>
     );
   }
@@ -148,14 +157,14 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
       </ScalePressable>
       <Pressable
         style={styles.toggle}
-        onPress={() => setExpanded((v) => !v)}
+        onPress={() => setHubOpen(true)}
         accessibilityRole="button"
-        accessibilityLabel={t(step.descriptionKey)}
-        accessibilityState={{ expanded }}
+        accessibilityLabel={t("onboarding.hubTitle")}
         hitSlop={6}
       >
-        <Text style={styles.chevron}>{expanded ? "▴" : "▾"}</Text>
+        <Text style={styles.chevron}>☰</Text>
       </Pressable>
+      <QuestHub visible={hubOpen} onClose={() => setHubOpen(false)} />
     </View>
   );
 }
