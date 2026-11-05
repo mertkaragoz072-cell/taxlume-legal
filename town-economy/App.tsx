@@ -27,7 +27,6 @@ import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
-import { OnboardingBanner } from "./src/components/OnboardingBanner";
 import { QuestBadge } from "./src/components/QuestBadge";
 import { QuestHub } from "./src/components/QuestHub";
 import { AmbientGlow } from "./src/components/AmbientGlow";
@@ -430,15 +429,6 @@ function Game() {
         <EventBanner event={state.lastEvent} language={state.language} />
         <ComboBanner event={comboEvent} />
         <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
-
-        {/* Rendered outside the per-screen blocks so the guided task follows
-            the player between tabs — several of the steps are there to show
-            that a tab exists at all. */}
-        <OnboardingBanner
-          onGoToScreen={setScreen}
-          activeScreen={screen}
-          onOpenHub={() => setQuestHubOpen(true)}
-        />
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
