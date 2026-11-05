@@ -134,7 +134,12 @@ export function TradeDialog(p: Props) {
       <View style={styles.headIcon}>
         <GoodIcon id={p.goodId} fallback={p.good.icon} size={f(0.2)} />
       </View>
-      <Text style={[styles.name, { fontSize: f(0.075) }]} numberOfLines={1}>
+      <Text
+        style={[styles.name, { fontSize: f(0.075) }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+      >
         {t(p.good.nameKey)}
       </Text>
       <View style={styles.meta}>
@@ -183,7 +188,14 @@ export function TradeDialog(p: Props) {
         onPress={() => p.setSide("buy")}
         label={t("market.buyShort")}
       >
-        <Text style={[styles.tabText, { fontSize: f(0.052) }]}>{t("market.buyShort")}</Text>
+        <Text
+          style={[styles.tabText, { fontSize: f(0.052) }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {t("market.buyShort")}
+        </Text>
       </Art>
       <Art
         source={buy ? tabBrownImg : tabGreenImg}
@@ -194,7 +206,14 @@ export function TradeDialog(p: Props) {
         onPress={() => p.setSide("sell")}
         label={t("market.sellShort")}
       >
-        <Text style={[styles.tabText, { fontSize: f(0.052) }]}>{t("market.sellShort")}</Text>
+        <Text
+          style={[styles.tabText, { fontSize: f(0.052) }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {t("market.sellShort")}
+        </Text>
       </Art>
 
       {qtys.map((o) => {
@@ -248,7 +267,12 @@ export function TradeDialog(p: Props) {
             <Text style={[styles.stepText, { fontSize: f(0.06) }]}>+</Text>
           </Pressable>
         </View>
-        <Text style={[styles.sumTotal, { fontSize: f(0.062) }]} numberOfLines={1}>
+        <Text
+          style={[styles.sumTotal, { fontSize: f(0.062) }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
           {formatCoins(p.total)}
         </Text>
       </View>
@@ -264,7 +288,12 @@ export function TradeDialog(p: Props) {
         style={p.disabled ? styles.off : undefined}
       >
         <View style={styles.confirmRow}>
-          <Text style={[styles.confirmText, { fontSize: f(0.068) }]}>
+          <Text
+            style={[styles.confirmText, { fontSize: f(0.068) }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
+          >
             {buy ? t("market.buyConfirm") : t("market.sellConfirm")}
           </Text>
           <GoodIcon id={p.goodId} fallback={p.good.icon} size={f(0.07)} style={{ marginRight: -f(0.02) }} />

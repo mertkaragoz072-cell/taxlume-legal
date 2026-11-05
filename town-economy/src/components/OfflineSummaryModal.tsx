@@ -117,6 +117,8 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               },
             ]}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
             accessibilityRole="header"
           >
             {t("offline.title").toUpperCase()}
@@ -136,12 +138,19 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               key={tile.label}
               style={[styles.tile, { left: pctX(tile.left), top: pctY(474), width: pctX(215) }]}
             >
-              <Text style={[styles.tileLabel, { fontSize: f(27) }]} numberOfLines={1}>
+              <Text
+                style={[styles.tileLabel, { fontSize: f(27) }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
                 {tile.label}
               </Text>
               <Text
                 style={[styles.tileValue, { fontSize: f(40), color: tone(tile.value) }]}
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
               >
                 {signed(tile.value)}
               </Text>
@@ -161,6 +170,8 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               },
             ]}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
             accessibilityRole="header"
           >
             {t("offline.eventsSectionLabel")}

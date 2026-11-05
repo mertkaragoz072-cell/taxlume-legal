@@ -19,11 +19,13 @@ const GOLD_TEXT = "#f3d27a";
 export function BeamTitle({ title }: { title: string }) {
   const [w, onLayout] = useBoxWidth();
   return (
-    <View style={styles.beam} onLayout={onLayout}>
+    <View style={[styles.beam, { width: "100%" }]} onLayout={onLayout}>
       <Image source={headerImg} style={styles.fill} resizeMode="stretch" />
       <Text
         style={[styles.beamText, { fontSize: Math.round(w * 0.05) }]}
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
         accessibilityRole="header"
       >
         {title}
@@ -33,14 +35,28 @@ export function BeamTitle({ title }: { title: string }) {
 }
 
 /** The green section ribbon with its vines, sized to a share of the row. */
-export function AssetRibbon({ text, widthPct = 62 }: { text: string; widthPct?: number }) {
+export function AssetRibbon({ text, widthPct: widthOverride }: { text: string; widthPct?: number }) {
   const [w, onLayout] = useBoxWidth();
+  // The plate's lettering area is ~70% of the ribbon (vines and the gold dot
+  // take the rest), so the ribbon is sized from the label itself instead of a
+  // fixed share: a capital of the bold face runs ~0.74em plus the tracking.
+  // adjustsFontSizeToFit does not exist on web, and phone fonts set wider
+  // than a browser's, so the size is computed rather than left to shrink.
+  const letterSpacing = 1;
+  const baseFont = w * 0.036;
+  const natural = text.length * (0.9 * baseFont + letterSpacing);
+  let widthPx = widthOverride ? (w * widthOverride) / 100 : Math.max(w * 0.4, natural / 0.66);
+  let fontSize = baseFont;
+  if (widthPx > w) {
+    widthPx = w;
+    fontSize = Math.max(8, (w * 0.66) / text.length - letterSpacing) / 0.9;
+  }
   return (
     <View style={styles.ribbonRow} onLayout={onLayout}>
-      <View style={[styles.ribbon, { width: `${widthPct}%` }]}>
+      <View style={[styles.ribbon, { width: widthPx }]}>
         <Image source={ribbonImg} style={styles.fill} resizeMode="stretch" />
         <Text
-          style={[styles.ribbonText, { fontSize: Math.round(w * (widthPct / 100) * 0.056) }]}
+          style={[styles.ribbonText, { fontSize: Math.round(fontSize), letterSpacing }]}
           numberOfLines={1}
           accessibilityRole="header"
         >
@@ -64,7 +80,7 @@ interface FixedPanelProps {
 export function FixedPanel({ source, aspect, children, style }: FixedPanelProps) {
   const [w, onLayout] = useBoxWidth();
   return (
-    <View style={[{ aspectRatio: aspect }, style]} onLayout={onLayout}>
+    <View style={[{ aspectRatio: aspect, width: "100%", alignSelf: "stretch" }, style]} onLayout={onLayout}>
       <Image source={source} style={styles.fill} resizeMode="stretch" />
       {children(w)}
     </View>
@@ -90,7 +106,6 @@ const styles = StyleSheet.create({
   ribbonText: {
     fontFamily: FONT.bold,
     color: GOLD_TEXT,
-    letterSpacing: 1,
     textAlign: "center",
     marginTop: -2,
   },

@@ -264,7 +264,7 @@ export function MarketScreen({ sounds }: Props) {
                 </Text>
                 <View style={[styles.lockedRankChip, { borderColor: withAlpha(g.color, 0.4) }]}>
                   <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
-                  <Text style={styles.lockedRankText} numberOfLines={1}>
+                  <Text style={styles.lockedRankText} numberOfLines={2}>
                     {t(townRankNameKey(g.unlockRank ?? 0))}
                   </Text>
                 </View>
@@ -754,6 +754,8 @@ const styles = StyleSheet.create({
   },
   lockedRankIcon: { fontSize: TYPE.micro },
   lockedRankText: {
+    flexShrink: 1,
+    textAlign: "center",
     color: COLORS.textMuted,
     fontSize: TYPE.micro,
     fontWeight: WEIGHT.bold,

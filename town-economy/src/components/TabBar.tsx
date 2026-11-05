@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     // art has the stone path running along its last ~15%, and the label
     // text was landing right on top of that seam instead of staying on
     // the wood above it.
-    paddingBottom: 18,
+    paddingBottom: 24,
     paddingTop: 8,
     overflow: "hidden",
   },

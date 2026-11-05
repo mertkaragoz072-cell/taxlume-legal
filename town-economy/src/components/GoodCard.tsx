@@ -83,6 +83,16 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   // piece instead of the icon/chart staying fixed-size and overflowing a
   // card that got smaller around them.
   const scale = width / BASE_WIDTH;
+  // Lettering is sized to the text it carries: Turkish puts the percent sign
+  // in front ("-%16,0") and names like "Teknoloji Hissesi" run long, and a card
+  // is only ~90px wide, so long strings step down (and a big move drops its
+  // decimal) instead of ending in an ellipsis.
+  const changeText = formatPercent(change, economy.language, Math.abs(change) >= 10 ? 0 : 1);
+  const changeSize = changeText.length > 4 ? 9 : TYPE.micro;
+  const nameLen = t(good.nameKey).length;
+  const nameSize = nameLen > 10 ? 12 : TYPE.title - 2;
+  const prodLen = good.producerKey ? t(good.producerKey).length : 0;
+  const producerSize = prodLen > 12 ? 9 : TYPE.caption;
   const cardPadding = Math.round(SPACING.sm * scale);
   const iconSize = Math.round(40 * scale);
   const chartWidth = Math.max(32, Math.round(88 * scale));
@@ -138,17 +148,20 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
           <View style={styles.topRow}>
             <GoodIcon id={good.id ?? ""} fallback={good.icon} size={iconSize} />
             <View style={styles.changeWrap}>
-              {change !== 0 && width >= 88 && (
+              {change !== 0 && width >= 110 && (
                 <Text style={[styles.arrow, { color: positive ? COLORS.positive : COLORS.negative }]}>
                   {positive ? "▲" : "▼"}
                 </Text>
               )}
               <Text
                 numberOfLines={1}
-                style={[styles.change, { color: positive ? COLORS.positive : COLORS.negative }]}
+                style={[
+                  styles.change,
+                  { color: positive ? COLORS.positive : COLORS.negative, fontSize: changeSize },
+                ]}
               >
                 {positive ? "+" : ""}
-                {formatPercent(change, economy.language, 1)}
+                {changeText}
               </Text>
             </View>
           </View>
@@ -174,7 +187,10 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
 
         <View style={styles.bottomFrame}>
           <View style={styles.bottomZone}>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text
+              style={[styles.name, { fontSize: nameSize, lineHeight: nameLen > 10 ? 14 : 18 }]}
+              numberOfLines={2}
+            >
               {t(good.nameKey)}
             </Text>
             {/* Who makes it, in the same breath as the price — a card is no
@@ -183,7 +199,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
               (gold, oil...) have no producer, so this quietly disappears
               for them. */}
             {good.producerKey && (
-              <Text style={styles.producer} numberOfLines={1}>
+              <Text style={[styles.producer, { fontSize: producerSize }]} numberOfLines={1}>
                 {t(good.producerKey)}
               </Text>
             )}
@@ -285,7 +301,7 @@ const styles = StyleSheet.create({
     color: PARCHMENT.ink,
     fontSize: TYPE.title - 2,
     fontFamily: FONT.serif,
-    lineHeight: 15,
+    textAlign: "center",
   },
   producer: {
     color: PARCHMENT.inkMuted,

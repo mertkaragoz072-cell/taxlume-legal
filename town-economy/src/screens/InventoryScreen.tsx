@@ -52,12 +52,19 @@ export function InventoryScreen() {
                   style={[styles.sumIcon, { width: w * 0.115 }]}
                   resizeMode="contain"
                 />
-                <Text style={[styles.sumLabel, { fontSize: w * 0.044 }]} numberOfLines={1}>
+                <Text
+                  style={[styles.sumLabel, { fontSize: w * 0.044 }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
+                >
                   {row.label}
                 </Text>
                 <Text
                   style={[styles.sumValue, { fontSize: w * (row.strong ? 0.054 : 0.05) }]}
                   numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
                 >
                   {formatCoins(row.value)}
                 </Text>
@@ -80,12 +87,16 @@ export function InventoryScreen() {
               <Text
                 style={[styles.storageLabel, { fontSize: w * 0.044, top: warn ? "9%" : "8%" }]}
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
               >
                 {t("inventory.storageLabel")}
               </Text>
               <Text
                 style={[styles.storageValue, { fontSize: w * 0.05, top: warn ? "6%" : "5%" }]}
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
               >
                 {t("inventory.storageUsage", {
                   used: Math.round(usedStorage),
@@ -117,7 +128,12 @@ export function InventoryScreen() {
             // chest — no panel or tint behind the words.
             <View style={styles.emptyCaption}>
               <Text style={[styles.emptyText, { fontSize: w * 0.046 }]}>{t("inventory.emptyTitle")}</Text>
-              <Text style={[styles.emptySub, { fontSize: w * 0.0255 }]} numberOfLines={1}>
+              <Text
+                style={[styles.emptySub, { fontSize: w * 0.0255 }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
                 {t("inventory.emptySubtitle")}
               </Text>
             </View>
@@ -144,7 +160,12 @@ export function InventoryScreen() {
                 </View>
                 <View style={styles.rowTextCol}>
                   <View style={styles.rowTop}>
-                    <Text style={[styles.rowName, { fontSize: w * 0.05 }]} numberOfLines={1}>
+                    <Text
+                      style={[styles.rowName, { fontSize: w * 0.05 }]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.6}
+                    >
                       {t(good.nameKey)}
                     </Text>
                     <View style={{ width: w * 0.115, aspectRatio: 146 / 77 }}>
@@ -154,7 +175,12 @@ export function InventoryScreen() {
                       </View>
                     </View>
                   </View>
-                  <Text style={[styles.rowSub, { fontSize: w * 0.032 }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.rowSub, { fontSize: w * 0.032 }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                  >
                     {t("inventory.rowSub", { qty: gs.holding, price: gs.price.toFixed(2) })} ·{" "}
                     {formatPercent(share, state.language)}
                   </Text>
@@ -163,7 +189,12 @@ export function InventoryScreen() {
                   </View>
                 </View>
                 <View style={styles.rowRight}>
-                  <Text style={[styles.rowValue, { fontSize: w * 0.05 }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.rowValue, { fontSize: w * 0.05 }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                  >
                     {formatCoins(value)}
                   </Text>
                   {hasCost && (
@@ -173,6 +204,8 @@ export function InventoryScreen() {
                         <Text
                           style={[styles.pnlText, { fontSize: w * 0.032, color: up ? "#b6f0c3" : "#ffb3ab" }]}
                           numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.6}
                         >
                           {up ? "+" : ""}
                           {formatPercent(pnlPct, state.language, 1)}

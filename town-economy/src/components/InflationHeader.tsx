@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   wrap: {
     // Headroom above the title row so the market-street scene shows.
     paddingTop: 30,
-    paddingBottom: 4,
+    paddingBottom: 8,
     paddingHorizontal: 12,
     overflow: "hidden",
     backgroundColor: "#2a1a0e",
@@ -553,7 +553,9 @@ const styles = StyleSheet.create({
     // floating narrower than the art it sits on.
     marginHorizontal: -12,
     borderRadius: 10,
-    paddingVertical: 7,
+    // Roomy on purpose: phone fonts (iOS especially) set taller than the
+    // browser's, and the inflation column stacks three lines.
+    paddingVertical: 13,
     paddingHorizontal: 14,
     overflow: "hidden",
   },
