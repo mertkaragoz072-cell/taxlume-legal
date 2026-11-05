@@ -7,8 +7,8 @@ import { CaravanRoad } from "../components/CaravanRoad";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
-import { BeamTitle } from "../components/ImagePanels";
-import { ParchmentBackground } from "../components/ParchmentBackground";
+import lockArt from "../../assets/ui/tradelock/panel.webp";
+import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
 import { TownMapView } from "../components/TownMapView";
@@ -132,26 +132,80 @@ export function TradeScreen({ sounds, compactMap }: Props) {
     const pct = Math.max(0, Math.min(1, netWorth / target));
     return (
       <ScrollView contentContainerStyle={styles.lockedBody} showsVerticalScrollIndicator={false}>
-        <BeamTitle title={t("tabs.trade")} />
-        <View style={styles.lockedCard}>
-          <View style={styles.lockedInner}>
-            <ParchmentBackground />
-            <Text style={styles.lockedIcon}>🔒</Text>
-            <Text style={styles.lockedTitle}>{t("trade.locked.title")}</Text>
-            <Text style={styles.lockedDesc}>
-              {t("trade.locked.description", { target: Math.round(target) })}
-            </Text>
-            <View style={styles.lockedTrack}>
-              <View style={[styles.lockedFill, { width: `${pct * 100}%` }]} />
-            </View>
-            <Text style={styles.lockedProgress}>
-              {t("trade.locked.progress", {
-                current: Math.floor(netWorth),
-                target: Math.round(target),
-              })}
-            </Text>
-          </View>
-        </View>
+        {/* The sent lock-card art carries its own plaque, ribbon, parchment and
+            progress groove; the words and the gold fill are drawn over it. */}
+        <FixedPanel source={lockArt} aspect={900 / 932}>
+          {(w) => {
+            const px = (v: number) => `${(v / 1199) * 100}%` as const;
+            const py = (v: number) => `${(v / 1242) * 100}%` as const;
+            return (
+              <>
+                <Text
+                  style={[
+                    styles.lockPlaque,
+                    {
+                      left: px(335),
+                      width: px(530),
+                      top: py(110),
+                      height: py(85),
+                      fontSize: w * 0.052,
+                      lineHeight: w * 0.07,
+                    },
+                  ]}
+                  numberOfLines={1}
+                  accessibilityRole="header"
+                >
+                  {t("tabs.trade").toUpperCase()}
+                </Text>
+                <Text
+                  style={[
+                    styles.lockRibbon,
+                    {
+                      left: px(260),
+                      width: px(680),
+                      top: py(566),
+                      height: py(80),
+                      fontSize: Math.min(w * 0.04, (w * 0.54) / (t("trade.locked.title").length * 0.95)),
+                      lineHeight: w * 0.07,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {t("trade.locked.title")}
+                </Text>
+                <Text
+                  style={[
+                    styles.lockDesc,
+                    {
+                      left: px(175),
+                      width: px(850),
+                      top: py(690),
+                      fontSize: w * 0.034,
+                      lineHeight: w * 0.047,
+                    },
+                  ]}
+                  numberOfLines={4}
+                >
+                  {t("trade.locked.description", { target: Math.round(target) })}
+                </Text>
+                <View
+                  style={[styles.lockTrack, { left: px(192), width: px(816), top: py(918), height: py(44) }]}
+                >
+                  <View style={[styles.lockFill, { width: `${pct * 100}%` }]} />
+                </View>
+                <Text
+                  style={[
+                    styles.lockProgress,
+                    { left: px(175), width: px(850), top: py(992), fontSize: w * 0.04 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {t("trade.locked.progress", { current: Math.floor(netWorth), target: Math.round(target) })}
+                </Text>
+              </>
+            );
+          }}
+        </FixedPanel>
       </ScrollView>
     );
   }
@@ -875,48 +929,33 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   lockedBody: { flexGrow: 1, padding: SCREEN_PADDING, justifyContent: "flex-start" },
-  lockedCard: {
-    borderWidth: 3,
-    borderColor: "#6f4e2e",
-    backgroundColor: "#3a2615",
-    borderRadius: 20,
-    marginTop: SPACING.md,
-    padding: 4,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  lockedInner: { paddingVertical: 32, paddingHorizontal: 26, alignItems: "center" },
-  lockedIcon: { fontSize: 56, marginBottom: SPACING.sm + 2 },
-  lockedTitle: {
-    color: "#3d2415",
-    fontSize: TYPE.heading,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    marginBottom: SPACING.sm,
+  lockPlaque: {
+    position: "absolute",
     textAlign: "center",
+    color: "#f3d27a",
+    fontFamily: FONT.display,
+    letterSpacing: 2,
   },
-  lockedDesc: {
-    color: "#6b4a2e",
-    fontSize: TYPE.body,
+  lockRibbon: {
+    position: "absolute",
     textAlign: "center",
-    lineHeight: 18,
-    marginBottom: PANEL_GAP,
+    color: "#f4e8ce",
+    fontFamily: FONT.display,
+    letterSpacing: 1,
   },
+  lockDesc: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
+  lockTrack: { position: "absolute", borderRadius: 999, overflow: "hidden", padding: 2 },
+  lockFill: { height: "100%", backgroundColor: "#f2b630", borderRadius: 999 },
   lockedTrack: {
     width: "100%",
     height: 8,
     borderRadius: 4,
-    backgroundColor: "rgba(61,36,21,0.55)",
+    backgroundColor: COLORS.onLight,
     overflow: "hidden",
     marginBottom: SPACING.sm,
   },
-  lockedFill: { height: "100%", backgroundColor: "#f2b630", borderRadius: 4 },
-  lockedProgress: {
-    color: "#8a5a14",
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
+  lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
+  lockProgress: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
   metropolLockedCard: {
     ...WOOD_RIM,
     flexDirection: "row",
