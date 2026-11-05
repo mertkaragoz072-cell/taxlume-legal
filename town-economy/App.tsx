@@ -361,7 +361,11 @@ function Game() {
   const holdForOtherInterruptions = holdInterruptions || Boolean(state.merveRankUp);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    // The wood backdrop and season scrim fill the whole screen, notch and home
+    // bar included; only the content sits inside the safe area. Before, the
+    // background lived inside SafeAreaView, so the status-bar and home-bar
+    // strips showed the bare dark base colour and the game looked inset.
+    <View style={styles.safe}>
       <StatusBar style="light" />
       {/* A weathered wood-plank backdrop behind the whole app rather than a
           flat gradient — most of it sits under opaque cards and only shows
@@ -393,157 +397,159 @@ function Game() {
         y2="1"
       />
       <AmbientGlow />
-      <SpotlightProvider style={styles.content}>
-        <SpotlightTarget id="inflation">
-          <InflationHeader
-            townName={state.townName}
-            rankIcon={townRankIcon(state.townRankIndex)}
-            rankTitle={rankTitle}
-            cash={state.cash}
-            netWorth={netWorth}
-            inflationIndex={state.inflationIndex}
-            inflationRate={state.inflationRate}
-            inflationHistory={state.inflationHistory}
-            paused={state.paused}
-            muted={sounds.muted}
-            streakCount={state.streak.count}
-            gameDay={gameDayFromTick(state.tick)}
-            tick={state.tick}
-            difficulty={state.difficulty}
-            language={state.language}
-            t={t}
-            onTogglePause={togglePause}
-            onToggleMuted={sounds.toggleMuted}
-            onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
-            onReset={() => setDifficultyModalVisible(true)}
-            onHelp={() => setTutorialVisible(true)}
-            onEditName={() => setNameModalVisible(true)}
-            onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
-          />
-        </SpotlightTarget>
-        {/* Above the screens rather than inside one: a crisis lands on the
+      <SafeAreaView style={styles.insetFill}>
+        <SpotlightProvider style={styles.content}>
+          <SpotlightTarget id="inflation">
+            <InflationHeader
+              townName={state.townName}
+              rankIcon={townRankIcon(state.townRankIndex)}
+              rankTitle={rankTitle}
+              cash={state.cash}
+              netWorth={netWorth}
+              inflationIndex={state.inflationIndex}
+              inflationRate={state.inflationRate}
+              inflationHistory={state.inflationHistory}
+              paused={state.paused}
+              muted={sounds.muted}
+              streakCount={state.streak.count}
+              gameDay={gameDayFromTick(state.tick)}
+              tick={state.tick}
+              difficulty={state.difficulty}
+              language={state.language}
+              t={t}
+              onTogglePause={togglePause}
+              onToggleMuted={sounds.toggleMuted}
+              onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
+              onReset={() => setDifficultyModalVisible(true)}
+              onHelp={() => setTutorialVisible(true)}
+              onEditName={() => setNameModalVisible(true)}
+              onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
+            />
+          </SpotlightTarget>
+          {/* Above the screens rather than inside one: a crisis lands on the
             whole town, so the countdown has to follow the player wherever
             they are preparing — market, trade or town hall. */}
-        <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
-        <FlashDealBanner deal={state.activeFlashDeal} tick={state.tick} />
-        <EventBanner event={state.lastEvent} language={state.language} />
-        <ComboBanner event={comboEvent} />
-        <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
+          <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
+          <FlashDealBanner deal={state.activeFlashDeal} tick={state.tick} />
+          <EventBanner event={state.lastEvent} language={state.language} />
+          <ComboBanner event={comboEvent} />
+          <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
 
-        {screen === "market" && <MarketScreen sounds={sounds} />}
-        {screen === "inventory" && <InventoryScreen />}
-        {screen === "trade" && (
-          <TradeScreen
-            sounds={sounds}
-            compactMap={caravanTutorialActive && caravanSpotlight === "caravanMap"}
-          />
-        )}
-        {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
-        {screen === "research" && <ResearchScreen />}
-        {screen === "invest" && <InvestScreen sounds={sounds} />}
-        {screen === "achievements" && <AchievementsScreen />}
+          {screen === "market" && <MarketScreen sounds={sounds} />}
+          {screen === "inventory" && <InventoryScreen />}
+          {screen === "trade" && (
+            <TradeScreen
+              sounds={sounds}
+              compactMap={caravanTutorialActive && caravanSpotlight === "caravanMap"}
+            />
+          )}
+          {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
+          {screen === "research" && <ResearchScreen />}
+          {screen === "invest" && <InvestScreen sounds={sounds} />}
+          {screen === "achievements" && <AchievementsScreen />}
 
-        {/* Zero-height so it takes no room: the badge floats just above the tab
+          {/* Zero-height so it takes no room: the badge floats just above the tab
             bar, over the bottom of whichever screen is showing. */}
-        <View style={styles.badgeDock} pointerEvents="box-none">
-          <QuestBadge onOpen={() => setQuestHubOpen(true)} hidden={holdInterruptions} />
-        </View>
-        <QuestHub visible={questHubOpen} onClose={() => setQuestHubOpen(false)} />
+          <View style={styles.badgeDock} pointerEvents="box-none">
+            <QuestBadge onOpen={() => setQuestHubOpen(true)} hidden={holdInterruptions} />
+          </View>
+          <QuestHub visible={questHubOpen} onClose={() => setQuestHubOpen(false)} />
 
-        {/* She sits above the tab bar in the layout but paints above the dim
+          {/* She sits above the tab bar in the layout but paints above the dim
             as well, which is what the zIndex on her dock is for — source
             order alone cannot give her both. */}
-        {mentorActive && <MentorCoach onNext={nextMentorBeat} onSkip={skipMentor} />}
-        {caravanTutorialActive && (
-          <CaravanTutorialModal
-            visible
-            stepIndex={caravanTutorialStep}
-            language={state.language}
-            tradeUnlockThreshold={Math.round(effectiveTradeUnlockNetWorth(state))}
-            onNext={nextCaravanStep}
-            onSkip={skipCaravanTutorial}
-          />
-        )}
+          {mentorActive && <MentorCoach onNext={nextMentorBeat} onSkip={skipMentor} />}
+          {caravanTutorialActive && (
+            <CaravanTutorialModal
+              visible
+              stepIndex={caravanTutorialStep}
+              language={state.language}
+              tradeUnlockThreshold={Math.round(effectiveTradeUnlockNetWorth(state))}
+              onNext={nextCaravanStep}
+              onSkip={skipCaravanTutorial}
+            />
+          )}
 
-        <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} muted={sounds.muted} />
+          <TabBar active={screen} onChange={setScreen} spotlight={mentorScreen} muted={sounds.muted} />
 
-        {/* Over everything the tour is not pointing at, including the tab
+          {/* Over everything the tour is not pointing at, including the tab
             bar. The lit area is a gap in the dim rather than a hole punched
             through it, so the control inside it is the real one, still
             live, with nothing forwarding touches on its behalf. */}
-        {mentorActive && <SpotlightOverlay target={mentorSpotlight} />}
-        {caravanTutorialActive && <SpotlightOverlay target={caravanSpotlight} />}
+          {mentorActive && <SpotlightOverlay target={mentorSpotlight} />}
+          {caravanTutorialActive && <SpotlightOverlay target={caravanSpotlight} />}
 
-        <DifficultyModal
-          visible={difficultyModalVisible}
-          currentDifficulty={state.difficulty}
-          prestigeLevel={state.prestigeLevel}
-          onSelect={(difficulty, ngPlusModifiers) => {
-            reset(difficulty, ngPlusModifiers);
-            setDifficultyModalVisible(false);
-          }}
-          onCancel={() => setDifficultyModalVisible(false)}
-        />
+          <DifficultyModal
+            visible={difficultyModalVisible}
+            currentDifficulty={state.difficulty}
+            prestigeLevel={state.prestigeLevel}
+            onSelect={(difficulty, ngPlusModifiers) => {
+              reset(difficulty, ngPlusModifiers);
+              setDifficultyModalVisible(false);
+            }}
+            onCancel={() => setDifficultyModalVisible(false)}
+          />
 
-        <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
+          <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
 
-        <MerveRankUpModal
-          rankUp={holdInterruptions ? null : state.merveRankUp}
-          onDismiss={dismissMerveRankUp}
-          sounds={sounds}
-        />
+          <MerveRankUpModal
+            rankUp={holdInterruptions ? null : state.merveRankUp}
+            onDismiss={dismissMerveRankUp}
+            sounds={sounds}
+          />
 
-        <DecisionModal
-          decision={holdForOtherInterruptions ? null : state.pendingDecision}
-          onResolve={resolveDecision}
-        />
+          <DecisionModal
+            decision={holdForOtherInterruptions ? null : state.pendingDecision}
+            onResolve={resolveDecision}
+          />
 
-        <VillagerRequestModal
-          request={holdForOtherInterruptions ? null : state.pendingRequest}
-          holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
-          onResolve={resolveRequest}
-        />
+          <VillagerRequestModal
+            request={holdForOtherInterruptions ? null : state.pendingRequest}
+            holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
+            onResolve={resolveRequest}
+          />
 
-        <RivalTraderModal
-          offer={holdForOtherInterruptions ? null : state.pendingRivalOffer}
-          holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
-          onResolve={resolveRivalOffer}
-        />
+          <RivalTraderModal
+            offer={holdForOtherInterruptions ? null : state.pendingRivalOffer}
+            holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
+            onResolve={resolveRivalOffer}
+          />
 
-        <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
+          <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
 
-        <TownNameModal
-          visible={nameModalVisible}
-          currentName={state.townName}
-          onSave={(name) => {
-            setTownName(name);
-            setNameModalVisible(false);
-          }}
-          onCancel={() => setNameModalVisible(false)}
-        />
+          <TownNameModal
+            visible={nameModalVisible}
+            currentName={state.townName}
+            onSave={(name) => {
+              setTownName(name);
+              setNameModalVisible(false);
+            }}
+            onCancel={() => setNameModalVisible(false)}
+          />
 
-        <DoctrineModal visible={doctrineModalVisible} onClose={() => setDoctrineModalVisible(false)} />
-        <SpeedBoostModal
-          visible={speedBoostModalVisible}
-          onClose={() => setSpeedBoostModalVisible(false)}
-          sounds={sounds}
-        />
+          <DoctrineModal visible={doctrineModalVisible} onClose={() => setDoctrineModalVisible(false)} />
+          <SpeedBoostModal
+            visible={speedBoostModalVisible}
+            onClose={() => setSpeedBoostModalVisible(false)}
+            sounds={sounds}
+          />
 
-        <DailyRewardWheelModal
-          visible={
-            !state.offlineSummary &&
-            !state.merveRankUp &&
-            !tutorialVisible &&
-            state.dailyBonusPending !== null
-          }
-          amount={state.dailyBonusPending ?? 0}
-          streakCount={state.streak.count}
-          onDismiss={dismissDailyBonus}
-          onRevealed={() => setConfettiTrigger((n) => n + 1)}
-          sounds={sounds}
-        />
-      </SpotlightProvider>
-    </SafeAreaView>
+          <DailyRewardWheelModal
+            visible={
+              !state.offlineSummary &&
+              !state.merveRankUp &&
+              !tutorialVisible &&
+              state.dailyBonusPending !== null
+            }
+            amount={state.dailyBonusPending ?? 0}
+            streakCount={state.streak.count}
+            onDismiss={dismissDailyBonus}
+            onRevealed={() => setConfettiTrigger((n) => n + 1)}
+            sounds={sounds}
+          />
+        </SpotlightProvider>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -594,6 +600,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#140f0a" },
+  insetFill: { flex: 1, backgroundColor: "transparent" },
   // The UI was designed for a phone-width column; on a wide screen (iPad,
   // web desktop) let it grow to a comfortable max width and center it
   // instead of stretching cards edge-to-edge.
