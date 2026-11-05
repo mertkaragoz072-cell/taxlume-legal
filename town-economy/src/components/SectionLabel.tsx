@@ -74,7 +74,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   wrap: {
-    alignSelf: "flex-start",
+    // Centred over its panel, like the Inventory beam title.
+    alignSelf: "center",
     // Tucks over the top edge of the panel below, like the reference's
     // ribbons overlapping the cards they title.
     marginBottom: 3,

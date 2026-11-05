@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     marginTop: -2,
   },
-  ribbonRow: { flexDirection: "row", marginTop: 6, marginBottom: 6 },
+  ribbonRow: { flexDirection: "row", justifyContent: "center", marginTop: 6, marginBottom: 6 },
   ribbon: { aspectRatio: 719 / 131, justifyContent: "center", paddingLeft: "19%", paddingRight: "9%" },
   ribbonText: {
     fontFamily: FONT.bold,
