@@ -28,6 +28,8 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { OnboardingBanner } from "./src/components/OnboardingBanner";
+import { QuestBadge } from "./src/components/QuestBadge";
+import { QuestHub } from "./src/components/QuestHub";
 import { AmbientGlow } from "./src/components/AmbientGlow";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
 import { CARAVAN_STEPS, CaravanTutorialModal } from "./src/components/CaravanTutorialModal";
@@ -107,6 +109,7 @@ function Game() {
   } = useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
+  const [questHubOpen, setQuestHubOpen] = useState(false);
   // The title screen stands in front of the game until the player taps
   // through it. It is Game's own state rather than App's so the economy
   // is already mounted and hydrating behind it — by the time the button is
@@ -431,7 +434,11 @@ function Game() {
         {/* Rendered outside the per-screen blocks so the guided task follows
             the player between tabs — several of the steps are there to show
             that a tab exists at all. */}
-        <OnboardingBanner onGoToScreen={setScreen} activeScreen={screen} />
+        <OnboardingBanner
+          onGoToScreen={setScreen}
+          activeScreen={screen}
+          onOpenHub={() => setQuestHubOpen(true)}
+        />
 
         {screen === "market" && <MarketScreen sounds={sounds} />}
         {screen === "inventory" && <InventoryScreen />}
@@ -445,6 +452,13 @@ function Game() {
         {screen === "research" && <ResearchScreen />}
         {screen === "invest" && <InvestScreen sounds={sounds} />}
         {screen === "achievements" && <AchievementsScreen />}
+
+        {/* Zero-height so it takes no room: the badge floats just above the tab
+            bar, over the bottom of whichever screen is showing. */}
+        <View style={styles.badgeDock} pointerEvents="box-none">
+          <QuestBadge onOpen={() => setQuestHubOpen(true)} hidden={holdInterruptions} />
+        </View>
+        <QuestHub visible={questHubOpen} onClose={() => setQuestHubOpen(false)} />
 
         {/* She sits above the tab bar in the layout but paints above the dim
             as well, which is what the zIndex on her dock is for — source
@@ -593,5 +607,6 @@ const styles = StyleSheet.create({
   // The UI was designed for a phone-width column; on a wide screen (iPad,
   // web desktop) let it grow to a comfortable max width and center it
   // instead of stretching cards edge-to-edge.
+  badgeDock: { height: 0, zIndex: 6 },
   content: { flex: 1, width: "100%", maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
 });

@@ -8,7 +8,6 @@ import { ONBOARDING_STEPS, currentOnboardingStep } from "../economy/onboarding";
 import { FONT, GOLD_GRADIENT, PARCHMENT, SPACING, TYPE } from "../theme";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
-import { QuestHub } from "./QuestHub";
 import { RibbonLabel } from "./SectionLabel";
 import { ScreenId, TAB_LABEL_KEYS } from "./TabBar";
 
@@ -17,6 +16,8 @@ interface Props {
   /** the tab the player is looking at, so the banner does not send them
    * somewhere they already are */
   activeScreen: ScreenId;
+  /** opens the quest panel (owned by the app shell) */
+  onOpenHub: () => void;
 }
 
 /** One task at a time, across the top of every screen, until the guided
@@ -33,11 +34,10 @@ interface Props {
  * player who wants to ignore it and trade can, and the steps will tick off
  * behind them.
  */
-export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
+export function OnboardingBanner({ onGoToScreen, activeScreen, onOpenHub }: Props) {
   const { state, t } = useEconomyContext();
   const { width: windowWidth } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
-  const [hubOpen, setHubOpen] = useState(false);
   const step = currentOnboardingStep(state);
   if (!step) return null;
 
@@ -67,7 +67,7 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
         >
           <Pressable
             style={styles.ring}
-            onPress={() => setHubOpen(true)}
+            onPress={() => onOpenHub()}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel={t("onboarding.hubTitle")}
@@ -100,7 +100,6 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
             <Text style={styles.pillNoteText}>{t(step.descriptionKey)}</Text>
           </View>
         )}
-        <QuestHub visible={hubOpen} onClose={() => setHubOpen(false)} />
       </View>
     );
   }
@@ -157,14 +156,13 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
       </ScalePressable>
       <Pressable
         style={styles.toggle}
-        onPress={() => setHubOpen(true)}
+        onPress={() => onOpenHub()}
         accessibilityRole="button"
         accessibilityLabel={t("onboarding.hubTitle")}
         hitSlop={6}
       >
         <Text style={styles.chevron}>☰</Text>
       </Pressable>
-      <QuestHub visible={hubOpen} onClose={() => setHubOpen(false)} />
     </View>
   );
 }
