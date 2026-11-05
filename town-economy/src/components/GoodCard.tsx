@@ -88,7 +88,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
   // is only ~90px wide, so long strings step down (and a big move drops its
   // decimal) instead of ending in an ellipsis.
   const changeText = formatPercent(change, economy.language, Math.abs(change) >= 10 ? 0 : 1);
-  const changeSize = changeText.length > 4 ? 9 : TYPE.micro;
+  const changeSize = width < 95 ? (changeText.length > 4 ? 8.5 : 9) : changeText.length > 4 ? 9 : TYPE.micro;
   const nameLen = t(good.nameKey).length;
   const nameSize = nameLen > 10 ? 12 : TYPE.title - 2;
   const prodLen = good.producerKey ? t(good.producerKey).length : 0;

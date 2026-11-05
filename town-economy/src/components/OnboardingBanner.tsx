@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "./AppText";
 import Svg, { Circle } from "react-native-svg";
 import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
@@ -34,6 +34,7 @@ interface Props {
  */
 export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
   const { state, t } = useEconomyContext();
+  const { width: windowWidth } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
   const step = currentOnboardingStep(state);
   if (!step) return null;
@@ -106,7 +107,13 @@ export function OnboardingBanner({ onGoToScreen, activeScreen }: Props) {
       >
         <View style={styles.topLine}>
           <RibbonLabel text={t("onboarding.banner")} height={24} fontSize={TYPE.caption} />
-          <Text style={styles.title} numberOfLines={1}>
+          <Text
+            style={[
+              styles.title,
+              windowWidth < 370 && { fontSize: windowWidth < 350 ? TYPE.caption : TYPE.label },
+            ]}
+            numberOfLines={1}
+          >
             {t(step.titleKey)}
           </Text>
           <View style={styles.rewardWrap}>
