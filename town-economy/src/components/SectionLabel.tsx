@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     // Tucks over the top edge of the panel below, like the reference's
     // ribbons overlapping the cards they title.
-    marginBottom: -5,
+    marginBottom: 3,
     zIndex: 2,
     marginTop: 2,
   },
