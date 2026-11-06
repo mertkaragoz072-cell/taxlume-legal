@@ -1,24 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Animated, Easing, Image, StyleSheet, useWindowDimensions, View } from "react-native";
+import cardArt from "../../assets/ui/mervecard/card.webp";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES } from "../economy/difficulty";
 import { effectiveDifficultyConfig } from "../economy/ngPlusModifiers";
 import { currentMentorStep, isWaitingOnPlayer, MENTOR_STEPS } from "../economy/mentor";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
-import { MentorPortrait } from "./MentorPortrait";
+import { FONT, SCREEN_PADDING, SPACING } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -28,9 +16,19 @@ interface Props {
   onSkip: () => void;
 }
 
-// Bigger than the old inset portrait (112), and now free to spill over the
-// card's top edge instead of being fit inside it — see portraitFloat below.
-const PORTRAIT_SIZE = 148;
+// The sent card, cropped from its sheet to 1616 x 853. Every field below is
+// read off the original sheet (1637 wide) and shifted by the crop (OX, OY),
+// then scaled by card width / ART_W so the words stay on their plaques.
+const ART_W = 1616;
+const ART_H = 853;
+const OX = 10;
+const OY = 75;
+const NAME = { x: 672, y: 195, w: 638, h: 83 };
+const TAG = { x: 1337, y: 195, w: 225, h: 77 };
+const TITLE = { x: 698, y: 320, w: 810, h: 110 };
+const BODY = { x: 698, y: 480, w: 880, h: 225 };
+const SKIP = { x: 852, y: 735, w: 218, h: 93 };
+const NEXT = { x: 1103, y: 712, w: 414, h: 128 };
 
 /** Merve, docked above the tab bar, walking a new mayor through the town.
  *
@@ -46,6 +44,7 @@ const PORTRAIT_SIZE = 148;
  */
 export function MentorCoach({ onNext, onSkip }: Props) {
   const { state, t } = useEconomyContext();
+  const { width: windowWidth } = useWindowDimensions();
   const step = currentMentorStep(state.mentorStep);
   // The number that ends a run differs per difficulty, and New Game+ can
   // move it again, so the beat about losing reads the live one rather than
@@ -90,6 +89,33 @@ export function MentorCoach({ onNext, onSkip }: Props) {
   const waitingOnPlayer = isWaitingOnPlayer(step, state, escaped);
   const say = (key: string) => t(key, { limit: hyperinflationIndex });
 
+  const name = `${t("mentor.name")} · ${t("mentor.role")}`;
+  const title = say(step.titleKey);
+  const body = say(step.textKey);
+  const tip = step.tipKey ? say(step.tipKey) : "";
+  const progress = t("mentor.progress", { current: index + 1, total: MENTOR_STEPS.length });
+  const nextLabel = waitingOnPlayer ? t("mentor.waiting") : isLast ? t("mentor.done") : t("mentor.next");
+  const cardW = Math.min(windowWidth - SCREEN_PADDING * 2, 480);
+  const s = cardW / ART_W;
+  const cardH = ART_H * s;
+  const w = (px: number) => px * s;
+  const x = (px: number) => (px - OX) * s;
+  const y = (px: number) => (px - OY) * s;
+
+  // The art's text field is small, so the body is sized from its length: the
+  // largest size at which the sentence and its tip still fit the field
+  // (phone letters average ~0.52em). Better a smaller line than one that
+  // runs over the buttons.
+  const fieldW = w(BODY.w);
+  const fieldH = w(BODY.h);
+  let bodySize = 12.5;
+  const linesAt = (size: number) =>
+    Math.ceil((body.length * 0.52 * size) / fieldW) +
+    (tip ? Math.ceil(((tip.length + 3) * 0.52 * size) / fieldW) : 0);
+  while (bodySize > 8.5 && linesAt(bodySize) * bodySize * 1.17 > fieldH) bodySize -= 0.25;
+  const fit = (text: string, boxW: number, maxSize: number, em: number) =>
+    Math.min(maxSize, (boxW * 0.92) / (text.length * em));
+
   return (
     <Animated.View
       style={[
@@ -100,71 +126,86 @@ export function MentorCoach({ onNext, onSkip }: Props) {
         },
       ]}
     >
-      <View style={styles.card}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      {/* Merve's painted card: her portrait, the name plaque, the step tag,
+          the title scroll and both buttons are all in the art. Only the
+          words are drawn. */}
+      <View style={{ width: cardW, height: cardH }}>
+        <Image source={cardArt} style={styles.art} resizeMode="stretch" />
 
-        <View style={styles.row}>
-          {/* A spacer, not the portrait itself: the real MentorPortrait
-              renders below as a sibling of the card, so it can spill over
-              the card's top edge instead of being clipped by its overflow.
-              This just reserves the row's own space for it. */}
-          <View style={styles.portraitSpacer} />
-          <View style={styles.speech}>
-            {/* Who is talking, and how much of this is left. The dots that
-                used to carry progress were readable as decoration and not
-                as "two more of these" — a count says it outright. */}
-            <View style={styles.nameRow}>
-              <Text style={styles.name}>
-                {t("mentor.name")} <Text style={styles.role}>· {t("mentor.role")}</Text>
-              </Text>
-              <Text style={styles.progress}>
-                {t("mentor.progress", { current: index + 1, total: MENTOR_STEPS.length })}
-              </Text>
-            </View>
+        <View
+          style={[styles.field, { left: x(NAME.x), top: y(NAME.y), width: w(NAME.w), height: w(NAME.h) }]}
+        >
+          <Text
+            style={[styles.name, { fontSize: fit(name, w(NAME.w), w(NAME.h) * 0.5, 0.72) }]}
+            numberOfLines={1}
+          >
+            {name}
+          </Text>
+        </View>
+        <View style={[styles.field, { left: x(TAG.x), top: y(TAG.y), width: w(TAG.w), height: w(TAG.h) }]}>
+          <Text
+            style={[styles.progress, { fontSize: fit(progress, w(TAG.w), w(TAG.h) * 0.46, 0.62) }]}
+            numberOfLines={1}
+          >
+            {progress}
+          </Text>
+        </View>
+        <View
+          style={[styles.field, { left: x(TITLE.x), top: y(TITLE.y), width: w(TITLE.w), height: w(TITLE.h) }]}
+        >
+          <Text
+            accessibilityRole="header"
+            style={[styles.title, { fontSize: fit(title, w(TITLE.w), w(TITLE.h) * 0.46, 0.74) }]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+        </View>
 
-            {/* Subject first. A player who already knows what a market is can
-                see this beat is about the market and press on without
-                reading the sentence. */}
-            <Text style={styles.title}>{say(step.titleKey)}</Text>
-            <Text style={styles.text}>{say(step.textKey)}</Text>
+        <View style={[styles.bodyBox, { left: x(BODY.x), top: y(BODY.y), width: fieldW, height: fieldH }]}>
+          <Text style={[styles.body, { fontSize: bodySize, lineHeight: bodySize * 1.17 }]}>{body}</Text>
+          {tip ? (
+            <Text style={[styles.tip, { fontSize: bodySize, lineHeight: bodySize * 1.17 }]}>▸ {tip}</Text>
+          ) : null}
+        </View>
 
-            {/* And the one thing to actually do, lifted out of the prose.
-                Every beat used to end with its instruction buried in the
-                middle of a paragraph. */}
-            {step.tipKey && (
-              <View style={styles.tipRow}>
-                <Text style={styles.tipMark}>▸</Text>
-                <Text style={styles.tip}>{say(step.tipKey)}</Text>
-              </View>
-            )}
+        <ScalePressable
+          onPress={onSkip}
+          accessibilityLabel={t("mentor.skip")}
+          style={[styles.field, { left: x(SKIP.x), top: y(SKIP.y), width: w(SKIP.w), height: w(SKIP.h) }]}
+          scaleTo={0.96}
+        >
+          <Text
+            style={[styles.skipText, { fontSize: fit(t("mentor.skip"), w(SKIP.w), w(SKIP.h) * 0.5, 0.62) }]}
+          >
+            {t("mentor.skip")}
+          </Text>
+        </ScalePressable>
+        {waitingOnPlayer ? (
+          <View
+            style={[styles.field, { left: x(NEXT.x), top: y(NEXT.y), width: w(NEXT.w), height: w(NEXT.h) }]}
+          >
+            <Text
+              style={[
+                styles.nextText,
+                { fontSize: fit(nextLabel, w(NEXT.w), w(NEXT.h) * 0.4, 0.62), opacity: 0.8 },
+              ]}
+            >
+              {nextLabel}
+            </Text>
           </View>
-        </View>
-
-        <View style={styles.footer}>
-          {!isLast && (
-            <ScalePressable onPress={onSkip} style={styles.skipBtn} scaleTo={0.96}>
-              <Text style={styles.skipText}>{t("mentor.skip")}</Text>
-            </ScalePressable>
-          )}
-          {waitingOnPlayer ? (
-            <View style={styles.waitingBadge}>
-              <Text style={styles.waitingText}>{t("mentor.waiting")}</Text>
-            </View>
-          ) : (
-            <ScalePressable onPress={onNext} style={styles.nextBtn} scaleTo={0.96}>
-              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={styles.nextText}>{isLast ? t("mentor.done") : t("mentor.next")}</Text>
-            </ScalePressable>
-          )}
-        </View>
-      </View>
-
-      {/* Sibling of the card, not a child of it — the card clips its own
-          content (overflow: hidden, for its rounded corners), which used to
-          crop her at its edge. Rendered after it so document order puts her
-          on top with no zIndex needed. */}
-      <View style={styles.portraitFloat} pointerEvents="none">
-        <MentorPortrait size={PORTRAIT_SIZE} />
+        ) : (
+          <ScalePressable
+            onPress={onNext}
+            accessibilityLabel={nextLabel}
+            style={[styles.field, { left: x(NEXT.x), top: y(NEXT.y), width: w(NEXT.w), height: w(NEXT.h) }]}
+            scaleTo={0.96}
+          >
+            <Text style={[styles.nextText, { fontSize: fit(nextLabel, w(NEXT.w), w(NEXT.h) * 0.4, 0.62) }]}>
+              {nextLabel}
+            </Text>
+          </ScalePressable>
+        )}
       </View>
     </Animated.View>
   );
@@ -181,82 +222,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: SPACING.md,
+    alignItems: "center",
     paddingBottom: SPACING.sm,
     zIndex: 30,
   },
-  card: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.accent, 0.45),
-    ...cardShadow,
-  },
-  row: { flexDirection: "row", alignItems: "flex-start" },
-  // Reserves the row's own space for the floating portrait (below); it
-  // carries no image itself.
-  portraitSpacer: { width: PORTRAIT_SIZE - 24, marginRight: SPACING.sm },
-  // Positioned against the dock, not the card, so its top-left lands at the
-  // card's own top-left corner (the dock has no padding above the card) and
-  // she can spill up and out of it instead of being clipped by its
-  // overflow. The negative top is how far above the card's edge she sits.
-  portraitFloat: { position: "absolute", left: SPACING.md, top: -SPACING.xl },
-  speech: { flex: 1 },
-  nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
-  name: {
-    color: COLORS.accent,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-  },
-  role: { color: COLORS.textMuted, fontWeight: WEIGHT.regular, fontFamily: FONT.medium },
-  progress: { color: COLORS.textMuted, fontSize: TYPE.micro, fontFamily: FONT.medium },
-  title: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.heading,
-    fontFamily: FONT.display,
-    marginTop: 4,
-    marginBottom: 3,
-  },
-  text: { color: COLORS.textMuted, fontSize: TYPE.label, lineHeight: 18 },
-  tipRow: { flexDirection: "row", alignItems: "flex-start", marginTop: 7 },
-  tipMark: { color: COLORS.positive, fontSize: TYPE.label, lineHeight: 18, marginRight: 5 },
-  tip: {
-    flex: 1,
-    color: COLORS.positive,
-    fontSize: TYPE.label,
-    lineHeight: 18,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: SPACING.sm },
-  skipBtn: { paddingVertical: 8, paddingHorizontal: SPACING.sm, marginRight: SPACING.xs },
-  skipText: { color: COLORS.textMuted, fontSize: TYPE.caption, fontFamily: FONT.medium },
-  nextBtn: {
-    borderRadius: RADIUS.chip,
-    paddingVertical: 9,
-    paddingHorizontal: SPACING.lg,
-    overflow: "hidden",
-  },
-  // No numeric fontWeight next to FONT.black — it is already the heavy cut,
-  // and asking iOS to weight a weighted file shifts the metrics enough to
-  // push the label off its own button. lineHeight spelled out for the same
-  // reason.
-  nextText: { color: "#1a1410", fontFamily: FONT.black, fontSize: TYPE.label, lineHeight: 18 },
-  waitingBadge: {
-    borderRadius: RADIUS.chip,
-    paddingVertical: 9,
-    paddingHorizontal: SPACING.lg,
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.positive, 0.6),
-    backgroundColor: withAlpha(COLORS.positive, 0.14),
-  },
-  waitingText: {
-    color: COLORS.positive,
-    fontFamily: FONT.bold,
-    fontWeight: WEIGHT.bold,
-    fontSize: TYPE.label,
-    lineHeight: 18,
-  },
+  art: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  field: { position: "absolute", alignItems: "center", justifyContent: "center" },
+  bodyBox: { position: "absolute", overflow: "hidden" },
+  name: { color: "#f6e2a0", fontFamily: FONT.display, textAlign: "center", letterSpacing: 0.5 },
+  progress: { color: "#f1e3b8", fontFamily: FONT.bold, textAlign: "center" },
+  title: { color: "#4a2f1a", fontFamily: FONT.display, textAlign: "center" },
+  body: { color: "#3d2415", fontFamily: FONT.medium },
+  tip: { color: "#1f6b32", fontFamily: FONT.bold, marginTop: 1 },
+  skipText: { color: "#5a3d22", fontFamily: FONT.bold, textAlign: "center" },
+  nextText: { color: "#f6e2a0", fontFamily: FONT.black, textAlign: "center" },
 });
