@@ -1,27 +1,25 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import rivalsArt from "../../assets/ui/tradesheet/rivals.webp";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { TOWNS_BY_ID } from "../economy/towns";
-import { TRADING_HOUSES_BY_ID, TradingHouseActivity } from "../economy/tradingHouses";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-  PANEL_GAP,
-  WOOD_RIM,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { TRADING_HOUSES, TRADING_HOUSES_BY_ID, TradingHouseActivity } from "../economy/tradingHouses";
+import { FONT, PANEL_GAP } from "../theme";
+import { FixedPanel } from "./ImagePanels";
 
-const BUYING = "#f0a04b";
-const SELLING = "#6fb8f2";
+const BUYING = "#ffb85a";
+const SELLING = "#8cc8ff";
+
+// Positions are in the sent panel's own pixels (774 x 398): three parchment
+// rows, each with a painted house shield on the left and an empty gold-rimmed
+// slot on the right, and an info mark at the foot for the hint.
+const ART_W = 774;
+const ART_H = 398;
+const ROW_CENTERS = [62, 167, 272];
+const pctX = (px: number) => `${(px / ART_W) * 100}%` as const;
+const pctY = (px: number) => `${(px / ART_H) * 100}%` as const;
 
 interface Props {
   activities: TradingHouseActivity[];
@@ -36,77 +34,70 @@ interface Props {
 export function TradingHousesCard({ activities }: Props) {
   const { t } = useEconomyContext();
   if (activities.length === 0) return null;
+  // The panel's three shields are the three houses, in this order.
+  const byHouse = TRADING_HOUSES.map((h) => activities.find((a) => a.houseId === h.id));
 
   return (
-    <View style={styles.card}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      {activities.map((a) => {
-        const house = TRADING_HOUSES_BY_ID[a.houseId];
-        const town = TOWNS_BY_ID[a.townId];
-        const good = GOODS_BY_ID[a.goodId];
-        if (!house || !town || !good) return null;
-        const buying = a.side === "buying";
-        const tint = buying ? BUYING : SELLING;
-        return (
-          <View key={a.houseId} style={styles.row}>
-            <Text aria-hidden style={styles.houseIcon}>
-              {house.icon}
-            </Text>
-            <View style={styles.body}>
-              <Text style={styles.houseName} numberOfLines={1}>
-                {t(house.nameKey)}
-              </Text>
-              <Text style={styles.action} numberOfLines={1}>
-                {t(buying ? "tradingHouse.buyingIn" : "tradingHouse.sellingIn", {
-                  good: `${good.icon} ${t(good.nameKey)}`,
-                  town: t(town.nameKey),
-                })}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.tag,
-                { borderColor: withAlpha(tint, 0.5), backgroundColor: withAlpha(tint, 0.14) },
-              ]}
-            >
-              <Text style={[styles.tagText, { color: tint }]}>
-                {t(buying ? "tradingHouse.priceUp" : "tradingHouse.priceDown")}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
-      <Text style={styles.hint}>{t("tradingHouse.hint")}</Text>
-    </View>
+    <FixedPanel source={rivalsArt} aspect={ART_W / ART_H} style={{ marginBottom: PANEL_GAP }}>
+      {(w) => (
+        <>
+          {byHouse.map((a, i) => {
+            if (!a) return null;
+            const house = TRADING_HOUSES_BY_ID[a.houseId];
+            const town = TOWNS_BY_ID[a.townId];
+            const good = GOODS_BY_ID[a.goodId];
+            if (!house || !town || !good) return null;
+            const buying = a.side === "buying";
+            const tint = buying ? BUYING : SELLING;
+            const cy = ROW_CENTERS[i];
+            return (
+              <React.Fragment key={a.houseId}>
+                <View
+                  style={[
+                    styles.text,
+                    { left: pctX(150), width: pctX(440), top: pctY(cy - 44), height: pctY(88) },
+                  ]}
+                >
+                  <Text style={[styles.name, { fontSize: w * 0.04 }]} numberOfLines={1}>
+                    {t(house.nameKey)}
+                  </Text>
+                  <Text style={[styles.action, { fontSize: w * 0.029 }]} numberOfLines={2}>
+                    {t(buying ? "tradingHouse.buyingIn" : "tradingHouse.sellingIn", {
+                      good: `${good.icon} ${t(good.nameKey)}`,
+                      town: t(town.nameKey),
+                    })}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.tag,
+                    { left: pctX(598), width: pctX(135), top: pctY(cy - 24), height: pctY(48) },
+                  ]}
+                >
+                  <Text style={[styles.tagText, { color: tint, fontSize: w * 0.03 }]} numberOfLines={1}>
+                    {t(buying ? "tradingHouse.priceUp" : "tradingHouse.priceDown")}
+                  </Text>
+                </View>
+              </React.Fragment>
+            );
+          })}
+          <Text
+            style={[styles.hint, { left: pctX(112), width: pctX(640), top: pctY(327), fontSize: w * 0.026 }]}
+            numberOfLines={2}
+          >
+            {t("tradingHouse.hint")}
+          </Text>
+        </>
+      )}
+    </FixedPanel>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    ...WOOD_RIM,
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  row: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm },
-  houseIcon: { fontSize: 18, marginRight: SPACING.sm },
-  body: { flex: 1 },
-  houseName: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
-  action: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 1 },
-  tag: {
-    borderWidth: 1,
-    borderRadius: RADIUS.chip,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    marginLeft: SPACING.sm,
-  },
-  tagText: { fontSize: 9, fontWeight: WEIGHT.black, fontFamily: FONT.black },
-  hint: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2, lineHeight: 15 },
+  text: { position: "absolute", justifyContent: "center" },
+  name: { color: "#3d2415", fontFamily: FONT.serif, flexShrink: 0 },
+  action: { color: "#5a3d22", fontFamily: FONT.bold, marginTop: 2, flexShrink: 0 },
+  tag: { position: "absolute", alignItems: "center", justifyContent: "center" },
+  tagText: { fontFamily: FONT.black, letterSpacing: 0.5 },
+  hint: { position: "absolute", color: "#e8d3a6", fontFamily: FONT.medium },
 });

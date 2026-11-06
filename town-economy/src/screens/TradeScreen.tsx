@@ -11,6 +11,8 @@ import lockArt from "../../assets/ui/tradelock/panel.webp";
 import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { LockedTierCard } from "../components/LockedTierCard";
+import { TownArtPills } from "../components/TownArtPills";
 import { TownMapView } from "../components/TownMapView";
 import { TradingHousesCard } from "../components/TradingHousesCard";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -287,18 +289,18 @@ export function TradeScreen({ sounds, compactMap }: Props) {
         </SpotlightTarget>
 
         <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-          {REGULAR_TOWNS.map((tn) => (
-            <TownPill
-              key={tn.id}
-              town={tn}
-              selected={tn.id === townId}
-              onPress={() => setTownId(tn.id)}
-              state={state}
-              t={t}
-            />
-          ))}
-        </ScrollView>
+        <TownArtPills
+          towns={REGULAR_TOWNS}
+          selectedTownId={townId}
+          onSelect={setTownId}
+          nameOf={(tn) => t(tn.nameKey)}
+          metaOf={(tn) =>
+            t("trade.townMeta", {
+              days: tn.distanceDays,
+              tariff: (effectiveTariffRate(state, tn) * 100).toFixed(0),
+            })
+          }
+        />
 
         <SectionLabel text={t("trade.metropolSectionLabel")} color="#c58ee0" />
         {state.metropolUnlocked ? (
@@ -315,36 +317,17 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             ))}
           </ScrollView>
         ) : (
-          <View style={styles.metropolLockedCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.metropolLockedIcon}>🔒</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.metropolLockedTitle}>{t("trade.metropolLocked.title")}</Text>
-              <Text style={styles.metropolLockedDesc}>
-                {t("trade.metropolLocked.description", {
-                  target: Math.round(effectiveMetropolUnlockNetWorth(state)),
-                })}
-              </Text>
-              <View style={styles.lockedTrack}>
-                <View
-                  style={[
-                    styles.lockedFill,
-                    {
-                      width: `${
-                        Math.max(0, Math.min(1, netWorth / effectiveMetropolUnlockNetWorth(state))) * 100
-                      }%`,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.metropolLockedProgress}>
-                {t("trade.metropolLocked.progress", {
-                  current: Math.floor(netWorth),
-                  target: Math.round(effectiveMetropolUnlockNetWorth(state)),
-                })}
-              </Text>
-            </View>
-          </View>
+          <LockedTierCard
+            title={t("trade.metropolLocked.title")}
+            description={t("trade.metropolLocked.description", {
+              target: Math.round(effectiveMetropolUnlockNetWorth(state)),
+            })}
+            progressText={t("trade.metropolLocked.progress", {
+              current: Math.floor(netWorth),
+              target: Math.round(effectiveMetropolUnlockNetWorth(state)),
+            })}
+            progress={netWorth / effectiveMetropolUnlockNetWorth(state)}
+          />
         )}
 
         <SectionLabel text={t("trade.legendarySectionLabel")} color="#f0776a" />
@@ -362,34 +345,15 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             ))}
           </ScrollView>
         ) : (
-          <View style={styles.metropolLockedCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.metropolLockedIcon}>🔒</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.metropolLockedTitle}>{t("trade.legendaryLocked.title")}</Text>
-              <Text style={styles.metropolLockedDesc}>
-                {t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
-              </Text>
-              <View style={styles.lockedTrack}>
-                <View
-                  style={[
-                    styles.lockedFill,
-                    {
-                      width: `${
-                        Math.max(0, Math.min(1, state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL)) * 100
-                      }%`,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.metropolLockedProgress}>
-                {t("trade.legendaryLocked.progress", {
-                  current: state.prestigeLevel,
-                  target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
-                })}
-              </Text>
-            </View>
-          </View>
+          <LockedTierCard
+            title={t("trade.legendaryLocked.title")}
+            description={t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
+            progressText={t("trade.legendaryLocked.progress", {
+              current: state.prestigeLevel,
+              target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+            })}
+            progress={state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL}
+          />
         )}
 
         {state.legendaryUnlocked && (
@@ -409,35 +373,15 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                 ))}
               </ScrollView>
             ) : (
-              <View style={styles.metropolLockedCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.metropolLockedIcon}>🔒</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.metropolLockedTitle}>{t("trade.mythicLocked.title")}</Text>
-                  <Text style={styles.metropolLockedDesc}>
-                    {t("trade.mythicLocked.description", { target: MYTHIC_UNLOCK_LEGENDARY_POINTS })}
-                  </Text>
-                  <View style={styles.lockedTrack}>
-                    <View
-                      style={[
-                        styles.lockedFill,
-                        {
-                          width: `${
-                            Math.max(0, Math.min(1, state.legendaryPoints / MYTHIC_UNLOCK_LEGENDARY_POINTS)) *
-                            100
-                          }%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.metropolLockedProgress}>
-                    {t("trade.mythicLocked.progress", {
-                      current: state.legendaryPoints,
-                      target: MYTHIC_UNLOCK_LEGENDARY_POINTS,
-                    })}
-                  </Text>
-                </View>
-              </View>
+              <LockedTierCard
+                title={t("trade.mythicLocked.title")}
+                description={t("trade.mythicLocked.description", { target: MYTHIC_UNLOCK_LEGENDARY_POINTS })}
+                progressText={t("trade.mythicLocked.progress", {
+                  current: state.legendaryPoints,
+                  target: MYTHIC_UNLOCK_LEGENDARY_POINTS,
+                })}
+                progress={state.legendaryPoints / MYTHIC_UNLOCK_LEGENDARY_POINTS}
+              />
             )}
           </>
         )}
@@ -946,46 +890,7 @@ const styles = StyleSheet.create({
   lockDesc: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
   lockTrack: { position: "absolute", borderRadius: 999, overflow: "hidden", padding: 2 },
   lockFill: { height: "100%", backgroundColor: "#f2b630", borderRadius: 999 },
-  lockedTrack: {
-    width: "100%",
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.onLight,
-    overflow: "hidden",
-    marginBottom: SPACING.sm,
-  },
-  lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
   lockProgress: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
-  metropolLockedCard: {
-    ...WOOD_RIM,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md + 2,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  metropolLockedIcon: { fontSize: 24, marginRight: SPACING.md },
-  metropolLockedTitle: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-  },
-  metropolLockedDesc: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    marginTop: 3,
-    marginBottom: SPACING.sm,
-    lineHeight: 15,
-  },
-  metropolLockedProgress: {
-    color: COLORS.accent,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
   townRow: { marginBottom: PANEL_GAP },
   townPill: {
     borderRadius: RADIUS.card,

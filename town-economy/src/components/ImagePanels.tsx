@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import headerImg from "../../assets/ui/inventory/header.png";
-import ribbonImg from "../../assets/ui/inventory/ribbon.png";
 import { FONT } from "../theme";
-import { BeamRow } from "./BeamRow";
+import { SheetHeader } from "./SheetHeader";
 
 /** Width of the nearest laid-out box, so type and positions inside a
  * fixed-aspect painted panel scale with it. */
@@ -35,37 +34,12 @@ export function BeamTitle({ title }: { title: string }) {
   );
 }
 
-/** The green section ribbon with its vines, sized to a share of the row. */
-export function AssetRibbon({ text, widthPct: widthOverride }: { text: string; widthPct?: number }) {
-  const [w, onLayout] = useBoxWidth();
-  // The plate's lettering area is ~70% of the ribbon (vines and the gold dot
-  // take the rest), so the ribbon is sized from the label itself instead of a
-  // fixed share: a capital of the bold face runs ~0.74em plus the tracking.
-  // adjustsFontSizeToFit does not exist on web, and phone fonts set wider
-  // than a browser's, so the size is computed rather than left to shrink.
-  const letterSpacing = 1;
-  const baseFont = w * 0.036;
-  const natural = text.length * (0.9 * baseFont + letterSpacing);
-  let widthPx = widthOverride ? (w * widthOverride) / 100 : Math.max(w * 0.4, natural / 0.66);
-  let fontSize = baseFont;
-  if (widthPx > w) {
-    widthPx = w;
-    fontSize = Math.max(8, (w * 0.66) / text.length - letterSpacing) / 0.9;
-  }
+/** Section heading for the painted pages: the same wheat-wreathed plaque beam
+ * the rest of the game uses. */
+export function AssetRibbon({ text }: { text: string; widthPct?: number }) {
   return (
-    <View style={styles.ribbonRow} onLayout={onLayout}>
-      <BeamRow>
-        <View style={[styles.ribbon, { width: widthPx }]}>
-          <Image source={ribbonImg} style={styles.fill} resizeMode="stretch" />
-          <Text
-            style={[styles.ribbonText, { fontSize: Math.round(fontSize), letterSpacing }]}
-            numberOfLines={1}
-            accessibilityRole="header"
-          >
-            {text}
-          </Text>
-        </View>
-      </BeamRow>
+    <View style={styles.ribbonRow}>
+      <SheetHeader text={text} />
     </View>
   );
 }
