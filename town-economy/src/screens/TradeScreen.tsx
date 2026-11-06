@@ -10,6 +10,7 @@ import lockArt from "../../assets/ui/tradelock/panel.webp";
 import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { ContractPanel } from "../components/ContractPanel";
 import { SendPanel } from "../components/SendPanel";
 import { HeatmapPanel } from "../components/HeatmapPanel";
 import { LockedTierCard } from "../components/LockedTierCard";
@@ -37,7 +38,6 @@ import {
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
 import {
-  BLUE_GRADIENT,
   CARD_GRADIENT,
   cardShadow,
   COLORS,
@@ -504,91 +504,43 @@ export function TradeScreen({ sounds, compactMap }: Props) {
 
         <SectionLabel text={t("trade.contract.sectionLabel")} color="#f0776a" />
         <Text style={styles.contractDesc}>{t("trade.contract.description")}</Text>
-        <View style={styles.panel}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={styles.sideToggle}>
-            <ScalePressable
-              style={[styles.sideBtn, contractDirection === "long" && styles.sideBtnActiveExport]}
-              onPress={() => setContractDirection("long")}
-            >
-              <Text style={[styles.sideBtnText, contractDirection === "long" && styles.sideBtnTextActive]}>
-                {t("trade.contract.directionLong")}
-              </Text>
-            </ScalePressable>
-            <ScalePressable
-              style={[styles.sideBtn, contractDirection === "short" && styles.sideBtnActiveImport]}
-              onPress={() => setContractDirection("short")}
-            >
-              <Text style={[styles.sideBtnText, contractDirection === "short" && styles.sideBtnTextActive]}>
-                {t("trade.contract.directionShort")}
-              </Text>
-            </ScalePressable>
-          </View>
-
-          <View style={styles.qtyRow}>
-            {([1, 5, 10] as const).map((q) => (
-              <ScalePressable
-                key={q}
-                style={[styles.qtyBtn, contractQty === q && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setContractQty(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <Text style={styles.contractTermLabel}>{t("trade.contract.termLabel")}</Text>
-          <View style={styles.qtyRow}>
-            {CONTRACT_TERM_DAY_STEPS.map((days) => (
-              <ScalePressable
-                key={days}
-                style={[
-                  styles.qtyBtn,
-                  contractTermDays === days && { borderColor: good.color, borderWidth: 2 },
-                ]}
-                onPress={() => setContractTermDays(days)}
-              >
-                <Text style={styles.qtyBtnText}>{t("trade.contract.termDays", { days })}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          {(() => {
-            const strikePreview = state.goods[goodId].price;
-            const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
-            const maxContracts = effectiveContractMaxActive(state);
-            const contractDisabled =
-              state.contracts.length >= maxContracts || state.cash < margin || !isGoodUnlocked(good, state);
-            return (
-              <>
-                <Text style={styles.summaryLabel}>
-                  {t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
-                </Text>
-                <Text style={styles.contractMaxNote}>
-                  {t("trade.contract.maxActiveNote", { max: maxContracts })}
-                </Text>
-                <ScalePressable
-                  disabled={contractDisabled}
-                  onPress={() => {
-                    openContract(goodId, contractDirection, contractQty, contractTermDays);
-                    sounds.playBuy();
-                  }}
-                  style={[styles.confirmBtn, contractDisabled && styles.confirmBtnDisabled]}
-                  scaleTo={0.97}
-                >
-                  <GradientFill
-                    colors={contractDirection === "long" ? GREEN_GRADIENT : BLUE_GRADIENT}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  />
-                  <Text style={styles.confirmBtnText}>{t("trade.contract.openBtn")}</Text>
-                </ScalePressable>
-              </>
-            );
-          })()}
-        </View>
+        {(() => {
+          const strikePreview = state.goods[goodId].price;
+          const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
+          const maxContracts = effectiveContractMaxActive(state);
+          const contractDisabled =
+            state.contracts.length >= maxContracts || state.cash < margin || !isGoodUnlocked(good, state);
+          return (
+            <ContractPanel
+              direction={contractDirection}
+              onDirection={setContractDirection}
+              longLabel={t("trade.contract.directionLong")}
+              shortLabel={t("trade.contract.directionShort")}
+              qty={([1, 5, 10] as const).map((q) => ({
+                key: String(q),
+                label: String(q),
+                selected: contractQty === q,
+                onPress: () => setContractQty(q),
+              }))}
+              termLabel={t("trade.contract.termLabel")}
+              terms={CONTRACT_TERM_DAY_STEPS.map((days) => ({
+                key: String(days),
+                label: t("trade.contract.termDays", { days }),
+                selected: contractTermDays === days,
+                onPress: () => setContractTermDays(days),
+              }))}
+              accent={good.color}
+              note={t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
+              maxNote={t("trade.contract.maxActiveNote", { max: maxContracts })}
+              openLabel={t("trade.contract.openBtn")}
+              openDisabled={contractDisabled}
+              onOpen={() => {
+                openContract(goodId, contractDirection, contractQty, contractTermDays);
+                sounds.playBuy();
+              }}
+            />
+          );
+        })()}
 
         <SectionLabel text={t("trade.contract.activeSectionLabel")} color={COLORS.accent} />
         {state.contracts.length === 0 && (
