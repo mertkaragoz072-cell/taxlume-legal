@@ -29,10 +29,7 @@ import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townR
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "../economy/workers";
-import { GoodIcon } from "../components/GoodIcon";
-import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
-import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
 import { StretchPanel, GoldButton } from "../components/PanelKit";
 import {
@@ -45,13 +42,14 @@ import {
   TaxPanel,
 } from "../components/TownPanels";
 import { DoctrinePanel } from "../components/DoctrinePanel";
+import { WorkerCard } from "../components/WorkerCard";
 import { WorkersLockedPanel } from "../components/WorkersLockedPanel";
 import { PerkCard, PointsLine } from "../components/PerkCard";
 import { PrestigePanel } from "../components/PrestigePanel";
 import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
 import { happinessFor } from "../components/TownSquareScene";
-import { CARD_GRADIENT, COLORS, SCREEN_PADDING, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
+import { COLORS, SCREEN_PADDING, FONT, SPACING, TYPE } from "../theme";
 
 /** Chart line colours that read on parchment (the mood colours are tuned for the dark theme). */
 const CHART_INK = { crisis: "#b8431c", heating: "#a8680f", calm: "#7a5a14", cooling: "#2f8a4a" } as const;
@@ -475,46 +473,26 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => {
           const count = state.workers[g.id];
           return (
-            <View key={g.id} style={styles.workerCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View style={[styles.workerAccent, { backgroundColor: g.color }]} />
-              <GoodIcon id={g.id} fallback={g.icon} size={22} style={styles.workerIcon} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.workerName}>{t(g.nameKey)}</Text>
-                {count > 0 && (
-                  <Text style={styles.workerInfo}>
-                    {t("town.workerWage", {
+            <WorkerCard
+              key={g.id}
+              goodId={g.id}
+              fallbackIcon={g.icon}
+              color={g.color}
+              name={t(g.nameKey)}
+              info={
+                count > 0
+                  ? `${t("town.workerWage", {
                       amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1),
-                    })}
-                    {" · "}
-                    {t("town.workerBonus", {
+                    })} · ${t("town.workerBonus", {
                       pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
-                    })}
-                  </Text>
-                )}
-                <View style={styles.workerPipRow}>
-                  {Array.from({ length: maxWorkersPerGood }).map((_, i) => (
-                    <View key={i} style={[styles.workerPip, i < count && styles.workerPipFilled]} />
-                  ))}
-                </View>
-              </View>
-              <View style={styles.workerBtnCol}>
-                <ScalePressable
-                  disabled={count >= maxWorkersPerGood}
-                  onPress={() => hireWorker(g.id)}
-                  style={[styles.workerBtn, count >= maxWorkersPerGood && styles.workerBtnDisabled]}
-                >
-                  <Text style={styles.workerBtnText}>+</Text>
-                </ScalePressable>
-                <ScalePressable
-                  disabled={count <= 0}
-                  onPress={() => fireWorker(g.id)}
-                  style={[styles.workerBtn, count <= 0 && styles.workerBtnDisabled]}
-                >
-                  <Text style={styles.workerBtnText}>−</Text>
-                </ScalePressable>
-              </View>
-            </View>
+                    })}`
+                  : undefined
+              }
+              count={count}
+              max={maxWorkersPerGood}
+              onHire={() => hireWorker(g.id)}
+              onFire={() => fireWorker(g.id)}
+            />
           );
         })}
 
@@ -598,47 +576,4 @@ const styles = StyleSheet.create({
   eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
-  workerCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
-    paddingLeft: SPACING.md + 3,
-    marginBottom: SPACING.sm + 2,
-    overflow: "hidden",
-  },
-  workerAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
-  workerIcon: { marginRight: SPACING.md },
-  workerName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-  },
-  workerInfo: {
-    color: COLORS.positive,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginTop: 2,
-  },
-  workerPipRow: { flexDirection: "row", gap: 4, marginTop: 6 },
-  workerPip: { width: 14, height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, marginRight: 4 },
-  workerPipFilled: { backgroundColor: COLORS.accent },
-  workerBtnCol: { marginLeft: SPACING.sm + 2, gap: 6 },
-  workerBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.onLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  workerBtnDisabled: { opacity: 0.35 },
-  workerBtnText: {
-    color: COLORS.accent,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.title,
-  },
 });
