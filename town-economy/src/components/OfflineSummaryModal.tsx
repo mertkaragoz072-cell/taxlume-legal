@@ -6,7 +6,6 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { OfflineSummary } from "../economy/types";
 import { resolveEventMessage } from "../i18n/t";
 import { FONT } from "../theme";
-import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -26,9 +25,12 @@ function formatElapsed(
   return t("offline.hoursMinutes", { h: hours, m: minutes });
 }
 
-const FADE = "#1a120d";
-const ART_W = 1024;
-const ART_H = 1536;
+// The panel was cut out of its blurred backdrop and cropped; positions below are
+// still read off the original 1024 x 1536 sheet, so they are shifted by the crop.
+const ART_W = 980;
+const ART_H = 1388;
+const OX = 18;
+const OY = 50;
 
 /** One entry in the event list: the icon (a quest tick, an achievement cup, a
  * scroll for a plain event) and its sentence. */
@@ -54,10 +56,14 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
   const { width: windowWidth } = useWindowDimensions();
   if (!summary) return null;
 
-  const w = Math.min(windowWidth - 8, 430);
+  const w = Math.min(windowWidth - 16, 410);
   const f = (px: number) => (px / ART_W) * w;
-  const pctX = (px: number) => `${(px / ART_W) * 100}%` as const;
-  const pctY = (px: number) => `${(px / ART_H) * 100}%` as const;
+  const pctX = (px: number) => `${((px - OX) / ART_W) * 100}%` as const;
+  // right-hand insets are measured from the original sheet's right edge (1024)
+  const pctR = (px: number) => `${((px + (1024 - OX - ART_W)) / ART_W) * 100}%` as const;
+  const pctW = (px: number) => `${(px / ART_W) * 100}%` as const;
+  const pctH = (px: number) => `${(px / ART_H) * 100}%` as const;
+  const pctY = (px: number) => `${((px - OY) / ART_H) * 100}%` as const;
 
   const entries: Entry[] = [
     ...(summary.caravansCompleted > 0
@@ -89,29 +95,14 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
       <View style={styles.backdrop} aria-modal>
         <View style={{ width: w, height: (w * ART_H) / ART_W }}>
           <Image source={panelArt} style={styles.art} resizeMode="stretch" />
-          {/* The art ships with its own blurred night-town backdrop; the
-              edges fade into the modal's dark so it reads as a card. */}
-          <View pointerEvents="none" style={styles.fadeTop}>
-            <GradientFill colors={[FADE, "rgba(26,18,13,0)"]} x1="0" y1="0" x2="0" y2="1" />
-          </View>
-          <View pointerEvents="none" style={styles.fadeBottom}>
-            <GradientFill colors={["rgba(26,18,13,0)", FADE]} x1="0" y1="0" x2="0" y2="1" />
-          </View>
-          <View pointerEvents="none" style={styles.fadeLeft}>
-            <GradientFill colors={[FADE, "rgba(26,18,13,0)"]} x1="0" y1="0" x2="1" y2="0" />
-          </View>
-          <View pointerEvents="none" style={styles.fadeRight}>
-            <GradientFill colors={["rgba(26,18,13,0)", FADE]} x1="0" y1="0" x2="1" y2="0" />
-          </View>
-
           <Text
             style={[
               styles.title,
               {
                 left: pctX(235),
-                width: pctX(555),
+                width: pctW(555),
                 top: pctY(284),
-                height: pctY(76),
+                height: pctH(76),
                 fontSize: f(titleSize),
                 lineHeight: f(76),
               },
@@ -124,7 +115,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
             {t("offline.title").toUpperCase()}
           </Text>
           <Text
-            style={[styles.subtitle, { left: pctX(110), right: pctX(110), top: pctY(372), fontSize: f(27) }]}
+            style={[styles.subtitle, { left: pctX(110), right: pctR(110), top: pctY(372), fontSize: f(27) }]}
             numberOfLines={2}
           >
             {t("offline.subtitle", { elapsed: formatElapsed(summary.elapsedMs, t) })}
@@ -136,7 +127,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
           ].map((tile) => (
             <View
               key={tile.label}
-              style={[styles.tile, { left: pctX(tile.left), top: pctY(474), width: pctX(215) }]}
+              style={[styles.tile, { left: pctX(tile.left), top: pctY(474), width: pctW(215) }]}
             >
               <Text
                 style={[styles.tileLabel, { fontSize: f(27) }]}
@@ -162,9 +153,9 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               styles.banner,
               {
                 left: pctX(200),
-                width: pctX(390),
+                width: pctW(390),
                 top: pctY(636),
-                height: pctY(60),
+                height: pctH(60),
                 fontSize: f(34),
                 lineHeight: f(58),
               },
@@ -177,14 +168,14 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
             {t("offline.eventsSectionLabel")}
           </Text>
           {hidden > 0 && (
-            <Text style={[styles.more, { right: pctX(110), top: pctY(660), fontSize: f(26) }]}>
+            <Text style={[styles.more, { right: pctR(110), top: pctY(660), fontSize: f(26) }]}>
               +{hidden}
             </Text>
           )}
 
           {summary.hyperinflationHappened && (
             <Text
-              style={[styles.crisis, { left: pctX(130), right: pctX(130), top: pctY(1182), fontSize: f(24) }]}
+              style={[styles.crisis, { left: pctX(130), right: pctR(130), top: pctY(1182), fontSize: f(24) }]}
               numberOfLines={2}
             >
               {t("offline.hyperinflation")}
@@ -196,7 +187,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
               key={entry.key}
               style={[
                 styles.slot,
-                { top: pctY(SLOTS[i].top), height: pctY(SLOTS[i].height), left: pctX(150), right: pctX(140) },
+                { top: pctY(SLOTS[i].top), height: pctH(SLOTS[i].height), left: pctX(150), right: pctR(140) },
               ]}
             >
               <Text style={[styles.slotIcon, { fontSize: f(42), width: f(84) }]}>{entry.icon}</Text>
@@ -210,7 +201,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
             onPress={onDismiss}
             style={[
               styles.confirm,
-              { left: pctX(175), width: pctX(670), top: pctY(1243), height: pctY(114) },
+              { left: pctX(175), width: pctW(670), top: pctY(1243), height: pctH(114) },
             ]}
             scaleTo={0.97}
             accessibilityLabel={t("offline.confirmBtn")}
@@ -231,10 +222,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(20,14,10,0.94)",
   },
   art: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
-  fadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: "4.5%" },
-  fadeBottom: { position: "absolute", bottom: 0, left: 0, right: 0, height: "7%" },
-  fadeLeft: { position: "absolute", top: 0, bottom: 0, left: 0, width: "3.6%" },
-  fadeRight: { position: "absolute", top: 0, bottom: 0, right: 0, width: "3.6%" },
   title: {
     position: "absolute",
     textAlign: "center",
