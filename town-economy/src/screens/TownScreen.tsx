@@ -45,6 +45,7 @@ import {
   TaxPanel,
 } from "../components/TownPanels";
 import { DoctrinePanel } from "../components/DoctrinePanel";
+import { PerkCard, PointsLine } from "../components/PerkCard";
 import { PrestigePanel } from "../components/PrestigePanel";
 import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
@@ -56,7 +57,6 @@ import {
   PANEL_GAP,
   SCREEN_PADDING,
   FONT,
-  GOLD_GRADIENT,
   RADIUS,
   SPACING,
   TYPE,
@@ -302,13 +302,13 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       {state.prestigeLevel > 0 && (
         <>
           <SectionLabel text={t("town.prestige.perksSectionLabel")} color={COLORS.accent} />
-          <Text style={styles.prestigePointsLabel}>
-            {t("town.prestige.pointsLabel", { points: state.prestigePoints })}
-          </Text>
+          <PointsLine text={plainTitle(t("town.prestige.pointsLabel", { points: state.prestigePoints }))} />
           {state.legendaryUnlocked && (
-            <Text style={styles.legendaryPointsLabel}>
-              {t("town.prestige.legendaryPointsLabel", { points: state.legendaryPoints })}
-            </Text>
+            <PointsLine
+              tone="violet"
+              text={t("town.prestige.legendaryPointsLabel", { points: state.legendaryPoints })}
+              medal={false}
+            />
           )}
           {PRESTIGE_PERKS.map((perk) => {
             const unlocked = state.prestigePerks.includes(perk.id);
@@ -317,36 +317,26 @@ export function TownScreen({ onOpenDoctrine }: Props) {
             const disabled = unlocked || !requirementMet || state.prestigePoints < perk.cost;
             const effect = perk.effectLabel();
             return (
-              <View key={perk.id} style={styles.upgradeCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.upgradeIcon}>{perk.icon}</Text>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.upgradeTitleRow}>
-                    <Text style={styles.upgradeName}>{t(perk.nameKey)}</Text>
-                    {unlocked && <Text style={styles.upgradeLevel}>{t("town.propertyOwnedLabel")}</Text>}
-                  </View>
-                  <Text style={styles.upgradeDesc}>{t(perk.descriptionKey)}</Text>
-                  <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>
-                  {!unlocked && !requirementMet && requiresDef && (
-                    <Text style={styles.perkRequires}>
-                      {t("town.prestige.perkRequires", { name: t(requiresDef.nameKey) })}
-                    </Text>
-                  )}
-                </View>
-                <ScalePressable
-                  disabled={disabled}
-                  onPress={() => unlockPrestigePerk(perk.id)}
-                  style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
-                  scaleTo={0.95}
-                >
-                  {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-                  <Text style={styles.upgradeBtnText}>
-                    {unlocked
-                      ? t("town.prestige.perkUnlockedBtn")
-                      : t("town.prestige.perkUnlockBtn", { cost: perk.cost })}
-                  </Text>
-                </ScalePressable>
-              </View>
+              <PerkCard
+                key={perk.id}
+                icon={perk.icon}
+                name={t(perk.nameKey)}
+                tag={unlocked ? t("town.propertyOwnedLabel") : undefined}
+                description={t(perk.descriptionKey)}
+                effect={t(effect.key, effect.params)}
+                requires={
+                  !unlocked && !requirementMet && requiresDef
+                    ? t("town.prestige.perkRequires", { name: t(requiresDef.nameKey) })
+                    : undefined
+                }
+                buttonLabel={
+                  unlocked
+                    ? t("town.prestige.perkUnlockedBtn")
+                    : t("town.prestige.perkUnlockBtn", { cost: perk.cost })
+                }
+                buttonDisabled={disabled}
+                onPress={() => unlockPrestigePerk(perk.id)}
+              />
             );
           })}
         </>
@@ -628,27 +618,6 @@ const styles = StyleSheet.create({
   eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
   doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  prestigePointsLabel: {
-    color: COLORS.accent,
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginBottom: SPACING.sm + 2,
-  },
-  legendaryPointsLabel: {
-    color: "#c77df0",
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginBottom: SPACING.sm + 2,
-  },
-  perkRequires: {
-    color: COLORS.negative,
-    fontSize: TYPE.micro,
-    marginTop: 3,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-  },
   lockedTrack: {
     width: "100%",
     height: 8,
@@ -708,50 +677,5 @@ const styles = StyleSheet.create({
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
     fontSize: TYPE.title,
-  },
-  upgradeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm + 2,
-    overflow: "hidden",
-    minHeight: 80,
-  },
-  upgradeIcon: { fontSize: 24, marginRight: SPACING.md },
-  upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  upgradeName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-  },
-  upgradeLevel: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-  },
-  upgradeDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
-  upgradeEffect: {
-    color: COLORS.positive,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginTop: 3,
-  },
-  upgradeBtn: {
-    borderRadius: RADIUS.chip,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.sm + 2,
-    marginLeft: SPACING.sm + 2,
-    overflow: "hidden",
-  },
-  upgradeBtnDisabled: { backgroundColor: "#4a4032" },
-  upgradeBtnText: {
-    color: COLORS.onLight,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.label,
   },
 });
