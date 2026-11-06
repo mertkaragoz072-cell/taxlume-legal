@@ -50,6 +50,21 @@ export function TradingHousesCard({ activities }: Props) {
             const buying = a.side === "buying";
             const tint = buying ? BUYING : SELLING;
             const cy = ROW_CENTERS[i];
+            const name = t(house.nameKey);
+            const action = t(buying ? "tradingHouse.buyingIn" : "tradingHouse.sellingIn", {
+              good: `${good.icon} ${t(good.nameKey)}`,
+              town: t(town.nameKey),
+            });
+            // Sized from the text, not left to wrap: phone letters run wider than
+            // a browser's, and a third line would spill out of the parchment row.
+            // Prefer one line; otherwise two lines that fit under the name.
+            const boxW = (440 / ART_W) * w;
+            const nameSize = Math.min(w * 0.04, boxW / (name.length * 0.62));
+            const oneLine = boxW / (action.length * 0.62);
+            const actionSize =
+              oneLine >= w * 0.021
+                ? Math.min(w * 0.029, oneLine)
+                : Math.min(w * 0.025, (boxW * 1.8) / (action.length * 0.62));
             return (
               <React.Fragment key={a.houseId}>
                 <View
@@ -58,14 +73,14 @@ export function TradingHousesCard({ activities }: Props) {
                     { left: pctX(150), width: pctX(440), top: pctY(cy - 44), height: pctY(88) },
                   ]}
                 >
-                  <Text style={[styles.name, { fontSize: w * 0.04 }]} numberOfLines={1}>
-                    {t(house.nameKey)}
+                  <Text style={[styles.name, { fontSize: nameSize }]} numberOfLines={1}>
+                    {name}
                   </Text>
-                  <Text style={[styles.action, { fontSize: w * 0.029 }]} numberOfLines={2}>
-                    {t(buying ? "tradingHouse.buyingIn" : "tradingHouse.sellingIn", {
-                      good: `${good.icon} ${t(good.nameKey)}`,
-                      town: t(town.nameKey),
-                    })}
+                  <Text
+                    style={[styles.action, { fontSize: actionSize, lineHeight: actionSize * 1.2 }]}
+                    numberOfLines={2}
+                  >
+                    {action}
                   </Text>
                 </View>
                 <View
@@ -81,12 +96,27 @@ export function TradingHousesCard({ activities }: Props) {
               </React.Fragment>
             );
           })}
-          <Text
-            style={[styles.hint, { left: pctX(112), width: pctX(640), top: pctY(327), fontSize: w * 0.026 }]}
-            numberOfLines={2}
-          >
-            {t("tradingHouse.hint")}
-          </Text>
+          {(() => {
+            // The hint must stay inside the frame's lower strip whatever font the
+            // phone uses: size it so the whole text fits two lines of that strip
+            // (phone letters run ~0.6em wide), instead of letting it spill over
+            // the gold rim.
+            const hint = t("tradingHouse.hint");
+            const boxW = (640 / ART_W) * w;
+            const size = Math.min(w * 0.026, (boxW * 1.8) / (hint.length * 0.6));
+            return (
+              <View
+                style={[
+                  styles.hintBox,
+                  { left: pctX(112), width: pctX(640), top: pctY(322), height: pctY(50) },
+                ]}
+              >
+                <Text style={[styles.hint, { fontSize: size, lineHeight: size * 1.2 }]} numberOfLines={2}>
+                  {hint}
+                </Text>
+              </View>
+            );
+          })()}
         </>
       )}
     </FixedPanel>
@@ -99,5 +129,6 @@ const styles = StyleSheet.create({
   action: { color: "#5a3d22", fontFamily: FONT.bold, marginTop: 2, flexShrink: 0 },
   tag: { position: "absolute", alignItems: "center", justifyContent: "center" },
   tagText: { fontFamily: FONT.black, letterSpacing: 0.5 },
-  hint: { position: "absolute", color: "#e8d3a6", fontFamily: FONT.medium },
+  hintBox: { position: "absolute", justifyContent: "center", overflow: "hidden" },
+  hint: { color: "#e8d3a6", fontFamily: FONT.medium },
 });
