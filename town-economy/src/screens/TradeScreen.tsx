@@ -10,6 +10,7 @@ import lockArt from "../../assets/ui/tradelock/panel.webp";
 import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { BulkContractPanel } from "../components/BulkContractPanel";
 import { ContractPanel } from "../components/ContractPanel";
 import { SendPanel } from "../components/SendPanel";
 import { HeatmapPanel } from "../components/HeatmapPanel";
@@ -42,7 +43,6 @@ import {
   cardShadow,
   COLORS,
   FONT,
-  GREEN_GRADIENT,
   RADIUS,
   PANEL_GAP,
   SCREEN_PADDING,
@@ -582,69 +582,45 @@ export function TradeScreen({ sounds, compactMap }: Props) {
         <Text style={styles.contractDesc}>
           {t("trade.bulkContract.description", { pct: Math.round(BULK_CONTRACT_BONUS_PCT * 100) })}
         </Text>
-        <View style={styles.panel}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={styles.qtyRow}>
-            {([1, 5, 10] as const).map((q) => (
-              <ScalePressable
-                key={q}
-                style={[styles.qtyBtn, bulkQty === q && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setBulkQty(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <Text style={styles.contractTermLabel}>{t("trade.bulkContract.termLabel")}</Text>
-          <View style={styles.qtyRow}>
-            {BULK_CONTRACT_TERM_DAY_STEPS.map((days) => (
-              <ScalePressable
-                key={days}
-                style={[styles.qtyBtn, bulkTermDays === days && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setBulkTermDays(days)}
-              >
-                <Text style={styles.qtyBtnText}>{t("trade.bulkContract.termDays", { days })}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          {(() => {
-            const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
-            const payout = lockedPrice * bulkQty;
-            const hasEnough = state.goods[goodId].holding >= bulkQty;
-            const maxBulkContracts = effectiveBulkContractMaxActive(state);
-            const bulkDisabled =
-              state.bulkContracts.length >= maxBulkContracts || !hasEnough || !isGoodUnlocked(good, state);
-            return (
-              <>
-                <Text style={styles.summaryLabel}>
-                  {t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
-                </Text>
-                {!hasEnough && (
-                  <Text style={styles.contractMaxNote}>
-                    {t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })}
-                  </Text>
-                )}
-                <Text style={styles.contractMaxNote}>
-                  {t("trade.bulkContract.maxActiveNote", { max: maxBulkContracts })}
-                </Text>
-                <ScalePressable
-                  disabled={bulkDisabled}
-                  onPress={() => {
-                    openBulkContract(goodId, bulkQty, bulkTermDays);
-                    sounds.playBuy();
-                  }}
-                  style={[styles.confirmBtn, bulkDisabled && styles.confirmBtnDisabled]}
-                  scaleTo={0.97}
-                >
-                  <GradientFill colors={GREEN_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                  <Text style={styles.confirmBtnText}>{t("trade.bulkContract.openBtn")}</Text>
-                </ScalePressable>
-              </>
-            );
-          })()}
-        </View>
+        {(() => {
+          const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
+          const payout = lockedPrice * bulkQty;
+          const hasEnough = state.goods[goodId].holding >= bulkQty;
+          const maxBulkContracts = effectiveBulkContractMaxActive(state);
+          const bulkDisabled =
+            state.bulkContracts.length >= maxBulkContracts || !hasEnough || !isGoodUnlocked(good, state);
+          return (
+            <BulkContractPanel
+              qty={([1, 5, 10] as const).map((q) => ({
+                key: String(q),
+                label: String(q),
+                selected: bulkQty === q,
+                onPress: () => setBulkQty(q),
+              }))}
+              termLabel={t("trade.bulkContract.termLabel")}
+              terms={BULK_CONTRACT_TERM_DAY_STEPS.map((days) => ({
+                key: String(days),
+                label: t("trade.bulkContract.termDays", { days }),
+                selected: bulkTermDays === days,
+                onPress: () => setBulkTermDays(days),
+              }))}
+              accent={good.color}
+              payout={t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
+              warning={
+                !hasEnough
+                  ? t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })
+                  : undefined
+              }
+              maxNote={t("trade.bulkContract.maxActiveNote", { max: maxBulkContracts })}
+              openLabel={t("trade.bulkContract.openBtn")}
+              openDisabled={bulkDisabled}
+              onOpen={() => {
+                openBulkContract(goodId, bulkQty, bulkTermDays);
+                sounds.playBuy();
+              }}
+            />
+          );
+        })()}
 
         <SectionLabel text={t("trade.bulkContract.activeSectionLabel")} color={COLORS.accent} />
         {state.bulkContracts.length === 0 && (
@@ -760,73 +736,8 @@ const styles = StyleSheet.create({
   },
   townMeta: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs },
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
-  panel: {
-    ...WOOD_RIM,
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  sideToggle: {
-    flexDirection: "row",
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.chip,
-    padding: 3,
-    marginBottom: SPACING.sm + 2,
-  },
-  sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
-  sideBtnActiveExport: { backgroundColor: COLORS.positive },
-  sideBtnActiveImport: { backgroundColor: "#4a90c9" },
-  sideBtnText: {
-    color: COLORS.textMuted,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
-  },
-  sideBtnTextActive: { color: "#fff" },
-  qtyRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.sm + 2 },
-  qtyBtn: {
-    flex: 1,
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.chip,
-    paddingVertical: SPACING.sm,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
-    marginRight: SPACING.sm,
-  },
-  qtyBtnText: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1, marginRight: SPACING.sm },
-  confirmBtn: {
-    borderRadius: RADIUS.card,
-    paddingVertical: SPACING.md,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  confirmBtnDisabled: { opacity: 0.35 },
-  confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
   emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
   contractDesc: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
-  contractTermLabel: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  contractMaxNote: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.sm + 2,
-  },
   caravanCard: {
     ...WOOD_RIM,
     borderRadius: RADIUS.card,
