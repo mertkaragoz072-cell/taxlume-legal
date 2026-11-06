@@ -238,15 +238,15 @@ export function MoodPanel({ label, mood, emoji, index, indexLabel }: MoodProps) 
               {emoji}
             </Text>
           </View>
-          <View style={[box(s, 205, 72, 330, 86), { justifyContent: "center" }]}>
+          <View style={[box(s, 205, 72, 285, 86), { justifyContent: "center" }]}>
             <Text
-              style={[styles.display, { color: CREAM, fontSize: fit(mood, 320, 46, 0.74) * s }]}
+              style={[styles.display, { color: CREAM, fontSize: fit(mood, 280, 46, 0.74) * s }]}
               numberOfLines={1}
             >
               {mood}
             </Text>
           </View>
-          <View style={[box(s, 520, 62, 175, 60), { alignItems: "flex-end", justifyContent: "center" }]}>
+          <View style={[box(s, 490, 62, 175, 60), { alignItems: "flex-end", justifyContent: "center" }]}>
             <Text
               style={[styles.black, { color: GOLD, fontSize: fit(index, 175, 50, 0.6) * s }]}
               numberOfLines={1}
@@ -254,7 +254,7 @@ export function MoodPanel({ label, mood, emoji, index, indexLabel }: MoodProps) 
               {index}
             </Text>
           </View>
-          <View style={[box(s, 470, 120, 225, 40), { alignItems: "flex-end", justifyContent: "center" }]}>
+          <View style={[box(s, 440, 120, 225, 40), { alignItems: "flex-end", justifyContent: "center" }]}>
             <Text
               style={[styles.small, { color: "#d8c690", fontSize: fit(indexLabel, 225, 24) * s }]}
               numberOfLines={1}
