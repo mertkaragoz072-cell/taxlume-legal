@@ -45,7 +45,7 @@ import {
 } from "../components/TownPanels";
 import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
-import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
+import { happinessFor } from "../components/TownSquareScene";
 import {
   CARD_GRADIENT,
   cardShadow,
@@ -141,14 +141,6 @@ export function TownScreen({ onOpenDoctrine }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <TownSquareScene
-        happiness={state.happiness}
-        tick={state.tick}
-        townRankIndex={state.townRankIndex}
-        label={t("town.squareLabel")}
-        moodLabel={t(happy.labelKey)}
-        moodColor={happy.color}
-      />
       <TownChatterTicker state={state} t={t} />
 
       <RankPanel

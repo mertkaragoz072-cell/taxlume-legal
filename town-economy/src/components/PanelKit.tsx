@@ -66,7 +66,7 @@ const FRAMES = {
     mid: midC,
     bot: botC,
     botH: 37,
-    title: { x: 100, y: 14, w: 285, h: 40 },
+    title: { x: 118, y: 14, w: 262, h: 40 },
     inset: 36,
   },
 } satisfies Record<string, Frame>;
