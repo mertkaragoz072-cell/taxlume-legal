@@ -10,6 +10,7 @@ import lockArt from "../../assets/ui/tradelock/panel.webp";
 import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { SendPanel } from "../components/SendPanel";
 import { HeatmapPanel } from "../components/HeatmapPanel";
 import { LockedTierCard } from "../components/LockedTierCard";
 import { TownArtPills } from "../components/TownArtPills";
@@ -423,102 +424,47 @@ export function TradeScreen({ sounds, compactMap }: Props) {
           );
         })()}
 
-        <View style={styles.panel}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <SpotlightTarget id="caravanDirection">
-            <View style={styles.sideToggle}>
-              <ScalePressable
-                style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
-                onPress={() => setDirection("export")}
-              >
-                <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
-                  {t("trade.export")}
-                </Text>
-              </ScalePressable>
-              <ScalePressable
-                style={[styles.sideBtn, direction === "import" && styles.sideBtnActiveImport]}
-                onPress={() => setDirection("import")}
-              >
-                <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
-                  {t("trade.import")}
-                </Text>
-              </ScalePressable>
-            </View>
-          </SpotlightTarget>
-
-          <View style={styles.qtyRow}>
-            {([1, 5, "ALL"] as QtyOption[]).map((q) => (
-              <ScalePressable
-                key={String(q)}
-                style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setQtyOption(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>
-              {t("trade.summaryLine", {
-                qty: resolvedQty,
-                good: t(good.nameKey),
-                price: theirPrice.toFixed(2),
-                town: t(town.nameKey),
-              })}
-            </Text>
-            <Text style={styles.summaryTotal}>
-              {direction === "export" ? "+" : "-"}
-              {formatCoins(net)}
-            </Text>
-          </View>
-          <Text style={styles.etaText}>
-            {t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}
-            {tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""}
-          </Text>
-
-          <ScalePressable
-            onPress={() => setInsureCaravan((v) => !v)}
-            style={[styles.insuranceRow, insureCaravan && styles.insuranceRowActive]}
-            scaleTo={0.98}
-          >
-            <Text style={styles.insuranceLabel}>
-              🛡️ {t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}
-            </Text>
-            <Text style={styles.insuranceHint}>
-              {insureCaravan && !canAffordInsurance
-                ? t("trade.insuranceUnaffordable")
-                : t("trade.insuranceHint")}
-            </Text>
-          </ScalePressable>
-
-          <SpotlightTarget id="caravanSend">
-            <ScalePressable
-              disabled={disabled}
-              onPress={() => {
-                if (Math.random() < BARGAIN_CHANCE) {
-                  setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
-                  setBargainVisible(true);
-                  return;
-                }
-                sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
-                if (direction === "export") sounds.playSell();
-                else sounds.playBuy();
-              }}
-              style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-              scaleTo={0.97}
-            >
-              <GradientFill
-                colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              />
-              <Text style={styles.confirmBtnText}>{t("trade.sendCaravanBtn", { icon: good.icon })}</Text>
-            </ScalePressable>
-          </SpotlightTarget>
-        </View>
+        <SendPanel
+          direction={direction}
+          onDirection={setDirection}
+          exportLabel={t("trade.export")}
+          importLabel={t("trade.import")}
+          qtyOptions={([1, 5, "ALL"] as QtyOption[]).map((q) => ({
+            key: String(q),
+            label: q === "ALL" ? t("common.all") : String(q),
+            selected: qtyOption === q,
+            onPress: () => setQtyOption(q),
+          }))}
+          accent={good.color}
+          summary={t("trade.summaryLine", {
+            qty: resolvedQty,
+            good: t(good.nameKey),
+            price: theirPrice.toFixed(2),
+            town: t(town.nameKey),
+          })}
+          total={`${direction === "export" ? "+" : "-"}${formatCoins(net)}`}
+          eta={`${t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}${
+            tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""
+          }`}
+          insuranceLabel={`🛡️ ${t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}`}
+          insuranceHint={
+            insureCaravan && !canAffordInsurance ? t("trade.insuranceUnaffordable") : t("trade.insuranceHint")
+          }
+          insured={insureCaravan}
+          onToggleInsurance={() => setInsureCaravan((v) => !v)}
+          sendLabel={t("trade.sendCaravanBtn", { icon: good.icon })}
+          sendDisabled={disabled}
+          onSend={() => {
+            if (Math.random() < BARGAIN_CHANCE) {
+              setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
+              setBargainVisible(true);
+              return;
+            }
+            sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
+            if (direction === "export") sounds.playSell();
+            else sounds.playBuy();
+          }}
+        />
 
         <SectionLabel text={t("trade.activeCaravansSectionLabel")} color="#5fd884" />
         {state.caravans.length === 0 && <Text style={styles.emptyText}>{t("trade.noCaravans")}</Text>}
@@ -904,33 +850,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     fontSize: TYPE.label,
   },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 2 },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1, marginRight: SPACING.sm },
-  summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  etaText: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    marginTop: 6,
-    marginBottom: SPACING.sm + 2,
-    paddingHorizontal: 2,
-  },
-  insuranceRow: {
-    backgroundColor: "#1a1410",
-    borderRadius: RADIUS.card,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 2,
-    borderColor: "#3a2d1e",
-  },
-  insuranceRowActive: { borderColor: COLORS.accent },
-  insuranceLabel: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  insuranceHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
   confirmBtn: {
     borderRadius: RADIUS.card,
     paddingVertical: SPACING.md,
