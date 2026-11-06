@@ -4,13 +4,13 @@ import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { BargainingModal } from "../components/BargainingModal";
 import { CaravanRoad } from "../components/CaravanRoad";
-import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
 import lockArt from "../../assets/ui/tradelock/panel.webp";
 import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { HeatmapPanel } from "../components/HeatmapPanel";
 import { LockedTierCard } from "../components/LockedTierCard";
 import { TownArtPills } from "../components/TownArtPills";
 import { TownMapView } from "../components/TownMapView";
@@ -48,7 +48,6 @@ import {
   SPACING,
   TYPE,
   WEIGHT,
-  withAlpha,
   WOOD_RIM,
   glowShadow,
 } from "../theme";
@@ -73,16 +72,6 @@ const METROPOLISES = TOWNS.filter((tn) => tn.tier === "metropol");
 const LEGENDARY_TOWNS = TOWNS.filter((tn) => tn.tier === "legendary");
 const MYTHIC_TOWNS = TOWNS.filter((tn) => tn.tier === "mythic");
 const ALL_TOWNS = [...REGULAR_TOWNS, ...METROPOLISES, ...LEGENDARY_TOWNS, ...MYTHIC_TOWNS];
-
-// Green above the baseline, red below — same intensity-scales-with-magnitude
-// idea as a real heatmap, but built from the app's own warm palette (and a
-// ⭐ on the single best cell) so it reads as a game board, not a spreadsheet.
-function heatCellColor(pct: number): string {
-  const clamped = Math.max(-50, Math.min(50, pct));
-  const intensity = Math.abs(clamped) / 50;
-  const base = clamped >= 0 ? "#5fd884" : "#f0776a";
-  return withAlpha(base, 0.1 + intensity * 0.55);
-}
 
 interface TownPillProps {
   town: ForeignTown;
@@ -413,62 +402,24 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             }
           }
           return (
-            <View style={styles.heatmapCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View style={styles.heatmapHeaderRow}>
-                <View style={styles.heatmapCornerCell} />
-                {ALL_TOWNS.map((tn) => (
-                  <View key={tn.id} style={styles.heatmapTownHeader}>
-                    <Text style={styles.heatmapTownIcon}>{tn.icon}</Text>
-                  </View>
-                ))}
-              </View>
-              {unlockedGoods.map((g) => (
-                <View key={g.id} style={styles.heatmapRow}>
-                  <ScalePressable
-                    onPress={() => setGoodId(g.id)}
-                    style={[styles.heatmapGoodCell, g.id === goodId && { borderColor: g.color }]}
-                    scaleTo={0.95}
-                  >
-                    <GoodIcon id={g.id} fallback={g.icon} size={17} />
-                  </ScalePressable>
-                  {ALL_TOWNS.map((tn) => {
-                    const pct = cellPct(g, tn);
-                    const isBest = g.id === bestGoodId && tn.id === bestTownId;
-                    const isSelected = g.id === goodId && tn.id === townId;
-                    if (pct === null) {
-                      return (
-                        <View key={tn.id} style={styles.heatmapCellLocked}>
-                          <Text style={styles.heatmapLockIcon}>🔒</Text>
-                        </View>
-                      );
-                    }
-                    return (
-                      <ScalePressable
-                        key={tn.id}
-                        onPress={() => {
-                          setGoodId(g.id);
-                          setTownId(tn.id);
-                          setDirection("export");
-                        }}
-                        style={[
-                          styles.heatmapCell,
-                          { backgroundColor: heatCellColor(pct) },
-                          isSelected && styles.heatmapCellSelected,
-                        ]}
-                        scaleTo={0.95}
-                      >
-                        {isBest && <Text style={styles.heatmapStar}>⭐</Text>}
-                        <Text style={styles.heatmapCellText}>
-                          {pct >= 0 ? "+" : ""}
-                          {pct.toFixed(0)}%
-                        </Text>
-                      </ScalePressable>
-                    );
-                  })}
-                </View>
-              ))}
-            </View>
+            <HeatmapPanel
+              towns={ALL_TOWNS.map((tn) => ({ id: tn.id, icon: tn.icon }))}
+              rows={unlockedGoods.map((g) => ({
+                goodId: g.id,
+                fallbackIcon: g.icon,
+                color: g.color,
+                selected: g.id === goodId,
+                cells: ALL_TOWNS.map((tn) => cellPct(g, tn)),
+              }))}
+              selectedTownId={townId}
+              best={bestGoodId && bestTownId ? { goodId: bestGoodId, townId: bestTownId } : null}
+              onPickGood={setGoodId}
+              onPickCell={(gid, tid) => {
+                setGoodId(gid);
+                setTownId(tid as TownId);
+                setDirection("export");
+              }}
+            />
           );
         })()}
 
@@ -911,55 +862,6 @@ const styles = StyleSheet.create({
   },
   townMeta: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs },
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
-  heatmapCard: {
-    ...WOOD_RIM,
-    borderRadius: RADIUS.feature,
-    padding: SPACING.sm + 2,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  heatmapHeaderRow: { flexDirection: "row", marginBottom: 6 },
-  heatmapCornerCell: { width: 34 },
-  heatmapTownHeader: { flex: 1, alignItems: "center" },
-  heatmapTownIcon: { fontSize: 16 },
-  heatmapRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  heatmapGoodCell: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.chip,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
-    marginRight: 2,
-  },
-  heatmapCell: {
-    flex: 1,
-    height: 34,
-    marginHorizontal: 2,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heatmapCellSelected: { borderWidth: 2, borderColor: COLORS.accent },
-  heatmapCellText: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.micro,
-  },
-  heatmapStar: { fontSize: 9, position: "absolute", top: 1, right: 2 },
-  heatmapCellLocked: {
-    flex: 1,
-    height: 34,
-    marginHorizontal: 2,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-  heatmapLockIcon: { fontSize: TYPE.label, opacity: 0.4 },
   panel: {
     ...WOOD_RIM,
     borderRadius: RADIUS.feature,
