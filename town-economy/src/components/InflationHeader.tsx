@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { upperForUi } from "../utils/uiLanguage";
 import { Text } from "./AppText";
 import headerMarketImage from "../../assets/ui/header-market.webp";
 import statBarChart from "../../assets/ui/statpanel2/barchart.png";
@@ -273,7 +274,7 @@ export function InflationHeader({
             pointerEvents="none"
           >
             <Text style={[styles.town, { fontSize: nameFontSize }]} numberOfLines={1}>
-              {townName.toUpperCase()}
+              {upperForUi(townName)}
             </Text>
           </View>
         </Pressable>

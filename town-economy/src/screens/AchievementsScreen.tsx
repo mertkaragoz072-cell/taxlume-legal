@@ -359,8 +359,9 @@ export function AchievementsScreen() {
         </>
       )}
 
+      <SectionLabel text={t("achievements.dailyQuestsLabel")} color="#6fb8f2" />
       <View style={styles.questHeaderRow}>
-        <SectionLabel text={t("achievements.dailyQuestsLabel")} color="#6fb8f2" />
+        <Text style={styles.questNote}>{t("achievements.dailyQuestsNote")}</Text>
         <Text style={styles.questCount}>
           {t("achievements.dailyQuestsCount", {
             count: completedQuestCount,
@@ -368,7 +369,6 @@ export function AchievementsScreen() {
           })}
         </Text>
       </View>
-      <Text style={styles.questNote}>{t("achievements.dailyQuestsNote")}</Text>
       {state.dailyQuests.map((q) => {
         const template = QUEST_TEMPLATES_BY_ID[q.templateId];
         if (!template) return null;
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   statsGrid: { flexDirection: "row", flexWrap: "wrap" },
-  statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center" },
+  statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center", paddingHorizontal: 6 },
   statValue: {
     color: COLORS.accent,
     fontSize: TYPE.heading,
@@ -671,10 +671,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 10,
   },
   questCount: { color: "#e8c777", fontSize: 11, fontWeight: "700", fontFamily: FONT.bold },
-  questNote: { color: "#6b5f4d", fontSize: 10, marginBottom: 10 },
+  questNote: { color: "#8a7a62", fontSize: 10, flex: 1, marginRight: 8 },
   card: {
     flexDirection: "row",
     borderRadius: 14,

@@ -148,7 +148,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                   numberOfLines={1}
                   accessibilityRole="header"
                 >
-                  {t("tabs.trade").toUpperCase()}
+                  {t("tabs.trade")}
                 </Text>
                 <Text
                   style={[

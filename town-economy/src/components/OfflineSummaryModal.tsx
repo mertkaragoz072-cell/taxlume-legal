@@ -112,7 +112,7 @@ export function OfflineSummaryModal({ summary, onDismiss }: Props) {
             minimumFontScale={0.6}
             accessibilityRole="header"
           >
-            {t("offline.title").toUpperCase()}
+            {t("offline.title")}
           </Text>
           <Text
             style={[styles.subtitle, { left: pctX(110), right: pctR(110), top: pctY(372), fontSize: f(27) }]}
