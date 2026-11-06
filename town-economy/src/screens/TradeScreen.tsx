@@ -10,6 +10,7 @@ import lockArt from "../../assets/ui/tradelock/panel.webp";
 import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { ProgressCard } from "../components/ProgressCard";
 import { BulkContractPanel } from "../components/BulkContractPanel";
 import { ContractPanel } from "../components/ContractPanel";
 import { SendPanel } from "../components/SendPanel";
@@ -478,27 +479,18 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             const progress = total > 0 ? clamp01(elapsed / total) : 1;
             const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
             return (
-              <View key={c.id} style={styles.caravanCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.caravanAccent, { backgroundColor: g.color }]} />
-                <View style={styles.caravanHeader}>
-                  <Text style={styles.caravanTitle}>
-                    {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
-                    {c.insured ? " 🛡️" : ""}
-                  </Text>
-                  <Text style={styles.caravanEta}>
-                    {tPlural("trade.turnsLeft", daysLeft, { n: daysLeft })}
-                  </Text>
-                </View>
-                <Text style={styles.caravanSub}>
-                  {c.direction === "export"
+              <ProgressCard
+                key={c.id}
+                color={g.color}
+                title={`${c.direction === "export" ? "📤" : "📥"} ${cTown.icon} ${t(cTown.nameKey)}${c.insured ? " 🛡️" : ""}`}
+                right={tPlural("trade.turnsLeft", daysLeft, { n: daysLeft })}
+                sub={
+                  c.direction === "export"
                     ? t("trade.caravanSentSub", { qty: c.qty, good: t(g.nameKey) })
-                    : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })}
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
+                    : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })
+                }
+                progress={progress}
+              />
             );
           })}
 
@@ -555,26 +547,18 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             const progress = total > 0 ? clamp01(elapsed / total) : 1;
             const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
             return (
-              <View key={c.id} style={styles.caravanCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
-                <View style={styles.caravanHeader}>
-                  <Text style={styles.caravanTitle}>
-                    {c.direction === "long" ? "📈" : "📉"} {cGood.icon} {t(cGood.nameKey)}
-                  </Text>
-                  <Text style={styles.caravanEta}>{t("trade.contract.daysLeft", { days: daysLeft })}</Text>
-                </View>
-                <Text style={styles.caravanSub}>
-                  {t("trade.contract.contractRow", {
-                    qty: c.qty,
-                    good: t(cGood.nameKey),
-                    price: c.strikePrice.toFixed(2),
-                  })}
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
+              <ProgressCard
+                key={c.id}
+                color={cGood.color}
+                title={`${c.direction === "long" ? "📈" : "📉"} ${cGood.icon} ${t(cGood.nameKey)}`}
+                right={t("trade.contract.daysLeft", { days: daysLeft })}
+                sub={t("trade.contract.contractRow", {
+                  qty: c.qty,
+                  good: t(cGood.nameKey),
+                  price: c.strikePrice.toFixed(2),
+                })}
+                progress={progress}
+              />
             );
           })}
 
@@ -635,28 +619,18 @@ export function TradeScreen({ sounds, compactMap }: Props) {
             const progress = total > 0 ? clamp01(elapsed / total) : 1;
             const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
             return (
-              <View key={c.id} style={styles.caravanCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
-                <View style={styles.caravanHeader}>
-                  <Text style={styles.caravanTitle}>
-                    📦 {cGood.icon} {t(cGood.nameKey)}
-                  </Text>
-                  <Text style={styles.caravanEta}>
-                    {t("trade.bulkContract.daysLeft", { days: daysLeft })}
-                  </Text>
-                </View>
-                <Text style={styles.caravanSub}>
-                  {t("trade.bulkContract.contractRow", {
-                    qty: c.qty,
-                    good: t(cGood.nameKey),
-                    price: c.lockedPricePerUnit.toFixed(2),
-                  })}
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
+              <ProgressCard
+                key={c.id}
+                color={cGood.color}
+                title={`📦 ${cGood.icon} ${t(cGood.nameKey)}`}
+                right={t("trade.bulkContract.daysLeft", { days: daysLeft })}
+                sub={t("trade.bulkContract.contractRow", {
+                  qty: c.qty,
+                  good: t(cGood.nameKey),
+                  price: c.lockedPricePerUnit.toFixed(2),
+                })}
+                progress={progress}
+              />
             );
           })}
       </ScrollView>
@@ -738,29 +712,4 @@ const styles = StyleSheet.create({
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
   emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
   contractDesc: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
-  caravanCard: {
-    ...WOOD_RIM,
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
-    paddingLeft: SPACING.md + 3,
-    marginBottom: SPACING.sm + 2,
-    overflow: "hidden",
-  },
-  caravanAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
-  caravanHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.xs },
-  caravanTitle: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  caravanEta: {
-    color: COLORS.accent,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
-  },
-  caravanSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm },
-  progressTrack: { height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 3 },
 });
