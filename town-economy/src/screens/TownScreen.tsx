@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { formatPercent } from "../utils/formatNumber";
-import { Animated, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Animated, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../components/AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { resolveEventMessage } from "../i18n/t";
@@ -34,14 +34,22 @@ import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
 import { SectionLabel } from "../components/SectionLabel";
+import { StretchPanel, GoldButton } from "../components/PanelKit";
+import {
+  BankPanel,
+  ChartPanel,
+  HappinessPanel,
+  MoodPanel,
+  RankPanel,
+  TaxPanel,
+} from "../components/TownPanels";
+import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
-import { UpgradeIcon } from "../components/UpgradeIcon";
 import { happinessFor, TownSquareScene } from "../components/TownSquareScene";
 import {
   CARD_GRADIENT,
   cardShadow,
   COLORS,
-  CONTENT_MAX_WIDTH,
   PANEL_GAP,
   SCREEN_PADDING,
   FONT,
@@ -53,6 +61,9 @@ import {
   WEIGHT,
   withAlpha,
 } from "../theme";
+
+/** Chart line colours that read on parchment (the mood colours are tuned for the dark theme). */
+const CHART_INK = { crisis: "#b8431c", heating: "#a8680f", calm: "#7a5a14", cooling: "#2f8a4a" } as const;
 
 function moodFor(rate: number): { labelKey: string; emoji: string; color: string } {
   if (rate > 0.01) return { labelKey: "town.mood.crisis", emoji: "🔥", color: "#e0693f" };
@@ -82,14 +93,6 @@ export function TownScreen({ onOpenDoctrine }: Props) {
     t,
     formatCoins,
   } = useEconomyContext();
-  // See MarketScreen's identical comment: a hook instead of a module-level
-  // Dimensions.get() snapshot, which on native can be taken before the
-  // bridge reports the real window size and then never self-corrects.
-  // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
-  // MarketScreen for why (iPad: charts used to stop partway across a much
-  // wider card instead of filling it).
-  const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
@@ -148,145 +151,88 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       />
       <TownChatterTicker state={state} t={t} />
 
-      <View style={styles.moodCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(COLORS.accent, 0.1) }]}
-        />
-        <Text style={styles.moodEmoji}>{townRankIcon(state.townRankIndex)}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.moodLabel}>{t("town.rankLabel")}</Text>
-          <Text style={[styles.moodValue, { color: COLORS.accent, fontFamily: FONT.display }]}>
-            {rankTitle}
-          </Text>
-          <View style={styles.happinessTrack}>
-            <View
-              style={[styles.happinessFill, { width: `${rankPct * 100}%`, backgroundColor: COLORS.accent }]}
-            />
-          </View>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={styles.moodIndex}>{townRankIcon(state.townRankIndex + 1)}</Text>
-          <Text style={styles.moodIndexLabel}>{t("town.rankNext")}</Text>
-        </View>
-      </View>
+      <RankPanel
+        label={t("town.rankLabel")}
+        title={rankTitle}
+        icon={townRankIcon(state.townRankIndex)}
+        nextIcon={townRankIcon(state.townRankIndex + 1)}
+        nextLabel={t("town.rankNext")}
+        pct={rankPct}
+      />
 
-      <View style={styles.moodCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(mood.color, 0.1) }]}
-        />
-        <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.moodLabel}>{t("town.moodLabel")}</Text>
-          <Text style={[styles.moodValue, { color: mood.color }]}>{t(mood.labelKey)}</Text>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={styles.moodIndex}>{state.inflationIndex.toFixed(1)}</Text>
-          <Text style={styles.moodIndexLabel}>{t("town.priceIndexLabel")}</Text>
-        </View>
-      </View>
+      <MoodPanel
+        label={t("town.moodLabel")}
+        mood={t(mood.labelKey)}
+        emoji={mood.emoji}
+        index={state.inflationIndex.toFixed(1)}
+        indexLabel={t("town.priceIndexLabel")}
+      />
 
-      {/* What is actually pushing tomorrow's rate, broken out of the single
-          number above — so raising taxes or taking a loan reads as "this is
-          why inflation just moved" instead of a mystery. Rows that are
-          currently doing nothing (e.g. content relief while unhappy) don't
-          print, so a calm town shows just its baseline. */}
-      <View style={styles.factorsCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <Text style={styles.factorsTitle}>{t("town.inflationFactors.title")}</Text>
-        <View style={styles.factorRow}>
-          <Text style={styles.factorLabel}>{t("town.inflationFactors.baseline")}</Text>
-          <Text style={[styles.factorValue, { color: COLORS.textMuted }]}>
-            +{formatPercent(dailyPct(inflationPressure.baseline), state.language, 2)}
-          </Text>
-        </View>
+      <StretchPanel frame="wheat" title={t("town.inflationFactors.title")}>
+        <FactorRow
+          label={t("town.inflationFactors.baseline")}
+          value={`+${formatPercent(dailyPct(inflationPressure.baseline), state.language, 2)}`}
+          up
+          good={false}
+        />
         {inflationPressure.unhappinessDrag > 0 && (
-          <View style={styles.factorRow}>
-            <Text style={styles.factorLabel}>{t("town.inflationFactors.unhappiness")}</Text>
-            <Text style={[styles.factorValue, { color: "#f0776a" }]}>
-              +{formatPercent(dailyPct(inflationPressure.unhappinessDrag), state.language, 2)}
-            </Text>
-          </View>
+          <FactorRow
+            label={t("town.inflationFactors.unhappiness")}
+            value={`+${formatPercent(dailyPct(inflationPressure.unhappinessDrag), state.language, 2)}`}
+            up
+            good={false}
+          />
         )}
         {inflationPressure.contentRelief > 0 && (
-          <View style={styles.factorRow}>
-            <Text style={styles.factorLabel}>{t("town.inflationFactors.content")}</Text>
-            <Text style={[styles.factorValue, { color: "#5fd884" }]}>
-              -{formatPercent(dailyPct(inflationPressure.contentRelief), state.language, 2)}
-            </Text>
-          </View>
+          <FactorRow
+            label={t("town.inflationFactors.content")}
+            value={`-${formatPercent(dailyPct(inflationPressure.contentRelief), state.language, 2)}`}
+            up={false}
+            good
+          />
         )}
         {inflationPressure.taxHappinessDrag > 0.5 && (
-          <View style={styles.factorRow}>
-            <Text style={styles.factorLabel}>{t("town.inflationFactors.tax")}</Text>
-            <Text style={[styles.factorValue, { color: "#f0776a" }]}>
-              -{Math.round(inflationPressure.taxHappinessDrag)} {t("town.inflationFactors.happinessSuffix")}
-            </Text>
-          </View>
+          <FactorRow
+            label={t("town.inflationFactors.tax")}
+            value={`-${Math.round(inflationPressure.taxHappinessDrag)} ${t("town.inflationFactors.happinessSuffix")}`}
+            up={false}
+            good={false}
+          />
         )}
         {inflationPressure.debtHappinessDrag > 0.5 && (
-          <View style={styles.factorRow}>
-            <Text style={styles.factorLabel}>{t("town.inflationFactors.debt")}</Text>
-            <Text style={[styles.factorValue, { color: "#f0776a" }]}>
-              -{Math.round(inflationPressure.debtHappinessDrag)} {t("town.inflationFactors.happinessSuffix")}
-            </Text>
-          </View>
+          <FactorRow
+            label={t("town.inflationFactors.debt")}
+            value={`-${Math.round(inflationPressure.debtHappinessDrag)} ${t("town.inflationFactors.happinessSuffix")}`}
+            up={false}
+            good={false}
+          />
         )}
-      </View>
+      </StretchPanel>
 
-      <View style={styles.moodCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(happy.color, 0.1) }]}
-        />
-        <Text style={styles.moodEmoji}>{happy.emoji}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.moodLabel}>{t("town.happinessLabel")}</Text>
-          <Text style={[styles.moodValue, { color: happy.color }]}>{t(happy.labelKey)}</Text>
-          <View style={styles.happinessTrack}>
-            <View
-              style={[styles.happinessFill, { width: `${state.happiness}%`, backgroundColor: happy.color }]}
-            />
-          </View>
-        </View>
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={styles.moodIndex}>{Math.round(state.happiness)}</Text>
-          <Text style={styles.moodIndexLabel}>{t("town.outOf100")}</Text>
-        </View>
-      </View>
+      <HappinessPanel
+        label={t("town.happinessLabel")}
+        status={t(happy.labelKey)}
+        emoji={happy.emoji}
+        value={state.happiness}
+        outOf={t("town.outOf100")}
+        color={happy.color}
+      />
 
-      <View style={styles.taxCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View style={styles.taxHeaderRow}>
-          <Text style={styles.taxTitle}>{t("town.tax.title")}</Text>
-          <Text style={styles.taxIncome}>
-            {taxIncomePerTick > 0
-              ? t("town.tax.incomePerTurn", { amount: (taxIncomePerTick * TICKS_PER_GAME_DAY).toFixed(2) })
-              : t("town.tax.none")}
-          </Text>
-        </View>
-        <Text style={styles.taxDesc}>{t("town.tax.description")}</Text>
-        <View style={styles.taxRow}>
-          {TAX_RATE_STEPS.map((rate) => {
-            const selected = Math.abs(state.taxRate - rate) < 0.001;
-            return (
-              <ScalePressable
-                key={rate}
-                onPress={() => setTaxRate(rate)}
-                style={[styles.taxBtn, selected && styles.taxBtnActive]}
-              >
-                <Text style={[styles.taxBtnText, selected && styles.taxBtnTextActive]}>
-                  {formatPercent(rate * 100, state.language)}
-                </Text>
-              </ScalePressable>
-            );
-          })}
-        </View>
-      </View>
+      <TaxPanel
+        title={t("town.tax.title")}
+        rateLabel={t("town.tax.rateLabel")}
+        description={t("town.tax.description")}
+        income={
+          taxIncomePerTick > 0
+            ? t("town.tax.incomePerTurn", { amount: (taxIncomePerTick * TICKS_PER_GAME_DAY).toFixed(2) })
+            : t("town.tax.none")
+        }
+        rates={TAX_RATE_STEPS.map((rate) => ({
+          label: formatPercent(rate * 100, state.language),
+          selected: Math.abs(state.taxRate - rate) < 0.001,
+          onPress: () => setTaxRate(rate),
+        }))}
+      />
 
       {/* A brand-new player's net worth is nowhere near these thresholds
           (15,000+/5,000+/100,000+), so showing them from day one was just a
@@ -448,170 +394,131 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         </>
       )}
 
-      <View style={styles.bankCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: withAlpha(state.loan ? "#f0776a" : "#6fb8f2", 0.08) },
+      {state.loan ? (
+        <BankPanel
+          title={t("town.bank.title")}
+          description={t("town.bank.description")}
+          chipLabel={t("town.bank.activeTitle")}
+          info={[
+            formatCoins(state.loan.remainingBalance),
+            `${(loanTickRateToDayRate(state.loan.interestRatePerTick) * 100).toFixed(2)}% · ${t("town.bank.termMonths", { months: state.loan.termMonths })}`,
           ]}
+          rateLine={t("town.bank.rate", {
+            pct: (loanTickRateToDayRate(state.loan.interestRatePerTick) * 100).toFixed(2),
+            months: state.loan.termMonths,
+            days: state.loan.termMonths * LOAN_TERM_DAYS_PER_MONTH,
+          })}
+          pills={([0.25, 0.5, 1] as const).flatMap((frac) => {
+            const amount = Math.min(state.cash, state.loan!.remainingBalance) * frac;
+            if (amount < 1) return [];
+            return [
+              {
+                label:
+                  frac === 1
+                    ? t("town.bank.repayAllBtn")
+                    : t("town.bank.repayBtn", { amount: Math.round(amount) }),
+                onPress: () => repayLoan(amount),
+              },
+            ];
+          })}
         />
-        <Text style={styles.taxTitle}>{t("town.bank.title")}</Text>
-        <Text style={styles.taxDesc}>{t("town.bank.description")}</Text>
-        {state.loan ? (
-          <>
-            <View style={styles.bankBalanceRow}>
-              <Text style={styles.bankBalanceLabel}>{t("town.bank.activeTitle")}</Text>
-              <Text style={styles.bankBalanceValue}>{formatCoins(state.loan.remainingBalance)}</Text>
-            </View>
-            <Text style={styles.bankRate}>
-              {t("town.bank.rate", {
-                pct: (loanTickRateToDayRate(state.loan.interestRatePerTick) * 100).toFixed(2),
-                months: state.loan.termMonths,
-                days: state.loan.termMonths * LOAN_TERM_DAYS_PER_MONTH,
-              })}
-            </Text>
-            <View style={styles.bankBtnRow}>
-              {([0.25, 0.5, 1] as const).map((frac) => {
-                const amount = Math.min(state.cash, state.loan!.remainingBalance) * frac;
-                if (amount < 1) return null;
-                return (
-                  <ScalePressable key={frac} onPress={() => repayLoan(amount)} style={styles.bankBtn}>
-                    <Text style={styles.bankBtnText}>
-                      {frac === 1
-                        ? t("town.bank.repayAllBtn")
-                        : t("town.bank.repayBtn", { amount: Math.round(amount) })}
-                    </Text>
-                  </ScalePressable>
-                );
-              })}
-            </View>
-          </>
-        ) : (
-          <>
-            <Text style={styles.bankCap}>{t("town.bank.cap", { amount: cap })}</Text>
-            <Text style={styles.bankTermLabel}>{t("town.bank.termLabel")}</Text>
-            <View style={styles.taxRow}>
-              {LOAN_TERM_MONTHS_STEPS.map((months) => {
-                const selected = months === selectedTermMonths;
-                return (
-                  <ScalePressable
-                    key={months}
-                    onPress={() => setSelectedTermMonths(months)}
-                    style={[styles.taxBtn, selected && styles.taxBtnActive]}
-                  >
-                    <Text style={[styles.taxBtnText, selected && styles.taxBtnTextActive]}>
-                      {t("town.bank.termMonths", { months })}
-                    </Text>
-                  </ScalePressable>
-                );
-              })}
-            </View>
-            <Text style={styles.bankRate}>
-              {t("town.bank.ratePreview", { pct: (previewDayRate * 100).toFixed(2), days: previewTermDays })}
-            </Text>
-            <View style={styles.bankBtnRow}>
-              {([0.25, 0.5, 1] as const).map((frac) => {
-                const amount = Math.round(cap * frac);
-                if (amount < 10) return null;
-                return (
-                  <ScalePressable
-                    key={frac}
-                    onPress={() => takeLoan(amount, selectedTermMonths)}
-                    style={styles.bankBtn}
-                  >
-                    <Text style={styles.bankBtnText}>{t("town.bank.takeBtn", { amount })}</Text>
-                  </ScalePressable>
-                );
-              })}
-            </View>
-          </>
+      ) : (
+        <BankPanel
+          title={t("town.bank.title")}
+          description={t("town.bank.description")}
+          cap={t("town.bank.cap", { amount: cap })}
+          chipLabel={t("town.bank.termLabel")}
+          terms={LOAN_TERM_MONTHS_STEPS.map((months) => ({
+            label: t("town.bank.termMonths", { months }),
+            selected: months === selectedTermMonths,
+            onPress: () => setSelectedTermMonths(months),
+          }))}
+          rateLine={t("town.bank.ratePreview", {
+            pct: (previewDayRate * 100).toFixed(2),
+            days: previewTermDays,
+          })}
+          pills={([0.25, 0.5, 1] as const).flatMap((frac) => {
+            const amount = Math.round(cap * frac);
+            if (amount < 10) return [];
+            return [
+              {
+                label: t("town.bank.takeBtn", { amount }),
+                onPress: () => takeLoan(amount, selectedTermMonths),
+              },
+            ];
+          })}
+        />
+      )}
+
+      <ChartPanel title={t("town.chartTitle")}>
+        {(w, h) => (
+          <PriceChart
+            history={state.inflationHistory}
+            color={
+              CHART_INK[
+                state.inflationRate > 0.01
+                  ? "crisis"
+                  : state.inflationRate > 0.005
+                    ? "heating"
+                    : state.inflationRate > -0.001
+                      ? "calm"
+                      : "cooling"
+              ]
+            }
+            width={w}
+            height={h}
+            strokeWidth={3}
+            interactive
+          />
         )}
-      </View>
+      </ChartPanel>
 
-      <View style={styles.chartCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <Text style={styles.chartTitle}>{t("town.chartTitle")}</Text>
-        <PriceChart
-          history={state.inflationHistory}
-          color={mood.color}
-          width={chartWidth}
-          height={120}
-          strokeWidth={3}
-          interactive
-        />
-      </View>
-
-      <SectionLabel text={t("town.upgradesSectionLabel")} color="#6fb8f2" />
-      {UPGRADES.map((u) => {
-        const level = state.upgrades[u.id];
-        const maxed = level >= u.maxLevel;
-        const cost = maxed ? 0 : upgradeCost(u, level);
-        const disabled = maxed || state.cash < cost;
-        return (
-          <View key={u.id} style={styles.upgradeCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <UpgradeIcon id={u.id} level={level} fallback={u.icon} size={30} style={styles.upgradeIconImg} />
-            <View style={{ flex: 1 }}>
-              <View style={styles.upgradeTitleRow}>
-                <Text style={styles.upgradeName}>{t(u.nameKey)}</Text>
-                <Text style={styles.upgradeLevel}>{t("town.upgradeLevel", { level, max: u.maxLevel })}</Text>
-              </View>
-              <Text style={styles.upgradeDesc}>{t(u.descriptionKey)}</Text>
-              {level > 0 &&
-                (() => {
-                  const effect = u.effectLabel(level);
-                  return <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>;
-                })()}
-              <View style={styles.upgradeLevelTrack}>
-                {Array.from({ length: u.maxLevel }).map((_, i) => (
-                  <View key={i} style={[styles.upgradeLevelPip, i < level && styles.upgradeLevelPipFilled]} />
-                ))}
-              </View>
-            </View>
-            <ScalePressable
-              disabled={disabled}
+      <StretchPanel frame="upgrades" title={t("town.upgradesSectionLabel")}>
+        {UPGRADES.map((u) => {
+          const level = state.upgrades[u.id];
+          const maxed = level >= u.maxLevel;
+          const cost = maxed ? 0 : upgradeCost(u, level);
+          const disabled = maxed || state.cash < cost;
+          const effect = level > 0 ? u.effectLabel(level) : null;
+          return (
+            <TownItemCard
+              key={u.id}
+              art={BUILDING_ART[u.id]}
+              fallbackIcon={u.icon}
+              name={t(u.nameKey)}
+              tag={t("town.upgradeLevel", { level, max: u.maxLevel })}
+              description={t(u.descriptionKey)}
+              effect={effect ? t(effect.key, effect.params) : undefined}
+              pips={[level, u.maxLevel]}
+              buttonLabel={maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}
+              buttonDisabled={disabled}
               onPress={() => upgrade(u.id)}
-              style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
-              scaleTo={0.95}
-            >
-              {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-              <Text style={styles.upgradeBtnText}>{maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}</Text>
-            </ScalePressable>
-          </View>
-        );
-      })}
+            />
+          );
+        })}
+      </StretchPanel>
 
-      <SectionLabel text={t("town.propertiesSectionLabel")} color="#c58ee0" />
-      {PROPERTIES.map((p) => {
-        const owned = state.ownedProperties.includes(p.id);
-        const disabled = owned || state.cash < p.cost;
-        const effect = p.effectLabel();
-        return (
-          <View key={p.id} style={styles.upgradeCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.upgradeIcon}>{p.icon}</Text>
-            <View style={{ flex: 1 }}>
-              <View style={styles.upgradeTitleRow}>
-                <Text style={styles.upgradeName}>{t(p.nameKey)}</Text>
-                {owned && <Text style={styles.upgradeLevel}>{t("town.propertyOwnedLabel")}</Text>}
-              </View>
-              <Text style={styles.upgradeDesc}>{t(p.descriptionKey)}</Text>
-              <Text style={styles.upgradeEffect}>{t(effect.key, effect.params)}</Text>
-            </View>
-            <ScalePressable
-              disabled={disabled}
+      <StretchPanel frame="properties" title={t("town.propertiesSectionLabel")}>
+        {PROPERTIES.map((p) => {
+          const owned = state.ownedProperties.includes(p.id);
+          const disabled = owned || state.cash < p.cost;
+          const effect = p.effectLabel();
+          return (
+            <TownItemCard
+              key={p.id}
+              art={BUILDING_ART[p.id]}
+              fallbackIcon={p.icon}
+              name={t(p.nameKey)}
+              tag={owned ? t("town.propertyOwnedLabel") : undefined}
+              description={t(p.descriptionKey)}
+              effect={t(effect.key, effect.params)}
+              buttonLabel={owned ? t("town.propertyOwnedBtn") : `${p.cost} 🪙`}
+              buttonDisabled={disabled}
               onPress={() => buyProperty(p.id)}
-              style={[styles.upgradeBtn, disabled && styles.upgradeBtnDisabled]}
-              scaleTo={0.95}
-            >
-              {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-              <Text style={styles.upgradeBtnText}>{owned ? t("town.propertyOwnedBtn") : `${p.cost} 🪙`}</Text>
-            </ScalePressable>
-          </View>
-        );
-      })}
+            />
+          );
+        })}
+      </StretchPanel>
 
       {(state.workersUnlocked || netWorth >= WORKERS_UNLOCK_NET_WORTH * 0.5) && (
         <>
@@ -683,58 +590,84 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           );
         })}
 
-      <SectionLabel text={t("town.eventsSectionLabel")} color="#a0917a" />
-      {state.eventLog.length === 0 && <Text style={styles.emptyText}>{t("town.eventsEmpty")}</Text>}
-      {state.eventLog.length > 0 &&
-        (() => {
-          const goodCount = state.eventLog.filter((e) => e.tone === "good").length;
-          const badCount = state.eventLog.filter((e) => e.tone === "bad").length;
-          const neutralCount = state.eventLog.length - goodCount - badCount;
-          return (
-            <View style={styles.eventSummaryRow}>
-              <Text style={[styles.eventSummaryChip, { color: COLORS.positive }]}>✅ {goodCount}</Text>
-              <Text style={[styles.eventSummaryChip, { color: COLORS.negative }]}>⚠️ {badCount}</Text>
-              <Text style={[styles.eventSummaryChip, { color: COLORS.textMuted }]}>ℹ️ {neutralCount}</Text>
-            </View>
-          );
-        })()}
-      {(showAllEvents ? state.eventLog : state.eventLog.slice(0, 5)).map((event) => (
-        <View
-          key={event.id}
-          style={[
-            styles.eventRow,
-            {
-              borderLeftColor:
-                event.tone === "bad"
-                  ? COLORS.negative
-                  : event.tone === "good"
-                    ? COLORS.positive
-                    : COLORS.textMuted,
-            },
-          ]}
-        >
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.eventText}>{resolveEventMessage(state.language, event)}</Text>
-        </View>
-      ))}
-      {state.eventLog.length > 5 && (
-        <ScalePressable
-          onPress={() => setShowAllEvents((v) => !v)}
-          style={styles.eventToggleBtn}
-          scaleTo={0.97}
-        >
-          <Text style={styles.eventToggleBtnText}>
-            {showAllEvents
-              ? t("town.eventsShowLess")
-              : t("town.eventsShowMore", { count: state.eventLog.length - 5 })}
-          </Text>
-        </ScalePressable>
-      )}
+      {(() => {
+        const goodCount = state.eventLog.filter((e) => e.tone === "good").length;
+        const badCount = state.eventLog.filter((e) => e.tone === "bad").length;
+        const neutralCount = state.eventLog.length - goodCount - badCount;
+        const shown = showAllEvents ? state.eventLog : state.eventLog.slice(0, 5);
+        // The filter bar's three icons are painted on the banner strip (853-px
+        // art, icon centres at 610 / 688 / 760); their counts sit just right.
+        const counts = [
+          { x: 632, n: goodCount, color: INK_GREEN },
+          { x: 710, n: badCount, color: "#e8c777" },
+          { x: 782, n: neutralCount, color: "#f6e2a0" },
+        ];
+        return (
+          <StretchPanel
+            frame="events"
+            title={t("town.eventsSectionLabel")}
+            topOverlay={(w) =>
+              state.eventLog.length === 0
+                ? null
+                : counts.map((c) => (
+                    <Text
+                      key={c.x}
+                      pointerEvents="none"
+                      style={{
+                        position: "absolute",
+                        left: (c.x / 853) * w,
+                        top: (10 / 853) * w,
+                        width: (46 / 853) * w,
+                        height: (34 / 853) * w,
+                        lineHeight: (34 / 853) * w,
+                        fontSize: Math.max(10, (26 / 853) * w),
+                        color: c.color === INK_GREEN ? "#7fe39a" : c.color,
+                        fontFamily: FONT.black,
+                      }}
+                    >
+                      {c.n}
+                    </Text>
+                  ))
+            }
+          >
+            {state.eventLog.length === 0 && <Text style={styles.eventsEmpty}>{t("town.eventsEmpty")}</Text>}
+            {shown.map((event, i) => (
+              <EventRow
+                key={event.id}
+                tone={event.tone}
+                text={resolveEventMessage(state.language, event)}
+                last={i === shown.length - 1}
+              />
+            ))}
+            {state.eventLog.length > 5 && (
+              <View style={styles.eventsToggle}>
+                <GoldButton
+                  label={
+                    showAllEvents
+                      ? t("town.eventsShowLess")
+                      : t("town.eventsShowMore", { count: state.eventLog.length - 5 })
+                  }
+                  onPress={() => setShowAllEvents((v) => !v)}
+                  height={30}
+                />
+              </View>
+            )}
+          </StretchPanel>
+        );
+      })()}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  eventsEmpty: {
+    color: INK,
+    fontFamily: FONT.medium,
+    fontSize: 12,
+    paddingVertical: 10,
+    textAlign: "center",
+  },
+  eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
   doctrineCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.md,
@@ -768,58 +701,6 @@ const styles = StyleSheet.create({
   doctrineBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 13 },
   doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  moodCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  moodEmoji: { fontSize: 32, marginRight: SPACING.md },
-  moodLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
-  moodValue: { fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black, marginTop: 2 },
-  moodIndex: { color: COLORS.accent, fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
-  moodIndexLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2 },
-  happinessTrack: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: COLORS.onLight,
-    overflow: "hidden",
-    marginTop: 6,
-  },
-  happinessFill: { height: "100%", borderRadius: 3 },
-  factorsCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  factorsTitle: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.5,
-    marginBottom: SPACING.sm,
-  },
-  factorRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  factorLabel: { color: COLORS.textPrimary, fontSize: TYPE.label, flex: 1, marginRight: SPACING.sm },
-  factorValue: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  taxCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
   taxHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   taxTitle: {
     color: COLORS.textPrimary,
@@ -827,27 +708,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     fontSize: TYPE.body,
   },
-  taxIncome: { color: COLORS.accent, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
   taxDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 6, marginBottom: SPACING.md },
-  taxRow: { flexDirection: "row", gap: 6 },
-  taxBtn: {
-    flex: 1,
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.chip,
-    paddingVertical: 9,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
-    marginRight: 6,
-  },
-  taxBtnActive: { borderColor: COLORS.accent },
-  taxBtnText: {
-    color: COLORS.textMuted,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  taxBtnTextActive: { color: COLORS.accent },
   prestigeCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
@@ -923,56 +784,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.black,
     fontSize: TYPE.body,
   },
-  bankCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  bankCap: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    marginTop: SPACING.xs,
-    marginBottom: SPACING.sm + 2,
-  },
-  bankTermLabel: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  bankBalanceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: SPACING.sm,
-  },
-  bankBalanceLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
-  bankBalanceValue: {
-    color: COLORS.negative,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.title - 1,
-  },
-  bankRate: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 2, marginBottom: SPACING.sm + 2 },
-  bankBtnRow: { flexDirection: "row", gap: SPACING.sm },
-  bankBtn: {
-    flex: 1,
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.chip,
-    paddingVertical: 9,
-    alignItems: "center",
-    marginRight: 6,
-  },
-  bankBtnText: {
-    color: COLORS.accent,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
-  },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
   workersLockedCard: {
     borderRadius: RADIUS.feature,
@@ -1024,71 +835,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.black,
     fontSize: TYPE.title,
   },
-  chartCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  chartTitle: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-    marginBottom: 6,
-  },
-  buildingsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.sm + 2,
-    marginBottom: PANEL_GAP,
-  },
-  buildingCard: {
-    width: "31%",
-    borderRadius: RADIUS.card,
-    padding: SPACING.sm + 2,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  buildingIcon: { fontSize: 22 },
-  buildingName: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-    marginTop: SPACING.xs,
-    textAlign: "center",
-  },
-  buildingTrack: {
-    width: 10,
-    height: 44,
-    backgroundColor: COLORS.onLight,
-    borderRadius: 5,
-    marginTop: SPACING.sm,
-    justifyContent: "flex-end",
-    overflow: "hidden",
-  },
-  buildingFill: { width: "100%", borderRadius: 5 },
-  buildingRatio: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: 6 },
-  emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
-  eventRow: {
-    borderRadius: RADIUS.chip,
-    borderLeftWidth: 3,
-    padding: SPACING.sm + 2,
-    marginBottom: SPACING.sm,
-    overflow: "hidden",
-  },
-  eventText: { color: COLORS.textPrimary, fontSize: TYPE.label },
-  eventSummaryRow: { flexDirection: "row", gap: SPACING.md, marginBottom: SPACING.sm },
-  eventSummaryChip: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.label },
-  eventToggleBtn: { alignItems: "center", paddingVertical: SPACING.sm, marginBottom: SPACING.sm },
-  eventToggleBtnText: {
-    color: COLORS.accent,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
   upgradeCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -1099,11 +845,6 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   upgradeIcon: { fontSize: 24, marginRight: SPACING.md },
-  // UpgradeIcon's own size prop controls the box; this only carries the
-  // layout bit upgradeIcon above also has, since folding fontSize in would
-  // win over that size prop in the fallback-emoji case (style arrays apply
-  // later entries last) — see GoodIcon's own equivalent conversions.
-  upgradeIconImg: { marginRight: SPACING.md },
   upgradeTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   upgradeName: {
     color: COLORS.textPrimary,
@@ -1125,15 +866,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     marginTop: 3,
   },
-  upgradeLevelTrack: { flexDirection: "row", gap: 4, marginTop: 6 },
-  upgradeLevelPip: {
-    width: 14,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: COLORS.onLight,
-    marginRight: 4,
-  },
-  upgradeLevelPipFilled: { backgroundColor: COLORS.accent },
   upgradeBtn: {
     borderRadius: RADIUS.chip,
     paddingVertical: SPACING.sm,

@@ -373,6 +373,7 @@ export const STRINGS = {
       tax: {
         title: "💰 Vergi Politikası",
         none: "Vergi yok",
+        rateLabel: "Vergi Oranı",
         incomePerTurn: "+{amount} 🪙/gün",
         description:
           "Köylülerden vergi al, kasaya gelir gelsin. Ama vergi çok yükselirse halk sinirlenir, üretim düşer ve enflasyon hızlanır.",
@@ -1819,6 +1820,7 @@ export const STRINGS = {
       tax: {
         title: "💰 Tax Policy",
         none: "No tax",
+        rateLabel: "Tax Rate",
         incomePerTurn: "+{amount} 🪙/day",
         description:
           "Tax villagers to fill the treasury. But raise it too high and people get angry, production falls, and inflation speeds up.",
