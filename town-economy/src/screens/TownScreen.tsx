@@ -40,9 +40,11 @@ import {
   ChartPanel,
   HappinessPanel,
   MoodPanel,
+  plainTitle,
   RankPanel,
   TaxPanel,
 } from "../components/TownPanels";
+import { PrestigePanel } from "../components/PrestigePanel";
 import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
 import { happinessFor } from "../components/TownSquareScene";
@@ -53,13 +55,11 @@ import {
   PANEL_GAP,
   SCREEN_PADDING,
   FONT,
-  glowShadow,
   GOLD_GRADIENT,
   RADIUS,
   SPACING,
   TYPE,
   WEIGHT,
-  withAlpha,
 } from "../theme";
 
 /** Chart line colours that read on parchment (the mood colours are tuned for the dark theme). */
@@ -233,68 +233,39 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           its own threshold — or has already engaged with it, rather than
           the instant the town exists. */}
       {(prestigeReady || state.prestigeLevel > 0 || netWorth >= PRESTIGE_UNLOCK_NET_WORTH * 0.5) && (
-        <View style={[styles.prestigeCard, prestigeReady && glowShadow(COLORS.accent)]}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          {prestigeReady && (
-            <View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(COLORS.accent, 0.08) }]}
-            />
-          )}
-          <View style={styles.taxHeaderRow}>
-            <Text style={styles.taxTitle}>{t("town.prestige.title")}</Text>
-            {state.prestigeLevel > 0 && (
-              <Text style={styles.prestigeLevel}>
-                {t("town.prestige.level", { level: state.prestigeLevel })}
-              </Text>
-            )}
-          </View>
-          <Text style={styles.taxDesc}>{t("town.prestige.description")}</Text>
-          {state.prestigeLevel > 0 && (
-            <Text style={styles.prestigeBonus}>
-              {t("town.prestige.bonus", {
-                pct: Math.round(state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL * 100),
-                cash: state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
-              })}
-            </Text>
-          )}
-          {prestigeReady ? (
-            <Animated.View style={{ transform: [{ scale: prestigeArmed ? 1 : pulseScale }] }}>
-              <ScalePressable
-                onPress={() => {
-                  if (!prestigeArmed) {
-                    setPrestigeArmed(true);
-                    return;
-                  }
-                  prestige();
-                  setPrestigeArmed(false);
-                }}
-                style={styles.prestigeBtn}
-                scaleTo={0.97}
-              >
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.prestigeBtnText}>
-                  {prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
-                </Text>
-              </ScalePressable>
-            </Animated.View>
-          ) : (
-            <>
-              <Text style={styles.prestigeLocked}>
-                {t("town.prestige.locked", { target: PRESTIGE_UNLOCK_NET_WORTH })}
-              </Text>
-              <View style={styles.lockedTrack}>
-                <View style={[styles.lockedFill, { width: `${prestigePct * 100}%` }]} />
-              </View>
-              <Text style={styles.prestigeProgress}>
-                {t("town.prestige.progress", {
-                  current: Math.floor(netWorth),
-                  target: PRESTIGE_UNLOCK_NET_WORTH,
-                })}
-              </Text>
-            </>
-          )}
-        </View>
+        <PrestigePanel
+          title={plainTitle(t("town.prestige.title"))}
+          level={
+            state.prestigeLevel > 0 ? t("town.prestige.level", { level: state.prestigeLevel }) : undefined
+          }
+          description={t("town.prestige.description")}
+          bonus={
+            state.prestigeLevel > 0
+              ? t("town.prestige.bonus", {
+                  pct: Math.round(state.prestigeLevel * PRESTIGE_PRODUCTION_BONUS_PER_LEVEL * 100),
+                  cash: state.prestigeLevel * PRESTIGE_CASH_BONUS_PER_LEVEL,
+                })
+              : undefined
+          }
+          ready={prestigeReady}
+          note={t("town.prestige.locked", { target: PRESTIGE_UNLOCK_NET_WORTH })}
+          pct={prestigePct}
+          progressText={t("town.prestige.progress", {
+            current: Math.floor(netWorth),
+            target: PRESTIGE_UNLOCK_NET_WORTH,
+          })}
+          armed={prestigeArmed}
+          buttonLabel={prestigeArmed ? t("town.prestige.confirmButton") : t("town.prestige.button")}
+          pulseScale={pulseScale}
+          onPress={() => {
+            if (!prestigeArmed) {
+              setPrestigeArmed(true);
+              return;
+            }
+            prestige();
+            setPrestigeArmed(false);
+          }}
+        />
       )}
 
       {(activeDoctrine || netWorth >= DOCTRINE_UNLOCK_NET_WORTH * 0.5) && (
@@ -693,46 +664,6 @@ const styles = StyleSheet.create({
   doctrineBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 13 },
   doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  taxHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  taxTitle: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-  },
-  taxDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 6, marginBottom: SPACING.md },
-  prestigeCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  prestigeLevel: {
-    color: COLORS.accent,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.label,
-  },
-  prestigeBonus: {
-    color: COLORS.positive,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginTop: 6,
-  },
-  prestigeLocked: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    marginTop: SPACING.sm + 2,
-    marginBottom: SPACING.sm,
-  },
-  prestigeProgress: {
-    color: COLORS.accent,
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
   prestigePointsLabel: {
     color: COLORS.accent,
     fontSize: TYPE.label,
@@ -763,19 +694,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
-  prestigeBtn: {
-    borderRadius: RADIUS.card,
-    paddingVertical: SPACING.md,
-    alignItems: "center",
-    overflow: "hidden",
-    marginTop: SPACING.md,
-  },
-  prestigeBtnText: {
-    color: COLORS.onLight,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.body,
-  },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
   workersLockedCard: {
     borderRadius: RADIUS.feature,
