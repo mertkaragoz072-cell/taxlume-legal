@@ -81,7 +81,7 @@ function useBoxWidth(): [number, (e: LayoutChangeEvent) => void] {
 /** The lettering for a banner: sized from its length so it stays on the
  * ribbon on any phone font. */
 export function bannerFontSize(text: string, boxW: number, boxH: number): number {
-  return Math.max(7, Math.min(boxH * 0.5, (boxW * 0.94) / (text.length * 0.78 + 1)));
+  return Math.max(7, Math.min(boxH * 0.5, (boxW * 0.94) / (text.length * 0.84 + 1)));
 }
 
 interface PanelProps {

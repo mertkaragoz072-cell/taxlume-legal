@@ -84,7 +84,7 @@ function Banner({
   w: number;
   h: number;
 }) {
-  const size = fit(text, w, h * 0.55, 0.7);
+  const size = fit(text, w, h * 0.55, 0.86);
   return (
     <View pointerEvents="none" style={[box(s, x, y, w, h), styles.center]}>
       <Text style={[styles.banner, { fontSize: size * s }]} numberOfLines={1} accessibilityRole="header">
@@ -174,7 +174,7 @@ export function RankPanel({ label, title, icon, nextIcon, nextLabel, pct }: Rank
           </View>
           <View style={[box(s, 412, 64, 215, 80), { justifyContent: "center" }]}>
             <Text
-              style={[styles.display, { color: INK, fontSize: fit(title, 215, 44, 0.74) * s }]}
+              style={[styles.display, { color: INK, fontSize: fit(title, 215, 44, 0.86) * s }]}
               numberOfLines={2}
             >
               {title}
@@ -240,7 +240,7 @@ export function MoodPanel({ label, mood, emoji, index, indexLabel }: MoodProps) 
           </View>
           <View style={[box(s, 205, 72, 285, 86), { justifyContent: "center" }]}>
             <Text
-              style={[styles.display, { color: CREAM, fontSize: fit(mood, 280, 46, 0.74) * s }]}
+              style={[styles.display, { color: CREAM, fontSize: fit(mood, 280, 46, 0.86) * s }]}
               numberOfLines={1}
             >
               {mood}
@@ -293,7 +293,7 @@ export function HappinessPanel({ label, status, emoji, value, outOf, color }: Ha
             <Text
               style={[
                 styles.display,
-                { color: INK, fontSize: fit(status, 265, 44, 0.74) * s, flexShrink: 1 },
+                { color: INK, fontSize: fit(status, 265, 44, 0.86) * s, flexShrink: 1 },
               ]}
               numberOfLines={1}
             >
@@ -364,7 +364,7 @@ export function TaxPanel({ title, rateLabel, description, income, rates }: TaxPr
             </Text>
           </View>
           <View style={[box(s, 80, 294, 160, 36), styles.center]}>
-            <Text style={[styles.chip, { fontSize: fit(rateLabel, 150, 22, 0.62) * s }]} numberOfLines={1}>
+            <Text style={[styles.chip, { fontSize: fit(rateLabel, 150, 22, 0.84) * s }]} numberOfLines={1}>
               {rateLabel}
             </Text>
           </View>
@@ -460,7 +460,7 @@ export function BankPanel({ title, description, cap, chipLabel, terms, info, rat
             </View>
           ) : null}
           <View style={[box(s, 80, 312, 150, 36), styles.center]}>
-            <Text style={[styles.chip, { fontSize: fit(chipLabel, 150, 22, 0.62) * s }]} numberOfLines={1}>
+            <Text style={[styles.chip, { fontSize: fit(chipLabel, 150, 22, 0.84) * s }]} numberOfLines={1}>
               {chipLabel}
             </Text>
           </View>

@@ -86,7 +86,7 @@ export function DoctrineModal({ visible, onClose }: Props) {
             <Text
               style={[
                 styles.title,
-                { fontSize: Math.min(TITLE.h * 0.62, fit(title, TITLE.w, 60, 0.78)) * s },
+                { fontSize: Math.min(TITLE.h * 0.62, fit(title, TITLE.w, 60, 0.86)) * s },
               ]}
               numberOfLines={1}
               accessibilityRole="header"

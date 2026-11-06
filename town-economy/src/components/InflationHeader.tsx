@@ -162,6 +162,14 @@ export function InflationHeader({
   // the emoji onto its own line. formatNumber alone leaves the image to
   // carry that meaning by itself.
   const formatCash = (v: number) => formatNumber(v, language, 1);
+  // A town with six or seven digits of cash used to push the coin off the end of
+  // its column (or clip the last digits); past eight characters the figure steps
+  // down in size so it always fits beside its coin.
+  const moneySize = (v: number) => {
+    const base = compact ? TYPE.title : TYPE.title + 1;
+    const len = formatCash(v).length;
+    return len <= 8 ? base : Math.max(10, Math.floor((base * 8) / len));
+  };
 
   // A slow breathing glow on the inflation card while it's running hot, and
   // a gentle flicker on the streak flame — motion that reads as "alive"
@@ -360,7 +368,11 @@ export function InflationHeader({
                 <AnimatedNumber
                   value={cash}
                   formatter={formatCash}
-                  style={[styles.statValue, compact && styles.statValueCompact]}
+                  style={[
+                    styles.statValue,
+                    compact && styles.statValueCompact,
+                    { fontSize: moneySize(cash) },
+                  ]}
                 />
                 {!compact && <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />}
               </View>
@@ -377,7 +389,11 @@ export function InflationHeader({
                 <AnimatedNumber
                   value={netWorth}
                   formatter={formatCash}
-                  style={[styles.statValue, compact && styles.statValueCompact]}
+                  style={[
+                    styles.statValue,
+                    compact && styles.statValueCompact,
+                    { fontSize: moneySize(netWorth) },
+                  ]}
                 />
                 {!compact && <Image source={statCoinBullet} style={styles.statBullet} resizeMode="contain" />}
               </View>

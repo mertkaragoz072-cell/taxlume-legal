@@ -79,7 +79,7 @@ export function DecisionModal({ decision, onResolve }: Props) {
             <Text
               style={[
                 styles.title,
-                { fontSize: Math.min(TITLE.h * 0.62, fit(title, TITLE.w, 56, 0.78)) * s },
+                { fontSize: Math.min(TITLE.h * 0.62, fit(title, TITLE.w, 56, 0.86)) * s },
               ]}
               numberOfLines={1}
               accessibilityRole="header"

@@ -136,7 +136,7 @@ export function MentorCoach({ onNext, onSkip }: Props) {
           style={[styles.field, { left: x(NAME.x), top: y(NAME.y), width: w(NAME.w), height: w(NAME.h) }]}
         >
           <Text
-            style={[styles.name, { fontSize: fit(name, w(NAME.w), w(NAME.h) * 0.5, 0.72) }]}
+            style={[styles.name, { fontSize: fit(name, w(NAME.w), w(NAME.h) * 0.5, 0.84) }]}
             numberOfLines={1}
           >
             {name}
@@ -155,7 +155,7 @@ export function MentorCoach({ onNext, onSkip }: Props) {
         >
           <Text
             accessibilityRole="header"
-            style={[styles.title, { fontSize: fit(title, w(TITLE.w), w(TITLE.h) * 0.46, 0.74) }]}
+            style={[styles.title, { fontSize: fit(title, w(TITLE.w), w(TITLE.h) * 0.46, 0.86) }]}
             numberOfLines={1}
           >
             {title}

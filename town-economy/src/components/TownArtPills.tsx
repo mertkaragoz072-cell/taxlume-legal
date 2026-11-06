@@ -64,7 +64,7 @@ export function TownArtPills({ towns, selectedTownId, onSelect, nameOf, metaOf }
                     <Text
                       style={[
                         styles.name,
-                        { fontSize: Math.max(10, Math.min(w * 0.115, (w * 0.86) / (name.length * 0.6))) },
+                        { fontSize: Math.max(10, Math.min(w * 0.115, (w * 0.86) / (name.length * 0.8))) },
                       ]}
                       numberOfLines={1}
                     >

@@ -79,7 +79,7 @@ export function PrestigePanel({
     width: b.w * s,
     height: b.h * s,
   });
-  const titleSize = Math.min(TITLE.h * 0.62, (TITLE.w * 0.96) / (title.length * 0.7)) * s;
+  const titleSize = Math.min(TITLE.h * 0.62, (TITLE.w * 0.96) / (title.length * 0.84)) * s;
   const descSize = blockSize(description, DESC.w, DESC.h, 46, 28) * s;
   const noteSize = blockSize(note, NOTE.w, NOTE.h, 40, 28) * s;
 

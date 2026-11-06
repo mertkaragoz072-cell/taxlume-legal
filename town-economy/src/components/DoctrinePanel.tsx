@@ -62,7 +62,7 @@ export function DoctrinePanel({ title, state }: Props) {
 
       <View style={[box(PLAQUE), styles.center]} pointerEvents="none">
         <Text
-          style={[styles.title, { fontSize: Math.min(PLAQUE.h * 0.62, fit(title, PLAQUE.w, 60, 0.8)) * s }]}
+          style={[styles.title, { fontSize: Math.min(PLAQUE.h * 0.62, fit(title, PLAQUE.w, 60, 0.86)) * s }]}
           numberOfLines={1}
           accessibilityRole="header"
         >
