@@ -45,23 +45,13 @@ import {
   TaxPanel,
 } from "../components/TownPanels";
 import { DoctrinePanel } from "../components/DoctrinePanel";
+import { WorkersLockedPanel } from "../components/WorkersLockedPanel";
 import { PerkCard, PointsLine } from "../components/PerkCard";
 import { PrestigePanel } from "../components/PrestigePanel";
 import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
 import { happinessFor } from "../components/TownSquareScene";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  PANEL_GAP,
-  SCREEN_PADDING,
-  FONT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-} from "../theme";
+import { CARD_GRADIENT, COLORS, SCREEN_PADDING, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 /** Chart line colours that read on parchment (the mood colours are tuned for the dark theme). */
 const CHART_INK = { crisis: "#b8431c", heating: "#a8680f", calm: "#7a5a14", cooling: "#2f8a4a" } as const;
@@ -472,20 +462,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         <>
           <SectionLabel text={t("town.workersSectionLabel")} color="#e0a13f" />
           {!state.workersUnlocked ? (
-            <View style={styles.workersLockedCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <Text style={styles.doctrineLocked}>
-                🔒 {t("town.workersLockedNote", { amount: WORKERS_UNLOCK_NET_WORTH })}
-              </Text>
-              <View style={styles.lockedTrack}>
-                <View
-                  style={[
-                    styles.lockedFill,
-                    { width: `${Math.max(0, Math.min(1, netWorth / WORKERS_UNLOCK_NET_WORTH)) * 100}%` },
-                  ]}
-                />
-              </View>
-            </View>
+            <WorkersLockedPanel
+              note={t("town.workersLockedNote", { amount: WORKERS_UNLOCK_NET_WORTH })}
+              pct={netWorth / WORKERS_UNLOCK_NET_WORTH}
+            />
           ) : (
             <Text style={styles.workersNote}>{t("town.workersNote")}</Text>
           )}
@@ -616,25 +596,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
-  doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  lockedTrack: {
-    width: "100%",
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.onLight,
-    overflow: "hidden",
-    marginBottom: SPACING.sm,
-  },
-  lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
-  workersLockedCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
   workerCard: {
     flexDirection: "row",
     alignItems: "center",

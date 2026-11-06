@@ -57,7 +57,7 @@ const FRAMES = {
     mid: midB,
     bot: botB,
     botH: 30,
-    title: { x: 92, y: 10, w: 206, h: 34 },
+    title: { x: 88, y: 10, w: 224, h: 34 },
     inset: 38,
   },
   wheat: {
@@ -81,7 +81,7 @@ function useBoxWidth(): [number, (e: LayoutChangeEvent) => void] {
 /** The lettering for a banner: sized from its length so it stays on the
  * ribbon on any phone font. */
 export function bannerFontSize(text: string, boxW: number, boxH: number): number {
-  return Math.max(8, Math.min(boxH * 0.5, (boxW * 0.94) / (text.length * 0.7 + 1)));
+  return Math.max(7, Math.min(boxH * 0.5, (boxW * 0.94) / (text.length * 0.78 + 1)));
 }
 
 interface PanelProps {
@@ -184,7 +184,7 @@ export function GoldButton({ label, onPress, disabled, height = 34, accessibilit
 
 const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
-  bannerText: { color: "#f6e2a0", fontFamily: FONT.display, textAlign: "center", letterSpacing: 1 },
+  bannerText: { color: "#f6e2a0", fontFamily: FONT.display, textAlign: "center", letterSpacing: 0.3 },
   btnLabel: {
     position: "absolute",
     top: 0,
