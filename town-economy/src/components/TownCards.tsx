@@ -82,10 +82,12 @@ export function TownItemCard({
       </View>
       <View style={styles.body}>
         <View style={styles.titleRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          {tag ? <Text style={styles.tag}>{tag}</Text> : null}
+          <Text style={styles.name}>{name}</Text>
+          {tag ? (
+            <Text style={styles.tag} numberOfLines={1}>
+              {tag}
+            </Text>
+          ) : null}
         </View>
         <Text style={styles.desc}>{description}</Text>
         {effect ? <Text style={styles.effect}>{effect}</Text> : null}
@@ -161,9 +163,9 @@ const styles = StyleSheet.create({
   art: { width: 58, height: 52, alignItems: "center", justifyContent: "center", marginRight: 6 },
   artImg: { width: 58, height: 52 },
   body: { flex: 1, marginRight: 8 },
-  titleRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
-  name: { color: INK, fontFamily: FONT.serif, fontSize: 14, flexShrink: 1 },
-  tag: { color: "#8a5a2b", fontFamily: FONT.bold, fontSize: 10, marginLeft: 6 },
+  titleRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", columnGap: 8 },
+  name: { color: INK, fontFamily: FONT.serif, fontSize: 14 },
+  tag: { color: "#8a5a2b", fontFamily: FONT.bold, fontSize: 10 },
   desc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 10.5, lineHeight: 14, marginTop: 1 },
   effect: { color: INK_GREEN, fontFamily: FONT.bold, fontSize: 10.5, lineHeight: 14, marginTop: 2 },
   pipRow: { flexDirection: "row", gap: 4, marginTop: 5 },

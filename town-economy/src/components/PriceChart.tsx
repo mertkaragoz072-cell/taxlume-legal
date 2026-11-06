@@ -45,7 +45,7 @@ function smoothLinePath(points: Point[]): string {
 }
 
 export function PriceChart({
-  history,
+  history: rawHistory,
   color,
   width,
   height,
@@ -65,8 +65,12 @@ export function PriceChart({
   const gradientId = React.useId().replace(/:/g, "");
   const [touchIndex, setTouchIndex] = useState<number | null>(null);
 
-  if (history.length === 0) {
-    return <View style={{ width, height }} />;
+  // A not-yet-measured box (NaN / 0 size) or a stray NaN in the series would
+  // otherwise reach the SVG path as "NaN" and spam the console with errors.
+  const history = rawHistory.filter((v) => Number.isFinite(v));
+  const sized = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
+  if (history.length === 0 || !sized) {
+    return <View style={{ width: sized ? width : 0, height: sized ? height : 0 }} />;
   }
 
   // Right at the start (or the moment a good unlocks) there's only the
