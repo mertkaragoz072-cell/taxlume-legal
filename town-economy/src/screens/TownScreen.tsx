@@ -44,6 +44,7 @@ import {
   RankPanel,
   TaxPanel,
 } from "../components/TownPanels";
+import { DoctrinePanel } from "../components/DoctrinePanel";
 import { PrestigePanel } from "../components/PrestigePanel";
 import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
@@ -269,36 +270,30 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       )}
 
       {(activeDoctrine || netWorth >= DOCTRINE_UNLOCK_NET_WORTH * 0.5) && (
-        <>
-          <SectionLabel text={t("doctrine.activeLabel")} color="#e8c777" />
-          <View style={styles.doctrineCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            {activeDoctrine ? (
-              <>
-                <View style={styles.doctrineHead}>
-                  <Text aria-hidden style={styles.doctrineIcon}>
-                    {activeDoctrine.icon}
-                  </Text>
-                  <Text style={styles.doctrineName}>{t(activeDoctrine.nameKey)}</Text>
-                </View>
-                <Text style={styles.doctrineBonus}>+ {t(activeDoctrine.bonusKey)}</Text>
-                <Text style={styles.doctrinePenalty}>− {t(activeDoctrine.penaltyKey)}</Text>
-              </>
-            ) : netWorth >= DOCTRINE_UNLOCK_NET_WORTH ? (
-              <>
-                <Text style={styles.doctrinePrompt}>{t("doctrine.choosePrompt")}</Text>
-                <ScalePressable onPress={onOpenDoctrine} style={styles.doctrineBtn} scaleTo={0.96}>
-                  <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                  <Text style={styles.doctrineBtnText}>{t("doctrine.chooseBtn")}</Text>
-                </ScalePressable>
-              </>
-            ) : (
-              <Text style={styles.doctrineLocked}>
-                🔒 {t("doctrine.lockedNote", { amount: DOCTRINE_UNLOCK_NET_WORTH })}
-              </Text>
-            )}
-          </View>
-        </>
+        <DoctrinePanel
+          title={t("doctrine.activeLabel")}
+          state={
+            activeDoctrine
+              ? {
+                  kind: "active",
+                  icon: activeDoctrine.icon,
+                  name: t(activeDoctrine.nameKey),
+                  bonus: t(activeDoctrine.bonusKey),
+                  penalty: t(activeDoctrine.penaltyKey),
+                }
+              : netWorth >= DOCTRINE_UNLOCK_NET_WORTH
+                ? {
+                    kind: "choose",
+                    prompt: t("doctrine.choosePrompt"),
+                    buttonLabel: t("doctrine.chooseBtn"),
+                    onChoose: onOpenDoctrine,
+                  }
+                : {
+                    kind: "locked",
+                    note: `🔒 ${t("doctrine.lockedNote", { amount: DOCTRINE_UNLOCK_NET_WORTH })}`,
+                  }
+          }
+        />
       )}
 
       {/* Prestige perks are spent out of prestigePoints, which stay at 0
@@ -631,37 +626,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
-  doctrineCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  doctrineHead: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.xs },
-  doctrineIcon: { fontSize: 20, marginRight: SPACING.sm },
-  doctrineName: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.body,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-  },
-  doctrineBonus: {
-    color: COLORS.positive,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
-  doctrinePenalty: {
-    color: COLORS.negative,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginTop: 2,
-  },
-  doctrinePrompt: { color: COLORS.textMuted, fontSize: TYPE.micro, marginBottom: SPACING.sm, lineHeight: 15 },
-  doctrineBtn: { borderRadius: 12, paddingVertical: 10, alignItems: "center", overflow: "hidden" },
-  doctrineBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 13 },
   doctrineLocked: { color: COLORS.textMuted, fontSize: TYPE.micro },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   prestigePointsLabel: {
