@@ -1,28 +1,14 @@
-import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Text } from "../components/AppText";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { GoodTab, ResearchBanner, ResearchCard } from "../components/ResearchPanels";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { RESEARCH_NODES, RESEARCH_NODES_BY_ID, ResearchNode } from "../economy/research";
 import { researchCost } from "../economy/formulas";
 import { townRankNameKey } from "../economy/townRanks";
-import { GradientFill } from "../components/GradientFill";
-import { ScalePressable } from "../components/ScalePressable";
-import {
-  CARD_GRADIENT,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  PANEL_GAP,
-  SCREEN_PADDING,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
+import { PANEL_GAP, SCREEN_PADDING } from "../theme";
 
-function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
+function NodeCard({ node }: { node: ResearchNode }) {
   const { state, research, t } = useEconomyContext();
   const researched = state.researched.includes(node.id);
   const prereq = node.requires ? RESEARCH_NODES_BY_ID[node.requires] : null;
@@ -35,156 +21,84 @@ function NodeCard({ node, color }: { node: ResearchNode; color: string }) {
   const locked = prereqLocked || rankLocked;
   const cost = researchCost(state, node);
   const affordable = state.cash >= cost;
-  const disabled = researched || locked || !affordable;
+
+  const effects: string[] = [];
+  if (node.productionBonusPct > 0) {
+    effects.push(t("research.effectProduction", { pct: Math.round(node.productionBonusPct * 100) }));
+  }
+  if (node.valueBonusPct > 0) {
+    effects.push(t("research.effectValue", { pct: Math.round(node.valueBonusPct * 100) }));
+  }
+  let lockedText: string | undefined;
+  if (prereqLocked && prereq) {
+    lockedText = t("research.lockedRequires", { name: t(prereq.nameKey) });
+  } else if (rankLocked && node.requiresRank !== undefined) {
+    lockedText = t("research.lockedRank", { rank: t(townRankNameKey(node.requiresRank)) });
+  }
 
   return (
-    <View style={[styles.nodeCard, locked && styles.nodeCardLocked]}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      {!locked && (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(color, 0.1) }]}
-        />
-      )}
-      <View style={[styles.accentStripe, { backgroundColor: color }]} />
-      <Text style={[styles.nodeIcon, locked && styles.dimmed]}>{node.icon}</Text>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.nodeName, locked && styles.dimmed]}>{t(node.nameKey)}</Text>
-        <Text style={[styles.nodeDesc, locked && styles.dimmed]}>{t(node.descriptionKey)}</Text>
-        <View style={styles.effectRow}>
-          {node.productionBonusPct > 0 && (
-            <Text style={styles.effectText}>
-              {t("research.effectProduction", { pct: Math.round(node.productionBonusPct * 100) })}
-            </Text>
-          )}
-          {node.valueBonusPct > 0 && (
-            <Text style={styles.effectText}>
-              {t("research.effectValue", { pct: Math.round(node.valueBonusPct * 100) })}
-            </Text>
-          )}
-        </View>
-        {prereqLocked && prereq && (
-          <Text style={styles.lockedText}>{t("research.lockedRequires", { name: t(prereq.nameKey) })}</Text>
-        )}
-        {!prereqLocked && rankLocked && node.requiresRank !== undefined && (
-          <Text style={styles.lockedText}>
-            {t("research.lockedRank", { rank: t(townRankNameKey(node.requiresRank)) })}
-          </Text>
-        )}
-      </View>
-      {researched ? (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{t("research.researchedBadge")}</Text>
-        </View>
-      ) : (
-        <ScalePressable
-          disabled={disabled}
-          onPress={() => research(node.id)}
-          style={[styles.researchBtn, (locked || !affordable) && styles.researchBtnDisabled]}
-          scaleTo={0.95}
-        >
-          {!disabled && <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />}
-          <Text style={styles.researchBtnText}>{t("research.researchBtn", { cost })}</Text>
-        </ScalePressable>
-      )}
-    </View>
+    <ResearchCard
+      nodeId={node.id}
+      icon={node.icon}
+      name={t(node.nameKey)}
+      description={t(node.descriptionKey)}
+      effects={effects}
+      lockedText={lockedText}
+      locked={locked}
+      researched={researched}
+      affordable={affordable}
+      buttonLabel={t("research.researchBtn", { cost })}
+      researchedLabel={t("research.researchedBadge")}
+      onResearch={() => research(node.id)}
+    />
   );
 }
 
 export function ResearchScreen() {
-  const { t } = useEconomyContext();
+  const { state, t } = useEconomyContext();
+  const { width: screenW } = useWindowDimensions();
+  const goods = GOODS.filter((good) => RESEARCH_NODES.some((n) => n.goodId === good.id));
+  const [selectedId, setSelectedId] = useState(goods[0]?.id);
+  const selected = goods.find((g) => g.id === selectedId) ?? goods[0];
+  const nodes = selected ? RESEARCH_NODES.filter((n) => n.goodId === selected.id) : [];
+
+  const inner = Math.min(screenW, 640) - SCREEN_PADDING * 2;
+  const sideW = Math.round(Math.max(96, Math.min(130, inner * 0.27)));
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionNote}>{t("research.sectionNote")}</Text>
-      {GOODS.filter((good) => RESEARCH_NODES.some((n) => n.goodId === good.id)).map((good) => {
-        const nodes = RESEARCH_NODES.filter((n) => n.goodId === good.id);
-        return (
-          <View key={good.id} style={styles.goodGroup}>
-            <View style={styles.goodHeaderRow}>
-              <Text style={styles.goodHeaderIcon}>{good.icon}</Text>
-              <Text style={[styles.goodHeaderName, { color: good.color }]}>{t(good.nameKey)}</Text>
-            </View>
-            {nodes.map((node) => (
-              <NodeCard key={node.id} node={node} color={good.color} />
-            ))}
-          </View>
-        );
-      })}
+      <ResearchBanner title={t("tabs.research")} note={t("research.sectionNote")} />
+      <View style={styles.row}>
+        <View style={{ width: sideW }}>
+          {goods.map((good) => {
+            const goodNodes = RESEARCH_NODES.filter((n) => n.goodId === good.id);
+            const done = goodNodes.filter((n) => state.researched.includes(n.id)).length;
+            return (
+              <GoodTab
+                key={good.id}
+                goodId={good.id}
+                icon={good.icon}
+                name={t(good.nameKey)}
+                selected={good.id === selected?.id}
+                width={sideW}
+                progress={`${done}/${goodNodes.length}`}
+                onPress={() => setSelectedId(good.id)}
+              />
+            );
+          })}
+        </View>
+        <View style={styles.cards}>
+          {nodes.map((node) => (
+            <NodeCard key={node.id} node={node} />
+          ))}
+        </View>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: PANEL_GAP, lineHeight: 17 },
-  goodGroup: { marginBottom: PANEL_GAP },
-  goodHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm },
-  goodHeaderIcon: { fontSize: TYPE.heading, marginRight: SPACING.sm },
-  goodHeaderName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.body,
-  },
-  nodeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm + 2,
-    overflow: "hidden",
-  },
-  nodeCardLocked: { opacity: 0.6 },
-  accentStripe: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
-  dimmed: { opacity: 0.7 },
-  nodeIcon: { fontSize: TYPE.heading + 6, marginRight: SPACING.md },
-  nodeName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-  },
-  nodeDesc: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
-  effectRow: { flexDirection: "row", gap: SPACING.sm + 2, marginTop: SPACING.xs },
-  effectText: {
-    color: COLORS.positive,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
-  lockedText: {
-    color: COLORS.negative,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-    marginTop: SPACING.xs,
-  },
-  badge: {
-    backgroundColor: "rgba(63,174,92,0.16)",
-    borderRadius: RADIUS.chip,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.sm + 2,
-    marginLeft: SPACING.sm + 2,
-  },
-  badgeText: {
-    color: COLORS.positive,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
-  },
-  researchBtn: {
-    borderRadius: RADIUS.chip,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.sm + 2,
-    marginLeft: SPACING.sm + 2,
-    overflow: "hidden",
-  },
-  researchBtnDisabled: { backgroundColor: "#4a4032" },
-  researchBtnText: {
-    color: COLORS.onLight,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    fontSize: TYPE.caption,
-  },
+  row: { flexDirection: "row", alignItems: "flex-start", gap: PANEL_GAP - 4 },
+  cards: { flex: 1, minWidth: 0 },
 });
