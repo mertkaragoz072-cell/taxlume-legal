@@ -3,6 +3,7 @@ import { Animated, Easing, Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { COLORS, FONT, SPACING, TYPE, WEIGHT } from "../theme";
+import medStall from "../../assets/ui/modal/med_stall.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { BigButton, ModalShell } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
@@ -100,8 +101,13 @@ export function BargainingModal({ visible, onResolve }: Props) {
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <ModalShell title={t("bargain.title")}>
+        <ModalShell title={t("bargain.title")} medallion={medStall}>
           <Text style={styles.subtitle}>{t("bargain.subtitle")}</Text>
+          <View style={styles.divider}>
+            <View style={styles.divLine} />
+            <View style={styles.divGem} />
+            <View style={styles.divLine} />
+          </View>
 
           <View style={styles.barTrack} onLayout={(e) => setBarW(e.nativeEvent.layout.width)}>
             <View style={[styles.goodZone, { left: barW * 0.3, width: barW * 0.4 }]} />
@@ -141,13 +147,22 @@ export function BargainingModal({ visible, onResolve }: Props) {
 
 const styles = StyleSheet.create({
   subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
+  divider: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  divLine: { flex: 1, height: 1, backgroundColor: "rgba(232,170,70,0.6)" },
+  divGem: {
+    width: 8,
+    height: 8,
+    marginHorizontal: 8,
+    backgroundColor: "#f0b84a",
+    transform: [{ rotate: "45deg" }],
+  },
   barTrack: {
     alignSelf: "stretch",
     height: 34,
     borderRadius: 17,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderWidth: 2,
-    borderColor: "#c8843c",
+    backgroundColor: "rgba(10,6,2,0.6)",
+    borderWidth: 2.5,
+    borderColor: "#e0a03c",
     justifyContent: "center",
     marginBottom: SPACING.lg,
     overflow: "hidden",

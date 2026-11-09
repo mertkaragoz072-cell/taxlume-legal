@@ -75,8 +75,8 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
               </Text>
               <Text style={[styles.lore, { fontSize: 12.5 * u, lineHeight: 17 * u }]}>{rankUp.lore}</Text>
             </View>
-            <View style={box(96, 472, 594, 66)}>
-              <BigButton label={t("merveRankUp.confirmBtn")} onPress={onDismiss} />
+            <View style={box(56, 466, 674, 80)}>
+              <BigButton laurel label={t("merveRankUp.confirmBtn")} onPress={onDismiss} />
             </View>
           </View>
         </Animated.View>

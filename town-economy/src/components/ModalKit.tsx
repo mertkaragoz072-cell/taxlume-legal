@@ -11,6 +11,8 @@ import optGCap from "../../assets/ui/modal/opt_g_cap.webp";
 import optGMid from "../../assets/ui/modal/opt_g_mid.webp";
 import optRCap from "../../assets/ui/modal/opt_r_cap.webp";
 import optRMid from "../../assets/ui/modal/opt_r_mid.webp";
+import g2Cap from "../../assets/ui/modal/g2_cap.webp";
+import g2Mid from "../../assets/ui/modal/g2_mid.webp";
 import plCap from "../../assets/ui/modal/pl_cap.webp";
 import plMid from "../../assets/ui/modal/pl_mid.webp";
 import rowCap from "../../assets/ui/modal/row_cap.webp";
@@ -21,9 +23,10 @@ import { Text } from "./AppText";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
-export type BarKind = "plate" | "btn" | "optG" | "optR" | "difG" | "difB" | "difR" | "row";
+export type BarKind = "laurel" | "plate" | "btn" | "optG" | "optR" | "difG" | "difB" | "difR" | "row";
 
 const BARS: Record<BarKind, { cap: ImageSourcePropType; mid: ImageSourcePropType; capW: number }> = {
+  laurel: { cap: g2Cap, mid: g2Mid, capW: 300 },
   plate: { cap: plCap, mid: plMid, capW: 52 },
   btn: { cap: btnGCap, mid: btnGMid, capW: 36 },
   optG: { cap: optGCap, mid: optGMid, capW: 36 },
@@ -35,6 +38,7 @@ const BARS: Record<BarKind, { cap: ImageSourcePropType; mid: ImageSourcePropType
 };
 // the art's own heights (cap images are 3x of the sent 1x crop)
 const BAR_ART_H: Record<BarKind, number> = {
+  laurel: 316,
   plate: 47,
   btn: 53,
   optG: 83,
@@ -171,12 +175,33 @@ export function BigButton({
   onPress,
   disabled,
   icon,
+  laurel,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   icon?: ImageSourcePropType;
+  /** the green plaque with gold laurels (Merve's thank-you) */
+  laurel?: boolean;
 }) {
+  if (laurel) {
+    return (
+      <ScalePressable
+        onPress={onPress}
+        disabled={disabled}
+        accessibilityLabel={label}
+        scaleTo={0.97}
+        style={{ alignSelf: "stretch", height: 52, marginTop: 4 }}
+      >
+        <Bar kind="laurel" height={52} dim={disabled} />
+        <View style={[styles.bigBtnLabel, { paddingHorizontal: 46 }]} pointerEvents="none">
+          <Text style={styles.laurelText} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
+      </ScalePressable>
+    );
+  }
   return (
     <ScalePressable
       onPress={onPress}
@@ -369,6 +394,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
+  },
+  laurelText: {
+    color: "#fff4d8",
+    fontFamily: FONT.serif,
+    fontSize: 18,
+    textShadowColor: "rgba(0,0,0,0.55)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   bigBtnText: {
     color: "#fff8e6",
