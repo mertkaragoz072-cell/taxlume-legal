@@ -49,7 +49,6 @@ import {
   SCREEN_PADDING,
   SPACING,
   TYPE,
-  WEIGHT,
   WOOD_RIM,
   glowShadow,
 } from "../theme";
@@ -85,12 +84,21 @@ interface TownPillProps {
 
 function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
   const effectiveTariff = effectiveTariffRate(state, town);
+  const name = t(town.nameKey);
   return (
-    <ScalePressable onPress={onPress} style={[styles.townPill, selected && styles.townPillActive]}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <Text style={styles.townIcon}>{town.icon}</Text>
-      <Text style={styles.townName}>{t(town.nameKey)}</Text>
-      <Text style={styles.townMeta}>
+    <ScalePressable
+      onPress={onPress}
+      accessibilityLabel={name}
+      aria-selected={selected}
+      style={[styles.townPill, selected && styles.townPillActive]}
+    >
+      <View style={[styles.townIconWrap, selected && styles.townIconWrapActive]}>
+        <Text style={styles.townIcon}>{town.icon}</Text>
+      </View>
+      <Text style={styles.townName} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={styles.townMeta} numberOfLines={1}>
         {t("trade.townMeta", { days: town.distanceDays, tariff: (effectiveTariff * 100).toFixed(0) })}
       </Text>
     </ScalePressable>
@@ -692,23 +700,36 @@ const styles = StyleSheet.create({
   lockProgress: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
   townRow: { marginBottom: PANEL_GAP },
   townPill: {
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
+    width: 132,
     marginRight: SPACING.sm + 2,
-    width: 128,
-    ...WOOD_RIM,
-    overflow: "hidden",
-    ...cardShadow,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "rgba(200,130,70,0.55)",
+    backgroundColor: "rgba(44,26,15,0.92)",
+    paddingVertical: SPACING.sm + 2,
+    paddingHorizontal: SPACING.sm,
+    alignItems: "center",
   },
-  townPillActive: { borderColor: "#f6d36a", ...glowShadow("#f6d36a") },
-  townIcon: { fontSize: 22, marginBottom: SPACING.xs },
-  townName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
+  townPillActive: {
+    borderColor: "#f6d36a",
+    backgroundColor: "rgba(70,44,20,0.95)",
+    ...glowShadow("#f6d36a"),
   },
-  townMeta: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs },
+  townIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderWidth: 1.5,
+    borderColor: "rgba(200,130,70,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  townIconWrapActive: { borderColor: "#f6d36a" },
+  townIcon: { fontSize: 24 },
+  townName: { color: "#fbeccb", fontFamily: FONT.serif, fontSize: 14, textAlign: "center" },
+  townMeta: { color: "#d8c394", fontFamily: FONT.medium, fontSize: TYPE.micro, marginTop: 2 },
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
   emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
   contractDesc: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
