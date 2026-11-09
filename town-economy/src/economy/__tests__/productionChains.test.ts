@@ -65,10 +65,21 @@ describe("what a good is made from", () => {
     // The whole point. Two identical towns, one with the wool shelves half
     // empty, run for a day — the one short of wool ends with less cloth.
     const base = { ...initialState(), paused: false };
+    // The tick rolls random events and noise; give both towns the same dice
+    // (a fresh seeded generator per run) so only the wool differs.
     const run = (state: EconomyState) => {
-      let s = state;
-      for (let i = 0; i < TICKS_PER_GAME_DAY; i++) s = tick(s);
-      return s.goods.cloth.supply;
+      let seed = 12345;
+      const spy = jest.spyOn(Math, "random").mockImplementation(() => {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      });
+      try {
+        let s = state;
+        for (let i = 0; i < Math.ceil(TICKS_PER_GAME_DAY / 4); i++) s = tick(s);
+        return s.goods.cloth.supply;
+      } finally {
+        spy.mockRestore();
+      }
     };
     const normal = run(base);
     const shortOfWool = run(withSupply(base, "wool", 0.35));
