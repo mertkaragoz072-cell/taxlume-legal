@@ -9,6 +9,15 @@ import iron3 from "../../assets/ui/research/iron3.webp";
 import cloth1 from "../../assets/ui/research/cloth1.webp";
 import cloth2 from "../../assets/ui/research/cloth2.webp";
 import cloth3 from "../../assets/ui/research/cloth3.webp";
+import fish1 from "../../assets/ui/research/fish1.webp";
+import fish2 from "../../assets/ui/research/fish2.webp";
+import fish3 from "../../assets/ui/research/fish3.webp";
+import wine1 from "../../assets/ui/research/wine1.webp";
+import wine2 from "../../assets/ui/research/wine2.webp";
+import wine3 from "../../assets/ui/research/wine3.webp";
+import leather1 from "../../assets/ui/research/leather1.webp";
+import leather2 from "../../assets/ui/research/leather2.webp";
+import leather3 from "../../assets/ui/research/leather3.webp";
 import banner from "../../assets/ui/research/banner.webp";
 import bread1 from "../../assets/ui/research/bread1.webp";
 import bread2 from "../../assets/ui/research/bread2.webp";
@@ -55,6 +64,15 @@ const NODE_ART: Record<string, number> = {
   cloth_t1: cloth1,
   cloth_t2: cloth2,
   cloth_t3: cloth3,
+  fish_t1: fish1,
+  fish_t2: fish2,
+  fish_t3: fish3,
+  wine_t1: wine1,
+  wine_t2: wine2,
+  wine_t3: wine3,
+  leather_t1: leather1,
+  leather_t2: leather2,
+  leather_t3: leather3,
 };
 
 function useWidth(initial = 360): [number, (e: LayoutChangeEvent) => void] {
