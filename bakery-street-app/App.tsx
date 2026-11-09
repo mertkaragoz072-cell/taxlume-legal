@@ -16,13 +16,13 @@ import { WorldProvider, useRefresh, type Actions } from "./src/runtime/context";
 import { GameView } from "./src/runtime/GameView";
 import { NativeStorage } from "./src/runtime/storage";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
-import { GoalPill, Hud, Nav, Toast, type NavId } from "./src/ui/Chrome";
+import { GoalPill, Hud, Nav, TillPill, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
-import { Present } from "./src/ui/kit";
+import { Btn, Present, useAppear } from "./src/ui/kit";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
 import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
-import { C, FONT, fmt } from "./src/ui/theme";
+import { C, FONT, fmt, fs, useU } from "./src/ui/theme";
 
 
 /** Start-up diagnostics: any error (also in render or outside React) is shown on screen instead of leaving the splash screen forever. */
@@ -41,6 +41,28 @@ class Boundary extends React.Component<{ children: React.ReactNode }, { err: str
 }
 
 export default function Root() { return <Boundary><App /></Boundary>; }
+
+/** Shown once when the café reaches a new stage: what changed and what comes next. The café itself already looks different behind it. */
+function StageCard({ c, onClose }: { c: { id: number; name: string; gold: number; next: string | null }; onClose: () => void }) {
+  const u = useU(), a = useAppear(260, 160);
+  return (
+    <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, zIndex: 40, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(70,48,32,0.55)", opacity: a }}>
+      <Animated.View style={{ width: "84%", maxWidth: u * 80, padding: u * 3, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.honeyDark, backgroundColor: C.cream, alignItems: "center", gap: u * 1.4, transform: [{ scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }}>
+        <Text allowFontScaling={false} style={{ fontSize: fs(u, 7) }}>🏆</Text>
+        <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 4.2), textAlign: "center" }}>Aşama {c.id}: {c.name}</Text>
+        <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.8), textAlign: "center" }}>Kafen büyüdü, yeni bir görünüme kavuştu!{c.gold ? `\nÖdül: 💰 ${fmt(c.gold)} altın` : ""}{c.next ? `\nSıradaki aşama: ${c.next}` : "\nEn yüksek aşamaya ulaştın!"}</Text>
+        <Btn label="Harika!" onPress={onClose} />
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+/** Extra line of the sale toast: which service bonuses applied. */
+function saleNotes(e: any): string {
+  const b = e.bonus;
+  if (!b?.pct) return "";
+  return ` · ${[b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
+}
 
 function App() {
   const [fontsReady] = useFonts({ Nunito_700Bold, Nunito_800ExtraBold });
@@ -91,6 +113,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   const [peeking, setPeeking] = useState(false);          // the shop sheet is tucked away for a moment so a new piece can be seen in the café
   const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toast, setToast] = useState({ text: "", seq: 0 });
+  const [celebrate, setCelebrate] = useState<{ id: number; name: string; gold: number; next: string | null } | null>(null);   // stage reached: a short celebration card
   const [saveWarn, setSaveWarn] = useState<string | null>(problems[problems.length - 1] ?? null);
   const [exploreSel, setExploreSel] = useState<string | null>(null);
   const fade = useRef(new Animated.Value(0)).current;
@@ -154,10 +177,11 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         default: break;
       }
     }));
-    offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income) showToast(`${game.productsDef[e.product].icon} satıldı · +${fmt(e.income)} altın`, 1400); }));   // sold: by a tap or by the waiter
+    offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income) showToast(`${game.productsDef[e.product].icon} satıldı · +${fmt(e.income)} altın${saleNotes(e)}`, e.bonus?.pct ? 1900 : 1400); }));   // sold: by a tap or by the waiter
+    offs.push(game.on("goalComplete", ({ goal }: any) => showToast(`🎯 Günlük hedef tamamlandı: ${goal.name} — Görevler'den ödülünü al`, 3000)));
     offs.push(game.on("complete", ({ product }: any) => showToast(`${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600)));
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
-    offs.push(game.on("stage", ({ stage }: any) => { const next = world.shop.nextStage(); showToast(`🏆 Aşama ${stage.id}: ${stage.name}!${stage.reward ? ` Ödül: 💰 ${fmt(stage.reward.gold)}` : ""}${next ? `\nSıradaki aşama: ${next.name}` : "\nEn yüksek aşamaya ulaştın!"}`, 4600); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
+    offs.push(game.on("stage", ({ stage }: any) => { const next = world.shop.nextStage(); setCelebrate({ id: stage.id, name: stage.name, gold: stage.reward?.gold ?? 0, next: next?.name ?? null }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
     offs.push(game.on("shop", () => feedback.sfx("buy")));
     offs.push(game.on("exploreReady", ({ region }: any) => { showToast(`🎁 ${region.name} keşfi tamamlandı — ödülünü al!`, 4000); feedback.sfx("done"); feedback.buzz(40); }));
     let levelUps: any[] = [];                                // one action can pass several levels: show a single summary
@@ -248,7 +272,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes[sceneRef.current]?.setLook?.(n)} />
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
           <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />
-          <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /></Present>
+          <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /><TillPill /></Present>
           <Present show={sceneId === "interior" && !!panel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</Present>
           {sceneId === "market" ? <MarketPanel /> : null}
           {sceneId === "bookshop" ? <ResearchPanel /> : null}
@@ -258,6 +282,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Present show={overlay === "settings"}><SettingsPanel onReset={reset} /></Present>
           <Present show={overlay === "shop" && !peeking}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></Present>
           <Present show={overlay === "town"}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></Present>
+          <Present show={!!celebrate}>{celebrate ? <StageCard c={celebrate} onClose={() => setCelebrate(null)} /> : null}</Present>
           <Toast text={toast.text} seq={toast.seq} />
           {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
         </View>
@@ -271,7 +296,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
 function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId; overlay: Overlay | null; setOverlay: (o: Overlay | null) => void; navSelect: (id: NavId) => void }) {
   const { world } = useWorldOnly();
   useRefresh(5000);
-  const badges = { quests: world.quests.claimable().length > 0, daily: world.daily.status().canClaim };
+  const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0, daily: world.daily.status().canClaim };
   const toggle = (o: Overlay) => setOverlay(overlay === o ? null : o);
   const active: NavId | null = overlay === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (

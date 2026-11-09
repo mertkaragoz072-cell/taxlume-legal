@@ -147,6 +147,14 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "set
   );
 }
 
+/** About how many more sales it takes to earn `gold`, from the average of the recent sales in the ledger (0 = not enough data to say). */
+function salesToGo(game: any, gold: number): number {
+  const sales = ((game.ledger ?? []) as any[]).filter((e) => e.source === "sale" || e.source === "showcase").slice(0, 10);
+  if (sales.length < 3) return 0;
+  const avg = sales.reduce((n, e) => n + e.delta, 0) / sales.length;
+  return avg > 0 ? Math.max(1, Math.ceil(gold / avg)) : 0;
+}
+
 /** A small, calm chip under the top bar: the next thing worth saving for, how far away it is. Tapping it opens the shop on that item's tab. */
 export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const { world } = useWorld(), u = useU();
@@ -154,6 +162,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const a = useAppear(220, 140);
   const g = world.shop.nextGoal();
   if (!g.item) return null;
+  const sales = g.kind === "save" ? salesToGo(world.game, g.missingGold) : 0;
   const ready = g.kind === "ready", tab = g.item.category;
   return (
     <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }] }}>
@@ -162,7 +171,28 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>
           <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
           <View style={{ height: u * 1, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}><View style={{ width: `${Math.round(g.progress * 100)}%`, height: "100%", backgroundColor: ready ? C.green : C.honey }} /></View>
-          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.1) }}>{g.kind === "level" ? g.text.split(": ")[1] : ready ? `${fmt(g.price)} altın` : `${fmt(g.missingGold)} altın kaldı`}</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.1) }}>{g.kind === "level" ? g.text.split(": ")[1] : ready ? `${fmt(g.price)} altın` : `${fmt(g.missingGold)} altın kaldı${sales ? ` · ≈${sales} satış` : ""}`}</Text>
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/** The till box: money that piled up while the app was closed. One tap collects it. */
+export function TillPill() {
+  const { world, act } = useWorld(), u = useU();
+  useRefresh();
+  const a = useAppear(220, 140);
+  const stored = world.till.stored as number;
+  if (stored <= 0) return null;
+  return (
+    <Animated.View style={{ position: "absolute", right: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }] }}>
+      <Pressable onPress={() => { const r = world.till.collect(); if (r.ok) { act.toast(`🪙 Kasadan +${fmt(r.gold)} altın alındı`, 2200); act.sfx("claim"); } }} accessibilityRole="button" accessibilityLabel={`Kasada ${stored} altın birikti`}
+        style={({ pressed }) => ({ minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: C.green, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
+        <GameIcon id="gift" size={u * 4.4} />
+        <View style={{ gap: u * 0.3 }}>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>Kasada birikti</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.3) }}>+{fmt(stored)} altın · dokun, al</Text>
         </View>
       </Pressable>
     </Animated.View>

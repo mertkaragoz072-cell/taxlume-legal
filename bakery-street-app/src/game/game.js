@@ -284,6 +284,8 @@ export class Game {
       ...(this.research ? { research: this.research.exportState() } : {}),
       ...(this.exploration ? { exploration: this.exploration.exportState() } : {}),
       ...(this.shop ? { shop: this.shop.exportState() } : {}),
+      ...(this.till ? { till: this.till.exportState() } : {}),
+      ...(this.goals ? { goals: this.goals.exportState() } : {}),
     };
   }
 
@@ -303,6 +305,8 @@ export class Game {
     this.research?.importState(state.research);
     this.exploration?.importState(state.exploration);
     this.shop?.importState(state.shop);
+    this.till?.importState(state.till);        // after the shop: the stage sets the rate
+    this.goals?.importState(state.goals);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -324,6 +328,8 @@ export class Game {
       research: { levels: {} },
       exploration: { active: null, done: {} },
       shop: { owned: [], placed: {}, stored: [], introduced: [], stage: 1 },
+      till: { stored: 0, lastAt: null },
+      goals: { date: null, baseline: {}, claimed: [] },
     };
   }
 

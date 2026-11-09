@@ -18,14 +18,26 @@ export const formatReward = fmtReward;
 // ---------------------------------------------------------------------------------------------------------------- quests
 export function QuestPanel() {
   const { world, act } = useWorld();
-  const { game, quests } = world, u = useU();
+  const { game, quests, goals } = world, u = useU();
   useRefresh();
+  const todays = goals.list() as any[];
   const rank = (s: any) => (s.claimed ? 2 : s.complete ? 0 : 1);
   const list = (quests.list() as any[]).slice().sort((a, b) => rank(a) - rank(b));
   const done = list.filter((s) => s.claimed).length;
   const rewardText = (r: any) => [r.gold ? `💰 ${fmt(r.gold)}` : "", ...Object.entries(r.ingredients ?? {}).map(([id, n]) => `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${n}`)].filter(Boolean).join(" · ");
   return (
     <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
+      <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
+      {todays.map((g) => (
+        <Card key={g.id} tone={g.claimed ? "locked" : g.complete ? "ready" : undefined} left={<EmojiIcon emoji={g.icon} size={u * 7} />}
+          right={g.claimed ? <Btn label="✓ Alındı" disabled /> : g.complete ? <Btn label="Ödülü Al" onPress={() => { const r = goals.claim(g.id); if (r.ok) act.toast(`🎁 ${g.name}: +${fmt(r.gold)} altın`, 2200); else act.warn(r.message); }} /> : <Btn label="Devam ediyor" disabled />}>
+          <Title name={g.name} />
+          <Meta text={`Bugün ${g.text}`} />
+          <Bar value={g.progress / g.target} text={`${fmt(g.progress)}/${fmt(g.target)}`} />
+          <Meta tone="reward" text={`Ödül: 💰 ${fmt(g.gold)}`} />
+        </Card>
+      ))}
+      <Meta text="Görevler" />
       {list.map((s) => {
         const q = s.def;
         return (

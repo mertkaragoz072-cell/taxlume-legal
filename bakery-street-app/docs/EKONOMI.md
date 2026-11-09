@@ -176,3 +176,19 @@ Catalogue total: 330.600 gold
 ## 10. Eksik / yedek olanlar
 
 Bkz. `docs/EKSIK_ASSETLER.md`. Özet: 15 ekipman kademe resmi (E12), yeni tarif ikonları (yedek: `scripts/make_recipe_icons.py`), yeni sandalye/masa çeşitleri, duvar lambası, yeni iç mekân bölümleri, VIP kedi görünümleri; aşama tabelası/flamalar ve bekleme direkleri vektör çizim.
+
+## Oynanış katmanı (kayıt v12)
+
+Hepsi `src/data/economy.js` içinde ayarlanır; hiçbiri yeni bina veya yeni sistem eklemez, mevcut satış/kazanç yolunu (`Game.earn`) kullanır.
+
+- **Servis bonusları** (`CAFE.bonuses`, `Cafe.serviceBonus`): satış gelirine yüzde olarak eklenir, toplanır, çarpılmaz.
+  - *Kombo:* 14 sn (kafe süresi, uygulama dışında akmaz) içinde peş peşe satışlar seri kurar; ikinci satıştan itibaren her adım +%3, en çok 5 adım. Sabrı tükenip giden müşteri seriyi bozar.
+  - *Hızlı servis:* müşterinin sabrının en az %60'ı kalmışken servis +%8.
+  - *Favori tarif:* her müşteri görünümünün sabit bir favorisi var (açıksa %30 ihtimalle onu sipariş eder); servis +%20.
+  - En iyi durumda +%43, yoğun ama sıradan bir vardiyada yaklaşık +%10-15. Kapatmak için `bonuses: null`.
+- **Kasa kutusu** (`TILL`, `src/game/till.js`): uygulama kapalıyken dakikada `4 + 3×(aşama−1)` altın birikir, en çok 120 dakika; en az 5 dakika gerekir; saat geriye alınırsa bir şey eklenmez. Tek dokunuşla alınır (`source: 'till'`). Uygulama açıkken birikmez.
+- **Günlük hedefler** (`GOALS`, `src/game/goals.js`): her gün 3 hedef (5'lik havuzdan dönüşümlü), ilerleme yalnızca o günün sayaç farkı; hedef ve ödül aşamayla `×(1 + 0.5×(aşama−1))` büyür. Ödül küçük (120-200 altın, aşama 1).
+- **Aşama kutlaması:** aşama atlayınca kısa kart (ödül + sıradaki aşama); kafenin görünümü zaten değişmiş olur.
+- **Koleksiyon sayacı** Mağaza başlığında; **hedef çipi** son satışların ortalamasından "≈N satış" tahmini gösterir.
+
+Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda erken oyunu hızlandırır, bu yüzden ilk gerçek oyundan sonra `scripts/balance-shop.mjs` ile yeniden ölçülmelidir.

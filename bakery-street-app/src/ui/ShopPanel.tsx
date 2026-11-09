@@ -74,6 +74,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
   };
   const dot = (id: string) => id !== "goal" && id !== "ingredients" && (shop.list(id) as any[]).some((v) => v.status === "ready" && v.missingGold === 0);
 
+  const collection = (() => { const all = (shop.items as any[]).filter((d) => d.category !== "ingredients" && d.kind !== "upgrade"); return { owned: all.filter((d) => shop.has(d.id)).length, total: all.length }; })();
   const tabs = (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: u * 0.8 }} contentContainerStyle={{ gap: u * 0.8, paddingHorizontal: u * 1.2, paddingVertical: u * 0.4 }}>
       {TABS.map((t) => {
@@ -89,7 +90,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
   );
 
   return (
-    <Sheet title="Mağaza" hint={`💰 ${fmt(game.gold)} · Aşama ${stage.id}: ${stage.name}`} side="right" onClose={onClose} header={tabs} tall>
+    <Sheet title="Mağaza" hint={`💰 ${fmt(game.gold)} · Aşama ${stage.id}: ${stage.name}\nKoleksiyon: ${collection.owned}/${collection.total} eşya`} side="right" onClose={onClose} header={tabs} tall>
       {tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : tab === "decor" ? <DecorList list={items("decor")} onBuy={buy} flash={flash} /> : items(tab).map((v) => <ItemCard key={v.def.id} v={v} onBuy={buy} flash={flash === v.def.id} />)}
     </Sheet>
   );

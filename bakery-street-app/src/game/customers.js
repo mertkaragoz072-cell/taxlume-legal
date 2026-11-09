@@ -31,6 +31,8 @@ export class Cafe {
     this.orders = [];
     this.holds = {};            // table index -> ms left while a served guest eats and the table is cleared (the table is not free meanwhile)
     this.spawnIn = ms(this.cfg.firstSpawnSec);
+    this.combo = 0;             // sales in a row served within the combo window (memory only; resets with the cafe)
+    this.comboLeft = 0;         // ms of cafe time left to keep the streak going
   }
 
   // ---- queries --------------------------------------------------------------------------------
@@ -75,6 +77,7 @@ export class Cafe {
     this.last = now;
     if (!dt) return;
     let changed = false;
+    if (this.comboLeft > 0) { this.comboLeft -= dt; if (this.comboLeft <= 0) { this.comboLeft = 0; this.combo = 0; changed = true; } }
     for (const k of Object.keys(this.holds)) {                      // tables being cleared come free again
       this.holds[k] -= dt;
       if (this.holds[k] <= 0) { delete this.holds[k]; changed = true; this.game.emit('customer', { type: 'tableFree', table: +k }); }
@@ -138,11 +141,24 @@ export class Cafe {
     return seated;
   }
 
+  /** The product a guest look likes best (fixed per look; only used while the player has unlocked it). */
+  favoriteOf(look) {
+    const ids = Object.keys(this.game.productsDef);
+    const i = Math.max(0, this.looks.indexOf(look));
+    return ids.length ? ids[(i * 3 + 1) % ids.length] : null;
+  }
+
   makeOrder(c) {
     const ids = Object.keys(this.game.productsDef).filter((id) => this.game.isUnlocked(id));     // recipes the player has not bought are never ordered
+    const fav = this.cfg.bonuses?.favorite, favorite = fav ? this.favoriteOf(c.look) : null;
+    if (favorite && ids.includes(favorite) && this.rng() < fav.chance) return this.addOrder(c, favorite);   // (the random number is only drawn when a favourite can be ordered)
     const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1));
     let r = this.rng() * weights.reduce((s, w) => s + w, 0), product = ids[ids.length - 1];
     for (let i = 0; i < ids.length; i++) { r -= weights[i]; if (r < 0) { product = ids[i]; break; } }
+    return this.addOrder(c, product);
+  }
+
+  addOrder(c, product) {
     const order = { id: this.nextId++, product, price: this.game.productsDef[product].price, status: 'open', customerId: c.id };
     this.orders.push(order);
     this.trimOrders();
@@ -160,6 +176,7 @@ export class Cafe {
     const order = this.orderOf(c);
     if (order && order.status === 'open') order.status = 'cancelled';
     this.customers = this.customers.filter((x) => x !== c);
+    if (!happy) { this.combo = 0; this.comboLeft = 0; }                  // a guest who gave up breaks the streak
     this.game.emit('customer', { type: 'leave', id: c.id, happy, table: c.table });
   }
 
@@ -180,15 +197,33 @@ export class Cafe {
     let tip = 0;
     const tipChance = this.game.shop?.tipChance() ?? 0;                             // decoration: some guests leave a tip (the random number is only drawn when there is a chance)
     if (tipChance > 0 && this.rng() < tipChance) tip = Math.max(1, Math.round(income * this.game.shop.tipShare()));
-    this.game.earn(income + tip, 'sale', `${def.name} satışı${tip ? ` (+${tip} bahşiş)` : ''}`);
+    const bonus = this.serviceBonus(c, order);                                      // combo / fast service / favourite, as extra percent of the income
+    const extra = Math.round(income * bonus.pct);
+    income += extra;
+    this.game.earn(income + tip, 'sale', `${def.name} satışı${tip ? ` (+${tip} bahşiş)` : ''}${extra ? ` (+${extra} servis bonusu)` : ''}`);
     this.game.recordSold(order.product, 1);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);
     if (this.holdSec() > 0) this.holds[c.table] = ms(this.holdSec());     // the guest eats (the scene keeps them at the table), then the table is cleared
-    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income: income + tip, tip, vip: !!c.vip, product: order.product, eatSec: this.cfg.eatSec ?? 0, holdSec: this.holdSec() });
+    this.game.emit('customer', { type: 'leave', id: c.id, happy: true, table: c.table, income: income + tip, tip, bonus, vip: !!c.vip, product: order.product, eatSec: this.cfg.eatSec ?? 0, holdSec: this.holdSec() });
     this.seatQueued();
     this.game.emit('change', { type: 'sale', product: order.product, price: income + tip });
-    return { ok: true, income: income + tip, tip, product: order.product, orderId: order.id, customerId: c.id };
+    return { ok: true, income: income + tip, tip, bonus, product: order.product, orderId: order.id, customerId: c.id };
+  }
+
+  /**
+   * Service bonuses for the sale being made now (see CAFE.bonuses). Also advances the combo streak, so call it exactly once per sale.
+   * Returns { pct, combo, fast, favorite }: pct is the total extra share of the income, the rest say which parts applied.
+   */
+  serviceBonus(c, order) {
+    const b = this.cfg.bonuses;
+    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false };
+    const fast = this.patienceFraction(c) >= b.fast.minPatience;
+    const favorite = order.product === this.favoriteOf(c.look);
+    this.combo = this.comboLeft > 0 ? this.combo + 1 : 1;
+    this.comboLeft = ms(b.combo.windowSec);
+    const steps = Math.min(b.combo.maxSteps, this.combo - 1);
+    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0), combo: this.combo, fast, favorite };
   }
 
   deliverToCustomer(customerId) {
@@ -213,6 +248,7 @@ export class Cafe {
     this.customers = state.customers.map((c) => ({ ...c }));
     this.orders = state.orders.map((o) => ({ ...o }));
     this.holds = {};                 // tables being cleared are free after a restart
+    this.combo = 0; this.comboLeft = 0;
     this.spawnIn = this.nextInterval();
     this.last = null;                // elapsed time while the app was closed is never counted as waiting time
   }

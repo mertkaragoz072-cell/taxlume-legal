@@ -7,6 +7,8 @@ import { validateResearch } from './research.js';
 import { validateExploration } from './exploration.js';
 import { validateProgression } from './progression.js';
 import { validateShop } from './shop.js';
+import { validateTill } from './till.js';
+import { validateGoals } from './goals.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
@@ -14,7 +16,7 @@ import { validateShop } from './shop.js';
 
 export const SAVE_KEY = 'bakery-street:save';
 export const BACKUP_KEY = 'bakery-street:save.corrupt';
-export const SAVE_VERSION = 11;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward, v6 player level / XP (older saves start at level 1), v7 town buildings (older saves: only the starter buildings are open), v8 Bookshop research levels, v9 exploration (active trip + completed counts), v10 shop (owned items, placement, stage; older saves own nothing and keep everything else), v11 gold earned counter, daily-reward claim time, exploration daily gold budget, stored decoration (every one of these is optional: older saves load with the defaults, nothing is reset)
+export const SAVE_VERSION = 12;   // v2 cafe, v3 upgrades + several jobs per station, v4 lifetime stats + quest rewards, v5 gems + daily reward, v6 player level / XP (older saves start at level 1), v7 town buildings (older saves: only the starter buildings are open), v8 Bookshop research levels, v9 exploration (active trip + completed counts), v10 shop (owned items, placement, stage; older saves own nothing and keep everything else), v12 till box + daily goals (both optional), v11 gold earned counter, daily-reward claim time, exploration daily gold budget, stored decoration (every one of these is optional: older saves load with the defaults, nothing is reset)
 
 const isCount = (n) => Number.isFinite(n) && Number.isInteger(n) && n >= 0 && n < 1e12;
 
@@ -63,6 +65,8 @@ export function validate(raw, game) {
   const research = game.research ? validateResearch(raw.research, game.research) : undefined;
   const exploration = game.exploration ? validateExploration(raw.exploration, game.exploration) : undefined;
   const shop = game.shop ? validateShop(raw.shop, game.shop) : undefined;
+  const till = game.till ? validateTill(raw.till) : undefined;
+  const goals = game.goals ? validateGoals(raw.goals) : undefined;
   const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
   const upgrades = {};
   for (const [id, def] of Object.entries(game.upgradesDef)) {
@@ -88,7 +92,7 @@ export function validate(raw, game) {
   }
   const queueMax = game.cafe ? game.cafe.cfg.queueMax + (shop ? game.shop.queueBonusFor(shop.owned) : 0) : 0;     // the waiting area the SAVED shop state has bought, not the one in memory now
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks, queueMax) : null;
-  return { gold: raw.gold, gems, ingredients, products, jobs, upgrades, stats, quests, daily, progression, town, research, exploration, shop, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, ingredients, products, jobs, upgrades, stats, quests, daily, progression, town, research, exploration, shop, till, goals, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {

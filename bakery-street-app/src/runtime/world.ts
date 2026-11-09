@@ -4,6 +4,8 @@ import { Game } from "../game/game.js";
 import { Cafe } from "../game/customers.js";
 import { Quests } from "../game/quests.js";
 import { DailyReward } from "../game/daily.js";
+import { Till } from "../game/till.js";
+import { DailyGoals } from "../game/goals.js";
 import { Settings } from "../game/settings.js";
 import { SaveManager, safeStorage } from "../game/save.js";
 import { Exploration } from "../game/exploration.js";
@@ -25,7 +27,7 @@ export type SceneId = "street" | "interior" | "market" | "bookshop" | "explore";
 
 export interface World {
   storage: NativeStorage;
-  settings: any; game: any; progression: any; town: any; exploration: any; research: any; shop: any; quests: any; daily: any; cafe: any; saves: any;
+  settings: any; game: any; progression: any; town: any; exploration: any; research: any; shop: any; quests: any; daily: any; till: any; goals: any; cafe: any; saves: any;
   scenes: Record<SceneId, any>;
   /** problems reported by the save code, shown to the player */
   problems: string[];
@@ -47,6 +49,8 @@ export function createWorld(storage: NativeStorage, onProblem: (msg: string) => 
   const shop = new Shop(game);                            // after the game rules it extends (recipes join the products) and before the save is read
   const quests = new Quests(game);
   const daily = new DailyReward(game);
+  const till = new Till(game);
+  const goals = new DailyGoals(game);
   const cafe = new Cafe(game);
   const saves = new SaveManager(game, store, { onProblem: ({ message }: { message: string }) => report(message), onRecover: () => {} });
   saves.attach();
@@ -66,5 +70,5 @@ export function createWorld(storage: NativeStorage, onProblem: (msg: string) => 
   bakery.configure();
   bookshop.configure();
   market.configure();
-  return { storage, settings, game, progression, town, exploration, research, shop, quests, daily, cafe, saves, scenes, problems, loadResult: { status: loaded.status, summary } };
+  return { storage, settings, game, progression, town, exploration, research, shop, quests, daily, till, goals, cafe, saves, scenes, problems, loadResult: { status: loaded.status, summary } };
 }

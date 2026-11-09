@@ -74,6 +74,36 @@ export const CAFE = {
   maxStepSec: 2,                // longest time one tick may advance patience (a hidden tab never burns patience)
   orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4, simit: 3, latte: 3, kurabiye: 2, mocha: 2, muffin: 2, waffle: 1 },   // how likely each product is ordered (recipes not bought yet are never ordered)
   history: 20,                  // closed orders kept for reference
+  /**
+   * Service bonuses, paid on top of a sale as extra percent of its income (they add up, never multiply; the sum is capped by the parts below).
+   *  combo    : sales that follow each other within `windowSec` of cafe time build a streak; every step after the first adds `step` (up to `maxSteps` steps)
+   *  fast     : serving while the guest still has at least `minPatience` of their patience left adds `share`
+   *  favorite : every guest look has one favourite product; ordering it is `chance` likely (when unlocked) and serving it adds `share`
+   * Best case together: 0.03*5 + 0.08 + 0.20 = +43%; a normal busy shift lands around +10-15%. Set `bonuses: null` to switch them all off.
+   */
+  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.6, share: 0.08 }, favorite: { chance: 0.3, share: 0.2 } },
+};
+
+/**
+ * Till box: while the app is closed the till collects a little money, up to `capMinutes` worth. The player collects it with one tap.
+ * Rate per minute = base + perStage * (stage - 1). Only time the app was really closed counts (at least `minMinutes`); a clock set back adds nothing.
+ */
+export const TILL = { base: 4, perStage: 3, capMinutes: 120, minMinutes: 5 };
+
+/**
+ * Daily goals: three short goals a day, picked in rotation from this pool by calendar day. A goal counts progress made TODAY (the stat's value now minus
+ * its value when the day began). `target` and `gold` grow with the cafe stage: x(1 + 0.5 * (stage - 1)).
+ */
+export const GOALS = {
+  perDay: 3,
+  stageGrowth: 0.5,
+  pool: [
+    { id: 'sell', name: 'Günün satışları', icon: '🧾', stat: 'soldTotal', label: 'ürün sat', target: 6, gold: 150 },
+    { id: 'make', name: 'Üretim günü', icon: '🥐', stat: 'producedTotal', label: 'ürün üret', target: 8, gold: 140 },
+    { id: 'earn', name: 'Kazançlı gün', icon: '💰', stat: 'goldEarned', label: 'altın kazan', target: 500, gold: 200 },
+    { id: 'buy', name: 'Malzeme turu', icon: '🛒', stat: 'marketPurchases', label: 'kez malzeme al', target: 2, gold: 120 },
+    { id: 'spend', name: 'Yatırım zamanı', icon: '🪙', stat: 'goldSpent', label: 'altın harca', target: 300, gold: 160 },
+  ],
 };
 
 /**

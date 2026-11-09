@@ -35,7 +35,7 @@ function make({ gold = 54320, level = 1, storage = new FakeStorage(), clock = { 
   const shop = new Shop(game);
   const quests = new Quests(game);
   const daily = new DailyReward(game);
-  const cafe = new Cafe(game, { rng, config: { ...CAFE, firstSpawnSec: 999, spawnEverySec: [999, 999], eatSec: 0, cleanSec: 0, orderPatienceSec: 500, ...cafeCfg } });
+  const cafe = new Cafe(game, { rng, config: { ...CAFE, bonuses: null, firstSpawnSec: 999, spawnEverySec: [999, 999], eatSec: 0, cleanSec: 0, orderPatienceSec: 500, ...cafeCfg } });
   cafe.setActive(true);
   const saves = new SaveManager(game, storage);
   const status = saves.load(); saves.attach();

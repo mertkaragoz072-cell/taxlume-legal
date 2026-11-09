@@ -13,7 +13,7 @@ function make({ gold = 1000, config = {}, seed = 7 } = {}) {
   const clock = { now: 1_700_000_000_000 };
   const player = { gold };
   const game = new Game(player, {}, () => clock.now);
-  const cfg = { ...CAFE, tablesUpgrade: null, firstSpawnSec: 1, spawnEverySec: [5, 5], eatSec: 0, cleanSec: 0, ...config };   // eating/clearing is switched off here; its own tests ask for it
+  const cfg = { ...CAFE, bonuses: null, tablesUpgrade: null, firstSpawnSec: 1, spawnEverySec: [5, 5], eatSec: 0, cleanSec: 0, ...config };   // eating/clearing is switched off here; its own tests ask for it
   const cafe = new Cafe(game, { rng: seeded(seed), config: cfg });
   cafe.setActive(true);   // customers only run while the interior is open
   /** advance fake time in 1 s steps, ticking each step */
@@ -178,7 +178,7 @@ test('counts report customers, queue and open orders', () => {
 class FakeStorage { constructor() { this.m = new Map(); } getItem(k) { return this.m.has(k) ? this.m.get(k) : null; } setItem(k, v) { this.m.set(k, String(v)); } removeItem(k) { this.m.delete(k); } }
 function session(storage, clock, seed = 3) {
   const player = { gold: 54320 }, game = new Game(player, {}, () => clock.now);
-  const cafe = new Cafe(game, { rng: seeded(seed), config: { ...CAFE, firstSpawnSec: 999, spawnEverySec: [999, 999] } });
+  const cafe = new Cafe(game, { rng: seeded(seed), config: { ...CAFE, bonuses: null, firstSpawnSec: 999, spawnEverySec: [999, 999] } });
   cafe.setActive(true);
   const problems = [];
   const mgr = new SaveManager(game, storage, { onProblem: (p) => problems.push(p) });
@@ -229,7 +229,7 @@ test('v1 saves (without a cafe section) still load, with an empty cafe', () => {
 
 test('invalid or finished orders in a save are repaired safely instead of crashing', () => {
   const game = new Game({ gold: 0 }, {}, () => 0);
-  const cfg = { ...CAFE, queueMax: 3 };
+  const cfg = { ...CAFE, bonuses: null, queueMax: 3 };
   const raw = {
     nextId: 3,
     orders: [
@@ -299,7 +299,7 @@ test('importing a snapshot does not age waiting customers while the app was clos
 test('a new cafe is paused until the interior opens (app starts on the street)', () => {
   const clock = { now: 1_700_000_000_000 };
   const game = new Game({ gold: 0 }, {}, () => clock.now);
-  const cafe = new Cafe(game, { rng: seeded(1), config: { ...CAFE, firstSpawnSec: 1, spawnEverySec: [1, 1] } });
+  const cafe = new Cafe(game, { rng: seeded(1), config: { ...CAFE, bonuses: null, firstSpawnSec: 1, spawnEverySec: [1, 1] } });
   assert.equal(cafe.active, false);
   game.tick();
   for (let i = 0; i < 60; i++) { clock.now += 1000; game.tick(); }
@@ -347,7 +347,7 @@ test('the pause state is not saved: a reloaded app starts paused and keeps custo
   const a = session(st, clock); a.mgr.load(); a.mgr.attach();
   const { order } = seatWith(a.cafe, 'coffee'); a.game.emit('change', { type: 'cafe' });
   const b = new Game({ gold: 0 }, {}, () => clock.now);
-  const cafeB = new Cafe(b, { rng: seeded(1), config: { ...CAFE, firstSpawnSec: 1, spawnEverySec: [1, 1] } });
+  const cafeB = new Cafe(b, { rng: seeded(1), config: { ...CAFE, bonuses: null, firstSpawnSec: 1, spawnEverySec: [1, 1] } });
   new SaveManager(b, st).load();
   assert.equal(cafeB.active, false);
   assert.ok(cafeB.orders.find((o) => o.id === order.id && o.status === 'open'));
@@ -518,4 +518,82 @@ test('a guest with no matching stock is not served and keeps waiting (nothing is
   const c = cafe.arrive(); cafe.seatQueued(); game.products[cafe.orderOf(c).product] = 0;
   const gold = player.gold, r = cafe.deliver(c.orderId);
   assert.equal(r.ok, false); assert.equal(r.reason, 'stock'); assert.equal(player.gold, gold); assert.equal(cafe.orderOf(c).status, 'open'); assert.deepEqual(cafe.holds, {});
+});
+
+// ---- service bonuses: combo, fast service, favourite ------------------------------------------------------------------
+const BONUS = CAFE.bonuses;
+const bonusMake = (config = {}) => make({ config: { bonuses: BONUS, firstSpawnSec: 999, spawnEverySec: [999, 999], tables: 4, queueMax: 4, orderPatienceSec: 100, ...config } });
+/** a guest who has waited `waited` seconds, wanting `product` (never their favourite unless asked) */
+function guest(cafe, product, waited = 0) {
+  const { c, order } = seatWith(cafe, product);
+  c.patience = Math.round((cafe.cfg.orderPatienceSec - waited) * 1000);
+  return { c, order };
+}
+const notFavorite = (cafe, c) => (cafe.favoriteOf(c.look) === 'bread' ? 'coffee' : 'bread');
+
+test('fast service: a guest with most of their patience left pays +8%, a worn-out guest pays the plain price', () => {
+  const { cafe, game } = bonusMake();
+  game.products.bread = 5; game.products.coffee = 5;
+  const a = guest(cafe, 'bread'); const pa = notFavorite(cafe, a.c); a.order.product = pa; a.order.price = PRODUCTS[pa].price;
+  const base = game.unitEconomics(pa, PRODUCTS[pa].price).customer;
+  const r1 = cafe.deliver(a.order.id);
+  assert.ok(r1.bonus.fast && !r1.bonus.favorite);
+  assert.equal(r1.income, base + Math.round(base * BONUS.fast.share));
+  cafe.comboLeft = 0; cafe.combo = 0;
+  const b = guest(cafe, 'bread', 70); const pb = notFavorite(cafe, b.c); b.order.product = pb; b.order.price = PRODUCTS[pb].price;
+  const r2 = cafe.deliver(b.order.id);
+  assert.ok(!r2.bonus.fast);
+  assert.equal(r2.income, game.unitEconomics(pb, PRODUCTS[pb].price).customer);
+});
+
+test('combo: sales within the window build a streak (+3% per step, capped); the window runs on cafe time and a leaving guest breaks it', () => {
+  const { cafe, game, run } = bonusMake({ orderPatienceSec: 5000 });
+  game.products.bread = 50; game.products.coffee = 50;
+  const sells = [];
+  for (let i = 0; i < 8; i++) {
+    const g = guest(cafe, 'bread', 90); const p = notFavorite(cafe, g.c); g.order.product = p; g.order.price = PRODUCTS[p].price;
+    g.c.patience = 1000 * 1000;   // plenty of patience left, but below the fast-service line
+    sells.push(cafe.deliver(g.order.id));
+    cafe.holds = {};
+    run(2);                         // 2 s later: still inside the 14 s window
+  }
+  assert.deepEqual(sells.map((r) => r.bonus.combo), [1, 2, 3, 4, 5, 6, 7, 8]);
+  for (const r of sells) assert.ok(Math.abs(r.bonus.pct - (Math.min(BONUS.combo.maxSteps, r.bonus.combo - 1) * BONUS.combo.step + (r.bonus.fast ? BONUS.fast.share : 0) + (r.bonus.favorite ? BONUS.favorite.share : 0))) < 1e-9);
+  assert.ok(sells[7].bonus.pct >= BONUS.combo.maxSteps * BONUS.combo.step - 1e-9 && sells[7].bonus.pct < BONUS.combo.maxSteps * BONUS.combo.step + BONUS.fast.share + 1e-9);   // capped at 5 steps
+  run(20);                          // longer than the window: the streak is over
+  assert.equal(cafe.combo, 0);
+  const late = guest(cafe, 'bread', 0); const p = notFavorite(cafe, late.c); late.order.product = p; late.order.price = PRODUCTS[p].price;
+  assert.equal(cafe.deliver(late.order.id).bonus.combo, 1);
+  // a guest who gives up breaks a running streak
+  const g1 = guest(cafe, 'bread'); const q = notFavorite(cafe, g1.c); g1.order.product = q; g1.order.price = PRODUCTS[q].price; cafe.deliver(g1.order.id);
+  assert.ok(cafe.combo >= 1);
+  const g2 = guest(cafe, 'bread'); cafe.leave(g2.c, false);
+  assert.equal(cafe.combo, 0);
+});
+
+test('favourite: each look has a fixed favourite product, ordering it is likely, serving it pays +20%', () => {
+  const { cafe, game } = bonusMake();
+  assert.equal(cafe.favoriteOf('girl_red'), cafe.favoriteOf('girl_red'));
+  for (const look of LOOKS) assert.ok(game.productsDef[cafe.favoriteOf(look)]);
+  game.products.bread = 5; game.products.coffee = 5; game.products.croissant = 5; game.products.cake = 5;
+  const c = cafe.arrive(); c.look = 'boy_cap';
+  const fav = cafe.favoriteOf('boy_cap');
+  // the favourite is picked when the random number is below `chance`, otherwise the weighted choice applies
+  cafe.rng = () => 0;
+  const o = cafe.makeOrder(c);
+  if (game.isUnlocked(fav)) assert.equal(o.product, fav);
+  const base = game.unitEconomics(fav, game.productsDef[fav].price).customer;
+  const s = guest(cafe, fav, 90); s.c.look = 'boy_cap'; s.c.patience = 1000 * 1000; game.products[fav] = 5;
+  cafe.comboLeft = 0; cafe.combo = 0;
+  const r = cafe.deliver(s.order.id);
+  assert.ok(r.bonus.favorite);
+  assert.equal(r.income, base + Math.round(base * (BONUS.favorite.share + (r.bonus.fast ? BONUS.fast.share : 0))));
+});
+
+test('bonuses off (null) pay exactly the plain price and draw no extra random number', () => {
+  const { cafe, game } = make();
+  game.products.bread = 3;
+  const g = guest(cafe, 'bread');
+  assert.deepEqual(cafe.serviceBonus(g.c, g.order), { pct: 0, combo: 0, fast: false, favorite: false });
+  assert.equal(cafe.deliver(g.order.id).income, game.unitEconomics('bread', PRODUCTS.bread.price).customer);
 });
