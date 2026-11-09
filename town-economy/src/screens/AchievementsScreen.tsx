@@ -15,7 +15,7 @@ import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
-import { SectionLabel } from "../components/SectionLabel";
+import { GoalFrame, GoalIcon, GoalIconName, GoalProgress, GoalRibbon } from "../components/GoalPanels";
 import { ACHIEVEMENTS, ACHIEVEMENTS_BY_ID, AchievementId } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
@@ -28,7 +28,6 @@ import { festivalMetric } from "../economy/townFestival";
 import { gameDayFromTick, isGoodUnlocked, RIVAL_TOWN_GRACE_DAYS, TICK_MS } from "../economy/useEconomy";
 import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../economy/weeklyChallenges";
 import {
-  CARD_GRADIENT,
   cardShadow,
   COLORS,
   CONTENT_MAX_WIDTH,
@@ -43,6 +42,13 @@ import {
   WEIGHT,
   withAlpha,
 } from "../theme";
+
+/** Painted icons for the two daily-quest kinds the mockup shows; every other
+ * quest keeps its emoji. */
+const QUEST_ART: Record<string, GoalIconName> = {
+  daily_two_towns: "store",
+  daily_trade_big: "bars2",
+};
 
 type ImportFeedback = { type: "success" | "error"; text: string };
 
@@ -95,10 +101,42 @@ export function AchievementsScreen() {
     setImportArmed(false);
   };
 
+  const statCells: { label: string; value: string; icon?: GoalIconName; emoji?: string; color?: string }[] = [
+    { label: t("achievements.stats.totalTrades"), value: String(state.stats.totalTrades), icon: "bars" },
+    {
+      label: t("achievements.stats.caravansCompleted"),
+      value: String(state.stats.totalCaravansCompleted),
+      icon: "cart",
+    },
+    {
+      label: t("achievements.stats.townsTradedWith"),
+      value: String(state.stats.townsTradedWith.length),
+      emoji: "🏘️",
+    },
+    { label: t("achievements.stats.loansRepaid"), value: String(state.stats.loansRepaid), icon: "shield" },
+    { label: t("achievements.stats.contractsWon"), value: String(state.stats.contractsWon), icon: "swords" },
+    { label: t("achievements.stats.prestigeLevel"), value: String(state.prestigeLevel), icon: "trophy" },
+    {
+      label: t("achievements.stats.totalRealizedProfit"),
+      value: formatCoins(state.stats.totalRealizedProfit),
+      icon: "coins",
+      color: state.stats.totalRealizedProfit >= 0 ? "#3fae5c" : "#c94b4b",
+    },
+    {
+      label: t("achievements.stats.bestTradeStreak"),
+      value: String(state.stats.bestTradeStreak),
+      emoji: "🔥",
+    },
+    {
+      label: t("achievements.stats.bestNetWorthEver"),
+      value: formatCoins(state.bestNetWorthEver),
+      icon: "bag",
+    },
+  ];
+
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <View style={styles.summaryCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <GoalFrame>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryBig}>
             {t("achievements.unlockedCount", { count: unlockedCount, total: ACHIEVEMENTS.length })}
@@ -113,11 +151,11 @@ export function AchievementsScreen() {
               : t("achievements.noStreak")}
           </Text>
         </View>
-      </View>
+      </GoalFrame>
 
       {state.unlockedAchievements.length > 0 && (
         <>
-          <SectionLabel text={t("achievements.hallOfFameSectionLabel")} color="#c58ee0" />
+          <GoalRibbon text={t("achievements.hallOfFameSectionLabel")} />
           <View style={styles.hallOfFameRow}>
             {[...state.unlockedAchievements]
               .slice(-3)
@@ -144,59 +182,41 @@ export function AchievementsScreen() {
         </>
       )}
 
-      <SectionLabel text={t("achievements.statsSectionLabel")} color="#e8c777" />
-      <View style={styles.statsCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <GoalRibbon text={t("achievements.statsSectionLabel")} />
+      <GoalFrame contentStyle={styles.statsBody}>
         <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{state.stats.totalTrades}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.totalTrades")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{state.stats.totalCaravansCompleted}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.caravansCompleted")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{state.stats.townsTradedWith.length}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.townsTradedWith")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{state.stats.loansRepaid}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.loansRepaid")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{state.stats.contractsWon}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.contractsWon")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{state.prestigeLevel}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.prestigeLevel")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text
+          {statCells.map((cell, i) => (
+            <View
+              key={cell.label}
               style={[
-                styles.statValue,
-                { color: state.stats.totalRealizedProfit >= 0 ? "#3fae5c" : "#c94b4b" },
+                styles.statItem,
+                i % 3 !== 2 && styles.statDivV,
+                i < statCells.length - 3 && styles.statDivH,
               ]}
             >
-              {formatCoins(state.stats.totalRealizedProfit)}
-            </Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.totalRealizedProfit")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>🔥{state.stats.bestTradeStreak}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.bestTradeStreak")}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>🏆{formatCoins(state.bestNetWorthEver)}</Text>
-            <Text style={styles.statLabel}>{t("achievements.stats.bestNetWorthEver")}</Text>
-          </View>
+              {cell.icon ? (
+                <GoalIcon name={cell.icon} size={26} style={{ marginBottom: 3 }} />
+              ) : (
+                <Text style={styles.statEmoji}>{cell.emoji}</Text>
+              )}
+              <Text
+                style={[styles.statValue, cell.color ? { color: cell.color } : null]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
+                {cell.value}
+              </Text>
+              <Text style={styles.statLabel} numberOfLines={2}>
+                {cell.label}
+              </Text>
+            </View>
+          ))}
         </View>
-      </View>
+      </GoalFrame>
 
-      <SectionLabel text={t("achievements.netWorthHistorySectionLabel")} color="#5fd884" />
-      <View style={styles.netWorthChartCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <GoalRibbon text={t("achievements.netWorthHistorySectionLabel")} />
+      <GoalFrame>
         <Text style={styles.netWorthChartValue}>{formatCoins(netWorth)}</Text>
         <PriceChart
           history={state.netWorthHistory}
@@ -220,11 +240,11 @@ export function AchievementsScreen() {
             </Text>
           </View>
         )}
-      </View>
+      </GoalFrame>
 
       {miniQuest && miniQuestTemplate && (
         <>
-          <SectionLabel text={t("achievements.miniQuestSectionLabel")} color="#f0776a" />
+          <GoalRibbon text={t("achievements.miniQuestSectionLabel")} />
           {(() => {
             const current = Math.max(
               0,
@@ -235,32 +255,33 @@ export function AchievementsScreen() {
               (Math.max(0, miniQuest.expiresAtTick - state.tick) * TICK_MS) / 1000
             );
             return (
-              <View style={styles.miniQuestCard}>
-                <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.icon}>{miniQuestTemplate.icon}</Text>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.titleRow}>
-                    <Text style={[styles.title, styles.titleUnlocked]}>{t(miniQuestTemplate.titleKey)}</Text>
-                    <Text style={styles.reward}>+{miniQuest.reward} 🪙</Text>
+              <GoalFrame lit>
+                <View style={styles.rowInner}>
+                  <View style={styles.rowIcon}>
+                    <Text style={styles.icon}>{miniQuestTemplate.icon}</Text>
                   </View>
-                  <Text style={styles.description}>
-                    {t(miniQuestTemplate.descriptionKey, { target: miniQuest.target })}
-                  </Text>
-                  <View style={styles.progressTrack}>
-                    <View
-                      style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
-                    />
-                  </View>
-                  <View style={styles.miniQuestFooterRow}>
-                    <Text style={styles.progressText}>
-                      {Math.floor(current)} / {miniQuest.target}
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.title, styles.titleUnlocked]} numberOfLines={2}>
+                        {t(miniQuestTemplate.titleKey)}
+                      </Text>
+                      <Text style={styles.reward}>+{miniQuest.reward} 🪙</Text>
+                    </View>
+                    <Text style={styles.description}>
+                      {t(miniQuestTemplate.descriptionKey, { target: miniQuest.target })}
                     </Text>
-                    <Text style={styles.miniQuestTicksLeft}>
-                      {t("achievements.miniQuestTicksLeft", { seconds: secondsLeft })}
-                    </Text>
+                    <GoalProgress pct={pct} />
+                    <View style={styles.miniQuestFooterRow}>
+                      <Text style={styles.progressText}>
+                        {Math.floor(current)} / {miniQuest.target}
+                      </Text>
+                      <Text style={styles.miniQuestTicksLeft}>
+                        {t("achievements.miniQuestTicksLeft", { seconds: secondsLeft })}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
+              </GoalFrame>
             );
           })()}
         </>
@@ -268,7 +289,7 @@ export function AchievementsScreen() {
 
       {weeklyChallenge && weeklyChallengeTemplate && (
         <>
-          <SectionLabel text={t("achievements.weeklyChallengeSectionLabel")} color="#e8c777" />
+          <GoalRibbon text={t("achievements.weeklyChallengeSectionLabel")} />
           {(() => {
             const current = Math.max(
               0,
@@ -279,36 +300,35 @@ export function AchievementsScreen() {
             );
             const pct = weeklyChallenge.target > 0 ? current / weeklyChallenge.target : 0;
             return (
-              <View style={styles.miniQuestCard}>
-                <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.icon}>{weeklyChallengeTemplate.icon}</Text>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.titleRow}>
-                    <Text style={[styles.title, styles.titleUnlocked]}>
-                      {t(weeklyChallengeTemplate.titleKey)}
+              <GoalFrame lit>
+                <View style={styles.rowInner}>
+                  <View style={styles.rowIcon}>
+                    <GoalIcon name="bag" size={30} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.title, styles.titleUnlocked]} numberOfLines={2}>
+                        {t(weeklyChallengeTemplate.titleKey)}
+                      </Text>
+                      <Text style={styles.reward}>
+                        {t("achievements.weeklyChallengeReward", { amount: weeklyChallenge.reward })}
+                      </Text>
+                    </View>
+                    <Text style={styles.description}>
+                      {t(weeklyChallengeTemplate.descriptionKey, { target: weeklyChallenge.target })}
                     </Text>
-                    <Text style={styles.reward}>
-                      {t("achievements.weeklyChallengeReward", { amount: weeklyChallenge.reward })}
+                    <GoalProgress pct={pct} />
+                    <Text style={styles.progressText}>
+                      {weeklyChallenge.claimed
+                        ? t("achievements.weeklyChallengeClaimed")
+                        : t("achievements.weeklyChallengeProgress", {
+                            current: Math.floor(current),
+                            target: weeklyChallenge.target,
+                          })}
                     </Text>
                   </View>
-                  <Text style={styles.description}>
-                    {t(weeklyChallengeTemplate.descriptionKey, { target: weeklyChallenge.target })}
-                  </Text>
-                  <View style={styles.progressTrack}>
-                    <View
-                      style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
-                    />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {weeklyChallenge.claimed
-                      ? t("achievements.weeklyChallengeClaimed")
-                      : t("achievements.weeklyChallengeProgress", {
-                          current: Math.floor(current),
-                          target: weeklyChallenge.target,
-                        })}
-                  </Text>
                 </View>
-              </View>
+              </GoalFrame>
             );
           })()}
         </>
@@ -316,7 +336,7 @@ export function AchievementsScreen() {
 
       {festivalProgress && (
         <>
-          <SectionLabel text={t("achievements.festivalSectionLabel")} color="#e8c777" />
+          <GoalRibbon text={t("achievements.festivalSectionLabel")} />
           {(() => {
             const current = Math.max(
               0,
@@ -324,42 +344,41 @@ export function AchievementsScreen() {
             );
             const pct = festivalProgress.target > 0 ? current / festivalProgress.target : 0;
             return (
-              <View style={styles.miniQuestCard}>
-                <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.icon}>🎪</Text>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.titleRow}>
-                    <Text style={[styles.title, styles.titleUnlocked]}>
-                      {t("achievements.festivalTitle")}
+              <GoalFrame lit>
+                <View style={styles.rowInner}>
+                  <View style={styles.rowIcon}>
+                    <Text style={styles.icon}>🎪</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.title, styles.titleUnlocked]} numberOfLines={2}>
+                        {t("achievements.festivalTitle")}
+                      </Text>
+                      <Text style={styles.reward}>
+                        {t("achievements.festivalReward", { amount: festivalProgress.reward })}
+                      </Text>
+                    </View>
+                    <Text style={styles.description}>
+                      {t("achievements.festivalDescription", { target: festivalProgress.target })}
                     </Text>
-                    <Text style={styles.reward}>
-                      {t("achievements.festivalReward", { amount: festivalProgress.reward })}
+                    <GoalProgress pct={pct} />
+                    <Text style={styles.progressText}>
+                      {festivalProgress.claimed
+                        ? t("achievements.festivalClaimed")
+                        : t("achievements.festivalProgress", {
+                            current: Math.floor(current),
+                            target: festivalProgress.target,
+                          })}
                     </Text>
                   </View>
-                  <Text style={styles.description}>
-                    {t("achievements.festivalDescription", { target: festivalProgress.target })}
-                  </Text>
-                  <View style={styles.progressTrack}>
-                    <View
-                      style={[styles.progressFill, styles.miniQuestProgressFill, { width: `${pct * 100}%` }]}
-                    />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {festivalProgress.claimed
-                      ? t("achievements.festivalClaimed")
-                      : t("achievements.festivalProgress", {
-                          current: Math.floor(current),
-                          target: festivalProgress.target,
-                        })}
-                  </Text>
                 </View>
-              </View>
+              </GoalFrame>
             );
           })()}
         </>
       )}
 
-      <SectionLabel text={t("achievements.dailyQuestsLabel")} color="#6fb8f2" />
+      <GoalRibbon text={t("achievements.dailyQuestsLabel")} />
       <View style={styles.questHeaderRow}>
         <Text style={styles.questNote}>{t("achievements.dailyQuestsNote")}</Text>
         <Text style={styles.questCount}>
@@ -374,86 +393,80 @@ export function AchievementsScreen() {
         if (!template) return null;
         const current = Math.min(template.progress(state.dailyProgress), q.target);
         const pct = q.target > 0 ? Math.min(1, current / q.target) : q.completed ? 1 : 0;
+        const art = QUEST_ART[q.templateId];
         return (
-          <View key={q.id} style={[styles.card, q.completed && styles.cardUnlocked]}>
-            <GradientFill
-              colors={q.completed ? UNLOCKED_CARD_GRADIENT : CARD_GRADIENT}
-              x1="0"
-              y1="0"
-              x2="1"
-              y2="1"
-            />
-            <Text style={[styles.icon, !q.completed && styles.iconLocked]}>
-              {q.completed ? "✅" : template.icon}
-            </Text>
-            <View style={{ flex: 1 }}>
-              <View style={styles.titleRow}>
-                <Text style={[styles.title, q.completed && styles.titleUnlocked]}>
-                  {t(template.titleKey)}
-                </Text>
-                <Text style={styles.reward}>+{q.reward} 🪙</Text>
+          <GoalFrame key={q.id} lit={q.completed}>
+            <View style={styles.rowInner}>
+              <View style={styles.rowIcon}>
+                {q.completed ? (
+                  <Text style={styles.icon}>✅</Text>
+                ) : art ? (
+                  <GoalIcon name={art} size={30} />
+                ) : (
+                  <Text style={[styles.icon, styles.iconLocked]}>{template.icon}</Text>
+                )}
               </View>
-              <Text style={styles.description}>{t(template.descriptionKey, { target: q.target })}</Text>
-              {!q.completed && (
-                <>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${pct * 100}%` }]} />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {Math.floor(current)} / {q.target}
+              <View style={{ flex: 1 }}>
+                <View style={styles.titleRow}>
+                  <Text style={[styles.title, q.completed && styles.titleUnlocked]} numberOfLines={2}>
+                    {t(template.titleKey)}
                   </Text>
-                </>
-              )}
+                  <Text style={styles.reward}>+{q.reward} 🪙</Text>
+                </View>
+                <Text style={styles.description}>{t(template.descriptionKey, { target: q.target })}</Text>
+                {!q.completed && (
+                  <>
+                    <GoalProgress pct={pct} />
+                    <Text style={styles.progressText}>
+                      {Math.floor(current)} / {q.target}
+                    </Text>
+                  </>
+                )}
+              </View>
             </View>
-          </View>
+          </GoalFrame>
         );
       })}
 
-      <SectionLabel text={t("achievements.sectionLabel")} color="#c58ee0" />
+      <GoalRibbon text={t("achievements.sectionLabel")} />
       {ACHIEVEMENTS.map((a) => {
         const unlocked = state.unlockedAchievements.includes(a.id);
         const current = Math.min(a.progress(state, netWorth), a.target);
         const pct = a.target > 0 ? Math.min(1, current / a.target) : unlocked ? 1 : 0;
         return (
-          <View key={a.id} style={[styles.card, unlocked && styles.cardUnlocked]}>
-            <GradientFill
-              colors={unlocked ? UNLOCKED_CARD_GRADIENT : CARD_GRADIENT}
-              x1="0"
-              y1="0"
-              x2="1"
-              y2="1"
-            />
-            <AchievementIcon
-              id={a.id}
-              fallback={unlocked ? a.icon : "🔒"}
-              size={26}
-              locked={!unlocked}
-              style={{ marginRight: 12, opacity: unlocked ? 1 : 0.5 }}
-            />
-            <View style={{ flex: 1 }}>
-              <View style={styles.titleRow}>
-                <Text style={[styles.title, unlocked && styles.titleUnlocked]}>{t(a.titleKey)}</Text>
-                <Text style={styles.reward}>+{a.reward} 🪙</Text>
+          <GoalFrame key={a.id} lit={unlocked}>
+            <View style={styles.rowInner}>
+              <View style={styles.rowIcon}>
+                {unlocked ? (
+                  <AchievementIcon id={a.id} fallback={a.icon} size={28} />
+                ) : (
+                  <GoalIcon name="lock" size={28} />
+                )}
               </View>
-              <Text style={styles.description}>{t(a.descriptionKey)}</Text>
-              {!unlocked && (
-                <>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${pct * 100}%` }]} />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {Math.floor(current)} / {a.target}
+              <View style={{ flex: 1 }}>
+                <View style={styles.titleRow}>
+                  <Text style={[styles.title, unlocked && styles.titleUnlocked]} numberOfLines={2}>
+                    {t(a.titleKey)}
                   </Text>
-                </>
-              )}
+                  <Text style={styles.reward}>+{a.reward} 🪙</Text>
+                </View>
+                <Text style={styles.description}>{t(a.descriptionKey)}</Text>
+                {!unlocked && (
+                  <>
+                    <GoalProgress pct={pct} />
+                    <Text style={styles.progressText}>
+                      {Math.floor(current)} / {a.target}
+                    </Text>
+                  </>
+                )}
+              </View>
             </View>
-          </View>
+          </GoalFrame>
         );
       })}
 
-      <SectionLabel text={t("achievements.compendiumSectionLabel")} color="#6fb8f2" />
-      <View style={styles.compendiumCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+      <GoalRibbon text={t("achievements.compendiumSectionLabel")} />
+      <GoalFrame>
         <Text style={styles.compendiumGroupLabel}>
           {t("achievements.compendiumGoods", {
             count: GOODS.filter((g) => isGoodUnlocked(g, state)).length,
@@ -499,20 +512,12 @@ export function AchievementsScreen() {
             total: RESEARCH_NODES.length,
           })}
         </Text>
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${(state.researched.length / RESEARCH_NODES.length) * 100}%` },
-            ]}
-          />
-        </View>
-      </View>
+        <GoalProgress pct={state.researched.length / RESEARCH_NODES.length} />
+      </GoalFrame>
 
-      <SectionLabel text={t("backup.sectionLabel")} color="#a0917a" />
+      <GoalRibbon text={t("backup.sectionLabel")} />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <View style={styles.backupCard}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <GoalFrame>
           <Text style={styles.description}>{t("backup.description")}</Text>
           <ScalePressable onPress={handleCopyCode} style={styles.backupBtn} scaleTo={0.97}>
             <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
@@ -558,7 +563,7 @@ export function AchievementsScreen() {
               {importFeedback.text}
             </Text>
           )}
-        </View>
+        </GoalFrame>
       </KeyboardAvoidingView>
     </ScrollView>
   );
@@ -573,7 +578,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
-  summaryRow: { flexDirection: "row", alignItems: "baseline", marginBottom: SPACING.sm },
+  summaryRow: { flexDirection: "row", alignItems: "baseline", marginBottom: SPACING.sm, flexWrap: "wrap" },
   summaryBig: {
     color: COLORS.accent,
     fontSize: TYPE.display,
@@ -592,7 +597,13 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   statsGrid: { flexDirection: "row", flexWrap: "wrap" },
-  statItem: { width: "33.33%", marginBottom: SPACING.md, alignItems: "center", paddingHorizontal: 6 },
+  statsBody: { paddingHorizontal: 8, paddingVertical: 8 },
+  statItem: { width: "33.33%", alignItems: "center", paddingHorizontal: 4, paddingVertical: SPACING.sm },
+  statDivV: { borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: "rgba(232,199,119,0.18)" },
+  statDivH: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "rgba(232,199,119,0.18)" },
+  statEmoji: { fontSize: 24, marginBottom: 3, lineHeight: 28 },
+  rowInner: { flexDirection: "row", alignItems: "center" },
+  rowIcon: { width: 34, alignItems: "center", justifyContent: "center", marginRight: 10 },
   statValue: {
     color: COLORS.accent,
     fontSize: TYPE.heading,
