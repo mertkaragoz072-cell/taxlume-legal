@@ -1,13 +1,16 @@
 import React, { useEffect, useRef } from "react";
-import { View, StyleSheet, Image, Animated, Easing } from "react-native";
+import { StyleSheet, Image, Animated, Easing, View, useWindowDimensions } from "react-native";
 import { Text } from "./AppText";
-import caravanGuideImage from "../../assets/caravan-merchant-guide.png";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
-import { cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
-import { Bar, FrameBox } from "./ModalKit";
+import { FONT, SPACING } from "../theme";
+import frameArt from "../../assets/ui/modal/cv_frame.webp";
+import { upperForUi } from "../utils/uiLanguage";
 import { ScalePressable } from "./ScalePressable";
 import { SpotlightId } from "./Spotlight";
+
+const ART_W = 702;
+const ART_H = 558;
 
 interface CaravanStep {
   titleKey: string;
@@ -55,6 +58,8 @@ export function CaravanTutorialModal({
   onSkip,
 }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
+  const { width: winW } = useWindowDimensions();
+  const cardW = Math.min(winW - SPACING.md * 2, 460);
 
   useEffect(() => {
     if (!visible) return;
@@ -72,6 +77,31 @@ export function CaravanTutorialModal({
   if (!step) return null;
   const isLast = stepIndex === CARAVAN_STEPS.length - 1;
 
+  const k = cardW / ART_W;
+  const box = (x: number, y: number, bw: number, bh: number) => ({
+    position: "absolute" as const,
+    left: x * k,
+    top: y * k,
+    width: bw * k,
+    height: bh * k,
+  });
+  const u = Math.max(0.8, Math.min(1.15, cardW / 360));
+  const fit = (text: string, boxW: number, max: number, em: number) =>
+    Math.min(max, (boxW * k * 0.96) / (Math.max(1, text.length) * em));
+  const guide = t(language, "caravanTutorial.guideTitle");
+  const role = t(language, "caravanTutorial.guideRole").replace(/^[^\p{L}\p{N}]+/u, "");
+  const title = upperForUi(t(language, step.titleKey));
+  const body = t(language, step.textKey, { threshold: tradeUnlockThreshold });
+  const progress = `${stepIndex + 1} / ${CARAVAN_STEPS.length}`;
+  const nextLabel = isLast ? t(language, "common.close") : t(language, "common.next");
+  // Largest body size at which the words still fit the painted text field.
+  let bodySize = 14.5 * u;
+  const fieldW = 332 * k;
+  const fieldH = 172 * k;
+  while (bodySize > 9 && Math.ceil((body.length * 0.5 * bodySize) / fieldW) * bodySize * 1.25 > fieldH) {
+    bodySize -= 0.25;
+  }
+
   return (
     <Animated.View
       style={[
@@ -82,51 +112,56 @@ export function CaravanTutorialModal({
         },
       ]}
     >
-      <FrameBox>
-        <View style={styles.row}>
-          <View style={styles.portraitSpacer} />
-          <View style={styles.speech}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>
-                {t(language, "caravanTutorial.guideTitle")}
-              </Text>
-              <Text style={styles.progress}>
-                {stepIndex + 1} / {CARAVAN_STEPS.length}
-              </Text>
-            </View>
-            <Text style={styles.role} numberOfLines={1}>
-              {t(language, "caravanTutorial.guideRole")}
-            </Text>
-
-            <Text style={styles.title}>{t(language, step.titleKey)}</Text>
-            <Text style={styles.text}>{t(language, step.textKey, { threshold: tradeUnlockThreshold })}</Text>
-          </View>
+      <View style={{ width: cardW, height: ART_H * k, alignSelf: "center" }}>
+        <Image source={frameArt} style={styles.fill} resizeMode="stretch" />
+        <View style={[box(246, 58, 223, 37), styles.center]} pointerEvents="none">
+          <Text style={[styles.plateName, { fontSize: fit(guide, 215, 20 * u, 0.62) }]} numberOfLines={1}>
+            {guide}
+          </Text>
         </View>
-
-        <View style={styles.footer}>
-          {!isLast && (
-            <ScalePressable onPress={onSkip} style={styles.skipBtn} scaleTo={0.96}>
-              <Text style={styles.skipText}>{t(language, "common.skip")}</Text>
-            </ScalePressable>
-          )}
-          <ScalePressable onPress={onNext} style={styles.nextBtn} scaleTo={0.96}>
-            <Bar kind="btn" height={38} />
-            <Text style={styles.nextText}>
-              {isLast ? t(language, "common.close") : t(language, "common.next")}
+        <View style={[box(311, 94, 145, 27), styles.center]} pointerEvents="none">
+          <Text style={[styles.plateRole, { fontSize: fit(role, 140, 13 * u, 0.6) }]} numberOfLines={1}>
+            {role}
+          </Text>
+        </View>
+        <View style={[box(564, 70, 79, 35), styles.center]} pointerEvents="none">
+          <Text style={[styles.counter, { fontSize: 15 * u }]} numberOfLines={1}>
+            {progress}
+          </Text>
+        </View>
+        <View style={[box(308, 144, 322, 44), styles.center]} pointerEvents="none">
+          <Text style={[styles.title, { fontSize: fit(title, 310, 24 * u, 0.82) }]} numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
+        <View style={box(325, 211, 332, 172)} pointerEvents="none">
+          <Text style={[styles.body, { fontSize: bodySize, lineHeight: bodySize * 1.25 }]}>{body}</Text>
+        </View>
+        {!isLast && (
+          <ScalePressable
+            onPress={onSkip}
+            scaleTo={0.96}
+            accessibilityLabel={t(language, "common.skip")}
+            style={[box(324, 411, 96, 53), styles.center]}
+          >
+            <Text style={[styles.skipText, { fontSize: fit(t(language, "common.skip"), 70, 17 * u, 0.6) }]}>
+              {t(language, "common.skip")}
             </Text>
           </ScalePressable>
-        </View>
-      </FrameBox>
-
-      {/* Sibling of the card, not a child of it — the card clips its own
-          content (overflow: hidden, for its rounded corners), which would
-          crop him at its edge. Rendered after it so document order puts
-          him on top with no zIndex needed. Positioned against the dock
-          rather than the card so his left edge can sit further out than
-          the card's own padding, past the speech bubble instead of tucked
-          inside it. */}
-      <View style={styles.portraitFloat} pointerEvents="none">
-        <Image source={caravanGuideImage} style={styles.characterImage} resizeMode="contain" />
+        )}
+        <ScalePressable
+          onPress={onNext}
+          scaleTo={0.97}
+          accessibilityLabel={nextLabel}
+          style={box(430, 401, 223, 76)}
+        >
+          <View style={styles.nextBox}>
+            <Text style={[styles.nextText, { fontSize: fit(nextLabel, 100, 24 * u, 0.6) }]} numberOfLines={1}>
+              {nextLabel}
+            </Text>
+            {!isLast && <Text style={[styles.nextText, { fontSize: 26 * u, marginLeft: 6 }]}>›</Text>}
+          </View>
+        </ScalePressable>
       </View>
     </Animated.View>
   );
@@ -154,85 +189,20 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.sm,
     zIndex: 30,
   },
-  card: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.accent, 0.45),
-    ...cardShadow,
+  fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  center: { alignItems: "center", justifyContent: "center" },
+  plateName: { color: "#3b2210", fontFamily: FONT.serif },
+  plateRole: { color: "#5a3a1c", fontFamily: FONT.serif },
+  counter: { color: "#f4dca0", fontFamily: FONT.serif, lineHeight: 18 },
+  title: { color: "#fbeccb", fontFamily: FONT.serif, textAlign: "center" },
+  body: { color: "#f6e8c8", fontFamily: FONT.medium },
+  skipText: { color: "#f6e8c8", fontFamily: FONT.serif },
+  nextBox: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingLeft: 36 },
+  nextText: {
+    color: "#fbeccb",
+    fontFamily: FONT.serif,
+    textShadowColor: "rgba(20,40,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  row: { flexDirection: "row", alignItems: "flex-start" },
-  // Reserves the row's own space for the floating portrait (below); it
-  // carries no image itself. Narrower than the portrait's own width for
-  // the same reason as MentorCoach's: he starts further left, past the
-  // card's padding, than this spacer needs to reach — and narrower still
-  // than before, so the speech column gets more breathing room and the
-  // name/progress line stops wrapping.
-  portraitSpacer: { width: 150, marginRight: SPACING.sm },
-  // Positioned against the dock, not the card, and pulled past its left
-  // edge with a negative offset — past the card's own padding rather than
-  // flush with it — so he reads as breaking out of the speech bubble like
-  // a comic panel, not just floating a little above it. Anchored to the
-  // dock's bottom rather than a fixed distance from the top: a short beat
-  // makes a short card, and top-anchoring left empty space below him once
-  // the card's own bottom edge no longer reached as far down as he did.
-  // Bottom-anchoring means he always meets the card's edge, however tall
-  // that step's text makes it, and simply rides higher above the top on
-  // the short beats instead. The bottom offset matches the dock's own
-  // paddingBottom — plain `bottom: 0` sits against the dock's outer edge,
-  // past the padding, which let him overshoot below the card's own border.
-  portraitFloat: { position: "absolute", left: -SPACING.md, bottom: SPACING.sm },
-  // Matches the bust-crop's own aspect ratio (480×376) so "contain" fills
-  // the box instead of letterboxing against the old portrait-shaped one.
-  characterImage: { width: 200, height: 157 },
-  speech: { flex: 1 },
-  nameRow: { flexDirection: "row", alignItems: "baseline" },
-  // flex: 1 (not the default) plus numberOfLines on the Text itself caps
-  // the width "name" is allowed to claim before truncating, so "progress"
-  // still lands on the right instead of getting pushed off past the card's
-  // own edge (the old justifyContent:"space-between" is no longer needed
-  // for that). The role used to be nested inside this same Text — "Caravan
-  // Guide · 🐪 Caravan Master" plus the counter together didn't fit even a
-  // single line on a real phone width and truncated mid-word — it's now
-  // its own line below instead (see `role` and its render site).
-  name: {
-    flex: 1,
-    color: "#f4c43c",
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-  },
-  role: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.regular,
-    fontFamily: FONT.medium,
-    marginTop: 1,
-  },
-  progress: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    fontFamily: FONT.medium,
-    marginLeft: SPACING.sm,
-  },
-  title: {
-    color: "#fff4d8",
-    fontSize: TYPE.heading,
-    fontFamily: FONT.display,
-    marginTop: 4,
-    marginBottom: 3,
-  },
-  text: { color: "#f0e2c4", fontSize: TYPE.label, lineHeight: 18 },
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: SPACING.sm },
-  skipBtn: { paddingVertical: 8, paddingHorizontal: SPACING.sm, marginRight: SPACING.xs },
-  skipText: { color: "#e8dcc0", fontSize: TYPE.caption, fontFamily: FONT.medium },
-  nextBtn: {
-    height: 38,
-    minWidth: 110,
-    paddingHorizontal: SPACING.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nextText: { color: "#fff8e6", fontFamily: FONT.black, fontSize: TYPE.label, lineHeight: 18 },
 });
