@@ -5,6 +5,7 @@
 // Every sale is one synchronous commit (stock, gold, order status, customer removal), so an order can be paid only once.
 import { CAFE } from '../data/economy.js';
 import { weeklyProduct } from './events.js';
+import { weatherOf } from './weather.js';
 
 export const LOOKS = ['boy_backpack', 'girl_basket', 'oldman', 'boy_cap', 'girl_glasses', 'girl_red', 'grandma', 'boy_redcap'];
 const ms = (s) => Math.round(s * 1000);
@@ -34,6 +35,8 @@ export class Cafe {
     this.spawnIn = ms(this.cfg.firstSpawnSec);
     this.combo = 0;             // sales in a row served within the combo window (memory only; resets with the cafe)
     this.comboLeft = 0;         // ms of cafe time left to keep the streak going
+    this.recentSold = [];       // the last few products sold (variety bonus)
+    this.results = [];          // the last guests' mood: true = left happy, false = gave up (star rating)
   }
 
   // ---- queries --------------------------------------------------------------------------------
@@ -99,7 +102,27 @@ export class Cafe {
   nextInterval() {
     const [a, b] = this.cfg.spawnEverySec;
     const pace = this.cfg.tablesUpgrade ? Math.min(1, this.cfg.baseTables / this.tableCount()) : 1;   // more tables, shorter gaps
-    return ms((a + this.rng() * (b - a)) * pace * (this.game.shop?.arrivalFactor() ?? 1));    // decoration makes guests come a little more often
+    const b2 = this.cfg.bonuses;
+    const mood = b2?.rating ? 1 - b2.rating.pace * (this.rating().stars - 3) : 1;                       // a well-liked cafe fills up a little faster
+    const rain = b2?.weather && this.weather() === 'rain' ? b2.weather.slower : 1;
+    return ms((a + this.rng() * (b - a)) * pace * mood * rain * (this.game.shop?.arrivalFactor() ?? 1));    // decoration makes guests come a little more often
+  }
+
+  /** 'rain' or 'clear' today (always 'clear' when the bonuses are switched off). */
+  weather() { return this.cfg.bonuses?.weather ? weatherOf(this.game.clock(), this.cfg.bonuses.weather.rainChance) : 'clear'; }
+
+  /** The cafe's star rating, 1 to 5 in half stars: the share of happy guests among the last few (3 stars until there are 5 results). */
+  rating() {
+    const n = this.results.length;
+    if (n < 5) return { stars: 3, happy: this.results.filter(Boolean).length, total: n };
+    const happy = this.results.filter(Boolean).length;
+    return { stars: Math.round((1 + 4 * happy / n) * 2) / 2, happy, total: n };
+  }
+
+  remember(happy) {
+    const w = this.cfg.bonuses?.rating?.window ?? 20;
+    this.results.push(happy);
+    if (this.results.length > w) this.results.shift();
   }
 
   /** Guests that may wait outside for a table: the café's own limit plus the waiting-area expansion. */
@@ -154,7 +177,8 @@ export class Cafe {
     const fav = this.cfg.bonuses?.favorite, favorite = fav ? this.favoriteOf(c.look) : null;
     if (favorite && ids.includes(favorite) && this.rng() < fav.chance) return this.addOrder(c, favorite);   // (the random number is only drawn when a favourite can be ordered)
     const star = this.cfg.bonuses?.event ? weeklyProduct(this.game) : null;                                  // the star product of the week is ordered more often
-    const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1) * (id === star ? this.cfg.bonuses.event.weight : 1));
+    const rainy = this.cfg.bonuses?.weather && this.weather() === 'rain';
+    const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1) * (id === star ? this.cfg.bonuses.event.weight : 1) * (rainy && this.game.productsDef[id].station === 'coffee' ? this.cfg.bonuses.weather.hotDrinkWeight : 1));
     let r = this.rng() * weights.reduce((s, w) => s + w, 0), product = ids[ids.length - 1];
     for (let i = 0; i < ids.length; i++) { r -= weights[i]; if (r < 0) { product = ids[i]; break; } }
     return this.addOrder(c, product);
@@ -178,7 +202,7 @@ export class Cafe {
     const order = this.orderOf(c);
     if (order && order.status === 'open') order.status = 'cancelled';
     this.customers = this.customers.filter((x) => x !== c);
-    if (!happy) { this.combo = 0; this.comboLeft = 0; }                  // a guest who gave up breaks the streak
+    if (!happy) { this.combo = 0; this.comboLeft = 0; this.remember(false); }                  // a guest who gave up breaks the streak
     this.game.emit('customer', { type: 'leave', id: c.id, happy, table: c.table });
   }
 
@@ -216,21 +240,25 @@ export class Cafe {
 
   /**
    * Service bonuses for the sale being made now (see CAFE.bonuses). Also advances the combo streak, so call it exactly once per sale.
-   * Returns { pct, combo, fast, favorite, event }: pct is the total extra share of the income, the rest say which parts applied.
+   * Returns { pct, combo, fast, favorite, event, variety }: pct is the total extra share of the income, the rest say which parts applied.
    */
   serviceBonus(c, order) {
     const b = this.cfg.bonuses;
-    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false, event: false };
+    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false };
     const fast = this.patienceFraction(c) >= b.fast.minPatience;
     const favorite = order.product === this.favoriteOf(c.look);
     this.combo = this.comboLeft > 0 ? this.combo + 1 : 1;
     this.comboLeft = ms(b.combo.windowSec);
     const steps = Math.min(b.combo.maxSteps, this.combo - 1);
     const event = !!b.event && order.product === weeklyProduct(this.game);
+    this.recentSold.push(order.product);
+    if (this.recentSold.length > b.variety.window) this.recentSold.shift();
+    const variety = !!b.variety && this.recentSold.length === b.variety.window && new Set(this.recentSold).size === b.variety.window;
+    this.remember(true);
     const stats = this.game.stats;
     stats.bestCombo = Math.max(stats.bestCombo ?? 0, this.combo);
     if (favorite) stats.favoritesServed = (stats.favoritesServed ?? 0) + 1;
-    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0), combo: this.combo, fast, favorite, event };
+    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0) + (variety ? b.variety.share : 0), combo: this.combo, fast, favorite, event, variety };
   }
 
   deliverToCustomer(customerId) {
@@ -255,7 +283,7 @@ export class Cafe {
     this.customers = state.customers.map((c) => ({ ...c }));
     this.orders = state.orders.map((o) => ({ ...o }));
     this.holds = {};                 // tables being cleared are free after a restart
-    this.combo = 0; this.comboLeft = 0;
+    this.combo = 0; this.comboLeft = 0; this.recentSold = []; this.results = [];
     this.spawnIn = this.nextInterval();
     this.last = null;                // elapsed time while the app was closed is never counted as waiting time
   }

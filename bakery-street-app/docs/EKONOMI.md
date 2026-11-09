@@ -202,3 +202,14 @@ Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda 
 - **Gün/gece** (`src/scene/daylight.js`): gerçek yerel saate göre kafe rengi (gece mavi-koyu, akşam turuncu, gündüz yok). Yalnızca görünüm.
 - **Tepkiler:** mutlu giden müşteri kalp (favori: iki kalp), sabrı bitip giden öfke işareti.
 - Bu katman da cihazda denenmedi; haftalık ürün ve rozet ödülleri ekonomiyi biraz daha hızlandırır, dengeyi ilk gerçek oyundan sonra `scripts/balance-shop.mjs` ile yeniden ölçün.
+
+### Üçüncü katman (çeşitlilik, hava, kafe puanı, mutfak yardımcısı, haftalık hedef)
+
+- **Çeşitlilik bonusu** (`bonuses.variety`): art arda 3 satış üç farklı ürünse +%5.
+- **Hava** (`bonuses.weather`, `src/game/weather.js`): günün tarihinden hesaplanır (kayıt yok), günlerin ~%22'si yağmurlu; yağmurda kahve makinesi ürünleri 1,6 kat sık istenir, müşteri 1,1 kat yavaş gelir; sahnede yağmur çizilir.
+- **Kafe puanı** (`bonuses.rating`): son 20 müşterinin mutlu ayrılma oranından ★1-5 (5 sonuç gelene dek ★3); yıldız başına ±%3 geliş hızı. Hafızada tutulur, kaydedilmez.
+- **Mutfak yardımcısı** (`UPGRADES.kitchenHelper`, 3.500 altın): makine işini bitirince son yapılan ürünü malzeme ve yer varsa yeniden başlatır; hiçbir şey satın almaz.
+- **Haftalık hedef** (`GOALS.weekly`): Pazartesi-Pazar, 4'lü havuzdan dönüşümlü tek büyük hedef (800-1000 altın, aşamayla büyür).
+- **Mevsim tonu** ve **konuşma balonları**, **Fotoğraf Modu** (menüden): yalnızca görünüm.
+
+**Robot ile ölçüm** (`node scripts/simulate-economy.mjs [gün] [dk/gün] [seed] [bonus 1/0]`): günde 30 dk oynayan ortalama bir robotla 7 günde, bonuslar açıkken toplam kazanç kapalıya göre 3 denemede %3, %4 ve %12 yüksek çıktı (ortalama ≈ %7). Satışın kendisi toplamın ~%55'i; geri kalanı görev, hedef, seviye/aşama ödülü, günlük ödül ve albüm. Robot gerçek oyuncu değildir; kasa kutusu (uygulama kapalıyken birikir) bu simülasyonda yoktur.

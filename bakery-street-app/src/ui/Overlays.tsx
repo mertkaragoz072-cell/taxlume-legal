@@ -22,6 +22,9 @@ export function QuestPanel() {
   const { game, quests, goals } = world, u = useU();
   useRefresh();
   const todays = goals.list() as any[];
+  const week = goals.weekly() as any;
+  const rating = world.cafe.rating() as { stars: number; total: number };
+  const rainy = world.cafe.weather() === "rain";
   const star = world.cafe.cfg.bonuses?.event ? weeklyProduct(game) as string | null : null;
   const rank = (s: any) => (s.claimed ? 2 : s.complete ? 0 : 1);
   const list = (quests.list() as any[]).slice().sort((a, b) => rank(a) - rank(b));
@@ -29,6 +32,7 @@ export function QuestPanel() {
   const rewardText = (r: any) => [r.gold ? `💰 ${fmt(r.gold)}` : "", ...Object.entries(r.ingredients ?? {}).map(([id, n]) => `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${n}`)].filter(Boolean).join(" · ");
   return (
     <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
+      <Meta text={`${rainy ? "🌧 Bugün yağmurlu: sıcak içecekler daha çok istenir, müşteri biraz az gelir" : "☀ Bugün hava açık"} · Kafe puanı: ★ ${rating.stars.toFixed(1)}${rating.total < 5 ? " (henüz yeni)" : ""}`} />
       {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
       <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
       {todays.map((g) => (
@@ -40,6 +44,18 @@ export function QuestPanel() {
           <Meta tone="reward" text={`Ödül: 💰 ${fmt(g.gold)}`} />
         </Card>
       ))}
+      {week ? (
+        <>
+          <Meta text="Bu haftanın hedefi (Pazartesi yenilenir)" />
+          <Card tone={week.claimed ? "locked" : week.complete ? "ready" : undefined} left={<EmojiIcon emoji={week.icon} size={u * 7} />}
+            right={week.claimed ? <Btn label="✓ Alındı" disabled /> : week.complete ? <Btn label="Ödülü Al" onPress={() => { const r = goals.claimWeekly(); if (r.ok) act.toast(`🎁 ${week.name}: +${fmt(r.gold)} altın`, 2400); else act.warn(r.message); }} /> : <Btn label="Devam ediyor" disabled />}>
+            <Title name={week.name} />
+            <Meta text={`Bu hafta ${week.text}`} />
+            <Bar value={week.progress / week.target} text={`${fmt(week.progress)}/${fmt(week.target)}`} />
+            <Meta tone="reward" text={`Ödül: 💰 ${fmt(week.gold)}`} />
+          </Card>
+        </>
+      ) : null}
       <Meta text="Görevler" />
       {list.map((s) => {
         const q = s.def;

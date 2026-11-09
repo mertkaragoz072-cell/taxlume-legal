@@ -114,10 +114,10 @@ test('daily goals: a new day brings a new set and fresh progress; goals grow wit
 });
 
 test('daily goals: unreadable saved data starts a clean day; the save carries till and goals', () => {
-  assert.deepEqual(validateGoals(null), { date: null, baseline: {}, claimed: [] });
-  assert.deepEqual(validateGoals({ date: '2025-13-40', baseline: { soldTotal: 3 }, claimed: ['sell'] }), { date: null, baseline: {}, claimed: [] });
+  assert.deepEqual(validateGoals(null), { date: null, baseline: {}, claimed: [], week: null, weekBase: {}, weekClaimed: false });
+  assert.deepEqual(validateGoals({ date: '2025-13-40', baseline: { soldTotal: 3 }, claimed: ['sell'] }), { date: null, baseline: {}, claimed: [], week: null, weekBase: {}, weekClaimed: false });
   const v = validateGoals({ date: '2025-03-10', baseline: { soldTotal: 3, bogus: 9, goldEarned: -4 }, claimed: ['sell', 'sell', 'zzz'] });
-  assert.deepEqual(v, { date: '2025-03-10', baseline: { soldTotal: 3 }, claimed: ['sell'] });
+  assert.deepEqual(v, { date: '2025-03-10', baseline: { soldTotal: 3 }, claimed: ['sell'], week: null, weekBase: {}, weekClaimed: false });
   const { storage, game, saves } = make();
   game.earn(1, 'other'); saves.save();
   const saved = JSON.parse(storage.getItem(SAVE_KEY));

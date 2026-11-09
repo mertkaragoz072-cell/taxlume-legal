@@ -77,12 +77,15 @@ export const CAFE = {
   /**
    * Service bonuses, paid on top of a sale as extra percent of its income (they add up, never multiply; the sum is capped by the parts below).
    *  combo    : sales that follow each other within `windowSec` of cafe time build a streak; every step after the first adds `step` (up to `maxSteps` steps)
-   *  fast     : serving while the guest still has at least `minPatience` of their patience left adds `share`
+   *  fast     : serving while the guest still has at least `minPatience` of their patience left (within about 15 s of their order) adds `share`
    *  event    : the star product of the week (see src/game/events.js) is ordered `weight` times as often and pays `share` extra
+   *  variety  : the last `window` sales were all different products: `share` extra
+   *  weather  : on a rainy day (about `rainChance` of days, decided by the date) guests order coffee-station drinks `hotDrinkWeight` times as often and arrive `slower` times as slowly
+   *  rating   : the cafe's star rating (share of happy guests among the last `window`) speeds arrivals up or down by `pace` per star above or below 3
    *  favorite : every guest look has one favourite product; ordering it is `chance` likely (when unlocked) and serving it adds `share`
-   * Best case together: 0.03*5 + 0.08 + 0.20 + 0.15 = +58%; a normal busy shift lands around +10-15%. Set `bonuses: null` to switch them all off.
+   * Best case together: 0.03*5 + 0.06 + 0.20 + 0.15 + 0.05 = +61%; a normal busy shift lands around +10-15%. Set `bonuses: null` to switch them all off.
    */
-  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.6, share: 0.08 }, favorite: { chance: 0.3, share: 0.2 }, event: { share: 0.15, weight: 2 } },
+  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.85, share: 0.06 }, favorite: { chance: 0.3, share: 0.2 }, event: { share: 0.15, weight: 2 }, variety: { window: 3, share: 0.05 }, weather: { rainChance: 0.22, hotDrinkWeight: 1.6, slower: 1.1 }, rating: { window: 20, pace: 0.03 } },
 };
 
 /** Guest album: names of the guest looks, and the one-time rewards (a look served for the first time; every look served). */
@@ -111,6 +114,13 @@ export const GOALS = {
     { id: 'earn', name: 'Kazançlı gün', icon: '💰', stat: 'goldEarned', label: 'altın kazan', target: 500, gold: 200 },
     { id: 'buy', name: 'Malzeme turu', icon: '🛒', stat: 'marketPurchases', label: 'kez malzeme al', target: 2, gold: 120 },
     { id: 'spend', name: 'Yatırım zamanı', icon: '🪙', stat: 'goldSpent', label: 'altın harca', target: 300, gold: 160 },
+  ],
+  /** One bigger goal a week (Monday to Sunday), picked in rotation; progress counts from the start of the week. Same stage growth. */
+  weekly: [
+    { id: 'wsell', name: 'Haftanın satış hedefi', icon: '📈', stat: 'soldTotal', label: 'ürün sat', target: 60, gold: 900 },
+    { id: 'wmake', name: 'Haftanın üretim hedefi', icon: '🏭', stat: 'producedTotal', label: 'ürün üret', target: 80, gold: 800 },
+    { id: 'wearn', name: 'Haftanın kazanç hedefi', icon: '💎', stat: 'goldEarned', label: 'altın kazan', target: 6000, gold: 1000 },
+    { id: 'wfav', name: 'Favori haftası', icon: '♥', stat: 'favoritesServed', label: 'müşteriye favorisini sun', target: 12, gold: 900 },
   ],
 };
 
@@ -143,6 +153,10 @@ export const UPGRADES = {
   showcaseCapacity: {
     name: 'Satış vitrini', icon: '🗄️', costs: [400, 1200, 3000, 7000, 15000], values: [10, 15, 20, 30, 40, 60],
     describe: (v) => `Vitrin her üründen ${v} adet tutar`,
+  },
+  kitchenHelper: {
+    name: 'Mutfak yardımcısı', icon: '👩‍🍳', costs: [3500], values: [0, 1],
+    describe: (v) => (v ? 'Bir makine işini bitirince en son yaptığın ürünü, malzeme varsa kendiliğinden yeniden başlatır' : 'Yok'),
   },
   waiterTraining: {
     name: 'Garson eğitimi', icon: '🧑‍🍳', costs: [1500, 4500, 11000], values: [1, 1.2, 1.4, 1.7],
@@ -404,6 +418,7 @@ export const SHOP_ITEMS = [
   { id: 'waiter1', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 1, name: 'Garson Eğitimi I', desc: 'Garson daha hızlı yürür; sipariş masaya çabuk ulaşır.', art: { icon: 'u-speed' } },
   { id: 'waiter2', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 2, name: 'Garson Eğitimi II', desc: 'Daha da hızlı: servis süresi kısalır, hızlı servis bonusu kolaylaşır.', art: { icon: 'u-speed' } },
   { id: 'waiter3', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 3, name: 'Garson Eğitimi III', desc: 'Usta garson: en hızlı servis.', art: { icon: 'u-speed' } },
+  { id: 'helper1', category: 'expansion', kind: 'upgrade', upgrade: 'kitchenHelper', level: 1, name: 'Mutfak Yardımcısı', desc: 'Makine işini bitirince en son yapılan ürünü, malzeme varsa kendiliğinden tekrar başlatır.', art: { icon: 'u-oven' } },
   { id: 'table4', category: 'expansion', kind: 'upgrade', upgrade: 'cafeTables', level: 2, name: '4. Masa Takımı', desc: 'Salon tamamen dolar.', art: { image: 'table' } },
   { id: 'waitingA', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 2, name: 'Bekleme Köşesi', desc: 'Vitrinin önünde bir misafir daha bekleyebilir. Halat ve direkler eklenir.', price: 2500, minLevel: 3, effect: { queue: 1 }, art: { image: 'rug-runner' } },
   { id: 'waitingB', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 3, name: 'Geniş Bekleme Alanı', desc: 'İki misafir daha bekleyebilir.', price: 9000, minLevel: 8, stage: 2, effect: { queue: 2 }, requires: [{ item: 'waitingA' }], art: { image: 'rug-runner' } },

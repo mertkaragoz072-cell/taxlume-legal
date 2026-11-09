@@ -121,3 +121,103 @@ test('time of day: night is cool and dark, midday has no tint, evening is warm, 
   assert.deepEqual(daylightTint(NaN), daylightTint(12));
   assert.equal(hourOf(at(2025, 3, 10, 18)), 18);
 });
+
+// ---- variety, weather, rating, kitchen helper, weekly goal, season ---------------------------------------------------------
+import { weatherOf } from '../src/game/weather.js';
+import { seasonTint } from '../src/scene/daylight.js';
+import { DailyGoals } from '../src/game/goals.js';
+import { GOALS } from '../src/data/economy.js';
+
+function bonusCafe(extra = {}) {
+  const clock = { now: at(2025, 3, 10) }, player = { gold: 1e6 };
+  const game = new Game(player, {}, () => clock.now);
+  new Shop(game);
+  const bonuses = { ...CAFE.bonuses, event: null, ...extra };
+  const cafe = new Cafe(game, { rng: () => 0.9, config: { ...CAFE, bonuses, firstSpawnSec: 999, spawnEverySec: [999, 999], eatSec: 0, cleanSec: 0, orderPatienceSec: 5000, tables: 4, queueMax: 4 } });
+  cafe.setActive(true); game.tick();
+  return { clock, game, cafe, player };
+}
+const sell = (cafe, game, product, look = 'oldman') => { const r = serve(cafe, game, look, product); cafe.holds = {}; return r; };
+
+test('variety: three different products in a row pay +5%; repeating one does not', () => {
+  const { cafe, game } = bonusCafe();
+  const a = sell(cafe, game, 'bread'), b = sell(cafe, game, 'coffee'), c = sell(cafe, game, 'croissant');
+  assert.ok(!a.bonus.variety && !b.bonus.variety && c.bonus.variety);
+  const d = sell(cafe, game, 'croissant');
+  assert.ok(!d.bonus.variety);
+});
+
+test('weather: decided by the date alone, rainy about as often as configured, rain brings hot drinks and slows arrivals', () => {
+  const rain = [];
+  for (let d = 0; d < 400; d++) rain.push(weatherOf(at(2025, 1, 1 + d), 0.22));
+  const share = rain.filter((w) => w === 'rain').length / rain.length;
+  assert.ok(share > 0.15 && share < 0.3, `rain share ${share}`);
+  assert.equal(weatherOf(at(2025, 3, 10, 6), 0.22), weatherOf(at(2025, 3, 10, 23), 0.22));
+  assert.equal(weatherOf(at(2025, 3, 10), 0), 'clear');
+  // find a rainy and a clear day and compare the cafe's behaviour
+  let rainy = null, clear = null;
+  for (let d = 0; d < 60 && !(rainy && clear); d++) { const t = at(2025, 4, 1 + d); if (weatherOf(t, 0.22) === 'rain') rainy ??= t; else clear ??= t; }
+  const mk = (t) => { const x = bonusCafe(); x.clock.now = t; x.cafe.last = null; return x; };
+  const wet = mk(rainy), dry = mk(clear);
+  assert.equal(wet.cafe.weather(), 'rain'); assert.equal(dry.cafe.weather(), 'clear');
+  const coffeeShare = (x) => { let n = 0, seed = 5; x.cafe.rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }; x.cafe.cfg = { ...x.cafe.cfg, bonuses: { ...x.cafe.cfg.bonuses, favorite: null } }; for (let i = 0; i < 3000; i++) { const g = x.cafe.arrive(); g.look = 'oldman'; if (x.game.productsDef[x.cafe.makeOrder(g).product].station === 'coffee') n++; x.cafe.customers = []; } return n / 3000; };
+  assert.ok(coffeeShare(wet) > coffeeShare(dry) + 0.04);
+  const gap = (x) => { let s = 0; x.cafe.rng = () => 0.5; for (let i = 0; i < 5; i++) s += x.cafe.nextInterval(); return s; };
+  assert.ok(gap(wet) > gap(dry));
+  const off = bonusCafe({ weather: null }); off.clock.now = rainy; assert.equal(off.cafe.weather(), 'clear');
+});
+
+test('cafe rating: starts at 3 stars, follows how many guests left happy, speeds arrivals up or down a little', () => {
+  const { cafe, game } = bonusCafe();
+  assert.equal(cafe.rating().stars, 3);
+  for (let i = 0; i < 10; i++) sell(cafe, game, 'bread');
+  assert.equal(cafe.rating().stars, 5);
+  cafe.rng = () => 0.5;
+  const happyGap = cafe.nextInterval();
+  for (let i = 0; i < 20; i++) { const g = cafe.arrive(); cafe.seatQueued(); cafe.leave(g, false); }
+  assert.equal(cafe.rating().stars, 1);
+  assert.ok(cafe.nextInterval() > happyGap);
+  assert.ok(cafe.results.length <= 20);
+});
+
+test('kitchen helper: repeats the last product when a machine finishes, only when it is bought, never buys anything', () => {
+  const clock = { now: at(2025, 3, 10) };
+  const game = new Game({ gold: 1e6 }, {}, () => clock.now);
+  new Shop(game);
+  game.ingredients.flour = 20;
+  assert.ok(game.startProduction('bread').ok);
+  clock.now += 21_000; game.tick();
+  assert.equal(game.products.bread, 3);                                 // 2 at the start + 1 made, nothing restarted
+  assert.equal((game.jobs.oven ?? []).length, 0);
+  assert.ok(game.buyUpgrade('kitchenHelper').ok);
+  assert.ok(game.startProduction('bread').ok);
+  const flourBefore = game.ingredients.flour;
+  clock.now += 21_000; game.tick();
+  assert.equal((game.jobs.oven ?? []).length, 1);                       // restarted by itself
+  assert.equal(game.ingredients.flour, flourBefore - 2);
+  game.ingredients.flour = 0; clock.now += 21_000; game.tick();
+  assert.equal((game.jobs.oven ?? []).length, 0);                       // no flour: it stops, and does not buy any
+  assert.equal(game.ingredients.flour, 0);
+});
+
+test('weekly goal: one goal a week, counts from Monday, pays once through Game.earn, a new week brings the next one', () => {
+  const clock = { now: at(2025, 3, 10) }, game = new Game({ gold: 0 }, {}, () => clock.now);
+  new Shop(game); const goals = new DailyGoals(game);
+  const w1 = goals.weekly();
+  assert.equal(goals.weekly().id, w1.id);
+  game.stats[GOALS.weekly.find((g) => g.id === w1.id).stat] += w1.target + 5;
+  const w = goals.weekly(); assert.ok(w.complete && !w.claimed); assert.equal(w.progress, w.target);
+  assert.ok(goals.claimable().some((g) => g.id === w1.id));
+  const r = goals.claimWeekly(); assert.ok(r.ok); assert.equal(game.player.gold, w1.gold); assert.equal(game.ledger[0].source, 'goal');
+  assert.equal(goals.claimWeekly().ok, false);
+  clock.now = at(2025, 3, 14); assert.equal(goals.weekly().id, w1.id); assert.ok(goals.weekly().claimed);   // same week: still collected
+  clock.now = at(2025, 3, 17);
+  const next = goals.weekly(); assert.notEqual(next.id, w1.id); assert.equal(next.progress, 0); assert.equal(next.claimed, false);
+});
+
+test('season tint: winter cool, autumn warm, summer none, every month valid', () => {
+  assert.ok(seasonTint(0).rgb[2] > seasonTint(0).rgb[0]);
+  assert.ok(seasonTint(9).rgb[0] > seasonTint(9).rgb[2]);
+  assert.equal(seasonTint(6).alpha, 0);
+  for (let m = 0; m < 12; m++) { const t = seasonTint(m); assert.ok(t.alpha >= 0 && t.alpha < 0.15 && t.rgb.every((v) => v >= 0 && v <= 255)); }
+});

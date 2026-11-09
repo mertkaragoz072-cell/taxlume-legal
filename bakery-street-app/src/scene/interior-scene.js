@@ -9,7 +9,7 @@ import { CustomerLayer, setEntryY } from './interior-customers.js';
 import { StaffLayer } from './interior-staff.js';
 import { DecorLayer } from './interior-decor.js';
 import { hasSitFrames } from '../characters/sprites.js';
-import { applyDaylight } from './daylight.js';
+import { applyDaylight, drawRain } from './daylight.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
 /** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
@@ -215,7 +215,8 @@ export class InteriorScene {
     this.shopDecor.drawTheme(ctx);
     this.shopDecor.drawFx(ctx);
     gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
-    applyDaylight(ctx, this.game.clock());                                          // evening and night tint by the real local hour
+    applyDaylight(ctx, this.game.clock());                                          // evening and night tint by the real local hour, a faint tone by season
+    if (this.game.cafe?.weather() === 'rain') drawRain(ctx, this.t);                // rainy day (see Cafe.weather)
     textFloor.px = floorPx;
   }
 

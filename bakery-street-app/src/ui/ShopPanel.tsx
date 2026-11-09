@@ -90,7 +90,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
   );
 
   return (
-    <Sheet title="Mağaza" hint={`💰 ${fmt(game.gold)} · Aşama ${stage.id}: ${stage.name}\nKoleksiyon: ${collection.owned}/${collection.total} eşya`} side="right" onClose={onClose} header={tabs} tall>
+    <Sheet title="Mağaza" hint={`💰 ${fmt(game.gold)} · Aşama ${stage.id}: ${stage.name}\nKoleksiyon: ${collection.owned}/${collection.total} eşya · Kafe puanı: ★ ${(world.cafe.rating().stars as number).toFixed(1)}`} side="right" onClose={onClose} header={tabs} tall>
       {tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : tab === "decor" ? <DecorList list={items("decor")} onBuy={buy} flash={flash} /> : items(tab).map((v) => <ItemCard key={v.def.id} v={v} onBuy={buy} flash={flash === v.def.id} />)}
     </Sheet>
   );

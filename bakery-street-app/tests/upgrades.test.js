@@ -23,12 +23,12 @@ const level = (game, id, n) => { for (let i = 0; i < n; i++) assert.ok(game.buyU
 
 test('every upgrade has at least 5 purchasable levels with strictly rising costs and a real effect each level', () => {
   for (const [id, u] of Object.entries(UPGRADES)) {
-    assert.ok(u.costs.length >= (id === 'cafeTables' ? 2 : id === 'waiterTraining' ? 3 : 5), `${id} needs 5+ levels (the interior only has room for 4 tables)`);
+    assert.ok(u.costs.length >= (id === 'cafeTables' ? 2 : id === 'waiterTraining' ? 3 : id === 'kitchenHelper' ? 1 : 5), `${id} needs 5+ levels (the interior only has room for 4 tables)`);
     assert.equal(u.values.length, u.costs.length + 1, `${id} has a value for level 0 and for every level`);
     for (let i = 1; i < u.costs.length; i++) assert.ok(u.costs[i] > u.costs[i - 1], `${id} costs must rise`);
     for (let i = 1; i < u.values.length; i++) assert.notEqual(u.values[i], u.values[i - 1], `${id} level ${i} must change something`);
   }
-  assert.deepEqual(Object.keys(UPGRADES).sort(), ['cafeTables', 'ovenCapacity', 'productionSpeed', 'showcaseCapacity', 'waiterTraining']);
+  assert.deepEqual(Object.keys(UPGRADES).sort(), ['cafeTables', 'kitchenHelper', 'ovenCapacity', 'productionSpeed', 'showcaseCapacity', 'waiterTraining']);
 });
 
 // ---------------------------------------------------------------- 1. oven capacity changes real production
@@ -268,7 +268,7 @@ test('upgrade levels, gold, stock and running jobs survive a reload, and the eff
   clock.now += 5000;
   const b = mk(0); assert.equal(b.mgr.load().status, 'loaded');
   const after = b.game.exportState();
-  assert.deepEqual(after.upgrades, { cafeTables: 0, ovenCapacity: 2, productionSpeed: 3, showcaseCapacity: 1, waiterTraining: 0 });
+  assert.deepEqual(after.upgrades, { cafeTables: 0, kitchenHelper: 0, ovenCapacity: 2, productionSpeed: 3, showcaseCapacity: 1, waiterTraining: 0 });
   assert.equal(after.gold, before.gold);
   assert.deepEqual(after.jobs, before.jobs);
   assert.equal(b.game.capacity('oven'), 3);                        // effects are live again after the reload
@@ -304,7 +304,7 @@ test('old saves load: v2 jobs (single object) migrate and missing upgrades defau
   st.setItem(SAVE_KEY, JSON.stringify({ version: 2, gold: 900, ingredients: {}, products: { bread: 3 }, jobs: { oven: { product: 'cake', startedAt: T0 - 10_000 } } }));
   const game = new Game({ gold: 0 }, {}, () => clock.now); const mgr = new SaveManager(game, st);
   assert.equal(mgr.load().status, 'loaded');
-  assert.deepEqual(game.upgrades, { cafeTables: 0, ovenCapacity: 0, productionSpeed: 0, showcaseCapacity: 0, waiterTraining: 0 });
+  assert.deepEqual(game.upgrades, { cafeTables: 0, kitchenHelper: 0, ovenCapacity: 0, productionSpeed: 0, showcaseCapacity: 0, waiterTraining: 0 });
   assert.equal(game.jobsOf('oven').length, 1);
   assert.equal(Math.round(game.remaining('oven')), PRODUCTS.cake.time - 10);
 });
@@ -316,7 +316,7 @@ test('invalid upgrade data in a save is rejected (backed up, not silently used)'
     const game = new Game({ gold: 0 }, {}, () => T0); const mgr = new SaveManager(game, st, { onProblem: (p) => problems.push(p) });
     assert.equal(mgr.load().status, 'corrupt');
     assert.ok(problems.some((p) => p.kind === 'corrupt'));
-    assert.deepEqual(game.upgrades, { cafeTables: 0, ovenCapacity: 0, productionSpeed: 0, showcaseCapacity: 0, waiterTraining: 0 });
+    assert.deepEqual(game.upgrades, { cafeTables: 0, kitchenHelper: 0, ovenCapacity: 0, productionSpeed: 0, showcaseCapacity: 0, waiterTraining: 0 });
   }
 });
 

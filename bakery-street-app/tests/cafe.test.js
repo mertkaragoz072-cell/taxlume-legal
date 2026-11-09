@@ -594,6 +594,6 @@ test('bonuses off (null) pay exactly the plain price and draw no extra random nu
   const { cafe, game } = make();
   game.products.bread = 3;
   const g = guest(cafe, 'bread');
-  assert.deepEqual(cafe.serviceBonus(g.c, g.order), { pct: 0, combo: 0, fast: false, favorite: false, event: false });
+  assert.deepEqual(cafe.serviceBonus(g.c, g.order), { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false });
   assert.equal(cafe.deliver(g.order.id).income, game.unitEconomics('bread', PRODUCTS.bread.price).customer);
 });

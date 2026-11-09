@@ -61,7 +61,7 @@ function StageCard({ c, onClose }: { c: { id: number; name: string; gold: number
 function saleNotes(e: any): string {
   const b = e.bonus;
   if (!b?.pct) return "";
-  return ` · ${[b.event ? "⭐ haftanın ürünü" : "", b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
+  return ` · ${[b.event ? "⭐ haftanın ürünü" : "", b.variety ? "🎨 çeşitlilik" : "", b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
 }
 
 function App() {
@@ -101,7 +101,7 @@ function App() {
   );
 }
 
-type Overlay = "quests" | "daily" | "album" | "settings" | "town" | "shop";
+type Overlay = "quests" | "daily" | "album" | "photo" | "settings" | "town" | "shop";
 
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
@@ -272,7 +272,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       <View style={styles.fill}>
         <GameView world={world} sceneId={sceneId} active pixelRatio={PixelRatio.get()} onPress={onPress} onLook={(n) => world.scenes[sceneRef.current]?.setLook?.(n)} />
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
-          <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />
+          {overlay === "photo" ? null : <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />}
+          {overlay === "photo" ? <Pressable onPress={() => setOverlay(null)} accessibilityLabel="Fotoğraf modundan çık" style={{ position: "absolute", left: -insets.left, right: -insets.right, top: -insets.top, bottom: -insets.bottom, zIndex: 30 }} /> : null}
           <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /><TillPill /></Present>
           <Present show={sceneId === "interior" && !!panel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</Present>
           {sceneId === "market" ? <MarketPanel /> : null}
@@ -296,10 +297,10 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
 
 /** Top bar and the fixed bottom navigation, with the badge state. */
 function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId; overlay: Overlay | null; setOverlay: (o: Overlay | null) => void; navSelect: (id: NavId) => void }) {
-  const { world } = useWorldOnly();
+  const { world, act } = useWorldOnly();
   useRefresh(5000);
   const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0, daily: world.daily.status().canClaim };
-  const toggle = (o: Overlay) => setOverlay(overlay === o ? null : o);
+  const toggle = (o: Overlay) => { if (o === "photo") act.toast("📷 Fotoğraf modu: ekran görüntüsü al, çıkmak için ekrana dokun", 3200); setOverlay(overlay === o ? null : o); };
   const active: NavId | null = overlay === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (
     <>

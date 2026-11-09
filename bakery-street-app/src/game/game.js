@@ -201,6 +201,7 @@ export class Game {
     for (const [ing, need] of Object.entries(def.ingredients)) this.ingredients[ing] -= need;
     const rebate = this.ingredientRebate(id);
     if (rebate) this.earn(rebate, 'rebate', `${def.name}: malzeme iadesi`);
+    (this.lastMade ??= {})[def.station] = id;                    // what the kitchen helper repeats
     (this.jobs[def.station] ??= []).push({ product: id, startedAt: this.clock(), duration: this.duration(id) });
     this.emit('change', { type: 'start', product: id, rebate });
     return rebate ? { ok: true, rebate } : { ok: true };
@@ -229,7 +230,15 @@ export class Game {
         this.emit('complete', { station, product: job.product });
         this.emit('change', { type: 'complete', product: job.product });
       }
+      this.repeatLast(station);
     }
+  }
+
+  /** Kitchen helper (upgrade): when a machine finishes work, the last product made there is started again if its ingredients and room are there. Never buys anything. */
+  repeatLast(station) {
+    if (!(this.upgrades.kitchenHelper > 0)) return;
+    const id = this.lastMade?.[station];
+    if (id && this.isUnlocked(id)) this.startProduction(id);
   }
 
   // ---- upgrades: buying -------------------------------------------------------------------------

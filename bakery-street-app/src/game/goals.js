@@ -3,6 +3,7 @@
 // Stored: the day, the counters at the start of that day and which goals were collected. Collecting is one atomic step (flag + gold).
 import { GOALS } from '../data/economy.js';
 import { dateKey, dayNumber } from './daily.js';
+import { weekOf } from './events.js';
 
 export class DailyGoals {
   /** @param {import('./game.js').Game} game */
@@ -13,6 +14,9 @@ export class DailyGoals {
     this.baseline = {};
     this.claimed = new Set();
     this.announced = new Set();
+    this.week = null;                  // the weekly goal: week number, counters at the start of the week, collected?
+    this.weekBase = {};
+    this.weekClaimed = false;
     game.goals = this;
     game.on('change', () => { this.roll(); this.announce(); });
   }
@@ -38,6 +42,38 @@ export class DailyGoals {
     return true;
   }
 
+  /** Starts a new week (Monday) the same way a new day starts. */
+  rollWeek() {
+    const w = weekOf(this.game.clock());
+    if (this.week === w) return false;
+    this.week = w;
+    this.weekBase = Object.fromEntries((this.cfg.weekly ?? []).map((g) => [g.stat, this.value(g.stat)]));
+    this.weekClaimed = false;
+    return true;
+  }
+
+  /** This week's goal with its state, or null when the config has none. */
+  weekly() {
+    const pool = this.cfg.weekly ?? [];
+    if (!pool.length) return null;
+    this.rollWeek();
+    const g = pool[((this.week % pool.length) + pool.length) % pool.length], m = this.mult();
+    const target = Math.max(1, Math.round(g.target * m)), gold = Math.round(g.gold * m);
+    const progress = Math.min(target, Math.max(0, this.value(g.stat) - (this.weekBase[g.stat] ?? 0)));
+    return { id: g.id, name: g.name, icon: g.icon, text: `${target.toLocaleString('tr-TR')} ${g.label}`, target, gold, progress, complete: progress >= target, claimed: this.weekClaimed };
+  }
+
+  claimWeekly() {
+    const g = this.weekly();
+    if (!g) return { ok: false, reason: 'unknown', message: 'Bu hafta hedef yok.' };
+    if (g.claimed) return { ok: false, reason: 'claimed', message: 'Bu haftanın ödülü zaten alındı.' };
+    if (!g.complete) return { ok: false, reason: 'incomplete', message: `Hedef henüz tamamlanmadı (${g.progress}/${g.target}).` };
+    this.weekClaimed = true;
+    this.game.earn(g.gold, 'goal', `Haftalık hedef: ${g.name}`);
+    this.game.emit('change', { type: 'goal', goal: g.id });
+    return { ok: true, gold: g.gold, goal: g };
+  }
+
   /** Today's goals with their state. */
   list() {
     this.roll();
@@ -49,7 +85,7 @@ export class DailyGoals {
     });
   }
 
-  claimable() { return this.list().filter((g) => g.complete && !g.claimed); }
+  claimable() { const w = this.weekly(); return [...this.list().filter((g) => g.complete && !g.claimed), ...(w && w.complete && !w.claimed ? [w] : [])]; }
 
   claim(id) {
     const g = this.list().find((x) => x.id === id);
@@ -71,14 +107,17 @@ export class DailyGoals {
     }
   }
 
-  exportState() { this.roll(); return { date: this.date, baseline: { ...this.baseline }, claimed: [...this.claimed] }; }
+  exportState() { this.roll(); this.rollWeek(); return { date: this.date, baseline: { ...this.baseline }, claimed: [...this.claimed], week: this.week, weekBase: { ...this.weekBase }, weekClaimed: this.weekClaimed }; }
 
   importState(state) {
     this.date = state?.date ?? null;
     this.baseline = { ...(state?.baseline ?? {}) };
     this.claimed = new Set(state?.claimed ?? []);
     if (this.date != null && this.date > this.today() && dayNumber(this.date) - dayNumber(this.today()) > 1) this.date = null;   // saved day is more than a day ahead: the clock was changed
-    this.roll();
+    this.week = state?.week ?? null;
+    this.weekBase = { ...(state?.weekBase ?? {}) };
+    this.weekClaimed = !!state?.weekClaimed;
+    this.roll(); this.rollWeek();
     this.announced = new Set(this.list().filter((g) => g.complete).map((g) => g.id));        // no announcements for old completions
   }
 }
@@ -90,5 +129,9 @@ export function validateGoals(raw, cfg = GOALS) {
   const baseline = {};
   if (date) for (const [k, v] of Object.entries(raw.baseline ?? {})) if (stats.has(k) && Number.isFinite(v) && v >= 0 && v < 1e12) baseline[k] = Math.floor(v);
   const claimed = date ? [...new Set(Array.isArray(raw.claimed) ? raw.claimed.filter((id) => ids.has(id)) : [])] : [];
-  return { date, baseline, claimed };
+  const wstats = new Set((cfg.weekly ?? []).map((g) => g.stat));
+  const week = raw && Number.isInteger(raw.week) && raw.week > 0 && raw.week < 1e6 ? raw.week : null;
+  const weekBase = {};
+  if (week) for (const [k, v] of Object.entries(raw.weekBase ?? {})) if (wstats.has(k) && Number.isFinite(v) && v >= 0 && v < 1e12) weekBase[k] = Math.floor(v);
+  return { date, baseline, claimed, week, weekBase, weekClaimed: week ? raw.weekClaimed === true : false };
 }

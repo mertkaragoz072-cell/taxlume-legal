@@ -12,6 +12,8 @@ const ENTRY = { x: 450, y: 1580 };
 const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests use different columns (arrivals x 450 / table gaps, leavers x 395 / 60 px further into the aisle), so nobody walks head-on
 const SPEED = 210;                 // design px per second
 const COIN_FLIGHT_SEC = 0.5;     // a coin's flight from the guest to the register
+/** What a guest says on the way out (the guest's number picks the line). */
+const SAYINGS = { happy: ['Teşekkürler!', 'Çok lezzetliydi!', 'Yine gelirim!', 'Harika!'], favorite: ['Favorim buydu!', 'Tam istediğim!'], angry: ['Çok bekledim…', 'Gidiyorum!'] };
 const BODY_H = PERSON_H;           // approximate sprite height at scale 1 (the first table row) for bubbles and hit-testing; `bodyH(y)` follows the perspective
 const bodyH = (y) => BODY_H * depthScale(y);
 
@@ -48,12 +50,14 @@ export class CustomerLayer {
   /** A guest's reaction when they leave: a heart for a happy one, two hearts for a favourite, an anger mark for one who gave up. */
   react(e) {
     const v = this.v.get(e.id);
-    if (!v || (this.emotes.length > 10)) return;
+    if (!v || (this.emotes.length > 8)) return;
     const ghost = e.table != null ? { state: 'seated', table: e.table } : null;
     const table = ghost ? AREAS.find((a) => a.id === `table${e.table + 1}`) : null;
     const x = ghost ? this.bodyX(v, ghost) : v.x, y = (ghost ? this.bubbleTop(v, ghost) : v.y - bodyH(v.y)) + this.warp(table ? depthOf(table) + 1 : v.y);   // (the same offset the order bubble gets)
     const kind = !e.happy ? 'anger' : e.bonus?.favorite ? 'love' : 'heart';
     this.emotes.push({ x, y: y - 6, kind, life: 1 });
+    const lines = SAYINGS[kind === 'anger' ? 'angry' : e.bonus?.favorite ? 'favorite' : 'happy'];
+    this.emotes.push({ x, y: y - 62, kind: 'say', text: lines[e.id % lines.length], life: 1.4 });     // a short line, chosen by the guest's number so it is the same every time
   }
 
   /** Placeholder for a paying-at-the-register animation: three coins fly from the guest to the till, which bounces and shows the amount. */
@@ -291,9 +295,15 @@ export class CustomerLayer {
 
   /** One reaction mark, drawn with paths (no emoji, so it looks the same everywhere): rising and fading. */
   drawEmote(ctx, m) {
-    const rise = (1 - m.life) * 60, a = clamp(m.life * 1.8, 0, 1), pulse = 1 + Math.sin((1 - m.life) * 9) * 0.06;
+    const rise = m.kind === 'say' ? (1 - m.life) * 22 : (1 - m.life) * 60, a = clamp(m.life * 1.8, 0, 1), pulse = 1 + Math.sin((1 - m.life) * 9) * 0.06;
     ctx.save(); ctx.globalAlpha = a; ctx.translate(m.x, m.y - rise);
-    if (m.kind === 'anger') {
+    if (m.kind === 'say') {
+      ctx.font = '700 26px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const w = ctx.measureText(m.text).width + 30;
+      rrect(ctx, -w / 2, -22, w, 44, 22); paint(ctx, PAL.cream, 3, PAL.brown);
+      ctx.beginPath(); ctx.moveTo(-8, 21); ctx.lineTo(0, 34); ctx.lineTo(8, 21); ctx.closePath(); ctx.fillStyle = PAL.cream; ctx.fill();
+      ctx.fillStyle = PAL.brownDark; ctx.fillText(m.text, 0, 1);
+    } else if (m.kind === 'anger') {
       ctx.strokeStyle = '#C8442F'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.scale(pulse, pulse);
       for (const [dx, dy] of [[-8, -8], [8, 8]]) { ctx.beginPath(); ctx.moveTo(dx - 10, dy); ctx.lineTo(dx + 10, dy); ctx.moveTo(dx, dy - 10); ctx.lineTo(dx, dy + 10); ctx.stroke(); }
     } else {
