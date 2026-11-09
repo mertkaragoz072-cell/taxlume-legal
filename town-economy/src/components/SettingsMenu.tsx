@@ -1,8 +1,17 @@
 import React, { useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
+import icPause from "../../assets/ui/modal/ic_pause.webp";
+import icBolt from "../../assets/ui/modal/ic_bolt.webp";
+import icSpeaker from "../../assets/ui/modal/ic_speaker.webp";
+import icGlobe from "../../assets/ui/modal/ic_globe.webp";
+import icHelp from "../../assets/ui/modal/ic_help.webp";
+import icPad from "../../assets/ui/modal/ic_pad.webp";
+import medGear from "../../assets/ui/modal/med_gear.webp";
+import { ModalShell, RowBar } from "./ModalKit";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { FONT, TYPE } from "../theme";
+import { ModalBackdrop } from "./ModalBackdrop";
 
 interface Props {
   size: number;
@@ -32,32 +41,31 @@ export function SettingsMenu(props: Props) {
     fn();
   };
 
-  const rows: { icon: string; label: string; right?: string; onPress: () => void; tone?: string }[] = [
+  const rows: { icon: number; label: string; right?: string; onPress: () => void; toggle?: boolean }[] = [
     {
-      icon: paused ? "▶" : "⏸",
+      icon: icPause,
       label: paused ? t("a11y.resume") : t("a11y.pause"),
       onPress: run(props.onTogglePause),
-      tone: "#6fb8f2",
     },
     {
-      icon: "⚡",
+      icon: icBolt,
       label: t("a11y.speedBoost"),
       right: boostActive ? "●" : undefined,
       onPress: run(props.onOpenSpeedBoost),
     },
     {
-      icon: muted ? "🔇" : "🔊",
+      icon: icSpeaker,
       label: muted ? t("a11y.unmute") : t("a11y.mute"),
       onPress: run(props.onToggleMuted),
     },
     {
-      icon: "🌐",
+      icon: icGlobe,
       label: t("a11y.toggleLanguage"),
       right: language === "tr" ? "TR" : "EN",
       onPress: run(props.onToggleLanguage),
     },
-    { icon: "❓", label: t("a11y.help"), onPress: run(props.onHelp) },
-    { icon: "⟳", label: t("a11y.newGame"), onPress: run(props.onReset), tone: "#f0776a" },
+    { icon: icHelp, label: t("a11y.help"), onPress: run(props.onHelp) },
+    { icon: icPad, label: t("a11y.newGame"), onPress: run(props.onReset) },
   ];
 
   return (
@@ -73,24 +81,19 @@ export function SettingsMenu(props: Props) {
         {(boostActive || paused) && <View style={[styles.dot, paused && styles.dotPaused]} />}
       </Pressable>
       <Modal transparent visible={open} animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <View style={styles.menu}>
-            {rows.map((row, i) => (
-              <Pressable
+        <ModalBackdrop>
+          <ModalShell title={t("settings.title")} medallion={medGear} onClose={() => setOpen(false)}>
+            {rows.map((row) => (
+              <RowBar
                 key={row.label}
+                label={row.label}
+                icon={row.icon}
+                right={row.right}
                 onPress={row.onPress}
-                style={[styles.row, i > 0 && styles.rowDivider]}
-                accessibilityRole="button"
-              >
-                <Text style={[styles.rowIcon, row.tone ? { color: row.tone } : null]}>{row.icon}</Text>
-                <Text style={styles.rowLabel} numberOfLines={1}>
-                  {row.label}
-                </Text>
-                {row.right && <Text style={styles.rowRight}>{row.right}</Text>}
-              </Pressable>
+              />
             ))}
-          </View>
-        </Pressable>
+          </ModalShell>
+        </ModalBackdrop>
       </Modal>
     </>
   );

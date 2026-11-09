@@ -2,20 +2,10 @@ import React, { useState } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
-import { IconBadge } from "./IconBadge";
+import { FONT } from "../theme";
+import icBook from "../../assets/ui/modal/ic_book.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
+import { ArrowButton, BigButton, ModalShell, ParchmentNote } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 
 interface Slide {
@@ -74,91 +64,49 @@ export function TutorialModal({ visible, onFinish }: Props) {
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <IconBadge icon={slide.icon} color={slide.color} size="lg" />
-          <Text style={[styles.title, { color: slide.color }]}>{t(slide.titleKey)}</Text>
-          <Text style={styles.body}>{t(slide.bodyKey)}</Text>
+        <ModalShell title={t("a11y.help")} plateIcon={icBook} onClose={skip}>
+          <View style={styles.carousel}>
+            <ArrowButton dir="left" onPress={() => setIndex(index - 1)} disabled={index === 0} />
+            <View style={{ flex: 1, marginHorizontal: 6 }}>
+              <ParchmentNote>
+                <Text style={styles.emoji}>{slide.icon}</Text>
+                <Text style={[styles.title, { color: "#3b2412" }]}>{t(slide.titleKey)}</Text>
+                <Text style={styles.body}>{t(slide.bodyKey)}</Text>
+              </ParchmentNote>
+            </View>
+            <ArrowButton dir="right" onPress={() => setIndex(index + 1)} disabled={isLast} />
+          </View>
 
           <View style={styles.dots}>
             {SLIDES.map((s, i) => (
               <View
                 key={i}
-                style={[styles.dot, i === index && [styles.dotActive, { backgroundColor: s.color }]]}
+                style={[styles.dot, i === index && [styles.dotActive, { backgroundColor: "#f4c43c" }]]}
               />
             ))}
           </View>
 
-          <ScalePressable onPress={next} style={styles.nextBtn} scaleTo={0.96}>
-            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-            <Text style={styles.nextBtnText}>{isLast ? t("tutorial.start") : t("tutorial.next")}</Text>
-          </ScalePressable>
+          <BigButton label={isLast ? t("tutorial.start") : t("tutorial.next")} onPress={next} />
 
           {!isLast && (
             <ScalePressable onPress={skip} style={styles.skipBtn} scaleTo={0.96}>
               <Text style={styles.skipBtnText}>{t("tutorial.skip")}</Text>
             </ScalePressable>
           )}
-        </View>
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: "100%",
-    maxWidth: 360,
-    borderRadius: RADIUS.feature,
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.accent, 0.3),
-    padding: 22,
-    alignItems: "center",
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  title: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.heading,
-    fontFamily: FONT.display,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  body: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.body,
-    textAlign: "center",
-    lineHeight: 19,
-    marginBottom: 18,
-  },
-  dots: { flexDirection: "row", gap: 6, marginBottom: 18 },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#4a4032",
-    marginRight: 6,
-  },
-  dotActive: { backgroundColor: COLORS.accent, width: 18 },
-  nextBtn: {
-    width: "100%",
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  // No numeric fontWeight alongside the family. FONT.black already *is* the
-  // heavy cut, and asking iOS for a weight on top of a weighted file makes it
-  // synthesise one, which shifts the metrics — the label rendered below the
-  // button's bottom edge on a phone, half of it outside the gold. lineHeight
-  // is spelled out for the same reason: left to the font, the line box was
-  // taller than the space the button had reserved for it.
-  nextBtnText: { color: COLORS.onLight, fontFamily: FONT.black, fontSize: 14, lineHeight: 20 },
-  skipBtn: { marginTop: 10, paddingVertical: 6 },
-  skipBtnText: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
-  },
+  carousel: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  emoji: { fontSize: 44, textAlign: "center", marginBottom: 6 },
+  title: { fontSize: 16, fontFamily: FONT.display, textAlign: "center", marginBottom: 6 },
+  body: { color: "#4a3320", fontFamily: FONT.medium, fontSize: 12.5, lineHeight: 18, textAlign: "center" },
+  dots: { flexDirection: "row", justifyContent: "center", gap: 7, marginVertical: 8 },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: "rgba(255,255,255,0.22)" },
+  dotActive: { width: 11, height: 11, borderRadius: 6 },
+  skipBtn: { alignItems: "center", paddingVertical: 10, marginTop: 2 },
+  skipBtnText: { color: "#d8c8a8", fontSize: 13, fontFamily: FONT.medium },
 });

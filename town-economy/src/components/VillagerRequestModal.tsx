@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Modal, StyleSheet, View } from "react-native";
+import { Animated, Image, Modal, StyleSheet, View } from "react-native";
+import villagerArt from "../../assets/ui/modal/villager.webp";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { GOOD_IMAGES } from "../economy/goodImages";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, VillagerRequest } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, WEIGHT, withAlpha } from "../theme";
-import { GradientFill } from "./GradientFill";
+import { FONT } from "../theme";
 import { ModalBackdrop } from "./ModalBackdrop";
-import { ScalePressable } from "./ScalePressable";
-import { VillagerIllustration } from "./VillagerIllustration";
+import { ModalShell, OptionBar, ParchmentNote } from "./ModalKit";
 
 interface Props {
   request: VillagerRequest | null;
@@ -35,128 +35,70 @@ export function VillagerRequestModal({ request, holding, onResolve }: Props) {
   if (!request) return null;
   const good = GOODS_BY_ID[request.goodId];
   const canGive = (holding?.holding ?? 0) >= request.qty;
+  const art = GOOD_IMAGES[request.goodId];
 
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <View style={styles.stage}>
-          <Animated.View
-            style={[
-              styles.villagerWrap,
-              {
-                opacity: enterAnim,
-                transform: [
-                  {
-                    translateX: enterAnim.interpolate({ inputRange: [0, 1], outputRange: [-40, 0] }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <VillagerIllustration size={76} gesturing />
-          </Animated.View>
-
-          <View style={styles.card}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <View
+        <ModalShell title={t("villagerRequest.title")}>
+          <View style={styles.row}>
+            <Animated.View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(good.color, 0.1) }]}
-            />
-            <Text style={styles.title}>{t("villagerRequest.title")}</Text>
-            <Text style={styles.description}>
-              {t("villagerRequest.description", {
-                qty: request.qty,
-                icon: good.icon,
-                good: t(good.nameKey),
-              })}
-            </Text>
-
-            <ScalePressable
-              onPress={() => onResolve(true)}
               style={[
-                styles.option,
-                canGive && { borderColor: good.color },
-                !canGive && styles.optionDisabled,
+                styles.villager,
+                {
+                  opacity: enterAnim,
+                  transform: [
+                    { translateX: enterAnim.interpolate({ inputRange: [0, 1], outputRange: [-30, 0] }) },
+                  ],
+                },
               ]}
-              scaleTo={0.96}
             >
-              <Text style={styles.optionLabel}>
-                {t("villagerRequest.giveBtn", { qty: request.qty, icon: good.icon })}
-              </Text>
-              <Text style={styles.optionHint}>
-                {canGive
-                  ? t("villagerRequest.giveHint")
-                  : t("villagerRequest.insufficientHint", { good: t(good.nameKey) })}
-              </Text>
-            </ScalePressable>
-
-            <ScalePressable onPress={() => onResolve(false)} style={styles.option} scaleTo={0.96}>
-              <Text style={styles.optionLabel}>{t("villagerRequest.refuseBtn")}</Text>
-              <Text style={styles.optionHint}>{t("villagerRequest.refuseHint")}</Text>
-            </ScalePressable>
+              <Image source={villagerArt} style={styles.villagerImg} resizeMode="contain" />
+            </Animated.View>
+            <View style={styles.col}>
+              <ParchmentNote>
+                <Text style={styles.note}>
+                  {t("villagerRequest.description", {
+                    qty: request.qty,
+                    icon: good.icon,
+                    good: t(good.nameKey),
+                  })}
+                </Text>
+              </ParchmentNote>
+              <View style={{ height: 10 }} />
+              <OptionBar
+                kind="optG"
+                title={t("villagerRequest.giveBtn", { qty: request.qty, icon: good.icon })}
+                hint={
+                  canGive
+                    ? t("villagerRequest.giveHint")
+                    : t("villagerRequest.insufficientHint", { good: t(good.nameKey) })
+                }
+                icon={art}
+                emoji={art ? undefined : good.icon}
+                disabled={!canGive}
+                onPress={() => onResolve(true)}
+              />
+              <OptionBar
+                kind="optR"
+                title={t("villagerRequest.refuseBtn")}
+                hint={t("villagerRequest.refuseHint")}
+                emoji="😟"
+                onPress={() => onResolve(false)}
+              />
+            </View>
           </View>
-        </View>
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  stage: {
-    width: "100%",
-    maxWidth: 360,
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  villagerWrap: {
-    marginRight: -22,
-    marginBottom: 14,
-    zIndex: 2,
-  },
-  card: {
-    flex: 1,
-    borderRadius: RADIUS.feature,
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.accent, 0.3),
-    paddingVertical: 20,
-    paddingRight: 20,
-    paddingLeft: 30,
-    alignItems: "center",
-    overflow: "hidden",
-    zIndex: 1,
-    ...cardShadow,
-  },
-  title: {
-    color: COLORS.textPrimary,
-    fontSize: 17,
-    fontFamily: FONT.display,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  description: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    textAlign: "center",
-    marginBottom: 18,
-    lineHeight: 18,
-  },
-  option: {
-    width: "100%",
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.card,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: "#3a2d1e",
-  },
-  optionDisabled: { opacity: 0.5 },
-  optionLabel: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: 14,
-    marginBottom: 3,
-  },
-  optionHint: { color: COLORS.textMuted, fontSize: 11 },
+  row: { flexDirection: "row", alignItems: "flex-end", minHeight: 250 },
+  villager: { position: "absolute", left: -10, bottom: -10, width: 96, zIndex: 2 },
+  villagerImg: { width: 96, height: 240 },
+  col: { flex: 1, marginLeft: 76 },
+  note: { color: "#3b2412", fontFamily: FONT.medium, fontSize: 12.5, lineHeight: 17, textAlign: "center" },
 });

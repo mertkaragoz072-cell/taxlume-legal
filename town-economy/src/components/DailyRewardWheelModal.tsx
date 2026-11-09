@@ -5,23 +5,11 @@ import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-nativ
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { dailyBonusForStreak } from "../economy/formulas";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  glowShadow,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
+import { cardShadow, COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
-import { GradientFill } from "./GradientFill";
+import medGift from "../../assets/ui/modal/med_gift.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
-import { ScalePressable } from "./ScalePressable";
+import { BigButton, ModalShell } from "./ModalKit";
 
 interface Props {
   visible: boolean;
@@ -165,96 +153,92 @@ export function DailyRewardWheelModal({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>{t("dailyWheel.title")}</Text>
-          <Text style={styles.subtitle}>
-            {revealed ? t("dailyWheel.streakLabel", { count: streakCount }) : t("dailyWheel.subtitle")}
-          </Text>
+        <ModalShell title={t("dailyWheel.title")} medallion={medGift}>
+          <View style={styles.inner}>
+            <Text style={styles.subtitle}>
+              {revealed ? t("dailyWheel.streakLabel", { count: streakCount }) : t("dailyWheel.subtitle")}
+            </Text>
 
-          <View style={styles.wheelWrap}>
-            <View style={styles.pointer} />
-            <Animated.View style={[styles.wheel, { transform: [{ rotate: rotateDeg }] }]}>
-              <Svg width={WHEEL_RADIUS * 2} height={WHEEL_RADIUS * 2} style={StyleSheet.absoluteFill}>
-                <Defs>
-                  <RadialGradient id="dailyWheelGloss" cx="35%" cy="28%" r="75%">
-                    <Stop offset="0" stopColor="#ffffff" stopOpacity={0.12} />
-                    <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
-                  </RadialGradient>
-                </Defs>
-                {WHEEL_ICONS.map((_, i) => (
-                  <Path
-                    key={i}
-                    d={wedgePath(
-                      WHEEL_RADIUS,
-                      WHEEL_RADIUS,
-                      WHEEL_RADIUS - 2,
-                      i * SEGMENT_ANGLE,
-                      (i + 1) * SEGMENT_ANGLE
-                    )}
-                    fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
-                  />
-                ))}
-                {WHEEL_ICONS.map((_, i) => {
-                  const angle = i * SEGMENT_ANGLE;
-                  const inner = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.2, angle);
-                  const outer = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS - 2, angle);
-                  return (
-                    <Line
+            <View style={styles.wheelWrap}>
+              <View style={styles.pointer} />
+              <Animated.View style={[styles.wheel, { transform: [{ rotate: rotateDeg }] }]}>
+                <Svg width={WHEEL_RADIUS * 2} height={WHEEL_RADIUS * 2} style={StyleSheet.absoluteFill}>
+                  <Defs>
+                    <RadialGradient id="dailyWheelGloss" cx="35%" cy="28%" r="75%">
+                      <Stop offset="0" stopColor="#ffffff" stopOpacity={0.12} />
+                      <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
+                    </RadialGradient>
+                  </Defs>
+                  {WHEEL_ICONS.map((_, i) => (
+                    <Path
                       key={i}
-                      x1={inner.x}
-                      y1={inner.y}
-                      x2={outer.x}
-                      y2={outer.y}
-                      stroke={withAlpha(COLORS.accent, 0.3)}
-                      strokeWidth={1}
+                      d={wedgePath(
+                        WHEEL_RADIUS,
+                        WHEEL_RADIUS,
+                        WHEEL_RADIUS - 2,
+                        i * SEGMENT_ANGLE,
+                        (i + 1) * SEGMENT_ANGLE
+                      )}
+                      fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
                     />
-                  );
-                })}
-                <Circle
-                  cx={WHEEL_RADIUS}
-                  cy={WHEEL_RADIUS}
-                  r={WHEEL_RADIUS - 2}
-                  fill="url(#dailyWheelGloss)"
-                />
-                <Circle
-                  cx={WHEEL_RADIUS}
-                  cy={WHEEL_RADIUS}
-                  r={WHEEL_RADIUS - 1.5}
-                  fill="none"
-                  stroke={withAlpha(COLORS.accent, 0.55)}
-                  strokeWidth={2.5}
-                />
-              </Svg>
-              {WHEEL_ICONS.map((icon, i) => (
-                <Text key={i} style={[styles.wedgeIcon, iconPosition(i)]}>
-                  {icon}
-                </Text>
-              ))}
-            </Animated.View>
-            <View style={styles.hubHalo} />
-            <View style={styles.hub} />
-          </View>
+                  ))}
+                  {WHEEL_ICONS.map((_, i) => {
+                    const angle = i * SEGMENT_ANGLE;
+                    const inner = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.2, angle);
+                    const outer = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS - 2, angle);
+                    return (
+                      <Line
+                        key={i}
+                        x1={inner.x}
+                        y1={inner.y}
+                        x2={outer.x}
+                        y2={outer.y}
+                        stroke={withAlpha(COLORS.accent, 0.3)}
+                        strokeWidth={1}
+                      />
+                    );
+                  })}
+                  <Circle
+                    cx={WHEEL_RADIUS}
+                    cy={WHEEL_RADIUS}
+                    r={WHEEL_RADIUS - 2}
+                    fill="url(#dailyWheelGloss)"
+                  />
+                  <Circle
+                    cx={WHEEL_RADIUS}
+                    cy={WHEEL_RADIUS}
+                    r={WHEEL_RADIUS - 1.5}
+                    fill="none"
+                    stroke={withAlpha(COLORS.accent, 0.55)}
+                    strokeWidth={2.5}
+                  />
+                </Svg>
+                {WHEEL_ICONS.map((icon, i) => (
+                  <Text key={i} style={[styles.wedgeIcon, iconPosition(i)]}>
+                    {icon}
+                  </Text>
+                ))}
+              </Animated.View>
+              <View style={styles.hubHalo} />
+              <View style={styles.hub} />
+            </View>
 
-          {revealed ? (
-            <>
-              <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
-              <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
-              <StreakCalendar streakCount={streakCount} />
-              <ScalePressable onPress={onDismiss} style={styles.spinBtn} scaleTo={0.96}>
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.spinBtnText}>{t("dailyWheel.claimBtn")}</Text>
-              </ScalePressable>
-            </>
-          ) : (
-            <ScalePressable disabled={spinning} onPress={spin} style={styles.spinBtn} scaleTo={0.96}>
-              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={styles.spinBtnText}>
-                {spinning ? t("dailyWheel.spinning") : t("dailyWheel.spinBtn")}
-              </Text>
-            </ScalePressable>
-          )}
-        </View>
+            {revealed ? (
+              <>
+                <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
+                <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
+                <StreakCalendar streakCount={streakCount} />
+                <BigButton label={t("dailyWheel.claimBtn")} onPress={onDismiss} />
+              </>
+            ) : (
+              <BigButton
+                label={spinning ? t("dailyWheel.spinning") : t("dailyWheel.spinBtn")}
+                disabled={spinning}
+                onPress={spin}
+              />
+            )}
+          </View>
+        </ModalShell>
       </ModalBackdrop>
       <ConfettiBurst trigger={confettiTrigger} />
     </Modal>
@@ -273,8 +257,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
+  inner: { alignItems: "center" },
   title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
+  subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
   wheelWrap: {
     width: WHEEL_RADIUS * 2,
     height: WHEEL_RADIUS * 2,

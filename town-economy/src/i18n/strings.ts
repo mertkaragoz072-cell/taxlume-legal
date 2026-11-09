@@ -16,6 +16,7 @@ export const STRINGS = {
     app: {
       defaultTownName: "Altın Kasaba",
     },
+    settings: { title: "Ayarlar" },
     common: {
       save: "Kaydet",
       cancel: "Vazgeç",
@@ -1466,6 +1467,7 @@ export const STRINGS = {
     app: {
       defaultTownName: "Golden Town",
     },
+    settings: { title: "Settings" },
     common: {
       save: "Save",
       cancel: "Cancel",

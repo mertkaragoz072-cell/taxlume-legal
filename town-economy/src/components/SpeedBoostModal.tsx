@@ -1,24 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Modal, StyleSheet, View } from "react-native";
+import { Image, Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { SPEED_BOOST_MULTIPLIER, todayString } from "../economy/useEconomy";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-} from "../theme";
+import { cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 import { maybeRequestReview } from "../utils/reviewPrompt";
 import { formatCountdown } from "./SpeedBoostButton";
-import { GradientFill } from "./GradientFill";
+import icBolt from "../../assets/ui/modal/ic_bolt_b.webp";
+import icGlass from "../../assets/ui/modal/ic_hourglass.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
+import { BigButton, ModalShell } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -71,12 +63,15 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-
+        <ModalShell
+          title={t(
+            active ? "speedBoost.activeTitle" : claimedToday ? "speedBoost.claimedTitle" : "speedBoost.title"
+          )}
+          plateIcon={icBolt}
+          onClose={onClose}
+        >
           {active ? (
             <>
-              <Text style={styles.title}>{t("speedBoost.activeTitle")}</Text>
               <Text style={styles.subtitle}>
                 {t("speedBoost.activeSubtitle", { multiplier: SPEED_BOOST_MULTIPLIER })}
               </Text>
@@ -87,26 +82,22 @@ export function SpeedBoostModal({ visible, onClose, sounds }: Props) {
             </>
           ) : claimedToday ? (
             <>
-              <Text style={styles.title}>{t("speedBoost.claimedTitle")}</Text>
               <Text style={styles.subtitle}>{t("speedBoost.claimedSubtitle")}</Text>
             </>
           ) : (
             <>
-              <Text style={styles.title}>{t("speedBoost.title")}</Text>
               <Text style={styles.subtitle}>
                 {t("speedBoost.subtitle", { multiplier: SPEED_BOOST_MULTIPLIER })}
               </Text>
-              <ScalePressable onPress={claim} style={styles.claimBtn} scaleTo={0.96}>
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.claimBtnText}>{t("speedBoost.claimBtn")}</Text>
-              </ScalePressable>
+              <Image source={icGlass} style={styles.glass} resizeMode="contain" />
+              <BigButton label={t("speedBoost.claimBtn")} onPress={claim} />
             </>
           )}
 
           <ScalePressable onPress={onClose} style={styles.cancelBtn} scaleTo={0.96}>
             <Text style={styles.cancelBtnText}>{t("common.close")}</Text>
           </ScalePressable>
-        </View>
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
@@ -122,10 +113,11 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg, lineHeight: 17 },
+  subtitle: { color: "#f4e8d0", fontSize: 13, marginBottom: SPACING.md, lineHeight: 19, textAlign: "center" },
+  glass: { width: 96, height: 118, alignSelf: "center", marginBottom: 8 },
   countdownBlock: {
     alignItems: "center",
-    backgroundColor: "#1a1410",
+    backgroundColor: "rgba(0,0,0,0.3)",
     borderRadius: RADIUS.card,
     paddingVertical: SPACING.md,
     marginBottom: SPACING.lg,
@@ -146,5 +138,5 @@ const styles = StyleSheet.create({
   },
   claimBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
   cancelBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
-  cancelBtnText: { color: "#a0917a", fontSize: 13, fontWeight: "600", fontFamily: FONT.medium },
+  cancelBtnText: { color: "#e8dcc0", fontSize: 13, fontWeight: "600", fontFamily: FONT.medium },
 });

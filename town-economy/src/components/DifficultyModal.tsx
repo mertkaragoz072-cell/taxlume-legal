@@ -4,20 +4,13 @@ import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES, DIFFICULTY_ORDER, DifficultyId } from "../economy/difficulty";
 import { NG_PLUS_MODIFIERS, ngPlusBonusPrestigePoints } from "../economy/ngPlusModifiers";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import icPad from "../../assets/ui/modal/ic_pad.webp";
+import icSprout from "../../assets/ui/modal/ic_sprout.webp";
+import icScales from "../../assets/ui/modal/ic_scales.webp";
+import icFlame from "../../assets/ui/modal/ic_flame.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
+import { BigButton, ModalShell, OptionBar } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -29,12 +22,6 @@ interface Props {
   onSelect: (difficulty: DifficultyId, ngPlusModifiers: string[]) => void;
   onCancel: () => void;
 }
-
-const DIFFICULTY_COLORS: Record<DifficultyId, string> = {
-  easy: "#5fd884",
-  normal: "#e8c777",
-  hard: "#f0776a",
-};
 
 export function DifficultyModal({ visible, currentDifficulty, prestigeLevel, onSelect, onCancel }: Props) {
   const { t } = useEconomyContext();
@@ -61,11 +48,13 @@ export function DifficultyModal({ visible, currentDifficulty, prestigeLevel, onS
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
+        <ModalShell
+          title={pending ? t("difficultyModal.confirmTitle") : t("difficultyModal.title")}
+          plateIcon={icPad}
+          onClose={onCancel}
+        >
           {pending ? (
             <>
-              <Text style={styles.title}>{t("difficultyModal.confirmTitle")}</Text>
               <Text style={styles.subtitle}>
                 {t("difficultyModal.confirmBody", { difficulty: t(pending.labelKey) })}
               </Text>
@@ -102,14 +91,10 @@ export function DifficultyModal({ visible, currentDifficulty, prestigeLevel, onS
                 </View>
               )}
 
-              <ScalePressable
+              <BigButton
+                label={t("difficultyModal.confirmButton")}
                 onPress={() => onSelect(pending.id, selectedModifiers)}
-                style={styles.confirmBtn}
-                scaleTo={0.97}
-              >
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.confirmBtnText}>{t("difficultyModal.confirmButton")}</Text>
-              </ScalePressable>
+              />
               <ScalePressable
                 onPress={() => setPendingDifficulty(null)}
                 style={styles.cancelBtn}
@@ -120,37 +105,21 @@ export function DifficultyModal({ visible, currentDifficulty, prestigeLevel, onS
             </>
           ) : (
             <>
-              <Text style={styles.title}>{t("difficultyModal.title")}</Text>
               <Text style={styles.subtitle}>{t("difficultyModal.subtitle")}</Text>
 
               {DIFFICULTY_ORDER.map((id) => {
                 const d = DIFFICULTIES[id];
                 const active = id === currentDifficulty;
-                const color = DIFFICULTY_COLORS[id];
                 return (
-                  <ScalePressable
+                  <OptionBar
                     key={id}
+                    kind={id === "easy" ? "difG" : id === "normal" ? "difB" : "difR"}
+                    title={t(d.labelKey)}
+                    hint={t(d.descriptionKey)}
+                    icon={id === "easy" ? icSprout : id === "normal" ? icScales : icFlame}
+                    tag={active ? t("difficultyModal.currentTag") : undefined}
                     onPress={() => setPendingDifficulty(id)}
-                    style={[
-                      styles.option,
-                      { backgroundColor: withAlpha(color, 0.1) },
-                      active && { borderColor: color },
-                    ]}
-                    scaleTo={0.97}
-                  >
-                    <Text style={styles.optionIcon}>{d.icon}</Text>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.optionTitleRow}>
-                        <Text style={[styles.optionLabel, { color }]}>{t(d.labelKey)}</Text>
-                        {active && (
-                          <Text style={[styles.optionActiveTag, { backgroundColor: color }]}>
-                            {t("difficultyModal.currentTag")}
-                          </Text>
-                        )}
-                      </View>
-                      <Text style={styles.optionDesc}>{t(d.descriptionKey)}</Text>
-                    </View>
-                  </ScalePressable>
+                  />
                 );
               })}
 
@@ -159,7 +128,7 @@ export function DifficultyModal({ visible, currentDifficulty, prestigeLevel, onS
               </ScalePressable>
             </>
           )}
-        </View>
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
@@ -177,7 +146,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: 14 },
+  subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: 12, textAlign: "center", lineHeight: 17 },
   ngPlusSection: { marginBottom: 6 },
   ngPlusTitle: {
     color: COLORS.accent,
