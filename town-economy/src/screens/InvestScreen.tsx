@@ -1,28 +1,23 @@
 import React, { useState } from "react";
-import { Animated, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { ASSETS, AssetId } from "../economy/assets";
 import { AnimatedNumber } from "../components/AnimatedNumber";
+import { AssetChartPanel, PortfolioPanel } from "../components/InvestPanels";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
-import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import {
-  cardShadow,
-  CARD_GRADIENT,
   COLORS,
   CONTENT_MAX_WIDTH,
   PANEL_GAP,
   SCREEN_PADDING,
   FONT,
-  RADIUS,
   SPACING,
   TYPE,
-  WEIGHT,
-  withAlpha,
 } from "../theme";
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
@@ -38,7 +33,6 @@ export function InvestScreen({ sounds }: Props) {
   // Clamped against CONTENT_MAX_WIDTH, not a raw screenWidth cap — see
   // MarketScreen for why.
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
   // All 4 assets fit the row at once — see MarketScreen's goodCardWidth
   // for why this is computed rather than a fixed guess.
   const assetsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2;
@@ -65,76 +59,64 @@ export function InvestScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-      <View style={styles.portfolioCard}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <Text style={styles.portfolioLabel}>{t("invest.portfolioLabel")}</Text>
-        <View style={styles.portfolioRow}>
-          <Text style={styles.portfolioValue}>{formatCoins(assetsValue)}</Text>
-          {assetsValue > 0 && (
-            <Text style={[styles.portfolioPnl, { color: totalPnl >= 0 ? COLORS.positive : COLORS.negative }]}>
-              {totalPnl >= 0
-                ? t("invest.unrealizedProfit", { amount: formatNumber(totalPnl, state.language) })
-                : t("invest.unrealizedLoss", { amount: formatNumber(Math.abs(totalPnl), state.language) })}
-            </Text>
-          )}
-        </View>
-      </View>
+      <PortfolioPanel
+        label={t("invest.portfolioLabel")}
+        value={formatCoins(assetsValue)}
+        pnl={
+          assetsValue > 0
+            ? totalPnl >= 0
+              ? t("invest.unrealizedProfit", { amount: formatNumber(totalPnl, state.language) })
+              : t("invest.unrealizedLoss", { amount: formatNumber(Math.abs(totalPnl), state.language) })
+            : undefined
+        }
+        pnlPositive={totalPnl >= 0}
+      />
 
       <Text style={styles.sectionNote}>{t("invest.sectionNote")}</Text>
 
-      <View style={[styles.chartCard, { borderColor: withAlpha(selected.color, 0.4) }]}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(selected.color, 0.1) }]}
-        />
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity: flashOpacity }]}
-        />
-        <View style={styles.chartHeaderRow}>
-          <View>
-            <Text style={styles.chartTitle}>
-              {selected.icon} {t(selected.nameKey)}
-            </Text>
-            <Text style={styles.chartSubtitle}>{t(selected.descriptionKey)}</Text>
-          </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <AnimatedNumber value={selectedState.price} formatter={formatPrice} style={styles.chartPrice} />
-            <Text style={[styles.chartChange, { color: change >= 0 ? COLORS.positive : COLORS.negative }]}>
-              {change >= 0 ? "+" : ""}
-              {formatPercent(change, state.language, 2)}
-            </Text>
-          </View>
-        </View>
-        <PriceChart
-          history={selectedState.history}
-          color={selected.color}
-          width={chartWidth}
-          height={140}
-          strokeWidth={3}
-          interactive
-        />
-        {selectedState.holding > 0 ? (
-          <View style={styles.holdingRow}>
-            <Text style={styles.holdingText}>
-              {t("invest.holdingLabel", { qty: selectedState.holding })} ·{" "}
-              {t("invest.avgCostLabel", { price: selectedState.avgCost.toFixed(2) })}
-            </Text>
-            <Text
-              style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? COLORS.positive : COLORS.negative }]}
-            >
-              {unrealizedPnl >= 0
-                ? t("invest.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
-                : t("invest.unrealizedLoss", {
-                    amount: formatNumber(Math.abs(unrealizedPnl), state.language),
-                  })}
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.noHolding}>{t("invest.noHolding")}</Text>
+      <AssetChartPanel
+        icon={selected.icon}
+        name={t(selected.nameKey)}
+        description={t(selected.descriptionKey)}
+        price={
+          <AnimatedNumber
+            value={selectedState.price}
+            formatter={formatPrice}
+            style={{ color: "#f6e2a0", fontFamily: FONT.black, fontSize: 22 }}
+          />
+        }
+        change={`${change >= 0 ? "+" : ""}${formatPercent(change, state.language, 2)}`}
+        changePositive={change >= 0}
+        color={selected.color}
+        flashColor={flashColor}
+        flashOpacity={flashOpacity}
+        holding={
+          selectedState.holding > 0
+            ? `${t("invest.holdingLabel", { qty: selectedState.holding })} · ${t("invest.avgCostLabel", {
+                price: selectedState.avgCost.toFixed(2),
+              })}`
+            : t("invest.noHolding")
+        }
+        pnl={
+          selectedState.holding > 0
+            ? unrealizedPnl >= 0
+              ? t("invest.unrealizedProfit", { amount: formatNumber(unrealizedPnl, state.language) })
+              : t("invest.unrealizedLoss", { amount: formatNumber(Math.abs(unrealizedPnl), state.language) })
+            : undefined
+        }
+        pnlPositive={unrealizedPnl >= 0}
+      >
+        {(w, h) => (
+          <PriceChart
+            history={selectedState.history}
+            color={selected.color}
+            width={w}
+            height={h}
+            strokeWidth={3}
+            interactive
+          />
         )}
-      </View>
+      </AssetChartPanel>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.assetsRow}>
         {ASSETS.map((a) => (
@@ -150,6 +132,7 @@ export function InvestScreen({ sounds }: Props) {
       </ScrollView>
 
       <BuySellPanel
+        painted
         good={selected}
         state={selectedState}
         cash={state.cash}
@@ -165,79 +148,6 @@ export function InvestScreen({ sounds }: Props) {
 
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
-  portfolioCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md + 2,
-    marginBottom: SPACING.md,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  portfolioLabel: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 1,
-  },
-  portfolioRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: SPACING.xs,
-  },
-  portfolioValue: {
-    color: COLORS.accent,
-    fontSize: TYPE.display,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-  },
-  portfolioPnl: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
   sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: PANEL_GAP, lineHeight: 17 },
-  chartCard: {
-    borderRadius: RADIUS.feature,
-    borderWidth: 1.5,
-    padding: SPACING.lg,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  chartHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: SPACING.sm,
-  },
-  chartTitle: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.title,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-  },
-  chartSubtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginTop: 2, maxWidth: 200 },
-  chartPrice: {
-    color: COLORS.accent,
-    fontSize: TYPE.heading,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-  },
-  chartChange: { fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold, marginTop: 2 },
-  holdingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: SPACING.sm + 2,
-    paddingTop: SPACING.sm + 2,
-    borderTopWidth: 1,
-    borderTopColor: "#3a2d1e",
-  },
-  holdingText: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1 },
-  holdingPnl: { fontSize: TYPE.label, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  noHolding: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    marginTop: SPACING.sm + 2,
-    paddingTop: SPACING.sm + 2,
-    borderTopWidth: 1,
-    borderTopColor: "#3a2d1e",
-  },
   assetsRow: { marginBottom: PANEL_GAP },
 });

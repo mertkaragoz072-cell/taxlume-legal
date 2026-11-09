@@ -18,6 +18,7 @@ import {
   withAlpha,
 } from "../theme";
 import { CoinPop } from "./CoinPop";
+import { InvestTradePanel } from "./InvestPanels";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 import { TradeDialog } from "./TradeDialog";
@@ -35,6 +36,8 @@ interface Props {
   spreadPct?: number;
   /** render as the painted trade dialog (panel art, plaque buttons) instead of the dark card; needs goodId and onClose */
   dialog?: boolean;
+  /** render on the sent Invest-screen panel art (only the Invest screen sets it) */
+  painted?: boolean;
   goodId?: string;
   onClose?: () => void;
 }
@@ -50,6 +53,7 @@ export function BuySellPanel({
   onTrade,
   spreadPct = 0,
   dialog = false,
+  painted = false,
   goodId,
   onClose,
 }: Props) {
@@ -95,6 +99,43 @@ export function BuySellPanel({
         }}
         coinPopTrigger={coinPopTrigger}
       />
+    );
+  }
+
+  if (painted) {
+    return (
+      <View>
+        {tradeStreak >= 2 && (
+          <View style={styles.streakBadge}>
+            <Text style={styles.streakBadgeText}>
+              {t("market.hotStreak", { streak: tradeStreak, bonusPct: streakBonusPct })}
+            </Text>
+          </View>
+        )}
+        <InvestTradePanel
+          side={side}
+          onSide={setSide}
+          buyLabel={t("market.buyShort")}
+          sellLabel={t("market.sellShort")}
+          qty={([1, 5, "ALL"] as Qty[]).map((q) => ({
+            key: String(q),
+            label: q === "ALL" ? t("common.all") : String(q),
+            selected: qtyOption === q,
+            onPress: () => setQtyOption(q),
+          }))}
+          accent={good.color}
+          summary={`${resolvedQty} x ${t(good.nameKey)} @ ${execPrice.toFixed(2)}`}
+          total={formatCoins(total)}
+          confirmLabel={`${side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} ${good.icon}`}
+          disabled={disabled}
+          onConfirm={() => {
+            onTrade(side, resolvedQty);
+            setCoinPopTrigger((n) => n + 1);
+          }}
+        >
+          <CoinPop trigger={coinPopTrigger} />
+        </InvestTradePanel>
+      </View>
     );
   }
 
