@@ -2,20 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { COLORS, FONT, SPACING, TYPE, WEIGHT } from "../theme";
 import { ModalBackdrop } from "./ModalBackdrop";
+import { BigButton, ModalShell } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -23,7 +12,6 @@ interface Props {
   onResolve: (tariffDiscountBonus: number) => void;
 }
 
-const BAR_WIDTH = 280;
 const MARKER_SIZE = 20;
 const PASS_MS = 950;
 
@@ -46,6 +34,7 @@ export function BargainingModal({ visible, onResolve }: Props) {
   const anim = useRef(new Animated.Value(0)).current;
   const animLoop = useRef<Animated.CompositeAnimation | null>(null);
   const positionRef = useRef(0);
+  const [barW, setBarW] = useState(250);
 
   useEffect(() => {
     if (!visible) return;
@@ -96,7 +85,7 @@ export function BargainingModal({ visible, onResolve }: Props) {
 
   const markerLeft = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, BAR_WIDTH - MARKER_SIZE],
+    outputRange: [0, barW - MARKER_SIZE],
   });
 
   const resultText =
@@ -111,15 +100,13 @@ export function BargainingModal({ visible, onResolve }: Props) {
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>{t("bargain.title")}</Text>
+        <ModalShell title={t("bargain.title")}>
           <Text style={styles.subtitle}>{t("bargain.subtitle")}</Text>
 
-          <View style={styles.barTrack}>
-            <View style={styles.goodZone} />
-            <View style={styles.perfectZoneHalo} />
-            <View style={styles.perfectZone} />
+          <View style={styles.barTrack} onLayout={(e) => setBarW(e.nativeEvent.layout.width)}>
+            <View style={[styles.goodZone, { left: barW * 0.3, width: barW * 0.4 }]} />
+            <View style={[styles.perfectZoneHalo, { left: barW * 0.4, width: barW * 0.2 }]} />
+            <View style={[styles.perfectZone, { left: barW * 0.44, width: barW * 0.12 }]} />
             <Animated.View style={[styles.marker, { left: markerLeft }]} />
           </View>
 
@@ -130,77 +117,43 @@ export function BargainingModal({ visible, onResolve }: Props) {
                   styles.resultText,
                   {
                     color:
-                      result.tier === "perfect"
-                        ? COLORS.positive
-                        : result.tier === "good"
-                          ? COLORS.warning
-                          : COLORS.textMuted,
+                      result.tier === "perfect" ? "#7fe39a" : result.tier === "good" ? "#f4c43c" : "#d8c8a8",
                   },
                 ]}
               >
                 {resultText}
               </Text>
-              <ScalePressable
-                onPress={() => onResolve(result.bonus)}
-                style={styles.continueBtn}
-                scaleTo={0.96}
-              >
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.continueBtnText}>{t("bargain.continueBtn")}</Text>
-              </ScalePressable>
+              <BigButton label={t("bargain.continueBtn")} onPress={() => onResolve(result.bonus)} />
             </>
           ) : (
             <>
-              <ScalePressable onPress={stop} style={styles.stopBtn} scaleTo={0.94}>
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.stopBtnText}>{t("bargain.stopBtn")}</Text>
-              </ScalePressable>
+              <BigButton label={t("bargain.stopBtn")} onPress={stop} />
               <ScalePressable onPress={() => onResolve(0)} style={styles.skipBtn} scaleTo={0.97}>
                 <Text style={styles.skipBtnText}>{t("bargain.skipBtn")}</Text>
               </ScalePressable>
             </>
           )}
-        </View>
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: "100%",
-    maxWidth: 340,
-    borderRadius: RADIUS.feature,
-    borderWidth: 1,
-    borderColor: withAlpha(COLORS.accent, 0.3),
-    padding: 20,
-    alignItems: "center",
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  title: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.title,
-    fontFamily: FONT.display,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  subtitle: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
+  subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
   barTrack: {
-    width: BAR_WIDTH,
+    alignSelf: "stretch",
     height: 34,
     borderRadius: 17,
-    backgroundColor: COLORS.onLight,
+    backgroundColor: "rgba(0,0,0,0.35)",
     borderWidth: 2,
-    borderColor: "#3a2d1e",
+    borderColor: "#c8843c",
     justifyContent: "center",
     marginBottom: SPACING.lg,
     overflow: "hidden",
   },
   goodZone: {
     position: "absolute",
-    left: BAR_WIDTH * 0.3,
-    width: BAR_WIDTH * 0.4,
     height: "70%",
     top: "15%",
     borderRadius: 999,
@@ -208,8 +161,6 @@ const styles = StyleSheet.create({
   },
   perfectZoneHalo: {
     position: "absolute",
-    left: BAR_WIDTH * 0.4,
-    width: BAR_WIDTH * 0.2,
     height: "88%",
     top: "6%",
     borderRadius: 999,
@@ -217,8 +168,6 @@ const styles = StyleSheet.create({
   },
   perfectZone: {
     position: "absolute",
-    left: BAR_WIDTH * 0.44,
-    width: BAR_WIDTH * 0.12,
     height: "70%",
     top: "15%",
     borderRadius: 999,
@@ -244,28 +193,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     textAlign: "center",
   },
-  stopBtn: {
-    width: "100%",
-    borderRadius: RADIUS.card,
-    paddingVertical: 14,
-    alignItems: "center",
-    overflow: "hidden",
-    marginBottom: SPACING.sm,
-  },
-  stopBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 16 },
   skipBtn: { alignItems: "center", paddingVertical: 8 },
   skipBtnText: {
-    color: COLORS.textMuted,
+    color: "#e8dcc0",
     fontSize: TYPE.label,
     fontWeight: WEIGHT.medium,
     fontFamily: FONT.medium,
   },
-  continueBtn: {
-    width: "100%",
-    borderRadius: RADIUS.card,
-    paddingVertical: 12,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  continueBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 14 },
 });

@@ -52,8 +52,17 @@ export function Bar({ kind, height, dim }: { kind: BarKind; height: number; dim?
   const capW = Math.round((b.capW * height) / BAR_ART_H[kind]);
   return (
     <View style={[styles.barRow, { height, opacity: dim ? 0.5 : 1 }]} pointerEvents="none">
+      {/* The middle runs a little under both caps so no hairline of the
+          background shows at the joins when widths land on fractions. */}
+      <View style={{ position: "absolute", top: 0, left: capW - 2, right: capW - 2, height }}>
+        <Image
+          source={b.mid}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+          resizeMode="stretch"
+        />
+      </View>
       <Image source={b.cap} style={{ width: capW, height }} resizeMode="stretch" />
-      <Image source={b.mid} style={{ flex: 1, height }} resizeMode="stretch" />
+      <View style={{ flex: 1 }} />
       <Image
         source={b.cap}
         style={{ width: capW, height, transform: [{ scaleX: -1 }] }}
@@ -134,6 +143,22 @@ export function ModalShell({
           <Image source={xClose} style={{ width: 34, height: 34 }} resizeMode="contain" />
         </ScalePressable>
       ) : null}
+    </View>
+  );
+}
+
+/** The same copper-rimmed walnut frame without a plate, for docked cards. */
+export function FrameBox({ children, style }: { children: React.ReactNode; style?: object }) {
+  return (
+    <View style={[styles.rim1, style]}>
+      <View style={styles.rim2}>
+        <View style={styles.rim3}>
+          <View style={[styles.body, { paddingBottom: 12, paddingTop: 12 }]}>
+            <GradientFill colors={["#4a2e1a", "#2c1a0f"]} x1="0" y1="0" x2="0" y2="1" />
+            {children}
+          </View>
+        </View>
+      </View>
     </View>
   );
 }

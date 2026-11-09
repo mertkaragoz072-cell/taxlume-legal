@@ -4,19 +4,8 @@ import { Text } from "./AppText";
 import caravanGuideImage from "../../assets/caravan-merchant-guide.png";
 import { t } from "../i18n/t";
 import { Language } from "../i18n/t";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { Bar, FrameBox } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 import { SpotlightId } from "./Spotlight";
 
@@ -93,16 +82,8 @@ export function CaravanTutorialModal({
         },
       ]}
     >
-      <View style={styles.card}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-
+      <FrameBox>
         <View style={styles.row}>
-          {/* A spacer, not the portrait itself — see portraitFloat below,
-              same split MentorCoach uses for Merve. Squeezing the image and
-              the text into one row was what made this read as cluttered:
-              the speech column had barely half the card's width to work
-              with, so the name/role line and the title were both wrapping
-              onto extra lines they didn't need. */}
           <View style={styles.portraitSpacer} />
           <View style={styles.speech}>
             <View style={styles.nameRow}>
@@ -113,11 +94,6 @@ export function CaravanTutorialModal({
                 {stepIndex + 1} / {CARAVAN_STEPS.length}
               </Text>
             </View>
-            {/* Its own line rather than squeezed onto the name row: "Caravan
-                Guide · 🐪 Caravan Master" plus the "N / 5" count together ran
-                past the available width and truncated mid-word ("Caravan…"),
-                losing "Master" outright — reported back as looking broken.
-                A dedicated line only has to fit itself, never the counter. */}
             <Text style={styles.role} numberOfLines={1}>
               {t(language, "caravanTutorial.guideRole")}
             </Text>
@@ -134,13 +110,13 @@ export function CaravanTutorialModal({
             </ScalePressable>
           )}
           <ScalePressable onPress={onNext} style={styles.nextBtn} scaleTo={0.96}>
-            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
+            <Bar kind="btn" height={38} />
             <Text style={styles.nextText}>
               {isLast ? t(language, "common.close") : t(language, "common.next")}
             </Text>
           </ScalePressable>
         </View>
-      </View>
+      </FrameBox>
 
       {/* Sibling of the card, not a child of it — the card clips its own
           content (overflow: hidden, for its rounded corners), which would
@@ -222,7 +198,7 @@ const styles = StyleSheet.create({
   // its own line below instead (see `role` and its render site).
   name: {
     flex: 1,
-    color: COLORS.accent,
+    color: "#f4c43c",
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
@@ -241,21 +217,22 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.sm,
   },
   title: {
-    color: COLORS.textPrimary,
+    color: "#fff4d8",
     fontSize: TYPE.heading,
     fontFamily: FONT.display,
     marginTop: 4,
     marginBottom: 3,
   },
-  text: { color: COLORS.textMuted, fontSize: TYPE.label, lineHeight: 18 },
+  text: { color: "#f0e2c4", fontSize: TYPE.label, lineHeight: 18 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: SPACING.sm },
   skipBtn: { paddingVertical: 8, paddingHorizontal: SPACING.sm, marginRight: SPACING.xs },
-  skipText: { color: COLORS.textMuted, fontSize: TYPE.caption, fontFamily: FONT.medium },
+  skipText: { color: "#e8dcc0", fontSize: TYPE.caption, fontFamily: FONT.medium },
   nextBtn: {
-    borderRadius: RADIUS.chip,
-    paddingVertical: 9,
+    height: 38,
+    minWidth: 110,
     paddingHorizontal: SPACING.lg,
-    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  nextText: { color: "#1a1410", fontFamily: FONT.black, fontSize: TYPE.label, lineHeight: 18 },
+  nextText: { color: "#fff8e6", fontFamily: FONT.black, fontSize: TYPE.label, lineHeight: 18 },
 });
