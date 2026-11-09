@@ -239,13 +239,20 @@ describe("openBulkContract", () => {
 
     it("pays out the locked price per unit at maturity via tick()", () => {
       Math.random = () => 0.999999; // clears every chance check in tick() so only the settlement itself moves cash
-      const bought = trade({ ...initialState(), cash: 100000, happiness: 50 }, "bread", "buy", 10);
+      // productionQuotas cleared: a hit quota pays its own cash bonus mid-run
+      const bought = trade(
+        { ...initialState(), cash: 100000, happiness: 50, productionQuotas: [] },
+        "bread",
+        "buy",
+        10
+      );
       const opened = openBulkContract(bought, "bread", 10, BULK_CONTRACT_TERM_DAY_STEPS[0]);
       const termTicks = BULK_CONTRACT_TERM_DAY_STEPS[0] * TICKS_PER_GAME_DAY;
       let state = { ...opened, paused: false };
       const expectedPayout = opened.bulkContracts[0].qty * opened.bulkContracts[0].lockedPricePerUnit;
       for (let i = 0; i < termTicks; i++) {
-        state = tick(state);
+        // quotas are regenerated each new game day; keep them out of the cash total
+        state = { ...tick(state), productionQuotas: [] };
       }
       expect(state.bulkContracts).toHaveLength(0);
       expect(state.cash).toBeCloseTo(opened.cash + expectedPayout, 1);
@@ -632,7 +639,9 @@ describe("lost treasure", () => {
     const state = { ...initialState(), cash: 1000, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(1000 + 1000 * 0.05, 6);
-    expect(next.lastEvent?.message).toMatch(/hazine|treasure/i);
+    // Later systems (bounties) can post their own event in the same tick and take
+    // lastEvent, so look for the treasure in the whole log.
+    expect(next.eventLog.some((e) => /hazine|treasure/i.test(e.message))).toBe(true);
   });
 
   it("floors the windfall so it's still meaningful with little cash", () => {
