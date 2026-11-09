@@ -14,6 +14,7 @@ const SPEED = 210;                 // design px per second
 const COIN_FLIGHT_SEC = 0.5;     // a coin's flight from the guest to the register
 /** What a guest says on the way out (the guest's number picks the line). */
 const SAYINGS = { happy: ['Teşekkürler!', 'Çok lezzetliydi!', 'Yine gelirim!', 'Harika!'], favorite: ['Favorim buydu!', 'Tam istediğim!'], angry: ['Çok bekledim…', 'Gidiyorum!'] };
+const TYPE_LINES = { hurried: 'Acelem var!', gourmet: 'En iyisinden!', kid: 'Karnım aç!' };
 const BODY_H = PERSON_H;           // approximate sprite height at scale 1 (the first table row) for bubbles and hit-testing; `bodyH(y)` follows the perspective
 const bodyH = (y) => BODY_H * depthScale(y);
 
@@ -36,6 +37,7 @@ export class CustomerLayer {
     this.bubbleScale = 1;          // set by the scene: bubbles grow a little on small screens (zoomed out) so the icon and price stay readable
     game.on('customer', (e) => {
       if (e.type === 'leave') this.react(e);
+      if (e.type === 'seat' && e.guestType) this.greet(e);
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
         if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; v.payout = e.income; }   // paid: the guest stays in the chair and eats before leaving; the coins go to the register when they get up
@@ -45,6 +47,12 @@ export class CustomerLayer {
         for (const v of this.v.values()) if (v.ghost && v.table === e.table && v.linger > 0) v.linger = 0;
       }
     });
+  }
+
+  /** A guest of a special type says so when they sit down. */
+  greet(e) {
+    if (this.emotes.length > 8) return;
+    this.emotes.push({ id: e.id, table: e.table, kind: 'say', text: TYPE_LINES[e.guestType], life: 1.6, wait: 3.2 });      // shown over the guest once they have reached the chair
   }
 
   /** A guest's reaction when they leave: a heart for a happy one, two hearts for a favourite, an anger mark for one who gave up. */
@@ -120,7 +128,7 @@ export class CustomerLayer {
     }
     this.coins = this.coins.filter((c) => !c.landed);
     for (const p of this.pops) p.life -= dt * 0.8;
-    for (const m of this.emotes) m.life -= dt * 0.9;
+    for (const m of this.emotes) { if (m.wait > 0) m.wait -= dt; else m.life -= dt * 0.9; }
     this.emotes = this.emotes.filter((m) => m.life > 0);
     this.pops = this.pops.filter((p) => p.life > 0);
     for (const [id, v] of this.v) {                                 // lower into / rise out of the chair
@@ -282,7 +290,7 @@ export class CustomerLayer {
       ctx.globalAlpha = 1;
       drawIcon(ctx, 'coin', c.x0 + (c.x1 - c.x0) * e, c.y0 + (c.y1 - c.y0) * e - Math.sin(k * Math.PI) * 110, 40 - 10 * k);      // an arc over the floor
     }
-    for (const m of this.emotes) this.drawEmote(ctx, m);
+    for (const m of this.emotes) if (!(m.wait > 0)) this.drawEmote(ctx, m);
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
       const py = p.y - (1 - p.life) * 70 + this.warp(p.y + bodyH(p.y));
@@ -295,6 +303,12 @@ export class CustomerLayer {
 
   /** One reaction mark, drawn with paths (no emoji, so it looks the same everywhere): rising and fading. */
   drawEmote(ctx, m) {
+    if (m.id != null) {                                         // a line that follows its guest (type greeting)
+      const v = this.v.get(m.id), c = this.cafe.customers.find((x) => x.id === m.id);
+      if (!v || !c || c.state !== 'seated') return;
+      const table = AREAS.find((a) => a.id === `table${c.table + 1}`);
+      m = { ...m, x: this.bodyX(v, c), y: this.bubbleTop(v, c) + this.warp(depthOf(table) + 1) - 100 };      // (above the order bubble)
+    }
     const rise = m.kind === 'say' ? (1 - m.life) * 22 : (1 - m.life) * 60, a = clamp(m.life * 1.8, 0, 1), pulse = 1 + Math.sin((1 - m.life) * 9) * 0.06;
     ctx.save(); ctx.globalAlpha = a; ctx.translate(m.x, m.y - rise);
     if (m.kind === 'say') {

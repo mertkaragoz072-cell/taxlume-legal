@@ -1,7 +1,9 @@
 // Quest, daily reward, settings, town, research and exploration panels.
 import { weeklyProduct } from "../game/events.js";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
+import { NAME_MAX } from "../game/profile.js";
+import { timings } from "../runtime/startup";
 import { formatDuration } from "../game/exploration.js";
 import { EXPLORE_LIMIT } from "../data/economy.js";
 import { useRefresh, useWorld } from "../runtime/context";
@@ -95,6 +97,32 @@ export function AlbumPanel() {
   );
 }
 
+// ---------------------------------------------------------------------------------------------------------------- statistics
+const clockText = (sec: number) => { const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h ? `${h} sa ${m} dk` : `${m} dk`; };
+export function StatsPanel() {
+  const { world, act } = useWorld();
+  const { game, album, cafe } = world, u = useU();
+  useRefresh(5000);
+  const st = game.stats, best = Object.entries(st.sold as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
+  const bestDef = best && best[1] > 0 ? game.productsDef[best[0]] : null;
+  const rating = cafe.rating() as { stars: number; happy: number; total: number };
+  const line = (icon: string, name: string, value: string) => <Card key={name} left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>{icon}</Text>}><Title name={name} note={value} /></Card>;
+  return (
+    <Sheet title="İstatistikler" hint={game.profile.name ? `🪧 ${game.profile.name}` : "Kafenin şimdiye kadarki hikâyesi"} onClose={() => act.openOverlay(null)}>
+      {line("⏱", "Kafede geçen süre", clockText(st.playSec ?? 0))}
+      {line("🧾", "Toplam satış", fmt(st.soldTotal))}
+      {line("🏭", "Toplam üretim", fmt(st.producedTotal))}
+      {line("💰", "Toplam kazanılan altın", fmt(st.goldEarned))}
+      {line("🪙", "Toplam harcanan altın", fmt(st.goldSpent))}
+      {line("⚡", "En iyi servis serisi", `${st.bestCombo ?? 0} satış`)}
+      {line("♥", "Favori servisi", fmt(st.favoritesServed ?? 0))}
+      {line("🏆", "En çok satan ürün", bestDef ? `${bestDef.icon} ${bestDef.name} · ${fmt(best[1])}` : "—")}
+      {line("⭐", "Kafe puanı", `★ ${rating.stars.toFixed(1)} (son ${rating.total} müşteri)`)}
+      {line("📖", "Müşteri albümü", `${album.count()}/${album.looks.length}`)}
+    </Sheet>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------------------------- daily reward
 export function DailyPanel() {
   const { world, act } = useWorld();
@@ -125,6 +153,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
   const { world, act } = useWorld();
   const { settings } = world, u = useU();
   const [confirming, setConfirming] = useState(false);
+  const [name, setName] = useState<string>(world.game.profile.name);
   const [, bump] = useState(0);
   const toggle = (key: string) => { settings.toggle(key); act.sfx("tap"); bump((n) => n + 1); };
   const row = (key: string, icon: string, label: string) => (
@@ -134,9 +163,19 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
   );
   return (
     <Sheet title="Ayarlar" onClose={() => act.openOverlay(null)}>
+      <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>🪧</Text>}>
+        <Title name="Kafenin adı" note={`en çok ${NAME_MAX} harf`} />
+        <TextInput value={name} onChangeText={(t) => setName(t.slice(0, NAME_MAX * 2))} onEndEditing={() => { const kept = world.game.setCafeName(name); setName(kept); if (kept) act.toast(`🪧 Kafenin adı: ${kept}`, 2000); }} placeholder="Örn. Pati Fırın" maxLength={NAME_MAX * 2} returnKeyType="done" accessibilityLabel="Kafenin adı"
+          style={{ minHeight: Math.max(44, u * 8), borderRadius: u * 1.6, borderWidth: u * 0.3, borderColor: C.brown, backgroundColor: C.paper, paddingHorizontal: u * 1.6, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3) }} />
+        <Meta tone="muted" text="Tabelada görünür (kafe 2. aşamaya geçince asılır). Boş bırakırsan aşamanın adı kullanılır." />
+      </Card>
       {row("sfx", "🔊", "Ses efektleri")}
       {row("music", "🎵", "Müzik")}
       {row("vibration", "📳", "Titreşim")}
+      <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>⏱</Text>}>
+        <Title name="Açılış süresi" />
+        <Meta tone="muted" text={Object.keys(timings).length ? `Toplam ${(timings.toplam / 1000).toFixed(1).replace(".", ",")} sn · ${Object.entries(timings).filter(([k]) => k !== "toplam").map(([k, v]) => `${k} ${(v / 1000).toFixed(1).replace(".", ",")} sn`).join(" · ")}` : "Ölçüm yok"} />
+      </Card>
       <Card tone="danger" right={confirming
         ? <View style={{ gap: u * 0.6 }}><Btn small variant="lack" label="Evet, sıfırla" onPress={() => { setConfirming(false); onReset(); }} /><Btn small variant="alt" label="Vazgeç" onPress={() => setConfirming(false)} /></View>
         : <Btn variant="lack" label="Sıfırla…" onPress={() => setConfirming(true)} />}>

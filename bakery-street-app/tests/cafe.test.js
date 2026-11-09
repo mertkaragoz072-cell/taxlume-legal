@@ -521,7 +521,7 @@ test('a guest with no matching stock is not served and keeps waiting (nothing is
 });
 
 // ---- service bonuses: combo, fast service, favourite ------------------------------------------------------------------
-const BONUS = { ...CAFE.bonuses, event: null };                  // the weekly star product has its own test
+const BONUS = { ...CAFE.bonuses, event: null, types: null };                  // the weekly star product has its own test
 const bonusMake = (config = {}) => make({ config: { bonuses: BONUS, firstSpawnSec: 999, spawnEverySec: [999, 999], tables: 4, queueMax: 4, orderPatienceSec: 100, ...config } });
 /** a guest who has waited `waited` seconds, wanting `product` (never their favourite unless asked) */
 function guest(cafe, product, waited = 0) {
@@ -594,6 +594,6 @@ test('bonuses off (null) pay exactly the plain price and draw no extra random nu
   const { cafe, game } = make();
   game.products.bread = 3;
   const g = guest(cafe, 'bread');
-  assert.deepEqual(cafe.serviceBonus(g.c, g.order), { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false });
+  assert.deepEqual(cafe.serviceBonus(g.c, g.order), { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false, guest: null });
   assert.equal(cafe.deliver(g.order.id).income, game.unitEconomics('bread', PRODUCTS.bread.price).customer);
 });

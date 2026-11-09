@@ -1,4 +1,5 @@
 // Pure game logic for production, stock and gold. No DOM or canvas here, so it can be unit-tested in Node.
+import { cleanName } from './profile.js';
 import { INGREDIENTS, PRODUCTS, STATIONS, MARKET, UPGRADES, SALES } from '../data/economy.js';
 
 const fmtGold = (n) => n.toLocaleString('tr-TR');
@@ -6,7 +7,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0, bestCombo: 0, favoritesServed: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0, bestCombo: 0, favoritesServed: 0, playSec: 0 };
 }
 
 export class Game {
@@ -25,6 +26,7 @@ export class Game {
     this.upgradesDef = data.upgrades ?? UPGRADES;
     this.sales = data.sales ?? SALES;
     this.stats = blankStats(this.productsDef);
+    this.profile = { name: '' };      // the player's own touches (cafe name)
     this.upgrades = Object.fromEntries(Object.keys(this.upgradesDef).map((id) => [id, 0]));   // current level of each upgrade
     this.handledRequests = new Set();   // purchase request ids already applied (guards against a replayed click)
     this.clock = clock;
@@ -207,6 +209,13 @@ export class Game {
     return rebate ? { ok: true, rebate } : { ok: true };
   }
 
+  /** Names the cafe (see profile.js). Returns the name that was kept. */
+  setCafeName(text) {
+    this.profile.name = cleanName(text);
+    this.emit('change', { type: 'profile' });
+    return this.profile.name;
+  }
+
   /** Completes every finished job. Call regularly (each frame); also catches up after a long pause. */
   tick() {
     this.cafe?.tick();
@@ -232,6 +241,17 @@ export class Game {
       }
       this.repeatLast(station);
     }
+  }
+
+  /** Starts up to `n` units of one product in a row (stops at the first refusal). Returns { started, message } (message = why it stopped early, if it did). */
+  startMany(id, n = 3) {
+    let started = 0, message = '';
+    for (let i = 0; i < n; i++) {
+      const r = this.startProduction(id);
+      if (!r.ok) { message = r.message ?? ''; break; }
+      started++;
+    }
+    return { started, message };
   }
 
   /** Kitchen helper (upgrade): when a machine finishes work, the last product made there is started again if its ingredients and room are there. Never buys anything. */
@@ -281,6 +301,7 @@ export class Game {
       ...(this.cafe ? { cafe: this.cafe.exportState() } : {}),
       gold: this.player.gold,
       gems: this.player.gems ?? 0,
+      profile: { name: this.profile.name },
       ingredients: { ...this.ingredients },
       products: { ...this.products },
       jobs: Object.fromEntries(Object.entries(this.jobs).map(([st, list]) => [st, list.map((j) => ({ product: j.product, startedAt: j.startedAt, duration: j.duration }))])),
@@ -308,6 +329,7 @@ export class Game {
     this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, list]) => [st, list.map((j) => ({ ...j }))]));
     this.upgrades = { ...state.upgrades };
     this.stats = JSON.parse(JSON.stringify(state.stats));
+    this.profile = { name: state.profile?.name ?? '' };
     this.quests?.importState(state.quests);
     this.daily?.importState(state.daily);
     this.progression?.importState(state.progression);
@@ -332,6 +354,7 @@ export class Game {
       jobs: {},
       upgrades: Object.fromEntries(Object.keys(this.upgradesDef).map((id) => [id, 0])),
       stats: blankStats(this.productsDef),
+      profile: { name: '' },
       quests: { claimed: [] },
       daily: { lastDate: null, day: 0 },
       progression: { level: 1, xp: 0, rewardedLevel: 1 },

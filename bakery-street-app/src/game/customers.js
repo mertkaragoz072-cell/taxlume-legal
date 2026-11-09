@@ -7,6 +7,7 @@ import { CAFE } from '../data/economy.js';
 import { weeklyProduct } from './events.js';
 import { weatherOf } from './weather.js';
 
+export const GUEST_TYPES = ['hurried', 'gourmet', 'kid'];
 export const LOOKS = ['boy_backpack', 'girl_basket', 'oldman', 'boy_cap', 'girl_glasses', 'girl_red', 'grandma', 'boy_redcap'];
 const ms = (s) => Math.round(s * 1000);
 const isId = (n) => Number.isInteger(n) && n > 0 && n < 1e12;
@@ -58,9 +59,13 @@ export class Cafe {
   }
   /** 1 = just arrived, 0 = about to leave. */
   patienceFraction(c) {
-    const max = ms(c.state === 'queued' ? this.cfg.queuePatienceSec : this.cfg.orderPatienceSec);
+    const max = ms(c.state === 'queued' ? this.cfg.queuePatienceSec : this.cfg.orderPatienceSec) * this.patienceMult(c);
     return Math.max(0, Math.min(1, c.patience / max));
   }
+
+  /** The guest type's definition ({ patience?, share? }) or null. */
+  typeDef(c) { return c?.type ? this.cfg.bonuses?.types?.[c.type] ?? null : null; }
+  patienceMult(c) { return this.typeDef(c)?.patience ?? 1; }
 
   // ---- simulation -----------------------------------------------------------------------------
   /**
@@ -80,6 +85,8 @@ export class Cafe {
     const dt = this.last == null ? 0 : Math.min(Math.max(0, now - this.last), ms(this.cfg.maxStepSec));
     this.last = now;
     if (!dt) return;
+    this.playMs = (this.playMs ?? 0) + dt;                            // time spent in the cafe, counted in whole seconds in the stats
+    if (this.playMs >= 1000) { const sec = Math.floor(this.playMs / 1000); this.playMs -= sec * 1000; this.game.stats.playSec = (this.game.stats.playSec ?? 0) + sec; }
     let changed = false;
     if (this.comboLeft > 0) { this.comboLeft -= dt; if (this.comboLeft <= 0) { this.comboLeft = 0; this.combo = 0; changed = true; } }
     for (const k of Object.keys(this.holds)) {                      // tables being cleared come free again
@@ -134,6 +141,15 @@ export class Cafe {
     return !!v && this.rng() < v.chance;
   }
 
+  /** Guest type (see CAFE.bonuses.types): decided once on arrival; one random number, only drawn when types exist. */
+  rollType() {
+    const t = this.cfg.bonuses?.types;
+    if (!t) return null;
+    let r = this.rng();
+    for (const id of GUEST_TYPES) { if (!t[id]) continue; if (r < t[id].chance) return id; r -= t[id].chance; }
+    return null;
+  }
+
   /** A look nobody in the cafe has right now (so two guests never look like copies), unless every look is taken. */
   pickLook() {
     const used = new Set(this.customers.map((c) => c.look));
@@ -144,6 +160,8 @@ export class Cafe {
   arrive() {
     const c = { id: this.nextId++, look: this.pickLook(), state: 'queued', table: null, orderId: null, patience: ms(this.cfg.queuePatienceSec) };
     if (this.rollVip()) c.vip = true;
+    const type = this.rollType();
+    if (type) { c.type = type; c.patience = Math.round(c.patience * this.patienceMult(c)); }
     this.customers.push(c);
     this.game.emit('customer', { type: 'arrive', id: c.id });
     return c;
@@ -158,8 +176,8 @@ export class Cafe {
       c.state = 'seated';
       c.table = free.shift();
       c.orderId = this.makeOrder(c).id;
-      c.patience = ms(this.cfg.orderPatienceSec);
-      this.game.emit('customer', { type: 'seat', id: c.id, table: c.table });
+      c.patience = Math.round(ms(this.cfg.orderPatienceSec) * this.patienceMult(c));
+      this.game.emit('customer', { type: 'seat', id: c.id, table: c.table, guestType: c.type ?? null });
       seated = true;
     }
     return seated;
@@ -174,11 +192,16 @@ export class Cafe {
 
   makeOrder(c) {
     const ids = Object.keys(this.game.productsDef).filter((id) => this.game.isUnlocked(id));     // recipes the player has not bought are never ordered
+    let pool = ids;
+    if ((c.type === 'gourmet' || c.type === 'kid') && ids.length >= 2) {                       // gourmets order from the dearer half, kids from the cheaper half
+      const byPrice = ids.slice().sort((a, b) => this.game.productsDef[a].price - this.game.productsDef[b].price), half = Math.ceil(byPrice.length / 2);
+      pool = c.type === 'kid' ? byPrice.slice(0, half) : byPrice.slice(byPrice.length - half);
+    }
     const fav = this.cfg.bonuses?.favorite, favorite = fav ? this.favoriteOf(c.look) : null;
-    if (favorite && ids.includes(favorite) && this.rng() < fav.chance) return this.addOrder(c, favorite);   // (the random number is only drawn when a favourite can be ordered)
+    if (favorite && pool.includes(favorite) && this.rng() < fav.chance) return this.addOrder(c, favorite);   // (the random number is only drawn when a favourite can be ordered)
     const star = this.cfg.bonuses?.event ? weeklyProduct(this.game) : null;                                  // the star product of the week is ordered more often
     const rainy = this.cfg.bonuses?.weather && this.weather() === 'rain';
-    const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1) * (id === star ? this.cfg.bonuses.event.weight : 1) * (rainy && this.game.productsDef[id].station === 'coffee' ? this.cfg.bonuses.weather.hotDrinkWeight : 1));
+    const weights = ids.map((id) => !pool.includes(id) ? 0 : Math.max(0, this.cfg.orderWeights?.[id] ?? 1) * (id === star ? this.cfg.bonuses.event.weight : 1) * (rainy && this.game.productsDef[id].station === 'coffee' ? this.cfg.bonuses.weather.hotDrinkWeight : 1));
     let r = this.rng() * weights.reduce((s, w) => s + w, 0), product = ids[ids.length - 1];
     for (let i = 0; i < ids.length; i++) { r -= weights[i]; if (r < 0) { product = ids[i]; break; } }
     return this.addOrder(c, product);
@@ -244,7 +267,7 @@ export class Cafe {
    */
   serviceBonus(c, order) {
     const b = this.cfg.bonuses;
-    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false };
+    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false, guest: null };
     const fast = this.patienceFraction(c) >= b.fast.minPatience;
     const favorite = order.product === this.favoriteOf(c.look);
     this.combo = this.comboLeft > 0 ? this.combo + 1 : 1;
@@ -255,10 +278,11 @@ export class Cafe {
     if (this.recentSold.length > b.variety.window) this.recentSold.shift();
     const variety = !!b.variety && this.recentSold.length === b.variety.window && new Set(this.recentSold).size === b.variety.window;
     this.remember(true);
+    const td = this.typeDef(c), typed = c.type === 'hurried' ? (fast ? td?.share ?? 0 : 0) : c.type === 'gourmet' ? td?.share ?? 0 : 0;
     const stats = this.game.stats;
     stats.bestCombo = Math.max(stats.bestCombo ?? 0, this.combo);
     if (favorite) stats.favoritesServed = (stats.favoritesServed ?? 0) + 1;
-    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0) + (variety ? b.variety.share : 0), combo: this.combo, fast, favorite, event, variety };
+    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0) + (variety ? b.variety.share : 0) + typed, combo: this.combo, fast, favorite, event, variety, guest: c.type ?? null };
   }
 
   deliverToCustomer(customerId) {
@@ -271,7 +295,7 @@ export class Cafe {
   exportState() {
     return {
       nextId: this.nextId,
-      customers: this.customers.map((c) => ({ id: c.id, look: c.look, state: c.state, table: c.table, orderId: c.orderId, patience: Math.round(c.patience), ...(c.vip ? { vip: true } : {}) })),
+      customers: this.customers.map((c) => ({ id: c.id, look: c.look, state: c.state, table: c.table, orderId: c.orderId, patience: Math.round(c.patience), ...(c.vip ? { vip: true } : {}), ...(c.type ? { type: c.type } : {}) })),
       orders: this.orders.map((o) => ({ id: o.id, product: o.product, price: o.price, status: o.status, customerId: o.customerId })),
     };
   }
@@ -319,7 +343,9 @@ export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS, queueMax = cf
     if (!c || !isId(c.id) || custIds.has(c.id) || customers.length >= maxCrowd) { repaired++; continue; }
     const look = looks.includes(c.look) ? c.look : looks[0];
     if (look !== c.look) repaired++;
-    const max = (state) => Math.round((state === 'queued' ? cfg.queuePatienceSec : cfg.orderPatienceSec) * 1000);
+    const type = GUEST_TYPES.includes(c.type) && cfg.bonuses?.types?.[c.type] ? c.type : null;
+    const pm = type ? cfg.bonuses.types[type].patience ?? 1 : 1;
+    const max = (state) => Math.round((state === 'queued' ? cfg.queuePatienceSec : cfg.orderPatienceSec) * 1000 * pm);
     let state = c.state === 'seated' ? 'seated' : 'queued';
     if (c.state !== 'seated' && c.state !== 'queued') repaired++;
     let table = null, orderId = null;
@@ -332,7 +358,7 @@ export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS, queueMax = cf
     }
     const patience = Number.isFinite(c.patience) && c.patience > 0 ? Math.min(c.patience, max(state)) : max(state);
     custIds.add(c.id);
-    customers.push({ id: c.id, look, state, table, orderId, patience, ...(c.vip === true ? { vip: true } : {}) });
+    customers.push({ id: c.id, look, state, table, orderId, patience, ...(c.vip === true ? { vip: true } : {}), ...(type ? { type } : {}) });
   }
   // queue overflow is trimmed in arrival order
   const queued = customers.filter((c) => c.state === 'queued');

@@ -132,7 +132,7 @@ function bonusCafe(extra = {}) {
   const clock = { now: at(2025, 3, 10) }, player = { gold: 1e6 };
   const game = new Game(player, {}, () => clock.now);
   new Shop(game);
-  const bonuses = { ...CAFE.bonuses, event: null, ...extra };
+  const bonuses = { ...CAFE.bonuses, event: null, types: null, ...extra };
   const cafe = new Cafe(game, { rng: () => 0.9, config: { ...CAFE, bonuses, firstSpawnSec: 999, spawnEverySec: [999, 999], eatSec: 0, cleanSec: 0, orderPatienceSec: 5000, tables: 4, queueMax: 4 } });
   cafe.setActive(true); game.tick();
   return { clock, game, cafe, player };
@@ -220,4 +220,74 @@ test('season tint: winter cool, autumn warm, summer none, every month valid', ()
   assert.ok(seasonTint(9).rgb[0] > seasonTint(9).rgb[2]);
   assert.equal(seasonTint(6).alpha, 0);
   for (let m = 0; m < 12; m++) { const t = seasonTint(m); assert.ok(t.alpha >= 0 && t.alpha < 0.15 && t.rgb.every((v) => v >= 0 && v <= 255)); }
+});
+
+// ---- guest types, cafe name, play time, quick production ----------------------------------------------------------------
+import { cleanName, NAME_MAX } from '../src/game/profile.js';
+import { GUEST_TYPES, validateCafe } from '../src/game/customers.js';
+
+test('guest types: chances roughly as configured; hurried guests wait less, kids more; gourmets order dear, kids cheap; the bonus applies per type', () => {
+  const { cafe, game } = bonusCafe({ types: CAFE.bonuses.types });
+  let seed = 11; cafe.rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const counts = { hurried: 0, gourmet: 0, kid: 0, none: 0 };
+  for (let i = 0; i < 3000; i++) { const g = cafe.arrive(); counts[g.type ?? 'none']++; cafe.customers = []; }
+  for (const t of GUEST_TYPES) assert.ok(Math.abs(counts[t] / 3000 - CAFE.bonuses.types[t].chance) < 0.03, `${t} ${counts[t] / 3000}`);
+  const mk = (type) => { const g = cafe.arrive(); g.type = type; g.state = 'queued'; return g; };
+  const h = mk('hurried'), n = mk(null), k = mk('kid');
+  assert.ok(cafe.patienceMult(h) < 1 && cafe.patienceMult(k) > 1 && cafe.patienceMult(n) === 1);
+  cafe.customers = [];
+  // order prices
+  game.shop.stageId = 4; for (const id of Object.keys(game.productsDef)) game.products[id] = 5;
+  const prices = (type) => { const out = []; for (let i = 0; i < 400; i++) { const g = cafe.arrive(); g.type = type; out.push(game.productsDef[cafe.makeOrder(g).product].price); cafe.customers = []; } return out.reduce((a, b) => a + b, 0) / out.length; };
+  assert.ok(prices('gourmet') > prices(null) && prices(null) > prices('kid'));
+  // bonus: a gourmet always pays +10%, a hurried guest only when served fast
+  const g1 = cafe.arrive(); g1.look = 'oldman'; g1.type = 'gourmet'; cafe.seatQueued();
+  const o1 = cafe.orderOf(g1); o1.product = 'bread'; o1.price = 30; g1.patience = 1; game.products.bread = 5;
+  assert.equal(cafe.deliver(o1.id).bonus.guest, 'gourmet');
+  const g2 = cafe.arrive(); g2.look = 'oldman'; g2.type = 'hurried'; cafe.seatQueued();
+  const o2 = cafe.orderOf(g2); o2.product = 'bread'; o2.price = 30;
+  const fastPct = cafe.serviceBonus(g2, o2).pct; g2.patience = 1; const slowPct = cafe.serviceBonus(g2, o2).pct;
+  assert.ok(fastPct > slowPct);
+});
+
+test('guest types: saved with the guest, unknown types dropped on load', () => {
+  const { cafe, game } = bonusCafe({ types: CAFE.bonuses.types });
+  const g = cafe.arrive(); g.type = 'kid'; cafe.seatQueued();
+  const state = cafe.exportState();
+  assert.equal(state.customers[0].type, 'kid');
+  const ok = validateCafe(state, game, cafe.cfg, cafe.looks);
+  assert.equal(ok.state.customers[0].type, 'kid');
+  state.customers[0].type = 'wizard';
+  assert.equal(validateCafe(state, game, cafe.cfg, cafe.looks).state.customers[0].type, undefined);
+});
+
+test('cafe name: cleaned, capped, saved with the game, empty falls back to the stage name', () => {
+  assert.equal(cleanName('  Pati   Fırın \n'), 'Pati Fırın');
+  assert.equal(cleanName('x'.repeat(40)).length, NAME_MAX);
+  assert.equal(cleanName('a\u0000b​c'), 'a b c');
+  assert.equal(cleanName(42), ''); assert.equal(cleanName('   '), '');
+  assert.equal([...cleanName('🐱'.repeat(30))].length, NAME_MAX);          // characters, not bytes
+  const { game, cafe } = make();
+  assert.equal(game.setCafeName('  Mırmır Kafe  '), 'Mırmır Kafe');
+  const storage = new FakeStorage(), saves = new SaveManager(game, storage); saves.save();
+  const g2 = new Game({ gold: 0 }, {}, () => 1); new Shop(g2); new Cafe(g2);
+  new SaveManager(g2, storage).load();
+  assert.equal(g2.profile.name, 'Mırmır Kafe');
+  assert.equal(game.setCafeName(''), ''); assert.ok(cafe);
+});
+
+test('play time counts whole seconds spent in the cafe only, and quick production starts up to three in a row', () => {
+  const { clock, game, cafe } = make();
+  const before = game.stats.playSec;
+  for (let i = 0; i < 10; i++) { clock.now += 1000; game.tick(); }
+  assert.ok(game.stats.playSec - before >= 9 && game.stats.playSec - before <= 10);
+  cafe.setActive(false); const mid = game.stats.playSec;
+  for (let i = 0; i < 10; i++) { clock.now += 1000; game.tick(); }
+  assert.equal(game.stats.playSec, mid);                                // away from the cafe: not counted
+  game.player.gold = 1e6; game.buyUpgrade('ovenCapacity'); game.buyUpgrade('ovenCapacity');
+  game.ingredients.flour = 50;
+  const r = game.startMany('bread', 3);
+  assert.equal(r.started, 3); assert.equal(game.jobsOf('oven').length, 3);
+  const r2 = game.startMany('bread', 3);
+  assert.equal(r2.started, 0); assert.ok(r2.message);
 });

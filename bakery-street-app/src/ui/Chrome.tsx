@@ -71,7 +71,7 @@ function MenuPop({ u, top, children }: { u: number; top: number; children: React
 }
 
 /** Portrait top bar: cat-ear level badge, gold and XP counters, and a menu button (Görevler / Günlük Ödül / Ayarlar open from it). */
-export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "photo" | "settings") => void; badges: { quests: boolean; daily: boolean } }) {
+export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings") => void; badges: { quests: boolean; daily: boolean } }) {
   const { world, act } = useWorld();
   const { game, progression } = world, u = useU();
   useRefresh();
@@ -98,7 +98,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
     lastLevel.current = progression.level;
   }, [progression.level, progression.xp, progression.isMax, xpAnim, badgePop]);   // eslint-disable-line react-hooks/exhaustive-deps
   const bh = u * 11, bw = bh * (192 / 170), mh = Math.max(44, u * 11.4);
-  const entry = (id: "quests" | "daily" | "album" | "photo" | "settings", icon: string, label: string, badge: boolean) => (
+  const entry = (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings", icon: string, label: string, badge: boolean) => (
     <Pressable key={id} onPress={() => { act.sfx("tap"); setMenu(false); onOpen(id); }} accessibilityLabel={label} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: u * 1.6, height: Math.max(46, u * 11), paddingHorizontal: u * 1.8, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper })}>
       <GameIcon id={icon} size={u * 6.4} />
       <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.2) }} numberOfLines={1}>{label}</Text>
@@ -141,6 +141,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
           {entry("quests", "hud-quests", "Görevler", badges.quests)}
           {entry("daily", "hud-events", "Günlük Ödül", badges.daily)}
           {entry("album", "q-explorer", "Müşteri Albümü", false)}
+          {entry("stats", "xp", "İstatistikler", false)}
           {entry("photo", "gift", "Fotoğraf Modu", false)}
           {entry("settings", "hud-settings", "Ayarlar", false)}
         </MenuPop>
@@ -163,11 +164,18 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   useRefresh();
   const a = useAppear(220, 140);
   const g = world.shop.nextGoal();
+  const pulse = useRef(new Animated.Value(0)).current, ready0 = g.kind === "ready";
+  useEffect(() => {
+    if (!ready0) { pulse.setValue(0); return; }
+    const loop = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 650, easing: Easing.inOut(Easing.quad), useNativeDriver: true })]));
+    loop.start();
+    return () => loop.stop();
+  }, [ready0, pulse]);
   if (!g.item) return null;
   const sales = g.kind === "save" ? salesToGo(world.game, g.missingGold) : 0;
   const ready = g.kind === "ready", tab = g.item.category;
   return (
-    <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }] }}>
+    <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }, { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.045] }) }] }}>
       <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 40, minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>

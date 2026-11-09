@@ -213,3 +213,13 @@ Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda 
 - **Mevsim tonu** ve **konuşma balonları**, **Fotoğraf Modu** (menüden): yalnızca görünüm.
 
 **Robot ile ölçüm** (`node scripts/simulate-economy.mjs [gün] [dk/gün] [seed] [bonus 1/0]`): günde 30 dk oynayan ortalama bir robotla 7 günde, bonuslar açıkken toplam kazanç kapalıya göre 3 denemede %3, %4 ve %12 yüksek çıktı (ortalama ≈ %7). Satışın kendisi toplamın ~%55'i; geri kalanı görev, hedef, seviye/aşama ödülü, günlük ödül ve albüm. Robot gerçek oyuncu değildir; kasa kutusu (uygulama kapalıyken birikir) bu simülasyonda yoktur.
+
+### Dördüncü katman (müşteri tipleri, istatistik, kafe adı, hızlı üretim)
+
+- **Müşteri tipleri** (`bonuses.types`): %15 aceleci (sabır ×0,6, hızlı servis edilirse +%10), %12 gurme (pahalı yarıdan sipariş verir, +%10), %15 çocuk (ucuz yarıdan sipariş verir, sabır ×1,3). Oturunca kısa bir cümle söyler; kayıtlıdır.
+- **Hızlı üretim:** Fırın kapasitesi 2+ olunca üretim kartında "×3" (art arda en çok 3 iş; malzeme/yer bitince durur).
+- **Stok uyarısı:** bekleyen bir siparişin ürünü stokta yok ve yapılmıyorsa ilgili makinenin üstünde kırmızı ünlem.
+- **Kafe adı** (Ayarlar, en çok 16 karakter, kayıtlı) tabelada görünür (aşama 2+); **İstatistikler** sayfası (menüden); seviye atlayınca yeni açılan mağaza ürünleri kartta.
+- **Açılış süresi** Ayarlar'da: kayıt, yazı tipi, resimler, oyun kurma süreleri cihazda ölçülür.
+- **Panel güvenliği:** bir panel çizilirken hata verirse yalnızca o panel kapanır, oyun sürer.
+- **Test:** `tests/simulation.test.js` robotu test paketine bağlar (geniş bantlar: bozuk ekonomi yakalanır, küçük ayar yakalanmaz).

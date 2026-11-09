@@ -46,7 +46,10 @@ function Recipe({ pid, d }: { pid: string; d: any }) {
   const label = full ? (cap > 1 ? "Dolu" : mine.length ? "Hazırlanıyor" : "Meşgul") : "Üret";
   const dur = game.duration(pid), eco = game.unitEconomics(pid);
   return (
-    <Card left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={<Btn label={label} variant={full ? "busy" : lack ? "lack" : "go"} onPress={() => { const r = game.startProduction(pid); if (!r.ok) act.warn(r.message); }} />}>
+    <Card left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={<View style={{ gap: u * 0.6 }}>
+      <Btn label={label} variant={full ? "busy" : lack ? "lack" : "go"} onPress={() => { const r = game.startProduction(pid); if (!r.ok) act.warn(r.message); }} />
+      {cap > 1 && !full ? <Btn small variant="alt" label="×3" onPress={() => { const r = game.startMany(pid, 3); if (!r.started) act.warn(r.message || "Üretim başlatılamadı."); else if (r.started < 3 && r.message) act.toast(`${r.started} adet başlatıldı · ${r.message}`, 2200); }} /> : null}
+    </View>}>
       <Title name={d.name} note={`Stok: ${game.products[pid]}/${game.showcaseLimit()}`} />
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6 }}>
         {Object.entries(d.ingredients as Record<string, number>).map(([ing, need]) => {

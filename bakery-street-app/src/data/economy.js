@@ -82,10 +82,12 @@ export const CAFE = {
    *  variety  : the last `window` sales were all different products: `share` extra
    *  weather  : on a rainy day (about `rainChance` of days, decided by the date) guests order coffee-station drinks `hotDrinkWeight` times as often and arrive `slower` times as slowly
    *  rating   : the cafe's star rating (share of happy guests among the last `window`) speeds arrivals up or down by `pace` per star above or below 3
+   *  types    : a guest may be hurried (patience x0.6, +`share` when served fast), a gourmet (orders from the dearer half of the unlocked products, +`share`) or a kid (orders from the cheaper half, patience x1.3); `chance` is the share of guests of each type
    *  favorite : every guest look has one favourite product; ordering it is `chance` likely (when unlocked) and serving it adds `share`
    * Best case together: 0.03*5 + 0.06 + 0.20 + 0.15 + 0.05 = +61%; a normal busy shift lands around +10-15%. Set `bonuses: null` to switch them all off.
    */
-  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.85, share: 0.06 }, favorite: { chance: 0.3, share: 0.2 }, event: { share: 0.15, weight: 2 }, variety: { window: 3, share: 0.05 }, weather: { rainChance: 0.22, hotDrinkWeight: 1.6, slower: 1.1 }, rating: { window: 20, pace: 0.03 } },
+  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.85, share: 0.06 }, favorite: { chance: 0.3, share: 0.2 }, event: { share: 0.15, weight: 2 }, variety: { window: 3, share: 0.05 }, weather: { rainChance: 0.22, hotDrinkWeight: 1.6, slower: 1.1 }, rating: { window: 20, pace: 0.03 },
+    types: { hurried: { chance: 0.15, patience: 0.6, share: 0.1 }, gourmet: { chance: 0.12, share: 0.1 }, kid: { chance: 0.15, patience: 1.3 } } },
 };
 
 /** Guest album: names of the guest looks, and the one-time rewards (a look served for the first time; every look served). */

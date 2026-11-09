@@ -15,13 +15,14 @@ import { Feedback } from "./src/runtime/feedback";
 import { WorldProvider, useRefresh, type Actions } from "./src/runtime/context";
 import { GameView } from "./src/runtime/GameView";
 import { NativeStorage } from "./src/runtime/storage";
+import { mark } from "./src/runtime/startup";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
 import { GoalPill, Hud, Nav, TillPill, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
 import { Btn, Present, useAppear } from "./src/ui/kit";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
-import { AlbumPanel, DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
+import { AlbumPanel, StatsPanel, DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
 import { C, FONT, fmt, fs, useU } from "./src/ui/theme";
 
 
@@ -40,17 +41,25 @@ class Boundary extends React.Component<{ children: React.ReactNode }, { err: str
   render() { return this.state.err ? <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun çöktü.{"\n"}{this.state.err}</Text></View> : this.props.children; }
 }
 
+/** One panel that fails to draw must not take the whole game down: it is closed and the player is told, the café keeps running. */
+class PanelBoundary extends React.Component<{ onFail: () => void; children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() { this.props.onFail(); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+
 export default function Root() { return <Boundary><App /></Boundary>; }
 
 /** Shown once when the café reaches a new stage: what changed and what comes next. The café itself already looks different behind it. */
-function StageCard({ c, onClose }: { c: { id: number; name: string; gold: number; next: string | null }; onClose: () => void }) {
+function StageCard({ c, onClose }: { c: { icon: string; title: string; lines: string[] }; onClose: () => void }) {
   const u = useU(), a = useAppear(260, 160);
   return (
     <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, zIndex: 40, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(70,48,32,0.55)", opacity: a }}>
       <Animated.View style={{ width: "84%", maxWidth: u * 80, padding: u * 3, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.honeyDark, backgroundColor: C.cream, alignItems: "center", gap: u * 1.4, transform: [{ scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }}>
-        <Text allowFontScaling={false} style={{ fontSize: fs(u, 7) }}>🏆</Text>
-        <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 4.2), textAlign: "center" }}>Aşama {c.id}: {c.name}</Text>
-        <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.8), textAlign: "center" }}>Kafen büyüdü, yeni bir görünüme kavuştu!{c.gold ? `\nÖdül: 💰 ${fmt(c.gold)} altın` : ""}{c.next ? `\nSıradaki aşama: ${c.next}` : "\nEn yüksek aşamaya ulaştın!"}</Text>
+        <Text allowFontScaling={false} style={{ fontSize: fs(u, 7) }}>{c.icon}</Text>
+        <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 4.2), textAlign: "center" }}>{c.title}</Text>
+        <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.8), textAlign: "center" }}>{c.lines.join("\n")}</Text>
         <Btn label="Harika!" onPress={onClose} />
       </Animated.View>
     </Animated.View>
@@ -79,12 +88,13 @@ function App() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
     (async () => {
       try {
-        setStage("kayıt okunuyor"); await storage.current.hydrate();
-        setStage("yazı tipi"); await loadFonts();
-        setStage("resimler"); await loadAssets({ onProgress: (d: number, t: number) => setProgress(d / t) });
+        setStage("kayıt okunuyor"); await storage.current.hydrate(); mark("kayıt");
+        setStage("yazı tipi"); await loadFonts(); mark("yazı tipi");
+        setStage("resimler"); await loadAssets({ onProgress: (d: number, t: number) => setProgress(d / t) }); mark("resimler");
         setStage("oyun kuruluyor");
         const w = createWorld(storage.current, (m) => startupProblems.current.push(m));
         if (Platform.OS === "web") (window as any).__world = w;   // development screenshots only
+        mark("oyun kuruluyor");
         setWorld(w);
       } catch (e) { setError(String(e)); }
       finally { SplashScreen.hideAsync().catch(() => {}); }
@@ -101,7 +111,7 @@ function App() {
   );
 }
 
-type Overlay = "quests" | "daily" | "album" | "photo" | "settings" | "town" | "shop";
+type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "town" | "shop";
 
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
@@ -113,7 +123,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   const [peeking, setPeeking] = useState(false);          // the shop sheet is tucked away for a moment so a new piece can be seen in the café
   const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toast, setToast] = useState({ text: "", seq: 0 });
-  const [celebrate, setCelebrate] = useState<{ id: number; name: string; gold: number; next: string | null } | null>(null);   // stage reached: a short celebration card
+  const [celebrate, setCelebrate] = useState<{ icon: string; title: string; lines: string[] } | null>(null);   // stage reached: a short celebration card
   const [saveWarn, setSaveWarn] = useState<string | null>(problems[problems.length - 1] ?? null);
   const [exploreSel, setExploreSel] = useState<string | null>(null);
   const fade = useRef(new Animated.Value(0)).current;
@@ -129,6 +139,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast((t) => ({ text: "", seq: t.seq + 1 })), ms);
   }, []);
+  const failPanel = useCallback(() => { setOverlay(null); setPanel(null); showToast("Bu ekran açılamadı; oyun devam ediyor.", 3000); }, [showToast]);
   const warn = useCallback((text: string, ms = 2400) => { showToast(text, ms); feedback.sfx("error"); feedback.buzz([40, 30, 40]); }, [showToast, feedback]);
 
   const go = useCallback((id: SceneId) => {
@@ -182,7 +193,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     offs.push(game.on("goalComplete", ({ goal }: any) => showToast(`🎯 Günlük hedef tamamlandı: ${goal.name} — Görevler'den ödülünü al`, 3000)));
     offs.push(game.on("complete", ({ product }: any) => showToast(`${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600)));
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
-    offs.push(game.on("stage", ({ stage }: any) => { const next = world.shop.nextStage(); setCelebrate({ id: stage.id, name: stage.name, gold: stage.reward?.gold ?? 0, next: next?.name ?? null }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
+    offs.push(game.on("stage", ({ stage }: any) => { const next = world.shop.nextStage(); setCelebrate({ icon: "🏆", title: `Aşama ${stage.id}: ${stage.name}`, lines: ["Kafen büyüdü, yeni bir görünüme kavuştu!", ...(stage.reward?.gold ? [`Ödül: 💰 ${fmt(stage.reward.gold)} altın`] : []), next ? `Sıradaki aşama: ${next.name}` : "En yüksek aşamaya ulaştın!"] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
     offs.push(game.on("shop", () => feedback.sfx("buy")));
     offs.push(game.on("exploreReady", ({ region }: any) => { showToast(`🎁 ${region.name} keşfi tamamlandı — ödülünü al!`, 4000); feedback.sfx("done"); feedback.buzz(40); }));
     let levelUps: any[] = [];                                // one action can pass several levels: show a single summary
@@ -195,13 +206,15 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         if (reward.gold) parts.push(`+${fmt(reward.gold)} altın`);
         for (const [k, v] of Object.entries(reward.ingredients)) parts.push(`${game.ingredientsDef[k]?.icon ?? ""} ×${v}`);
         const title = list.length > 1 ? `Seviye ${list[0].level}–${list[list.length - 1].level}` : `Seviye ${list[0].level}`;
-        showToast(`⭐ ${title}! Ödül: ${parts.join("  ")}`, 3800);
+        const levels = list.map((l: any) => l.level), fresh = (world.shop.items as any[]).filter((d) => d.category !== "ingredients" && levels.includes(world.shop.minLevelOf(d)));     // what these levels open in the shop
+        if (fresh.length) setCelebrate((prev) => prev ?? { icon: "⭐", title: `${title}!`, lines: [`Ödül: ${parts.join("  ")}`, `Mağaza'da yeni: ${fresh.slice(0, 4).map((d) => d.name).join(", ")}${fresh.length > 4 ? ` ve ${fresh.length - 4} tane daha` : ""}`] });
+        else showToast(`⭐ ${title}! Ödül: ${parts.join("  ")}`, 3800);
         feedback.sfx("claim"); feedback.buzz([40, 40, 80]);
       });
       levelUps.push(e);
     }));
     return () => offs.forEach((o) => o?.());
-  }, [game, feedback, showToast]);
+  }, [game, feedback, showToast, world]);
 
   useEffect(() => {
     feedback.init();
@@ -275,16 +288,17 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           {overlay === "photo" ? null : <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />}
           {overlay === "photo" ? <Pressable onPress={() => setOverlay(null)} accessibilityLabel="Fotoğraf modundan çık" style={{ position: "absolute", left: -insets.left, right: -insets.right, top: -insets.top, bottom: -insets.bottom, zIndex: 30 }} /> : null}
           <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /><TillPill /></Present>
-          <Present show={sceneId === "interior" && !!panel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</Present>
-          {sceneId === "market" ? <MarketPanel /> : null}
-          {sceneId === "bookshop" ? <ResearchPanel /> : null}
-          {sceneId === "explore" ? <ExplorePanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} /> : null}
-          <Present show={overlay === "quests"}><QuestPanel /></Present>
-          <Present show={overlay === "daily"}><DailyPanel /></Present>
-          <Present show={overlay === "album"}><AlbumPanel /></Present>
-          <Present show={overlay === "settings"}><SettingsPanel onReset={reset} /></Present>
-          <Present show={overlay === "shop" && !peeking}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></Present>
-          <Present show={overlay === "town"}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></Present>
+          <Present show={sceneId === "interior" && !!panel}><PanelBoundary onFail={failPanel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</PanelBoundary></Present>
+          {sceneId === "market" ? <PanelBoundary onFail={failPanel}><MarketPanel /></PanelBoundary> : null}
+          {sceneId === "bookshop" ? <PanelBoundary onFail={failPanel}><ResearchPanel /></PanelBoundary> : null}
+          {sceneId === "explore" ? <PanelBoundary onFail={failPanel}><ExplorePanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} /></PanelBoundary> : null}
+          <Present show={overlay === "quests"}><PanelBoundary onFail={failPanel}><QuestPanel /></PanelBoundary></Present>
+          <Present show={overlay === "daily"}><PanelBoundary onFail={failPanel}><DailyPanel /></PanelBoundary></Present>
+          <Present show={overlay === "album"}><PanelBoundary onFail={failPanel}><AlbumPanel /></PanelBoundary></Present>
+          <Present show={overlay === "stats"}><PanelBoundary onFail={failPanel}><StatsPanel /></PanelBoundary></Present>
+          <Present show={overlay === "settings"}><PanelBoundary onFail={failPanel}><SettingsPanel onReset={reset} /></PanelBoundary></Present>
+          <Present show={overlay === "shop" && !peeking}><PanelBoundary onFail={failPanel}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></PanelBoundary></Present>
+          <Present show={overlay === "town"}><PanelBoundary onFail={failPanel}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></PanelBoundary></Present>
           <Present show={!!celebrate}>{celebrate ? <StageCard c={celebrate} onClose={() => setCelebrate(null)} /> : null}</Present>
           <Toast text={toast.text} seq={toast.seq} />
           {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}

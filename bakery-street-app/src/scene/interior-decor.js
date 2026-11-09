@@ -205,7 +205,7 @@ export class DecorLayer {
   drawStage(ctx) {
     const stage = this.shop?.stageId ?? 1;
     if (stage < 2) return;
-    const name = this.shop.stage().name, t = this.scene.t, pop = Math.min(1, this.pop('stage')), cx = 548, y = 138, w = stage >= 4 ? 248 : 206, h = stage >= 4 ? 50 : 42;     // right of centre: the goal chip sits under the top bar on the left
+    const name = this.scene.game.profile?.name || this.shop.stage().name, t = this.scene.t, pop = Math.min(1, this.pop('stage')), cx = 548, y = 138, w = stage >= 4 ? 248 : 206, h = stage >= 4 ? 50 : 42;     // right of centre: the goal chip sits under the top bar on the left
     ctx.save();
     ctx.translate(cx, y); ctx.scale(pop, pop); ctx.translate(-cx, -y);
     if (stage >= 3) {                                               // pennant garland, sagging between hooks on the wall
@@ -226,7 +226,10 @@ export class DecorLayer {
     ctx.fillStyle = stage >= 4 ? '#E3B64E' : PAL.brown; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = PAL.brownDark; ctx.stroke();
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - w / 2, y - h / 2, w, h, 10) : ctx.rect(cx - w / 2, y - h / 2, w, h);
     ctx.fillStyle = stage >= 3 ? '#F6E6BC' : '#D9B982'; ctx.fill();
-    label(ctx, name, cx, y + 1, { font: `800 ${stage >= 4 ? 25 : 22}px "Trebuchet MS", sans-serif`, fill: stage >= 3 ? PAL.terracottaDark : PAL.brownDark, lw: 0 });
+    const fontPx = stage >= 4 ? 25 : 22;
+    ctx.font = `800 ${fontPx}px "Trebuchet MS", sans-serif`;
+    const fit = Math.min(1, (w - 24) / Math.max(1, ctx.measureText(name).width));                  // a long name shrinks to fit the sign
+    label(ctx, name, cx, y + 1, { font: `800 ${Math.round(fontPx * fit)}px "Trebuchet MS", sans-serif`, fill: stage >= 3 ? PAL.terracottaDark : PAL.brownDark, lw: 0 });
     if (stage >= 4) {
       for (const dx of [-w / 2 - 22, w / 2 + 22]) this.star(ctx, cx + dx, y, 12, '#FFE08A');
       ctx.globalCompositeOperation = 'lighter';

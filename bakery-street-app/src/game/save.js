@@ -10,6 +10,7 @@ import { validateShop } from './shop.js';
 import { validateTill } from './till.js';
 import { validateAlbum } from './album.js';
 import { validateGoals } from './goals.js';
+import { cleanName } from './profile.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
@@ -44,7 +45,7 @@ export function validate(raw, game) {
   const rs = raw.stats;
   if (rs !== undefined) {
     if (!rs || typeof rs !== 'object') throw new Error('istatistikler geçersiz');
-    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades', 'researchBought', 'explorationsDone', 'goldSpent', 'goldEarned', 'shopBought', 'bestCombo', 'favoritesServed']) {
+    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades', 'researchBought', 'explorationsDone', 'goldSpent', 'goldEarned', 'shopBought', 'bestCombo', 'favoritesServed', 'playSec']) {
       if (rs[k] === undefined) continue;
       if (!isCount(rs[k])) throw new Error(`istatistik geçersiz (${k})`);
       stats[k] = rs[k];
@@ -67,6 +68,7 @@ export function validate(raw, game) {
   const exploration = game.exploration ? validateExploration(raw.exploration, game.exploration) : undefined;
   const shop = game.shop ? validateShop(raw.shop, game.shop) : undefined;
   const album = game.album ? validateAlbum(raw.album, game.album.looks) : undefined;
+  const profile = { name: cleanName(raw.profile?.name) };
   const till = game.till ? validateTill(raw.till) : undefined;
   const goals = game.goals ? validateGoals(raw.goals) : undefined;
   const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
@@ -94,7 +96,7 @@ export function validate(raw, game) {
   }
   const queueMax = game.cafe ? game.cafe.cfg.queueMax + (shop ? game.shop.queueBonusFor(shop.owned) : 0) : 0;     // the waiting area the SAVED shop state has bought, not the one in memory now
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks, queueMax) : null;
-  return { gold: raw.gold, gems, ingredients, products, jobs, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, profile, ingredients, products, jobs, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {

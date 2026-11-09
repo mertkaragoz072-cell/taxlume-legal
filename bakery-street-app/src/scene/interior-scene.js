@@ -196,6 +196,7 @@ export class InteriorScene {
     this.shifted(ctx, 'deco', () => this.light(ctx));
     this.shifted(ctx, 'front', () => this.frontDecor(ctx));
 
+    this.stockWarnings(ctx);
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
       if (p.check) {                                             // a green tick badge (vector, no font needed)
@@ -218,6 +219,26 @@ export class InteriorScene {
     applyDaylight(ctx, this.game.clock());                                          // evening and night tint by the real local hour, a faint tone by season
     if (this.game.cafe?.weather() === 'rain') drawRain(ctx, this.t);                // rainy day (see Cafe.weather)
     textFloor.px = floorPx;
+  }
+
+  /** A pulsing red mark over a machine whose product a waiting guest ordered while none is in stock and none is being made. */
+  stockWarnings(ctx) {
+    const cafe = this.game.cafe;
+    if (!cafe?.active) return;
+    const need = new Set();
+    for (const o of cafe.openOrders()) {
+      const def = this.game.productsDef[o.product];
+      if (def && this.game.products[o.product] < 1 && !this.game.jobsOf(def.station).some((j) => j.product === o.product)) need.add(def.station);
+    }
+    for (const station of need) {
+      const a = AREAS.find((x) => x.station === station);
+      if (!a) continue;
+      const x = a.x + a.w / 2, y = a.y - 6 + Math.sin(this.t * 6) * 3, k = 1 + Math.sin(this.t * 6) * 0.08;
+      ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+      ctx.beginPath(); ctx.arc(0, 0, 22, 0, 7); ctx.fillStyle = '#C8442F'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = PAL.cream; ctx.stroke();
+      ctx.fillStyle = PAL.cream; ctx.fillRect(-3, -12, 6, 14); ctx.beginPath(); ctx.arc(0, 11, 3.6, 0, 7); ctx.fill();
+      ctx.restore();
+    }
   }
 
   /** Runs `fn` with the drawing moved sideways by the parallax of `plane`. */
