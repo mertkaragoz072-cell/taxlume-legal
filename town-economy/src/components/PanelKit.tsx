@@ -39,7 +39,7 @@ const FRAMES = {
     mid: midB,
     bot: botB,
     botH: 30,
-    title: { x: 96, y: 14, w: 326, h: 34 },
+    title: { x: 94, y: 14, w: 280, h: 34 },
     inset: 38,
   },
   properties: {
@@ -48,7 +48,7 @@ const FRAMES = {
     mid: midB,
     bot: botB,
     botH: 30,
-    title: { x: 92, y: 12, w: 186, h: 34 },
+    title: { x: 92, y: 12, w: 282, h: 34 },
     inset: 38,
   },
   events: {
@@ -57,7 +57,7 @@ const FRAMES = {
     mid: midB,
     bot: botB,
     botH: 30,
-    title: { x: 88, y: 10, w: 224, h: 34 },
+    title: { x: 92, y: 10, w: 282, h: 34 },
     inset: 38,
   },
   wheat: {
@@ -66,7 +66,7 @@ const FRAMES = {
     mid: midC,
     bot: botC,
     botH: 37,
-    title: { x: 118, y: 14, w: 262, h: 40 },
+    title: { x: 108, y: 14, w: 266, h: 40 },
     inset: 36,
   },
 } satisfies Record<string, Frame>;

@@ -15,9 +15,7 @@ const ART_H = 80;
 const W = { capL: 154, midL: 28, plL: 83, plR: 99, midR: 20, capR: 155 };
 // The vine-and-lantern ends are squeezed sideways a little so a long label still
 // gets a plaque wide enough to read.
-const CAP_SQUEEZE = 0.7;
 const MIN_PLATE = 70;
-const MIN_SQUEEZE = 0.38;
 
 interface Props {
   text: string;
@@ -34,18 +32,19 @@ interface Props {
 export function SheetHeader({ text, height = 44 }: Props) {
   const [rowW, setRowW] = useState(360);
   const k = height / ART_H;
-  const letter = 1;
-  const textW = (size: number) => text.length * (size * 0.82 + letter);
-  const plateFor = (size: number) => Math.max(MIN_PLATE * k, textW(size) + 14);
-  // Everything but the caps and the plaque centre is fixed; the caps give way
-  // first (down to MIN_SQUEEZE), then the label shrinks.
+  const letter = 0.6;
+  // Every heading in the game uses the same plaque: its width depends only on
+  // the row it sits in (never on its own words), and the beam's vine ends give
+  // way to make room for it. Long labels shrink their letters to fit instead
+  // of growing their plaque, so two headings on one screen always match.
   const bodyW = (W.plL + W.plR) * k;
   const capsFull = (W.capL + W.capR) * k;
-  const avail = rowW - bodyW - 2 * 6;
-  let font = Math.round(height * 0.32);
-  while (font > 8 && avail - plateFor(font) < capsFull * MIN_SQUEEZE) font -= 0.5;
-  const plate = plateFor(font);
-  const squeeze = Math.max(MIN_SQUEEZE, Math.min(CAP_SQUEEZE, (avail - plate) / capsFull));
+  const avail = rowW - bodyW - 2 * 4;
+  const squeeze = 0.26;
+  const plate = Math.max(MIN_PLATE * k, avail - capsFull * squeeze);
+  const textRoom = plate - 16;
+  const fitFont = (textRoom / Math.max(1, text.length) - letter) / 0.8;
+  const font = Math.max(8, Math.min(Math.round(height * 0.3), fitFont));
   const onLayout = (e: LayoutChangeEvent) => setRowW(e.nativeEvent.layout.width);
   const img = (src: number, w: number) => ({
     source: src,

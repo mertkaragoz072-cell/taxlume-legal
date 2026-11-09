@@ -35,6 +35,8 @@ import { SpotlightTarget } from "./Spotlight";
 import { SettingsMenu } from "./SettingsMenu";
 
 interface Props {
+  /** height of the notch / status bar the header scene is extended under */
+  topInset?: number;
   townName: string;
   rankIcon: string;
   rankTitle: string;
@@ -110,6 +112,7 @@ const PLATE_CAP_RIGHT_W = 35;
 const COMPACT_WIDTH = 380;
 
 export function InflationHeader({
+  topInset = 0,
   townName,
   rankIcon,
   rankTitle,
@@ -230,14 +233,18 @@ export function InflationHeader({
   const dailyInflationPct = (Math.pow(1 + inflationRate, TICKS_PER_GAME_DAY) - 1) * 100;
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { paddingTop: 30 + topInset }]}>
       {/* The town's own market street as a bright, undimmed scene across
           the top of the header, fading into the dark wood below it (where
           the stat row sits) rather than a scrim over the whole header —
           the scene is the point, the controls and chips carry their own
           solid backgrounds so they read without any darkening. */}
-      <View style={styles.scene} pointerEvents="none">
-        <Image source={headerMarketImage} style={styles.sceneImage} resizeMode="cover" />
+      <View style={[styles.scene, { height: SCENE_HEIGHT + topInset }]} pointerEvents="none">
+        <Image
+          source={headerMarketImage}
+          style={[styles.sceneImage, { height: SCENE_HEIGHT + 40 + topInset }]}
+          resizeMode="cover"
+        />
         <View style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.08) }]} />
         <View style={styles.sceneFade}>
           <GradientFill colors={["rgba(42,26,14,0)", "rgba(42,26,14,1)"]} x1="0" y1="0" x2="0" y2="1" />

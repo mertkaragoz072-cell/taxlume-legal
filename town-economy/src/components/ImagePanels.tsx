@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from "react-native";
-import { Text } from "./AppText";
-import headerImg from "../../assets/ui/inventory/header.png";
 import { FONT } from "../theme";
 import { SheetHeader } from "./SheetHeader";
 
@@ -14,22 +12,11 @@ function useBoxWidth(): [number, (e: LayoutChangeEvent) => void] {
 
 const GOLD_TEXT = "#f3d27a";
 
-/** The carved beam with the green plaque (vines, lamps and the plaque's
- * gold rim are all in the art); only the title is drawn. */
+/** Page title: the same beam-and-plaque heading every section uses. */
 export function BeamTitle({ title }: { title: string }) {
-  const [w, onLayout] = useBoxWidth();
   return (
-    <View style={[styles.beam, { width: "100%" }]} onLayout={onLayout}>
-      <Image source={headerImg} style={styles.fill} resizeMode="stretch" />
-      <Text
-        style={[styles.beamText, { fontSize: Math.round(w * 0.05) }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.6}
-        accessibilityRole="header"
-      >
-        {title}
-      </Text>
+    <View style={styles.ribbonRow}>
+      <SheetHeader text={title} />
     </View>
   );
 }

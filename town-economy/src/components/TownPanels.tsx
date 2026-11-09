@@ -166,7 +166,7 @@ export function RankPanel({ label, title, icon, nextIcon, nextLabel, pct }: Rank
     <Painted source={rankArt} artW={853} artH={247}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(label)} x={105} y={10} w={270} h={46} />
+          <Banner s={s} text={plainTitle(label)} x={105} y={10} w={269} h={46} />
           <View style={[box(s, 338, 64, 70, 80), styles.center]}>
             <Text aria-hidden style={{ fontSize: 52 * s }}>
               {icon}
@@ -348,7 +348,7 @@ export function TaxPanel({ title, rateLabel, description, income, rates }: TaxPr
     <Painted source={taxArt} artW={852} artH={535}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(title)} x={160} y={12} w={420} h={50} />
+          <Banner s={s} text={plainTitle(title)} x={152} y={12} w={222} h={50} />
           <View style={[box(s, 360, 92, 425, 182), { justifyContent: "center" }]}>
             <Text
               style={[
@@ -431,7 +431,7 @@ export function BankPanel({ title, description, cap, chipLabel, terms, info, rat
     <Painted source={bankArt} artW={852} artH={612}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(title)} x={165} y={12} w={255} h={50} />
+          <Banner s={s} text={plainTitle(title)} x={165} y={12} w={209} h={50} />
           <View style={[box(s, 388, 90, 410, cap ? 150 : 190), { justifyContent: "center" }]}>
             <Text
               style={[
@@ -530,7 +530,7 @@ export function ChartPanel({
     <Painted source={chartArt} artW={853} artH={214}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(title)} x={90} y={10} w={295} h={42} />
+          <Banner s={s} text={plainTitle(title)} x={92} y={10} w={282} h={42} />
           <View style={box(s, 62, 84, 750, 120)}>{children(750 * s, 120 * s)}</View>
         </>
       )}

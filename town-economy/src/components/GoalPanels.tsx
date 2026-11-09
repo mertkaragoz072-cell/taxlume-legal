@@ -13,11 +13,7 @@ import ic_lock from "../../assets/ui/goals/ic_lock.webp";
 import ic_store from "../../assets/ui/goals/ic_store.webp";
 import ic_bars2 from "../../assets/ui/goals/ic_bars2.webp";
 import ic_bag from "../../assets/ui/goals/ic_bag.webp";
-import ribL from "../../assets/ui/goals/rib_l.webp";
-import ribM from "../../assets/ui/goals/rib_m.webp";
-import ribR from "../../assets/ui/goals/rib_r.webp";
 import { FONT, PANEL_GAP } from "../theme";
-import { Text } from "./AppText";
 import { SheetHeader } from "./SheetHeader";
 
 export const GOAL_ICONS = {
@@ -135,35 +131,11 @@ export function GoalPanel({
 
 // -------------------------------------------------------------- ribbon
 
-const RIB_ART_W = 428;
-const RIB_ART_H = 52;
-const RIB_CAP = 105;
-
-/** The green plaque ribbon that heads each Goals section: laurel ends and
- * vines are painted, the title is drawn. */
+/** Section heading of the Goals page: the same plaque every other screen uses. */
 export function GoalRibbon({ text }: { text: string }) {
-  const [w, onLayout] = useWidth();
-  const h = Math.min(44, w * (RIB_ART_H / RIB_ART_W));
-  const k = h / RIB_ART_H;
-  const cap = RIB_CAP * k;
-  const textW = Math.max(60, w - cap * 2 + 14);
-  const size = Math.max(8, Math.min(h * 0.38, (textW * 0.96) / (text.length * 0.85 + 1)));
   return (
-    <View style={{ alignSelf: "stretch", height: h, marginTop: 2, marginBottom: 5 }} onLayout={onLayout}>
-      <View style={{ flexDirection: "row", height: h }}>
-        <Image source={ribL} style={{ width: cap, height: h }} resizeMode="stretch" />
-        <Image source={ribM} style={{ flex: 1, height: h }} resizeMode="stretch" />
-        <Image source={ribR} style={{ width: cap, height: h }} resizeMode="stretch" />
-      </View>
-      <View pointerEvents="none" style={styles.ribText}>
-        <Text
-          style={[styles.ribTitle, { fontSize: size, width: textW }]}
-          numberOfLines={1}
-          accessibilityRole="header"
-        >
-          {text}
-        </Text>
-      </View>
+    <View style={{ alignSelf: "stretch", marginTop: 2, marginBottom: 3, zIndex: 2 }}>
+      <SheetHeader text={text} />
     </View>
   );
 }

@@ -32,9 +32,11 @@ interface Props {
    * to go quiet with everything else rather than becoming the one thing
    * "quiet mode" doesn't quiet. */
   muted?: boolean;
+  /** home-indicator strip the bar is extended under */
+  bottomInset?: number;
 }
 
-export function TabBar({ active, onChange, spotlight = null, muted = false }: Props) {
+export function TabBar({ active, onChange, spotlight = null, muted = false, bottomInset = 0 }: Props) {
   const { t } = useEconomyContext();
   // Seven tabs share the width, so on a narrow phone the badges and labels
   // shrink together instead of the labels running into each other.
@@ -96,7 +98,7 @@ export function TabBar({ active, onChange, spotlight = null, muted = false }: Pr
   });
 
   return (
-    <View style={styles.wrap} accessibilityRole="tablist">
+    <View style={[styles.wrap, { paddingBottom: 24 + bottomInset }]} accessibilityRole="tablist">
       {/* The bar's own backdrop — cropped from the wood background's own
           bottom edge (the leaf vines, barrels and stone path it already
           carried) — rather than just staying transparent over whatever the
