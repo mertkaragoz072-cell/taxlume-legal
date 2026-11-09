@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, StyleSheet, View } from "react-native";
+import { Animated, Easing, Image, Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { COLORS, FONT, SPACING, TYPE, WEIGHT } from "../theme";
-import medStall from "../../assets/ui/modal/med_stall.webp";
+import { COLORS, FONT } from "../theme";
+import { upperForUi } from "../utils/uiLanguage";
+import frameArt from "../../assets/ui/modal/barg_frame.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
-import { BigButton, ModalShell } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -36,6 +36,7 @@ export function BargainingModal({ visible, onResolve }: Props) {
   const animLoop = useRef<Animated.CompositeAnimation | null>(null);
   const positionRef = useRef(0);
   const [barW, setBarW] = useState(250);
+  const [frameW, setFrameW] = useState(340);
 
   useEffect(() => {
     if (!visible) return;
@@ -98,75 +99,112 @@ export function BargainingModal({ visible, onResolve }: Props) {
           ? t("bargain.resultMiss")
           : "";
 
+  const k = frameW / ART_W;
+  const box = (x: number, y: number, bw: number, bh: number) => ({
+    position: "absolute" as const,
+    left: x * k,
+    top: y * k,
+    width: bw * k,
+    height: bh * k,
+  });
+  const title = upperForUi(t("bargain.title").replace(/^[^\p{L}\p{N}]+/u, ""));
+  const titleSize = Math.min(40 * k, (430 * k * 0.95) / (title.length * 0.7));
+  const btnLabel = (result ? t("bargain.continueBtn") : t("bargain.stopBtn")).replace(/^[^\p{L}\p{N}]+/u, "");
+  const btnSize = Math.min(56 * k, (250 * k * 0.95) / (btnLabel.length * 0.52));
+  const subtitleText = result ? resultText : t("bargain.subtitle");
+  const subColor = !result
+    ? "#f6e8c8"
+    : result.tier === "perfect"
+      ? "#9cf0b0"
+      : result.tier === "good"
+        ? "#f4c43c"
+        : "#e8dcc0";
+  const subSize = Math.min(
+    16 * Math.max(0.85, Math.min(1.1, frameW / 360)),
+    (620 * k * 0.97) / (subtitleText.length * 0.52)
+  );
+
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <ModalShell title={t("bargain.title")} medallion={medStall}>
-          <Text style={styles.subtitle}>{t("bargain.subtitle")}</Text>
-          <View style={styles.divider}>
-            <View style={styles.divLine} />
-            <View style={styles.divGem} />
-            <View style={styles.divLine} />
-          </View>
+        <View
+          style={[styles.frame, { width: frameW }]}
+          onLayout={(e) => setFrameW(e.nativeEvent.layout.width)}
+        >
+          <View style={{ width: "100%", aspectRatio: ART_W / ART_H }}>
+            <Image source={frameArt} style={styles.fill} resizeMode="stretch" />
 
-          <View style={styles.barTrack} onLayout={(e) => setBarW(e.nativeEvent.layout.width)}>
-            <View style={[styles.goodZone, { left: barW * 0.3, width: barW * 0.4 }]} />
-            <View style={[styles.perfectZoneHalo, { left: barW * 0.4, width: barW * 0.2 }]} />
-            <View style={[styles.perfectZone, { left: barW * 0.44, width: barW * 0.12 }]} />
-            <Animated.View style={[styles.marker, { left: markerLeft }]} />
-          </View>
-
-          {result ? (
-            <>
+            <View style={[box(150, 160, 450, 64), styles.center]} pointerEvents="none">
               <Text
-                style={[
-                  styles.resultText,
-                  {
-                    color:
-                      result.tier === "perfect" ? "#7fe39a" : result.tier === "good" ? "#f4c43c" : "#d8c8a8",
-                  },
-                ]}
+                style={[styles.title, { fontSize: titleSize }]}
+                numberOfLines={1}
+                accessibilityRole="header"
               >
-                {resultText}
+                {title}
               </Text>
-              <BigButton label={t("bargain.continueBtn")} onPress={() => onResolve(result.bonus)} />
-            </>
-          ) : (
-            <>
-              <BigButton label={t("bargain.stopBtn")} onPress={stop} />
-              <ScalePressable onPress={() => onResolve(0)} style={styles.skipBtn} scaleTo={0.97}>
-                <Text style={styles.skipBtnText}>{t("bargain.skipBtn")}</Text>
+            </View>
+            <View style={[box(50, 240, 645, 44), styles.center]} pointerEvents="none">
+              <Text style={[styles.sub, { fontSize: subSize, color: subColor }]} numberOfLines={1}>
+                {subtitleText}
+              </Text>
+            </View>
+
+            <View style={box(60, 326, 625, 66)} onLayout={(e) => setBarW(e.nativeEvent.layout.width)}>
+              <View style={[styles.goodZone, { left: barW * 0.3, width: barW * 0.4 }]} />
+              <View style={[styles.perfectZoneHalo, { left: barW * 0.4, width: barW * 0.2 }]} />
+              <View style={[styles.perfectZone, { left: barW * 0.44, width: barW * 0.12 }]} />
+              <Animated.View style={[styles.marker, { left: markerLeft, top: (66 * k - MARKER_SIZE) / 2 }]} />
+            </View>
+
+            <ScalePressable
+              onPress={result ? () => onResolve(result.bonus) : stop}
+              scaleTo={0.97}
+              accessibilityLabel={result ? t("bargain.continueBtn") : t("bargain.stopBtn")}
+              style={box(105, 423, 525, 108)}
+            >
+              <View style={[styles.btnTextBox, { left: 245 * k, right: 28 * k }]}>
+                <Text style={[styles.btnText, { fontSize: btnSize }]} numberOfLines={1}>
+                  {(result ? t("bargain.continueBtn") : t("bargain.stopBtn")).replace(/^[^\p{L}\p{N}]+/u, "")}
+                </Text>
+              </View>
+            </ScalePressable>
+
+            {!result && (
+              <ScalePressable
+                onPress={() => onResolve(0)}
+                scaleTo={0.97}
+                style={[box(150, 538, 450, 44), styles.center]}
+              >
+                <Text style={styles.skipText} numberOfLines={1}>
+                  {t("bargain.skipBtn")}
+                </Text>
               </ScalePressable>
-            </>
-          )}
-        </ModalShell>
+            )}
+          </View>
+        </View>
       </ModalBackdrop>
     </Modal>
   );
 }
 
+const ART_W = 745;
+const ART_H = 655;
+
 const styles = StyleSheet.create({
-  subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
-  divider: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  divLine: { flex: 1, height: 1, backgroundColor: "rgba(232,170,70,0.6)" },
-  divGem: {
-    width: 8,
-    height: 8,
-    marginHorizontal: 8,
-    backgroundColor: "#f0b84a",
-    transform: [{ rotate: "45deg" }],
+  frame: { maxWidth: 400, alignSelf: "center" },
+  fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  center: { alignItems: "center", justifyContent: "center" },
+  title: { color: "#4a2a12", fontFamily: FONT.serif, textAlign: "center" },
+  sub: { fontFamily: FONT.medium, textAlign: "center" },
+  btnTextBox: { position: "absolute", top: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
+  btnText: {
+    color: "#fbeccb",
+    fontFamily: FONT.serif,
+    textShadowColor: "rgba(40,20,0,0.7)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 2,
   },
-  barTrack: {
-    alignSelf: "stretch",
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(10,6,2,0.6)",
-    borderWidth: 2.5,
-    borderColor: "#e0a03c",
-    justifyContent: "center",
-    marginBottom: SPACING.lg,
-    overflow: "hidden",
-  },
+  skipText: { color: "#f6e8c8", fontFamily: FONT.medium, fontSize: 14, lineHeight: 20 },
   goodZone: {
     position: "absolute",
     height: "70%",
@@ -200,19 +238,5 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 0 },
     elevation: 4,
-  },
-  resultText: {
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginBottom: SPACING.md,
-    textAlign: "center",
-  },
-  skipBtn: { alignItems: "center", paddingVertical: 8 },
-  skipBtnText: {
-    color: "#e8dcc0",
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.medium,
-    fontFamily: FONT.medium,
   },
 });
