@@ -10,15 +10,7 @@ import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
-import {
-  COLORS,
-  CONTENT_MAX_WIDTH,
-  PANEL_GAP,
-  SCREEN_PADDING,
-  FONT,
-  SPACING,
-  TYPE,
-} from "../theme";
+import { COLORS, CONTENT_MAX_WIDTH, PANEL_GAP, SCREEN_PADDING, FONT, SPACING, TYPE } from "../theme";
 import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
 interface Props {
