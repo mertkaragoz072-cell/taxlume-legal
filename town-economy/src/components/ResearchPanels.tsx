@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import { Image, LayoutChangeEvent, StyleSheet, View } from "react-native";
+import wood1 from "../../assets/ui/research/wood1.webp";
+import wood2 from "../../assets/ui/research/wood2.webp";
+import wood3 from "../../assets/ui/research/wood3.webp";
+import iron1 from "../../assets/ui/research/iron1.webp";
+import iron2 from "../../assets/ui/research/iron2.webp";
+import iron3 from "../../assets/ui/research/iron3.webp";
+import cloth1 from "../../assets/ui/research/cloth1.webp";
+import cloth2 from "../../assets/ui/research/cloth2.webp";
+import cloth3 from "../../assets/ui/research/cloth3.webp";
 import banner from "../../assets/ui/research/banner.webp";
 import bread1 from "../../assets/ui/research/bread1.webp";
 import bread2 from "../../assets/ui/research/bread2.webp";
@@ -37,6 +46,15 @@ const NODE_ART: Record<string, number> = {
   milk_t1: milk1,
   milk_t2: milk2,
   milk_t3: milk3,
+  wood_t1: wood1,
+  wood_t2: wood2,
+  wood_t3: wood3,
+  iron_t1: iron1,
+  iron_t2: iron2,
+  iron_t3: iron3,
+  cloth_t1: cloth1,
+  cloth_t2: cloth2,
+  cloth_t3: cloth3,
 };
 
 function useWidth(initial = 360): [number, (e: LayoutChangeEvent) => void] {
@@ -174,7 +192,7 @@ export function ResearchCard(p: ResearchCardProps) {
   const art = painted ?? (GOOD_IMAGES as Record<string, number | undefined>)[p.goodId];
   const disabled = p.researched || p.locked || !p.affordable;
   const narrow = w < 250;
-  const artSize = narrow ? 42 : 52;
+  const artSize = painted ? (narrow ? 52 : 64) : narrow ? 42 : 52;
 
   const button = p.researched ? (
     <View style={styles.doneBadge}>
