@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Modal, StyleSheet, View } from "react-native";
+import { Animated, Image, LayoutChangeEvent, Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { FONT, SPACING, TYPE } from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
-import { MentorPortrait } from "./MentorPortrait";
 import { ModalBackdrop } from "./ModalBackdrop";
-import { BigButton, ModalShell } from "./ModalKit";
+import frameArt from "../../assets/ui/merve/frame.webp";
+import { BigButton } from "./ModalKit";
 
 interface Props {
   rankUp: { icon: string; title: string; lore: string } | null;
@@ -24,6 +24,7 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   const { t } = useEconomyContext();
   const enter = useRef(new Animated.Value(0)).current;
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+  const [w, setW] = useState(340);
 
   useEffect(() => {
     if (!rankUp) return;
@@ -35,6 +36,17 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   }, [rankUp, enter]);
 
   if (!rankUp) return null;
+  const k = w / ART_W;
+  const u = Math.max(0.82, Math.min(1.08, w / 350));
+  const box = (x: number, y: number, bw: number, bh: number) => ({
+    position: "absolute" as const,
+    left: x * k,
+    top: y * k,
+    width: bw * k,
+    height: bh * k,
+  });
+  const titleText = t("merveRankUp.title");
+  const titleSize = Math.min(22 * u, (410 * k * 0.96) / (titleText.length * 0.86));
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
@@ -48,21 +60,25 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
             },
           ]}
         >
-          <ModalShell title={t("merveRankUp.title")}>
-            <View style={styles.row}>
-              <View style={styles.portrait}>
-                <MentorPortrait pose="cheer" size={112} />
-              </View>
-              <View style={styles.speech}>
-                <Text style={styles.eyebrow}>{t("merveRankUp.eyebrow")}</Text>
-                <Text style={styles.body}>
-                  {t("merveRankUp.body", { icon: rankUp.icon, title: rankUp.title })}
-                </Text>
-                <Text style={styles.lore}>{rankUp.lore}</Text>
-              </View>
+          <View
+            style={{ aspectRatio: ART_W / ART_H, width: "100%" }}
+            onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}
+          >
+            <Image source={frameArt} style={styles.fill} resizeMode="stretch" />
+            <View style={box(310, 108, 410, 350)}>
+              <Text style={[styles.eyebrow, { fontSize: 11.5 * u }]}>{t("merveRankUp.eyebrow")}</Text>
+              <Text style={[styles.title, { fontSize: titleSize }]} numberOfLines={2}>
+                {t("merveRankUp.title")}
+              </Text>
+              <Text style={[styles.body, { fontSize: 14 * u, lineHeight: 19 * u }]}>
+                {t("merveRankUp.body", { icon: rankUp.icon, title: rankUp.title })}
+              </Text>
+              <Text style={[styles.lore, { fontSize: 12.5 * u, lineHeight: 17 * u }]}>{rankUp.lore}</Text>
             </View>
-            <BigButton label={t("merveRankUp.confirmBtn")} onPress={onDismiss} />
-          </ModalShell>
+            <View style={box(96, 472, 594, 66)}>
+              <BigButton label={t("merveRankUp.confirmBtn")} onPress={onDismiss} />
+            </View>
+          </View>
         </Animated.View>
       </ModalBackdrop>
       <ConfettiBurst trigger={confettiTrigger} big />
@@ -70,8 +86,13 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   );
 }
 
+const ART_W = 786;
+const ART_H = 630;
+
 const styles = StyleSheet.create({
-  dock: { width: "100%", maxWidth: 360 },
+  fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  title: { color: "#f6e2a0", fontFamily: FONT.display, marginVertical: 3 },
+  dock: { width: "100%", maxWidth: 400 },
   row: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.md },
   portrait: { width: 104, alignItems: "center", marginRight: SPACING.sm },
   speech: { flex: 1 },
