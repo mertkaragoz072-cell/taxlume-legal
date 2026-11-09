@@ -18,6 +18,7 @@ import ribM from "../../assets/ui/goals/rib_m.webp";
 import ribR from "../../assets/ui/goals/rib_r.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
+import { SheetHeader } from "./SheetHeader";
 
 export const GOAL_ICONS = {
   bars: ic_bars,
@@ -102,6 +103,32 @@ export function GoalFrame({ children, lit, style, contentStyle, gap = PANEL_GAP 
       >
         {children}
       </View>
+    </View>
+  );
+}
+
+/** A framed panel with its green plaque heading laid over the top edge, as the
+ * Market mockup does: the heading is the game's own wheat-wreath beam, the
+ * frame is the copper-rimmed dark card. */
+export function GoalPanel({
+  title,
+  children,
+  padX = 10,
+  style,
+}: {
+  title: string;
+  children: React.ReactNode;
+  padX?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[{ alignSelf: "stretch", marginBottom: PANEL_GAP }, style]}>
+      <View style={{ zIndex: 2, marginBottom: -26 }}>
+        <SheetHeader text={title} />
+      </View>
+      <GoalFrame gap={0} contentStyle={{ paddingTop: 30, paddingHorizontal: padX }}>
+        {children}
+      </GoalFrame>
     </View>
   );
 }

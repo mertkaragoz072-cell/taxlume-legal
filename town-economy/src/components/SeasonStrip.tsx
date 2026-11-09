@@ -4,19 +4,8 @@ import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GoodGroup } from "../economy/goods";
 import { daysUntilNextSeason, nextSeasonFromTick, seasonFromTick } from "../economy/seasons";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-  PANEL_GAP,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha, PANEL_GAP } from "../theme";
+import { GoalFrame } from "./GoalPanels";
 
 const GROUP_LABEL: Record<GoodGroup, string> = {
   food: "season.groupFood",
@@ -51,9 +40,7 @@ export function SeasonStrip() {
   }));
 
   return (
-    <View style={styles.card}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-
+    <GoalFrame gap={PANEL_GAP}>
       <View style={styles.headRow}>
         <Text style={styles.title}>
           {season.icon} {t(season.nameKey)}
@@ -84,7 +71,7 @@ export function SeasonStrip() {
           );
         })}
       </View>
-    </View>
+    </GoalFrame>
   );
 }
 

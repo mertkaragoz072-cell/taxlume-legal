@@ -24,14 +24,13 @@ import { SeasonStrip } from "../components/SeasonStrip";
 import { GoodCard } from "../components/GoodCard";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
+import { GoalIcon, GoalPanel } from "../components/GoalPanels";
 import { PriceChart } from "../components/PriceChart";
 import { ProductionChainLine } from "../components/ProductionChainLine";
 import { ScalePressable } from "../components/ScalePressable";
-import { SectionLabel } from "../components/SectionLabel";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import {
   cardShadow,
-  CARD_GRADIENT,
   COLORS,
   CONTENT_MAX_WIDTH,
   PANEL_GAP,
@@ -88,19 +87,19 @@ export function MarketScreen({ sounds }: Props) {
   // it used to cap at a phone-sized 420 and leave the rest of a much wider
   // card blank.
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 16);
+  const chartWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - (SCREEN_PADDING * 2 + 44);
   // Two full cards and most of a third, running to the
   // screen's edge — the half-hidden card is the cue that this row scrolls
   // sideways to more goods. Wide cards rather than four squeezed across
   // keeps the icon, move and name readable.
-  const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2;
+  const goodsRowWidth = Math.min(screenWidth, CONTENT_MAX_WIDTH) - SCREEN_PADDING * 2 - 24;
   // Four across where they fit, but never narrower than a card can stay
   // readable — on a small phone the row scrolls instead of squeezing.
-  const goodCardWidth = Math.max(84, (goodsRowWidth - SPACING.sm * 3) / 4);
+  const goodCardWidth = Math.max(76, (goodsRowWidth - SPACING.sm * 3) / 4);
   // The locked cards run wider so the Coming Soon row always overflows a
   // little: the last card peeks past the edge and the row slides sideways
   // like Town Market's, even while only four goods are still locked.
-  const lockedCardWidth = Math.round(goodCardWidth * 1.3);
+  const lockedCardWidth = Math.floor((goodsRowWidth - SPACING.sm * 3) / 3);
   const [autoSide, setAutoSide] = useState<"buy" | "sell">("buy");
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
@@ -200,77 +199,74 @@ export function MarketScreen({ sounds }: Props) {
           "buy any good in the market" lands straight on the grid they'd
           buy it from, instead of scrolling past the pulse/chart cards
           first to find it. */}
-      <SectionLabel text={t("market.sectionLabel")} color={selected.color} />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.goodsRow}
-        contentContainerStyle={styles.goodsRowContent}
-      >
-        {unlockedGoods.map((g) => (
-          <GoodCard
-            key={g.id}
-            good={g}
-            state={state.goods[g.id]}
-            selected={g.id === state.selectedGood}
-            onPress={() => {
-              selectGood(g.id);
-              if (!tourBuyBeat) setSheetOpen(true);
-            }}
-            width={goodCardWidth}
-            // One ribbon color for both states, like the reference — the word
-            // on it says which.
-            badge={
-              isHot(state.demandCycle, g.id)
-                ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
-                : isGlutted(state.demandCycle, g.id)
-                  ? { text: t("market.demand.glutBadge"), color: "#f0a04b" }
-                  : undefined
-            }
-          />
-        ))}
-      </ScrollView>
+      <GoalPanel title={t("market.sectionLabel")}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.goodsRow}
+          contentContainerStyle={styles.goodsRowContent}
+        >
+          {unlockedGoods.map((g) => (
+            <GoodCard
+              key={g.id}
+              good={g}
+              state={state.goods[g.id]}
+              selected={g.id === state.selectedGood}
+              onPress={() => {
+                selectGood(g.id);
+                if (!tourBuyBeat) setSheetOpen(true);
+              }}
+              width={goodCardWidth}
+              // One ribbon color for both states, like the reference — the word
+              // on it says which.
+              badge={
+                isHot(state.demandCycle, g.id)
+                  ? { text: t("market.demand.hotBadge"), color: "#f0a04b" }
+                  : isGlutted(state.demandCycle, g.id)
+                    ? { text: t("market.demand.glutBadge"), color: "#f0a04b" }
+                    : undefined
+              }
+            />
+          ))}
+        </ScrollView>
+      </GoalPanel>
 
       {lockedGoods.length > 0 && (
         <>
-          <SectionLabel text={t("market.comingSoonLabel")} color="#a0917a" />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.goodsRow}
-            contentContainerStyle={styles.goodsRowContent}
-          >
-            {lockedGoods.map((g) => (
-              <View
-                key={g.id}
-                style={[styles.lockedCard, { width: lockedCardWidth, borderColor: withAlpha(g.color, 0.3) }]}
-              >
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.lockedAccentStripe, { backgroundColor: withAlpha(g.color, 0.5) }]} />
-                <View style={styles.lockedBadge}>
-                  <Text style={styles.lockedBadgeText}>🔒</Text>
-                </View>
-                {/* The good's own icon, full size and in its own color
+          <GoalPanel title={t("market.comingSoonLabel")}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.goodsRow}
+              contentContainerStyle={styles.goodsRowContent}
+            >
+              {lockedGoods.map((g) => (
+                <View key={g.id} style={[styles.lockedCard, { width: lockedCardWidth }]}>
+                  <View style={styles.lockedBadge}>
+                    <GoalIcon name="lock" size={14} />
+                  </View>
+                  {/* The good's own icon, full size and in its own color
                     rather than greyed out — this is a preview of a reward,
                     not a dead slot, so it should look like one. */}
-                <GoodIcon
-                  id={g.id}
-                  fallback={g.icon}
-                  size={Math.round(48 * (lockedCardWidth / 112))}
-                  style={styles.lockedIcon}
-                />
-                <Text style={styles.lockedName} numberOfLines={1}>
-                  {t(g.nameKey)}
-                </Text>
-                <View style={[styles.lockedRankChip, { borderColor: withAlpha(g.color, 0.4) }]}>
-                  <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
-                  <Text style={styles.lockedRankText} numberOfLines={2}>
-                    {t(townRankNameKey(g.unlockRank ?? 0))}
+                  <GoodIcon
+                    id={g.id}
+                    fallback={g.icon}
+                    size={Math.round(48 * (lockedCardWidth / 112))}
+                    style={styles.lockedIcon}
+                  />
+                  <Text style={styles.lockedName} numberOfLines={1}>
+                    {t(g.nameKey)}
                   </Text>
+                  <View style={[styles.lockedRankChip, { borderColor: withAlpha(g.color, 0.4) }]}>
+                    <Text style={styles.lockedRankIcon}>{townRankIcon(g.unlockRank ?? 0)}</Text>
+                    <Text style={styles.lockedRankText} numberOfLines={2}>
+                      {t(townRankNameKey(g.unlockRank ?? 0))}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </ScrollView>
+              ))}
+            </ScrollView>
+          </GoalPanel>
         </>
       )}
 
@@ -351,15 +347,13 @@ export function MarketScreen({ sounds }: Props) {
           from the "Kasaba Piyasası" grid above updates this in place, so
           it reads as one motion (pick, then look down) rather than a
           separate screen. */}
-      <View style={[styles.chartCard, { borderColor: withAlpha(selected.color, 0.4) }]}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(selected.color, 0.1) }]}
-        />
+      <GoalPanel title={`${t("market.chartTitle")} – ${t(selected.nameKey)}`}>
         <Animated.View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: flashColor, opacity: flashOpacity }]}
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: flashColor, opacity: flashOpacity, borderRadius: 14 },
+          ]}
         />
         <View style={styles.chartHeaderRow}>
           <View>
@@ -391,6 +385,30 @@ export function MarketScreen({ sounds }: Props) {
           strokeWidth={3}
           interactive
         />
+        {(() => {
+          const h = selectedState.history.filter((v) => Number.isFinite(v));
+          if (h.length === 0) return null;
+          const hi = Math.max(...h);
+          const lo = Math.min(...h);
+          const avg = h.reduce((a, v) => a + v, 0) / h.length;
+          const cells: [string, number, string][] = [
+            [t("market.chartStats.high"), hi, "#3fae5c"],
+            [t("market.chartStats.low"), lo, "#c94b4b"],
+            [t("market.chartStats.avg"), avg, COLORS.textPrimary],
+          ];
+          return (
+            <View style={styles.statsBox}>
+              {cells.map(([label, v, color]) => (
+                <View key={label} style={styles.statsCell}>
+                  <Text style={styles.statsLabel} numberOfLines={1}>
+                    {label}
+                  </Text>
+                  <Text style={[styles.statsValue, { color }]}>{formatPrice(v)}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        })()}
         {selectedState.holding > 0 && (
           <View style={styles.holdingRow}>
             <Text style={styles.holdingText}>
@@ -406,7 +424,7 @@ export function MarketScreen({ sounds }: Props) {
             </Text>
           </View>
         )}
-      </View>
+      </GoalPanel>
 
       {/* The year above the week: the season sets the backdrop the demand
           cycle plays out against, and reading them together is what turns a
@@ -478,131 +496,135 @@ export function MarketScreen({ sounds }: Props) {
         </Pressable>
       </Modal>
 
-      <SectionLabel text={t("market.autoTrade.sectionLabel")} color={selected.color} />
-      <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>
-      <View style={styles.autoTradePanel}>
-        <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-        <View style={styles.sideToggle}>
-          <ScalePressable
-            style={[styles.sideBtn, autoSide === "buy" && styles.sideBtnActiveBuy]}
-            onPress={() => setAutoSide("buy")}
-          >
-            <Text style={[styles.sideBtnText, autoSide === "buy" && styles.sideBtnTextActive]}>
-              {t("market.buyShort")}
-            </Text>
-          </ScalePressable>
-          <ScalePressable
-            style={[styles.sideBtn, autoSide === "sell" && styles.sideBtnActiveSell]}
-            onPress={() => setAutoSide("sell")}
-          >
-            <Text style={[styles.sideBtnText, autoSide === "sell" && styles.sideBtnTextActive]}>
-              {t("market.sellShort")}
-            </Text>
-          </ScalePressable>
-        </View>
-
-        <Text style={styles.autoTradeSubLabel}>
-          {autoSide === "buy"
-            ? t("market.autoTrade.triggerBelowLabel")
-            : t("market.autoTrade.triggerAboveLabel")}
-        </Text>
-        <View style={styles.qtyRow}>
-          {AUTO_TRADE_TRIGGER_PCT_STEPS.map((pct) => (
+      <GoalPanel title={t("market.autoTrade.sectionLabel")}>
+        <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>
+        <View style={styles.autoTradePanel}>
+          <View style={styles.sideToggle}>
             <ScalePressable
-              key={pct}
-              style={[styles.qtyBtn, autoPct === pct && { borderColor: selected.color, borderWidth: 2 }]}
-              onPress={() => setAutoPct(pct)}
+              style={[styles.sideBtn, autoSide === "buy" && styles.sideBtnActiveBuy]}
+              onPress={() => setAutoSide("buy")}
             >
-              <Text style={styles.qtyBtnText}>{formatPercent(pct * 100, state.language)}</Text>
-            </ScalePressable>
-          ))}
-        </View>
-
-        <Text style={styles.autoTradeSubLabel}>{t("market.autoTrade.qtyLabel")}</Text>
-        <View style={styles.qtyRow}>
-          {([1, 5, 10] as const).map((q) => (
-            <ScalePressable
-              key={q}
-              style={[styles.qtyBtn, autoQty === q && { borderColor: selected.color, borderWidth: 2 }]}
-              onPress={() => setAutoQty(q)}
-            >
-              <Text style={styles.qtyBtnText}>{q}</Text>
-            </ScalePressable>
-          ))}
-        </View>
-
-        {(() => {
-          const triggerPrice =
-            autoSide === "buy" ? selectedState.price * (1 - autoPct) : selectedState.price * (1 + autoPct);
-          const maxRules = effectiveAutoTradeMaxRules(state);
-          const disabled = state.autoTradeRules.length >= maxRules || !isGoodUnlocked(selected, state);
-          return (
-            <>
-              <Text style={styles.autoTradePreview}>
-                {t("market.autoTrade.preview", { qty: autoQty, price: triggerPrice.toFixed(2) })}
-              </Text>
-              <Text style={styles.autoTradeMaxNote}>
-                {t("market.autoTrade.maxActiveNote", { max: maxRules })}
-              </Text>
-              <ScalePressable
-                disabled={disabled}
-                onPress={() => {
-                  addAutoTradeRule(selected.id, autoSide, autoPct, autoQty);
-                  sounds.playBuy();
-                }}
-                style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-                scaleTo={0.97}
-              >
-                <GradientFill
-                  colors={autoSide === "buy" ? GREEN_GRADIENT : RED_GRADIENT}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                />
-                <Text style={styles.confirmBtnText}>{t("market.autoTrade.addBtn")}</Text>
-              </ScalePressable>
-            </>
-          );
-        })()}
-      </View>
-
-      <SectionLabel text={t("market.autoTrade.activeSectionLabel")} color={COLORS.accent} />
-      {state.autoTradeRules.length === 0 && (
-        <Text style={styles.autoTradeEmptyText}>{t("market.autoTrade.noRules")}</Text>
-      )}
-      {state.autoTradeRules.map((rule) => {
-        const ruleGood = GOODS_BY_ID[rule.goodId];
-        return (
-          <View key={rule.id} style={styles.autoTradeRow}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <View style={[styles.autoTradeAccent, { backgroundColor: ruleGood.color }]} />
-            <GoodIcon id={ruleGood.id} fallback={ruleGood.icon} size={22} style={styles.autoTradeRowIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.autoTradeRowTitle}>
-                {rule.side === "buy" ? "📉" : "📈"} {t(ruleGood.nameKey)}
-              </Text>
-              <Text style={styles.autoTradeRowSub}>
-                {t(rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell", {
-                  qty: rule.qty,
-                  price: rule.triggerPrice.toFixed(2),
-                })}
-              </Text>
-            </View>
-            <ScalePressable
-              style={[styles.autoTradeToggleBtn, rule.enabled && styles.autoTradeToggleBtnActive]}
-              onPress={() => toggleAutoTradeRule(rule.id)}
-            >
-              <Text style={styles.autoTradeToggleBtnText}>
-                {rule.enabled ? t("market.autoTrade.on") : t("market.autoTrade.off")}
+              <Text style={[styles.sideBtnText, autoSide === "buy" && styles.sideBtnTextActive]}>
+                {t("market.buyShort")}
               </Text>
             </ScalePressable>
-            <ScalePressable style={styles.autoTradeDeleteBtn} onPress={() => removeAutoTradeRule(rule.id)}>
-              <Text style={styles.autoTradeDeleteBtnText}>✕</Text>
+            <ScalePressable
+              style={[styles.sideBtn, autoSide === "sell" && styles.sideBtnActiveSell]}
+              onPress={() => setAutoSide("sell")}
+            >
+              <Text style={[styles.sideBtnText, autoSide === "sell" && styles.sideBtnTextActive]}>
+                {t("market.sellShort")}
+              </Text>
             </ScalePressable>
           </View>
-        );
-      })}
+
+          <Text style={styles.autoTradeSubLabel}>
+            {autoSide === "buy"
+              ? t("market.autoTrade.triggerBelowLabel")
+              : t("market.autoTrade.triggerAboveLabel")}
+          </Text>
+          <View style={styles.qtyRow}>
+            {AUTO_TRADE_TRIGGER_PCT_STEPS.map((pct) => (
+              <ScalePressable
+                key={pct}
+                style={[styles.qtyBtn, autoPct === pct && { borderColor: selected.color, borderWidth: 2 }]}
+                onPress={() => setAutoPct(pct)}
+              >
+                <Text style={styles.qtyBtnText}>{formatPercent(pct * 100, state.language)}</Text>
+              </ScalePressable>
+            ))}
+          </View>
+
+          <Text style={styles.autoTradeSubLabel}>{t("market.autoTrade.qtyLabel")}</Text>
+          <View style={styles.qtyRow}>
+            {([1, 5, 10] as const).map((q) => (
+              <ScalePressable
+                key={q}
+                style={[styles.qtyBtn, autoQty === q && { borderColor: selected.color, borderWidth: 2 }]}
+                onPress={() => setAutoQty(q)}
+              >
+                <Text style={styles.qtyBtnText}>{q}</Text>
+              </ScalePressable>
+            ))}
+          </View>
+
+          {(() => {
+            const triggerPrice =
+              autoSide === "buy" ? selectedState.price * (1 - autoPct) : selectedState.price * (1 + autoPct);
+            const maxRules = effectiveAutoTradeMaxRules(state);
+            const disabled = state.autoTradeRules.length >= maxRules || !isGoodUnlocked(selected, state);
+            return (
+              <>
+                <Text style={styles.autoTradePreview}>
+                  {t("market.autoTrade.preview", { qty: autoQty, price: triggerPrice.toFixed(2) })}
+                </Text>
+                <Text style={styles.autoTradeMaxNote}>
+                  {t("market.autoTrade.maxActiveNote", { max: maxRules })}
+                </Text>
+                <ScalePressable
+                  disabled={disabled}
+                  onPress={() => {
+                    addAutoTradeRule(selected.id, autoSide, autoPct, autoQty);
+                    sounds.playBuy();
+                  }}
+                  style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
+                  scaleTo={0.97}
+                >
+                  <GradientFill
+                    colors={autoSide === "buy" ? GREEN_GRADIENT : RED_GRADIENT}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  />
+                  <Text style={styles.confirmBtnText}>{t("market.autoTrade.addBtn")}</Text>
+                </ScalePressable>
+              </>
+            );
+          })()}
+        </View>
+      </GoalPanel>
+
+      <GoalPanel title={t("market.autoTrade.activeSectionLabel")}>
+        {state.autoTradeRules.length === 0 && (
+          <Text style={styles.autoTradeEmptyText}>{t("market.autoTrade.noRules")}</Text>
+        )}
+        {state.autoTradeRules.map((rule) => {
+          const ruleGood = GOODS_BY_ID[rule.goodId];
+          return (
+            <View key={rule.id} style={styles.autoTradeRow}>
+              <GoodIcon id={ruleGood.id} fallback={ruleGood.icon} size={22} style={styles.autoTradeRowIcon} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.autoTradeRowTitle}>
+                  {rule.side === "buy" ? "📉" : "📈"} {t(ruleGood.nameKey)}
+                </Text>
+                <Text style={styles.autoTradeRowSub}>
+                  {t(rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell", {
+                    qty: rule.qty,
+                    price: rule.triggerPrice.toFixed(2),
+                  })}
+                </Text>
+              </View>
+              <ScalePressable
+                style={[styles.switchTrack, rule.enabled && styles.switchTrackOn]}
+                onPress={() => toggleAutoTradeRule(rule.id)}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: rule.enabled }}
+                accessibilityLabel={rule.enabled ? t("market.autoTrade.on") : t("market.autoTrade.off")}
+              >
+                <View style={[styles.switchKnob, rule.enabled && styles.switchKnobOn]} />
+              </ScalePressable>
+              <ScalePressable
+                style={styles.autoTradeDeleteBtn}
+                onPress={() => removeAutoTradeRule(rule.id)}
+                accessibilityLabel="Delete"
+              >
+                <Text style={styles.autoTradeDeleteBtnText}>🗑️</Text>
+              </ScalePressable>
+            </View>
+          );
+        })}
+      </GoalPanel>
 
       {state.gameOver && (
         <View style={styles.gameOverBox}>
@@ -672,6 +694,18 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...cardShadow,
   },
+  statsBox: {
+    flexDirection: "row",
+    marginTop: SPACING.sm,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(200,130,70,0.4)",
+    backgroundColor: "rgba(0,0,0,0.25)",
+    paddingVertical: 6,
+  },
+  statsCell: { flex: 1, alignItems: "center", paddingHorizontal: 4 },
+  statsLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, fontFamily: FONT.medium },
+  statsValue: { fontFamily: FONT.black, fontWeight: WEIGHT.black, fontSize: TYPE.label, marginTop: 1 },
   chartHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -706,20 +740,21 @@ const styles = StyleSheet.create({
   // Bleeds past the screen body's own padding so a half-visible card
   // reaches the screen edge instead of being cut off short of it, while
   // the first card still lines up with the content above.
-  goodsRow: { marginBottom: PANEL_GAP, marginHorizontal: -SCREEN_PADDING },
-  goodsRowContent: { paddingHorizontal: SCREEN_PADDING },
+  goodsRow: { marginBottom: 2 },
+  goodsRowContent: { paddingHorizontal: 0 },
   // Width comes from the same goodCardWidth calc as the unlocked row above
   // it (passed inline), so the two rows read at the same scale and both
   // scroll the same way.
   lockedCard: {
-    borderRadius: RADIUS.card,
+    borderRadius: 14,
     borderWidth: 1,
+    borderColor: "rgba(200,130,70,0.5)",
+    backgroundColor: "rgba(0,0,0,0.28)",
     padding: SPACING.xs + 2,
     paddingTop: SPACING.sm,
     marginRight: SPACING.sm,
     alignItems: "center",
     overflow: "hidden",
-    ...cardShadow,
   },
   lockedAccentStripe: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
   lockedBadge: {
@@ -778,11 +813,11 @@ const styles = StyleSheet.create({
   gameOverSub: { color: "#c9a893", fontSize: TYPE.label, marginTop: 6, textAlign: "center" },
   autoTradeDesc: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
   autoTradePanel: {
-    borderRadius: RADIUS.card,
-    padding: SPACING.md + 2,
-    marginBottom: PANEL_GAP,
-    overflow: "hidden",
-    ...cardShadow,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(200,130,70,0.4)",
+    backgroundColor: "rgba(0,0,0,0.25)",
+    padding: SPACING.md,
   },
   sideToggle: {
     flexDirection: "row",
@@ -838,13 +873,13 @@ const styles = StyleSheet.create({
   autoTradeRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: RADIUS.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(200,130,70,0.45)",
+    backgroundColor: "rgba(0,0,0,0.25)",
     padding: SPACING.md,
-    paddingLeft: SPACING.md + 3,
-    marginBottom: SPACING.sm + 2,
-    overflow: "hidden",
+    marginBottom: SPACING.sm,
   },
-  autoTradeAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 3 },
   autoTradeRowIcon: { marginRight: SPACING.sm + 2 },
   autoTradeRowTitle: {
     color: COLORS.textPrimary,
@@ -853,24 +888,24 @@ const styles = StyleSheet.create({
     fontSize: TYPE.label,
   },
   autoTradeRowSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 1 },
-  autoTradeToggleBtn: {
-    borderRadius: RADIUS.chip,
-    paddingVertical: 6,
-    paddingHorizontal: SPACING.sm + 2,
+  switchTrack: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: "#1a1410",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: 2,
     marginRight: SPACING.sm,
   },
-  autoTradeToggleBtnActive: { backgroundColor: COLORS.positive },
-  autoTradeToggleBtnText: {
-    color: "#fff",
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
+  switchTrackOn: { backgroundColor: COLORS.positive },
+  switchKnob: { width: 18, height: 18, borderRadius: 9, backgroundColor: "#d8ccb4" },
+  switchKnobOn: { alignSelf: "flex-end", backgroundColor: "#f4ffe8" },
   autoTradeDeleteBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: "#3a1f1a",
     alignItems: "center",
     justifyContent: "center",
