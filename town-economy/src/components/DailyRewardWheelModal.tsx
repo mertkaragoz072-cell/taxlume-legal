@@ -25,7 +25,6 @@ interface Props {
 
 // The sent wheel art, in its own pixels (square crop around the centre).
 const ART = 704;
-const WHEEL_SIZE = 296;
 const DISC = 528;
 const HUB = 188;
 
@@ -95,6 +94,10 @@ export function DailyRewardWheelModal({
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const lastDegRef = useRef(0);
+  const [boxW, setBoxW] = useState(300);
+  // Bigger than the dialog body's content so the prizes read; the wheel art's
+  // own margins absorb the overhang.
+  const size = Math.min(350, boxW + 28);
 
   useEffect(() => {
     if (visible) {
@@ -135,21 +138,47 @@ export function DailyRewardWheelModal({
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
       <ModalBackdrop>
         <ModalShell title={t("dailyWheel.title")} medallion={medGift}>
-          <View style={styles.inner}>
+          <View style={styles.inner} onLayout={(e) => setBoxW(e.nativeEvent.layout.width)}>
             <Text style={styles.subtitle}>
               {revealed ? t("dailyWheel.streakLabel", { count: streakCount }) : t("dailyWheel.subtitle")}
             </Text>
 
-            <View style={styles.wheelWrap}>
+            <View style={[styles.wheelWrap, { width: size, height: size, marginVertical: -size * 0.1 }]}>
               <Animated.View
-                style={[styles.disc, { transform: [{ rotate: rotateDeg }] }]}
+                style={[
+                  styles.disc,
+                  {
+                    width: (size * DISC) / ART,
+                    height: (size * DISC) / ART,
+                    left: (size - (size * DISC) / ART) / 2,
+                    top: (size - (size * DISC) / ART) / 2,
+                    transform: [{ rotate: rotateDeg }],
+                  },
+                ]}
                 pointerEvents="none"
               >
                 <Image source={discArt} style={styles.fillImg} resizeMode="stretch" />
               </Animated.View>
               <Image source={ringArt} style={styles.fillImg} resizeMode="stretch" />
-              <Image source={hubArt} style={styles.hub} resizeMode="stretch" />
+              <Image
+                source={hubArt}
+                style={{
+                  position: "absolute",
+                  width: (size * HUB) / ART,
+                  height: (size * HUB) / ART,
+                  left: (size - (size * HUB) / ART) / 2,
+                  top: (size - (size * HUB) / ART) / 2,
+                }}
+                resizeMode="stretch"
+              />
             </View>
+
+            {!revealed && (
+              <View style={styles.prizeBox}>
+                <Text style={styles.prizeLabel}>{t("dailyWheel.todayPrize")}</Text>
+                <Text style={styles.prizeAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
+              </View>
+            )}
 
             {revealed ? (
               <>
@@ -188,30 +217,19 @@ const styles = StyleSheet.create({
   },
   inner: { alignItems: "center" },
   title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
+  subtitle: { color: "#f4e8d0", fontSize: 14, marginBottom: SPACING.lg, textAlign: "center" },
   fillImg: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
-  wheelWrap: {
-    width: WHEEL_SIZE,
-    height: WHEEL_SIZE,
-    alignSelf: "center",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: -24,
-    marginTop: -28,
-  },
-  disc: {
-    position: "absolute",
-    width: (WHEEL_SIZE * DISC) / ART,
-    height: (WHEEL_SIZE * DISC) / ART,
-    left: (WHEEL_SIZE - (WHEEL_SIZE * DISC) / ART) / 2,
-    top: (WHEEL_SIZE - (WHEEL_SIZE * DISC) / ART) / 2,
-  },
-  hub: {
-    position: "absolute",
-    width: (WHEEL_SIZE * HUB) / ART,
-    height: (WHEEL_SIZE * HUB) / ART,
-    left: (WHEEL_SIZE - (WHEEL_SIZE * HUB) / ART) / 2,
-    top: (WHEEL_SIZE - (WHEEL_SIZE * HUB) / ART) / 2,
+  wheelWrap: { alignSelf: "center", alignItems: "center", justifyContent: "center" },
+  disc: { position: "absolute" },
+  prizeBox: { alignItems: "center", marginBottom: 10 },
+  prizeLabel: { color: "#f4e8d0", fontFamily: FONT.medium, fontSize: 13 },
+  prizeAmount: {
+    color: "#ffd75e",
+    fontFamily: FONT.black,
+    fontSize: 30,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   wonTitle: { color: "#ffd75e", fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   wonAmount: {

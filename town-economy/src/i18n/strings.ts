@@ -705,6 +705,7 @@ export const STRINGS = {
     dailyWheel: {
       title: "🎡 Günlük Ödül",
       subtitle: "Bugünkü ödülünü almak için çarkı çevir!",
+      todayPrize: "Bugünkü ödülün",
       streakLabel: "{count}. gün üst üste giriş",
       spinBtn: "🎡 Çarkı Çevir",
       spinning: "Çevriliyor...",
@@ -2153,6 +2154,7 @@ export const STRINGS = {
     dailyWheel: {
       title: "🎡 Daily Reward",
       subtitle: "Spin the wheel to claim today's reward!",
+      todayPrize: "Your prize today",
       streakLabel: "Day {count} in a row",
       spinBtn: "🎡 Spin the Wheel",
       spinning: "Spinning...",
