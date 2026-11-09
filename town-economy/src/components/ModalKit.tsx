@@ -7,8 +7,6 @@ import difBCap from "../../assets/ui/modal/dif_b_cap.webp";
 import difBMid from "../../assets/ui/modal/dif_b_mid.webp";
 import difGCap from "../../assets/ui/modal/dif_g_cap.webp";
 import difGMid from "../../assets/ui/modal/dif_g_mid.webp";
-import difRCap from "../../assets/ui/modal/dif_r_cap.webp";
-import difRMid from "../../assets/ui/modal/dif_r_mid.webp";
 import optGCap from "../../assets/ui/modal/opt_g_cap.webp";
 import optGMid from "../../assets/ui/modal/opt_g_mid.webp";
 import optRCap from "../../assets/ui/modal/opt_r_cap.webp";
@@ -32,7 +30,7 @@ const BARS: Record<BarKind, { cap: ImageSourcePropType; mid: ImageSourcePropType
   optR: { cap: optRCap, mid: optRMid, capW: 36 },
   difG: { cap: difGCap, mid: difGMid, capW: 32 },
   difB: { cap: difBCap, mid: difBMid, capW: 32 },
-  difR: { cap: difRCap, mid: difRMid, capW: 32 },
+  difR: { cap: optRCap, mid: optRMid, capW: 36 },
   row: { cap: rowCap, mid: rowMid, capW: 21 },
 };
 // the art's own heights (cap images are 3x of the sent 1x crop)
@@ -43,7 +41,7 @@ const BAR_ART_H: Record<BarKind, number> = {
   optR: 83,
   difG: 55,
   difB: 55,
-  difR: 56,
+  difR: 83,
   row: 48,
 };
 
@@ -106,7 +104,7 @@ export function ModalShell({
           <View style={styles.rim3}>
             <View style={styles.body}>
               <GradientFill colors={["#4a2e1a", "#2c1a0f"]} x1="0" y1="0" x2="0" y2="1" />
-              <View style={{ height: crown ? 46 : 12 }} />
+              <View style={{ height: crown ? 28 : 12 }} />
               <View style={[styles.plateWrap, { height: plateH }]}>
                 <Bar kind="plate" height={plateH} />
                 {plateIcon ? (
