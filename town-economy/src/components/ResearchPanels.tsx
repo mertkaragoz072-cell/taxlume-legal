@@ -18,6 +18,15 @@ import wine3 from "../../assets/ui/research/wine3.webp";
 import leather1 from "../../assets/ui/research/leather1.webp";
 import leather2 from "../../assets/ui/research/leather2.webp";
 import leather3 from "../../assets/ui/research/leather3.webp";
+import spice1 from "../../assets/ui/research/spice1.webp";
+import spice2 from "../../assets/ui/research/spice2.webp";
+import spice3 from "../../assets/ui/research/spice3.webp";
+import silk1 from "../../assets/ui/research/silk1.webp";
+import silk2 from "../../assets/ui/research/silk2.webp";
+import silk3 from "../../assets/ui/research/silk3.webp";
+import jewelry1 from "../../assets/ui/research/jewelry1.webp";
+import jewelry2 from "../../assets/ui/research/jewelry2.webp";
+import jewelry3 from "../../assets/ui/research/jewelry3.webp";
 import banner from "../../assets/ui/research/banner.webp";
 import bread1 from "../../assets/ui/research/bread1.webp";
 import bread2 from "../../assets/ui/research/bread2.webp";
@@ -73,6 +82,15 @@ const NODE_ART: Record<string, number> = {
   leather_t1: leather1,
   leather_t2: leather2,
   leather_t3: leather3,
+  spice_t1: spice1,
+  spice_t2: spice2,
+  spice_t3: spice3,
+  silk_t1: silk1,
+  silk_t2: silk2,
+  silk_t3: silk3,
+  jewelry_t1: jewelry1,
+  jewelry_t2: jewelry2,
+  jewelry_t3: jewelry3,
 };
 
 function useWidth(initial = 360): [number, (e: LayoutChangeEvent) => void] {
