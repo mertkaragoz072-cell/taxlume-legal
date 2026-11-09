@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, StyleSheet, View } from "react-native";
+import { Animated, Easing, Image, Modal, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
-import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-native-svg";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { dailyBonusForStreak } from "../economy/formulas";
 import { cardShadow, COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
 import medGift from "../../assets/ui/modal/med_gift.webp";
+import discArt from "../../assets/ui/wheel/disc.webp";
+import hubArt from "../../assets/ui/wheel/hub.webp";
+import icFerris from "../../assets/ui/wheel/ic_ferris.webp";
+import ringArt from "../../assets/ui/wheel/ring.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { BigButton, ModalShell } from "./ModalKit";
 
@@ -20,33 +23,11 @@ interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
 }
 
-const WHEEL_ICONS = ["🪙", "💰", "🎁", "🪙", "💰", "🎁", "🪙", "💰"];
-const SEGMENT_COUNT = WHEEL_ICONS.length;
-const SEGMENT_ANGLE = 360 / SEGMENT_COUNT;
-const WHEEL_RADIUS = 78;
-const ICON_SIZE = 22;
-// Two alternating warm wood tones (rather than a bright/casino palette) so
-// the wheel reads as a real carved object that belongs in this game's
-// world, not a neon slot machine.
-const SEGMENT_COLORS = ["#3a2a1c", "#4a3520"];
-
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const angleRad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
-}
-
-function wedgePath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
-  const start = polarToCartesian(cx, cy, r, startAngle);
-  const end = polarToCartesian(cx, cy, r, endAngle);
-  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
-}
-
-function iconPosition(index: number) {
-  const midAngle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-  const pos = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.62, midAngle);
-  return { left: pos.x - ICON_SIZE / 2, top: pos.y - ICON_SIZE / 2 };
-}
+// The sent wheel art, in its own pixels (square crop around the centre).
+const ART = 704;
+const WHEEL_SIZE = 296;
+const DISC = 528;
+const HUB = 188;
 
 /** A 7-pip strip showing where today sits in the current week of the
  * streak, rather than the raw (and eventually large) streak count — a
@@ -160,67 +141,14 @@ export function DailyRewardWheelModal({
             </Text>
 
             <View style={styles.wheelWrap}>
-              <View style={styles.pointer} />
-              <Animated.View style={[styles.wheel, { transform: [{ rotate: rotateDeg }] }]}>
-                <Svg width={WHEEL_RADIUS * 2} height={WHEEL_RADIUS * 2} style={StyleSheet.absoluteFill}>
-                  <Defs>
-                    <RadialGradient id="dailyWheelGloss" cx="35%" cy="28%" r="75%">
-                      <Stop offset="0" stopColor="#ffffff" stopOpacity={0.12} />
-                      <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
-                    </RadialGradient>
-                  </Defs>
-                  {WHEEL_ICONS.map((_, i) => (
-                    <Path
-                      key={i}
-                      d={wedgePath(
-                        WHEEL_RADIUS,
-                        WHEEL_RADIUS,
-                        WHEEL_RADIUS - 2,
-                        i * SEGMENT_ANGLE,
-                        (i + 1) * SEGMENT_ANGLE
-                      )}
-                      fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
-                    />
-                  ))}
-                  {WHEEL_ICONS.map((_, i) => {
-                    const angle = i * SEGMENT_ANGLE;
-                    const inner = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.2, angle);
-                    const outer = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS - 2, angle);
-                    return (
-                      <Line
-                        key={i}
-                        x1={inner.x}
-                        y1={inner.y}
-                        x2={outer.x}
-                        y2={outer.y}
-                        stroke={withAlpha(COLORS.accent, 0.3)}
-                        strokeWidth={1}
-                      />
-                    );
-                  })}
-                  <Circle
-                    cx={WHEEL_RADIUS}
-                    cy={WHEEL_RADIUS}
-                    r={WHEEL_RADIUS - 2}
-                    fill="url(#dailyWheelGloss)"
-                  />
-                  <Circle
-                    cx={WHEEL_RADIUS}
-                    cy={WHEEL_RADIUS}
-                    r={WHEEL_RADIUS - 1.5}
-                    fill="none"
-                    stroke={withAlpha(COLORS.accent, 0.55)}
-                    strokeWidth={2.5}
-                  />
-                </Svg>
-                {WHEEL_ICONS.map((icon, i) => (
-                  <Text key={i} style={[styles.wedgeIcon, iconPosition(i)]}>
-                    {icon}
-                  </Text>
-                ))}
+              <Animated.View
+                style={[styles.disc, { transform: [{ rotate: rotateDeg }] }]}
+                pointerEvents="none"
+              >
+                <Image source={discArt} style={styles.fillImg} resizeMode="stretch" />
               </Animated.View>
-              <View style={styles.hubHalo} />
-              <View style={styles.hub} />
+              <Image source={ringArt} style={styles.fillImg} resizeMode="stretch" />
+              <Image source={hubArt} style={styles.hub} resizeMode="stretch" />
             </View>
 
             {revealed ? (
@@ -232,6 +160,7 @@ export function DailyRewardWheelModal({
               </>
             ) : (
               <BigButton
+                icon={icFerris}
                 label={spinning ? t("dailyWheel.spinning") : t("dailyWheel.spinBtn")}
                 disabled={spinning}
                 onPress={spin}
@@ -260,64 +189,29 @@ const styles = StyleSheet.create({
   inner: { alignItems: "center" },
   title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
   subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: SPACING.lg, textAlign: "center" },
+  fillImg: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   wheelWrap: {
-    width: WHEEL_RADIUS * 2,
-    height: WHEEL_RADIUS * 2,
+    width: WHEEL_SIZE,
+    height: WHEEL_SIZE,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: SPACING.lg,
-    shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    marginBottom: -24,
+    marginTop: -28,
   },
-  pointer: {
+  disc: {
     position: "absolute",
-    top: -4,
-    zIndex: 2,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 7,
-    borderRightWidth: 7,
-    borderTopWidth: 12,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderTopColor: COLORS.accent,
-    shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  wheel: {
-    width: WHEEL_RADIUS * 2,
-    height: WHEEL_RADIUS * 2,
-    borderRadius: WHEEL_RADIUS,
-    overflow: "hidden",
-  },
-  wedgeIcon: {
-    position: "absolute",
-    fontSize: 16,
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    textAlign: "center",
-    lineHeight: ICON_SIZE,
-  },
-  hubHalo: {
-    position: "absolute",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: withAlpha(COLORS.accent, 0.18),
+    width: (WHEEL_SIZE * DISC) / ART,
+    height: (WHEEL_SIZE * DISC) / ART,
+    left: (WHEEL_SIZE - (WHEEL_SIZE * DISC) / ART) / 2,
+    top: (WHEEL_SIZE - (WHEEL_SIZE * DISC) / ART) / 2,
   },
   hub: {
     position: "absolute",
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: COLORS.accent,
-    borderWidth: 2,
-    borderColor: "#2a2016",
+    width: (WHEEL_SIZE * HUB) / ART,
+    height: (WHEEL_SIZE * HUB) / ART,
+    left: (WHEEL_SIZE - (WHEEL_SIZE * HUB) / ART) / 2,
+    top: (WHEEL_SIZE - (WHEEL_SIZE * HUB) / ART) / 2,
   },
   wonTitle: { color: "#ffd75e", fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   wonAmount: {

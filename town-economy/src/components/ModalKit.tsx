@@ -166,7 +166,7 @@ export function BigButton({
           <Image source={icon} style={{ width: 26, height: 26, marginRight: 8 }} resizeMode="contain" />
         ) : null}
         <Text style={styles.bigBtnText} numberOfLines={1}>
-          {label}
+          {icon ? label.replace(/^[^\p{L}\p{N}]+/u, "") : label}
         </Text>
       </View>
     </ScalePressable>
