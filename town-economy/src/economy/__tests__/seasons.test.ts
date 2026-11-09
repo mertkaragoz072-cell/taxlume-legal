@@ -62,10 +62,21 @@ describe("what a season does", () => {
   it("actually moves the market: food is scarcer after a winter than an autumn", () => {
     // The whole point of the feature. Run the same town through a full
     // autumn and a full winter and compare what is on the shelves.
+    // Same dice for both runs (seeded generator) so random events and noise
+    // cannot flip the comparison — only the season differs.
     const run = (startDay: number) => {
-      let state = { ...initialState(), paused: false, tick: startDay * TICKS_PER_GAME_DAY };
-      for (let i = 0; i < SEASON_DAYS * TICKS_PER_GAME_DAY; i++) state = tick(state);
-      return state.goods.bread.supply;
+      let seed = 987654;
+      const spy = jest.spyOn(Math, "random").mockImplementation(() => {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      });
+      try {
+        let state = { ...initialState(), paused: false, tick: startDay * TICKS_PER_GAME_DAY };
+        for (let i = 0; i < SEASON_DAYS * TICKS_PER_GAME_DAY; i++) state = tick(state);
+        return state.goods.bread.supply;
+      } finally {
+        spy.mockRestore();
+      }
     };
     const autumnIdx = SEASONS.findIndex((s) => s.id === "autumn");
     const winterIdx = SEASONS.findIndex((s) => s.id === "winter");
