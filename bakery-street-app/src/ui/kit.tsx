@@ -1,7 +1,7 @@
 // The small building blocks of every panel: sheet, card, button, bar, chip, pips. Sizes are multiples of the UI unit (see theme.ts).
 import { LinearGradient } from "expo-linear-gradient";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Animated, Easing, Image, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { C, FONT, fs, navHeight, useU } from "./theme";
 import { Rich } from "./icons";
@@ -133,6 +133,17 @@ export function Pips({ level, max }: { level: number; max: number }) {
   );
 }
 
+/** Height of the on-screen keyboard (0 when it is hidden), so a panel with a text field can move up above it. */
+function useKeyboardHeight(): number {
+  const [h, setH] = useState(0);
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow", (e) => setH(e.endCoordinates?.height ?? 0));
+    const hide = Keyboard.addListener(Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide", () => setH(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+  return h;
+}
+
 /** A side panel: title row with an optional close button, a hint line and a scrolling body. `side` picks which edge it sticks to. */
 export function Sheet({ title, hint, onClose, side = "right", lowered, header, tall, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; header?: React.ReactNode; tall?: boolean; children: React.ReactNode }) {
   const u = useU();
@@ -140,9 +151,11 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, header, t
   const portrait = height >= width;
   // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it) in the picture frame
   // (wood border, cream inside, paw crest); wide windows keep the old plain side panel
-  const panelH = Math.min(height * (tall && height < 720 ? 0.64 : 0.54), u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
+  const kb = useKeyboardHeight();                                      // a panel with a text field (Ayarlar) rises above the keyboard
+  const panelH0 = Math.min(height * (tall && height < 720 ? 0.64 : 0.54), u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
+  const panelH = kb > 0 ? Math.min(panelH0, Math.max(u * 40, height - kb - u * 12)) : panelH0;
   const place = portrait
-    ? { left: (width - panelW) / 2, width: panelW, bottom: navHeight(u) + u * 1.6, height: panelH }
+    ? { left: (width - panelW) / 2, width: panelW, bottom: kb > 0 ? kb + u * 1.6 : navHeight(u) + u * 1.6, height: panelH }
     : { top: u * 12.8, bottom: lowered ? u * 11 : u * 1.4, width: Math.min(u * 78, width * 0.48), ...(side === "left" ? { left: u * 1.4 } : { right: u * 1.4 }) };
   const inner = (
     <>

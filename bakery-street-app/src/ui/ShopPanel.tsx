@@ -6,7 +6,7 @@ import { SHOP_CATEGORIES } from "../data/economy.js";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Chip, Meta, Sheet, Title } from "./kit";
-import { EmojiIcon } from "./icons";
+import { EmojiIcon, GameIcon } from "./icons";
 import { C, FONT, fmt, fs, useU } from "./theme";
 
 export type ShopTab = "goal" | "ingredients" | "equipment" | "decor" | "recipes" | "expansion" | "special";
@@ -23,6 +23,7 @@ function Preview({ d, game }: { d: any; game: any }) {
   let body: React.ReactNode;
   if (src) body = <Image source={src} style={{ width: size * 0.9, height: size * 0.9, resizeMode: "contain" }} />;
   else if (d.kind === "recipe") body = <EmojiIcon emoji={game.productsDef[d.recipe]?.icon ?? "🍞"} size={size * 0.8} />;
+  else if (d.art?.icon && !SPECIAL_EMOJI[d.art.icon]) body = <GameIcon id={d.art.icon} size={size * 0.8} />;      // an interface icon (waiter training, kitchen helper)
   else body = <Text allowFontScaling={false} style={{ fontSize: size * 0.6 }}>{SPECIAL_EMOJI[d.art?.icon] ?? "⭐"}</Text>;
   return (
     <View style={{ width: size, height: size, borderRadius: u * 2, backgroundColor: TIER_BG[tier] || C.vanilla, borderWidth: u * 0.3, borderColor: tier ? C.honeyDark : C.vanillaDark, alignItems: "center", justifyContent: "center" }}>

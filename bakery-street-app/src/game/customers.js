@@ -116,7 +116,13 @@ export class Cafe {
   }
 
   /** 'rain' or 'clear' today (always 'clear' when the bonuses are switched off). */
-  weather() { return this.cfg.bonuses?.weather ? weatherOf(this.game.clock(), this.cfg.bonuses.weather.rainChance) : 'clear'; }
+  weather() {
+    const w = this.cfg.bonuses?.weather;
+    if (!w) return 'clear';
+    const now = this.game.clock(), slot = Math.floor(now / 60_000);        // looked up every frame: worked out at most once a minute
+    if (this.weatherCache?.slot !== slot || this.weatherCache.chance !== w.rainChance) this.weatherCache = { slot, chance: w.rainChance, value: weatherOf(now, w.rainChance) };
+    return this.weatherCache.value;
+  }
 
   /** The cafe's star rating, 1 to 5 in half stars: the share of happy guests among the last few (3 stars until there are 5 results). */
   rating() {

@@ -1,6 +1,6 @@
 // Quest, daily reward, settings, town, research and exploration panels.
 import { weeklyProduct } from "../game/events.js";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { NAME_MAX } from "../game/profile.js";
 import { timings } from "../runtime/startup";
@@ -154,6 +154,16 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
   const { settings } = world, u = useU();
   const [confirming, setConfirming] = useState(false);
   const [name, setName] = useState<string>(world.game.profile.name);
+  const nameRef = useRef(name), dirty = useRef(false);
+  nameRef.current = name;
+  const commitName = (announce: boolean) => {                                  // the typed name is kept when the field is left, submitted or the panel is closed
+    if (!dirty.current) return;
+    dirty.current = false;
+    const kept = world.game.setCafeName(nameRef.current);
+    setName(kept);
+    if (announce && kept) act.toast(`🪧 Kafenin adı: ${kept}`, 2000);
+  };
+  useEffect(() => () => { if (dirty.current) world.game.setCafeName(nameRef.current); }, [world]);
   const [, bump] = useState(0);
   const toggle = (key: string) => { settings.toggle(key); act.sfx("tap"); bump((n) => n + 1); };
   const row = (key: string, icon: string, label: string) => (
@@ -165,7 +175,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
     <Sheet title="Ayarlar" onClose={() => act.openOverlay(null)}>
       <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>🪧</Text>}>
         <Title name="Kafenin adı" note={`en çok ${NAME_MAX} harf`} />
-        <TextInput value={name} onChangeText={(t) => setName(t.slice(0, NAME_MAX * 2))} onEndEditing={() => { const kept = world.game.setCafeName(name); setName(kept); if (kept) act.toast(`🪧 Kafenin adı: ${kept}`, 2000); }} placeholder="Örn. Pati Fırın" maxLength={NAME_MAX * 2} returnKeyType="done" accessibilityLabel="Kafenin adı"
+        <TextInput value={name} onChangeText={(t) => { dirty.current = true; setName(t.slice(0, NAME_MAX * 2)); }} onEndEditing={() => commitName(true)} onSubmitEditing={() => commitName(true)} onBlur={() => commitName(true)} placeholder="Örn. Pati Fırın" maxLength={NAME_MAX * 2} returnKeyType="done" accessibilityLabel="Kafenin adı"
           style={{ minHeight: Math.max(44, u * 8), borderRadius: u * 1.6, borderWidth: u * 0.3, borderColor: C.brown, backgroundColor: C.paper, paddingHorizontal: u * 1.6, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3) }} />
         <Meta tone="muted" text="Tabelada görünür (kafe 2. aşamaya geçince asılır). Boş bırakırsan aşamanın adı kullanılır." />
       </Card>
@@ -177,7 +187,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
         <Meta tone="muted" text={Object.keys(timings).length ? `Toplam ${(timings.toplam / 1000).toFixed(1).replace(".", ",")} sn · ${Object.entries(timings).filter(([k]) => k !== "toplam").map(([k, v]) => `${k} ${(v / 1000).toFixed(1).replace(".", ",")} sn`).join(" · ")}` : "Ölçüm yok"} />
       </Card>
       <Card tone="danger" right={confirming
-        ? <View style={{ gap: u * 0.6 }}><Btn small variant="lack" label="Evet, sıfırla" onPress={() => { setConfirming(false); onReset(); }} /><Btn small variant="alt" label="Vazgeç" onPress={() => setConfirming(false)} /></View>
+        ? <View style={{ gap: u * 0.6 }}><Btn small variant="lack" label="Evet, sıfırla" onPress={() => { dirty.current = false; setConfirming(false); onReset(); }} /><Btn small variant="alt" label="Vazgeç" onPress={() => setConfirming(false)} /></View>
         : <Btn variant="lack" label="Sıfırla…" onPress={() => setConfirming(true)} />}>
         {confirming
           ? <><Title name="Emin misin?" /><Meta text="Tüm ilerleme (altın, stok, görevler, geliştirmeler, araştırmalar, keşif, günlük ödül) silinir. Eski kayıt yedeklenir. Ses ve titreşim ayarların korunur." /></>
