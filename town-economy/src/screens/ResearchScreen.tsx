@@ -39,6 +39,8 @@ function NodeCard({ node }: { node: ResearchNode }) {
   return (
     <ResearchCard
       nodeId={node.id}
+      goodId={node.goodId}
+      tier={node.tier}
       icon={node.icon}
       name={t(node.nameKey)}
       description={t(node.descriptionKey)}

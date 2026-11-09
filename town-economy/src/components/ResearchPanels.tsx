@@ -19,6 +19,7 @@ import btnOffL from "../../assets/ui/town/btn_off_l.webp";
 import btnOffM from "../../assets/ui/town/btn_off_m.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
+import { GOOD_IMAGES } from "../economy/goodImages";
 import { GoodIcon } from "./GoodIcon";
 import { ScalePressable } from "./ScalePressable";
 
@@ -144,6 +145,9 @@ const CARD_CAP = 24;
 
 interface ResearchCardProps {
   nodeId: string;
+  goodId: string;
+  /** 1-3, shown as pips when the card uses its good's picture */
+  tier: number;
   icon: string;
   name: string;
   description: string;
@@ -165,7 +169,9 @@ export function ResearchCard(p: ResearchCardProps) {
   const [w, onLayout] = useWidth(270);
   const k = w / CARD_ART_W;
   const cap = CARD_CAP * k;
-  const art = NODE_ART[p.nodeId];
+  const painted = NODE_ART[p.nodeId];
+  // No hand-painted illustration for this node yet: use the good's own picture.
+  const art = painted ?? (GOOD_IMAGES as Record<string, number | undefined>)[p.goodId];
   const disabled = p.researched || p.locked || !p.affordable;
   const narrow = w < 250;
   const artSize = narrow ? 42 : 52;
@@ -201,6 +207,13 @@ export function ResearchCard(p: ResearchCardProps) {
             ) : (
               <Text style={{ fontSize: artSize * 0.7 }}>{p.icon}</Text>
             )}
+            {!painted && art ? (
+              <View style={styles.pips}>
+                {[1, 2, 3].map((n) => (
+                  <View key={n} style={[styles.pip, n <= p.tier && styles.pipOn]} />
+                ))}
+              </View>
+            ) : null}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.cardName} numberOfLines={2}>
@@ -329,6 +342,9 @@ const styles = StyleSheet.create({
   cardDesc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 10.5, lineHeight: 13, marginTop: 2 },
   cardEffect: { color: GREEN, fontFamily: FONT.bold, fontSize: 10.5, marginTop: 3 },
   cardLocked: { color: RED, fontFamily: FONT.medium, fontSize: 10, lineHeight: 12, marginTop: 3 },
+  pips: { position: "absolute", bottom: -5, flexDirection: "row", gap: 3 },
+  pip: { width: 7, height: 7, borderRadius: 4, backgroundColor: "rgba(60,36,16,0.25)" },
+  pipOn: { backgroundColor: "#c8842c" },
   btnCol: { marginLeft: 8, alignItems: "center", justifyContent: "center" },
   lock: { position: "absolute", width: 14, height: 16, resizeMode: "contain", opacity: 0.85 },
   btnLabel: {
