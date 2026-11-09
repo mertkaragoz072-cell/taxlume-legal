@@ -97,8 +97,8 @@ export function CaravanTutorialModal({
   // Largest body size at which the words still fit the painted text field.
   let bodySize = 14.5 * u;
   const fieldW = 332 * k;
-  const fieldH = 172 * k;
-  while (bodySize > 9 && Math.ceil((body.length * 0.5 * bodySize) / fieldW) * bodySize * 1.25 > fieldH) {
+  const fieldH = 160 * k;
+  while (bodySize > 9 && Math.ceil((body.length * 0.54 * bodySize) / fieldW) * bodySize * 1.25 > fieldH) {
     bodySize -= 0.25;
   }
 
@@ -130,25 +130,23 @@ export function CaravanTutorialModal({
           </Text>
         </View>
         <View style={[box(308, 144, 322, 44), styles.center]} pointerEvents="none">
-          <Text style={[styles.title, { fontSize: fit(title, 310, 24 * u, 0.82) }]} numberOfLines={1}>
+          <Text style={[styles.title, { fontSize: fit(title, 322, 24 * u, 0.7) }]} numberOfLines={1}>
             {title}
           </Text>
         </View>
         <View style={box(325, 211, 332, 172)} pointerEvents="none">
           <Text style={[styles.body, { fontSize: bodySize, lineHeight: bodySize * 1.25 }]}>{body}</Text>
         </View>
-        {!isLast && (
-          <ScalePressable
-            onPress={onSkip}
-            scaleTo={0.96}
-            accessibilityLabel={t(language, "common.skip")}
-            style={[box(324, 411, 96, 53), styles.center]}
-          >
-            <Text style={[styles.skipText, { fontSize: fit(t(language, "common.skip"), 70, 17 * u, 0.6) }]}>
-              {t(language, "common.skip")}
-            </Text>
-          </ScalePressable>
-        )}
+        <ScalePressable
+          onPress={onSkip}
+          scaleTo={0.96}
+          accessibilityLabel={t(language, "common.skip")}
+          style={[box(324, 411, 96, 53), styles.center]}
+        >
+          <Text style={[styles.skipText, { fontSize: fit(t(language, "common.skip"), 70, 17 * u, 0.6) }]}>
+            {t(language, "common.skip")}
+          </Text>
+        </ScalePressable>
         <ScalePressable
           onPress={onNext}
           scaleTo={0.97}

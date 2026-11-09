@@ -55,21 +55,21 @@ export function Bar({ kind, height, dim }: { kind: BarKind; height: number; dim?
   const b = BARS[kind];
   const capW = Math.round((b.capW * height) / BAR_ART_H[kind]);
   return (
-    <View style={[styles.barRow, { height, opacity: dim ? 0.5 : 1 }]} pointerEvents="none">
+    <View style={[styles.barRow, { opacity: dim ? 0.5 : 1 }]} pointerEvents="none">
       {/* The middle runs a little under both caps so no hairline of the
           background shows at the joins when widths land on fractions. */}
-      <View style={{ position: "absolute", top: 0, left: capW - 2, right: capW - 2, height }}>
+      <View style={{ position: "absolute", top: 0, left: capW - 2, right: capW - 2, bottom: 0 }}>
         <Image
           source={b.mid}
           style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
           resizeMode="stretch"
         />
       </View>
-      <Image source={b.cap} style={{ width: capW, height }} resizeMode="stretch" />
+      <Image source={b.cap} style={{ width: capW, height: "100%" }} resizeMode="stretch" />
       <View style={{ flex: 1 }} />
       <Image
         source={b.cap}
-        style={{ width: capW, height, transform: [{ scaleX: -1 }] }}
+        style={{ width: capW, height: "100%", transform: [{ scaleX: -1 }] }}
         resizeMode="stretch"
       />
     </View>
@@ -237,14 +237,14 @@ interface OptionProps {
 
 /** A choice bar: painted frame, icon on the left, title + hint on the right. */
 export function OptionBar({ kind, title, hint, icon, emoji, tag, disabled, onPress, height }: OptionProps) {
-  const h = height ?? (kind.startsWith("opt") ? 64 : 60);
+  const h = height ?? (kind.startsWith("opt") ? 64 : 58);
   return (
     <ScalePressable
       onPress={onPress}
       disabled={disabled}
       scaleTo={0.97}
       accessibilityLabel={`${title}${hint ? `. ${hint}` : ""}`}
-      style={{ alignSelf: "stretch", height: h, marginBottom: 8 }}
+      style={{ alignSelf: "stretch", minHeight: h, marginBottom: 8 }}
     >
       <Bar kind={kind} height={h} dim={disabled} />
       <View style={[styles.optRow, { opacity: disabled ? 0.6 : 1 }]} pointerEvents="none">
@@ -267,7 +267,7 @@ export function OptionBar({ kind, title, hint, icon, emoji, tag, disabled, onPre
             ) : null}
           </View>
           {hint ? (
-            <Text style={styles.optHint} numberOfLines={2}>
+            <Text style={styles.optHint} numberOfLines={3}>
               {hint}
             </Text>
           ) : null}
@@ -355,7 +355,7 @@ export function ParchmentNote({ children }: { children: React.ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  barRow: { position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row" },
+  barRow: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "row" },
   outer: { width: "100%", alignSelf: "center" },
   rim1: { borderRadius: 24, backgroundColor: "#5e3512", padding: 3 },
   rim2: { borderRadius: 21, backgroundColor: "#e0a057", padding: 2 },
@@ -411,7 +411,13 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  optRow: { flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 12 },
+  optRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 0,
+  },
   optIcon: { width: 46, alignItems: "center", justifyContent: "center", marginRight: 8 },
   optEmoji: { fontSize: 26 },
   optTitleRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 },
