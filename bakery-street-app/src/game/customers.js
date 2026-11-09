@@ -4,6 +4,7 @@
 // Table occupancy is derived from seated customers, so two customers can never share a table.
 // Every sale is one synchronous commit (stock, gold, order status, customer removal), so an order can be paid only once.
 import { CAFE } from '../data/economy.js';
+import { weeklyProduct } from './events.js';
 
 export const LOOKS = ['boy_backpack', 'girl_basket', 'oldman', 'boy_cap', 'girl_glasses', 'girl_red', 'grandma', 'boy_redcap'];
 const ms = (s) => Math.round(s * 1000);
@@ -152,7 +153,8 @@ export class Cafe {
     const ids = Object.keys(this.game.productsDef).filter((id) => this.game.isUnlocked(id));     // recipes the player has not bought are never ordered
     const fav = this.cfg.bonuses?.favorite, favorite = fav ? this.favoriteOf(c.look) : null;
     if (favorite && ids.includes(favorite) && this.rng() < fav.chance) return this.addOrder(c, favorite);   // (the random number is only drawn when a favourite can be ordered)
-    const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1));
+    const star = this.cfg.bonuses?.event ? weeklyProduct(this.game) : null;                                  // the star product of the week is ordered more often
+    const weights = ids.map((id) => Math.max(0, this.cfg.orderWeights?.[id] ?? 1) * (id === star ? this.cfg.bonuses.event.weight : 1));
     let r = this.rng() * weights.reduce((s, w) => s + w, 0), product = ids[ids.length - 1];
     for (let i = 0; i < ids.length; i++) { r -= weights[i]; if (r < 0) { product = ids[i]; break; } }
     return this.addOrder(c, product);
@@ -202,6 +204,7 @@ export class Cafe {
     income += extra;
     this.game.earn(income + tip, 'sale', `${def.name} satışı${tip ? ` (+${tip} bahşiş)` : ''}${extra ? ` (+${extra} servis bonusu)` : ''}`);
     this.game.recordSold(order.product, 1);
+    this.game.album?.record(c.look, bonus.favorite);
     order.status = 'paid';
     this.customers = this.customers.filter((x) => x !== c);
     if (this.holdSec() > 0) this.holds[c.table] = ms(this.holdSec());     // the guest eats (the scene keeps them at the table), then the table is cleared
@@ -213,17 +216,21 @@ export class Cafe {
 
   /**
    * Service bonuses for the sale being made now (see CAFE.bonuses). Also advances the combo streak, so call it exactly once per sale.
-   * Returns { pct, combo, fast, favorite }: pct is the total extra share of the income, the rest say which parts applied.
+   * Returns { pct, combo, fast, favorite, event }: pct is the total extra share of the income, the rest say which parts applied.
    */
   serviceBonus(c, order) {
     const b = this.cfg.bonuses;
-    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false };
+    if (!b) return { pct: 0, combo: 0, fast: false, favorite: false, event: false };
     const fast = this.patienceFraction(c) >= b.fast.minPatience;
     const favorite = order.product === this.favoriteOf(c.look);
     this.combo = this.comboLeft > 0 ? this.combo + 1 : 1;
     this.comboLeft = ms(b.combo.windowSec);
     const steps = Math.min(b.combo.maxSteps, this.combo - 1);
-    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0), combo: this.combo, fast, favorite };
+    const event = !!b.event && order.product === weeklyProduct(this.game);
+    const stats = this.game.stats;
+    stats.bestCombo = Math.max(stats.bestCombo ?? 0, this.combo);
+    if (favorite) stats.favoritesServed = (stats.favoritesServed ?? 0) + 1;
+    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0), combo: this.combo, fast, favorite, event };
   }
 
   deliverToCustomer(customerId) {

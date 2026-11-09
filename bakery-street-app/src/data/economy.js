@@ -78,10 +78,18 @@ export const CAFE = {
    * Service bonuses, paid on top of a sale as extra percent of its income (they add up, never multiply; the sum is capped by the parts below).
    *  combo    : sales that follow each other within `windowSec` of cafe time build a streak; every step after the first adds `step` (up to `maxSteps` steps)
    *  fast     : serving while the guest still has at least `minPatience` of their patience left adds `share`
+   *  event    : the star product of the week (see src/game/events.js) is ordered `weight` times as often and pays `share` extra
    *  favorite : every guest look has one favourite product; ordering it is `chance` likely (when unlocked) and serving it adds `share`
-   * Best case together: 0.03*5 + 0.08 + 0.20 = +43%; a normal busy shift lands around +10-15%. Set `bonuses: null` to switch them all off.
+   * Best case together: 0.03*5 + 0.08 + 0.20 + 0.15 = +58%; a normal busy shift lands around +10-15%. Set `bonuses: null` to switch them all off.
    */
-  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.6, share: 0.08 }, favorite: { chance: 0.3, share: 0.2 } },
+  bonuses: { combo: { windowSec: 14, step: 0.03, maxSteps: 5 }, fast: { minPatience: 0.6, share: 0.08 }, favorite: { chance: 0.3, share: 0.2 }, event: { share: 0.15, weight: 2 } },
+};
+
+/** Guest album: names of the guest looks, and the one-time rewards (a look served for the first time; every look served). */
+export const ALBUM = {
+  newLook: 60,
+  complete: 400,
+  names: { boy_backpack: 'Sırt Çantalı Çocuk', girl_basket: 'Sepetli Kız', oldman: 'Yaşlı Amca', boy_cap: 'Şapkalı Çocuk', girl_glasses: 'Gözlüklü Kız', girl_red: 'Kırmızılı Kız', grandma: 'Nine', boy_redcap: 'Kırmızı Şapkalı Çocuk' },
 };
 
 /**
@@ -136,6 +144,10 @@ export const UPGRADES = {
     name: 'Satış vitrini', icon: '🗄️', costs: [400, 1200, 3000, 7000, 15000], values: [10, 15, 20, 30, 40, 60],
     describe: (v) => `Vitrin her üründen ${v} adet tutar`,
   },
+  waiterTraining: {
+    name: 'Garson eğitimi', icon: '🧑‍🍳', costs: [1500, 4500, 11000], values: [1, 1.2, 1.4, 1.7],
+    describe: (v) => (v === 1 ? 'Normal hız' : `Garson %${Math.round((v - 1) * 100)} daha hızlı yürür, siparişler masaya daha çabuk ulaşır`),
+  },
   cafeTables: {
     name: 'Kafe masaları', icon: '🪑', costs: [1800, 6500], values: [2, 3, 4], minLevels: [2, 4],   // minLevels[i]: player level needed for level i+1 (enforced once progression exists)
     describe: (v) => `Kafede ${v} masa var, müşteri sayısı masalarla artar`,
@@ -158,6 +170,12 @@ export const QUESTS = [
   { id: 'firstExplore', name: 'Kaşif', icon: '🧭', condition: 'Bir keşfi tamamla ve ödülünü al', stat: 'explorationsDone', target: 1, reward: { gold: 300, ingredients: { egg: 4 } } },
   { id: 'firstShop', name: 'Kafeni süsle', icon: '🪴', condition: "Mağaza'dan bir eşya satın al", stat: 'shopBought', target: 1, reward: { gold: 200, ingredients: { sugar: 4 } } },
   { id: 'shopFive', name: 'Gelişen kafe', icon: '🏠', condition: "Mağaza'dan 5 eşya satın al", stat: 'shopBought', target: 5, reward: { gold: 700, ingredients: { butter: 3, egg: 4 } } },
+  { id: 'sold100', name: 'Yüz satış', icon: '🏅', condition: 'Toplam 100 ürün sat', stat: 'soldTotal', target: 100, reward: { gold: 600 } },
+  { id: 'produce100', name: 'Fırın hiç durmuyor', icon: '🔥', condition: 'Toplam 100 ürün üret', stat: 'producedTotal', target: 100, reward: { gold: 800 } },
+  { id: 'combo5', name: 'Seri servis', icon: '⚡', condition: 'Arka arkaya 5 satış serisi yap', stat: 'bestCombo', target: 5, reward: { gold: 400 } },
+  { id: 'fav10', name: 'Favori ustası', icon: '♥', condition: '10 müşteriye favori tarifini sun', stat: 'favoritesServed', target: 10, reward: { gold: 500 } },
+  { id: 'earn10k', name: 'Gelişen gelir', icon: '💰', condition: 'Toplam 10.000 altın kazan', stat: 'goldEarned', target: 10000, reward: { gold: 1000 } },
+  { id: 'sold500', name: 'Beş yüz satış', icon: '🏆', condition: 'Toplam 500 ürün sat', stat: 'soldTotal', target: 500, reward: { gold: 2500 } },
   { id: 'spendBig', name: 'Büyük yatırım', icon: '💰', condition: 'Toplam 5.000 altın harca', stat: 'goldSpent', target: 5000, reward: { gold: 800, ingredients: { beans: 4 } } },
 ];
 
@@ -383,6 +401,9 @@ export const SHOP_ITEMS = [
   { id: 'areaAisle', category: 'expansion', kind: 'area', name: 'Koridor Dekor Alanı', desc: 'Masaların arasındaki koridor düzenlenir (cilalı zemin): halılar, lambalar ve bitki yerleştirilebilir.', price: 1500, minLevel: 2, effect: { area: 'aisle' }, art: { image: 'rug-green' } },
   { id: 'areaWall', category: 'expansion', kind: 'area', name: 'Duvar Dekor Alanı', desc: 'Sağ duvara ahşap bir pano çakılır: raflar yerleştirilebilir.', price: 1200, minLevel: 3, effect: { area: 'wall' }, art: { image: 'shelf' } },
   { id: 'table3', category: 'expansion', kind: 'upgrade', upgrade: 'cafeTables', level: 1, name: '3. Masa Takımı', desc: 'Aynı anda bir misafir daha oturur; müşteri akışı hızlanır.', art: { image: 'table' } },
+  { id: 'waiter1', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 1, name: 'Garson Eğitimi I', desc: 'Garson daha hızlı yürür; sipariş masaya çabuk ulaşır.', art: { icon: 'u-speed' } },
+  { id: 'waiter2', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 2, name: 'Garson Eğitimi II', desc: 'Daha da hızlı: servis süresi kısalır, hızlı servis bonusu kolaylaşır.', art: { icon: 'u-speed' } },
+  { id: 'waiter3', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 3, name: 'Garson Eğitimi III', desc: 'Usta garson: en hızlı servis.', art: { icon: 'u-speed' } },
   { id: 'table4', category: 'expansion', kind: 'upgrade', upgrade: 'cafeTables', level: 2, name: '4. Masa Takımı', desc: 'Salon tamamen dolar.', art: { image: 'table' } },
   { id: 'waitingA', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 2, name: 'Bekleme Köşesi', desc: 'Vitrinin önünde bir misafir daha bekleyebilir. Halat ve direkler eklenir.', price: 2500, minLevel: 3, effect: { queue: 1 }, art: { image: 'rug-runner' } },
   { id: 'waitingB', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 3, name: 'Geniş Bekleme Alanı', desc: 'İki misafir daha bekleyebilir.', price: 9000, minLevel: 8, stage: 2, effect: { queue: 2 }, requires: [{ item: 'waitingA' }], art: { image: 'rug-runner' } },

@@ -6,7 +6,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0, bestCombo: 0, favoritesServed: 0 };
 }
 
 export class Game {
@@ -284,6 +284,7 @@ export class Game {
       ...(this.research ? { research: this.research.exportState() } : {}),
       ...(this.exploration ? { exploration: this.exploration.exportState() } : {}),
       ...(this.shop ? { shop: this.shop.exportState() } : {}),
+      ...(this.album ? { album: this.album.exportState() } : {}),
       ...(this.till ? { till: this.till.exportState() } : {}),
       ...(this.goals ? { goals: this.goals.exportState() } : {}),
     };
@@ -305,6 +306,7 @@ export class Game {
     this.research?.importState(state.research);
     this.exploration?.importState(state.exploration);
     this.shop?.importState(state.shop);
+    this.album?.importState(state.album);
     this.till?.importState(state.till);        // after the shop: the stage sets the rate
     this.goals?.importState(state.goals);
     this.cafe?.importState(state.cafe);
@@ -328,6 +330,7 @@ export class Game {
       research: { levels: {} },
       exploration: { active: null, done: {} },
       shop: { owned: [], placed: {}, stored: [], introduced: [], stage: 1 },
+      album: { seen: {}, completed: false },
       till: { stored: 0, lastAt: null },
       goals: { date: null, baseline: {}, claimed: [] },
     };

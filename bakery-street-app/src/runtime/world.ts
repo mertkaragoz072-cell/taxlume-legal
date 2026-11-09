@@ -5,6 +5,7 @@ import { Cafe } from "../game/customers.js";
 import { Quests } from "../game/quests.js";
 import { DailyReward } from "../game/daily.js";
 import { Till } from "../game/till.js";
+import { Album } from "../game/album.js";
 import { DailyGoals } from "../game/goals.js";
 import { Settings } from "../game/settings.js";
 import { SaveManager, safeStorage } from "../game/save.js";
@@ -27,7 +28,7 @@ export type SceneId = "street" | "interior" | "market" | "bookshop" | "explore";
 
 export interface World {
   storage: NativeStorage;
-  settings: any; game: any; progression: any; town: any; exploration: any; research: any; shop: any; quests: any; daily: any; till: any; goals: any; cafe: any; saves: any;
+  settings: any; game: any; progression: any; town: any; exploration: any; research: any; shop: any; quests: any; daily: any; till: any; goals: any; album: any; cafe: any; saves: any;
   scenes: Record<SceneId, any>;
   /** problems reported by the save code, shown to the player */
   problems: string[];
@@ -52,6 +53,7 @@ export function createWorld(storage: NativeStorage, onProblem: (msg: string) => 
   const till = new Till(game);
   const goals = new DailyGoals(game);
   const cafe = new Cafe(game);
+  const album = new Album(game, cafe.looks);
   const saves = new SaveManager(game, store, { onProblem: ({ message }: { message: string }) => report(message), onRecover: () => {} });
   saves.attach();
   const scenes = {
@@ -70,5 +72,5 @@ export function createWorld(storage: NativeStorage, onProblem: (msg: string) => 
   bakery.configure();
   bookshop.configure();
   market.configure();
-  return { storage, settings, game, progression, town, exploration, research, shop, quests, daily, till, goals, cafe, saves, scenes, problems, loadResult: { status: loaded.status, summary } };
+  return { storage, settings, game, progression, town, exploration, research, shop, quests, daily, till, goals, album, cafe, saves, scenes, problems, loadResult: { status: loaded.status, summary } };
 }

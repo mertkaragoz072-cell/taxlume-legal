@@ -1,4 +1,5 @@
 // Quest, daily reward, settings, town, research and exploration panels.
+import { weeklyProduct } from "../game/events.js";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { formatDuration } from "../game/exploration.js";
@@ -21,12 +22,14 @@ export function QuestPanel() {
   const { game, quests, goals } = world, u = useU();
   useRefresh();
   const todays = goals.list() as any[];
+  const star = world.cafe.cfg.bonuses?.event ? weeklyProduct(game) as string | null : null;
   const rank = (s: any) => (s.claimed ? 2 : s.complete ? 0 : 1);
   const list = (quests.list() as any[]).slice().sort((a, b) => rank(a) - rank(b));
   const done = list.filter((s) => s.claimed).length;
   const rewardText = (r: any) => [r.gold ? `💰 ${fmt(r.gold)}` : "", ...Object.entries(r.ingredients ?? {}).map(([id, n]) => `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${n}`)].filter(Boolean).join(" · ");
   return (
     <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
+      {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
       <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
       {todays.map((g) => (
         <Card key={g.id} tone={g.claimed ? "locked" : g.complete ? "ready" : undefined} left={<EmojiIcon emoji={g.icon} size={u * 7} />}
@@ -47,6 +50,28 @@ export function QuestPanel() {
             <Meta text={q.condition} />
             <Bar value={s.progress / q.target} text={`${s.progress}/${q.target}`} />
             <Meta tone="reward" text={`Ödül: ${rewardText(q.reward)}`} />
+          </Card>
+        );
+      })}
+    </Sheet>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------------- guest album
+export function AlbumPanel() {
+  const { world, act } = useWorld();
+  const { game, album, cafe } = world, u = useU();
+  useRefresh();
+  const looks = album.looks as string[];
+  return (
+    <Sheet title="Müşteri Albümü" hint={`${album.count()}/${looks.length} müşteri tanıştın${album.completed ? " · albüm tamamlandı!" : `\nYeni her müşteri +${fmt(album.cfg.newLook)} altın, hepsi +${fmt(album.cfg.complete)} altın kazandırır`}`} onClose={() => act.openOverlay(null)}>
+      {looks.map((look) => {
+        const e = album.entry(look), fav = cafe.favoriteOf(look), def = game.productsDef[fav];
+        return (
+          <Card key={look} tone={e ? undefined : "locked"} left={<EmojiIcon emoji={e ? "🐱" : "❔"} size={u * 7} />}>
+            <Title name={e ? album.nameOf(look) : "Henüz tanışmadın"} />
+            <Meta text={e ? `${e.served} kez servis yapıldı` : "Bu müşteriye bir ürün servis et"} />
+            <Meta tone={e?.fav ? "reward" : undefined} text={e?.fav ? `Favorisi: ${def.icon} ${def.name} (+%${Math.round(cafe.cfg.bonuses.favorite.share * 100)})` : "Favorisi: ? (denerken öğrenirsin)"} />
           </Card>
         );
       })}

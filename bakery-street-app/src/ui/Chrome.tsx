@@ -71,7 +71,7 @@ function MenuPop({ u, top, children }: { u: number; top: number; children: React
 }
 
 /** Portrait top bar: cat-ear level badge, gold and XP counters, and a menu button (Görevler / Günlük Ödül / Ayarlar open from it). */
-export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "settings") => void; badges: { quests: boolean; daily: boolean } }) {
+export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "settings") => void; badges: { quests: boolean; daily: boolean } }) {
   const { world, act } = useWorld();
   const { game, progression } = world, u = useU();
   useRefresh();
@@ -98,7 +98,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "set
     lastLevel.current = progression.level;
   }, [progression.level, progression.xp, progression.isMax, xpAnim, badgePop]);   // eslint-disable-line react-hooks/exhaustive-deps
   const bh = u * 11, bw = bh * (192 / 170), mh = Math.max(44, u * 11.4);
-  const entry = (id: "quests" | "daily" | "settings", icon: string, label: string, badge: boolean) => (
+  const entry = (id: "quests" | "daily" | "album" | "settings", icon: string, label: string, badge: boolean) => (
     <Pressable key={id} onPress={() => { act.sfx("tap"); setMenu(false); onOpen(id); }} accessibilityLabel={label} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: u * 1.6, height: Math.max(46, u * 11), paddingHorizontal: u * 1.8, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper })}>
       <GameIcon id={icon} size={u * 6.4} />
       <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.2) }} numberOfLines={1}>{label}</Text>
@@ -140,6 +140,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "set
         <MenuPop u={u} top={u * 1 + mh + u * 1}>
           {entry("quests", "hud-quests", "Görevler", badges.quests)}
           {entry("daily", "hud-events", "Günlük Ödül", badges.daily)}
+          {entry("album", "q-explorer", "Müşteri Albümü", false)}
           {entry("settings", "hud-settings", "Ayarlar", false)}
         </MenuPop>
       </Present>

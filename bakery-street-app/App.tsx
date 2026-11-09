@@ -21,7 +21,7 @@ import { CafePanel } from "./src/ui/CafePanel";
 import { Btn, Present, useAppear } from "./src/ui/kit";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
-import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
+import { AlbumPanel, DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
 import { C, FONT, fmt, fs, useU } from "./src/ui/theme";
 
 
@@ -61,7 +61,7 @@ function StageCard({ c, onClose }: { c: { id: number; name: string; gold: number
 function saleNotes(e: any): string {
   const b = e.bonus;
   if (!b?.pct) return "";
-  return ` · ${[b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
+  return ` · ${[b.event ? "⭐ haftanın ürünü" : "", b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
 }
 
 function App() {
@@ -101,7 +101,7 @@ function App() {
   );
 }
 
-type Overlay = "quests" | "daily" | "settings" | "town" | "shop";
+type Overlay = "quests" | "daily" | "album" | "settings" | "town" | "shop";
 
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
@@ -178,6 +178,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       }
     }));
     offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income) showToast(`${game.productsDef[e.product].icon} satıldı · +${fmt(e.income)} altın${saleNotes(e)}`, e.bonus?.pct ? 1900 : 1400); }));   // sold: by a tap or by the waiter
+    offs.push(game.on("album", (e: any) => showToast(e.completed ? `📖 Müşteri albümü tamamlandı! +${fmt(e.gold)} altın` : `📖 Yeni müşteri: ${world.album.nameOf(e.look)} · +${fmt(e.gold)} altın`, 2600)));
     offs.push(game.on("goalComplete", ({ goal }: any) => showToast(`🎯 Günlük hedef tamamlandı: ${goal.name} — Görevler'den ödülünü al`, 3000)));
     offs.push(game.on("complete", ({ product }: any) => showToast(`${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600)));
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
@@ -279,6 +280,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           {sceneId === "explore" ? <ExplorePanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} /> : null}
           <Present show={overlay === "quests"}><QuestPanel /></Present>
           <Present show={overlay === "daily"}><DailyPanel /></Present>
+          <Present show={overlay === "album"}><AlbumPanel /></Present>
           <Present show={overlay === "settings"}><SettingsPanel onReset={reset} /></Present>
           <Present show={overlay === "shop" && !peeking}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></Present>
           <Present show={overlay === "town"}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></Present>

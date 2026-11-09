@@ -398,7 +398,7 @@ test('the next goal: nearest thing to save for, then "ready", then the level gat
   c.player.gold = 100_000;
   g = c.shop.nextGoal();
   assert.equal(g.kind, 'ready');
-  for (const d of SHOP_ITEMS) if (c.shop.status(d.id) === 'ready') c.shop.buy(d.id);
+  for (let pass = 0; pass < 6; pass++) for (const d of SHOP_ITEMS) if (c.shop.status(d.id) === 'ready') c.shop.buy(d.id);   // buying earns XP, which opens more items: repeat until nothing is left
   g = c.shop.nextGoal();
   assert.equal(g.kind, 'level'); assert.match(g.text, /Seviye|Aşama/);
 });

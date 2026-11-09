@@ -24,6 +24,7 @@ export class CustomerLayer {
     this.cafe = cafe;
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
+    this.emotes = [];              // little reactions over a guest: { x, y, kind: 'heart' | 'love' | 'anger', life }
     this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
     this.settled = () => true;      // (id) -> true once the guest sits in the chair; the waiter only brings an order to a seated guest
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
@@ -32,6 +33,7 @@ export class CustomerLayer {
     this.onRegister = null;        // set by the scene: called when a coin lands (the till bounces and glitters)
     this.bubbleScale = 1;          // set by the scene: bubbles grow a little on small screens (zoomed out) so the icon and price stay readable
     game.on('customer', (e) => {
+      if (e.type === 'leave') this.react(e);
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
         if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; v.payout = e.income; }   // paid: the guest stays in the chair and eats before leaving; the coins go to the register when they get up
@@ -41,6 +43,17 @@ export class CustomerLayer {
         for (const v of this.v.values()) if (v.ghost && v.table === e.table && v.linger > 0) v.linger = 0;
       }
     });
+  }
+
+  /** A guest's reaction when they leave: a heart for a happy one, two hearts for a favourite, an anger mark for one who gave up. */
+  react(e) {
+    const v = this.v.get(e.id);
+    if (!v || (this.emotes.length > 10)) return;
+    const ghost = e.table != null ? { state: 'seated', table: e.table } : null;
+    const table = ghost ? AREAS.find((a) => a.id === `table${e.table + 1}`) : null;
+    const x = ghost ? this.bodyX(v, ghost) : v.x, y = (ghost ? this.bubbleTop(v, ghost) : v.y - bodyH(v.y)) + this.warp(table ? depthOf(table) + 1 : v.y);   // (the same offset the order bubble gets)
+    const kind = !e.happy ? 'anger' : e.bonus?.favorite ? 'love' : 'heart';
+    this.emotes.push({ x, y: y - 6, kind, life: 1 });
   }
 
   /** Placeholder for a paying-at-the-register animation: three coins fly from the guest to the till, which bounces and shows the amount. */
@@ -103,6 +116,8 @@ export class CustomerLayer {
     }
     this.coins = this.coins.filter((c) => !c.landed);
     for (const p of this.pops) p.life -= dt * 0.8;
+    for (const m of this.emotes) m.life -= dt * 0.9;
+    this.emotes = this.emotes.filter((m) => m.life > 0);
     this.pops = this.pops.filter((p) => p.life > 0);
     for (const [id, v] of this.v) {                                 // lower into / rise out of the chair
       const c = this.cafe.customers.find((x) => x.id === id) ?? v.ghost;
@@ -263,6 +278,7 @@ export class CustomerLayer {
       ctx.globalAlpha = 1;
       drawIcon(ctx, 'coin', c.x0 + (c.x1 - c.x0) * e, c.y0 + (c.y1 - c.y0) * e - Math.sin(k * Math.PI) * 110, 40 - 10 * k);      // an arc over the floor
     }
+    for (const m of this.emotes) this.drawEmote(ctx, m);
     for (const p of this.pops) {
       ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
       const py = p.y - (1 - p.life) * 70 + this.warp(p.y + bodyH(p.y));
@@ -271,6 +287,28 @@ export class CustomerLayer {
       drawIcon(ctx, 'coin', p.x - 14 + ctx.measureText(p.text).width / 2 + 24, py, 36);
     }
     ctx.globalAlpha = 1;
+  }
+
+  /** One reaction mark, drawn with paths (no emoji, so it looks the same everywhere): rising and fading. */
+  drawEmote(ctx, m) {
+    const rise = (1 - m.life) * 60, a = clamp(m.life * 1.8, 0, 1), pulse = 1 + Math.sin((1 - m.life) * 9) * 0.06;
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(m.x, m.y - rise);
+    if (m.kind === 'anger') {
+      ctx.strokeStyle = '#C8442F'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.scale(pulse, pulse);
+      for (const [dx, dy] of [[-8, -8], [8, 8]]) { ctx.beginPath(); ctx.moveTo(dx - 10, dy); ctx.lineTo(dx + 10, dy); ctx.moveTo(dx, dy - 10); ctx.lineTo(dx, dy + 10); ctx.stroke(); }
+    } else {
+      const hearts = m.kind === 'love' ? [[-16, 0, 1.15], [18, -10, 0.85]] : [[0, 0, 1]];
+      for (const [dx, dy, k] of hearts) this.heart(ctx, dx, dy, 18 * k * pulse);
+    }
+    ctx.restore();
+  }
+
+  heart(ctx, x, y, s) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + s * 0.9);
+    ctx.bezierCurveTo(x - s * 1.5, y - s * 0.1, x - s * 0.9, y - s * 1.1, x, y - s * 0.4);
+    ctx.bezierCurveTo(x + s * 0.9, y - s * 1.1, x + s * 1.5, y - s * 0.1, x, y + s * 0.9);
+    ctx.closePath(); ctx.fillStyle = '#E8707A'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#8C3B3B'; ctx.stroke();
   }
 
   /** A little gold crown marking a VIP guest. */

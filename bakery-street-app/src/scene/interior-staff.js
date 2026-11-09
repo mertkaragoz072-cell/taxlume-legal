@@ -125,6 +125,7 @@ export class StaffLayer {
 
   updateWaiter(dt) {
     const w = this.waiter, cafe = this.game.cafe;
+    w.speed = 95 * (this.game.upgrades?.waiterTraining != null ? this.game.effect('waiterTraining') : 1);   // Garson eğitimi
     // blocked: a guest right ahead (along the row, or below/above when walking down/up a gap)
     const blocked = (x, y, dirx, diry) => [...this.guests()].some((g) => (dirx ? Math.abs(g.y - y) < 40 && (g.x - x) * dirx > 0 && (g.x - x) * dirx < 110 : Math.abs(g.x - x) < 55 && (g.y - y) * diry > 0 && (g.y - y) * diry < 95));
     if (this.phase === 'post') {

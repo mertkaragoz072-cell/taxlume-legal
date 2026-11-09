@@ -192,3 +192,13 @@ Hepsi `src/data/economy.js` içinde ayarlanır; hiçbiri yeni bina veya yeni sis
 - **Koleksiyon sayacı** Mağaza başlığında; **hedef çipi** son satışların ortalamasından "≈N satış" tahmini gösterir.
 
 Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda erken oyunu hızlandırır, bu yüzden ilk gerçek oyundan sonra `scripts/balance-shop.mjs` ile yeniden ölçülmelidir.
+
+### Ek katman (haftalık ürün, albüm, rozetler, garson eğitimi, gün/gece)
+
+- **Haftanın ürünü** (`src/game/events.js`, `CAFE.bonuses.event`): Pazartesi-Pazar, açık ürünler arasından haftada bir dönen bir ürün; 2 kat sık sipariş edilir, satışı +%15 öder. Kayıt tutmaz (takvimden hesaplanır).
+- **Müşteri albümü** (`src/game/album.js`, `ALBUM`): ilk kez servis edilen her görünüm bir kez +60 altın, hepsi görülünce bir kez +400; favorisi, favori sunulunca açılır. Kayıtlıdır (isteğe bağlı alan).
+- **Rozetler:** `QUESTS` listesine uzun vadeli 6 görev (100/500 satış, 100 üretim, 5'li seri, 10 favori servisi, 10.000 altın). Yeni sayaçlar: `stats.bestCombo`, `stats.favoritesServed`.
+- **Garson eğitimi** (`UPGRADES.waiterTraining`, Mağaza → Genişletme ve Fırın paneli): 3 seviye, garson hızı ×1.2 / ×1.4 / ×1.7.
+- **Gün/gece** (`src/scene/daylight.js`): gerçek yerel saate göre kafe rengi (gece mavi-koyu, akşam turuncu, gündüz yok). Yalnızca görünüm.
+- **Tepkiler:** mutlu giden müşteri kalp (favori: iki kalp), sabrı bitip giden öfke işareti.
+- Bu katman da cihazda denenmedi; haftalık ürün ve rozet ödülleri ekonomiyi biraz daha hızlandırır, dengeyi ilk gerçek oyundan sonra `scripts/balance-shop.mjs` ile yeniden ölçün.
