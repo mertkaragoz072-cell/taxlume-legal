@@ -1,7 +1,7 @@
 // Visual side of the customers: walking in, queueing, standing at a table, order bubbles and leaving.
 // Logic lives in game/customers.js; this layer only follows it (placeholder characters = the walk-cycle sprites).
 import { chairSpot, QUEUE_SPOTS, SERVICE_LINE_Y, LEAVE_LINE_Y, PERSON_SCALE, PERSON_H, AREAS, depthOf, depthScale, sitFeetY, sitCutY, seatRect } from './interior-layout.js';
-import { drawSprite, hasSitFrames } from '../characters/sprites.js';
+import { drawSprite, hasSitFrames, hasEatFrames } from '../characters/sprites.js';
 import { getImage } from '../assets.js';
 import { INK, rrect, poly, paint, label, clamp, glowAt } from '../util.js';
 import { PAL } from '../palette.js';
@@ -13,7 +13,7 @@ const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests 
 const SPEED = 210;                 // design px per second
 const COIN_FLIGHT_SEC = 0.5;     // a coin's flight from the guest to the register
 /** What a guest says on the way out (the guest's number picks the line). */
-const SAYINGS = { happy: ['Teşekkürler!', 'Çok lezzetliydi!', 'Yine gelirim!', 'Harika!'], favorite: ['Favorim buydu!', 'Tam istediğim!'], angry: ['Çok bekledim…', 'Gidiyorum!'] };
+const SAYINGS = { happy: ['Teşekkürler!', 'Mis gibi kokuyor!', 'Harika görünüyor!', 'Yaşasın!'], favorite: ['Favorim buydu!', 'Tam istediğim!'], angry: ['Çok bekledim…', 'Gidiyorum!'] };
 const TYPE_LINES = { hurried: 'Acelem var!', gourmet: 'En iyisinden!', kid: 'Karnım aç!' };
 const BODY_H = PERSON_H;           // approximate sprite height at scale 1 (the first table row) for bubbles and hit-testing; `bodyH(y)` follows the perspective
 const bodyH = (y) => BODY_H * depthScale(y);
@@ -52,7 +52,7 @@ export class CustomerLayer {
   /** A guest of a special type says so when they sit down. */
   greet(e) {
     if (this.emotes.length > 8) return;
-    this.emotes.push({ id: e.id, table: e.table, kind: 'say', text: TYPE_LINES[e.guestType], life: 1.6, wait: 3.2 });      // shown over the guest once they have reached the chair
+    this.emotes.push({ id: e.id, table: e.table, kind: 'say', text: TYPE_LINES[e.guestType], life: 1.6, wait: 1 });      // shown over the guest once they have reached the chair
   }
 
   /** A guest's reaction when they leave: a heart for a happy one, two hearts for a favourite, an anger mark for one who gave up. */
@@ -128,7 +128,15 @@ export class CustomerLayer {
     }
     this.coins = this.coins.filter((c) => !c.landed);
     for (const p of this.pops) p.life -= dt * 0.8;
-    for (const m of this.emotes) { if (m.wait > 0) m.wait -= dt; else m.life -= dt * 0.9; }
+    for (const m of this.emotes) {
+      if (m.id != null) {                                        // a greeting waits until its guest really sits in the chair
+        const gv = this.v.get(m.id);
+        if (!gv) { m.life = 0; continue; }
+        if (!(gv.sit >= 0.999)) continue;
+        m.wait = 0;
+      }
+      if (m.wait > 0) m.wait -= dt; else m.life -= dt * 0.9;
+    }
     this.emotes = this.emotes.filter((m) => m.life > 0);
     this.pops = this.pops.filter((p) => p.life > 0);
     for (const [id, v] of this.v) {                                 // lower into / rise out of the chair
@@ -257,7 +265,13 @@ export class CustomerLayer {
               drawSprite(ctx, v.look, p.x, p.y, t, { dir: v.dir, back: false, side: !!v.horiz, fps: 8, phase: id, frame: null, scale: sc, shade: false });
             }
             ctx.globalAlpha = keep * (settled ? 1 : e);
-            drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: v.ghost && !v.leaving ? 'eat' : 'wait', frame: 0, back: false, fps: 8, phase: id, scale: sc, shade: false });
+            if (hasEatFrames(v.look)) drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: v.ghost && !v.leaving ? 'eat' : 'wait', frame: 0, back: false, fps: 8, phase: id, scale: sc, shade: false });
+            else {                                                  // no sitting frames yet: the standing cat, lowered behind the table and cut off at the table top; it nods while it eats
+              const ds = depthScale(table.y + table.h), eating = v.ghost && !v.leaving, nod = eating ? Math.abs(Math.sin(t * 5 + id)) * 5 * ds : 0;
+              ctx.save(); ctx.beginPath(); ctx.rect(p.x - 160, p.y - 420, 320, 420 + 14 * ds); ctx.clip();
+              drawSprite(ctx, v.look, p.x, p.y + BODY_H * 0.08 * ds + nod, t, { dir: 1, back: false, fps: 8, phase: id, frame: 0, bob: 0.006, scale: PERSON_SCALE * 0.8 * ds, shade: false });
+              ctx.restore();
+            }
             ctx.globalAlpha = 1; return;
           }
           drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });

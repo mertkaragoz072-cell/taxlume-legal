@@ -24,8 +24,10 @@ export const SHEETS = {
 
 const SCALE = 0.9; // native sprite px -> design px (a street character ends up ~150 px tall; the cafe scales people up further, see PERSON_SCALE)
 
-/** True when the character has sitting frames (it is then drawn behind its table, centred, instead of beside it). */
-export const hasSitFrames = (id) => SHEETS[id]?.eat !== undefined;
+/** True when the character sits behind its table, centred, instead of standing beside it: every cat does. */
+export const hasSitFrames = (id) => !!SHEETS[id]?.cat;
+/** True when the cat has its own sitting / eating frames; a cat without them sits as its standing picture, cut off by the table (stand-in until its sheet arrives). */
+export const hasEatFrames = (id) => SHEETS[id]?.eat !== undefined;
 /** True when the waiter has the hand-over frames (the tray with cup and cake is then in the picture, so no icon flies to the table). */
 export const hasOvenFrames = () => !!SHEETS.chef_oven && !!getImage('char-chef_oven');
 export const hasCoffeeFrames = () => !!SHEETS.chef_coffee && !!getImage('char-chef_coffee');
