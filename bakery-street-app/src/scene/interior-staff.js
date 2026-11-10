@@ -126,8 +126,15 @@ export class StaffLayer {
   updateWaiter(dt) {
     const w = this.waiter, cafe = this.game.cafe;
     w.speed = 95 * (this.game.upgrades?.waiterTraining != null ? this.game.effect('waiterTraining') : 1);   // Garson eğitimi
-    // blocked: a guest right ahead (along the row, or below/above when walking down/up a gap)
-    const blocked = (x, y, dirx, diry) => [...this.guests()].some((g) => (dirx ? Math.abs(g.y - y) < 40 && (g.x - x) * dirx > 0 && (g.x - x) * dirx < 110 : Math.abs(g.x - x) < 55 && (g.y - y) * diry > 0 && (g.y - y) * diry < 95));
+    // blocked: a WALKING guest right ahead (along the row, or below/above when walking down/up a gap). Guests standing still (the queue stands on
+    // his lane) never block him: he would wait for ever while they wait for a table. He also gives up waiting after a moment and walks on.
+    const ahead = (x, y, dirx, diry) => [...this.guests()].some((g) => g.moving && (dirx ? Math.abs(g.y - y) < 40 && (g.x - x) * dirx > 0 && (g.x - x) * dirx < 110 : Math.abs(g.x - x) < 55 && (g.y - y) * diry > 0 && (g.y - y) * diry < 95));
+    const blocked = (x, y, dirx, diry) => {
+      if (!ahead(x, y, dirx, diry)) { this.blockT = 0; return false; }
+      this.blockT = (this.blockT ?? 0) + dt;                    // waits up to 1.2 s, then walks on for 1.2 s, and so on
+      if (this.blockT > 2.4) this.blockT = 0;
+      return this.blockT < 1.2;
+    };
     if (this.phase === 'post') {
       if (w.step(dt, blocked)) { w.dir = 1; return; }
       if (w.target) return;

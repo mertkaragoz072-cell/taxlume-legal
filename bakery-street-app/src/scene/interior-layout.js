@@ -26,7 +26,7 @@ const table = (cx, base) => { const w = Math.round(TABLE_W * perspScale(base)), 
 
 export const AREAS = [
   // PORTRAIT cafe, a 900-unit-wide world (see CAM). Back wall, kitchen row against it (oven, storage, the upgrade sign behind the coffee machine):
-  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', ...equip('oven', 130, 482) },
+  { id: 'oven', label: 'Fırın', panel: 'oven', station: 'oven', barDown: true, ...equip('oven', 130, 482) },     // barDown: the timers hang below the oven's top edge (above it they would sit under the goal chip)
   { id: 'storage', label: 'Depo', panel: 'storage', ...equip('storage', 385, 482) },
   { id: 'upgrades', label: 'Geliştirmeler', panel: 'upgrades', ...equip('upgrades', 660, 490) },
   // the service line, one row across the room in front of the kitchen: prep counter, showcase facing the guests, coffee station (all standing on line 700)

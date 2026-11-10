@@ -633,7 +633,7 @@ export class InteriorScene {
     const jobs = [...this.game.jobsOf(a.station)].sort((p, q) => this.game.remainingOf(p) - this.game.remainingOf(q));
     const bw = Math.min(a.barW ?? a.w - 50, 170), bcx = cx + (a.barDx ?? 0), many = jobs.length > 1, bh = Math.max(many ? 16 : 20, textFloor.px * 1.2), step = bh + 4;
     jobs.forEach((job, i) => {
-      const by = barTop - bh - i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
+      const by = a.barDown ? top + 34 + i * step : barTop - bh - i * step, prog = 1 - this.game.remainingOf(job) / job.duration, rem = this.game.remainingOf(job);
       rrect(ctx, bcx - bw / 2, by, bw, bh, bh / 2); paint(ctx, PAL.brownDark, 2.5);
       ctx.save(); rrect(ctx, bcx - bw / 2 + 2, by + 2, bw - 4, bh - 4, bh / 2 - 2); ctx.clip();
       ctx.fillStyle = vgrad(ctx, by, by + bh, [[0, PAL.greenLight], [1, PAL.green]]); ctx.fillRect(bcx - bw / 2, by, bw * prog, bh);
@@ -724,7 +724,11 @@ const ART = {
 /** "bought / total" upgrade levels as small dark text. */
 function upgradeCount(ctx, scene, x, y) {
   const total = Object.values(scene.game.upgrades).reduce((s, n) => s + n, 0), max = Object.keys(scene.game.upgrades).reduce((s, id) => s + scene.game.maxLevel(id), 0);
-  label(ctx, `${total}/${max}`, x, y, { font: '700 17px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
+  const text = `${total}/${max}`;
+  ctx.font = '700 17px "Trebuchet MS", sans-serif';
+  const w = ctx.measureText(text).width + 18;                                    // a small plate, so the count reads clearly over the sign's drawing
+  rrect(ctx, x - w / 2, y - 12, w, 24, 12); paint(ctx, PAL.cream, 2, PAL.brown);
+  label(ctx, text, x, y + 1, { font: '700 17px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
 }
 
 /** Stock icons in the showcase glass: one small pile per product in stock. */

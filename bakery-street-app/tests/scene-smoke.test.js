@@ -75,3 +75,20 @@ test('everything in the shop can be bought and drawn without any picture loaded 
   assert.ok(paid.length >= 1);
   assert.equal(shop.pendingIntro('oven'), null);
 });
+
+test('the waiter keeps serving while guests stand in the queue (a waiting guest must never block his lane for good)', () => {
+  setCanvasFactory((w, h) => { const c = mockCtx(); return { width: w, height: h, getContext: () => c }; });
+  const clock = { now: 1_700_000_000_000 };
+  const game = new Game({ gold: 5000 }, {}, () => clock.now);
+  const cafe = new Cafe(game, { config: { ...CAFE, bonuses: null, queueMax: 3, spawnEverySec: [999, 999], firstSpawnSec: 999, eatSec: 2, cleanSec: 0.5, orderPatienceSec: 5000, queuePatienceSec: 5000 } });
+  cafe.setActive(true); game.tick();
+  for (const k of Object.keys(game.products)) game.products[k] = 99;
+  const scene = new InteriorScene(game);
+  scene.resize({ vw: 390, vh: 844, dpr: 2 });
+  for (let i = 0; i < 5; i++) cafe.arrive();                       // 2 tables fill up, 3 guests wait in the queue on the waiter's lane
+  cafe.seatQueued();
+  assert.equal(cafe.queued().length, 3);
+  const paid = []; game.on('customer', (e) => { if (e.type === 'leave' && e.income) paid.push(e.id); });
+  for (let i = 0; i < 60 * 120; i++) { clock.now += 1000 / 60; game.tick(); scene.update(1 / 60); }
+  assert.ok(paid.length >= 5, `all five guests were served in two minutes (${paid.length})`);
+});
