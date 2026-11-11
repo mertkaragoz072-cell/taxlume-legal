@@ -13,6 +13,8 @@ const FILES: Record<string, number> = {
   error: require("../../assets/sounds/error.wav"),
 };
 const MUSIC = require("../../assets/sounds/music.wav");
+/** Loudness per effect: frequent, small sounds sit lower than the rare rewards, so nothing tiring repeats loudly. Music stays under the effects. */
+const VOLUME: Record<string, number> = { tap: 0.45, coin: 0.7, done: 0.65, buy: 0.8, claim: 0.9, error: 0.6 };
 
 export class Feedback {
   private players = new Map<string, AudioPlayer>();
@@ -29,16 +31,32 @@ export class Feedback {
     if (this.ready) return;
     try {
       void setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "mixWithOthers" } as any).catch(() => {});
-      for (const [name, src] of Object.entries(FILES)) { const p = createAudioPlayer(src); p.volume = 0.8; this.players.set(name, p); }
-      this.music = createAudioPlayer(MUSIC); this.music.loop = true; this.music.volume = 0.7;
+      for (const [name, src] of Object.entries(FILES)) { const p = createAudioPlayer(src); p.volume = VOLUME[name] ?? 0.8; this.players.set(name, p); }
+      this.music = createAudioPlayer(MUSIC); this.music.loop = true; this.music.volume = 0.45;
       this.ready = true;
       this.syncMusic();
     } catch { this.ready = false; }
   }
 
+  private last: Record<string, number> = {};
+  private streak: Record<string, number> = {};
+
+  /**
+   * Plays a sound effect. The same sound twice within 60 ms plays once (a burst of events must not stack into noise), and a sound that
+   * repeats quickly (coins of several sales in a row) climbs a little in pitch each time, so a run of sales sounds lively instead of identical.
+   */
   sfx(name: string) {
     if (!this.settings.sfx || !this.ready) return;
-    try { const p = this.players.get(name); if (p) { void p.seekTo(0); p.play(); } } catch { /* ignore */ }
+    const now = Date.now(), gap = now - (this.last[name] ?? 0);
+    if (gap < 60) return;
+    this.streak[name] = gap < 1500 ? Math.min(4, (this.streak[name] ?? 0) + 1) : 0;
+    this.last[name] = now;
+    try {
+      const p = this.players.get(name);
+      if (!p) return;
+      try { p.shouldCorrectPitch = false; p.setPlaybackRate(1 + this.streak[name] * 0.04); } catch { /* older players: plain rate */ }
+      void p.seekTo(0); p.play();
+    } catch { /* ignore */ }
   }
 
   syncMusic() {

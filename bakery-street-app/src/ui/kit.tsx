@@ -3,8 +3,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, Image, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ASSET_MODULES } from "../generated/assetModules";
-import { C, FONT, fs, navHeight, useU } from "./theme";
+import { C, FONT, fs, navHeight, useU, TYPE } from "./theme";
 import { Rich } from "./icons";
+import { MOTION } from "./motion";
 
 export type Variant = "go" | "alt" | "lack" | "busy" | "plain";
 
@@ -29,12 +30,12 @@ export function Present({ show, children, ms = 160 }: { show: boolean; children:
 }
 
 /** 0 -> 1 when the panel opens (starts at 0 on mount), back to 0 when its <Present> closes it. Native driver; frame-rate independent. */
-export function useAppear(openMs = 200, closeMs = 140) {
+export function useAppear(openMs: number = MOTION.enter, closeMs: number = MOTION.leave) {
   const closing = useContext(PresenceCtx);
   const v = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
   useEffect(() => {
     if (reduceMotion) { v.setValue(closing ? 0 : 1); return; }
-    const a = Animated.timing(v, { toValue: closing ? 0 : 1, duration: closing ? closeMs : openMs, easing: closing ? Easing.in(Easing.quad) : Easing.out(Easing.back(1.2)), useNativeDriver: true });
+    const a = Animated.timing(v, { toValue: closing ? 0 : 1, duration: closing ? closeMs : openMs, easing: closing ? MOTION.depart : MOTION.arrive, useNativeDriver: true });
     a.start();
     return () => a.stop();
   }, [closing, v, openMs, closeMs]);
@@ -57,7 +58,7 @@ export function Btn({ label, sub, variant = "go", onPress, disabled, small, styl
       style={({ pressed }) => [{ minWidth: Math.max(44, u * (small ? 7.5 : 14)), height: h, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: pal.edge, overflow: "hidden", opacity: pressed && !off ? 0.92 : 1, transform: [{ translateY: pressed ? u * 0.3 : 0 }, { scale: pressed && !off ? 0.96 : 1 }] }, style]}>
       <LinearGradient colors={[pal.top, pal.bot]} style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: u * 1.6 }}>
         <Text allowFontScaling={false} style={{ color: pal.text, fontFamily: FONT.bold, fontSize: fs(u, small ? 2.9 : 3.2) }} numberOfLines={1}>{label}</Text>
-        {sub ? <Rich text={sub} size={fs(u, 2.2)} style={{ color: pal.text, marginTop: -u * 0.2 }} /> : null}
+        {sub ? <Rich text={sub} size={fs(u, TYPE.small)} style={{ color: pal.text, marginTop: -u * 0.2 }} /> : null}
       </LinearGradient>
     </Pressable>
   );
@@ -93,8 +94,8 @@ export function Title({ name, note }: { name: string; note?: string }) {
   const u = useU();
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: u }}>
-      <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.3), flexShrink: 1 }}>{name}</Text>
-      {note ? <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.regular, fontSize: fs(u, 2.5) }}>{note}</Text> : null}
+      <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading), flexShrink: 1 }}>{name}</Text>
+      {note ? <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.regular, fontSize: fs(u, TYPE.body) }}>{note}</Text> : null}
     </View>
   );
 }
@@ -102,14 +103,14 @@ export function Title({ name, note }: { name: string; note?: string }) {
 export function Meta({ text, tone }: { text: string; tone?: "muted" | "reward" | "bad" | "ok" | "next" }) {
   const u = useU();
   const color = tone === "muted" ? C.honeyDark : tone === "bad" ? C.terracottaDark : tone === "ok" ? C.greenDark : tone === "next" ? C.honeyDark : C.brownDark;
-  return <Rich text={text} size={fs(u, 2.4)} style={{ color }} />;
+  return <Rich text={text} size={fs(u, TYPE.small)} style={{ color }} />;
 }
 
 export function Chip({ text, ok }: { text: string; ok: boolean }) {
   const u = useU();
   return (
     <View style={{ paddingHorizontal: u, paddingVertical: u * 0.3, borderRadius: 99, borderWidth: u * 0.25, backgroundColor: ok ? C.greenPale : C.terracottaPale, borderColor: ok ? C.greenLight : C.terracottaLight }}>
-      <Rich text={text} size={fs(u, 2.3)} style={{ color: ok ? C.brownDark : C.terracottaDark }} />
+      <Rich text={text} size={fs(u, TYPE.small)} style={{ color: ok ? C.brownDark : C.terracottaDark }} />
     </View>
   );
 }
@@ -119,7 +120,7 @@ export function Bar({ value, text, color }: { value: number; text?: string; colo
   return (
     <View style={{ height: u * 3.4, borderRadius: 99, backgroundColor: C.brown, borderWidth: u * 0.25, borderColor: C.brownDark, overflow: "hidden", justifyContent: "center" }}>
       <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.max(0, Math.min(1, value)) * 100}%`, backgroundColor: color ?? C.green }} />
-      {text ? <Text allowFontScaling={false} style={{ textAlign: "center", color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, 2.2) }}>{text}</Text> : null}
+      {text ? <Text allowFontScaling={false} style={{ textAlign: "center", color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{text}</Text> : null}
     </View>
   );
 }
@@ -160,20 +161,20 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, header, t
   const inner = (
     <>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: u * 2.2, paddingTop: portrait ? 0 : u * 1.6, paddingBottom: u * 0.6 }}>
-        <Rich text={title} size={fs(u, 4)} style={{ color: C.brownDark, fontFamily: FONT.bold }} />
+        <Rich text={title} size={fs(u, TYPE.title)} style={{ color: C.brownDark, fontFamily: FONT.bold }} />
         {onClose ? (
           <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ width: Math.max(44, u * 6), height: Math.max(44, u * 6), alignItems: "center", justifyContent: "center", marginRight: -u * 0.8 }}>
             <Image source={ASSET_MODULES["assets/icons/ui-close.webp"]} style={{ width: Math.max(40, u * 7.4), height: Math.max(40, u * 7.4) * (144 / 140), resizeMode: "contain" }} />
           </Pressable>
         ) : null}
       </View>
-      {hint ? <Rich text={hint} size={fs(u, 2.5)} style={{ color: C.brown, paddingHorizontal: u * 2.2, paddingBottom: u }} /> : null}
+      {hint ? <Rich text={hint} size={fs(u, TYPE.body)} style={{ color: C.brown, paddingHorizontal: u * 2.2, paddingBottom: u }} /> : null}
       {header}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: u * 1.6, paddingBottom: u * 1.6, gap: u * 1.2 }}>{children}</ScrollView>
     </>
   );
   const shadow = { shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: u * 2, shadowOffset: { width: 0, height: u }, elevation: 8 };
-  const appear = useAppear();
+  const appear = useAppear(MOTION.panelEnter, MOTION.panelLeave);
   const motion = { opacity: appear, transform: portrait ? [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [u * 7, 0] }) }, { scale: appear.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }] : [{ translateX: appear.interpolate({ inputRange: [0, 1], outputRange: [(side === "left" ? -1 : 1) * u * 8, 0] }) }] };
   if (portrait) {
     return (

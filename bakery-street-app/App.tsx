@@ -6,7 +6,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Animated, BackHandler, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Animated, BackHandler, Image, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AREAS } from "./src/scene/interior-layout.js";
 import { loadAssets } from "./src/assets.js";
@@ -17,9 +17,10 @@ import { GameView } from "./src/runtime/GameView";
 import { NativeStorage } from "./src/runtime/storage";
 import { mark } from "./src/runtime/startup";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
-import { GoalPill, Hud, Nav, TillPill, TipBar, Toast, type NavId } from "./src/ui/Chrome";
+import { CoinFlights, GoalPill, Hud, Nav, TillPill, TipBar, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
 import { Present } from "./src/ui/kit";
+import { MOTION } from "./src/ui/motion";
 import { PanelBoundary, StageCard, saleNotes } from "./src/ui/Celebration";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
@@ -41,6 +42,23 @@ class Boundary extends React.Component<{ children: React.ReactNode }, { err: str
   componentDidCatch() { SplashScreen.hideAsync().catch(() => {}); }
   static getDerivedStateFromError(e: any) { return { err: `${String(e?.message ?? e)}\n${String(e?.stack ?? "").split("\n").slice(0, 6).join("\n")}` }; }
   render() { return this.state.err ? <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun çöktü.{"\n"}{this.state.err}</Text></View> : this.props.children; }
+}
+
+const LOGO = require("./assets/splash-icon.png");
+
+/** The loading screen: the same logo as the splash screen, a filling bar and the current step (so a slow start shows where it is). */
+function Loading({ progress, stage }: { progress: number; stage: string }) {
+  const bar = useRef(new Animated.Value(0)).current;
+  useEffect(() => { Animated.timing(bar, { toValue: progress, duration: MOTION.count, easing: MOTION.settle, useNativeDriver: false }).start(); }, [progress, bar]);
+  return (
+    <View style={styles.center}>
+      <Image source={LOGO} style={{ width: 200, height: 200, resizeMode: "contain" }} />
+      <View style={{ width: 220, height: 14, borderRadius: 7, marginTop: 28, backgroundColor: "rgba(245,230,200,0.18)", overflow: "hidden" }}>
+        <Animated.View style={{ height: "100%", borderRadius: 7, backgroundColor: "#C99A61", width: bar.interpolate({ inputRange: [0, 1], outputRange: ["4%", "100%"] }) }} />
+      </View>
+      <Text allowFontScaling={false} style={[styles.msg, { fontSize: 14, marginTop: 12, opacity: 0.75 }]}>{Math.round(progress * 100)}% · {stage}</Text>
+    </View>
+  );
 }
 
 export default function Root() { return <Boundary><App /></Boundary>; }
@@ -74,7 +92,7 @@ function App() {
   }, []);
 
   if (error) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun yüklenemedi.{"\n"}{error}</Text></View>;
-  if (!world || !fontsReady) return <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Yükleniyor… {Math.round(progress * 100)}%{"\n"}({stage})</Text></View>;
+  if (!world || !fontsReady) return <Loading progress={progress} stage={stage} />;
   return (
     <SafeAreaProvider>
       <StatusBar hidden />
@@ -121,12 +139,12 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   const go = useCallback((id: SceneId) => {
     if (switching.current || sceneRef.current === id) return;
     switching.current = true;
-    Animated.timing(fade, { toValue: 1, duration: 240, useNativeDriver: true }).start(() => {
+    Animated.timing(fade, { toValue: 1, duration: MOTION.scene, easing: MOTION.settle, useNativeDriver: true }).start(() => {
       setPanel(null); setOverlay(null);
       world.cafe.setActive(id === "interior");               // customers only run while the cafe is open
       world.scenes.interior.select(null);
       setSceneId(id);
-      Animated.timing(fade, { toValue: 0, duration: 240, useNativeDriver: true }).start(() => { switching.current = false; });
+      Animated.timing(fade, { toValue: 0, duration: MOTION.scene, easing: MOTION.settle, useNativeDriver: true }).start(() => { switching.current = false; });
     });
   }, [fade, world]);
 
@@ -194,7 +212,19 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
 
   useEffect(() => {
     feedback.init();
-    const sub = AppState.addEventListener("change", (s) => { if (s !== "active") void storage.flush(); });
+    let awayAt = 0;
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s !== "active") { if (!awayAt) awayAt = Date.now(); world.saves.save(); void storage.flush(); return; }
+      const away = awayAt ? Date.now() - awayAt : 0; awayAt = 0;
+      if (away < 60_000) return;                               // back after a while: what happened meanwhile, in one line
+      const done: Record<string, number> = {};
+      const off = world.game.on("complete", ({ product }: any) => { done[product] = (done[product] ?? 0) + 1; });
+      world.game.tick(); off();
+      const till = world.till.settle();
+      const parts = [...Object.entries(done).map(([id, n]) => `${world.game.productsDef[id].icon}×${n}`), ...(till > 0 ? [`kasada +${fmt(world.till.stored)} altın`] : [])];
+      if (parts.length) showToast(`Sen yokken: ${parts.join(" · ")}`, 3600);
+      if (world.daily.status().canClaim) setOverlay((o) => o ?? "daily");
+    });
     if (world.loadResult.summary && world.loadResult.status === "loaded") showToast(`Sen yokken hazırlananlar: ${world.loadResult.summary}`, 4200);
     if (world.daily.status().canClaim) setOverlay("daily");  // first visit of the day: offer the daily reward
     return () => sub.remove();
@@ -279,7 +309,10 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Toast text={toast.text} seq={toast.seq} />
           {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} accessibilityRole="alert" accessibilityLabel={`Uyarı: ${saveWarn}. Kapatmak için dokun.`} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
         </View>
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: C.brownDark, opacity: fade }]} />
+        {sceneId === "interior" && overlay !== "photo" ? <CoinFlights /> : null}
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: C.brownDark, opacity: fade, alignItems: "center", justifyContent: "center" }]}>
+          <Animated.Image source={LOGO} style={{ width: 120, height: 120, resizeMode: "contain", transform: [{ scale: fade.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }} />
+        </Animated.View>
       </View>
     </WorldProvider>
   );

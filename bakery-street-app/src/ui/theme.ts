@@ -11,6 +11,12 @@ export function useU(): number {
 }
 /** Text size: a multiple of the unit, never below 12. */
 export const fs = (u: number, mult: number) => Math.max(12, u * mult);
+/**
+ * The type scale: every text in the interface uses one of these sizes (multiples of the UI unit), so panels read alike.
+ *   title: panel and card titles' big brother (panel heading, celebration title) · heading: card titles, toasts, main buttons
+ *   body: descriptions, button labels on small buttons · small: secondary lines, chips · tiny: badges and fine print
+ */
+export const TYPE = { title: 4.2, heading: 3.2, body: 2.7, small: 2.3, tiny: 2.0 } as const;
 export const FONT = { regular: "Nunito_700Bold", bold: "Nunito_800ExtraBold" };
 
 /** Height of the fixed bottom navigation inside the safe area (picture buttons + label + padding); panels sit above it. */

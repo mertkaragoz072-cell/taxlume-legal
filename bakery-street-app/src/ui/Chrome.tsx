@@ -7,8 +7,9 @@ import { useRefresh, useWorld } from "../runtime/context";
 import { GameIcon } from "./icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Present, useAppear } from "./kit";
-import { C, FONT, fmt, fs, navHeight, useU } from "./theme";
+import { C, FONT, fmt, fs, navHeight, useU, TYPE } from "./theme";
 import { currentTip } from "../game/tips.js";
+import { MOTION } from "./motion";
 
 const Pill = ({ children, style, u }: { children: React.ReactNode; style?: any; u: number }) => (
   <View style={[{ height: u * 7.2, borderRadius: u * 3.6, borderWidth: u * 0.45, borderColor: C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }, style]}>{children}</View>
@@ -57,7 +58,7 @@ function GainPop({ value, u }: { value: number; u: number }) {
   return (
     <Animated.View pointerEvents="none" style={{ position: "absolute", top: "100%", left: 0, right: 0, alignItems: "center", opacity: p.interpolate({ inputRange: [0, 0.1, 0.7, 1], outputRange: [0, 1, 1, 0] }), transform: [{ translateY: p.interpolate({ inputRange: [0, 1], outputRange: [-u * 0.6, u * 2.2] }) }] }}>
       <View style={{ paddingHorizontal: u * 1.6, paddingVertical: u * 0.3, borderRadius: 99, borderWidth: u * 0.3, borderColor: up ? C.green : C.terracotta, backgroundColor: C.paper }}>
-        <Text allowFontScaling={false} style={{ color: up ? C.greenDark : C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, 2.8) }}>{up ? "+" : "−"}{fmt(Math.abs(pop.n))}</Text>
+        <Text allowFontScaling={false} style={{ color: up ? C.greenDark : C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{up ? "+" : "−"}{fmt(Math.abs(pop.n))}</Text>
       </View>
     </Animated.View>
   );
@@ -65,7 +66,7 @@ function GainPop({ value, u }: { value: number; u: number }) {
 
 /** The menu popover: fades and drops in, and out again when closed (see Present). */
 function MenuPop({ u, top, children }: { u: number; top: number; children: React.ReactNode }) {
-  const a = useAppear(170, 110);
+  const a = useAppear(MOTION.enter, MOTION.leave);
   return (
     <Animated.View style={{ position: "absolute", right: u * 1.6, top, width: u * 44, padding: u * 0.8, borderRadius: u * 2.6, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.paper, gap: u * 0.4, zIndex: 20, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: u * 1.4, shadowOffset: { width: 0, height: u * 0.6 }, elevation: 8, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.6, 0] }) }, { scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }}>{children}</Animated.View>
   );
@@ -83,26 +84,31 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
   const xpAnim = useRef(new Animated.Value(progression.isMax ? 1 : progression.fraction())).current;
   const lastLevel = useRef(progression.level);
   const badgePop = useRef(new Animated.Value(1)).current;
+  const coinBump = useRef(new Animated.Value(1)).current;          // the counter's coin bounces when flying coins arrive
+  useEffect(() => game.on("fx", (e: any) => {
+    if (e?.type !== "coinsHome") return;
+    Animated.sequence([Animated.timing(coinBump, { toValue: 1.25, duration: MOTION.pop, easing: MOTION.settle, useNativeDriver: true }), Animated.spring(coinBump, { toValue: 1, friction: 4, tension: 140, useNativeDriver: true })]).start();
+  }), [game, coinBump]);
   useEffect(() => {
     const f = progression.isMax ? 1 : progression.fraction();
     if (progression.level > lastLevel.current) {                 // level-up: the bar fills up, starts over, and the badge pops
       Animated.sequence([
-        Animated.timing(xpAnim, { toValue: 1, duration: 220, useNativeDriver: false }),
+        Animated.timing(xpAnim, { toValue: 1, duration: MOTION.enter, useNativeDriver: false }),
         Animated.timing(xpAnim, { toValue: 0, duration: 0, useNativeDriver: false }),
-        Animated.timing(xpAnim, { toValue: f, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: false }),
+        Animated.timing(xpAnim, { toValue: f, duration: MOTION.count, easing: MOTION.settle, useNativeDriver: false }),
       ]).start();
       Animated.sequence([
-        Animated.timing(badgePop, { toValue: 1.4, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(badgePop, { toValue: 1.4, duration: MOTION.pop, easing: MOTION.settle, useNativeDriver: true }),
         Animated.spring(badgePop, { toValue: 1, friction: 4, tension: 120, useNativeDriver: true }),
       ]).start();
-    } else Animated.timing(xpAnim, { toValue: f, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: false }).start();
+    } else Animated.timing(xpAnim, { toValue: f, duration: MOTION.count, easing: MOTION.settle, useNativeDriver: false }).start();
     lastLevel.current = progression.level;
   }, [progression.level, progression.xp, progression.isMax, xpAnim, badgePop]);   // eslint-disable-line react-hooks/exhaustive-deps
   const bh = u * 11, bw = bh * (192 / 170), mh = Math.max(44, u * 11.4);
   const entry = (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings", icon: string, label: string, badge: boolean) => (
     <Pressable key={id} onPress={() => { act.sfx("tap"); setMenu(false); onOpen(id); }} accessibilityLabel={label} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: u * 1.6, height: Math.max(46, u * 11), paddingHorizontal: u * 1.8, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper })}>
       <GameIcon id={icon} size={u * 6.4} />
-      <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.2) }} numberOfLines={1}>{label}</Text>
+      <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }} numberOfLines={1}>{label}</Text>
       {badge ? <View style={{ width: u * 2.6, height: u * 2.6, borderRadius: 99, backgroundColor: C.terracotta }} /> : null}
     </Pressable>
   );
@@ -116,14 +122,14 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
           <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 4.4), lineHeight: fs(u, 4.6), marginTop: -u * 0.2 }}>{progression.level}</Text>
         </Animated.View>
         <Pill u={u} style={{ height: u * 8.4, borderRadius: u * 4.2, flex: 1, maxWidth: u * 36, paddingLeft: u * 7, paddingRight: u * 2, justifyContent: "center" }}>
-          <GameIcon id="coin" size={u * 9.4} style={{ position: "absolute", left: -u * 1.4 }} />
-          <Rolling value={game.gold} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.2), textAlign: "center", flex: 1 }} />
+          <Animated.View style={{ position: "absolute", left: -u * 1.4, transform: [{ scale: coinBump }] }}><GameIcon id="coin" size={u * 9.4} /></Animated.View>
+          <Rolling value={game.gold} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading), textAlign: "center", flex: 1 }} />
           <GainPop value={game.gold} u={u} />
         </Pill>
         <Pill u={u} style={{ height: u * 8.4, borderRadius: u * 4.2, flex: 1, maxWidth: u * 36, paddingLeft: u * 7, paddingRight: u * 2, justifyContent: "center" }}>
           <GameIcon id="xp" size={u * 9.4} style={{ position: "absolute", left: -u * 1.4 }} />
           <View style={{ flex: 1, justifyContent: "center", gap: u * 0.3 }}>
-            <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.5), textAlign: "center" }} numberOfLines={1}>{progression.isMax ? "MAX" : `${fmt(progression.xp)}/${fmt(need)}`}</Text>
+            <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body), textAlign: "center" }} numberOfLines={1}>{progression.isMax ? "MAX" : `${fmt(progression.xp)}/${fmt(need)}`}</Text>
             <View style={{ height: u * 1.1, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}>
               <Animated.View style={{ width: xpAnim.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }), height: "100%", backgroundColor: C.green }} />
             </View>
@@ -163,12 +169,12 @@ function salesToGo(game: any, gold: number): number {
 export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const { world } = useWorld(), u = useU();
   useRefresh();
-  const a = useAppear(220, 140);
+  const a = useAppear(MOTION.enter, MOTION.leave);
   const g = world.shop.nextGoal();
   const pulse = useRef(new Animated.Value(0)).current, ready0 = g.kind === "ready";
   useEffect(() => {
     if (!ready0) { pulse.setValue(0); return; }
-    const loop = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 650, easing: Easing.inOut(Easing.quad), useNativeDriver: true })]));
+    const loop = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 650, easing: MOTION.loop, useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 650, easing: MOTION.loop, useNativeDriver: true })]));
     loop.start();
     return () => loop.stop();
   }, [ready0, pulse]);
@@ -180,9 +186,9 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
       <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 40, minHeight: Math.max(44, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>
-          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
           <View style={{ height: u * 1, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}><View style={{ width: `${Math.round(g.progress * 100)}%`, height: "100%", backgroundColor: ready ? C.green : C.honey }} /></View>
-          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.1) }}>{g.kind === "level" ? g.text.split(": ")[1] : ready ? `${fmt(g.price)} altın` : `${fmt(g.missingGold)} altın kaldı${sales ? ` · ≈${sales} satış` : ""}`}</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>{g.kind === "level" ? g.text.split(": ")[1] : ready ? `${fmt(g.price)} altın` : `${fmt(g.missingGold)} altın kaldı${sales ? ` · ≈${sales} satış` : ""}`}</Text>
         </View>
       </Pressable>
     </Animated.View>
@@ -193,7 +199,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
 export function TillPill() {
   const { world, act } = useWorld(), u = useU();
   useRefresh();
-  const a = useAppear(220, 140);
+  const a = useAppear(MOTION.enter, MOTION.leave);
   const stored = world.till.stored as number;
   if (stored <= 0) return null;
   return (
@@ -202,8 +208,8 @@ export function TillPill() {
         style={({ pressed }) => ({ minHeight: Math.max(44, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: C.green, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id="gift" size={u * 4.4} />
         <View style={{ gap: u * 0.3 }}>
-          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>Kasada birikti</Text>
-          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.3) }}>+{fmt(stored)} altın · dokun, al</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>Kasada birikti</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>+{fmt(stored)} altın · dokun, al</Text>
         </View>
       </Pressable>
     </Animated.View>
@@ -214,20 +220,59 @@ export function TillPill() {
 export function TipBar() {
   const { world, act } = useWorld(), u = useU();
   useRefresh();
-  const a = useAppear(240, 140);
+  const a = useAppear(MOTION.enter, MOTION.leave);
   const tip = world.settings.values.tips ? currentTip(world.game) : null;
   if (!tip) return null;
   return (
     <Animated.View pointerEvents="box-none" style={{ position: "absolute", left: u * 2, right: u * 2, bottom: navHeight(u) + u * 1.6, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [u * 2, 0] }) }] }}>
       <View accessibilityRole="text" style={{ flexDirection: "row", alignItems: "center", gap: u * 1.4, padding: u * 1.6, borderRadius: u * 3, borderWidth: u * 0.4, borderColor: C.honeyDark, backgroundColor: C.cream, shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }}>
         <Text allowFontScaling={false} style={{ fontSize: fs(u, 4.4) }}>💡</Text>
-        <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.7) }}>{tip.text}</Text>
+        <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{tip.text}</Text>
         <Pressable onPress={() => { world.settings.set("tips", false); act.sfx("tap"); act.toast("İpuçları kapandı (Ayarlar'dan açılır)", 2200); }} accessibilityRole="button" accessibilityLabel="İpuçlarını kapat"
           style={({ pressed }) => ({ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: u * 1.2, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper, borderWidth: u * 0.3, borderColor: C.brown })}>
-          <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, 2.4) }}>Kapat</Text>
+          <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>Kapat</Text>
         </Pressable>
       </View>
     </Animated.View>
+  );
+}
+
+/** Coins that fly from the register (screen point given by the scene) up to the gold counter, then make the counter's coin bounce. */
+export function CoinFlights() {
+  const { world } = useWorld(), u = useU(), insets = useSafeAreaInsets();
+  const [flights, setFlights] = useState<{ id: number; x: number; y: number }[]>([]);
+  const seq = useRef(0);
+  useEffect(() => world.game.on("fx", (e: any) => {
+    if (e?.type !== "coins" || !e.at) return;
+    setFlights((f) => (f.length > 6 ? f : [...f, { id: ++seq.current, x: e.at.x, y: e.at.y }]));
+  }), [world]);
+  const target = { x: insets.left + u * 1.6 + u * 11 * (192 / 170) + u * 1.2 + u * 2.4, y: insets.top + u * 1 + u * 4.2 };     // the coin of the gold pill in the top bar
+  return (
+    <>
+      {flights.map((f) => <Flight key={f.id} from={f} to={target} size={u * 5} onDone={() => { setFlights((l) => l.filter((x) => x.id !== f.id)); world.game.emit("fx", { type: "coinsHome" }); }} />)}
+    </>
+  );
+}
+
+function Flight({ from, to, size, onDone }: { from: { x: number; y: number }; to: { x: number; y: number }; size: number; onDone: () => void }) {
+  const ts = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
+  useEffect(() => {
+    const a = Animated.stagger(70, ts.map((t) => Animated.timing(t, { toValue: 1, duration: 620, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })));
+    a.start(({ finished }) => { if (finished) onDone(); });
+    return () => a.stop();
+  }, []);   // eslint-disable-line react-hooks/exhaustive-deps
+  const top = Math.min(from.y, to.y) - size * 3;
+  return (
+    <>
+      {ts.map((t, i) => (
+        <Animated.View key={i} pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, zIndex: 25, opacity: t.interpolate({ inputRange: [0, 0.05, 0.9, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [{ translateX: t.interpolate({ inputRange: [0, 1], outputRange: [from.x - size / 2 + (i - 1) * size * 0.3, to.x - size / 2] }) },
+            { translateY: t.interpolate({ inputRange: [0, 0.45, 1], outputRange: [from.y - size / 2, top, to.y - size / 2] }) },
+            { scale: t.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.8, 1.1, 0.6] }) }] }}>
+          <GameIcon id="coin" size={size} />
+        </Animated.View>
+      ))}
+    </>
   );
 }
 
@@ -246,7 +291,7 @@ export function Nav({ active, onSelect, exploreBadge }: { active: NavId | null; 
           <Image source={img(on ? `ui-nav-${id}-on` : `ui-nav-${id}`)} style={{ width: w * s, height: h * s, resizeMode: "contain" }} />
           {id === "explore" && exploreBadge ? <View style={{ position: "absolute", right: -u * 0.4, top: on ? u * 1.4 : u * 3.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
         </View>
-        <Text allowFontScaling={false} numberOfLines={1} style={{ color: on ? C.brownDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, 2.7), marginTop: u * 0.3 }}>{label}</Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={{ color: on ? C.brownDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body), marginTop: u * 0.3 }}>{label}</Text>
       </Pressable>
     );
   };
@@ -263,10 +308,13 @@ export function Nav({ active, onSelect, exploreBadge }: { active: NavId | null; 
 export function Toast({ text, seq }: { text: string; seq: number }) {
   const u = useU();
   const o = useRef(new Animated.Value(0)).current;
-  useEffect(() => { if (text) { o.setValue(1); } else Animated.timing(o, { toValue: 0, duration: 200, useNativeDriver: true }).start(); }, [text, seq, o]);
+  useEffect(() => {                                                      // every new message drops in softly; the last one fades away
+    const a = text ? (o.setValue(0.4), Animated.timing(o, { toValue: 1, duration: MOTION.enter, easing: MOTION.arrive, useNativeDriver: true })) : Animated.timing(o, { toValue: 0, duration: MOTION.leave, easing: MOTION.depart, useNativeDriver: true });
+    a.start(); return () => a.stop();
+  }, [text, seq, o]);
   return (
-    <Animated.View pointerEvents="none" style={{ position: "absolute", top: u * 23, alignSelf: "center", opacity: o, maxWidth: "90%", paddingHorizontal: u * 3.6, paddingVertical: u * 1.6, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.cream, zIndex: 30 }}>
-      <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.8), textAlign: "center" }}>{text}</Text>
+    <Animated.View pointerEvents="none" style={{ position: "absolute", top: u * 23, alignSelf: "center", opacity: o, transform: [{ translateY: o.interpolate({ inputRange: [0, 1], outputRange: [-u * 2, 0] }) }, { scale: o.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) }], maxWidth: "90%", paddingHorizontal: u * 3.6, paddingVertical: u * 1.6, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.cream, zIndex: 30 }}>
+      <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading), textAlign: "center" }}>{text}</Text>
     </Animated.View>
   );
 }

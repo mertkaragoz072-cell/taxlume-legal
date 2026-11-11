@@ -76,7 +76,10 @@ export class InteriorScene {
     };
     const till = AREAS.find((x) => x.id === 'showcase');    // the register: guests who finished eating throw their coins onto the showcase counter
     this.customers.register = { x: till.x + till.w / 2, y: till.y + till.h * 0.62 };
-    this.customers.onRegister = (c) => { this.spring[till.id] = 0; this.burst(c.x1, c.y1, c.last ? 7 : 3, 36); };
+    this.customers.onRegister = (c) => {
+      this.spring[till.id] = 0; this.burst(c.x1, c.y1, c.last ? 7 : 3, 36);
+      if (c.last && this.view) game.emit('fx', { type: 'coins', at: this.toScreen(c.x1, c.y1), income: c.income });     // the interface flies the coins on to the gold counter
+    };
     game.on('customer', (e) => {                            // a cleared table sparkles for a moment
       if (e.type !== 'tableFree') return;
       const a = AREAS.find((x) => x.id === `table${e.table + 1}`);

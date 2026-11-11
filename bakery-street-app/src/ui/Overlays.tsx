@@ -9,7 +9,7 @@ import { EXPLORE_LIMIT } from "../data/economy.js";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon, Rich } from "./icons";
-import { C, FONT, fmt, fs, useU } from "./theme";
+import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
 
 const fmtReward = (game: any, r: any) => [
   r.gold ? `💰 ${fmt(r.gold)}` : "",
@@ -128,7 +128,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
       <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>🪧</Text>}>
         <Title name="Kafenin adı" note={`en çok ${NAME_MAX} harf`} />
         <TextInput value={name} onChangeText={(t) => { dirty.current = true; setName(t.slice(0, NAME_MAX * 2)); }} onEndEditing={() => commitName(true)} onSubmitEditing={() => commitName(true)} onBlur={() => commitName(true)} placeholder="Örn. Pati Fırın" maxLength={NAME_MAX * 2} returnKeyType="done" accessibilityLabel="Kafenin adı"
-          style={{ minHeight: Math.max(44, u * 8), borderRadius: u * 1.6, borderWidth: u * 0.3, borderColor: C.brown, backgroundColor: C.paper, paddingHorizontal: u * 1.6, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3) }} />
+          style={{ minHeight: Math.max(44, u * 8), borderRadius: u * 1.6, borderWidth: u * 0.3, borderColor: C.brown, backgroundColor: C.paper, paddingHorizontal: u * 1.6, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }} />
         <Meta tone="muted" text="Tabelada görünür (kafe 2. aşamaya geçince asılır). Boş bırakırsan aşamanın adı kullanılır." />
       </Card>
       {row("sfx", "🔊", "Ses efektleri")}
@@ -235,7 +235,7 @@ export function ResearchPanel() {
           <Card key={id} tone={st === "max" ? "open" : st === "locked" ? "locked" : undefined} left={<EmojiIcon emoji={d.icon} size={u * 7} />} right={btn}>
             <Title name={d.name} note={`Seviye ${lv}/${max}`} />
             <Pips level={lv} max={max} />
-            <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, 2.4) }}>{bonusText(id, lv)}</Text>
+            <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{bonusText(id, lv)}</Text>
             {extra}
           </Card>
         );

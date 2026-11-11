@@ -7,7 +7,7 @@ import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Chip, Meta, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon } from "./icons";
-import { C, FONT, fmt, fs, useU } from "./theme";
+import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
 
 export type ShopTab = "goal" | "ingredients" | "equipment" | "decor" | "recipes" | "expansion" | "special";
 const TABS: { id: ShopTab; name: string }[] = [{ id: "goal", name: "Hedef" }, ...(SHOP_CATEGORIES as { id: ShopTab; name: string }[])];
@@ -28,7 +28,7 @@ function Preview({ d, game }: { d: any; game: any }) {
   return (
     <View style={{ width: size, height: size, borderRadius: u * 2, backgroundColor: TIER_BG[tier] || C.vanilla, borderWidth: u * 0.3, borderColor: tier ? C.honeyDark : C.vanillaDark, alignItems: "center", justifyContent: "center" }}>
       {body}
-      {tier ? <Text allowFontScaling={false} style={{ position: "absolute", bottom: -u * 0.2, color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, 2) }}>{"★".repeat(tier - 1)}</Text> : null}
+      {tier ? <Text allowFontScaling={false} style={{ position: "absolute", bottom: -u * 0.2, color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{"★".repeat(tier - 1)}</Text> : null}
     </View>
   );
 }
@@ -82,7 +82,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
         const on = t.id === tab;
         return (
           <Pressable key={t.id} onPress={() => { act.sfx("tap"); setTab(t.id); }} accessibilityRole="tab" accessibilityLabel={t.name} accessibilityState={{ selected: on }} style={({ pressed }) => ({ minHeight: Math.max(44, u * 5.4), paddingHorizontal: u * 2.2, borderRadius: 99, borderWidth: u * 0.35, borderColor: on ? C.honeyDark : C.brown, backgroundColor: on ? C.honey : C.cream, alignItems: "center", justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
-            <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.8) }}>{t.name}</Text>
+            <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{t.name}</Text>
             {dot(t.id) ? <View style={{ position: "absolute", right: -u * 0.2, top: -u * 0.2, width: u * 2, height: u * 2, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.25, borderColor: C.paper }} /> : null}
           </Pressable>
         );
@@ -106,7 +106,7 @@ function DecorList({ list, onBuy, flash }: { list: any[]; onBuy: (d: any) => voi
     <>
       {groups.map((g) => (
         <React.Fragment key={g}>
-          <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, 2.9), marginTop: u * 0.6, marginLeft: u * 0.6 }}>{g}</Text>
+          <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body), marginTop: u * 0.6, marginLeft: u * 0.6 }}>{g}</Text>
           {list.filter((v) => v.def.group === g).map((v) => <ItemCard key={v.def.id} v={v} onBuy={onBuy} flash={flash === v.def.id} />)}
         </React.Fragment>
       ))}
@@ -160,7 +160,7 @@ function ItemCard({ v, onBuy, flash }: { v: any; onBuy: (d: any) => void; flash:
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6 }}>
               {(shop.slotChoices(d.id) as any[]).map((c) => (
                 <Pressable key={c.slot} onPress={() => (c.here ? setPicker(false) : choose(c.slot))} accessibilityRole="button" accessibilityLabel={`Yer: ${c.label ?? c.slot}`} style={({ pressed }) => ({ minHeight: Math.max(44, u * 5.4), paddingHorizontal: u * 1.6, borderRadius: 99, borderWidth: u * 0.3, borderColor: c.here ? C.greenDark : C.brown, backgroundColor: c.here ? C.greenPale : C.cream, justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
-                  <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.5) }}>{c.here ? "✓ " : ""}{c.label}{c.occupant ? ` · ${c.occupant}` : ""}</Text>
+                  <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{c.here ? "✓ " : ""}{c.label}{c.occupant ? ` · ${c.occupant}` : ""}</Text>
                 </Pressable>
               ))}
             </View>
@@ -242,10 +242,10 @@ function Ingredients() {
             <Meta text={`💰 ${fmt(d.price)} / adet`} />
             <Meta tone="muted" text={`Tarif: ${usedBy(id)}`} />
             <View style={{ flexDirection: "row", alignItems: "center", gap: u * 0.8, flexWrap: "wrap" }}>
-              <Pressable onPress={() => setQ(q - 1)} accessibilityRole="button" accessibilityLabel="Bir azalt" style={sq({ width: Math.max(44, u * 6) })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.4) }}>−</Text></Pressable>
-              <Text allowFontScaling={false} style={{ minWidth: u * 5, textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.3) }}>{q}</Text>
-              <Pressable onPress={() => setQ(q + 1)} accessibilityRole="button" accessibilityLabel="Bir artır" style={sq({ width: Math.max(44, u * 6) })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3.4) }}>+</Text></Pressable>
-              {(game.marketDef.quantities as number[]).map((n) => <Pressable key={n} onPress={() => setQ(n)} accessibilityRole="button" accessibilityLabel={`${n} adet`} style={sq({ paddingHorizontal: u })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 3) }}>{n}</Text></Pressable>)}
+              <Pressable onPress={() => setQ(q - 1)} accessibilityRole="button" accessibilityLabel="Bir azalt" style={sq({ width: Math.max(44, u * 6) })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>−</Text></Pressable>
+              <Text allowFontScaling={false} style={{ minWidth: u * 5, textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{q}</Text>
+              <Pressable onPress={() => setQ(q + 1)} accessibilityRole="button" accessibilityLabel="Bir artır" style={sq({ width: Math.max(44, u * 6) })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>+</Text></Pressable>
+              {(game.marketDef.quantities as number[]).map((n) => <Pressable key={n} onPress={() => setQ(n)} accessibilityRole="button" accessibilityLabel={`${n} adet`} style={sq({ paddingHorizontal: u })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{n}</Text></Pressable>)}
             </View>
           </Card>
         );

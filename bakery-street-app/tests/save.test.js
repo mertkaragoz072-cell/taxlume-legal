@@ -144,7 +144,7 @@ test('a corrupt save is backed up and reported, not silently reset', () => {
   const s = session(st, clock);
   const res = s.mgr.load();
   assert.equal(res.status, 'corrupt');
-  assert.match(res.message, /bozuk/);
+  assert.match(res.message, /açılamadı/);
   assert.equal(st.getItem(BACKUP_KEY), '{"version":1,"gold":"lots"');   // original text preserved
   assert.ok(s.problems.some((p) => p.kind === 'corrupt'));
 });
@@ -185,7 +185,7 @@ test('if the corrupt save cannot be backed up it is not overwritten either', () 
   assert.equal(s.mgr.load().status, 'corrupt');
   s.game.buyIngredient('flour', 1);
   assert.equal(st.getItem(SAVE_KEY), 'garbage');
-  assert.ok(s.problems.some((p) => /yedeklenemedi/.test(p.message || '')));
+  assert.ok(s.problems.some((p) => /silinmedi; bu oturumdaki ilerleme kaydedilmeyecek/.test(p.message || '')));
 });
 
 test('storage that cannot even be read does not wipe anything', () => {

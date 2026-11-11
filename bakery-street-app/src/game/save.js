@@ -121,10 +121,10 @@ export class SaveManager {
 
   /** Loads the save into the game. Returns { status: 'new'|'loaded'|'corrupt'|'future'|'nostorage', message? }. */
   load() {
-    if (!this.storage) { this.problem('nostorage', 'Tarayıcı depolaması kullanılamıyor; ilerleme kaydedilemeyecek.'); return { status: 'nostorage' }; }
+    if (!this.storage) { this.problem('nostorage', 'Cihaz şu an kayıt yapmaya izin vermiyor. Oynayabilirsin ama ilerlemen kaydedilmeyecek.'); return { status: 'nostorage' }; }
     let text;
     try { text = this.storage.getItem(this.key); }
-    catch { this.enabled = false; this.problem('read', 'Kayıt okunamadı (depolama erişimi engelli). Mevcut kayıt korunuyor, yeni ilerleme kaydedilmeyecek.'); return { status: 'corrupt' }; }
+    catch { this.enabled = false; this.problem('read', 'Kaydın okunamadı. Eski kaydın silinmedi; bu oturumdaki ilerleme kaydedilmeyecek. Oyunu kapatıp yeniden açmayı dene.'); return { status: 'corrupt' }; }
     if (text == null) { this.save(); return { status: 'new' }; }
     try {
       let raw;
@@ -150,10 +150,10 @@ export class SaveManager {
     try { this.storage.setItem(this.backupKey, text); } catch { backedUp = false; }
     let message;
     if (backedUp) {
-      message = `Kayıt dosyası bozuk (${err.message}). Eski kayıt yedeklendi; yeni oyunla başlandı.`;
+      message = `Kaydın açılamadı (${err.message}). Eski kaydın yedeklendi ve yeni bir oyun başladı.`;
     } else {
       this.enabled = false;   // could not preserve the old data: do not overwrite it
-      message = `Kayıt dosyası bozuk (${err.message}) ve yedeklenemedi. Mevcut kayıt silinmeyecek; bu oturumda ilerleme kaydedilmeyecek.`;
+      message = `Kaydın açılamadı (${err.message}). Eski kaydın silinmedi; bu oturumdaki ilerleme kaydedilmeyecek.`;
     }
     this.problem('corrupt', message);
     if (this.enabled) this.save();
@@ -172,7 +172,7 @@ export class SaveManager {
       this.storage.setItem(this.key, JSON.stringify(this.snapshot()));
     } catch (err) {
       this.failing = true;
-      const message = 'İlerleme kaydedilemedi (cihaz depolaması dolu olabilir). Oyun devam ediyor; kayıt yeniden denenecek.';
+      const message = 'İlerleme kaydedilemedi, telefonun hafızası dolu olabilir. Oyun sürüyor, kayıt kendiliğinden yeniden denenecek.';
       this.problem('write', message);
       return { ok: false, message };
     }
