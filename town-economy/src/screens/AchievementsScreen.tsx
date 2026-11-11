@@ -38,7 +38,6 @@ import {
   RADIUS,
   SPACING,
   TYPE,
-  UNLOCKED_CARD_GRADIENT,
   WEIGHT,
   withAlpha,
 } from "../theme";
@@ -165,7 +164,6 @@ export function AchievementsScreen() {
                 if (!a) return null;
                 return (
                   <View key={id} style={styles.hallOfFameChip}>
-                    <GradientFill colors={UNLOCKED_CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
                     <AchievementIcon
                       id={a.id}
                       fallback={a.icon}
@@ -614,14 +612,17 @@ const styles = StyleSheet.create({
   hallOfFameRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: PANEL_GAP },
   hallOfFameChip: {
     flex: 1,
-    borderRadius: RADIUS.card,
-    padding: SPACING.sm + 2,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "rgba(246,211,106,0.8)",
+    backgroundColor: "rgba(70,44,20,0.92)",
+    paddingVertical: SPACING.sm + 2,
+    paddingHorizontal: 6,
     alignItems: "center",
     overflow: "hidden",
-    ...cardShadow,
   },
   hallOfFameTitle: {
-    color: COLORS.textPrimary,
+    color: "#fbeccb",
     fontSize: TYPE.micro,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
