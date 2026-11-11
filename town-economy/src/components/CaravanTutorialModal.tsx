@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   title: { color: "#fbeccb", fontFamily: FONT.serif, textAlign: "center" },
   body: { color: "#f6e8c8", fontFamily: FONT.medium },
   skipText: { color: "#f6e8c8", fontFamily: FONT.serif },
-  nextBox: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingLeft: 36 },
+  nextBox: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center" },
   nextText: {
     color: "#fbeccb",
     fontFamily: FONT.serif,
