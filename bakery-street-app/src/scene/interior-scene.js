@@ -12,6 +12,9 @@ import { hasSitFrames } from '../characters/sprites.js';
 import { applyDaylight, drawRain } from './daylight.js';
 import { currentTip } from '../game/tips.js';
 
+const BAKER_LINES = ['Taze çıktı!', 'Sıcacık oldu', 'Mis gibi'];
+const WAITER_LINES = ['Afiyet olsun!', 'Buyurun', 'Sıcak, dikkat edin'];
+
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
 /** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
 const PARALLAX_PX = 24;
@@ -59,6 +62,7 @@ export class InteriorScene {
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: '+1', icon: product, life: 1 });
       this.burst(area.x + area.w / 2, area.y + area.h * 0.35, 12);
       this.spring[area.id] = 0;
+      if (Math.random() < 0.4) this.customers.speak(area.x + area.w / 2, area.y - 30 + this.warpAt(depthOf(area)), BAKER_LINES[Math.floor(Math.random() * BAKER_LINES.length)]);
     });
     game.on('change', (e) => {                              // an upgrade was bought: the thing it belongs to bounces, glitters and shows its new level
       if (e?.type !== 'upgrade') return;
@@ -73,6 +77,7 @@ export class InteriorScene {
       this.pops.push({ x: a.x + a.w / 2, y: a.y + a.h * 0.08 + w, check: true, life: 0.8 });
       this.burst(a.x + a.w / 2, a.y + a.h * 0.3 + w, 7);
       this.pulse[a.id] = 0;
+      if (Math.random() < 0.3) this.customers.speak(a.x + a.w / 2 + 70, a.y - 10 + w, WAITER_LINES[Math.floor(Math.random() * WAITER_LINES.length)]);
     };
     const till = AREAS.find((x) => x.id === 'showcase');    // the register: guests who finished eating throw their coins onto the showcase counter
     this.customers.register = { x: till.x + till.w / 2, y: till.y + till.h * 0.62 };

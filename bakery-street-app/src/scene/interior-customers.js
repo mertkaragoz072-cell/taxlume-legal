@@ -13,8 +13,15 @@ const EXIT = { x: 395, y: 1580, exit: true };    // arriving and leaving guests 
 const SPEED = 210;                 // design px per second
 const COIN_FLIGHT_SEC = 0.5;     // a coin's flight from the guest to the register
 /** What a guest says on the way out (the guest's number picks the line). */
-const SAYINGS = { happy: ['Teşekkürler!', 'Mis gibi kokuyor!', 'Harika görünüyor!', 'Yaşasın!'], favorite: ['Favorim buydu!', 'Tam istediğim!'], angry: ['Çok bekledim…', 'Gidiyorum!'] };
-const TYPE_LINES = { hurried: 'Acelem var!', gourmet: 'En iyisinden!', kid: 'Karnım aç!' };
+/** Little things guests say: kind and calm (the cafe is a place to rest). The guest's number picks the line, so it never flickers. */
+export const SAYINGS = {
+  happy: ['Teşekkürler!', 'Mis gibi kokuyor', 'Çok lezzetli görünüyor', 'Burası çok huzurlu', 'Tam aradığım şey', 'Günüm güzelleşti'],
+  favorite: ['En sevdiğim!', 'Tam istediğim'],
+  sad: ['Biraz bekledim…', 'Başka zaman gelirim'],
+  hello: ['Merhaba!', 'Ne güzel bir gün', 'Kokusu buraya kadar geliyor'],
+};
+const TYPE_LINES = { hurried: 'Biraz acelem var', gourmet: 'En güzelinden lütfen', kid: 'Karnım çok aç!' };
+const SAY_MAX = 2, SAY_GAP = 0.9, SAY_LIFE = 2.4;   // at most two little bubbles at once, never two starting together, each stays a moment
 const BODY_H = PERSON_H;           // approximate sprite height at scale 1 (the first table row) for bubbles and hit-testing; `bodyH(y)` follows the perspective
 const bodyH = (y) => BODY_H * depthScale(y);
 
@@ -27,7 +34,7 @@ export class CustomerLayer {
     this.cafe = cafe;
     this.v = new Map();            // customer id -> visual { x, y, dir, moving, leaving, look }
     this.pops = [];
-    this.emotes = [];              // little reactions over a guest: { x, y, kind: 'heart' | 'love' | 'anger', life }
+    this.emotes = [];              // little reactions over a guest: { x, y, kind: 'heart' | 'love' | 'sad' | 'say', life }
     this.warp = (y) => 0;           // set by the scene: how much lower things at logic y are drawn on tall screens
     this.settled = () => true;      // (id) -> true once the guest sits in the chair; the waiter only brings an order to a seated guest
     this.extra = null;             // other walkers to avoid (the waiter), set by the scene
@@ -37,7 +44,7 @@ export class CustomerLayer {
     this.bubbleScale = 1;          // set by the scene: bubbles grow a little on small screens (zoomed out) so the icon and price stay readable
     game.on('customer', (e) => {
       if (e.type === 'leave') this.react(e);
-      if (e.type === 'seat' && e.guestType) this.greet(e);
+      if (e.type === 'seat') this.greet(e);
       if (e.type === 'leave' && e.income) {
         const v = this.v.get(e.id);
         if (v && e.eatSec > 0 && e.table != null) { v.ghost = { id: e.id, state: 'seated', table: e.table, orderId: null }; v.linger = e.eatSec; v.payout = e.income; }   // paid: the guest stays in the chair and eats before leaving; the coins go to the register when they get up
@@ -51,8 +58,21 @@ export class CustomerLayer {
 
   /** A guest of a special type says so when they sit down. */
   greet(e) {
-    if (this.emotes.length > 8) return;
-    this.emotes.push({ id: e.id, table: e.table, kind: 'say', text: TYPE_LINES[e.guestType], life: 1.6, wait: 1 });      // shown over the guest once they have reached the chair
+    const text = e.guestType ? TYPE_LINES[e.guestType] : e.id % 3 === 1 ? SAYINGS.hello[e.id % SAYINGS.hello.length] : null;
+    if (text) this.emotes.push({ id: e.id, table: e.table, kind: 'say', text, life: SAY_LIFE, wait: 0.6, tone: 'warm' });      // shown over the guest once they have reached the chair
+  }
+
+  /** A little speech bubble at a point (guests, the baker, the waiter). Kept rare on purpose: false when the room is already talking. */
+  speak(x, y, text, tone = 'warm') {
+    if (!this.canSpeak()) return false;
+    this.emotes.push({ x, y, kind: 'say', text, life: SAY_LIFE, tone });
+    this.lastSay = this.clockT ?? 0;
+    return true;
+  }
+
+  canSpeak() {
+    const talking = this.emotes.filter((m) => m.kind === 'say' && !(m.wait > 0)).length;
+    return talking < SAY_MAX && (this.clockT ?? 0) - (this.lastSay ?? -9) >= SAY_GAP;
   }
 
   /** A guest's reaction when they leave: a heart for a happy one, two hearts for a favourite, an anger mark for one who gave up. */
@@ -62,10 +82,10 @@ export class CustomerLayer {
     const ghost = e.table != null ? { state: 'seated', table: e.table } : null;
     const table = ghost ? AREAS.find((a) => a.id === `table${e.table + 1}`) : null;
     const x = ghost ? this.bodyX(v, ghost) : v.x, y = (ghost ? this.bubbleTop(v, ghost) : v.y - bodyH(v.y)) + this.warp(table ? depthOf(table) + 1 : v.y);   // (the same offset the order bubble gets)
-    const kind = !e.happy ? 'anger' : e.bonus?.favorite ? 'love' : 'heart';
+    const kind = !e.happy ? 'sad' : e.bonus?.favorite ? 'love' : 'heart';
     this.emotes.push({ x, y: y - 6, kind, life: 1 });
-    const lines = SAYINGS[kind === 'anger' ? 'angry' : e.bonus?.favorite ? 'favorite' : 'happy'];
-    if (kind === 'anger' || e.id % 3 === 0) this.emotes.push({ x, y: y - 62, kind: 'say', text: lines[e.id % lines.length], life: 1.4 });     // a short line, chosen by the guest's number so it is the same every time
+    const lines = SAYINGS[kind === 'sad' ? 'sad' : kind === 'love' ? 'favorite' : 'happy'];
+    if (kind !== 'heart' || e.id % 3 !== 2) this.speak(x, y - 66, lines[e.id % lines.length], kind === 'sad' ? 'soft' : 'warm');     // two guests in three say something
   }
 
   /** Placeholder for a paying-at-the-register animation: three coins fly from the guest to the till, which bounces and shows the amount. */
@@ -128,14 +148,16 @@ export class CustomerLayer {
     }
     this.coins = this.coins.filter((c) => !c.landed);
     for (const p of this.pops) p.life -= dt * 0.8;
+    this.clockT = (this.clockT ?? 0) + dt;
     for (const m of this.emotes) {
-      if (m.id != null) {                                        // a greeting waits until its guest really sits in the chair
+      if (m.id != null && m.wait > 0) {                                        // a greeting waits until its guest really sits in the chair
         const gv = this.v.get(m.id);
         if (!gv) { m.life = 0; continue; }
         if (!(gv.sit >= 0.999)) continue;
-        m.wait = 0;
+        if (!this.canSpeak()) { m.life = 0; continue; }          // the room is already talking: this guest just smiles
+        m.wait = 0; this.lastSay = this.clockT;
       }
-      if (m.wait > 0) m.wait -= dt; else m.life -= dt * 0.9;
+      if (m.wait > 0) m.wait -= dt; else m.life -= dt * (m.kind === 'say' ? 1 : 0.9);
     }
     this.emotes = this.emotes.filter((m) => m.life > 0);
     this.pops = this.pops.filter((p) => p.life > 0);
@@ -323,17 +345,12 @@ export class CustomerLayer {
       const table = AREAS.find((a) => a.id === `table${c.table + 1}`);
       m = { ...m, x: this.bodyX(v, c), y: this.bubbleTop(v, c) + this.warp(depthOf(table) + 1) - 100 };      // (above the order bubble)
     }
-    const rise = m.kind === 'say' ? (1 - m.life) * 22 : (1 - m.life) * 60, a = clamp(m.life * 1.8, 0, 1), pulse = 1 + Math.sin((1 - m.life) * 9) * 0.06;
+    if (m.kind === 'say') { this.drawSay(ctx, m); return; }
+    const rise = (1 - m.life) * 60, a = clamp(m.life * 1.8, 0, 1), pulse = 1 + Math.sin((1 - m.life) * 9) * 0.06;
     ctx.save(); ctx.globalAlpha = a; ctx.translate(m.x, m.y - rise);
-    if (m.kind === 'say') {
-      ctx.font = '700 26px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const w = ctx.measureText(m.text).width + 30;
-      rrect(ctx, -w / 2, -22, w, 44, 22); paint(ctx, PAL.cream, 3, PAL.brown);
-      ctx.beginPath(); ctx.moveTo(-8, 21); ctx.lineTo(0, 34); ctx.lineTo(8, 21); ctx.closePath(); ctx.fillStyle = PAL.cream; ctx.fill();
-      ctx.fillStyle = PAL.brownDark; ctx.fillText(m.text, 0, 1);
-    } else if (m.kind === 'anger') {
-      ctx.strokeStyle = '#C8442F'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.scale(pulse, pulse);
-      for (const [dx, dy] of [[-8, -8], [8, 8]]) { ctx.beginPath(); ctx.moveTo(dx - 10, dy); ctx.lineTo(dx + 10, dy); ctx.moveTo(dx, dy - 10); ctx.lineTo(dx, dy + 10); ctx.stroke(); }
+    if (m.kind === 'sad') {                                        // a guest who gave up: a small pale-blue drop, not an angry mark
+      ctx.beginPath(); ctx.moveTo(0, -16); ctx.bezierCurveTo(10, -2, 12, 6, 0, 12); ctx.bezierCurveTo(-12, 6, -10, -2, 0, -16); ctx.closePath();
+      ctx.fillStyle = '#AFC8E6'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = '#6E86A6'; ctx.stroke();
     } else {
       const hearts = m.kind === 'love' ? [[-16, 0, 1.15], [18, -10, 0.85]] : [[0, 0, 1]];
       for (const [dx, dy, k] of hearts) this.heart(ctx, dx, dy, 18 * k * pulse);
@@ -341,12 +358,33 @@ export class CustomerLayer {
     ctx.restore();
   }
 
-  heart(ctx, x, y, s) {
+  /**
+   * A speech bubble, made to be easy on the eyes: warm cream, a thin honey edge, a soft shadow, small dark-brown text and a tiny heart (or a
+   * leaf for the softer lines). It pops in gently, floats up a little and fades.
+   */
+  drawSay(ctx, m) {
+    const age = SAY_LIFE - m.life, inK = clamp(age / 0.22, 0, 1), ease = 1 - Math.pow(1 - inK, 3);
+    const a = Math.min(ease, clamp(m.life / 0.45, 0, 1)), k = (0.86 + 0.14 * ease) * this.bubbleScale, rise = age * 5;     // (bubbleScale: a little bigger on small phones, like the order bubbles)
+    ctx.save(); ctx.globalAlpha = a * 0.97; ctx.translate(m.x, m.y - rise); ctx.scale(k, k);
+    ctx.font = '700 24px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(m.text).width, w = tw + 56, h = 40;
+    rrect(ctx, -w / 2 + 2, -h / 2 + 4, w, h, h / 2); ctx.fillStyle = 'rgba(70,48,32,0.12)'; ctx.fill();            // soft shadow
+    rrect(ctx, -w / 2, -h / 2, w, h, h / 2); paint(ctx, m.tone === 'soft' ? '#F4F1EC' : '#FFF7EA', 2, m.tone === 'soft' ? '#C9C2B8' : '#E3C08E');
+    ctx.beginPath(); ctx.moveTo(-7, h / 2 - 1); ctx.quadraticCurveTo(-2, h / 2 + 8, 2, h / 2 + 12); ctx.quadraticCurveTo(4, h / 2 + 5, 8, h / 2 - 1); ctx.closePath();
+    ctx.fillStyle = m.tone === 'soft' ? '#F4F1EC' : '#FFF7EA'; ctx.fill();
+    const ix = -w / 2 + 19;
+    if (m.tone === 'soft') { ctx.beginPath(); ctx.ellipse(ix, 0, 5, 8, 0.6, 0, 7); ctx.fillStyle = '#9DB88A'; ctx.fill(); }   // a little leaf
+    else { ctx.save(); ctx.globalAlpha *= 0.9; this.heart(ctx, ix, 1, 7, true); ctx.restore(); }
+    ctx.fillStyle = PAL.brownDark; ctx.fillText(m.text, ix + 12, 1);
+    ctx.restore();
+  }
+
+  heart(ctx, x, y, s, soft = false) {
     ctx.beginPath();
     ctx.moveTo(x, y + s * 0.9);
     ctx.bezierCurveTo(x - s * 1.5, y - s * 0.1, x - s * 0.9, y - s * 1.1, x, y - s * 0.4);
     ctx.bezierCurveTo(x + s * 0.9, y - s * 1.1, x + s * 1.5, y - s * 0.1, x, y + s * 0.9);
-    ctx.closePath(); ctx.fillStyle = '#E8707A'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#8C3B3B'; ctx.stroke();
+    ctx.closePath(); ctx.fillStyle = soft ? '#F2A0A8' : '#E8707A'; ctx.fill(); if (!soft) { ctx.lineWidth = 3; ctx.strokeStyle = '#8C3B3B'; ctx.stroke(); }
   }
 
   /** A little gold crown marking a VIP guest. */
