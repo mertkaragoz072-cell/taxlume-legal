@@ -19,10 +19,12 @@ import { mark } from "./src/runtime/startup";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
 import { GoalPill, Hud, Nav, TillPill, TipBar, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
-import { Btn, Present, useAppear } from "./src/ui/kit";
+import { Present } from "./src/ui/kit";
+import { PanelBoundary, StageCard, saleNotes } from "./src/ui/Celebration";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
-import { AlbumPanel, StatsPanel, DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
+import { AlbumPanel, StatsPanel } from "./src/ui/Collection";
+import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
 import { C, FONT, fmt, fs, useU } from "./src/ui/theme";
 
 
@@ -41,37 +43,7 @@ class Boundary extends React.Component<{ children: React.ReactNode }, { err: str
   render() { return this.state.err ? <View style={styles.center}><Text allowFontScaling={false} style={styles.msg}>Oyun çöktü.{"\n"}{this.state.err}</Text></View> : this.props.children; }
 }
 
-/** One panel that fails to draw must not take the whole game down: it is closed and the player is told, the café keeps running. */
-class PanelBoundary extends React.Component<{ onFail: () => void; children: React.ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch() { this.props.onFail(); }
-  render() { return this.state.failed ? null : this.props.children; }
-}
-
 export default function Root() { return <Boundary><App /></Boundary>; }
-
-/** Shown once when the café reaches a new stage: what changed and what comes next. The café itself already looks different behind it. */
-function StageCard({ c, onClose }: { c: { icon: string; title: string; lines: string[] }; onClose: () => void }) {
-  const u = useU(), a = useAppear(260, 160);
-  return (
-    <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, zIndex: 40, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(70,48,32,0.55)", opacity: a }}>
-      <Animated.View style={{ width: "84%", maxWidth: u * 80, padding: u * 3, borderRadius: u * 3, borderWidth: u * 0.5, borderColor: C.honeyDark, backgroundColor: C.cream, alignItems: "center", gap: u * 1.4, transform: [{ scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }}>
-        <Text allowFontScaling={false} style={{ fontSize: fs(u, 7) }}>{c.icon}</Text>
-        <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 4.2), textAlign: "center" }}>{c.title}</Text>
-        <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.8), textAlign: "center" }}>{c.lines.join("\n")}</Text>
-        <Btn label="Harika!" onPress={onClose} />
-      </Animated.View>
-    </Animated.View>
-  );
-}
-
-/** Extra line of the sale toast: which service bonuses applied. */
-function saleNotes(e: any): string {
-  const b = e.bonus;
-  if (!b?.pct) return "";
-  return ` · ${[b.event ? "⭐ haftanın ürünü" : "", b.variety ? "🎨 çeşitlilik" : "", b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
-}
 
 function App() {
   const [fontsReady] = useFonts({ Nunito_700Bold, Nunito_800ExtraBold });

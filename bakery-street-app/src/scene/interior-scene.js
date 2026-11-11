@@ -231,10 +231,10 @@ export class InteriorScene {
     if (!this.tipsOn || this.selected) return;
     const id = currentTip(this.game)?.area, a = id ? AREAS.find((x) => x.id === id) : null;
     if (!a) return;
-    const x = a.x + a.w / 2, y = (this.rects[a.id]?.y ?? a.y) - 30 - Math.abs(Math.sin(this.t * 3.2)) * 16;
+    const r = this.rects[a.id] ?? a, x = r.x + r.w / 2, y = r.y + r.h * 0.42 - Math.abs(Math.sin(this.t * 3.2)) * 16;     // on the object itself (its top edge can sit under the goal chip)
     ctx.save(); ctx.translate(x, y);
     ctx.beginPath(); ctx.moveTo(-16, -40); ctx.lineTo(16, -40); ctx.lineTo(16, -14); ctx.lineTo(30, -14); ctx.lineTo(0, 16); ctx.lineTo(-30, -14); ctx.lineTo(-16, -14); ctx.closePath();
-    ctx.fillStyle = PAL.honey; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = PAL.brownDark; ctx.stroke();
+    ctx.fillStyle = '#FFD45E'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = '#B85F3B'; ctx.stroke();
     ctx.restore();
   }
 

@@ -91,3 +91,52 @@ workflows:
         # Yalnızca yükle: build işlendikten sonra iç testçiler TestFlight'tan kurar (inceleme gerekmez).
         submit_to_testflight: false
         submit_to_app_store: false
+
+  # Android (Google Play iç test için .aab). Elle başlatılır. Henüz hiç çalıştırılmadı: önce bakery-street-app/docs/CODEMAGIC.md'deki
+  # "Android" bölümündeki iki ayar (yükleme anahtarı ve isteğe bağlı Play hesabı) yapılmalı.
+  firin-kafe-android:
+    name: Fırın & Kafe — Android (AAB)
+    instance_type: linux_x2
+    max_build_duration: 60
+    working_directory: bakery-street-app
+
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/.gradle/caches
+
+    environment:
+      android_signing:
+        - firin_kafe_upload      # Codemagic > Code signing identities > Android keystores'a bu adla yüklenen anahtar
+      node: 22
+      java: 17
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Typecheck and test
+        script: |
+          npm run typecheck
+          npm test
+
+      - name: Stamp the build number
+        script: node scripts/ci/set-build-number.js
+
+      - name: Generate the native project
+        script: npx expo prebuild --platform android --no-install --clean
+
+      - name: Use the upload key for release builds
+        script: node scripts/ci/android-signing.js
+
+      - name: Build the app bundle
+        script: cd android && ./gradlew bundleRelease
+
+    artifacts:
+      - $CM_BUILD_DIR/bakery-street-app/android/app/build/outputs/bundle/release/*.aab
+
+    # Play Console'a otomatik yükleme isteğe bağlı: bir Google Play hizmet hesabı Codemagic'e eklenince aşağıdaki bölüm açılır.
+    # publishing:
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal

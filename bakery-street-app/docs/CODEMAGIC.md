@@ -24,3 +24,17 @@ Ortak kurulum zaten var: App Store Connect API anahtarı `taxlume-admin` ve `ios
 - Proje adı app.json adından türer ("Fırın & Kafe" → `FrnKafe`); iş akışı workspace ve scheme'i kendisi bulur.
 - `src/generated/assetModules.ts` git'te yoktur; `npm ci` sırasında `postinstall` üretir (yeni resim eklendiğinde `npm run gen:assets`).
 - Derleme yalnızca elle başlar (otomatik tetikleyici yok).
+
+## Android (Google Play) — henüz denenmedi
+
+`codemagic.yaml` içinde `firin-kafe-android` iş akışı var; Google Play'e yüklenebilir bir `.aab` üretir. Bu iş akışı hiç çalıştırılmadı, ilk denemede
+ayar hatası çıkabilir. Çalıştırmadan önce sizin tarafınızda:
+
+1. **Yükleme anahtarı (keystore):** Codemagic > Teams > Code signing identities > Android keystores'a bir anahtar yükleyin (ya da orada oluşturun) ve
+   adını `firin_kafe_upload` koyun. Bu anahtarı kaybetmeyin; her güncelleme aynı anahtarla imzalanmalı.
+2. **Google Play Console:** 25 $'lık geliştirici hesabı ve `com.firinkafe.app` paket adıyla bir uygulama kaydı. İlk `.aab` dosyasını Play Console'a
+   elle yükleyin (Test > İç test). Otomatik yükleme isterseniz bir Google Play hizmet hesabı oluşturup Codemagic'e ekleyin ve yaml'daki
+   `publishing` bölümünü açın.
+
+Derleme numarası iOS'takiyle aynı yoldan (`BUILD_NUMBER` → `android.versionCode`) verilir. Sürüm imzası `scripts/ci/android-signing.js` ile
+Codemagic'in anahtarına bağlanır; anahtar yoksa derleme başta durur (hata ayıklama anahtarıyla imzalı bir dosya asla üretilmez).
