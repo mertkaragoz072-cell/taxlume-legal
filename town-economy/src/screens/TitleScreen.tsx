@@ -6,10 +6,10 @@ import logoIllustratedEn from "../../assets/logo/logo-illustrated-en-1000.webp";
 import logoIllustratedTr from "../../assets/logo/logo-illustrated-tr-1000.webp";
 import titleBg from "../../assets/title/title-bg-900.webp";
 import { Bobbing } from "../components/Bobbing";
-import { GradientFill } from "../components/GradientFill";
+import { BigButton } from "../components/ModalKit";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
-import { COLORS, FONT, glowShadow, GOLD_GRADIENT, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
+import { COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, withAlpha } from "../theme";
 
 // The wordmark comes from assets/logo, rendered per language — the two
 // painted market-square banners are cropped independently (their lettering
@@ -190,22 +190,12 @@ export function TitleScreen({ onStart }: Props) {
           ) : null}
 
           <View style={hydrated && styles.ctaGlow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.cta,
-                pressed && styles.ctaPressed,
-                !hydrated && styles.ctaWaiting,
-              ]}
+            <BigButton
+              laurel
+              label={!hydrated ? t("title.loading") : inProgress ? t("title.continue") : t("title.start")}
               onPress={onStart}
               disabled={!hydrated}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !hydrated }}
-            >
-              <GradientFill colors={GOLD_GRADIENT} />
-              <Text style={styles.ctaLabel}>
-                {!hydrated ? t("title.loading") : inProgress ? t("title.continue") : t("title.start")}
-              </Text>
-            </Pressable>
+            />
           </View>
         </Animated.View>
       </View>
