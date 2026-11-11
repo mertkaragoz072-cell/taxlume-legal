@@ -53,7 +53,7 @@ export function Btn({ label, sub, variant = "go", onPress, disabled, small, styl
     : { top: C.greenLight, bot: C.green, edge: C.greenDeep, shadow: C.greenDeep, text: C.paper };
   const h = Math.max(44, u * (small ? 6.2 : 7));
   return (
-    <Pressable onPress={off ? undefined : onPress} disabled={off && variant !== "lack"} accessibilityRole="button"
+    <Pressable onPress={off ? undefined : onPress} disabled={off && variant !== "lack"} accessibilityRole="button" accessibilityLabel={sub ? `${label}, ${sub.replace(/💰\s*/g, "")} altın` : label} accessibilityState={{ disabled: !!off }}
       style={({ pressed }) => [{ minWidth: Math.max(44, u * (small ? 7.5 : 14)), height: h, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: pal.edge, overflow: "hidden", opacity: pressed && !off ? 0.92 : 1, transform: [{ translateY: pressed ? u * 0.3 : 0 }, { scale: pressed && !off ? 0.96 : 1 }] }, style]}>
       <LinearGradient colors={[pal.top, pal.bot]} style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: u * 1.6 }}>
         <Text allowFontScaling={false} style={{ color: pal.text, fontFamily: FONT.bold, fontSize: fs(u, small ? 2.9 : 3.2) }} numberOfLines={1}>{label}</Text>

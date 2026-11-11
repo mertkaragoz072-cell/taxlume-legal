@@ -7,7 +7,8 @@ import { useRefresh, useWorld } from "../runtime/context";
 import { GameIcon } from "./icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Present, useAppear } from "./kit";
-import { C, FONT, fmt, fs, useU } from "./theme";
+import { C, FONT, fmt, fs, navHeight, useU } from "./theme";
+import { currentTip } from "../game/tips.js";
 
 const Pill = ({ children, style, u }: { children: React.ReactNode; style?: any; u: number }) => (
   <View style={[{ height: u * 7.2, borderRadius: u * 3.6, borderWidth: u * 0.45, borderColor: C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.5 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }, style]}>{children}</View>
@@ -107,7 +108,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
   );
   return (
     <>
-      {menu ? <Pressable onPress={() => setMenu(false)} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, zIndex: 18 }} /> : null}
+      {menu ? <Pressable onPress={() => setMenu(false)} accessibilityLabel="Menüyü kapat" style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, zIndex: 18 }} /> : null}
       <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, top: 0, flexDirection: "row", alignItems: "center", paddingTop: u * 1, paddingHorizontal: u * 1.6, gap: u * 1.2, zIndex: 19 }}>
         <Animated.View style={{ width: bw, height: bh, alignItems: "center", justifyContent: "center", transform: [{ scale: badgePop }] }}>
           <Image source={img("ui-badge")} style={{ position: "absolute", width: bw, height: bh, resizeMode: "contain" }} />
@@ -176,7 +177,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const ready = g.kind === "ready", tab = g.item.category;
   return (
     <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }, { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.045] }) }] }}>
-      <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 40, minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
+      <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 40, minHeight: Math.max(44, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>
           <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
@@ -198,13 +199,34 @@ export function TillPill() {
   return (
     <Animated.View style={{ position: "absolute", right: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }] }}>
       <Pressable onPress={() => { const r = world.till.collect(); if (r.ok) { act.toast(`🪙 Kasadan +${fmt(r.gold)} altın alındı`, 2200); act.sfx("claim"); } }} accessibilityRole="button" accessibilityLabel={`Kasada ${stored} altın birikti`}
-        style={({ pressed }) => ({ minHeight: Math.max(40, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: C.green, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
+        style={({ pressed }) => ({ minHeight: Math.max(44, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: C.green, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id="gift" size={u * 4.4} />
         <View style={{ gap: u * 0.3 }}>
           <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.6) }}>Kasada birikti</Text>
           <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, 2.3) }}>+{fmt(stored)} altın · dokun, al</Text>
         </View>
       </Pressable>
+    </Animated.View>
+  );
+}
+
+/** First-steps hint for a new player, just above the bottom bar. "Kapat" switches the hints off (they can be switched on again in Ayarlar). */
+export function TipBar() {
+  const { world, act } = useWorld(), u = useU();
+  useRefresh();
+  const a = useAppear(240, 140);
+  const tip = world.settings.values.tips ? currentTip(world.game) : null;
+  if (!tip) return null;
+  return (
+    <Animated.View pointerEvents="box-none" style={{ position: "absolute", left: u * 2, right: u * 2, bottom: navHeight(u) + u * 1.6, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [u * 2, 0] }) }] }}>
+      <View accessibilityRole="text" style={{ flexDirection: "row", alignItems: "center", gap: u * 1.4, padding: u * 1.6, borderRadius: u * 3, borderWidth: u * 0.4, borderColor: C.honeyDark, backgroundColor: C.cream, shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 }}>
+        <Text allowFontScaling={false} style={{ fontSize: fs(u, 4.4) }}>💡</Text>
+        <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, 2.7) }}>{tip.text}</Text>
+        <Pressable onPress={() => { world.settings.set("tips", false); act.sfx("tap"); act.toast("İpuçları kapandı (Ayarlar'dan açılır)", 2200); }} accessibilityRole="button" accessibilityLabel="İpuçlarını kapat"
+          style={({ pressed }) => ({ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: u * 1.2, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper, borderWidth: u * 0.3, borderColor: C.brown })}>
+          <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, 2.4) }}>Kapat</Text>
+        </Pressable>
+      </View>
     </Animated.View>
   );
 }

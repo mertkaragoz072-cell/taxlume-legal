@@ -291,3 +291,23 @@ test('play time counts whole seconds spent in the cafe only, and quick productio
   const r2 = game.startMany('bread', 3);
   assert.equal(r2.started, 0); assert.ok(r2.message);
 });
+
+// ---- first-steps hints -------------------------------------------------------------------------------------------------------
+import { currentTip, TIPS } from '../src/game/tips.js';
+import { Quests } from '../src/game/quests.js';
+
+test('first-steps hints: one at a time, in order, each gone once done; nothing left for an experienced player', () => {
+  const clock = { now: at(2025, 3, 10) };
+  const game = new Game({ gold: 54320 }, {}, () => clock.now);
+  new Shop(game); new Quests(game);
+  assert.equal(currentTip(game).id, 'produce');
+  assert.ok(game.startProduction('bread').ok);
+  assert.equal(currentTip(game).id, 'serve');                         // a job running counts as done
+  game.stats.soldTotal = 1;
+  assert.equal(currentTip(game).id, 'quest');                         // the first bread / first sale quests are complete
+  for (const q of game.quests.claimable()) game.quests.claim(q.def.id);
+  assert.equal(currentTip(game).id, 'shop');
+  game.stats.shopBought = 1;
+  assert.equal(currentTip(game), null);
+  assert.ok(TIPS.every((t) => t.text.length < 140));
+});

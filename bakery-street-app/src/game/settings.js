@@ -2,7 +2,7 @@
 // resetting progress never touches them (and a broken save never loses them). DOM-free; storage is injected.
 export const SETTINGS_KEY = 'bakery-street:settings';
 export const SETTINGS_VERSION = 1;
-export const DEFAULT_SETTINGS = { sfx: true, music: true, vibration: true };
+export const DEFAULT_SETTINGS = { sfx: true, music: true, vibration: true, lowfx: false, tips: true };   // lowfx: fewer effects for older phones; tips: first-steps hints
 
 export class Settings {
   /** @param {Storage|null} storage @param {{key?:string, onProblem?:(info:{kind:string,message:string})=>void}} [opts] */

@@ -182,6 +182,8 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
       {row("sfx", "🔊", "Ses efektleri")}
       {row("music", "🎵", "Müzik")}
       {row("vibration", "📳", "Titreşim")}
+      {row("tips", "💡", "İlk adım ipuçları")}
+      {row("lowfx", "🐢", "Düşük grafik (eski telefonlar: parıltı, ışık, yağmur ve gün ışığı kapanır)")}
       <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>⏱</Text>}>
         <Title name="Açılış süresi" />
         <Meta tone="muted" text={Object.keys(timings).length ? `Toplam ${(timings.toplam / 1000).toFixed(1).replace(".", ",")} sn · ${Object.entries(timings).filter(([k]) => k !== "toplam").map(([k, v]) => `${k} ${(v / 1000).toFixed(1).replace(".", ",")} sn`).join(" · ")}` : "Ölçüm yok"} />

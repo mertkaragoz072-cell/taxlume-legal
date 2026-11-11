@@ -10,6 +10,7 @@ import { StaffLayer } from './interior-staff.js';
 import { DecorLayer } from './interior-decor.js';
 import { hasSitFrames } from '../characters/sprites.js';
 import { applyDaylight, drawRain } from './daylight.js';
+import { currentTip } from '../game/tips.js';
 
 /** Pendant lamps along the back wall, hung in the gaps between the wall pieces. */
 /** Parallax: how far (world px) the nearest plane moves at full look, and each plane's share of it. */
@@ -37,6 +38,8 @@ export class InteriorScene {
     this.selected = null;       // area id whose panel is open
     this.pulse = {};            // table id -> seconds since the order was put down (the seated guest bounces happily)
     this.spring = {};           // area id -> seconds since it was tapped (a springy squash-and-stretch)
+    this.tipsOn = false;        // set by the app (Ayarlar > İpuçları): a bouncing arrow points at the thing the first-steps hint talks about
+    this.lowFx = false;         // set by the app (Ayarlar > Düşük grafik): no glitter, lamp glow, rain or time-of-day tint
     this.sparks = [];           // little glittering bits that fly off a tapped piece of furniture
     this.pops = [];             // floating "+1 Ekmek" texts
     this.view = null;
@@ -139,7 +142,7 @@ export class InteriorScene {
   }
   /** `n` glittering bits flying up from (x, y). */
   burst(x, y, n, spread = 40) {
-    if (this.sparks.length > 160) return;                      // (events can arrive while the cafe is hidden and nothing updates the sparks)
+    if (this.lowFx || this.sparks.length > 160) return;                      // (events can arrive while the cafe is hidden and nothing updates the sparks)
     for (let i = 0; i < n; i++) this.sparks.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread * 0.5, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
   }
   select(id) { this.selected = id; }
@@ -193,10 +196,11 @@ export class InteriorScene {
     for (const a of AREAS) if (this.tableOpen(a)) { ctx.save(); ctx.translate(0, this.warpAt(depthOf(a))); this.shifted(ctx, this.planeOf(a), () => this.overlay(ctx, a)); ctx.restore(); }
     this.shifted(ctx, 'floor', () => this.customers.drawBubbles(ctx, t));
     this.shifted(ctx, 'floor', () => this.shopDecor.drawHang(ctx));
-    this.shifted(ctx, 'deco', () => this.light(ctx));
+    if (!this.lowFx) this.shifted(ctx, 'deco', () => this.light(ctx));
     this.shifted(ctx, 'front', () => this.frontDecor(ctx));
 
     this.stockWarnings(ctx);
+    this.tipArrow(ctx);
     for (const p of this.pops) { // completion pops
       ctx.globalAlpha = clamp(p.life * 1.5, 0, 1);
       if (p.check) {                                             // a green tick badge (vector, no font needed)
@@ -215,10 +219,23 @@ export class InteriorScene {
     ctx.globalAlpha = 1;
     this.shopDecor.drawTheme(ctx);
     this.shopDecor.drawFx(ctx);
+    if (this.lowFx) { textFloor.px = floorPx; return; }                             // older phones: the picture as it is, no full-screen layers
     gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0.05 });
     applyDaylight(ctx, this.game.clock());                                          // evening and night tint by the real local hour, a faint tone by season
     if (this.game.cafe?.weather() === 'rain') drawRain(ctx, this.t);                // rainy day (see Cafe.weather)
     textFloor.px = floorPx;
+  }
+
+  /** The first-steps hint's arrow: bounces above the piece of furniture the hint is about (only while no panel is open). */
+  tipArrow(ctx) {
+    if (!this.tipsOn || this.selected) return;
+    const id = currentTip(this.game)?.area, a = id ? AREAS.find((x) => x.id === id) : null;
+    if (!a) return;
+    const x = a.x + a.w / 2, y = (this.rects[a.id]?.y ?? a.y) - 30 - Math.abs(Math.sin(this.t * 3.2)) * 16;
+    ctx.save(); ctx.translate(x, y);
+    ctx.beginPath(); ctx.moveTo(-16, -40); ctx.lineTo(16, -40); ctx.lineTo(16, -14); ctx.lineTo(30, -14); ctx.lineTo(0, 16); ctx.lineTo(-30, -14); ctx.lineTo(-16, -14); ctx.closePath();
+    ctx.fillStyle = PAL.honey; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = PAL.brownDark; ctx.stroke();
+    ctx.restore();
   }
 
   /** A pulsing red mark over a machine whose product a waiting guest ordered while none is in stock and none is being made. */

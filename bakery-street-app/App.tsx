@@ -17,7 +17,7 @@ import { GameView } from "./src/runtime/GameView";
 import { NativeStorage } from "./src/runtime/storage";
 import { mark } from "./src/runtime/startup";
 import { createWorld, type SceneId, type World } from "./src/runtime/world";
-import { GoalPill, Hud, Nav, TillPill, Toast, type NavId } from "./src/ui/Chrome";
+import { GoalPill, Hud, Nav, TillPill, TipBar, Toast, type NavId } from "./src/ui/Chrome";
 import { CafePanel } from "./src/ui/CafePanel";
 import { Btn, Present, useAppear } from "./src/ui/kit";
 import { MarketPanel } from "./src/ui/MarketPanel";
@@ -116,6 +116,10 @@ type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
   const feedback = useMemo(() => new Feedback(world.settings), [world]);
+  useEffect(() => {                                       // graphics and hint settings reach the cafe scene (now and whenever they change)
+    const apply = () => { const sc = world.scenes.interior as any; sc.lowFx = !!world.settings.values.lowfx; sc.tipsOn = !!world.settings.values.tips; };
+    apply(); world.settings.on(apply);
+  }, [world]);
   const [sceneId, setSceneId] = useState<SceneId>("interior");
   const [panel, setPanel] = useState<{ id: string; side: "left" | "right" } | null>(null);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
@@ -287,7 +291,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         <View pointerEvents="box-none" style={{ position: "absolute", left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom }}>
           {overlay === "photo" ? null : <Chrome sceneId={sceneId} overlay={overlay} setOverlay={setOverlay} navSelect={navSelect} />}
           {overlay === "photo" ? <Pressable onPress={() => setOverlay(null)} accessibilityLabel="Fotoğraf modundan çık" style={{ position: "absolute", left: -insets.left, right: -insets.right, top: -insets.top, bottom: -insets.bottom, zIndex: 30 }} /> : null}
-          <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /><TillPill /></Present>
+          <Present show={sceneId === "interior" && !overlay && !panel}><GoalPill onPress={(tab) => act.openShop(tab)} /><TillPill /><TipBar /></Present>
           <Present show={sceneId === "interior" && !!panel}><PanelBoundary onFail={failPanel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</PanelBoundary></Present>
           {sceneId === "market" ? <PanelBoundary onFail={failPanel}><MarketPanel /></PanelBoundary> : null}
           {sceneId === "bookshop" ? <PanelBoundary onFail={failPanel}><ResearchPanel /></PanelBoundary> : null}
@@ -301,7 +305,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Present show={overlay === "town"}><PanelBoundary onFail={failPanel}><TownPanel onVisit={(s) => { setOverlay(null); go(s === "cafe" ? "interior" : s); }} /></PanelBoundary></Present>
           <Present show={!!celebrate}>{celebrate ? <StageCard c={celebrate} onClose={() => setCelebrate(null)} /> : null}</Present>
           <Toast text={toast.text} seq={toast.seq} />
-          {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
+          {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} accessibilityRole="alert" accessibilityLabel={`Uyarı: ${saveWarn}. Kapatmak için dokun.`} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
         </View>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: C.brownDark, opacity: fade }]} />
       </View>
