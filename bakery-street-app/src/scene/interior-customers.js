@@ -65,7 +65,7 @@ export class CustomerLayer {
     const kind = !e.happy ? 'anger' : e.bonus?.favorite ? 'love' : 'heart';
     this.emotes.push({ x, y: y - 6, kind, life: 1 });
     const lines = SAYINGS[kind === 'anger' ? 'angry' : e.bonus?.favorite ? 'favorite' : 'happy'];
-    this.emotes.push({ x, y: y - 62, kind: 'say', text: lines[e.id % lines.length], life: 1.4 });     // a short line, chosen by the guest's number so it is the same every time
+    if (kind === 'anger' || e.id % 3 === 0) this.emotes.push({ x, y: y - 62, kind: 'say', text: lines[e.id % lines.length], life: 1.4 });     // a short line, chosen by the guest's number so it is the same every time
   }
 
   /** Placeholder for a paying-at-the-register animation: three coins fly from the guest to the till, which bounces and shows the amount. */
@@ -236,7 +236,7 @@ export class CustomerLayer {
   shake(v, c, t) {
     if (!c || v.ghost || v.moving || v.leaving) return 0;
     const f = this.cafe.patienceFraction(c);
-    return f >= 0.3 ? 0 : Math.sin(t * 32 + v.id * 2) * (1.2 + 2.2 * (1 - f / 0.3));
+    return f >= 0.3 ? 0 : Math.sin(t * 9 + v.id * 2) * (0.6 + 1.2 * (1 - f / 0.3));     // a slow, small sway: impatient, not frantic
   }
 
   shaken(ctx, dx, fn) { if (!dx) return fn(ctx); ctx.save(); ctx.translate(dx, 0); fn(ctx); ctx.restore(); }

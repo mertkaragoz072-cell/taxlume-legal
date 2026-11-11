@@ -174,7 +174,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const pulse = useRef(new Animated.Value(0)).current, ready0 = g.kind === "ready";
   useEffect(() => {
     if (!ready0) { pulse.setValue(0); return; }
-    const loop = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 650, easing: MOTION.loop, useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 650, easing: MOTION.loop, useNativeDriver: true })]));
+    const loop = Animated.loop(Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 1400, easing: MOTION.loop, useNativeDriver: true }), Animated.timing(pulse, { toValue: 0, duration: 1400, easing: MOTION.loop, useNativeDriver: true })]));
     loop.start();
     return () => loop.stop();
   }, [ready0, pulse]);
@@ -182,7 +182,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
   const sales = g.kind === "save" ? salesToGo(world.game, g.missingGold) : 0;
   const ready = g.kind === "ready", tab = g.item.category;
   return (
-    <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }, { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.045] }) }] }}>
+    <Animated.View style={{ position: "absolute", left: u * 1.6, top: u * 12.8, zIndex: 17, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.5, 0] }) }, { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] }) }] }}>
       <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 40, minHeight: Math.max(44, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>
@@ -257,7 +257,7 @@ export function CoinFlights() {
 function Flight({ from, to, size, onDone }: { from: { x: number; y: number }; to: { x: number; y: number }; size: number; onDone: () => void }) {
   const ts = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
   useEffect(() => {
-    const a = Animated.stagger(70, ts.map((t) => Animated.timing(t, { toValue: 1, duration: 620, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })));
+    const a = Animated.stagger(90, ts.map((t) => Animated.timing(t, { toValue: 1, duration: 820, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })));
     a.start(({ finished }) => { if (finished) onDone(); });
     return () => a.stop();
   }, []);   // eslint-disable-line react-hooks/exhaustive-deps

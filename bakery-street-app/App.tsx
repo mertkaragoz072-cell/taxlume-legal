@@ -173,19 +173,20 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     const offs: any[] = [];
     offs.push(game.on("change", (e: any) => {
       switch (e?.type) {
-        case "sell": case "sale": feedback.sfx("coin"); feedback.buzz(25); break;
+        case "sell": case "sale": feedback.sfx("coin"); break;                 // no vibration for every sale: only for things the player did or earned
         case "buy": feedback.sfx("buy"); break;
         case "upgrade": feedback.sfx("claim"); feedback.buzz([30, 40, 30]); break;
         case "quest": case "daily": feedback.sfx("claim"); feedback.buzz(40); break;
-        case "complete": feedback.sfx("done"); feedback.buzz(20); break;
+        case "complete": feedback.sfx("done"); break;
         case "start": feedback.sfx("tap"); break;
         default: break;
       }
     }));
-    offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income) showToast(`${game.productsDef[e.product].icon} satıldı · +${fmt(e.income)} altın${saleNotes(e)}`, e.bonus?.pct ? 1900 : 1400); }));   // sold: by a tap or by the waiter
+    // a calm cafe: an ordinary sale needs no message (the coins fly to the counter and the "+N" shows on it); only a sale with a bonus says why it paid more
+    offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income && e.bonus?.pct >= 0.1) showToast(`+${fmt(e.income)} altın${saleNotes(e)}`, 1600); }));
     offs.push(game.on("album", (e: any) => showToast(e.completed ? `📖 Müşteri albümü tamamlandı! +${fmt(e.gold)} altın` : `📖 Yeni müşteri: ${world.album.nameOf(e.look)} · +${fmt(e.gold)} altın`, 2600)));
     offs.push(game.on("goalComplete", ({ goal }: any) => showToast(`🎯 Günlük hedef tamamlandı: ${goal.name} — Görevler'den ödülünü al`, 3000)));
-    offs.push(game.on("complete", ({ product }: any) => showToast(`${game.productsDef[product].icon} ${game.productsDef[product].name} hazır!`, 1600)));
+    // (a finished product needs no message either: the "+1" rises from the machine and the stock shows on the showcase)
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
     offs.push(game.on("stage", ({ stage }: any) => { const next = world.shop.nextStage(); setCelebrate({ icon: "🏆", title: `Aşama ${stage.id}: ${stage.name}`, lines: ["Kafen büyüdü, yeni bir görünüme kavuştu!", ...(stage.reward?.gold ? [`Ödül: 💰 ${fmt(stage.reward.gold)} altın`] : []), next ? `Sıradaki aşama: ${next.name}` : "En yüksek aşamaya ulaştın!"] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
     offs.push(game.on("shop", () => feedback.sfx("buy")));

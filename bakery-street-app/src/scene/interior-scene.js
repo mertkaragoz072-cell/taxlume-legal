@@ -145,6 +145,7 @@ export class InteriorScene {
   }
   /** `n` glittering bits flying up from (x, y). */
   burst(x, y, n, spread = 40) {
+    n = Math.max(2, Math.round(n * 0.5));                      // a calm room: half the glitter it used to have
     if (this.lowFx || this.sparks.length > 160) return;                      // (events can arrive while the cafe is hidden and nothing updates the sparks)
     for (let i = 0; i < n; i++) this.sparks.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread * 0.5, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
   }
@@ -234,7 +235,7 @@ export class InteriorScene {
     if (!this.tipsOn || this.selected) return;
     const id = currentTip(this.game)?.area, a = id ? AREAS.find((x) => x.id === id) : null;
     if (!a) return;
-    const r = this.rects[a.id] ?? a, x = r.x + r.w / 2, y = r.y + r.h * 0.42 - Math.abs(Math.sin(this.t * 3.2)) * 16;     // on the object itself (its top edge can sit under the goal chip)
+    const r = this.rects[a.id] ?? a, x = r.x + r.w / 2, y = r.y + r.h * 0.42 - (1 - Math.cos(this.t * 2.2)) * 6;     // on the object itself (its top edge can sit under the goal chip)
     ctx.save(); ctx.translate(x, y);
     ctx.beginPath(); ctx.moveTo(-16, -40); ctx.lineTo(16, -40); ctx.lineTo(16, -14); ctx.lineTo(30, -14); ctx.lineTo(0, 16); ctx.lineTo(-30, -14); ctx.lineTo(-16, -14); ctx.closePath();
     ctx.fillStyle = '#FFD45E'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = '#B85F3B'; ctx.stroke();
@@ -253,7 +254,7 @@ export class InteriorScene {
     for (const station of need) {
       const a = AREAS.find((x) => x.station === station);
       if (!a) continue;
-      const x = a.x + a.w / 2, y = a.y - 6 + Math.sin(this.t * 6) * 3, k = 1 + Math.sin(this.t * 6) * 0.08;
+      const x = a.x + a.w / 2, y = a.y - 6 + Math.sin(this.t * 2) * 2, k = 1;
       ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
       ctx.beginPath(); ctx.arc(0, 0, 22, 0, 7); ctx.fillStyle = '#C8442F'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = PAL.cream; ctx.stroke();
       ctx.fillStyle = PAL.cream; ctx.fillRect(-3, -12, 6, 14); ctx.beginPath(); ctx.arc(0, 11, 3.6, 0, 7); ctx.fill();
