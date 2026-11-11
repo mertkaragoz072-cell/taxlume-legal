@@ -773,14 +773,18 @@ describe("personal net-worth record", () => {
     };
     const next = tick(state);
     expect(next.recordBrokenThisRun).toBe(true);
-    expect(next.lastEvent?.message).toMatch(/record|rekor/i);
+    // Read the event log, not lastEvent: a random event rolled in the same
+    // tick can take the lastEvent slot without the record being lost.
+    const isRecord = (e: { message: string }) => /record|rekor/i.test(e.message);
+    const recordEvents = next.eventLog.filter(isRecord).length;
+    expect(recordEvents).toBeGreaterThan(0);
     expect(next.bestNetWorthEver).toBeGreaterThanOrEqual(computeNetWorth(next));
 
     // A second tick shouldn't re-fire the celebration even though net worth
     // is still comfortably above the old record.
     const afterSecondTick = tick({ ...next, lastEvent: { id: -1, message: "", tone: "neutral" } });
     expect(afterSecondTick.recordBrokenThisRun).toBe(true);
-    expect(afterSecondTick.lastEvent?.message).not.toMatch(/record|rekor/i);
+    expect(afterSecondTick.eventLog.filter(isRecord).length).toBe(recordEvents);
   });
 });
 
