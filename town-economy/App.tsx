@@ -9,6 +9,7 @@ import {
 } from "@expo-google-fonts/manrope";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import { ScreenFade } from "./src/components/ScreenFade";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -463,18 +464,20 @@ function Game() {
             <ComboBanner event={comboEvent} />
             <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
 
-            {screen === "market" && <MarketScreen sounds={sounds} />}
-            {screen === "inventory" && <InventoryScreen />}
-            {screen === "trade" && (
-              <TradeScreen
-                sounds={sounds}
-                compactMap={caravanTutorialActive && caravanSpotlight === "caravanMap"}
-              />
-            )}
-            {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
-            {screen === "research" && <ResearchScreen />}
-            {screen === "invest" && <InvestScreen sounds={sounds} />}
-            {screen === "achievements" && <AchievementsScreen />}
+            <ScreenFade key={screen}>
+              {screen === "market" && <MarketScreen sounds={sounds} />}
+              {screen === "inventory" && <InventoryScreen />}
+              {screen === "trade" && (
+                <TradeScreen
+                  sounds={sounds}
+                  compactMap={caravanTutorialActive && caravanSpotlight === "caravanMap"}
+                />
+              )}
+              {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
+              {screen === "research" && <ResearchScreen />}
+              {screen === "invest" && <InvestScreen sounds={sounds} />}
+              {screen === "achievements" && <AchievementsScreen />}
+            </ScreenFade>
 
             {/* Zero-height so it takes no room: the badge floats just above the tab
             bar, over the bottom of whichever screen is showing. */}
