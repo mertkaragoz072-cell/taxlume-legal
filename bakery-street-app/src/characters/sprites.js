@@ -34,6 +34,13 @@ export const hasCoffeeFrames = () => !!SHEETS.chef_coffee && !!getImage('char-ch
 export const hasHandFrames = () => !!SHEETS.waiter_hand && !!getImage('char-waiter_hand');
 export const hasSprite = (id) => !!getImage(`char-${id}`);
 
+/**
+ * Simple walking (the game's design: calm, the walk only needs to be readable, not realistic). Walking characters hold ONE pose for the way
+ * they face (front, back or side) and move with a soft bob and a slight rock; the step-by-step walk cycles are not played. Set to false to
+ * bring the full walk cycles back.
+ */
+export const SIMPLE_WALK = true;
+
 /** Draws frame `floor(t*fps+phase)` of the sheet with the feet at (x, y). Returns false when the sheet is not loaded. */
 export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scale = 1, frame = null, bob = 0, sway = 0, shade = true, bounce = false, back = false, view = 'side', carry = true, bobRate = 2.2, joy = false, hand = 0, work = null, side: sideWalk = false, sit = false } = {}) {
   const img = getImage(`char-${id}`), m = SHEETS[id];
@@ -59,6 +66,12 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
     staffMove = frame === null;
     f0 = !staffMove ? (frame === 3 ? 1 : rest) : view === 'back' ? (carry ? 4 : 0) : view === 'side' ? (carry ? 5 : 0) : carry ? [2, 1, 3, 1][((Math.floor(t * fps + phase) % 4) + 4) % 4] : 0;
   }
+  const glide = SIMPLE_WALK && frame === null && !sit && !m.once && !joy && work !== 'knead' && (m.cat || m.crew);
+  if (glide) {                                              // one pose per facing instead of the walk cycle
+    if (m.cat) catFrame = sideWalk && !back && m.side !== undefined ? m.side : back ? 8 : 0;
+    else if (m.crew === 'chef') crewFrame = view === 'side' ? m.side : 0;
+    else if (m.crew === 'waiter') crewFrame = carry ? (view === 'side' ? m.side : view === 'back' ? 8 : 0) : (view === 'side' ? m.sideEmpty : 16);
+  }
   const f = m.once ? Math.min(m.frames - 1, Math.max(0, Math.floor(hand * m.frames))) : m.crew ? crewFrame : m.cat ? catFrame : m.staff ? f0 : m.frames === 1 ? 0 : m.views && frame !== null ? base : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
   const walking = (!m.crew && !m.cat && m.frames === 1 && frame === null) || (m.cat && bounce) || bounce || (staffMove && view !== 'front') || (m.views && frame === null);   // views sheets have real steps, so only `bounce` (waiting in place) moves them          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
   const s = SCALE * scale, dw = m.w * s, dh = m.h * s;
@@ -68,7 +81,11 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
   if (bob && frame !== null) ctx.scale(1, 1 + Math.sin(t * bobRate + phase * 1.7) * bob);   // standing pose breathes a little (bob = relative height change)
   if (sway) ctx.rotate(Math.sin(t * 3.1 + phase) * sway);     // a working lean: the standing pose rocks gently around the feet
   let lift = 0;
-  if (walking) {
+  if (glide) {                                              // the gentle walk: a soft little bob and the faintest rock, nothing more
+    const ph = t * 5.2 + phase * 1.3;
+    lift = Math.abs(Math.sin(ph)) * 3 * s;
+    ctx.rotate(Math.sin(ph) * 0.02);
+  } else if (walking) {
     const ph = t * fps * Math.PI + phase * 1.3, step = Math.abs(Math.sin(ph));            // two bounces per cycle, like footfalls
     const amp = m.views ? 0.6 : 1;                         // real step frames need less faking
     lift = step * 4.5 * s * amp;
