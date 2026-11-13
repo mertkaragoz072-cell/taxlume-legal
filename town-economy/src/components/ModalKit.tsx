@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from "react-native";
 import arrowL from "../../assets/ui/modal/arrow_l.webp";
+import btnRCap from "../../assets/ui/modal/btn_r_cap.webp";
+import btnRMid from "../../assets/ui/modal/btn_r_mid.webp";
 import btnGCap from "../../assets/ui/modal/btn_g_cap.webp";
 import btnGMid from "../../assets/ui/modal/btn_g_mid.webp";
 import difBCap from "../../assets/ui/modal/dif_b_cap.webp";
@@ -23,12 +25,14 @@ import { Text } from "./AppText";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
 
-export type BarKind = "laurel" | "plate" | "btn" | "optG" | "optR" | "difG" | "difB" | "difR" | "row";
+export type BarKind =
+  "btnR" | "laurel" | "plate" | "btn" | "optG" | "optR" | "difG" | "difB" | "difR" | "row";
 
 const BARS: Record<BarKind, { cap: ImageSourcePropType; mid: ImageSourcePropType; capW: number }> = {
   laurel: { cap: g2Cap, mid: g2Mid, capW: 300 },
   plate: { cap: plCap, mid: plMid, capW: 52 },
   btn: { cap: btnGCap, mid: btnGMid, capW: 36 },
+  btnR: { cap: btnRCap, mid: btnRMid, capW: 36 },
   optG: { cap: optGCap, mid: optGMid, capW: 36 },
   optR: { cap: optRCap, mid: optRMid, capW: 36 },
   difG: { cap: difGCap, mid: difGMid, capW: 32 },
@@ -41,6 +45,7 @@ const BAR_ART_H: Record<BarKind, number> = {
   laurel: 316,
   plate: 47,
   btn: 53,
+  btnR: 53,
   optG: 83,
   optR: 83,
   difG: 55,
@@ -176,7 +181,13 @@ export function BigButton({
   disabled,
   icon,
   laurel,
+  tone = "green",
+  height = 46,
+  fontSize,
 }: {
+  tone?: "green" | "red";
+  height?: number;
+  fontSize?: number;
   label: string;
   onPress: () => void;
   disabled?: boolean;
@@ -208,14 +219,14 @@ export function BigButton({
       disabled={disabled}
       accessibilityLabel={label}
       scaleTo={0.96}
-      style={styles.bigBtn}
+      style={[styles.bigBtn, { height }]}
     >
-      <Bar kind="btn" height={46} dim={disabled} />
+      <Bar kind={tone === "red" ? "btnR" : "btn"} height={height} dim={disabled} />
       <View style={styles.bigBtnLabel} pointerEvents="none">
         {icon ? (
           <Image source={icon} style={{ width: 26, height: 26, marginRight: 8 }} resizeMode="contain" />
         ) : null}
-        <Text style={styles.bigBtnText} numberOfLines={1}>
+        <Text style={[styles.bigBtnText, fontSize ? { fontSize } : null]} numberOfLines={1}>
           {icon ? label.replace(/^[^\p{L}\p{N}]+/u, "") : label}
         </Text>
       </View>

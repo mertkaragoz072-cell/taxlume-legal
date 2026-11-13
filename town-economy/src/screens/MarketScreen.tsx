@@ -24,6 +24,7 @@ import { SeasonStrip } from "../components/SeasonStrip";
 import { GoodCard } from "../components/GoodCard";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
+import { BigButton } from "../components/ModalKit";
 import { GoalIcon, GoalPanel } from "../components/GoalPanels";
 import { PriceChart } from "../components/PriceChart";
 import { ProductionChainLine } from "../components/ProductionChainLine";
@@ -38,9 +39,7 @@ import {
   SCREEN_PADDING,
   FONT,
   GOLD_GRADIENT,
-  GREEN_GRADIENT,
   RADIUS,
-  RED_GRADIENT,
   SPACING,
   TYPE,
   WEIGHT,
@@ -561,24 +560,16 @@ export function MarketScreen({ sounds }: Props) {
                 <Text style={styles.autoTradeMaxNote}>
                   {t("market.autoTrade.maxActiveNote", { max: maxRules })}
                 </Text>
-                <ScalePressable
+                <BigButton
+                  tone={autoSide === "buy" ? "green" : "red"}
+                  height={48}
                   disabled={disabled}
+                  label={t("market.autoTrade.addBtn")}
                   onPress={() => {
                     addAutoTradeRule(selected.id, autoSide, autoPct, autoQty);
                     sounds.playBuy();
                   }}
-                  style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-                  scaleTo={0.97}
-                >
-                  <GradientFill
-                    colors={autoSide === "buy" ? GREEN_GRADIENT : RED_GRADIENT}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  />
-                  <Text style={styles.confirmBtnText}>{t("market.autoTrade.addBtn")}</Text>
-                </ScalePressable>
+                />
               </>
             );
           })()}

@@ -8,10 +8,8 @@ import {
   cardShadow,
   COLORS,
   FONT,
-  GREEN_GRADIENT,
   glowShadow,
   RADIUS,
-  RED_GRADIENT,
   SPACING,
   TYPE,
   WEIGHT,
@@ -20,7 +18,7 @@ import {
 import { CoinPop } from "./CoinPop";
 import { InvestTradePanel } from "./InvestPanels";
 import { GradientFill } from "./GradientFill";
-import { ScalePressable } from "./ScalePressable";
+import { BigButton } from "./ModalKit";
 import { TradeDialog } from "./TradeDialog";
 import { SpotlightTarget } from "./Spotlight";
 
@@ -192,20 +190,17 @@ export function BuySellPanel({
           is the part of the market it means. It costs nothing to anyone past
           their first trade, because it is gone by then. */}
       <SpotlightTarget id="buy" style={[styles.confirmBtnWrap, nudge && styles.confirmBtnNudge]}>
-        <ScalePressable
+        <BigButton
+          tone={side === "buy" ? "green" : "red"}
+          height={52}
+          fontSize={18}
           disabled={disabled}
+          label={`${side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} ${good.icon}`}
           onPress={() => {
             onTrade(side, resolvedQty);
             setCoinPopTrigger((n) => n + 1);
           }}
-          style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-          scaleTo={0.97}
-        >
-          <GradientFill colors={side === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-          <Text style={styles.confirmBtnText}>
-            {side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} {good.icon}
-          </Text>
-        </ScalePressable>
+        />
         <CoinPop trigger={coinPopTrigger} />
       </SpotlightTarget>
     </View>
