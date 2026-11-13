@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "../components/AppText";
+import logoEn from "../../assets/title/logo_en.webp";
+import logoTr from "../../assets/title/logo_tr.webp";
 import titleArt from "../../assets/title/title-v2.webp";
 import { BigButton } from "../components/ModalKit";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -16,6 +18,12 @@ const CW = 1054;
 const CHT = 2281;
 const S = 1.3;
 const OY = 170;
+// The wordmark cut from the sent paintings, one per language: [x, y, w, h]
+// in the original art's pixels.
+const LOGOS = {
+  tr: { src: logoTr, box: [205, 452, 670, 113] },
+  en: { src: logoEn, box: [205, 452, 670, 114] },
+} as const;
 const ax = (x: number) => (x - CW / 2) * S + CW / 2;
 const ay = (y: number) => y * S + OY;
 
@@ -61,7 +69,7 @@ export function TitleScreen({ onStart }: Props) {
   };
 
   const name = t("app.defaultTownName");
-  const titleSize = Math.min(150 * k, (640 * k * 0.95) / (name.length * 0.52));
+  const logo = LOGOS[state.language];
   const label = !hydrated ? t("title.loading") : inProgress ? t("title.continue") : t("title.start");
 
   return (
@@ -69,15 +77,18 @@ export function TitleScreen({ onStart }: Props) {
       <Image source={titleArt} style={[styles.fill, { width, height }]} resizeMode="cover" />
 
       <Animated.View style={[StyleSheet.absoluteFill, enterStyle]} pointerEvents="box-none">
-        <View style={[box(ax(200), ay(450), ax(880), ay(590)), styles.center]} pointerEvents="none">
-          <Text
-            style={[styles.title, { fontSize: titleSize, lineHeight: titleSize * 1.15 }]}
-            numberOfLines={1}
-            accessibilityRole="header"
-          >
-            {name}
-          </Text>
-        </View>
+        <Image
+          source={logo.src}
+          style={box(
+            ax(logo.box[0]),
+            ay(logo.box[1]),
+            ax(logo.box[0] + logo.box[2]),
+            ay(logo.box[1] + logo.box[3])
+          )}
+          resizeMode="contain"
+          accessibilityRole="header"
+          accessibilityLabel={name}
+        />
 
         <View style={[box(ax(130), ay(655), ax(924), ay(740)), styles.center]} pointerEvents="none">
           <View style={styles.taglinePill}>
@@ -123,14 +134,6 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#180f09" },
   fill: { position: "absolute", top: 0, left: 0 },
   center: { alignItems: "center", justifyContent: "center" },
-  title: {
-    color: "#f9dd8c",
-    fontFamily: FONT.serif,
-    textAlign: "center",
-    textShadowColor: "rgba(40,18,0,0.9)",
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 2,
-  },
   tagline: {
     color: "#fff4d8",
     fontFamily: FONT.bold,
