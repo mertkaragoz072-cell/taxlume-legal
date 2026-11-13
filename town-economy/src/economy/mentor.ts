@@ -76,6 +76,7 @@ export const MENTOR_STEPS: MentorStep[] = [
     textKey: "mentor.inventory",
     tipKey: "mentor.inventoryTip",
     screen: "inventory",
+    spotlight: "holdings",
   },
   {
     id: "inflation",
@@ -97,6 +98,7 @@ export const MENTOR_STEPS: MentorStep[] = [
     textKey: "mentor.tax",
     tipKey: "mentor.taxTip",
     screen: "town",
+    spotlight: "tax",
   },
   {
     id: "trade",

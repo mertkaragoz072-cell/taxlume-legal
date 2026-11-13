@@ -10,14 +10,14 @@ import { gameDayFromTick } from "../economy/useEconomy";
 import { FONT } from "../theme";
 
 // The sent title painting, 1054 x 2281 once placed on its walnut canvas (the
-// art itself is scaled 1.3x and sits at y=170). The lettering on the plaque,
+// art itself is scaled 1.3x and sits at y=0). The lettering on the plaque,
 // the button and the language chip were erased from the art; they are drawn
 // live so both languages and the save state read correctly. Positions below
 // are in canvas pixels and follow the image as it scales.
 const CW = 1054;
 const CHT = 2281;
 const S = 1.3;
-const OY = 170;
+const OY = 0;
 // The wordmark cut from the sent paintings, one per language: [x, y, w, h]
 // in the original art's pixels.
 const LOGOS = {
@@ -90,14 +90,8 @@ export function TitleScreen({ onStart }: Props) {
           accessibilityLabel={name}
         />
 
-        <View style={[box(ax(130), ay(655), ax(924), ay(740)), styles.center]} pointerEvents="none">
-          <View style={styles.taglinePill}>
-            <Text style={[styles.tagline, { fontSize: Math.max(12, 38 * k) }]}>{t("title.tagline")}</Text>
-          </View>
-        </View>
-
         <Pressable
-          style={[box(878, 50, 1018, 114), styles.chip]}
+          style={[box(878, 90, 1018, 154), styles.chip]}
           onPress={() => setLanguage(state.language === "tr" ? "en" : "tr")}
           accessibilityRole="button"
           accessibilityLabel={t("a11y.toggleLanguage")}
@@ -134,20 +128,6 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#180f09" },
   fill: { position: "absolute", top: 0, left: 0 },
   center: { alignItems: "center", justifyContent: "center" },
-  tagline: {
-    color: "#fff4d8",
-    fontFamily: FONT.bold,
-    textAlign: "center",
-    textShadowColor: "rgba(0,0,0,0.85)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  taglinePill: {
-    backgroundColor: "rgba(20,12,6,0.62)",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
   chip: {
     borderRadius: 20,
     backgroundColor: "rgba(70,40,18,0.92)",

@@ -40,7 +40,7 @@ export function TownChatterTicker({ state, t }: Props) {
 
   const text = t(chatterKey);
   const textW = width * (1 - TEXT_X - 0.04);
-  const size = Math.max(9, Math.min(12.5, (textW * 2 * 0.92) / (Math.max(1, text.length) * 0.5)));
+  const size = Math.max(9, Math.min(12.5, (textW * 2 * 0.9) / (Math.max(1, text.length) * 0.6)));
 
   return (
     <View style={styles.wrap} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>

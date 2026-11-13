@@ -16,7 +16,8 @@ import { COLORS, RADIUS, withAlpha } from "../theme";
 /** Things the guided tour can point at. Adding one means wrapping the real
  * control in a <SpotlightTarget> with the same id — there is no registry of
  * selectors to keep in step with the UI. */
-export type SpotlightId = "buy" | "inflation" | "caravanMap" | "caravanDirection" | "caravanSend";
+export type SpotlightId =
+  "buy" | "holdings" | "tax" | "inflation" | "caravanMap" | "caravanDirection" | "caravanSend";
 
 interface Rect {
   x: number;
@@ -273,10 +274,16 @@ export function SpotlightOverlay({ target }: { target: SpotlightId | null }) {
     // blank screen, which is what this was reported as. Left out of the
     // polling tick below on purpose: re-scrolling ten times a second would
     // fight the player's own scrolling.
-    ctx.entryOf(target)?.scrollIntoView();
+    // The target's screen may mount a moment after the tour switches tabs, so
+    // the scroll happens on the first tick that finds the target registered.
+    let scrolled = false;
     const tick = () => {
       const entry = ctx.entryOf(target);
       if (!entry) return;
+      if (!scrolled) {
+        scrolled = true;
+        entry.scrollIntoView();
+      }
       entry.measure((r) => {
         if (cancelled) return;
         const o = ctx.originRef.current;

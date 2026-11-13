@@ -16,6 +16,8 @@ import storageNormal from "../../assets/ui/inv2/store_normal.png";
 import summaryImg from "../../assets/ui/inventory/summary.png";
 import { Text } from "../components/AppText";
 import { GoodIcon } from "../components/GoodIcon";
+import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { MENTOR_STEPS } from "../economy/mentor";
 import { AssetRibbon, BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
@@ -27,52 +29,62 @@ export function InventoryScreen() {
   const holdings = GOODS.map((g) => ({ good: g, gs: state.goods[g.id] })).filter(({ gs }) => gs.holding > 0);
   const usedStorage = totalGoodsHolding(state);
   const capacity = storageCapacity(state);
+  const spotlightScroll = useSpotlightScroll();
+  const mentorOn = state.mentorStep < MENTOR_STEPS.length;
   const storagePct = capacity > 0 ? Math.min(1, usedStorage / capacity) : 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      ref={spotlightScroll?.ref}
+      onScroll={spotlightScroll?.onScroll}
+      scrollEventThrottle={16}
+      contentContainerStyle={[styles.body, mentorOn && { paddingBottom: 300 }]}
+      showsVerticalScrollIndicator={false}
+    >
       <BeamTitle title={t("tabs.inventory")} />
-      <FixedPanel source={summaryImg} aspect={764 / 398} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
-        {(w) => (
-          <>
-            {[
-              { y: 27.4, icon: coinsImg, label: t("header.cash"), value: state.cash, strong: false },
-              {
-                y: 51.1,
-                icon: crateImg,
-                label: t("inventory.portfolioValue"),
-                value: portfolioValue,
-                strong: false,
-              },
-              { y: 77.7, icon: bagImg, label: t("header.netWorth"), value: netWorth, strong: true },
-            ].map((row) => (
-              <View key={row.label} style={[styles.sumRow, { top: `${row.y - 10}%` }]}>
-                <Image
-                  source={row.icon}
-                  style={[styles.sumIcon, { width: w * 0.115 }]}
-                  resizeMode="contain"
-                />
-                <Text
-                  style={[styles.sumLabel, { fontSize: w * 0.044 }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.6}
-                >
-                  {row.label}
-                </Text>
-                <Text
-                  style={[styles.sumValue, { fontSize: w * (row.strong ? 0.054 : 0.05) }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.6}
-                >
-                  {formatCoins(row.value)}
-                </Text>
-              </View>
-            ))}
-          </>
-        )}
-      </FixedPanel>
+      <SpotlightTarget id="holdings">
+        <FixedPanel source={summaryImg} aspect={764 / 398} style={{ marginTop: -4, marginBottom: PANEL_GAP }}>
+          {(w) => (
+            <>
+              {[
+                { y: 27.4, icon: coinsImg, label: t("header.cash"), value: state.cash, strong: false },
+                {
+                  y: 51.1,
+                  icon: crateImg,
+                  label: t("inventory.portfolioValue"),
+                  value: portfolioValue,
+                  strong: false,
+                },
+                { y: 77.7, icon: bagImg, label: t("header.netWorth"), value: netWorth, strong: true },
+              ].map((row) => (
+                <View key={row.label} style={[styles.sumRow, { top: `${row.y - 10}%` }]}>
+                  <Image
+                    source={row.icon}
+                    style={[styles.sumIcon, { width: w * 0.115 }]}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={[styles.sumLabel, { fontSize: w * 0.044 }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                  >
+                    {row.label}
+                  </Text>
+                  <Text
+                    style={[styles.sumValue, { fontSize: w * (row.strong ? 0.054 : 0.05) }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                  >
+                    {formatCoins(row.value)}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
+        </FixedPanel>
+      </SpotlightTarget>
 
       {/* The crate turns into the warning one (red badge) from 90% full. */}
       <FixedPanel

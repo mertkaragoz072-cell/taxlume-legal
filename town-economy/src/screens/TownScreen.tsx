@@ -1,3 +1,5 @@
+import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { MENTOR_STEPS } from "../economy/mentor";
 import React, { useEffect, useRef, useState } from "react";
 import { formatPercent } from "../utils/formatNumber";
 import { Animated, ScrollView, StyleSheet, View } from "react-native";
@@ -82,6 +84,8 @@ export function TownScreen({ onOpenDoctrine }: Props) {
     t,
     formatCoins,
   } = useEconomyContext();
+  const spotlightScroll = useSpotlightScroll();
+  const mentorOn = state.mentorStep < MENTOR_STEPS.length;
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
   const mood = moodFor(state.inflationRate);
   const happy = happinessFor(state.happiness);
@@ -129,7 +133,13 @@ export function TownScreen({ onOpenDoctrine }: Props) {
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.035] });
 
   return (
-    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      ref={spotlightScroll?.ref}
+      onScroll={spotlightScroll?.onScroll}
+      scrollEventThrottle={16}
+      contentContainerStyle={[styles.body, mentorOn && { paddingBottom: 300 }]}
+      showsVerticalScrollIndicator={false}
+    >
       <TownChatterTicker state={state} t={t} />
 
       <RankPanel
@@ -199,21 +209,23 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         color={happy.color}
       />
 
-      <TaxPanel
-        title={t("town.tax.title")}
-        rateLabel={t("town.tax.rateLabel")}
-        description={t("town.tax.description")}
-        income={
-          taxIncomePerTick > 0
-            ? t("town.tax.incomePerTurn", { amount: (taxIncomePerTick * TICKS_PER_GAME_DAY).toFixed(2) })
-            : t("town.tax.none")
-        }
-        rates={TAX_RATE_STEPS.map((rate) => ({
-          label: formatPercent(rate * 100, state.language),
-          selected: Math.abs(state.taxRate - rate) < 0.001,
-          onPress: () => setTaxRate(rate),
-        }))}
-      />
+      <SpotlightTarget id="tax">
+        <TaxPanel
+          title={t("town.tax.title")}
+          rateLabel={t("town.tax.rateLabel")}
+          description={t("town.tax.description")}
+          income={
+            taxIncomePerTick > 0
+              ? t("town.tax.incomePerTurn", { amount: (taxIncomePerTick * TICKS_PER_GAME_DAY).toFixed(2) })
+              : t("town.tax.none")
+          }
+          rates={TAX_RATE_STEPS.map((rate) => ({
+            label: formatPercent(rate * 100, state.language),
+            selected: Math.abs(state.taxRate - rate) < 0.001,
+            onPress: () => setTaxRate(rate),
+          }))}
+        />
+      </SpotlightTarget>
 
       {/* A brand-new player's net worth is nowhere near these thresholds
           (15,000+/5,000+/100,000+), so showing them from day one was just a

@@ -195,7 +195,7 @@ describe("mentor script", () => {
   it("only spotlights controls that exist", () => {
     // The id is what a SpotlightTarget in the UI registers itself under, so
     // a typo here is a step that dims the whole screen and lights nothing.
-    const known = ["buy", "inflation"];
+    const known = ["buy", "holdings", "tax", "inflation"];
     for (const step of MENTOR_STEPS) {
       if (step.spotlight) expect(known).toContain(step.spotlight);
     }

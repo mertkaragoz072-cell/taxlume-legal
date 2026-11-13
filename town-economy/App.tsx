@@ -415,7 +415,7 @@ function Game() {
           background's own already-dark brown, it read as muddy rather
           than moody. */}
       <GradientFill
-        colors={seasonalBackgroundGradient().map((c) => withAlpha(c, 0.5)) as [string, string]}
+        colors={seasonalBackgroundGradient().map((c) => withAlpha(c, 0.08)) as [string, string]}
         x1="0"
         y1="0"
         x2="0"

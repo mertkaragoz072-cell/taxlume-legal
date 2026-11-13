@@ -47,6 +47,17 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   });
   const titleText = t("merveRankUp.title");
   const titleSize = Math.min(22 * u, (410 * k * 0.96) / (titleText.length * 0.86));
+  // Body and lore share one size, shrunk until the whole block fits the
+  // painted text field (phone fonts run wider than the browser's).
+  const bodyText = t("merveRankUp.body", { icon: rankUp.icon, title: rankUp.title });
+  const fieldW = 410 * k;
+  const fieldH = 350 * k - 14 * u - titleSize * 1.4 - 14;
+  let textSize = 14 * u;
+  const linesAt = (sz: number) =>
+    Math.ceil((bodyText.length * 0.56 * sz) / fieldW) +
+    Math.ceil((rankUp.lore.length * 0.56 * sz) / fieldW) +
+    0.6;
+  while (textSize > 8.5 && linesAt(textSize) * textSize * 1.3 > fieldH) textSize -= 0.25;
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
@@ -70,10 +81,12 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
               <Text style={[styles.title, { fontSize: titleSize }]} numberOfLines={2}>
                 {t("merveRankUp.title")}
               </Text>
-              <Text style={[styles.body, { fontSize: 14 * u, lineHeight: 19 * u }]}>
-                {t("merveRankUp.body", { icon: rankUp.icon, title: rankUp.title })}
+              <Text style={[styles.body, { fontSize: textSize, lineHeight: textSize * 1.3 }]}>
+                {bodyText}
               </Text>
-              <Text style={[styles.lore, { fontSize: 12.5 * u, lineHeight: 17 * u }]}>{rankUp.lore}</Text>
+              <Text style={[styles.lore, { fontSize: textSize * 0.92, lineHeight: textSize * 1.2 }]}>
+                {rankUp.lore}
+              </Text>
             </View>
             <View style={box(56, 466, 674, 80)}>
               <BigButton laurel label={t("merveRankUp.confirmBtn")} onPress={onDismiss} />

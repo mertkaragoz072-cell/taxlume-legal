@@ -26,7 +26,7 @@ import {
   WEIGHT,
   withAlpha,
 } from "../theme";
-import { formatNumber, formatPercent } from "../utils/formatNumber";
+import { formatCompactNumber, formatNumber, formatPercent } from "../utils/formatNumber";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { GradientFill } from "./GradientFill";
 import { PriceChart } from "./PriceChart";
@@ -156,6 +156,11 @@ export function InflationHeader({
     nameRoom + capLeft + capRight,
     Math.round(townName.length * nameFontSize * 0.85 + 2 * Math.max(capLeft, capRight) + 14)
   );
+  // "Altın Kasaba" is also the game's own title, so while the town still has
+  // that default name the plate stays off the screen; a name the player chose
+  // is shown. The rank chip below opens the name editor either way.
+  const defaultNames = [t("app.defaultTownName"), "Altın Kasaba", "Golden Town"];
+  const showPlate = !defaultNames.includes(townName.trim());
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -164,14 +169,21 @@ export function InflationHeader({
   // "this is money" marker and, at this card's larger text size, wrapped
   // the emoji onto its own line. formatNumber alone leaves the image to
   // carry that meaning by itself.
-  const formatCash = (v: number) => formatNumber(v, language, 1);
+  // Whole coins only (a ",0" tail added nothing), and a compact "1.2M" once the
+  // figure gets long, so it can never outgrow its column.
+  const formatCash = (v: number) =>
+    Math.abs(v) < 1_000_000 ? formatNumber(v, language, 0) : formatCompactNumber(v, language, 0);
   // A town with six or seven digits of cash used to push the coin off the end of
   // its column (or clip the last digits); past eight characters the figure steps
   // down in size so it always fits beside its coin.
   const moneySize = (v: number) => {
     const base = compact ? TYPE.title : TYPE.title + 1;
     const len = formatCash(v).length;
-    return len <= 8 ? base : Math.max(10, Math.floor((base * 8) / len));
+    // Room for the figure: a third of the card minus the icon, the coin
+    // bullet and the dividers' margins.
+    const colW = (screenWidth - 24 - 18 * 2) / (1 + 1 + 1.35);
+    const room = colW - (compact ? 0 : 34) - (compact ? 0 : 15) - 6;
+    return Math.max(10, Math.min(base, Math.floor(room / (Math.max(3, len) * 0.62))));
   };
 
   // A slow breathing glow on the inflation card while it's running hot, and
@@ -257,42 +269,46 @@ export function InflationHeader({
           block of six circles — the town's own name being the thing that
           lost the width. */}
       <View style={styles.topRow}>
-        <Pressable
-          onPress={onEditName}
-          style={[styles.townNamePressable, { width: plateWidth }]}
-          accessibilityRole="button"
-          accessibilityLabel={t("a11y.editTownName")}
-        >
-          <Image
-            source={titleplateLeft}
-            style={{ width: capLeft, height: PLATE_HEIGHT }}
-            resizeMode="stretch"
-          />
-          <Image
-            source={titleplateMid}
-            style={{ flex: 1, minWidth: 0, height: PLATE_HEIGHT, marginHorizontal: -1 }}
-            resizeMode="stretch"
-          />
-          <Image
-            source={titleplateRight}
-            style={{ width: capRight, height: PLATE_HEIGHT }}
-            resizeMode="stretch"
-          />
-          <Text style={styles.pencil} pointerEvents="none">
-            ✎
-          </Text>
-          <View
-            style={[
-              styles.plateTextWrap,
-              { left: Math.max(capLeft, capRight) + 2, right: Math.max(capLeft, capRight) - 2 },
-            ]}
-            pointerEvents="none"
+        {showPlate ? (
+          <Pressable
+            onPress={onEditName}
+            style={[styles.townNamePressable, { width: plateWidth }]}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.editTownName")}
           >
-            <Text style={[styles.town, { fontSize: nameFontSize }]} numberOfLines={1}>
-              {upperForUi(townName)}
+            <Image
+              source={titleplateLeft}
+              style={{ width: capLeft, height: PLATE_HEIGHT }}
+              resizeMode="stretch"
+            />
+            <Image
+              source={titleplateMid}
+              style={{ flex: 1, minWidth: 0, height: PLATE_HEIGHT, marginHorizontal: -1 }}
+              resizeMode="stretch"
+            />
+            <Image
+              source={titleplateRight}
+              style={{ width: capRight, height: PLATE_HEIGHT }}
+              resizeMode="stretch"
+            />
+            <Text style={styles.pencil} pointerEvents="none">
+              ✎
             </Text>
-          </View>
-        </Pressable>
+            <View
+              style={[
+                styles.plateTextWrap,
+                { left: Math.max(capLeft, capRight) + 2, right: Math.max(capLeft, capRight) - 2 },
+              ]}
+              pointerEvents="none"
+            >
+              <Text style={[styles.town, { fontSize: nameFontSize }]} numberOfLines={1}>
+                {upperForUi(townName)}
+              </Text>
+            </View>
+          </Pressable>
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
         <SettingsMenu
           size={btnSize}
           language={language}
@@ -308,7 +324,10 @@ export function InflationHeader({
       </View>
 
       <View style={styles.chipRow}>
-        <View
+        <Pressable
+          onPress={onEditName}
+          accessibilityRole="button"
+          accessibilityLabel={t("a11y.editTownName")}
           style={[
             styles.streakBadge,
             styles.streakBadgeRow,
@@ -318,7 +337,7 @@ export function InflationHeader({
           <Text style={styles.streakBadgeText} numberOfLines={1}>
             {rankIcon} {rankTitle}
           </Text>
-        </View>
+        </Pressable>
         <View style={[styles.streakBadge, { backgroundColor: "#1f4a78", borderColor: "#7db8ea" }]}>
           <Text style={styles.streakBadgeText} numberOfLines={1}>
             {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
