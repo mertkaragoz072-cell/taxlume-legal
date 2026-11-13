@@ -231,7 +231,7 @@ export class StaffLayer {
     if (this.coffeeT >= 0 && hasCoffeeFrames()) { const hand = Math.min(0.999, this.coffeeT / COFFEE_SEC); return this.pose(ctx, 'baker', 'coffee', (c) => drawSprite(c, 'chef_coffee', x, STAFF_LANE_Y, t, { dir, scale: sc, hand })); }
     const hop = this.cheer > 0 ? Math.sin((1 - this.cheer / 0.55) * Math.PI) * 14 : 0;   // a hop of joy when something is done
     const joy = this.cheer > 0, moving = b.moving, view = b.view;
-    this.pose(ctx, 'baker', joy ? 'joy' : knead ? 'knead' : 'plain', (c) => drawSprite(c, 'chef', x, STAFF_LANE_Y - hop, t, { dir: knead ? 1 : dir, fps: 7, scale: sc, frame: moving ? null : 0, joy, work: knead ? 'knead' : null, view, bob: knead ? 0 : working ? 0.045 : 0.014, bobRate: working ? 7 : 2.2, sway: knead ? 0 : working ? 0.05 : 0 }));   // working: a quick kneading/stirring rhythm and a lean toward the machine
+    this.pose(ctx, 'baker', joy ? 'joy' : knead ? 'knead' : 'plain', (c) => drawSprite(c, 'chef', x, STAFF_LANE_Y - hop, t, { dir: knead ? 1 : dir, fps: 7, scale: sc, frame: moving ? null : 0, joy, work: knead ? 'knead' : null, view, bob: knead ? 0.012 : working ? 0.02 : 0.014, bobRate: working || knead ? 3.2 : 2.2, sway: knead ? 0.025 : working ? 0.03 : 0 }));   // working: a quick kneading/stirring rhythm and a lean toward the machine
   }
 
   drawWaiter(ctx) {

@@ -17,8 +17,8 @@ export const SHEETS = {
   // crew: true = cat staff sheets. chef: 0-8 walk holding the basket (0 is also the stand), 9-14 joy hop. waiter: 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk
   chef: { frames: 54, cols: 10, w: 132, h: 167, crew: 'chef', side: 15, knead: 37 },   // 0-8 front walk with the basket (0 also stands), 9-14 joy hop, 15-36 side walk with the basket (22-frame loop), 37-53 kneading dough (17-frame loop, front view)   // 0-8 front walk with the basket (0 also stands), 9-14 joy hop, 15-36 side walk with the basket (22-frame loop, faces right)
   waiter: { frames: 56, cols: 10, w: 137, h: 164, crew: 'waiter', side: 24, sideEmpty: 34 },   // 0-7 tray walk (front), 8-15 tray walk (back), 16-23 empty-handed walk (front), 24-33 tray walk sideways (10-frame loop), 34-55 empty-handed walk sideways (22-frame loop); side frames face right
-  chef_oven: { frames: 30, cols: 6, w: 384, h: 179, once: true },   // the chef puts the bread in the oven: one pass through 30 frames (progress = `hand`, 0..1), faces right, head on the centre line
-  chef_coffee: { frames: 24, cols: 6, w: 179, h: 168, once: true },   // the chef makes a coffee: reaches for the lever, takes the cup, sips (one pass, progress = `hand`), faces right, head on the centre line
+  chef_oven: { frames: 30, cols: 6, w: 384, h: 179, once: true, play: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 24, 25, 26, 27, 28, 29] },   // play: the frames with open eyes (13 and 21-23 wink, they are skipped)   // the chef puts the bread in the oven: one pass through 30 frames (progress = `hand`, 0..1), faces right, head on the centre line
+  chef_coffee: { frames: 24, cols: 6, w: 179, h: 168, once: true, play: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },   // play: reach, take the cup, hold it (12-23 sip with closed eyes: skipped)   // the chef makes a coffee: reaches for the lever, takes the cup, sips (one pass, progress = `hand`), faces right, head on the centre line
   waiter_hand: { frames: 21, cols: 6, w: 186, h: 154, once: true },   // serving: lowers the tray to the table, puts it down, stands with empty hands (one pass through 21 frames, progress = `hand`), faces right
 };
 
@@ -48,8 +48,8 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
   const base = m.views && back ? 3 : 0;   // sheets with views: frames 3-5 show the character from behind
   const seq = m.views ? [1, 0, 2, 0].map((i) => base + i) : m.cycle ?? Array.from({ length: m.frames }, (_, i) => i);
   let crewFrame = null;
-  if (m.crew === 'chef' && work === 'knead') crewFrame = m.knead + (Math.floor(t * 12 + phase) % 17);
-  else if (m.crew === 'chef') crewFrame = joy ? 9 + (Math.floor(t * 12) % 6) : frame === null ? (view === 'side' ? m.side + (Math.floor(t * 22 + phase * 5) % 22) : Math.floor(t * 12 + phase) % 9) : 0;
+  if (m.crew === 'chef' && work === 'knead') crewFrame = SIMPLE_WALK ? m.knead : m.knead + (Math.floor(t * 12 + phase) % 17);   // simple: one kneading pose with open eyes (the loop winks and closes its eyes), it rocks gently
+  else if (m.crew === 'chef') crewFrame = joy ? (SIMPLE_WALK ? 14 : 9 + (Math.floor(t * 12) % 6)) : frame === null ? (view === 'side' ? m.side + (Math.floor(t * 22 + phase * 5) % 22) : Math.floor(t * 12 + phase) % 9) : 0;
   else if (m.crew === 'waiter') {
     const n = Math.floor(t * 12 + phase) % 8;
     crewFrame = carry ? (frame === null ? (view === 'side' ? m.side + (Math.floor(t * 12 + phase) % 10) : (view === 'back' ? 8 : 0) + n) : 0) : 16 + (frame === null ? (view === 'side' ? 18 + (Math.floor(t * 22 + phase) % 22) : n) : 0);
@@ -72,7 +72,7 @@ export function drawSprite(ctx, id, x, y, t, { dir = 1, fps = 7, phase = 0, scal
     else if (m.crew === 'chef') crewFrame = view === 'side' ? m.side : 0;
     else if (m.crew === 'waiter') crewFrame = carry ? (view === 'side' ? m.side : view === 'back' ? 8 : 0) : (view === 'side' ? m.sideEmpty : 16);
   }
-  const f = m.once ? Math.min(m.frames - 1, Math.max(0, Math.floor(hand * m.frames))) : m.crew ? crewFrame : m.cat ? catFrame : m.staff ? f0 : m.frames === 1 ? 0 : m.views && frame !== null ? base : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
+  const f = m.once ? (m.play ? m.play[Math.min(m.play.length - 1, Math.max(0, Math.floor(hand * m.play.length)))] : Math.min(m.frames - 1, Math.max(0, Math.floor(hand * m.frames)))) : m.crew ? crewFrame : m.cat ? catFrame : m.staff ? f0 : m.frames === 1 ? 0 : m.views && frame !== null ? base : frame ?? seq[((Math.floor(t * fps + phase) % seq.length) + seq.length) % seq.length];   // `frame` freezes the pose (standing)
   const walking = (!m.crew && !m.cat && m.frames === 1 && frame === null) || (m.cat && bounce) || bounce || (staffMove && view !== 'front') || (m.views && frame === null);   // views sheets have real steps, so only `bounce` (waiting in place) moves them          // one-picture characters: the walk is made by moving the picture (bounce, lean, squash)
   const s = SCALE * scale, dw = m.w * s, dh = m.h * s;
   if (shade) shadow(ctx, x, y + 1, dw * 0.3, 5.5, 0.34);
