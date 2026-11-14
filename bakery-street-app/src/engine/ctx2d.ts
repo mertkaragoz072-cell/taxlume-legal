@@ -268,8 +268,9 @@ export class Surface2D {
   private snap: SkImage | null = null;
   constructor(public width: number, public height: number) {
     const w = Math.max(1, Math.round(width)), h = Math.max(1, Math.round(height));
-    // on the web (development screenshots) an off-screen GPU surface lives in its own WebGL context and cannot be drawn into the main canvas: use a CPU one
-    const s = Platform.OS === "web" ? Skia.Surface.Make(w, h) : Skia.Surface.MakeOffscreen(w, h);
+    // A CPU (raster) surface everywhere: its pictures can be drawn into any canvas, on any thread. A GPU off-screen surface lives in its own GL
+    // context, and its pictures can come out empty in the recorded frame (on the web it fails outright). These surfaces are drawn once and cached.
+    const s = Skia.Surface.Make(w, h) ?? Skia.Surface.MakeOffscreen(w, h);
     if (!s) throw new Error("Skia could not create an off-screen surface");
     this.surface = s;
   }
@@ -278,8 +279,13 @@ export class Surface2D {
     return (this.ctx ??= new Ctx2D(this.surface.getCanvas(), this));
   }
   snapshot(): SkImage {
+    if (this.snap) return this.snap;
     this.surface.flush();
-    return (this.snap ??= this.surface.makeImageSnapshot());
+    const shot = this.surface.makeImageSnapshot();
+    // On the phone the off-screen surface lives on the GPU, but the frame is recorded as a picture and played on another thread / GL context, where a
+    // GPU-backed image can come out empty (the cached room - wall and floor - and the furniture shadows went missing). A CPU copy draws everywhere.
+    this.snap = Platform.OS === "web" ? shot : shot.makeNonTextureImage() ?? shot;
+    return this.snap;
   }
 }
 export const createCanvas = (w: number, h: number) => new Surface2D(w, h);
