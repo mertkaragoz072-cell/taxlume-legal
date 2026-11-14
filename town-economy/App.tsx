@@ -504,7 +504,10 @@ function Game() {
             <View style={{ marginBottom: -insets.bottom }}>
               <TabBar
                 active={screen}
-                onChange={setScreen}
+                onChange={(next) => {
+                  if (next !== screen) sounds.playTap();
+                  setScreen(next);
+                }}
                 spotlight={mentorScreen}
                 muted={sounds.muted}
                 bottomInset={insets.bottom}

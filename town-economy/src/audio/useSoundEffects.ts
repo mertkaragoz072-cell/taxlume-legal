@@ -7,13 +7,15 @@ const sellSource = require("../../assets/sounds/sell.wav");
 const eventSource = require("../../assets/sounds/event.wav");
 const crashSource = require("../../assets/sounds/crash.wav");
 const fanfareSource = require("../../assets/sounds/fanfare.wav");
-// Two different loops (see scripts/gen-music.js) — one is picked at random
+const successSource = require("../../assets/sounds/success.wav");
+const tapSource = require("../../assets/sounds/tap.wav");
+// Two different loops (see scripts/gen-audio.py) — one is picked at random
 // per session in startMusic() rather than loading both, so a replay doesn't
 // always open on the identical tune, without doubling the audio the app
 // has to fetch on startup.
 const ambientSources = [
-  require("../../assets/sounds/ambient-a.wav"),
-  require("../../assets/sounds/ambient-b.wav"),
+  require("../../assets/sounds/ambient-a.m4a"),
+  require("../../assets/sounds/ambient-b.m4a"),
 ];
 
 function playOrIgnore(player: ReturnType<typeof useAudioPlayer>) {
@@ -33,6 +35,8 @@ export function useSoundEffects() {
   const eventPlayer = useAudioPlayer(eventSource);
   const crashPlayer = useAudioPlayer(crashSource);
   const fanfarePlayer = useAudioPlayer(fanfareSource);
+  const successPlayer = useAudioPlayer(successSource);
+  const tapPlayer = useAudioPlayer(tapSource);
   // No initial source: which of the two tracks plays is chosen (and loaded
   // via .replace()) inside startMusic(), not here, so only the one actually
   // used gets fetched.
@@ -46,7 +50,7 @@ export function useSoundEffects() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability
     musicPlayer.loop = true;
-    musicPlayer.volume = 0.28;
+    musicPlayer.volume = 0.5;
   }, [musicPlayer]);
   // Whether startMusic() has ever been called — the mute effect below
   // should never start music on its own, only resume it once the player
@@ -128,7 +132,12 @@ export function useSoundEffects() {
       play(crashPlayer);
       haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
     },
-    playSuccess: () => haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
+    playSuccess: () => {
+      play(successPlayer);
+      haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+    },
+    // The softest sound in the set: a wooden tick for changing tabs.
+    playTap: () => play(tapPlayer),
     // Reserved for a town rank-up — separate from playEvent so the one
     // moment that says "you've genuinely grown" doesn't sound like every
     // other notification blip.

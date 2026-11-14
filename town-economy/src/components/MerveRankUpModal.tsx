@@ -20,7 +20,7 @@ interface Props {
  * city, and every tier after. The rank-up event still lands in the log
  * (see applyTownRankUp) for the player who wants the full record; this is
  * the one that actually stops them and makes the milestone feel earned. */
-export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
+export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
   const { t } = useEconomyContext();
   const enter = useRef(new Animated.Value(0)).current;
   const [confettiTrigger, setConfettiTrigger] = useState(0);
@@ -29,10 +29,8 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   useEffect(() => {
     if (!rankUp) return;
     setConfettiTrigger((n) => n + 1);
-    sounds.playSuccess();
     enter.setValue(0);
     Animated.spring(enter, { toValue: 1, useNativeDriver: true, friction: 7, tension: 55 }).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rankUp, enter]);
 
   if (!rankUp) return null;
