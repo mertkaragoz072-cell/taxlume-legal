@@ -128,3 +128,51 @@ Mobil bir kedi kafe tycoon oyununun arayüz öğeleri. Stil: ekteki referans kaf
 ```
 Mobil bir kedi kafe tycoon oyunu için ürün ve malzeme ikonları. Stil: ekteki referans kafe görselindeki ürünlerle BİREBİR aynı: sevimli, yumuşak pastel cel boyama, ince yumuşak koyu kahverengi (#5a3a28) kontur. Düz önden hafif yukarıdan görünüm. Arka plan düz beyaz, öğeler arasında boşluk, YAZI YOK. 10 ikon, her biri ayrı: ekmek somunu, kruvasan, çilekli pasta dilimi, kahve fincanı (buhar çıkıyor), un çuvalı, tereyağı bloğu, şeker küpleri, yumurta, süt şişesi, kahve çekirdekleri torbası. Ayrıca 4 küçük durum ikonu: altın para, yıldız, kilit, hediye kutusu.
 ```
+
+## E13: Eşya seviyeleri (her eşya 5 seviye)
+
+Mağazadaki her dekorasyon eşyası 1. seviyede alınır ve Mağaza'dan 5. seviyeye kadar yükseltilir. Ekipman (fırın, kahve makinesi, hamur tezgâhı, vitrin, depo) 5 kademedir: 1. kademe kafenin başlangıç ekipmanı, 2-5 Mağaza'dan alınır (E12'deki 2-4 kademe komutlarına 5. kademe eklendi).
+**Seviye 1 resmi zaten oyunda.** Her eşya için 4 yeni resim gerekir (seviye 2, 3, 4, 5). Resim gelene kadar eşya mevcut resmiyle kalır, seviyesi kartta yıldızla görünür; hiçbir şey uydurulmaz.
+
+Her komutta eşyanın MEVCUT resmini (`assets/game/interior/<resim>.webp`) referans olarak ekle. Gelen resim: tek nesne, düz siyah (#000000) arka plan, gölge yok, aynı bakış açısı.
+```
+python3 scripts/add_item_level.py <eşya id> <seviye> ~/Downloads/resim.png       # örn. plantA 2
+python3 scripts/add_equipment_tier.py <istasyon> 5 ~/Downloads/resim.png          # ekipmanın 5. kademesi, örn. oven 5
+node scripts/gen-assets.mjs                                                        # bir kez, dosyalar eklendikten sonra
+```
+
+**Ortak komut** (köşeli parantezleri doldur):
+"Ekteki resim oyunun mevcut [EŞYA ADI] resmidir (seviye 1). AYNI sanat stilinde (sıcak, el çizimi, kalın koyu kahverengi dış hat, yumuşak boyama, sevimli kedi kafe teması), AYNI bakış açısı ve AYNI oranlarda bu eşyanın SEVİYE [N] halini çiz. [SEVİYE TARİFİ]. Eşya aynı eşya olarak tanınmalı, yalnızca daha özenli ve gösterişli olmalı. Tek nesne, düz siyah (#000000) arka plan, gölge yok, yazı yok."
+
+**Seviye tarifleri** (her eşyada aynı sıra, eşyaya uyarla):
+* **Seviye 2:** "biraz daha dolgun ve bakımlı: küçük bir ek süs (bir kurdele, birkaç yaprak ya da küçük bir çiçek), renkler bir ton daha canlı."
+* **Seviye 3:** "belirgin şekilde daha güzel: daha kaliteli malzeme (cilalı ahşap, desenli seramik, nakışlı kumaş), iki üç küçük süs, sıcak bir parıltı."
+* **Seviye 4:** "lüks: pirinç ya da bakır detaylar, zengin desenler, kenarlarda ince oymalar, daha bol ve gösterişli içerik."
+* **Seviye 5:** "efsane: altın detaylar, küçük kedi patisi ya da kedi kafası motifi, yumuşak ışıltılar, eşyanın en görkemli hali."
+
+**Eşyalar** (id · ad · seviye 1 resmi):
+| id | Ad | Seviye 1 resmi |
+|---|---|---|
+| matPaw | Pati Paspası | mat-paw |
+| plantA | Çiçekli Saksı | plant-1 |
+| plantB | Pembe Çiçekli Saksı | plant-2 |
+| plantC | Sarkık Bitki | plant-3 |
+| rugAisle | Koridor Halısı | rug-green |
+| rugRunner | Kırmızı Yolluk | rug-runner |
+| shelfPlants | Raflı Bitki | shelf-plants |
+| shelfBread | Ekmek Rafı | shelf |
+| rackPots | Bakır Tencere Askısı | rack |
+| lampA | Bakır Sarkıt Lamba | lamp |
+| lampB | İkinci Bakır Lamba | lamp |
+| tablePlain | Sade Masa Takımı | table-plain |
+| tableCake | Pastalı Masa Takımı | table-cake |
+| tableCup | Fincanlı Masa Takımı | table-cup |
+
+Toplam: 14 eşya × 4 = 56 resim + ekipman 5 hat × 4 kademe (2-5) = 20 resim. Öncelik: kafede en çok görünenler (masa takımları, saksılar, lambalar), sonra raflar ve halılar.
+
+**5. kademe ekipman komutları** (E12'deki başlıkla birlikte):
+* **Fırın 5 (Efsane Fırın)**: "Altın ve beyaz mermerden, kubbeli, kedi başı kabartmalı efsanevi fırın; yanlarda altın aletler, ağzında çok parlak sıcak ateş, küçük ışıltılar."
+* **Kahve makinesi 5 (Altın Barista Bar)**: "Altın kaplama beş kollu görkemli espresso barı, kristal hazneler, yükselen buhar, üstünde kedi patisi amblemi."
+* **Tezgâh 5 (Usta Şef İstasyonu)**: "Altın detaylı geniş mermer şef istasyonu; bakır kaplar, asılı aletler, hazır hamur işleri, kedi şapkası süsü."
+* **Vitrin 5 (Saray Vitrini)**: "Saray gibi, altın çerçeveli, kubbeli kristal vitrin; ışıklı raflarda gösterişli pastalar ve kurabiyeler."
+* **Depo 5 (Kraliyet Kileri)**: "Dört katlı görkemli ahşap ve altın kiler; dolu çuvallar, fıçılar, etiketli kavanozlar, altın tabela."

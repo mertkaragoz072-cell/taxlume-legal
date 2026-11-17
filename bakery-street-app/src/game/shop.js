@@ -3,7 +3,7 @@
 // small queries (speedBonus, capacityBonus, showcaseBonus, refundBonus, ingredientCap, queueBonus, vip, appeal ...) that Game / Cafe call.
 // A purchase is one atomic step: checks -> gold (Game.spend) -> owned + placed -> XP -> one 'change' event; if anything in it throws, gold and
 // state are restored. Prices, gates and effects come only from data/economy.js.
-import { SHOP_ITEMS, SHOP_CATEGORIES, SHARED_SLOTS, DECOR_SLOT_TYPES, STAGES, STORAGE, RECIPES, APPEAL } from '../data/economy.js';
+import { SHOP_ITEMS, SHOP_CATEGORIES, SHARED_SLOTS, DECOR_SLOT_TYPES, STAGES, STORAGE, RECIPES, APPEAL, ITEM_LEVELS } from '../data/economy.js';
 
 const fmt = (n) => n.toLocaleString('tr-TR');
 
@@ -19,6 +19,7 @@ export class Shop {
     this.owned = new Set();        // item ids bought
     this.placed = {};              // slot -> item id (decoration that is standing in the café)
     this.stored = new Set();       // decoration bought but not standing anywhere (taken down, or no free slot): gives no appeal until it is placed
+    this.levels = {};              // decoration id -> its level (2..5); an owned piece without an entry is level 1
     this.introduced = new Set();   // equipment items whose first-use introduction has played
     this.stageId = 1;              // highest stage reached (its reward is paid when it is reached, never again)
     this.stats = { lastGoal: null };
@@ -140,6 +141,42 @@ export class Shop {
     return { ok: true, cost: r.cost, item: d, xp: g.progression?.xpFor('upgrade', r.level) ?? 0 };
   }
 
+  // ---- decoration levels (ITEM_LEVELS) ------------------------------------------------------------
+  /** True for pieces that level up (furniture and decoration of the Dekorasyon tab). */
+  levelable(d) { return !!d && d.category === 'decor' && d.kind === 'decor'; }
+  /** The level of an owned piece (1..5), 0 when not owned. */
+  itemLevel(id) { return this.owned.has(id) ? this.levels[id] ?? 1 : 0; }
+  /** Appeal of a piece at a level. */
+  appealAt(d, level) { return Math.round((d.appeal ?? 0) * (ITEM_LEVELS.appeal[Math.max(1, level) - 1] ?? 1)); }
+  /**
+   * The next level of an owned piece: { level, cost, needLevel, appeal, ok, missingGold, reason } or null at the top / when it does not level.
+   */
+  nextLevel(id) {
+    const d = this.def(id);
+    if (!this.levelable(d) || !this.owned.has(id)) return null;
+    const cur = this.itemLevel(id);
+    if (cur >= ITEM_LEVELS.max) return null;
+    const level = cur + 1, cost = Math.round(d.price * ITEM_LEVELS.price[level - 1] / 10) * 10, needLevel = (d.minLevel ?? 1) + ITEM_LEVELS.levelStep * (level - 1);
+    const missingGold = Math.max(0, cost - this.game.player.gold), lvOk = this.playerLevel >= needLevel;
+    const reason = !lvOk ? `Seviye ${needLevel} gerekli (şu an ${this.playerLevel}).` : missingGold ? `${fmt(missingGold)} altın eksik (${fmt(cost)} gerekli).` : null;
+    return { level, cost, needLevel, appeal: this.appealAt(d, level), ok: !reason, missingGold, levelOk: lvOk, reason };
+  }
+  /** Raises an owned piece one level: one atomic step (gold, level, XP, one 'change' event). */
+  upgradeItem(id, requestId = null) {
+    const g = this.game, d = this.def(id), n = this.nextLevel(id);
+    if (!n) return { ok: false, reason: 'max', message: this.owned.has(id) ? `${d?.name ?? 'Eşya'} en üst seviyede.` : 'Önce eşyayı satın al.' };
+    if (requestId != null && g.handledRequests.has(requestId)) return { ok: false, reason: 'duplicate', message: 'Bu yükseltme zaten uygulandı.' };
+    if (!n.ok) return { ok: false, reason: n.levelOk ? 'gold' : 'level', message: n.reason };
+    if (!g.spend(n.cost, `${d.name} · Seviye ${n.level}`)) return { ok: false, reason: 'gold', message: n.reason ?? 'Altın yetmiyor.' };
+    this.levels[id] = n.level;
+    const xp = Math.max(10, Math.min(300, Math.round(n.cost / 40)));
+    g.progression?.gain(xp);
+    if (requestId != null) { if (g.handledRequests.size > 200) g.handledRequests.clear(); g.handledRequests.add(requestId); }
+    g.emit('shop', { item: d, level: n.level });
+    g.emit('change', { type: 'shop', item: id, level: n.level });
+    return { ok: true, cost: n.cost, level: n.level, item: d, xp };
+  }
+
   /** XP for a purchase grows with its price (about 1 XP per 40 gold, at least 10, at most 300). */
   xpFor(d) { return Math.max(10, Math.min(300, Math.round((d.price ?? 0) / 40))); }
 
@@ -232,7 +269,7 @@ export class Shop {
   theme() { return this.slotEffect('theme', 'theme'); }
 
   /** Appeal points of everything standing in the café. */
-  appeal() { return this.placedItems().reduce((s, d) => s + (d.appeal ?? 0), 0); }
+  appeal() { return this.placedItems().reduce((s, d) => s + this.appealAt(d, this.levelable(d) ? this.itemLevel(d.id) : 1), 0); }
   /** Factor on the gap between arriving guests (< 1 = guests come more often). */
   arrivalFactor() { const a = this.appealDef; return 1 - Math.min(a.arrivalMax, this.appeal() * a.arrivalPerPoint); }
   tipChance() { const a = this.appealDef; return Math.min(a.tipMax, this.appeal() * a.tipPerPoint); }
@@ -324,7 +361,7 @@ export class Shop {
   }
 
   // ---- persistence ------------------------------------------------------------------------------
-  exportState() { return { owned: [...this.owned], placed: { ...this.placed }, stored: [...this.stored], introduced: [...this.introduced], stage: this.stageId }; }
+  exportState() { return { owned: [...this.owned], placed: { ...this.placed }, stored: [...this.stored], introduced: [...this.introduced], stage: this.stageId, levels: { ...this.levels } }; }
 
   importState(state) {
     const v = validateShop(state, this);
@@ -333,6 +370,7 @@ export class Shop {
     this.stored = new Set(v.stored);
     this.introduced = new Set(v.introduced);
     this.stageId = v.stage;
+    this.levels = { ...v.levels };
   }
 }
 
@@ -359,7 +397,9 @@ export function validateShop(raw, shop) {
   const introduced = [...new Set(Array.isArray(raw?.introduced) ? raw.introduced.filter((id) => owned.includes(id)) : [])];
   const maxStage = Math.max(...shop.stages.map((s) => s.id));
   const stage = Number.isInteger(raw?.stage) && raw.stage >= 1 ? Math.min(raw.stage, maxStage) : 1;
-  return { owned, placed, stored: [...stored], introduced, stage };
+  const levels = {};                                          // decoration levels: only owned pieces that level, 2..max (level 1 is not stored)
+  for (const [id, n] of Object.entries(raw?.levels ?? {})) if (owned.includes(id) && shop.levelable(shop.def(id)) && Number.isInteger(n) && n >= 2 && n <= ITEM_LEVELS.max) levels[id] = n;
+  return { owned, placed, stored: [...stored], introduced, stage, levels };
 }
 
 /** One line of what an item does, built from its effect so the text can never disagree with the numbers. */

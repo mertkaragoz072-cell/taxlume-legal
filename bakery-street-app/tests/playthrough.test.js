@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { playthrough } from '../scripts/playthrough.mjs';
 
 // The whole game, start to finish, by a robot using every system. Catches dead ends: content that can never be bought or reached.
-test('playthrough: from 0 gold, 40 days of 30 minutes reach the last stage, the top level and every shop item, upgrade, research and quest', () => {
+test('playthrough: from 0 gold, 55 days of 30 minutes reach the last stage, the top level and every shop item, upgrade, research and quest', () => {
   for (const seed of [1, 2]) {
-    const r = playthrough({ days: 40, minutes: 30, seed });
+    const r = playthrough({ days: 55, minutes: 30, seed });
     assert.equal(r.end.stage, 4, `seed ${seed}`);
     assert.equal(r.end.level, 30, `seed ${seed}`);
     assert.deepEqual(r.left, [], `seed ${seed}: shop items left`);
@@ -13,6 +13,7 @@ test('playthrough: from 0 gold, 40 days of 30 minutes reach the last stage, the 
     assert.deepEqual(r.researchLeft, []);
     assert.deepEqual(r.questsLeft, []);
     assert.equal(r.end.album, '8/8');
+    assert.ok(+r.end.decorAt5.split('/')[0] >= 3, `decoration raised to level 5: ${r.end.decorAt5}`);
     for (const d of r.days) assert.ok(d.gold >= 0 && d.sold > 30, `day ${d.day}`);
   }
 });

@@ -33,7 +33,7 @@ def cut(rgb, lo=14, hi=44):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('line', choices=LINES); ap.add_argument('tier', type=int, choices=(2, 3, 4)); ap.add_argument('source')
+    ap.add_argument('line', choices=LINES); ap.add_argument('tier', type=int, choices=(2, 3, 4, 5)); ap.add_argument('source')
     ap.add_argument('--fit', choices=('height', 'width'), default='height'); ap.add_argument('--out', default=INTERIOR)
     ap.add_argument('--ground', type=int, default=0, help='extra transparent pixels kept under the object (shadow), default 0')
     a = ap.parse_args()

@@ -415,8 +415,8 @@ test('validateShop repairs garbage and never loses an owned decoration', () => {
   assert.deepEqual(v.stored.filter((id) => !['plantB'].includes(id)), []);   // matPaw is not owned: dropped from stored
   assert.deepEqual(v.introduced, ['plantA']);
   assert.equal(v.stage, 4);                                           // clamped, not trusted
-  assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1 });
-  assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1 });
+  assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {} });
+  assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {} });
   // a v10 save (no `stored`) loads: pieces keep their slots
   const old = validateShop({ owned: ['plantA', 'lampA'], placed: { 'edge-left': 'plantA', 'lamp-1': 'lampA' }, introduced: [], stage: 2 }, c.shop);
   assert.deepEqual(old.placed, { 'edge-left': 'plantA', 'lamp-1': 'lampA' }); assert.deepEqual(old.stored, []);
@@ -517,4 +517,49 @@ test('the catalogue is consistent: unique ids, valid requirements, equipment lin
   for (const l of lines) { const tiers = SHOP_ITEMS.filter((d) => d.line === l).map((d) => d.tier).sort(); assert.deepEqual(tiers, tiers.map((_, i) => i + 2).slice(0, tiers.length), `${l} tiers are 2,3,4`); }
   const prices = (line) => SHOP_ITEMS.filter((d) => d.line === line).sort((a, b) => a.tier - b.tier).map((d) => d.price);
   for (const l of ['oven', 'coffee', 'counter', 'showcase', 'storage']) { const p = prices(l); for (let i = 1; i < p.length; i++) assert.ok(p[i] > p[i - 1] * 2, `${l}: each tier costs well over double the last`); }
+});
+
+// ---------------------------------------------------------------------------------- decoration levels
+import { ITEM_LEVELS, APPEAL as APPEAL_DEF } from '../src/data/economy.js';
+test('decoration levels: bought at 1, raised one by one to 5 for gold and player level; appeal grows; saved; never past 5', () => {
+  const c = make({ level: 1, gold: 1e6 });
+  const d = SHOP_ITEMS.find((x) => x.id === 'plantA');
+  assert.equal(c.shop.itemLevel('plantA'), 0);
+  assert.equal(c.shop.nextLevel('plantA'), null);                        // not owned yet
+  assert.ok(c.shop.buy('plantA').ok);
+  assert.equal(c.shop.itemLevel('plantA'), 1);
+  const a1 = c.shop.appeal();
+  const n2 = c.shop.nextLevel('plantA');
+  assert.equal(n2.level, 2); assert.equal(n2.cost, Math.round(d.price * ITEM_LEVELS.price[1] / 10) * 10);
+  assert.equal(n2.needLevel, d.minLevel + ITEM_LEVELS.levelStep);
+  const r = c.shop.upgradeItem('plantA');
+  assert.equal(r.ok, false); assert.equal(r.reason, 'level');             // player level 1, level 3 needed
+  c.progression.level = 20; c.progression.rewardedLevel = 20;
+  const gold = c.player.gold;
+  assert.ok(c.shop.upgradeItem('plantA').ok);
+  assert.equal(c.player.gold, gold - n2.cost);
+  assert.ok(c.shop.appeal() > a1);
+  for (let i = 3; i <= 5; i++) assert.equal(c.shop.upgradeItem('plantA').level, i);
+  assert.equal(c.shop.upgradeItem('plantA').ok, false);
+  assert.equal(c.shop.itemLevel('plantA'), ITEM_LEVELS.max);
+  assert.equal(c.shop.appealAt(d, 5), Math.round(d.appeal * ITEM_LEVELS.appeal[4]));
+  // a piece taken down gives no appeal at any level
+  c.shop.unplace('plantA'); assert.ok(c.shop.appeal() < a1 + 1);
+  // save round trip, and garbage levels are dropped
+  const st = c.shop.exportState();
+  assert.equal(st.levels.plantA, 5);
+  const v = validateShop({ ...st, levels: { plantA: 9, plantB: 3, matPaw: 2.5, nope: 2 } }, c.shop);
+  assert.deepEqual(v.levels, {});
+  assert.deepEqual(validateShop(st, c.shop).levels, { plantA: 5 });
+  assert.ok(APPEAL_DEF.arrivalPerPoint > 0);
+});
+
+test('decoration levels: equipment, recipes and expansion do not level (equipment has its own five tiers)', () => {
+  const c = make({ level: 30, gold: 1e7 });
+  c.shop.stageId = 4;
+  for (const id of ['ovenT2', 'ovenT3', 'ovenT4', 'ovenT5', 'recipeSimit']) assert.ok(c.shop.buy(id).ok, id);
+  assert.equal(c.shop.tier('oven'), 5);
+  assert.equal(c.shop.nextLevel('ovenT2'), null);
+  assert.equal(c.shop.nextLevel('recipeSimit'), null);
+  for (const line of ['oven', 'coffee', 'counter', 'showcase', 'storage']) assert.ok(SHOP_ITEMS.some((x) => x.line === line && x.tier === 5), line);
 });

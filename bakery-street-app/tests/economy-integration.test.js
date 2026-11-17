@@ -307,7 +307,7 @@ test('equipment tiers: a tier picture is used when it exists, a missing one keep
     let ctx = recordingCtx(); scene.update(0.01); scene.render(ctx);
     assert.ok(ctx.__log.drawImage.some((a) => a[0] === plain), 'plain oven drawn');
     assert.equal(scene.shopDecor.tierImage('oven', 3), null);
-    assert.deepEqual(scene.shopDecor.equipmentArtStatus().filter((s) => s.line === 'oven').map((s) => s.ok), [false, false, false]);
+    assert.deepEqual(scene.shopDecor.equipmentArtStatus().filter((s) => s.line === 'oven').map((s) => s.ok), [false, false, false, false]);
     // only tier 2 exists: tier 3 uses the best lower picture that exists
     registerImage('int-oven-t2', t2);
     assert.equal(scene.shopDecor.tierImage('oven', 3), t2);
@@ -323,7 +323,7 @@ test('equipment tiers: a tier picture is used when it exists, a missing one keep
     assert.ok(ctx.__log.drawImage.some((a) => a[0] === scene.shopDecor && false) || true);
   } finally { for (const k of ['int-oven', 'int-oven-t2', 'int-oven-t3', 'int-coffee']) unregisterImage(k); }
   const all = Object.values(EQUIPMENT_ART).flatMap((t) => Object.values(t));
-  assert.equal(all.length, 15); assert.equal(new Set(all).size, 15);
+  assert.equal(all.length, 20); assert.equal(new Set(all).size, 20);
 });
 
 test('the café looks different at each stage: a name sign from stage 2, pennants from stage 3, a gold sign and stars at stage 4', () => {

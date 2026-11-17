@@ -223,3 +223,10 @@ Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda 
 - **Açılış süresi** Ayarlar'da: kayıt, yazı tipi, resimler, oyun kurma süreleri cihazda ölçülür.
 - **Panel güvenliği:** bir panel çizilirken hata verirse yalnızca o panel kapanır, oyun sürer.
 - **Test:** `tests/simulation.test.js` robotu test paketine bağlar (geniş bantlar: bozuk ekonomi yakalanır, küçük ayar yakalanmaz).
+
+### Eşya seviyeleri (kayıt alanı `shop.levels`)
+- **Dekorasyon** (Dekorasyon sekmesindeki 14 eşya): 1. seviyede alınır, Mağaza'dan 5'e kadar yükseltilir (`ITEM_LEVELS`). Seviye n'nin fiyatı = eşya fiyatı × [1; 1,6; 2,6; 4,2; 6,5], gereken oyuncu seviyesi = eşyanın seviyesi + 2×(n−1), çekicilik = eşyanın çekiciliği × [1; 1,5; 2; 2,75; 3,5].
+- Çekicilik etkisi (`APPEAL`) yarıya indirildi (gelişe 0,006 / bahşişe 0,004 puan başına): üst sınırlar artık birkaç eşyayla değil, yükseltilmiş eşyalarla (~60 puan) dolar.
+- **Ekipman**: her istasyon 5 kademe (1 = başlangıç, 2-5 Mağaza'da). 5. kademe yeni: Aşama 4, seviye 14-17, 50.000-95.000 altın.
+- Baştan sona robot (günde 30 dk): 50. günde her şey alınmış, 60. günde tüm dekorlar 5. seviyede.
+- Tarifler, genişletme ve özel içerik seviyelenmez.

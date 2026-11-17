@@ -64,6 +64,18 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
     if (d.kind === "decor" || d.kind === "upgrade" || d.kind === "area" || d.line === "waiting" || d.kind === "special") act.peek(2800);   // the sheet slides away so the new piece can be seen
   };
 
+  const raise = (d: any) => {
+    const now = Date.now();
+    if (now < lock.current.until) return;
+    lock.current.until = now + 450;
+    const r = shop.upgradeItem(d.id, `lvl-${++lock.current.seq}-${now}`);
+    if (!r.ok) { act.warn(r.message); return; }
+    act.sfx("buy"); act.buzz([30, 40, 30]);
+    setFlash(d.id); if (flashTimer.current) clearTimeout(flashTimer.current); flashTimer.current = setTimeout(() => setFlash(null), 1400);
+    act.toast(`⬆ ${d.name} · Seviye ${r.level} · −${fmt(r.cost)} altın · Çekicilik +${shop.appealAt(d, r.level)}`, 2600);
+    act.peek(2400);
+  };
+
   // the order of a tab is decided when it is opened (ready first, then short of gold, then locked, owned last) and then kept, so a card does not jump away when it is bought
   const { width: winW, height: winH } = useWindowDimensions(), portrait = winH >= winW;
   const rank = (v: any) => (v.status === "owned" ? 3 : v.status === "locked" ? 2 : v.missingGold > 0 ? 1 : 0);
@@ -98,9 +110,13 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
 
   const [detail, setDetail] = useState<string | null>(null);
   if (portrait) {
-    const body = tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : (
+    const body = tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : tab === "equipment" ? (
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4 }}>
+        {LINES.map((l) => <LineCard key={l} line={l} onBuy={buy} flash={flash} onOpen={(id) => setDetail(id)} />)}
+      </View>
+    ) : (
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4, justifyContent: "flex-start" }}>
-        {items(tab).map((v) => <GridCard key={v.def.id} v={v} onBuy={buy} flash={flash === v.def.id} onOpen={() => setDetail(v.def.id)} />)}
+        {items(tab).map((v) => <GridCard key={v.def.id} v={v} onBuy={buy} onRaise={raise} flash={flash === v.def.id} onOpen={() => setDetail(v.def.id)} />)}
       </View>
     );
     const dv = detail ? (shop.list(shop.def(detail).category) as any[]).find((x) => x.def.id === detail) : null;
@@ -166,15 +182,17 @@ function ShopFront({ tab, setTab, dot, onClose, title, sub, detail, closeDetail,
  * One item of the shop front: its picture, its name and what it gives (or what it needs), and one button: the price (green), a lock with the
  * level / stage it needs, or a tick. Locked items are shown faded with a padlock, so the player sees what is coming.
  */
-function GridCard({ v, onBuy, flash, onOpen }: { v: any; onBuy: (d: any) => void; flash: boolean; onOpen: () => void }) {
+function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any) => void; onRaise?: (d: any) => void; flash: boolean; onOpen: () => void }) {
   const { world, act } = useWorld();
   const { game, shop } = world, u = useU();
   const { width } = useWindowDimensions();
   const d = v.def, owned = v.status === "owned", locked = v.status === "locked", short = !owned && !locked && v.missingGold > 0, decor = d.kind === "decor";
   const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
   const need = locked ? (v.missing[0]?.text ?? "Kilitli") : "";
-  const line = owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? need : v.effectText || d.desc;
+  const lvl = owned && shop.levelable(d) ? (shop.itemLevel(d.id) as number) : 0, nxt = lvl ? shop.nextLevel(d.id) : null;
+  const line = lvl ? `Çekicilik +${shop.appealAt(d, lvl)}${nxt ? ` → +${nxt.appeal}` : ""}${v.placed ? "" : " · depoda"}` : owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? need : v.effectText || d.desc;
   const press = () => {
+    if (lvl) { if (!nxt) onOpen(); else if (!nxt.ok) act.warn(nxt.reason); else onRaise?.(d); return; }
     if (owned) { onOpen(); return; }
     if (locked) { act.warn(shop.blockReason(d.id).message); return; }
     if (short) { act.warn(shop.blockReason(d.id).message); return; }
@@ -185,17 +203,21 @@ function GridCard({ v, onBuy, flash, onOpen }: { v: any; onBuy: (d: any) => void
       <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${d.name}, ayrıntılar`}
         style={({ pressed }) => ({ width: w, padding: u * 0.8, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: owned ? C.green : "#E2C69B", backgroundColor: owned ? "#F1F5E4" : "#FFF9EE", transform: [{ scale: pressed ? 0.97 : 1 }] })}>
         <View style={{ height: w * 0.62, alignItems: "center", justifyContent: "center", opacity: locked ? 0.45 : 1 }}>
-          <ItemPicture d={d} game={game} size={w * 0.6} />
+          <ItemPicture d={d} game={game} size={w * 0.6} level={lvl} />
         </View>
+        {lvl ? <LevelPill level={lvl} /> : null}
         {d.kind === "equipment" && d.tier > 1 ? <View style={{ position: "absolute", left: u * 0.8, top: u * 0.8, paddingHorizontal: u * 0.8, borderRadius: 99, backgroundColor: TIER_BG[d.tier] || C.vanilla, borderWidth: u * 0.25, borderColor: C.honeyDark }}><Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{"★".repeat(d.tier - 1)}</Text></View> : null}
         {locked ? <View style={{ position: "absolute", right: u * 0.8, top: u * 0.8 }}><GameIcon id="lock" size={u * 5} /></View> : null}
         <Text allowFontScaling={false} numberOfLines={1} style={{ color: locked ? C.brown : C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
         <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
           <Text allowFontScaling={false} numberOfLines={2} style={{ color: locked ? C.terracottaDark : C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{line}</Text>
         </View>
-        <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={owned ? `${d.name}: alındı` : locked ? `${d.name}: kilitli, ${need}` : `Satın al: ${d.name}, ${v.price} altın`}
-          style={({ pressed }) => ({ height: Math.max(40, u * 7), borderRadius: 99, borderWidth: u * 0.35, borderColor: owned ? C.greenDark : locked || short ? "#B9A07C" : "#4E7A2C", backgroundColor: owned ? C.greenPale : locked ? "#E8DCC6" : short ? "#EBD9B8" : "#7DAF46", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: u * 0.6, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
-          {owned ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{decor ? "Taşı" : "✓ Alındı"}</Text>
+        <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={lvl ? (nxt ? `Yükselt: ${d.name}, seviye ${nxt.level}, ${nxt.cost} altın` : `${d.name}: en üst seviye`) : owned ? `${d.name}: alındı` : locked ? `${d.name}: kilitli, ${need}` : `Satın al: ${d.name}, ${v.price} altın`}
+          style={({ pressed }) => ({ height: Math.max(40, u * 7), borderRadius: 99, borderWidth: u * 0.35, borderColor: lvl && nxt?.ok ? "#4E7A2C" : owned ? C.greenDark : locked || short ? "#B9A07C" : "#4E7A2C", backgroundColor: lvl ? (nxt?.ok ? "#7DAF46" : nxt ? "#E8DCC6" : C.greenPale) : owned ? C.greenPale : locked ? "#E8DCC6" : short ? "#EBD9B8" : "#7DAF46", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: u * 0.6, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+          {lvl ? (!nxt ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>★ En üst seviye</Text>
+              : !nxt.levelOk ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Seviye {nxt.needLevel}</Text></>
+              : <><Text allowFontScaling={false} style={{ color: nxt.missingGold ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>⬆</Text><GameIcon id="coin" size={u * 4} /><Text allowFontScaling={false} style={{ color: nxt.missingGold ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(nxt.cost)}</Text></>)
+            : owned ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{decor ? "Taşı" : "✓ Alındı"}</Text>
             : locked ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{shortNeed(v)}</Text></>
             : <><GameIcon id="coin" size={u * 4.2} /><Text allowFontScaling={false} style={{ color: short ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(v.price)}</Text></>}
         </Pressable>
@@ -205,12 +227,64 @@ function GridCard({ v, onBuy, flash, onOpen }: { v: any; onBuy: (d: any) => void
 }
 
 /** The item's own picture at a given size (no tile behind it): the café art, the product picture for recipes, an icon or emoji otherwise. */
-function ItemPicture({ d, game, size }: { d: any; game: any; size: number }) {
-  const src = d.art?.image ? ASSET_MODULES[`assets/interior/${d.art.image}.webp`] : undefined;
+function ItemPicture({ d, game, size, level = 0, tier = 0 }: { d: any; game: any; size: number; level?: number; tier?: number }) {
+  let src: number | undefined;
+  for (let n = level; n >= 2 && src === undefined; n--) src = ASSET_MODULES[`assets/interior/levels/${d.id}-l${n}.webp`];          // the piece's picture at its level
+  for (let t = tier; t >= 2 && src === undefined; t--) src = ASSET_MODULES[`assets/interior/${d.line}-t${t}.webp`];                 // a station's picture at its tier
+  src ??= d.art?.image ? ASSET_MODULES[`assets/interior/${d.art.image}.webp`] : undefined;
   if (src) return <Image source={src} style={{ width: size * 1.35, height: size, resizeMode: "contain" }} />;
   if (d.kind === "recipe") return <EmojiIcon emoji={game.productsDef[d.recipe]?.icon ?? "🍞"} size={size * 0.85} />;
   if (d.art?.icon && !SPECIAL_EMOJI[d.art.icon]) return <GameIcon id={d.art.icon} size={size * 0.85} />;
   return <Text allowFontScaling={false} style={{ fontSize: size * 0.6 }}>{SPECIAL_EMOJI[d.art?.icon] ?? "⭐"}</Text>;
+}
+
+const LINES = ["oven", "coffee", "counter", "showcase", "storage"];
+const BASE_NAME: Record<string, string> = { oven: "Taş Fırın", coffee: "Kahve Makinesi", counter: "Hamur Tezgâhı", showcase: "Satış Vitrini", storage: "Depo" };
+
+/** Level 1..5 as a small pill with stars, on the card's top-left corner. */
+function LevelPill({ level }: { level: number }) {
+  const u = useU();
+  return (
+    <View style={{ position: "absolute", left: u * 0.7, top: u * 0.7, flexDirection: "row", alignItems: "center", paddingHorizontal: u * 0.8, paddingVertical: u * 0.1, borderRadius: 99, backgroundColor: "#FFF1C9", borderWidth: u * 0.25, borderColor: C.honeyDark }}>
+      <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Sv {level} {"★".repeat(level)}</Text>
+    </View>
+  );
+}
+
+/**
+ * One station (oven, coffee machine, prep counter, showcase, storage) with its five levels: the picture and name of the level it has, what it
+ * does, and the button for the next level (its price, or the lock with what it needs). Level 1 is the station the café starts with.
+ */
+function LineCard({ line, onBuy, flash, onOpen }: { line: string; onBuy: (d: any) => void; flash: string | null; onOpen: (id: string) => void }) {
+  const { world, act } = useWorld();
+  const { game, shop } = world, u = useU();
+  const { width } = useWindowDimensions();
+  const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
+  const tiers = (shop.items as any[]).filter((d) => d.kind === "equipment" && d.line === line).sort((a, b) => a.tier - b.tier);
+  const tier = shop.tier(line) as number, cur = shop.tierItem(line), next = tiers.find((d) => d.tier === tier + 1) ?? null;
+  const nv = next ? (shop.list("equipment") as any[]).find((x) => x.def.id === next.id) : null;
+  const locked = nv?.status === "locked", short = nv && !locked && nv.missingGold > 0;
+  const press = () => { if (!nv) return; if (locked || short) act.warn(shop.blockReason(next.id).message); else onBuy(next); };
+  const base = { id: `${line}-base`, line, art: { image: line }, kind: "equipment" };
+  return (
+    <Pulse on={!!cur && flash === cur.id}>
+      <Pressable onPress={() => next && onOpen(next.id)} accessibilityRole="button" accessibilityLabel={`${cur?.name ?? BASE_NAME[line]}, seviye ${tier}`}
+        style={({ pressed }) => ({ width: w, padding: u * 0.8, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: "#E2C69B", backgroundColor: "#FFF9EE", transform: [{ scale: pressed ? 0.97 : 1 }] })}>
+        <View style={{ height: w * 0.62, alignItems: "center", justifyContent: "center" }}><ItemPicture d={cur ?? base} game={game} size={w * 0.6} tier={tier} /></View>
+        <LevelPill level={tier} />
+        <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{cur?.name ?? BASE_NAME[line]}</Text>
+        <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
+          <Text allowFontScaling={false} numberOfLines={2} style={{ color: locked ? C.terracottaDark : C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{next ? `Sv ${tier + 1}: ${nv?.effectText ?? ""}` : cur ? cur.desc : ""}</Text>
+        </View>
+        <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={next ? (locked ? `${next.name}: kilitli, ${shortNeed(nv)}` : `Yükselt: ${next.name}, ${nv.price} altın`) : `${cur?.name}: en üst seviye`}
+          style={({ pressed }) => ({ height: Math.max(40, u * 7), borderRadius: 99, borderWidth: u * 0.35, borderColor: !next ? C.greenDark : locked || short ? "#B9A07C" : "#4E7A2C", backgroundColor: !next ? C.greenPale : locked ? "#E8DCC6" : short ? "#EBD9B8" : "#7DAF46", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: u * 0.6, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+          {!next ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>★ En üst seviye</Text>
+            : locked ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{shortNeed(nv)}</Text></>
+            : <><Text allowFontScaling={false} style={{ color: short ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>⬆</Text><GameIcon id="coin" size={u * 4} /><Text allowFontScaling={false} style={{ color: short ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(nv.price)}</Text></>}
+        </Pressable>
+      </Pressable>
+    </Pulse>
+  );
 }
 
 /** The first missing condition, short enough for a button: "Seviye 5", "Aşama 2", else "Kilitli". */
@@ -272,6 +346,7 @@ function ItemCard({ v, onBuy, flash }: { v: any; onBuy: (d: any) => void; flash:
       <Card tone={owned ? "open" : locked ? "locked" : undefined} left={<Preview d={d} game={game} />} right={button}>
         <Title name={d.name} note={owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : `${fmt(v.price)} altın`} />
         {v.effectText ? <Meta tone={owned ? "ok" : "reward"} text={`${owned ? "" : "Kazanım: "}${v.effectText}`} /> : null}
+        {owned && shop.levelable(d) ? (() => { const lv = shop.itemLevel(d.id), n = shop.nextLevel(d.id); return <Meta tone="next" text={`Seviye ${lv}/5 · Çekicilik +${shop.appealAt(d, lv)}${n ? ` · Seviye ${n.level}: +${n.appeal} çekicilik, ${fmt(n.cost)} altın${n.levelOk ? "" : ` (oyuncu seviyesi ${n.needLevel} gerekli)`}` : " · en üst seviye"}`} />; })() : null}
         <Meta tone="muted" text={d.desc} />
         {!owned && v.conditions.length ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6 }}>

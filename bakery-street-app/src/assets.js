@@ -1,4 +1,4 @@
-import { EQUIPMENT_ART } from './data/economy.js';
+import { EQUIPMENT_ART, SHOP_ITEMS, ITEM_LEVELS } from './data/economy.js';
 
 // Artwork registry: every image the game draws, keyed by name.
 //
@@ -47,6 +47,8 @@ for (const name of INTERIOR_ART) MANIFEST[`int-${name}`] = `assets/interior/${na
 // Equipment tier pictures (EQUIPMENT_ART) are optional: a file that is not there yet is simply skipped (no warning, the station keeps its picture).
 export const OPTIONAL_ART = new Set();
 for (const tiers of Object.values(EQUIPMENT_ART)) for (const name of Object.values(tiers)) { MANIFEST[`int-${name}`] = `assets/interior/${name}.webp`; OPTIONAL_ART.add(`int-${name}`); }
+// Decoration level pictures (optional): assets/interior/levels/<item id>-l<2..5>.webp, see ITEM_LEVELS.
+for (const d of SHOP_ITEMS) if (d.category === 'decor' && d.kind === 'decor') for (let n = 2; n <= ITEM_LEVELS.max; n++) { MANIFEST[`lvl-${d.id}-${n}`] = `assets/interior/levels/${d.id}-l${n}.webp`; OPTIONAL_ART.add(`lvl-${d.id}-${n}`); }
 
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
 // fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().

@@ -27,7 +27,11 @@ export class DecorLayer {
   }
 
   get shop() { return this.game.shop; }
-  imgOf(d) { return d.art?.image ? getImage(`int-${d.art.image}`) : null; }
+  /** The picture of a piece at its level: that level's own picture, else the best lower one that exists, else its plain picture. */
+  imgOf(d) {
+    for (let n = this.shop?.itemLevel?.(d.id) ?? 1; n >= 2; n--) { const img = getImage(`lvl-${d.id}-${n}`); if (img) return img; }
+    return d.art?.image ? getImage(`int-${d.art.image}`) : null;
+  }
 
   // ---- events ---------------------------------------------------------------------------------
   /** Where on the world an item is (for its reveal ring). */

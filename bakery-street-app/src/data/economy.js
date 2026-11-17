@@ -361,7 +361,7 @@ export const SHOP_CATEGORIES = [
  *   - shortens the gap between arriving guests by arrivalPerPoint per point (at most arrivalMax),
  *   - gives every paying guest a tipChance (tipPerPoint per point, at most tipMax) of leaving a tip of tipShare of the bill.
  */
-export const APPEAL = { arrivalPerPoint: 0.012, arrivalMax: 0.35, tipPerPoint: 0.008, tipMax: 0.25, tipShare: 0.2 };
+export const APPEAL = { arrivalPerPoint: 0.006, arrivalMax: 0.35, tipPerPoint: 0.004, tipMax: 0.25, tipShare: 0.2 };   // (halved when decoration got levels: the caps are now reached around 60 points, with raised pieces, not with the first few)
 
 /**
  * Cafe stages. A stage is reached when ALL of its `need` conditions hold (checked after every change; the reward is paid once). Conditions:
@@ -406,6 +406,12 @@ export const SHOP_ITEMS = [
   T('storageT2', 'storage', 2, 'Geniş Depo Rafları', 1800, 2, { storage: 120 }, { desc: 'Her malzemeden 120 adet saklanır.' }),
   T('storageT3', 'storage', 3, 'Soğuk Depo', 7000, 5, { storage: 250 }, { desc: 'Her malzemeden 250 adet.', stage: 2 }),
   T('storageT4', 'storage', 4, 'Büyük Ambar', 22000, 10, { storage: 500 }, { desc: 'Her malzemeden 500 adet.', stage: 3 }),
+  // level 5 of every station (the top of the line)
+  T('ovenT5', 'oven', 5, 'Efsane Fırın', 90000, 16, { speed: { oven: 0.33 } }, { desc: 'Kasabanın en ünlü fırını: her şey çok hızlı pişer.', stage: 4 }),
+  T('coffeeT5', 'coffee', 5, 'Altın Barista Bar', 95000, 17, { capacity: { coffee: 4 }, speed: { coffee: 0.28 } }, { desc: 'Beş kahve aynı anda, en hızlısı.', stage: 4 }),
+  T('counterT5', 'counter', 5, 'Usta Şef İstasyonu', 65000, 16, { refund: 0.2 }, { desc: 'Malzemenin beşte biri geri döner.', stage: 4 }),
+  T('showcaseT5', 'showcase', 5, 'Saray Vitrini', 60000, 15, { showcase: 80 }, { desc: 'Her üründen 80 adet daha.', stage: 4 }),
+  T('storageT5', 'storage', 5, 'Kraliyet Kileri', 50000, 14, { storage: 800 }, { desc: 'Her malzemeden 800 adet.', stage: 4 }),
 
   // ---- furniture and decoration (each placed piece adds appeal points)
   { id: 'matPaw', category: 'decor', kind: 'decor', name: 'Pati Paspası', desc: 'Girişte misafirleri karşılar.', price: 350, minLevel: 1, type: 'mat', group: 'Halı & Paspas', appeal: 1, art: { image: 'mat-paw' } },
@@ -456,12 +462,22 @@ export const SHOP_ITEMS = [
  * its current picture (or the best lower tier that exists) with a small level badge, and the file is listed as missing (docs/EKSIK_ASSETLER.md,
  * `node scripts/list-missing-art.mjs`). Drop the file in and run `node scripts/gen-assets.mjs`: it is used from then on, nothing else to change.
  */
+/**
+ * Decoration levels: every piece of furniture and decoration (category 'decor') is bought at level 1 and can be raised to level 5 in the shop.
+ *  - cost to reach level n: the item's price × price[n-1]
+ *  - player level needed for level n: the item's minLevel + levelStep × (n-1)
+ *  - appeal at level n: the item's appeal × appeal[n-1] (rounded)
+ * Each level can have its own picture: assets/game/interior/levels/<item id>-l<n>.webp (optional; until it exists the piece keeps its picture and
+ * shows its level with small stars). See docs/EKSIK_ASSETLER.md (E13) and scripts/add_item_level.py.
+ */
+export const ITEM_LEVELS = { max: 5, price: [1, 1.6, 2.6, 4.2, 6.5], appeal: [1, 1.5, 2, 2.75, 3.5], levelStep: 2 };
+
 export const EQUIPMENT_ART = {
-  oven: { 2: 'oven-t2', 3: 'oven-t3', 4: 'oven-t4' },
-  coffee: { 2: 'coffee-t2', 3: 'coffee-t3', 4: 'coffee-t4' },
-  showcase: { 2: 'showcase-t2', 3: 'showcase-t3', 4: 'showcase-t4' },
-  storage: { 2: 'storage-t2', 3: 'storage-t3', 4: 'storage-t4' },
-  counter: { 2: 'counter-t2', 3: 'counter-t3', 4: 'counter-t4' },
+  oven: { 2: 'oven-t2', 3: 'oven-t3', 4: 'oven-t4', 5: 'oven-t5' },
+  coffee: { 2: 'coffee-t2', 3: 'coffee-t3', 4: 'coffee-t4', 5: 'coffee-t5' },
+  showcase: { 2: 'showcase-t2', 3: 'showcase-t3', 4: 'showcase-t4', 5: 'showcase-t5' },
+  storage: { 2: 'storage-t2', 3: 'storage-t3', 4: 'storage-t4', 5: 'storage-t5' },
+  counter: { 2: 'counter-t2', 3: 'counter-t3', 4: 'counter-t4', 5: 'counter-t5' },
 };
 
 /**
