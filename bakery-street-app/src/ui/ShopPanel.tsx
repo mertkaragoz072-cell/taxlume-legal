@@ -1,13 +1,15 @@
 // The shop (Mağaza): ingredients plus everything else the player buys with gold. All rules live in game/shop.js and game/game.js; this only
 // shows the catalogue (preview, name, price, gate, effect, state) and forwards taps. Opens over the café so a purchase can be watched.
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { SHOP_CATEGORIES } from "../data/economy.js";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Chip, Meta, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon } from "./icons";
-import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
+import { C, FONT, fmt, fs, navHeight, useU, TYPE } from "./theme";
+import { useAppear } from "./kit";
+import { MOTION } from "./motion";
 
 export type ShopTab = "goal" | "ingredients" | "equipment" | "decor" | "recipes" | "expansion" | "special";
 const TABS: { id: ShopTab; name: string }[] = [{ id: "goal", name: "Hedef" }, ...(SHOP_CATEGORIES as { id: ShopTab; name: string }[])];
@@ -63,12 +65,16 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
   };
 
   // the order of a tab is decided when it is opened (ready first, then short of gold, then locked, owned last) and then kept, so a card does not jump away when it is bought
+  const { width: winW, height: winH } = useWindowDimensions(), portrait = winH >= winW;
+  const rank = (v: any) => (v.status === "owned" ? 3 : v.status === "locked" ? 2 : v.missingGold > 0 ? 1 : 0);
   const orders = useRef<Record<string, string[]>>({});
   const items = (cat: string) => {
     const list = shop.list(cat) as any[];
     if (!orders.current[cat]) {
-      const rank = (v: any) => (v.status === "owned" ? 3 : v.status === "locked" ? 2 : v.missingGold > 0 ? 1 : 0);
-      orders.current[cat] = list.slice().sort((a, b) => rank(a) - rank(b) || a.price - b.price).map((v) => v.def.id);
+      const lv = (v: any) => (v.def.kind === "upgrade" ? shop.minLevelOf(v.def) : v.def.minLevel ?? 1) * 1000 + (v.def.stage ?? 1) * 100;
+      orders.current[cat] = portrait
+        ? list.slice().sort((a, b) => lv(a) - lv(b) || a.price - b.price).map((v) => v.def.id)            // the shop front: in the order they open (level, stage, price): the first are open, the rest locked
+        : list.slice().sort((a, b) => rank(a) - rank(b) || a.price - b.price).map((v) => v.def.id);
     }
     const byId = Object.fromEntries(list.map((v) => [v.def.id, v]));
     return orders.current[cat].map((id) => byId[id]).filter(Boolean);
@@ -90,11 +96,130 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
     </ScrollView>
   );
 
+  const [detail, setDetail] = useState<string | null>(null);
+  if (portrait) {
+    const body = tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : (
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4, justifyContent: "flex-start" }}>
+        {items(tab).map((v) => <GridCard key={v.def.id} v={v} onBuy={buy} flash={flash === v.def.id} onOpen={() => setDetail(v.def.id)} />)}
+      </View>
+    );
+    const dv = detail ? (shop.list(shop.def(detail).category) as any[]).find((x) => x.def.id === detail) : null;
+    return <ShopFront tab={tab} setTab={setTab} dot={dot} onClose={onClose} title={TABS.find((t) => t.id === tab)?.name ?? ""} sub={`Aşama ${stage.id}: ${stage.name} · Koleksiyon ${collection.owned}/${collection.total}`} detail={dv ? <ItemCard v={dv} onBuy={buy} flash={flash === dv.def.id} /> : null} closeDetail={() => setDetail(null)}>{body}</ShopFront>;
+  }
   return (
     <Sheet title="Mağaza" hint={`💰 ${fmt(game.gold)} · Aşama ${stage.id}: ${stage.name}\nKoleksiyon: ${collection.owned}/${collection.total} eşya · Kafe puanı: ★ ${(world.cafe.rating().stars as number).toFixed(1)}`} side="right" onClose={onClose} header={tabs} tall>
       {tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : tab === "decor" ? <DecorList list={items("decor")} onBuy={buy} flash={flash} /> : items(tab).map((v) => <ItemCard key={v.def.id} v={v} onBuy={buy} flash={flash === v.def.id} />)}
     </Sheet>
   );
+}
+
+const TAB_ICON: Record<string, string> = { goal: "shop-goal", ingredients: "shop-ingredients", equipment: "shop-equipment", decor: "shop-decor", recipes: "shop-recipes", expansion: "shop-expansion", special: "xp" };
+
+/**
+ * The shop as a shop front (portrait): the awning picture on top, a row of picture tabs, and the goods in a cream panel. A card's details
+ * (and moving a decoration) open in a small card over the grid.
+ */
+function ShopFront({ tab, setTab, dot, onClose, title, sub, detail, closeDetail, children }: { tab: ShopTab; setTab: (t: ShopTab) => void; dot: (id: string) => boolean; onClose: () => void; title: string; sub: string; detail: React.ReactNode; closeDetail: () => void; children: React.ReactNode }) {
+  const { act } = useWorld(), u = useU();
+  const { width } = useWindowDimensions();
+  const a = useAppear(MOTION.panelEnter, MOTION.panelLeave);
+  const headerH = (width - u * 0) * (288 / 1024);
+  return (
+    <Animated.View style={{ position: "absolute", left: 0, right: 0, top: u * 12.6, bottom: navHeight(u), zIndex: 20, backgroundColor: "#7A4E2E", opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [u * 4, 0] }) }] }}>
+      <Image source={ASSET_MODULES["assets/shop-header.webp"]} style={{ width, height: headerH, resizeMode: "cover" }} />
+      <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ position: "absolute", right: u * 1.4, top: u * 1, width: Math.max(44, u * 8), height: Math.max(44, u * 8), alignItems: "center", justifyContent: "center" }}>
+        <Image source={ASSET_MODULES["assets/icons/ui-close.webp"]} style={{ width: Math.max(40, u * 7.4), height: Math.max(40, u * 7.4) * (144 / 140), resizeMode: "contain" }} />
+      </Pressable>
+      <View style={{ marginTop: -u * 1, marginHorizontal: u * 1.6, padding: u * 1, borderRadius: u * 2.6, backgroundColor: "#9A6A40", borderWidth: u * 0.5, borderColor: "#5E3A20", flexDirection: "row", gap: u * 0.8 }}>
+        {TABS.map((t) => {
+          const on = t.id === tab;
+          return (
+            <Pressable key={t.id} onPress={() => { act.sfx("tap"); setTab(t.id); }} accessibilityRole="tab" accessibilityLabel={t.name} accessibilityState={{ selected: on }}
+              style={({ pressed }) => ({ flex: 1, aspectRatio: 1.15, borderRadius: u * 2, borderWidth: on ? u * 0.7 : u * 0.35, borderColor: on ? "#F6C453" : "#C9A57A", backgroundColor: on ? "#FFF6E2" : "#F7E9CF", alignItems: "center", justifyContent: "center", transform: [{ scale: pressed ? 0.94 : on ? 1.04 : 1 }], shadowColor: "#F6C453", shadowOpacity: on ? 0.9 : 0, shadowRadius: u * 1.4, elevation: on ? 4 : 0 })}>
+              <GameIcon id={TAB_ICON[t.id]} size={u * 7.2} />
+              {dot(t.id) ? <View style={{ position: "absolute", right: -u * 0.4, top: -u * 0.4, width: u * 2.2, height: u * 2.2, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={{ flex: 1, margin: u * 1.6, marginTop: u * 1.2, borderRadius: u * 3, borderWidth: u * 0.6, borderColor: "#5E3A20", backgroundColor: C.cream, overflow: "hidden" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", paddingHorizontal: u * 2, paddingTop: u * 1.4, paddingBottom: u * 0.6 }}>
+          <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{title}</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ flexShrink: 1, marginLeft: u, color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny) }}>{sub}</Text>
+        </View>
+        <ScrollView contentContainerStyle={{ padding: u * 1.6, paddingTop: u * 0.6, gap: u * 1.2 }}>{children}</ScrollView>
+        {detail ? (
+          <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, backgroundColor: "rgba(70,48,32,0.35)", justifyContent: "flex-end" }}>
+            <Pressable style={{ flex: 1 }} onPress={closeDetail} accessibilityLabel="Ayrıntıyı kapat" />
+            <View style={{ padding: u * 1.4, backgroundColor: C.cream, borderTopLeftRadius: u * 3, borderTopRightRadius: u * 3 }}>
+              <ScrollView style={{ maxHeight: u * 90 }}>{detail}</ScrollView>
+              <Btn small variant="plain" label="Kapat" onPress={closeDetail} style={{ alignSelf: "center", marginTop: u }} />
+            </View>
+          </View>
+        ) : null}
+      </View>
+    </Animated.View>
+  );
+}
+
+/**
+ * One item of the shop front: its picture, its name and what it gives (or what it needs), and one button: the price (green), a lock with the
+ * level / stage it needs, or a tick. Locked items are shown faded with a padlock, so the player sees what is coming.
+ */
+function GridCard({ v, onBuy, flash, onOpen }: { v: any; onBuy: (d: any) => void; flash: boolean; onOpen: () => void }) {
+  const { world, act } = useWorld();
+  const { game, shop } = world, u = useU();
+  const { width } = useWindowDimensions();
+  const d = v.def, owned = v.status === "owned", locked = v.status === "locked", short = !owned && !locked && v.missingGold > 0, decor = d.kind === "decor";
+  const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
+  const need = locked ? (v.missing[0]?.text ?? "Kilitli") : "";
+  const line = owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? need : v.effectText || d.desc;
+  const press = () => {
+    if (owned) { onOpen(); return; }
+    if (locked) { act.warn(shop.blockReason(d.id).message); return; }
+    if (short) { act.warn(shop.blockReason(d.id).message); return; }
+    onBuy(d);
+  };
+  return (
+    <Pulse on={flash}>
+      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${d.name}, ayrıntılar`}
+        style={({ pressed }) => ({ width: w, padding: u * 0.8, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: owned ? C.green : "#E2C69B", backgroundColor: owned ? "#F1F5E4" : "#FFF9EE", transform: [{ scale: pressed ? 0.97 : 1 }] })}>
+        <View style={{ height: w * 0.62, alignItems: "center", justifyContent: "center", opacity: locked ? 0.45 : 1 }}>
+          <ItemPicture d={d} game={game} size={w * 0.6} />
+        </View>
+        {d.kind === "equipment" && d.tier > 1 ? <View style={{ position: "absolute", left: u * 0.8, top: u * 0.8, paddingHorizontal: u * 0.8, borderRadius: 99, backgroundColor: TIER_BG[d.tier] || C.vanilla, borderWidth: u * 0.25, borderColor: C.honeyDark }}><Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{"★".repeat(d.tier - 1)}</Text></View> : null}
+        {locked ? <View style={{ position: "absolute", right: u * 0.8, top: u * 0.8 }}><GameIcon id="lock" size={u * 5} /></View> : null}
+        <Text allowFontScaling={false} numberOfLines={1} style={{ color: locked ? C.brown : C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
+        <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
+          <Text allowFontScaling={false} numberOfLines={2} style={{ color: locked ? C.terracottaDark : C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{line}</Text>
+        </View>
+        <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={owned ? `${d.name}: alındı` : locked ? `${d.name}: kilitli, ${need}` : `Satın al: ${d.name}, ${v.price} altın`}
+          style={({ pressed }) => ({ height: Math.max(40, u * 7), borderRadius: 99, borderWidth: u * 0.35, borderColor: owned ? C.greenDark : locked || short ? "#B9A07C" : "#4E7A2C", backgroundColor: owned ? C.greenPale : locked ? "#E8DCC6" : short ? "#EBD9B8" : "#7DAF46", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: u * 0.6, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+          {owned ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{decor ? "Taşı" : "✓ Alındı"}</Text>
+            : locked ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{shortNeed(v)}</Text></>
+            : <><GameIcon id="coin" size={u * 4.2} /><Text allowFontScaling={false} style={{ color: short ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(v.price)}</Text></>}
+        </Pressable>
+      </Pressable>
+    </Pulse>
+  );
+}
+
+/** The item's own picture at a given size (no tile behind it): the café art, the product picture for recipes, an icon or emoji otherwise. */
+function ItemPicture({ d, game, size }: { d: any; game: any; size: number }) {
+  const src = d.art?.image ? ASSET_MODULES[`assets/interior/${d.art.image}.webp`] : undefined;
+  if (src) return <Image source={src} style={{ width: size * 1.35, height: size, resizeMode: "contain" }} />;
+  if (d.kind === "recipe") return <EmojiIcon emoji={game.productsDef[d.recipe]?.icon ?? "🍞"} size={size * 0.85} />;
+  if (d.art?.icon && !SPECIAL_EMOJI[d.art.icon]) return <GameIcon id={d.art.icon} size={size * 0.85} />;
+  return <Text allowFontScaling={false} style={{ fontSize: size * 0.6 }}>{SPECIAL_EMOJI[d.art?.icon] ?? "⭐"}</Text>;
+}
+
+/** The first missing condition, short enough for a button: "Seviye 5", "Aşama 2", else "Kilitli". */
+function shortNeed(v: any): string {
+  const m = v.missing[0];
+  if (!m) return "Kilitli";
+  if (m.kind === "level") return m.text.replace(/\s*\(.*\)/, "");
+  if (m.kind === "stage") return m.text.split(":")[0];
+  return "Ön koşul";
 }
 
 /** The decoration tab: grouped (table sets, plants, lighting, rugs, shelves) so what is for what is clear. */

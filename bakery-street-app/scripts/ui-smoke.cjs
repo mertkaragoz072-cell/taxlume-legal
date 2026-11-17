@@ -38,8 +38,8 @@ const OUT = '/tmp/ui-smoke';
     await step('first sales (a new game starts with 0 gold)', () => p.evaluate(() => window.__world.game.earn(500, 'sale', 'test')), (st) => st.gold >= 500);
     await step('shop', () => click('Mağaza'));
     const before = await p.evaluate(() => window.__world.game.gold);
-    await step('decoration tab', () => click('Dekorasyon'));
-    await step('buy the first decoration', () => click('Satın Al', false), (s) => s.owned === 1 && s.gold < before);
+    await step('decoration tab', () => p.getByLabel('Dekorasyon').first().click());
+    await step('buy the first decoration', () => p.getByLabel(/^Satın al:/).first().click(), (s) => s.owned === 1 && s.gold < before);
     await step('close the shop', () => p.getByLabel('Kapat').first().click());
     for (const item of ['Görevler', 'Müşteri Albümü', 'İstatistikler', 'Günlük Ödül']) {
       await step(`menu: ${item}`, async () => { await p.getByLabel('Menü').click(); await p.waitForTimeout(300); await click(item); });

@@ -26,6 +26,7 @@ export const MANIFEST = {
   'ground-walk-b': 'assets/ground-walk-b.webp',
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha
   'town-square': 'assets/town-square.webp',       // Kasaba: the portrait town square (1024 x 1536): Market, Fırın & Kafe, Kitapçı and an empty plaza
+  'shop-header': 'assets/shop-header.webp',       // Mağaza: the shop front (awning, sign with the basket, shelves), 1024 x 288
   'explore-board': 'assets/explore-board.webp',   // Keşif: the portrait map board (1024 x 853): banner, parchment map with six regions
   'explore-map': 'assets/explore-map.webp',       // Keşif parchment map (1600 px wide, 16:9; the three region spots sit on its left half)
 };
@@ -55,7 +56,8 @@ export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butte
 export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket',
   'u-oven', 'u-speed', 'u-showcase', 'u-tables', 'r-knowledge', 'r-efficient', 'r-seller', 'r-culture', 'r-equipment', 'q-target', 'q-line', 'q-explorer',
   'b-bakery', 'b-market', 'b-bookshop', 'b-plot', 'r-meadow', 'r-forest', 'r-ruins', 'o-guests', 'o-waiting', 'o-order', 'hud-quests',
-  'xr-meadow', 'xr-forest', 'xr-ruins', 'xr-pond', 'xr-lavender', 'xr-cave'];
+  'xr-meadow', 'xr-forest', 'xr-ruins', 'xr-pond', 'xr-lavender', 'xr-cave',
+  'shop-goal', 'shop-ingredients', 'shop-equipment', 'shop-expansion', 'shop-recipes', 'shop-decor'];
 for (const id of UI_ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 for (const id of ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 
