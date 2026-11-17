@@ -15,6 +15,7 @@ import { Shop } from "../game/shop.js";
 import { Town } from "../game/town.js";
 import { Progression } from "../game/progression.js";
 import { StreetScene } from "../scene/street-scene.js";
+import { TownScene } from "../scene/town-scene.js";
 import { InteriorScene } from "../scene/interior-scene.js";
 import { MarketScene } from "../scene/market-scene.js";
 import { ExploreScene } from "../scene/explore-scene.js";
@@ -24,7 +25,7 @@ import { bookshop } from "../buildings/bookshop.js";
 import { market } from "../buildings/market.js";
 import { NativeStorage } from "./storage";
 
-export type SceneId = "street" | "interior" | "market" | "bookshop" | "explore";
+export type SceneId = "town" | "street" | "interior" | "market" | "bookshop" | "explore";
 
 export interface World {
   storage: NativeStorage;
@@ -58,6 +59,7 @@ export function createWorld(storage: NativeStorage, onProblem: (msg: string) => 
   saves.attach();
   const scenes = {
     street: new StreetScene(),
+    town: new TownScene({ town, game, daily, quests, goals, exploration }),   // the town square reads several systems for its live badges
     interior: new InteriorScene(game),
     market: new MarketScene("market", "market", MARKET_PROPS as any),
     bookshop: new MarketScene("bookshop", "bookshop", BOOKSHOP_PROPS as any),

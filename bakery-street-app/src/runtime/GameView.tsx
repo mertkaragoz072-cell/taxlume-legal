@@ -77,8 +77,14 @@ export function GameView({ world, sceneId, active, pixelRatio, onPress, onLook }
 
   const toDesign = (e: GestureResponderEvent): SceneTap | null => {
     const v = viewport.current; if (!v) return null;
-    const { locationX, locationY } = e.nativeEvent;
-    return { x: locationX / v.scale - v.ox, y: locationY / v.scale - v.oy };
+    const ne: any = e.nativeEvent;
+    let lx = ne.locationX, ly = ne.locationY;
+    if (!Number.isFinite(lx) || !Number.isFinite(ly)) {          // (react-native-web leaves locationX empty on touch events: use the touch point; the view fills the screen)
+      const t = ne.changedTouches?.[0] ?? ne.touches?.[0];
+      lx = t?.locationX ?? t?.pageX ?? t?.clientX; ly = t?.locationY ?? t?.pageY ?? t?.clientY;
+      if (!Number.isFinite(lx) || !Number.isFinite(ly)) return null;
+    }
+    return { x: lx / v.scale - v.ox, y: ly / v.scale - v.oy };
   };
   const down = (e: GestureResponderEvent) => { const p = toDesign(e); if (p) onPress(scene, p, true); };
   const up = (e: GestureResponderEvent) => { const p = toDesign(e); if (p) onPress(scene, p, false); };

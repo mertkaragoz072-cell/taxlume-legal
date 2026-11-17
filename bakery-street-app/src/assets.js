@@ -25,6 +25,7 @@ export const MANIFEST = {
   'ground-walk-a': 'assets/ground-walk-a.webp',   // sidewalk slab strips (tile left-to-right)
   'ground-walk-b': 'assets/ground-walk-b.webp',
   'town-backdrop': 'assets/town-backdrop.webp',   // wide panorama, no alpha
+  'town-square': 'assets/town-square.webp',       // Kasaba: the portrait town square (1024 x 1536): Market, Fırın & Kafe, Kitapçı and an empty plaza
   'explore-map': 'assets/explore-map.webp',       // Keşif parchment map (1600 px wide, 16:9; the three region spots sit on its left half)
 };
 
@@ -52,7 +53,7 @@ export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butte
 /** Currency / status pictures (coin, XP star, gem, gift, lock, stopwatch, check, up-arrow, basket) and the upgrade, building (b-), region (r-) and order-bar (o-) pictures; the upgrade (u-), research (r-) and quest (q-) pictures. */
 export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket',
   'u-oven', 'u-speed', 'u-showcase', 'u-tables', 'r-knowledge', 'r-efficient', 'r-seller', 'r-culture', 'r-equipment', 'q-target', 'q-line', 'q-explorer',
-  'b-bakery', 'b-market', 'b-bookshop', 'b-plot', 'r-meadow', 'r-forest', 'r-ruins', 'o-guests', 'o-waiting', 'o-order'];
+  'b-bakery', 'b-market', 'b-bookshop', 'b-plot', 'r-meadow', 'r-forest', 'r-ruins', 'o-guests', 'o-waiting', 'o-order', 'hud-quests'];
 for (const id of UI_ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 for (const id of ICON_IDS) MANIFEST[`icon-${id}`] = `assets/icons/${id}.webp`;
 

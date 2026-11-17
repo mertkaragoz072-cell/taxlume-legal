@@ -12,7 +12,7 @@ const OUT = '/tmp/ui-smoke';
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const b = await chromium.launch();
-  const p = await b.newPage({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2 });
+  const p = await b.newPage({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, hasTouch: true });   // the game scene listens to touches (like a phone)
   const errors = [];
   p.on('pageerror', (e) => { if (!/play\(\)/.test(e.message)) errors.push(e.message); });
   p.on('console', (m) => { if (m.type() === 'error' && !/play\(\)|vibrate|net::ERR|Failed to load resource/.test(m.text())) errors.push(m.text().slice(0, 200)); });
@@ -51,7 +51,21 @@ const OUT = '/tmp/ui-smoke';
     await step('reset: confirm', async () => { await click('Sıfırla…'); await click('Evet, sıfırla'); }, (s) => s.owned === 0 && s.gold === 0 && s.name === '' && s.daily);
     await step('photo mode', async () => { await p.getByLabel('Menü').click(); await p.waitForTimeout(300); await click('Fotoğraf Modu'); });
     await step('leave photo mode', () => p.getByLabel('Fotoğraf modundan çık').click());
-    for (const nav of ['Kasaba', 'Keşif', 'Fırın & Kafe']) await step(`nav: ${nav}`, () => click(nav));
+    const tapSpot = async (id) => { const pt = await p.evaluate((id) => { const sc = window.__world.scenes.town, c = sc.spotCentre(id), v = sc.view; return { x: c.x * v.scale, y: c.y * v.scale }; }, id); await p.touchscreen.tap(pt.x, pt.y); await p.waitForTimeout(900); };
+    const where = () => p.evaluate(() => ({ scene: window.__shell.scene(), overlay: window.__shell.overlay() }));
+    const expect = async (what, want) => { const w = await where(); for (const [k, v] of Object.entries(want)) if (w[k] !== v) throw new Error(`${what}: expected ${k} ${v}, got ${JSON.stringify(w)}`); };
+    await step('nav: Kasaba (town square)', async () => { await click('Kasaba'); await p.waitForTimeout(700); await expect('Kasaba', { scene: 'town' }); });
+    await step('town: tap the Market to go in', async () => { await tapSpot('market'); await expect('Market', { scene: 'market' }); });
+    await step('town: back to the square', async () => { await click('Kasaba'); await p.waitForTimeout(700); await expect('back', { scene: 'town' }); });
+    await step('town: the closed Kitapçı opens the town panel', async () => { await tapSpot('bookshop'); await expect('Kitapçı', { overlay: 'town' }); });
+    await step('close the town panel', () => p.getByLabel('Kapat').first().click());
+    for (const [id, want] of [['daily', { overlay: 'daily' }], ['quests', { overlay: 'quests' }], ['board', { overlay: 'quests' }]]) {
+      await step(`town: ${id}`, async () => { await tapSpot(id); await expect(id, want); await p.getByLabel('Kapat').first().click(); await p.waitForTimeout(400); });
+    }
+    await step('town: flower beds open the café decoration shop', async () => { await tapSpot('flowers'); await p.waitForTimeout(900); await expect('flowers', { scene: 'interior', overlay: 'shop' }); await p.getByLabel('Kapat').first().click(); await click('Kasaba'); await p.waitForTimeout(800); });
+    for (const id of ['fountain', 'bench', 'paw']) await step(`town: ${id} (a small reaction, no screen)`, async () => { await tapSpot(id); await expect(id, { scene: 'town', overlay: null }); });
+    await step('town: the map sign goes to Keşif', async () => { await tapSpot('map'); await expect('map', { scene: 'explore' }); });
+    await step('nav: Fırın & Kafe', () => click('Fırın & Kafe'));
     await p.evaluate(() => { const g = window.__world.game; for (const id of Object.keys(g.productsDef)) if (g.isUnlocked(id)) g.products[id] = 5; });   // stock for whatever the first guests order
     await p.waitForTimeout(30000);
     await step('30 s of play: the waiter served guests', async () => {}, (s) => s.sold >= 1);

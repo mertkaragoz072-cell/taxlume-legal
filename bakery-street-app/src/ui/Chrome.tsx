@@ -276,20 +276,20 @@ function Flight({ from, to, size, onDone }: { from: { x: number; y: number }; to
   );
 }
 
-export type NavId = "cafe" | "town" | "explore" | "market";
+export type NavId = "cafe" | "town" | "explore" | "market" | "quests";
 
 /** Fixed bottom navigation: Fırın & Kafe, Kasaba, Keşif, Mağaza (picture buttons, the active one gets the cat-ear frame). Reaches the screen's bottom edge, home indicator included. */
-export function Nav({ active, onSelect, exploreBadge }: { active: NavId | null; onSelect: (id: NavId) => void; exploreBadge: boolean }) {
+export function Nav({ active, onSelect, exploreBadge, questBadge = false }: { active: NavId | null; onSelect: (id: NavId) => void; exploreBadge: boolean; questBadge?: boolean }) {
   const u = useU();
   const insets = useSafeAreaInsets();
   const H = Math.max(52, u * 14), s = H / 195;                         // the active picture is 195 units tall; the plain one 152, so both buttons have the same body size
   const btn = (id: NavId, label: string) => {
-    const on = active === id, w = on ? (id === "cafe" ? 229 : 223) : 214, h = on ? 195 : 152;
+    const on = active === id, w = on ? (id === "cafe" ? 229 : 223) : 214, h = on ? (id === "quests" ? 194 : 195) : 152;
     return (
       <Pressable key={id} onPress={() => onSelect(id)} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "flex-end", transform: [{ translateY: pressed ? u * 0.3 : 0 }, { scale: pressed ? 0.94 : 1 }] })}>
         <View style={{ height: H, justifyContent: "flex-end" }}>
           <Image source={img(on ? `ui-nav-${id}-on` : `ui-nav-${id}`)} style={{ width: w * s, height: h * s, resizeMode: "contain" }} />
-          {id === "explore" && exploreBadge ? <View style={{ position: "absolute", right: -u * 0.4, top: on ? u * 1.4 : u * 3.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
+          {(id === "explore" && exploreBadge) || (id === "quests" && questBadge) ? <View style={{ position: "absolute", right: -u * 0.4, top: on ? u * 1.4 : u * 3.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
         </View>
         <Text allowFontScaling={false} numberOfLines={1} style={{ color: on ? C.brownDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body), marginTop: u * 0.3 }}>{label}</Text>
       </Pressable>
@@ -301,6 +301,7 @@ export function Nav({ active, onSelect, exploreBadge }: { active: NavId | null; 
       {btn("town", "Kasaba")}
       {btn("explore", "Keşif")}
       {btn("market", "Mağaza")}
+      {btn("quests", "Görevler")}
     </View>
   );
 }

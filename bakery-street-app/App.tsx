@@ -258,7 +258,17 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     if (switching.current) return;
     const hit = scene.hitTest(p.x, p.y);
     const id = sceneRef.current;
-    if (id === "street") {
+    if (id === "town") {
+      const target: Record<string, SceneId> = { bakery: "interior", market: "market", bookshop: "bookshop" };
+      if (!hit) return;
+      scene.tapBuilding(hit); feedback.sfx("tap");
+      const later = (fn: () => void) => setTimeout(fn, 220);    // the tapped piece glows first; a panel opening under the finger also cannot catch the same tap
+      if (target[hit]) { if (world.town.isOpen(hit)) later(() => go(target[hit])); else later(() => setOverlay("town")); }   // a building that is not open yet: the town panel says what it needs and opens it
+      else if (hit === "daily") later(() => setOverlay("daily"));
+      else if (hit === "quests" || hit === "board") later(() => setOverlay("quests"));
+      else if (hit === "map") later(() => go("explore"));
+      else if (hit === "flowers") later(() => act.openShop("decor"));   // the flower beds lead to the café's decoration
+    } else if (id === "street") {
       const target: Record<string, SceneId> = { bakery: "interior", market: "market", bookshop: "bookshop" };
       if (hit && target[hit]) { scene.tapBuilding(hit, p.x, p.y); setTimeout(() => go(target[hit]), 260); }
     } else if (id === "explore") {
@@ -278,10 +288,11 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     }
   }, [act, feedback, game, go, showToast, world]);
 
-  if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast, openShop: act.openShop, peek: act.peek };   // development screenshots only
+  if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast, openShop: act.openShop, peek: act.peek, scene: () => sceneRef.current, overlay: () => overlay };   // development screenshots only
   const navSelect = (id: NavId) => {
     feedback.sfx("tap");
-    if (id === "town") { setOverlay((o) => (o === "town" ? null : "town")); return; }
+    if (id === "town") { setOverlay(null); go("town"); return; }
+    if (id === "quests") { setOverlay((o) => (o === "quests" ? null : "quests")); return; }       // the town square; the list of buildings opens from a locked building
     if (id === "market") { if (overlay === "shop") setOverlay(null); else act.openShop(shopReq.tab === "ingredients" ? "goal" : shopReq.tab); return; }     // the shop opens over the café
     setOverlay(null);
     go(id === "cafe" ? "interior" : id);
@@ -325,11 +336,11 @@ function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId;
   useRefresh(5000);
   const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0, daily: world.daily.status().canClaim };
   const toggle = (o: Overlay) => { if (o === "photo") act.toast("📷 Fotoğraf modu: ekran görüntüsü al, çıkmak için ekrana dokun", 3200); setOverlay(overlay === o ? null : o); };
-  const active: NavId | null = overlay === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
+  const active: NavId | null = overlay === "quests" ? "quests" : overlay === "town" || sceneId === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (
     <>
       <Hud badges={badges} onOpen={(id) => toggle(id === "daily" ? "daily" : id)} />
-      <Nav active={active} onSelect={navSelect} exploreBadge={world.exploration.isReady()} />
+      <Nav active={active} onSelect={navSelect} exploreBadge={world.exploration.isReady()} questBadge={badges.quests} />
     </>
   );
 }
