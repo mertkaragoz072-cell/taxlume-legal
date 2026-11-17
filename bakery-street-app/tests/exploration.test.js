@@ -31,8 +31,8 @@ function make({ level = 1, rng = lowRng, clock } = {}) {
 }
 const M = EXPLORE[0], F = EXPLORE[1], Z = EXPLORE[2];
 
-test('three regions: meadow short and open at start, forest and ruins need more level and progress', () => {
-  assert.deepEqual(EXPLORE.map((r) => r.id), ['meadow', 'forest', 'ruins']);
+test('six regions: meadow short and open at start, forest and ruins need more level and progress', () => {
+  assert.deepEqual(EXPLORE.map((r) => r.id), ['meadow', 'forest', 'ruins', 'pond', 'lavender', 'cave']);
   assert.equal(M.minLevel, 1);
   assert.ok(F.minLevel > M.minLevel && Z.minLevel > F.minLevel);
   assert.ok(M.duration < F.duration && F.duration < Z.duration);
@@ -49,7 +49,7 @@ test('locked regions refuse to start and say what is missing', () => {
   assert.equal(r.ok, false);
   assert.equal(r.reason, 'locked');
   assert.match(r.message, /Seviye 4 gerekli \(şu an 1\)/);
-  assert.match(r.message, /Yeşil Çayırlar/);
+  assert.match(r.message, /Meyve Bahçesi/);
   assert.equal(ex.active, null);
 });
 
@@ -239,7 +239,7 @@ test('invalid saved exploration data is repaired and never trusted', () => {
   const { ex } = make();
   const bad = validateExploration({ active: { id: 1, region: 'ghost', startedAt: T0, duration: 60, reward: {} }, done: { meadow: -3, forest: 'x' } }, ex);
   assert.equal(bad.active, null);
-  assert.deepEqual(bad.done, { meadow: 0, forest: 0, ruins: 0 });
+  assert.deepEqual(bad.done, { meadow: 0, forest: 0, ruins: 0, pond: 0, lavender: 0, cave: 0 });
   const odd = validateExploration({ active: { id: 5, region: 'meadow', startedAt: T0, duration: 60, reward: { gold: -9, xp: 1.5, gems: 'a', ingredients: { flour: 3, ghost: 2, egg: -1 } } }, nextId: 2 }, ex);
   assert.deepEqual(odd.active.reward, { gold: 0, xp: 0, gems: 0, ingredients: { flour: 3 } });
   assert.ok(odd.nextId > odd.active.id);

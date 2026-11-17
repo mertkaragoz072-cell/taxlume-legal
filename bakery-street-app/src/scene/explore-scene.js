@@ -5,14 +5,16 @@ import { PAL } from '../palette.js';
 import { drawIcon, getImage } from '../assets.js';
 import { DESIGN } from '../config.js';
 
-const R = 62;                                              // tap radius of a marker (design px)
+const R = 62;
+const BOARD_W = 1024, BOARD_H = 853;                                              // tap radius of a marker (design px)
 
 export class ExploreScene {
   /** @param {import('../game/exploration.js').Exploration} exploration */
-  constructor(exploration) { this.id = 'explore'; this.ex = exploration; this.t = 0; this.view = null; this.selected = null; this.pressedId = null; this.bg = null; this.bgKey = ''; }
+  constructor(exploration) { this.id = 'explore'; this.ex = exploration; this.t = 0; this.view = null; this.selected = null; this.pressedId = null; this.bg = null; this.bgKey = ''; this.topPx = 0; }   // topPx: set by the app, where the board starts on screen (below the top bar)
   resize(view) { this.view = view; this.bgKey = ''; this.panX = null; }
   update(dt) {
     this.t += dt;
+    if (this.usesBoard()) return;
     if (this.view?.portrait) {                                    // the map slides so the selected (or first) region stays in view
       const { s } = this.xform(), want = this.panTarget(s);
       this.panX = this.panX == null ? want : this.panX + (want - this.panX) * Math.min(1, dt * 6);
@@ -29,7 +31,16 @@ export class ExploreScene {
     const v = this.view, r = this.ex.regions.find((q) => q.id === this.selected) ?? this.ex.regions[0], fx = r ? r.map.x : DESIGN.w / 2;
     return Math.max(v.vw - DESIGN.w * s, Math.min(0, v.vw / 2 - fx * s));
   }
+  /** Portrait with the painted board (assets/explore-board.webp): the board fills the width right under the top bar. */
+  usesBoard() { return !!this.view?.portrait && !!getImage('explore-board'); }
+  board() { const v = this.view, s = v.vw / BOARD_W; return { s, ox: 0, oy: this.topPx / v.scale }; }
+
   hitTest(x, y) {
+    if (this.usesBoard()) {
+      const { s, ox, oy } = this.board(), bx = (x - ox) / s, by = (y - oy) / s;
+      for (const r of this.ex.regions) if (r.board && Math.hypot(bx - r.board.x, by - r.board.y) <= 70) return r.id;
+      return null;
+    }
     const { s, ox, oy } = this.xform(), mx = (x - ox) / s, my = (y - oy) / s;
     for (const r of this.ex.regions) if (Math.hypot(mx - r.map.x, my - r.map.y) <= R) return r.id;
     return null;
@@ -64,6 +75,7 @@ export class ExploreScene {
   }
 
   renderPortrait(ctx) {
+    if (this.usesBoard()) return this.renderBoard(ctx);
     const v = this.view, k = v.scale * v.dpr, t = this.t, { s, ox, oy } = this.xform(), map = getImage('explore-map');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -93,6 +105,89 @@ export class ExploreScene {
     }
     for (const r of rs) this.drawRegion(ctx, r, t);
     gradeScreen(ctx, { warm: 0.12, vignette: 0.1, floorFade: 0 });
+  }
+
+  /** The painted board, its title, and one marker per region: lock, open, on an expedition (timer), reward waiting, done (tick); the selected one gets the paw pin. */
+  renderBoard(ctx) {
+    const v = this.view, k = v.scale * v.dpr, t = this.t, { s, oy } = this.board(), img = getImage('explore-board');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    const sky = ctx.createLinearGradient(0, 0, 0, oy + 40); sky.addColorStop(0, '#A9D8FB'); sky.addColorStop(1, '#8CC8F4');
+    ctx.fillStyle = sky; ctx.fillRect(-10, -10, v.vw + 20, oy + 60);
+    const wood = ctx.createLinearGradient(0, oy + BOARD_H * s - 20, 0, v.vh); wood.addColorStop(0, '#8A5A36'); wood.addColorStop(1, '#6E4529');
+    ctx.fillStyle = wood; ctx.fillRect(-10, oy + BOARD_H * s - 20, v.vw + 20, v.vh);
+    ctx.strokeStyle = 'rgba(60,36,20,0.35)'; ctx.lineWidth = 3;                      // wooden planks under the board
+    for (let py = oy + BOARD_H * s + 40; py < v.vh; py += 70) { ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(v.vw, py); ctx.stroke(); }
+    ctx.drawImage(img, 0, oy, BOARD_W * s, BOARD_H * s);
+    ctx.save(); ctx.translate(0, oy); ctx.scale(s, s);
+    ctx.font = fontCss('800 54px "Trebuchet MS", system-ui, sans-serif'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = PAL.brownDark; ctx.fillText('Keşif', 540, 78);
+    const sel = this.selected ?? this.defaultSelection();
+    for (const r of this.ex.regions) if (r.board && r.id !== sel) this.marker(ctx, r, t, false);
+    const sr = this.ex.region(sel); if (sr?.board) this.marker(ctx, sr, t, true);
+    ctx.restore();
+    gradeScreen(ctx, { warm: 0.08, vignette: 0.06, floorFade: 0 });
+  }
+
+  /** What the panel shows when nothing was tapped: the expedition under way, else the newest open region. */
+  defaultSelection() {
+    if (this.ex.active) return this.ex.active.id;
+    const open = this.ex.regions.filter((r) => this.ex.status(r.id) !== 'locked');
+    return (open[open.length - 1] ?? this.ex.regions[0]).id;
+  }
+
+  marker(ctx, r, t, selected) {
+    const { x, y } = r.board, st = this.ex.status(r.id), done = this.ex.timesDone(r.id) > 0, press = this.pressedId === r.id ? 0.92 : 1;
+    ctx.save(); ctx.translate(x, y); ctx.scale(press, press);
+    if (selected) {                                            // soft glow and the paw pin
+      ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, 0, 10, 120, '255,220,120', 0.28 + 0.06 * Math.sin(t * 2)); ctx.globalCompositeOperation = 'source-over';
+      ctx.beginPath(); ctx.ellipse(0, 32, 34, 16, 0, 0, 7); paint(ctx, '#F2D9A6', 3, PAL.honeyDark);
+      const bob = Math.sin(t * 2.2) * 5;
+      ctx.translate(0, bob - 6);
+      ctx.beginPath(); ctx.moveTo(0, 30); ctx.bezierCurveTo(-12, 8, -40, -12, -40, -42); ctx.arc(0, -42, 40, Math.PI, 0); ctx.bezierCurveTo(40, -12, 12, 8, 0, 30); ctx.closePath();
+      paint(ctx, '#F08A24', 4, '#B85F3B');
+      ctx.beginPath(); ctx.arc(0, -42, 28, 0, 7); ctx.fillStyle = '#FFF4DE'; ctx.fill();
+      this.paw(ctx, 0, -42, 20, '#F08A24');
+      ctx.restore();
+      if (st !== 'locked' && st !== 'available' && st !== 'busy') this.stateChip(ctx, r, st, x, y - 120);
+      return;
+    }
+    ctx.beginPath(); ctx.arc(2, 5, 34, 0, 7); ctx.fillStyle = 'rgba(70,48,32,0.25)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, 34, 0, 7);
+    if (st === 'locked') { paint(ctx, '#EADFC8', 4, PAL.brown); this.lock(ctx); }
+    else if (st === 'ready') { paint(ctx, '#FFE7A8', 4, PAL.honeyDark); drawIcon(ctx, 'gift', 0, 0, 46); }
+    else if (st === 'active') { paint(ctx, '#FFF4DE', 4, PAL.honeyDark); drawIcon(ctx, 'timer', 0, 0, 42); }
+    else if (done) { paint(ctx, '#F4F0E2', 4, PAL.brown); this.tick(ctx); }
+    else { paint(ctx, '#FFF4DE', 4, PAL.honeyDark); this.paw(ctx, 0, 0, 18, '#F08A24'); }
+    ctx.restore();
+    if (st === 'ready' || st === 'active') this.stateChip(ctx, r, st, x, y - 58);
+  }
+
+  stateChip(ctx, r, st, x, y) {
+    const text = st === 'ready' ? 'Ödül hazır!' : formatShort(this.ex.remaining());
+    ctx.font = fontCss('700 26px "Trebuchet MS", system-ui, sans-serif'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(text).width + 30, h = 40;
+    ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); paint(ctx, st === 'ready' ? '#E5F0D6' : '#FFF7EA', 3, st === 'ready' ? PAL.green : PAL.honeyDark);
+    ctx.fillStyle = PAL.brownDark; ctx.fillText(text, x, y + 1);
+  }
+
+  lock(ctx) {
+    ctx.lineWidth = 5; ctx.strokeStyle = PAL.brown; ctx.beginPath(); ctx.arc(0, -6, 11, Math.PI, 0); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-16, -6, 32, 24, 5); paint(ctx, '#D8C3A0', 3, PAL.brown);
+    ctx.beginPath(); ctx.arc(0, 4, 4, 0, 7); ctx.fillStyle = PAL.brown; ctx.fill(); ctx.fillRect(-2, 4, 4, 8);
+  }
+
+  tick(ctx) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#3F6E2A'; ctx.lineWidth = 13; ctx.beginPath(); ctx.moveTo(-15, 1); ctx.lineTo(-4, 13); ctx.lineTo(18, -13); ctx.stroke();
+    ctx.strokeStyle = '#8CC152'; ctx.lineWidth = 7; ctx.stroke();
+  }
+
+  paw(ctx, x, y, r, col) {
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.ellipse(x, y + r * 0.25, r * 0.55, r * 0.45, 0, 0, 7); ctx.fill();
+    for (const [dx, dy] of [[-0.62, -0.32], [-0.22, -0.68], [0.22, -0.68], [0.62, -0.32]]) { ctx.beginPath(); ctx.ellipse(x + dx * r, y + dy * r, r * 0.18, r * 0.23, 0, 0, 7); ctx.fill(); }
   }
 
   drawRegion(ctx, r, t) {

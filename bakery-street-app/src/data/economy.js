@@ -305,22 +305,40 @@ export const EXPLORE_LIMIT = { dailyGold: 4000, overRate: 0.2 };
 
 export const EXPLORE = [
   {
-    id: 'meadow', name: 'Yeşil Çayırlar', icon: '🌿', map: { x: 268, y: 494 },
-    desc: 'Çiçekli, sakin otlaklar. Kısa bir yürüyüşle malzeme toplanır.',
+    id: 'meadow', name: 'Meyve Bahçesi', icon: '🌿', map: { x: 268, y: 494 }, board: { x: 240, y: 540 },
+    desc: 'Elma ağaçlarının arasında kısa, sakin bir yürüyüş. Malzeme toplanır.',
     minLevel: 1, duration: 60,
     rewards: { gold: [50, 90], xp: [14, 22], ingredients: [{ id: 'flour', amount: [2, 4], chance: 1 }, { id: 'egg', amount: [1, 3], chance: 0.5 }] },
   },
   {
-    id: 'forest', name: 'Orman Yolu', icon: '🌲', map: { x: 536, y: 228 },
+    id: 'forest', name: 'Orman Yolu', icon: '🌲', map: { x: 536, y: 228 }, board: { x: 285, y: 325 },
     desc: 'Gölgeli patikalar; mantar, süt ve tatlı bulmak için iyi bir yer.',
     minLevel: 4, after: { region: 'meadow', times: 1 }, duration: 300,
     rewards: { gold: [450, 750], xp: [100, 140], ingredients: [{ id: 'milk', amount: [2, 4], chance: 1 }, { id: 'sugar', amount: [2, 4], chance: 0.7 }, { id: 'butter', amount: [1, 2], chance: 0.4 }] },
   },
   {
-    id: 'ruins', name: 'Eski Harabeler', icon: '🏛️', map: { x: 590, y: 440 },
+    id: 'ruins', name: 'Eski Harabeler', icon: '🏛️', map: { x: 590, y: 440 }, board: { x: 658, y: 538 },
     desc: 'Unutulmuş taş kalıntılar. Tehlikeli ama nadir hazineler saklar.',
     minLevel: 8, after: { region: 'forest', times: 1 }, duration: 900,
     rewards: { gold: [1800, 2700], xp: [400, 500], ingredients: [{ id: 'butter', amount: [3, 6], chance: 1 }, { id: 'beans', amount: [3, 6], chance: 0.8 }], gems: { amount: [2, 5], chance: 0.4 } },
+  },
+  {
+    id: 'pond', name: 'Balıkçı Gölü', icon: '🎣', map: { x: 300, y: 640 }, board: { x: 268, y: 738 },
+    desc: 'Sazlıklı, sessiz bir göl. Uzun bir bekleyiş, bol süt ve yumurta.',
+    minLevel: 11, after: { region: 'ruins', times: 1 }, duration: 1800,
+    rewards: { gold: [3000, 4500], xp: [600, 750], ingredients: [{ id: 'milk', amount: [5, 9], chance: 1 }, { id: 'egg', amount: [4, 8], chance: 0.8 }], gems: { amount: [2, 4], chance: 0.3 } },
+  },
+  {
+    id: 'lavender', name: 'Lavanta Çiftliği', icon: '💜', map: { x: 900, y: 620 }, board: { x: 790, y: 738 },
+    desc: 'Yel değirmeninin yanında mor tarlalar. Şeker ve un çuvalları dolar.',
+    minLevel: 14, after: { region: 'pond', times: 1 }, duration: 3600,
+    rewards: { gold: [5000, 7500], xp: [900, 1100], ingredients: [{ id: 'sugar', amount: [6, 10], chance: 1 }, { id: 'flour', amount: [8, 12], chance: 1 }, { id: 'butter', amount: [3, 6], chance: 0.6 }], gems: { amount: [3, 6], chance: 0.35 } },
+  },
+  {
+    id: 'cave', name: 'Kristal Mağara', icon: '💎', map: { x: 900, y: 260 }, board: { x: 768, y: 328 },
+    desc: 'Dağın içinde parlayan kristaller. En uzun yolculuk, en değerli hazineler.',
+    minLevel: 18, after: { region: 'lavender', times: 1 }, duration: 7200,
+    rewards: { gold: [9000, 14000], xp: [1500, 1900], ingredients: [{ id: 'beans', amount: [8, 14], chance: 1 }, { id: 'butter', amount: [5, 9], chance: 0.8 }], gems: { amount: [5, 10], chance: 0.6 } },
   },
 ];
 

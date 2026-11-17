@@ -6,7 +6,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Animated, BackHandler, Image, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Animated, BackHandler, Image, PixelRatio, useWindowDimensions, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AREAS } from "./src/scene/interior-layout.js";
 import { loadAssets } from "./src/assets.js";
@@ -22,6 +22,7 @@ import { CafePanel } from "./src/ui/CafePanel";
 import { Present } from "./src/ui/kit";
 import { MOTION } from "./src/ui/motion";
 import { PanelBoundary, StageCard, saleNotes } from "./src/ui/Celebration";
+import { ExploreBoardPanel, useBoardTop } from "./src/ui/ExploreBoard";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
 import { AlbumPanel, StatsPanel } from "./src/ui/Collection";
@@ -106,6 +107,9 @@ type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   const insets = useSafeAreaInsets();
   const feedback = useMemo(() => new Feedback(world.settings), [world]);
+  const { width: winW, height: winH } = useWindowDimensions(), isPortrait = winH >= winW;
+  const boardTop = useBoardTop();
+  useEffect(() => { (world.scenes.explore as any).topPx = boardTop; }, [world, boardTop]);   // the Keşif board starts right under the top bar
   useEffect(() => {                                       // graphics and hint settings reach the cafe scene (now and whenever they change)
     const apply = () => { const sc = world.scenes.interior as any; sc.lowFx = !!world.settings.values.lowfx; sc.tipsOn = !!world.settings.values.tips; };
     apply(); world.settings.on(apply);
@@ -309,7 +313,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Present show={sceneId === "interior" && !!panel}><PanelBoundary onFail={failPanel}>{panel ? <CafePanel id={panel.id} side={panel.side} /> : null}</PanelBoundary></Present>
           {sceneId === "market" ? <PanelBoundary onFail={failPanel}><MarketPanel /></PanelBoundary> : null}
           {sceneId === "bookshop" ? <PanelBoundary onFail={failPanel}><ResearchPanel /></PanelBoundary> : null}
-          {sceneId === "explore" ? <PanelBoundary onFail={failPanel}><ExplorePanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} /></PanelBoundary> : null}
+          {sceneId === "explore" ? <PanelBoundary onFail={failPanel}>{isPortrait ? <ExploreBoardPanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} /> : <ExplorePanel selected={exploreSel} onSelect={(id) => { world.scenes.explore.selected = id; setExploreSel(id); }} />}</PanelBoundary> : null}
           <Present show={overlay === "quests"}><PanelBoundary onFail={failPanel}><QuestPanel /></PanelBoundary></Present>
           <Present show={overlay === "daily"}><PanelBoundary onFail={failPanel}><DailyPanel /></PanelBoundary></Present>
           <Present show={overlay === "album"}><PanelBoundary onFail={failPanel}><AlbumPanel /></PanelBoundary></Present>
