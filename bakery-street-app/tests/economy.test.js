@@ -187,9 +187,9 @@ test('changing research prices never touches saved research levels', () => {
   assert.equal(b.game.player.gold, 1_000_000);
 });
 
-test('starting gold stays 54.320', async () => {
+test('a new game starts with 0 gold (the first gold comes from the first sales, the daily reward and the first quests)', async () => {
   const { PLAYER } = await import('../src/config.js');
-  assert.equal(PLAYER.gold, 54320);
+  assert.equal(PLAYER.gold, 0);
 });
 
 // ------------------------------------------------------------------------------------------------ levels beyond 10

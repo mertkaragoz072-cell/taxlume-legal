@@ -15,7 +15,7 @@ test('simulation: 3 days of play earn a sane amount, sales stay the main steady 
   }
   const sales = days.reduce((s, d) => s + (d.income.sale ?? 0), 0), all = days.reduce((s, d) => s + d.total, 0);
   assert.ok(sales / all > 0.3 && sales / all < 0.95, `sales share ${sales / all}`);
-  assert.ok(days[2].stage >= 2 && days[2].level > days[0].level - 1);
+  assert.ok(days[2].level > days[0].level);                  // (stage progress is checked by the full playthrough test)
 });
 
 test('simulation: the service bonuses change income only moderately (they are a bonus, not a new economy)', () => {

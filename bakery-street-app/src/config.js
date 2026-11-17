@@ -17,7 +17,7 @@ export const TEXT = {
 
 // Starting values of a new game (saves replace them). energy / maxEnergy are not used by any system and are hidden in the HUD.
 export const PLAYER = {
-  gold: 54320,
+  gold: 0,
   gems: 865,
   energy: 120,
   maxEnergy: 120,

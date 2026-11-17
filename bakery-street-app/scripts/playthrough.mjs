@@ -15,12 +15,13 @@ import { Till } from '../src/game/till.js';
 import { DailyGoals } from '../src/game/goals.js';
 import { Cafe } from '../src/game/customers.js';
 import { Album } from '../src/game/album.js';
+import { PLAYER } from '../src/config.js';
 
 export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   let seed = s0 * 7919;
   const rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   const clock = { now: new Date(2025, 2, 10, 18, 0).getTime() };
-  const game = new Game({ gold: 54320, gems: 0 }, {}, () => clock.now);
+  const game = new Game({ gold: PLAYER.gold, gems: 0 }, {}, () => clock.now);
   const prog = new Progression(game), town = new Town(game), ex = new Exploration(game, { rng }), research = new Research(game);
   const shop = new Shop(game), quests = new Quests(game), daily = new DailyReward(game), till = new Till(game), goals = new DailyGoals(game);
   const cafe = new Cafe(game, { rng }); const album = new Album(game, cafe.looks);
@@ -51,7 +52,8 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   };
   const spend = () => {                                     // a sensible player: keep a small reserve for ingredients, buy what opens next
     const reserve = 400;
-    for (let i = 0; i < 6; i++) { const g = shop.nextGoal(); if (g.kind !== 'ready' || !g.item || game.gold - g.price < reserve) break; if (!shop.buy(g.item.id).ok) break; mile(`buy:${g.item.id}`, null); }
+    const ready = shop.items.filter((x) => x.category !== 'ingredients' && shop.status(x.id) === 'ready').sort((x, y) => shop.priceOf(x.id) - shop.priceOf(y.id));   // what the shop shows as buyable, cheapest first
+    for (const x of ready) { if (game.gold - shop.priceOf(x.id) < reserve) break; shop.buy(x.id); }
     for (const id of Object.keys(game.upgradesDef)) { const c = game.nextCost(id); if (c != null && game.gold - c > reserve * 3) game.buyUpgrade(id); }
     for (const b of town.list()) if (b.status === 'available' && game.gold > (b.need?.gold ?? 0) + reserve) { if (town.open(b.def.id).ok) mile(`open:${b.def.id}`, `${b.def.name} açıldı`); }
     if (town.isOpen('bookshop')) { town.develop('bookshop'); for (const id of research.ids()) { const c = research.nextCost(id); if (c != null && game.gold - c > reserve * 3) research.buy(id); } }

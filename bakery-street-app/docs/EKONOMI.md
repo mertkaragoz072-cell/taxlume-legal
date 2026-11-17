@@ -12,7 +12,7 @@ Altın kazanma, harcama, satın alınanların dünyada görünmesi ve aşama hed
 
 * Müşteri satışı ürünün listelenmiş fiyatını öder (araştırma bonusu bir kez, VIP çarpanı bir kez, bahşiş ayrı). Vitrinden satış daha az öder (müşterinin net kârının %20'si kesilir) ama malzeme maliyetinden fazladır. Testle doğrulanır (`tests/economy-integration.test.js`).
 * Üst çubuk altın sayısı değişimi 0,3 sn'de akıcı gösterir ve altında `+N / −N` çipi çıkar; satışta dünyada `+X altın` yazısı ve altınlar kasaya uçar.
-* Başlangıç altını (54.320) ve kayıtlı altınlar olduğu gibi korunur.
+* Yeni oyun 0 altınla başlar (ilk altın satışlardan, günlük ödülden ve ilk görevlerden gelir); kayıtlı oyunların altını olduğu gibi korunur.
 
 ### Sınırsız / hileli altın kapıları
 | Kaynak | Önlem |

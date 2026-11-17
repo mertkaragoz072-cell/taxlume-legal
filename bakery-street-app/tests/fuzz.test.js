@@ -18,7 +18,7 @@ class FakeStorage { constructor() { this.m = new Map(); } getItem(k) { return th
 
 /** The whole game wired the way src/runtime/world.ts does it. */
 function world(storage, clock, rng) {
-  const game = new Game({ gold: 54320, gems: 0 }, {}, () => clock.now);
+  const game = new Game({ gold: 0, gems: 0 }, {}, () => clock.now);
   const parts = { progression: new Progression(game), town: new Town(game), exploration: new Exploration(game, { rng }), research: new Research(game) };
   parts.shop = new Shop(game); parts.quests = new Quests(game); parts.daily = new DailyReward(game); parts.till = new Till(game); parts.goals = new DailyGoals(game);
   parts.cafe = new Cafe(game, { rng }); parts.album = new Album(game, parts.cafe.looks);

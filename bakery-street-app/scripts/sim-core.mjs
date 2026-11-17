@@ -20,7 +20,7 @@ let seed = seedArg;
 const rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const clock = { now: new Date(2025, 2, 10, 12, 0).getTime() };
 
-const player = { gold: 54320, gems: 0 };
+const player = { gold: 0, gems: 0 };
 const game = new Game(player, {}, () => clock.now);
 new Progression(game); new Town(game); new Exploration(game, { rng }); new Research(game);
 const shop = new Shop(game), quests = new Quests(game), daily = new DailyReward(game), till = new Till(game), goals = new DailyGoals(game);
@@ -59,11 +59,9 @@ function produce() {
   }
 }
 function shopping() {
-  for (let i = 0; i < 4; i++) {
-    const g = shop.nextGoal();
-    if (g.kind !== 'ready' || !g.item) break;
-    if (!shop.buy(g.item.id).ok) break;
-  }
+  const ready = shop.items.filter((x) => x.category !== 'ingredients' && shop.status(x.id) === 'ready').sort((x, y) => shop.priceOf(x.id) - shop.priceOf(y.id));   // what the shop shows as buyable, cheapest first
+  for (const x of ready) { if (game.gold - shop.priceOf(x.id) < 300) break; shop.buy(x.id); }
+  for (const id of Object.keys(game.upgradesDef)) { const c = game.nextCost(id); if (c != null && game.gold - c > 1200) game.buyUpgrade(id); }
   for (const q of quests.claimable()) quests.claim(q.def.id);
   for (const g of goals.claimable()) goals.claim(g.id);
 }
