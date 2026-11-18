@@ -72,7 +72,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
     if (!r.ok) { act.warn(r.message); return; }
     act.sfx("buy"); act.buzz([30, 40, 30]);
     setFlash(d.id); if (flashTimer.current) clearTimeout(flashTimer.current); flashTimer.current = setTimeout(() => setFlash(null), 1400);
-    act.toast(`⬆ ${d.name} · Seviye ${r.level} · −${fmt(r.cost)} altın · Çekicilik +${shop.appealAt(d, r.level)}`, 2600);
+    act.toast(r.steps > 1 ? `⬆ ${d.name} · ${r.step}. masa Seviye ${r.level} oldu${r.done ? ` · bütün masalar Seviye ${r.level}!` : ` (${r.step}/${r.steps})`} · −${fmt(r.cost)} altın` : `⬆ ${d.name} · Seviye ${r.level} · −${fmt(r.cost)} altın · Çekicilik +${shop.appealAt(d, r.level)}`, 2600);
     act.peek(2400);
   };
 
@@ -206,7 +206,7 @@ function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any
   const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
   const need = locked ? (v.missing[0]?.text ?? "Kilitli") : "";
   const lvl = owned && shop.levelable(d) ? (shop.itemLevel(d.id) as number) : 0, nxt = lvl ? shop.nextLevel(d.id) : null;
-  const line = lvl ? `Çekicilik +${shop.appealAt(d, lvl)}${nxt ? ` → +${nxt.appeal}` : ""}${v.placed ? "" : " · depoda"}` : owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? need : v.effectText || d.desc;
+  const line = lvl ? (nxt && nxt.steps > 1 ? `Sv ${nxt.level}: ${nxt.step - 1}/${nxt.steps} masa · sıradaki ${nxt.step}. masa` : `Çekicilik +${shop.appealNow(d)}${nxt ? ` → +${nxt.appeal}` : ""}`) + (v.placed ? "" : " · depoda") : owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? need : v.effectText || d.desc;
   const press = () => {
     if (lvl) { if (!nxt) onOpen(); else if (!nxt.ok) act.warn(nxt.reason); else onRaise?.(d); return; }
     if (owned) { onOpen(); return; }
@@ -222,6 +222,7 @@ function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any
           <ItemPicture d={d} game={game} size={w * 0.6} level={lvl} />
         </View>
         {lvl ? <LevelPill level={lvl} /> : null}
+        {nxt && nxt.steps > 1 ? <View style={{ position: "absolute", right: u * 0.7, top: u * 0.7, flexDirection: "row", gap: u * 0.3 }}>{Array.from({ length: nxt.steps }, (_, i) => <View key={i} style={{ width: u * 1.6, height: u * 1.6, borderRadius: 99, borderWidth: u * 0.25, borderColor: C.honeyDark, backgroundColor: i < nxt.step - 1 ? C.honey : C.paper }} />)}</View> : null}
         {d.kind === "equipment" && d.tier > 1 ? <View style={{ position: "absolute", left: u * 0.8, top: u * 0.8, paddingHorizontal: u * 0.8, borderRadius: 99, backgroundColor: TIER_BG[d.tier] || C.vanilla, borderWidth: u * 0.25, borderColor: C.honeyDark }}><Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{"★".repeat(d.tier - 1)}</Text></View> : null}
         {locked ? <View style={{ position: "absolute", right: u * 0.8, top: u * 0.8 }}><GameIcon id="lock" size={u * 5} /></View> : null}
         <Text allowFontScaling={false} numberOfLines={1} style={{ color: locked ? C.brown : C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>

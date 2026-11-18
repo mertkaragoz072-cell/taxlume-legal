@@ -415,8 +415,8 @@ test('validateShop repairs garbage and never loses an owned decoration', () => {
   assert.deepEqual(v.stored.filter((id) => !['plantB'].includes(id)), []);   // matPaw is not owned: dropped from stored
   assert.deepEqual(v.introduced, ['plantA']);
   assert.equal(v.stage, 4);                                           // clamped, not trusted
-  assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, recipeLevels: {}, collections: [] });
-  assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, recipeLevels: {}, collections: [] });
+  assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, parts: {}, recipeLevels: {}, collections: [] });
+  assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, parts: {}, recipeLevels: {}, collections: [] });
   // a v10 save (no `stored`) loads: pieces keep their slots
   const old = validateShop({ owned: ['plantA', 'lampA'], placed: { 'edge-left': 'plantA', 'lamp-1': 'lampA' }, introduced: [], stage: 2 }, c.shop);
   assert.deepEqual(old.placed, { 'edge-left': 'plantA', 'lamp-1': 'lampA' }); assert.deepEqual(old.stored, []);
@@ -607,4 +607,28 @@ test('collections: owning a whole decoration group pays once, raising it all to 
   assert.ok(c.player.gold < gold);                                           // (the upgrades cost more than the reward)
   assert.deepEqual(validateShop({ ...c.shop.exportState(), collections: ['Aydınlatma:max', 'Uydurma:owned', 'x'] }, c.shop).collections, ['Aydınlatma:max']);
   assert.ok(COLLECTIONS.max.min > COLLECTIONS.owned.min);
+});
+
+test('table sets level one table at a time: every table reaches the next level before any table goes further', () => {
+  const c = make({ level: 30, gold: 1e8 });
+  assert.ok(c.shop.buy('tablePlain').ok);
+  const d = SHOP_ITEMS.find((x) => x.id === 'tablePlain'), steps = c.shop.stepsOf(d);
+  assert.equal(steps, CAFE.tables);
+  const full = Math.round(d.price * ITEM_LEVELS.price[1] / steps / 10) * 10;
+  const seen = [];
+  for (let k = 0; k < steps; k++) {
+    const r = c.shop.upgradeItem('tablePlain');
+    assert.ok(r.ok); assert.equal(r.cost, full); assert.equal(r.step, k + 1);
+    seen.push([0, 1, 2, 3].map((i) => c.shop.tableLevel('tablePlain', i)).join(''));
+  }
+  assert.deepEqual(seen, ['2111', '2211', '2221', '2222']);
+  assert.equal(c.shop.itemLevel('tablePlain'), 2);
+  c.shop.upgradeItem('tablePlain');
+  assert.equal([0, 1, 2, 3].map((i) => c.shop.tableLevel('tablePlain', i)).join(''), '3222');
+  // appeal grows table by table, and the half-raised set is saved
+  assert.ok(c.shop.appealNow(d) >= c.shop.appealAt(d, 2) && c.shop.appealNow(d) <= c.shop.appealAt(d, 3));
+  assert.deepEqual(validateShop(c.shop.exportState(), c.shop).parts, { tablePlain: 1 });
+  assert.deepEqual(validateShop({ ...c.shop.exportState(), parts: { tablePlain: 9, plantA: 1 } }, c.shop).parts, {});
+  for (let k = 0; k < steps * 3; k++) c.shop.upgradeItem('tablePlain');
+  assert.equal(c.shop.itemLevel('tablePlain'), 5); assert.equal(c.shop.nextLevel('tablePlain'), null);
 });
