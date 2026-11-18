@@ -10,6 +10,8 @@ node scripts/gen-assets.mjs
 ```
 Bir versiyon beğenilmezse tek seviye de eklenebilir: `python3 scripts/add_item_level.py <id> 3 resim.png`.
 
+**Masa takımları (Sade, Pastalı, Fincanlı):** masanın ÜSTÜ BOŞ çizilir (vazo, pasta, fincan yok). Masanın üstüne oyun koyar: boş masada takımın süsü (pasta / fincan), müşteri oturunca onun sipariş ettiği ürün.
+
 **Sıra:** önce ilk üç (kafede en çok görünenler), sonra diğerleri.
 
 ## 1. Sade Masa Takımı (`tablePlain`)

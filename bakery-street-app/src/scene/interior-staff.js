@@ -197,7 +197,7 @@ export class StaffLayer {
       ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35)); ctx.globalAlpha = fade;
       this.plate(ctx, cx, cy);
       if (eaten < 0.85 && this.game.productsDef[pl.product]?.station === 'coffee') steam(ctx, cx, cy - 26, pl.t + ti, 0.7 * (1 - eaten));   // a hot drink steams while it is drunk
-      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIconOrEmoji(ctx, pl.product, this.game.productsDef[pl.product]?.icon, 0, -8 / k, 34); ctx.restore(); }
+      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIconOrEmoji(ctx, pl.product, this.game.productsDef[pl.product]?.icon, 0, -10 / k, 44); ctx.restore(); }   // exactly what the guest ordered, big enough to read
       else { ctx.fillStyle = 'rgba(121,82,56,.5)'; for (const [dx, dy] of [[-9, 0], [4, 2], [11, -1]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 1.8, 0, 7); ctx.fill(); } }     // crumbs
       ctx.restore();
     }

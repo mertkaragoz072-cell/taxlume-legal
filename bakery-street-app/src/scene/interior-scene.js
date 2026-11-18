@@ -304,6 +304,9 @@ export class InteriorScene {
       const sw = w * 1.12, sh = sw * set.naturalHeight / set.naturalWidth, sx = dx + (w - sw) / 2, sy = dy + h - sh;
       this.grounding(ctx, dx + w / 2, dy + h, sw * 0.5);
       ctx.drawImage(set, sx, sy, sw, sh);
+      // the set's pictures have an empty table top: a free table shows the set's decoration (cake / cup), a taken one stays clear for the order
+      const i = +a.id.slice(5) - 1, top = this.game.shop?.tableTop(), taken = !!this.customers.ownerAt(i) || this.staff.plates.has(i);
+      if (!taken && (top === 'cake' || top === 'cup')) drawIconOrEmoji(ctx, top === 'cake' ? 'cake' : 'coffee', top === 'cake' ? '🍰' : '☕', dx + w / 2, dy + h - sw * 0.5, sw * 0.17);
       return;
     }
     const i = +a.id.slice(5) - 1, tw = CHAIRS[i % CHAIRS.length], s = w / 1000;
