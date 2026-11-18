@@ -56,6 +56,7 @@ export class DecorLayer {
   onBought(d) {
     const p = this.pointOf(d), s = this.scene;
     this.born[d.id] = 0;
+    this.reveals = this.reveals.filter((r) => r.x !== p.x || r.y !== p.y);      // a quick second upgrade of the same piece replaces its label instead of stacking a copy
     this.reveals.push({ x: p.x, y: p.y, t: 0, text: d.kind === 'recipe' ? `Yeni tarif: ${d.name.replace(' Tarifi', '')}` : d.name });
     s.burst(p.x, p.y + s.warpAt(p.y), d.kind === 'equipment' ? 22 : 14, 120);
     const areaId = d.line && AREA_OF_LINE[d.line];
@@ -276,8 +277,10 @@ export class DecorLayer {
   drawHang(ctx) {
     const t = this.scene.t;
     for (const { d, slot } of this.placed('hang')) {
-      const sl = DECOR_SLOTS[slot], img = this.imgOf(d), k = perspScale(sl.y), h = sl.h * k, w = img ? h * img.naturalWidth / img.naturalHeight : h * 0.9, wy = this.scene.warpAt(sl.y), pop = this.pop(d.id);
-      const top = sl.y - h + wy, sway = Math.sin(t * 0.9 + sl.y) * 2;
+      const sl = DECOR_SLOTS[slot], img = this.imgOf(d), base = d.art?.image ? getImage(`int-${d.art.image}`) : null, k = perspScale(sl.y), wy = this.scene.warpAt(sl.y), pop = this.pop(d.id);
+      const h0 = sl.h * k, w = base ? h0 * base.naturalWidth / base.naturalHeight : img ? h0 * img.naturalWidth / img.naturalHeight : h0 * 0.9;      // as wide as the plain lamp: a raised lamp's crystals hang lower, the shade keeps its size
+      const h = img ? w * img.naturalHeight / img.naturalWidth : h0;
+      const top = sl.y - h0 + wy, sway = Math.sin(t * 0.9 + sl.y) * 2;
       ctx.save();
       ctx.translate(sl.x, sl.y + wy); ctx.scale(pop, pop); ctx.translate(-sl.x, -(sl.y + wy));
       const g = ctx.createLinearGradient(0, top - 120, 0, top + 6);
