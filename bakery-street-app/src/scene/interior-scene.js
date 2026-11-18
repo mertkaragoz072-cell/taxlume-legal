@@ -13,6 +13,9 @@ import { applyDaylight, drawRain } from './daylight.js';
 import { currentTip } from '../game/tips.js';
 import { steam } from './fx.js';
 
+/** Which chair picture stands on which side of a table: each picture's seat faces away from its name, so they are swapped and both chairs face the table. */
+const CHAIR_ART = { 'chair-left': 'chair-right', 'chair-right': 'chair-left' };
+
 const BAKER_LINES = ['Taze çıktı!', 'Sıcacık oldu', 'Mis gibi'];
 const WAITER_LINES = ['Afiyet olsun!', 'Buyurun', 'Sıcak, dikkat edin'];
 
@@ -338,7 +341,7 @@ export class InteriorScene {
     const sc = v && hasSitFrames(v.look) ? v.sit * v.sit * (3 - 2 * v.sit) : 0;           // a seated cat takes its chair behind the table (see guestChair)
     const pieces = [];
     for (const [key, cx] of [['chair-left', 165], ['chair-right', 835]]) {
-      const img = getImage(`int-${key}`), t = tw[key === 'chair-left' ? 0 : 1];
+      const img = getImage(`int-${CHAIR_ART[key]}`), t = tw[key === 'chair-left' ? 0 : 1];
       const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f * 0.62, ch = img.naturalHeight * f * 0.62;       // a chair is about half as wide as the table (the pictures were drawn at one scale)
       const px = dx + cx * s + t.dx * 1.6 + (guest ? slide * (key === 'chair-left' ? -1 : 1) : 0);
       if (guest && sc > 0) continue;
@@ -358,7 +361,7 @@ export class InteriorScene {
 
   /** The chair of a cat that sits behind its table: slides from beside the table to the middle, behind the cat (drawn just before the cat), and grows to the cat's size. */
   guestChair(ctx, a, v) {
-    const side = a.side ?? -1, key = side === -1 ? 'chair-left' : 'chair-right', img = getImage(`int-${key}`), tableImg = getImage('int-table');
+    const side = a.side ?? -1, key = side === -1 ? 'chair-left' : 'chair-right', img = getImage(`int-${CHAIR_ART[key]}`), tableImg = getImage('int-table');
     if (!img || !tableImg) return;
     const i = +a.id.slice(5) - 1, t = CHAIRS[i % CHAIRS.length][side === -1 ? 0 : 1], s = a.w / 1000, f = (TABLE_UNITS / tableImg.naturalWidth) * s, e = v.sit * v.sit * (3 - 2 * v.sit);
     const sideX = a.x + (side === -1 ? 165 : 835) * s + t.dx * 1.6, sideBase = a.y + a.h + t.dy, seatBase = a.y + a.h - SIT_SEAT * a.w + 0.09 * a.w;
