@@ -108,6 +108,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
   const insets = useSafeAreaInsets();
   const feedback = useMemo(() => new Feedback(world.settings), [world]);
   const { width: winW, height: winH } = useWindowDimensions(), isPortrait = winH >= winW;
+  const winRef = useRef({ w: winW, h: winH }); winRef.current = { w: winW, h: winH };
+  const rewardCoins = useCallback(() => { const { w, h } = winRef.current; world.game.emit("fx", { type: "coins", at: { x: w / 2, y: h * 0.5 }, big: true }); }, [world]);   // a collected reward: a shower of coins flies from the middle of the screen to the gold counter
   const boardTop = useBoardTop();
   useEffect(() => { (world.scenes.explore as any).topPx = boardTop; }, [world, boardTop]);   // the Keşif board starts right under the top bar
   useEffect(() => {                                       // graphics and hint settings reach the cafe scene (now and whenever they change)
@@ -180,7 +182,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         case "sell": case "sale": feedback.sfx("coin"); break;                 // no vibration for every sale: only for things the player did or earned
         case "buy": feedback.sfx("buy"); break;
         case "upgrade": feedback.sfx("claim"); feedback.buzz([30, 40, 30]); break;
-        case "quest": case "daily": feedback.sfx("claim"); feedback.buzz(40); break;
+        case "quest": case "daily": case "goal": case "till": feedback.sfx("claim"); feedback.buzz(40); rewardCoins(); break;
         case "complete": feedback.sfx("done"); break;
         case "start": feedback.sfx("tap"); break;
         default: break;
@@ -189,6 +191,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     // a calm cafe: an ordinary sale needs no message (the coins fly to the counter and the "+N" shows on it); only a sale with a bonus says why it paid more
     offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income && e.bonus?.pct >= 0.1) showToast(`+${fmt(e.income)} altın${saleNotes(e)}`, 1600); }));
     offs.push(game.on("album", (e: any) => showToast(e.completed ? `📖 Müşteri albümü tamamlandı! +${fmt(e.gold)} altın` : `📖 Yeni müşteri: ${world.album.nameOf(e.look)} · +${fmt(e.gold)} altın`, 2600)));
+    offs.push(game.on("collection", () => rewardCoins()));
+    offs.push(game.on("album", (e: any) => { if (e.gold) rewardCoins(); }));
     offs.push(game.on("collection", (e: any) => { showToast(`🏅 Koleksiyon: ${e.group}${e.kind === "max" ? " (hepsi en üst seviyede)" : " tamamlandı"} · +${fmt(e.reward.gold)} altın`, 3400); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
     offs.push(game.on("goalComplete", ({ goal }: any) => showToast(`🎯 Günlük hedef tamamlandı: ${goal.name} — Görevler'den ödülünü al`, 3000)));
     // (a finished product needs no message either: the "+1" rises from the machine and the stock shows on the showcase)
@@ -326,7 +330,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Toast text={toast.text} seq={toast.seq} />
           {saveWarn ? <Pressable onPress={() => setSaveWarn(null)} accessibilityRole="alert" accessibilityLabel={`Uyarı: ${saveWarn}. Kapatmak için dokun.`} style={styles.warn}><Text allowFontScaling={false} style={styles.warnText}>⚠ {saveWarn}</Text></Pressable> : null}
         </View>
-        {sceneId === "interior" && overlay !== "photo" ? <CoinFlights /> : null}
+        {overlay !== "photo" ? <CoinFlights /> : null}
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: C.brownDark, opacity: fade, alignItems: "center", justifyContent: "center" }]}>
           <Animated.Image source={LOGO} style={{ width: 120, height: 120, resizeMode: "contain", transform: [{ scale: fade.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }} />
         </Animated.View>

@@ -13,7 +13,7 @@ import sys
 from collections import deque
 from PIL import Image
 
-LOOKS = {'boy_backpack': 80, 'girl_basket': 80, 'oldman': 80, 'boy_cap': 80, 'boy_redcap': 50, 'girl_glasses': 80, 'girl_red': 80, 'grandma': 80}
+LOOKS = {'waiter': 56, 'chef': 54, 'boy_backpack': 80, 'girl_basket': 80, 'oldman': 80, 'boy_cap': 80, 'boy_redcap': 50, 'girl_glasses': 80, 'girl_red': 80, 'grandma': 80}
 COLS = 10
 BAND = 0.2          # bottom share of a cell that is looked at
 DRY = '--dry' in sys.argv
@@ -80,7 +80,7 @@ for look, frames in LOOKS.items():
     px = im.load()
     total = 0
     for f in range(frames):
-        total += clean_cell(px, (f % COLS) * w, (f // COLS) * h, w, h, walk=f < 20)
+        total += clean_cell(px, (f % COLS) * w, (f // COLS) * h, w, h, walk=f < (24 if look == 'waiter' else 37 if look == 'chef' else 20))   # crew: their walk frames only (the kneading and empty-handed side frames have pale fur touching the edge)
     print(f'{look}: {total} pixels cleaned')
     if total and not DRY:
         im.save(path, 'WEBP', quality=92, alpha_quality=100, method=6)       # (lossy like the originals; lossless would triple the app's size)

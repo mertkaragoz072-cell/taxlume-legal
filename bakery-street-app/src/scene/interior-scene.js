@@ -11,6 +11,7 @@ import { DecorLayer } from './interior-decor.js';
 import { hasSitFrames } from '../characters/sprites.js';
 import { applyDaylight, drawRain } from './daylight.js';
 import { currentTip } from '../game/tips.js';
+import { steam } from './fx.js';
 
 const BAKER_LINES = ['Taze çıktı!', 'Sıcacık oldu', 'Mis gibi'];
 const WAITER_LINES = ['Afiyet olsun!', 'Buyurun', 'Sıcak, dikkat edin'];
@@ -434,7 +435,8 @@ export class InteriorScene {
       }
       ctx.globalCompositeOperation = 'source-over';
     }
-    if (a.id === 'coffee') steam(ctx, a.x + a.w * 0.5, dy + h * 0.42, this.t);
+    if (a.id === 'coffee') { steam(ctx, a.x + a.w * 0.36, dy + h * 0.34, this.t, busy ? 1 : 0.45); if (busy) steam(ctx, a.x + a.w * 0.5, dy + h * 0.3, this.t + 0.4, 0.8); }   // the machine steams, more while it works
+    if (a.id === 'oven' && busy) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h + 30, a.w * 0.55, '255,150,60', 0.1 + 0.05 * Math.sin(this.t * 11) * Math.sin(this.t * 3.7)); ctx.globalCompositeOperation = 'source-over'; }   // the fire's flicker on the floor in front
     if (a.id === 'showcase') this.glint(ctx, dx, dy, w, h);
     if (a.station && this.game.jobs[a.station]) { ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, a.x + a.w / 2, a.y + a.h * 0.6, a.w * 0.6, '255,170,60', 0.3 + 0.08 * Math.sin(this.t * 9)); ctx.globalCompositeOperation = 'source-over'; }
     if (a.id === 'showcase') showcaseStock(ctx, a, this, { x: dx, y: dy, w, h });
@@ -810,10 +812,3 @@ function flames(ctx, x, yBase, w, t) {
   }
 }
 
-function steam(ctx, x, y, t) {
-  for (let i = 0; i < 3; i++) {
-    const p = (((t * 0.7 + i / 3) % 1) + 1) % 1;
-    ctx.fillStyle = `rgba(255,255,255,${0.6 * (1 - p)})`;
-    ctx.beginPath(); ctx.arc(x + Math.sin(p * 7 + i) * 8, y - p * 40, 4 + p * 6, 0, 7); ctx.fill();
-  }
-}

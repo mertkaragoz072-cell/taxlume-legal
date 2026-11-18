@@ -173,9 +173,13 @@ export class DecorLayer {
     ctx.translate(sl.x, sl.y); ctx.scale(pop, pop); ctx.translate(-sl.x, -sl.y);
     if (img) {
       const w = h * img.naturalWidth / img.naturalHeight, dx = sl.x - w / 2, dy = sl.y - h;
-      this.scene.castShadow(ctx, `decor-${d.id}`, img, dx, dy, w, h);
+      this.scene.castShadow(ctx, `decor-${d.id}-${this.shop?.itemLevel?.(d.id) ?? 1}`, img, dx, dy, w, h);     // (one shadow per level picture)
       this.scene.grounding(ctx, sl.x, sl.y, w * 0.7);
-      ctx.drawImage(img, dx, dy, w, h);
+      if (d.type === 'plant') {                                     // a plant stirs a little, as if in a breath of air: its top leans, its pot stays put
+        const lean = Math.sin(this.scene.t * 0.8 + sl.x * 0.013) * 0.025;
+        ctx.save(); ctx.translate(sl.x, sl.y); ctx.transform(1, 0, lean, 1, 0, 0); ctx.translate(-sl.x, -sl.y);
+        ctx.drawImage(img, dx, dy, w, h); ctx.restore();
+      } else ctx.drawImage(img, dx, dy, w, h);
     } else {                                                       // stand-in: a clay pot with leaves
       const w = h * 0.7;
       this.scene.grounding(ctx, sl.x, sl.y, w * 0.8);

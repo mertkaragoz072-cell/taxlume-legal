@@ -240,34 +240,35 @@ export function TipBar() {
 /** Coins that fly from the register (screen point given by the scene) up to the gold counter, then make the counter's coin bounce. */
 export function CoinFlights() {
   const { world } = useWorld(), u = useU(), insets = useSafeAreaInsets();
-  const [flights, setFlights] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [flights, setFlights] = useState<{ id: number; x: number; y: number; big?: boolean }[]>([]);
   const seq = useRef(0);
   useEffect(() => world.game.on("fx", (e: any) => {
     if (e?.type !== "coins" || !e.at) return;
-    setFlights((f) => (f.length > 6 ? f : [...f, { id: ++seq.current, x: e.at.x, y: e.at.y }]));
+    setFlights((f) => (f.length > 6 ? f : [...f, { id: ++seq.current, x: e.at.x, y: e.at.y, big: !!e.big }]));
   }), [world]);
   const target = { x: insets.left + u * 1.6 + u * 11 * (192 / 170) + u * 1.2 + u * 2.4, y: insets.top + u * 1 + u * 4.2 };     // the coin of the gold pill in the top bar
   return (
     <>
-      {flights.map((f) => <Flight key={f.id} from={f} to={target} size={u * 5} onDone={() => { setFlights((l) => l.filter((x) => x.id !== f.id)); world.game.emit("fx", { type: "coinsHome" }); }} />)}
+      {flights.map((f) => <Flight key={f.id} from={f} to={target} size={u * 5} count={f.big ? 7 : 3} onDone={() => { setFlights((l) => l.filter((x) => x.id !== f.id)); world.game.emit("fx", { type: "coinsHome" }); }} />)}
     </>
   );
 }
 
-function Flight({ from, to, size, onDone }: { from: { x: number; y: number }; to: { x: number; y: number }; size: number; onDone: () => void }) {
-  const ts = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
+function Flight({ from, to, size, count = 3, onDone }: { from: { x: number; y: number }; to: { x: number; y: number }; size: number; count?: number; onDone: () => void }) {
+  const ts = useRef(Array.from({ length: count }, () => new Animated.Value(0))).current;
   useEffect(() => {
     const a = Animated.stagger(90, ts.map((t) => Animated.timing(t, { toValue: 1, duration: 820, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })));
     a.start(({ finished }) => { if (finished) onDone(); });
     return () => a.stop();
   }, []);   // eslint-disable-line react-hooks/exhaustive-deps
-  const top = Math.min(from.y, to.y) - size * 3;
+  const burst = count > 3;                                 // a reward: the coins burst out of the middle, then fly to the counter
+  const top = Math.max(to.y + size * 0.5, Math.min(from.y, to.y) - size * 3);
   return (
     <>
       {ts.map((t, i) => (
         <Animated.View key={i} pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, zIndex: 25, opacity: t.interpolate({ inputRange: [0, 0.05, 0.9, 1], outputRange: [0, 1, 1, 0] }),
-          transform: [{ translateX: t.interpolate({ inputRange: [0, 1], outputRange: [from.x - size / 2 + (i - 1) * size * 0.3, to.x - size / 2] }) },
-            { translateY: t.interpolate({ inputRange: [0, 0.45, 1], outputRange: [from.y - size / 2, top, to.y - size / 2] }) },
+          transform: [{ translateX: t.interpolate({ inputRange: [0, 0.3, 1], outputRange: [from.x - size / 2, from.x - size / 2 + (i - (ts.length - 1) / 2) * size * (ts.length > 3 ? 0.9 : 0.3), to.x - size / 2] }) },
+            { translateY: burst ? t.interpolate({ inputRange: [0, 0.3, 1], outputRange: [from.y - size / 2, from.y - size * 2.5 - (i % 2) * size, to.y - size / 2] }) : t.interpolate({ inputRange: [0, 0.45, 1], outputRange: [from.y - size / 2, top, to.y - size / 2] }) },
             { scale: t.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.8, 1.1, 0.6] }) }] }}>
           <GameIcon id="coin" size={size} />
         </Animated.View>

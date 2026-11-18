@@ -8,6 +8,7 @@
 // that order (see claims()). No stock = the waiter does not go, the order stays open and the guest keeps waiting.
 import { drawSprite, hasHandFrames, hasOvenFrames, hasCoffeeFrames } from '../characters/sprites.js';
 import { drawIconOrEmoji } from '../assets.js';
+import { steam } from './fx.js';
 import { STAFF_LANE_Y, WAITER_LANE_Y, PERSON_SCALE, AREAS, chairSpot, depthScale } from './interior-layout.js';
 
 // where the baker stands for each job (beside the machine, never in front of its opening) and which way he faces there
@@ -195,6 +196,7 @@ export class StaffLayer {
       const eaten = pl.eat > 0 ? Math.min(1, pl.t / pl.eat) : 1, fade = pl.eat > 0 ? Math.min(1, Math.max(0, 1 - (pl.t - pl.eat) / 0.7)) : Math.min(1, Math.max(0, (pl.hold - pl.t) / 0.35)), cx = a.x + a.w / 2, cy = a.y + a.h * 0.26;
       ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35)); ctx.globalAlpha = fade;
       this.plate(ctx, cx, cy);
+      if (eaten < 0.85 && this.game.productsDef[pl.product]?.station === 'coffee') steam(ctx, cx, cy - 26, pl.t + ti, 0.7 * (1 - eaten));   // a hot drink steams while it is drunk
       if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIconOrEmoji(ctx, pl.product, this.game.productsDef[pl.product]?.icon, 0, -8 / k, 34); ctx.restore(); }
       else { ctx.fillStyle = 'rgba(121,82,56,.5)'; for (const [dx, dy] of [[-9, 0], [4, 2], [11, -1]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 1.8, 0, 7); ctx.fill(); } }     // crumbs
       ctx.restore();
@@ -240,7 +242,7 @@ export class StaffLayer {
     ctx.globalAlpha = this.show;
     // carrying an order he holds the tray out (frame 3) and walks by bouncing; otherwise he walks the 4-frame cycle or stands
     const tray = !!this.carry && this.phase !== 'hand';
-    const o = { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : 0, carry: tray, view: w.view, bob: 0.012, sway: this.phase === 'hand' ? 0.03 : 0 };
+    const o = { dir: w.dir, fps: 7, scale: PERSON_SCALE * depthScale(w.y), frame: w.moving ? null : 0, carry: tray, view: w.view, bob: 0.012, idle: !w.moving && this.phase !== 'hand', sway: this.phase === 'hand' ? 0.03 : 0 };
     const x = w.x, y = w.y, t = w.t;
     // handing over: the one-shot hand-over frames (tray with cup and cake) when they exist, else the standing frame with the item icon flying to the table
     if (this.phase === 'hand' && !w.moving && hasHandFrames()) {

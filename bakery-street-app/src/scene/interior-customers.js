@@ -288,7 +288,7 @@ export class CustomerLayer {
               drawSprite(ctx, v.look, p.x, p.y, t, { dir: v.dir, back: false, side: !!v.horiz, fps: 8, phase: id, frame: null, scale: sc, shade: false });
             }
             ctx.globalAlpha = keep * (settled ? 1 : e);
-            if (hasEatFrames(v.look)) drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: v.ghost && !v.leaving ? 'eat' : 'wait', frame: 0, back: false, fps: 8, phase: id, scale: sc, shade: false });
+            if (hasEatFrames(v.look)) drawSprite(ctx, v.look, p.x, p.y, t, { dir: 1, sit: v.ghost && !v.leaving ? 'eat' : 'wait', frame: 0, back: false, fps: 8, phase: id, scale: sc, shade: false, bob: 0.008, idle: true });
             else {                                                  // no sitting frames yet: the standing cat, lowered behind the table and cut off at the table top; it nods while it eats
               const ds = depthScale(table.y + table.h), eating = v.ghost && !v.leaving, nod = eating ? Math.abs(Math.sin(t * 5 + id)) * 5 * ds : 0;
               ctx.save(); ctx.beginPath(); ctx.rect(p.x - 160, p.y - 420, 320, 420 + 14 * ds); ctx.clip();
@@ -297,7 +297,7 @@ export class CustomerLayer {
             }
             ctx.globalAlpha = 1; return;
           }
-          drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.012, scale: PERSON_SCALE * depthScale(y), shade: !seated });
+          drawSprite(ctx, v.look, v.x, y, t, { dir: seated ? 1 : v.dir, back: !!v.back && hold, side: !!v.horiz && hold, fps: 8, phase: id, frame: hold ? null : 0, bob: seated ? 0.006 : 0.014, idle: !hold, scale: PERSON_SCALE * depthScale(y), shade: !seated });
           ctx.globalAlpha = 1;
         }),
       });
