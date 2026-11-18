@@ -3,6 +3,7 @@
 transparent background, trimmed, scaled to the level-1 picture's height and saved as assets/game/interior/levels/<item id>-l<level>.webp.
 
     python3 scripts/add_item_level.py plantA 2 ~/Downloads/saksi_2.png
+    python3 scripts/add_item_level.py plantA sheet ~/Downloads/saksi_2-5.png    # one picture with levels 2, 3, 4, 5 side by side, left to right
     node scripts/gen-assets.mjs            # (once, after adding files) so the app bundles it
 
 Item ids and their level-1 pictures are in src/data/economy.js (SHOP_ITEMS, category 'decor'). The café and the shop card draw the picture of
@@ -22,18 +23,39 @@ def base_image(item):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('item'); ap.add_argument('level', type=int, choices=(2, 3, 4, 5)); ap.add_argument('source')
+    ap.add_argument('item'); ap.add_argument('level', choices=('2', '3', '4', '5', 'sheet')); ap.add_argument('source')
     ap.add_argument('--fit', choices=('height', 'width'), default='height')
     a = ap.parse_args()
     base = Image.open(os.path.join(INTERIOR, f'{base_image(a.item)}.webp')); bw, bh = base.size
     rgba = Image.fromarray(cut(np.array(Image.open(a.source).convert('RGB'))), 'RGBA')
+    if a.level == 'sheet':
+        parts = split_sheet(rgba, 4)
+        for n, part in zip((2, 3, 4, 5), parts): save(a, part, n, bw, bh)
+    else:
+        save(a, rgba, int(a.level), bw, bh)
+
+def split_sheet(rgba, count):
+    """Cuts a picture with `count` objects side by side into `count` pictures: columns with no object are the gaps (the widest gaps win)."""
+    alpha = np.array(rgba.getchannel('A')) > 24
+    cols = alpha.any(axis=0)
+    runs, start = [], None
+    for x, on in enumerate(list(cols) + [False]):
+        if on and start is None: start = x
+        if not on and start is not None: runs.append([start, x]); start = None
+    while len(runs) > count:                                    # parts of one object (a lamp's chain, a leaf): join across the narrowest gap
+        gaps = [runs[i + 1][0] - runs[i][1] for i in range(len(runs) - 1)]
+        i = int(np.argmin(gaps)); runs[i][1] = runs[i + 1][1]; del runs[i + 1]
+    if len(runs) != count: sys.exit(f'found {len(runs)} objects, expected {count}: the four levels must stand apart, left to right')
+    return [rgba.crop((x0, 0, x1, rgba.height)) for x0, x1 in runs]
+
+def save(a, rgba, level, bw, bh):
     box = rgba.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox()
     if not box: sys.exit('no object found: the picture must show the piece on a plain black background')
     obj = rgba.crop(box)
     k = (bh / obj.height) if a.fit == 'height' else (bw / obj.width)
     obj = obj.resize((max(1, round(obj.width * k)), max(1, round(obj.height * k))), Image.LANCZOS)
     os.makedirs(os.path.join(INTERIOR, 'levels'), exist_ok=True)
-    out = os.path.join(INTERIOR, 'levels', f'{a.item}-l{a.level}.webp')
+    out = os.path.join(INTERIOR, 'levels', f'{a.item}-l{level}.webp')
     obj.save(out, 'WEBP', quality=92, method=6)
     print(f'wrote {out} ({obj.width}x{obj.height}; level-1 picture {bw}x{bh})')
 
