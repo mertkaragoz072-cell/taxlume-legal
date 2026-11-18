@@ -415,8 +415,8 @@ test('validateShop repairs garbage and never loses an owned decoration', () => {
   assert.deepEqual(v.stored.filter((id) => !['plantB'].includes(id)), []);   // matPaw is not owned: dropped from stored
   assert.deepEqual(v.introduced, ['plantA']);
   assert.equal(v.stage, 4);                                           // clamped, not trusted
-  assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {} });
-  assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {} });
+  assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, recipeLevels: {}, collections: [] });
+  assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, recipeLevels: {}, collections: [] });
   // a v10 save (no `stored`) loads: pieces keep their slots
   const old = validateShop({ owned: ['plantA', 'lampA'], placed: { 'edge-left': 'plantA', 'lamp-1': 'lampA' }, introduced: [], stage: 2 }, c.shop);
   assert.deepEqual(old.placed, { 'edge-left': 'plantA', 'lamp-1': 'lampA' }); assert.deepEqual(old.stored, []);
@@ -562,4 +562,49 @@ test('decoration levels: equipment, recipes and expansion do not level (equipmen
   assert.equal(c.shop.nextLevel('ovenT2'), null);
   assert.equal(c.shop.nextLevel('recipeSimit'), null);
   for (const line of ['oven', 'coffee', 'counter', 'showcase', 'storage']) assert.ok(SHOP_ITEMS.some((x) => x.line === line && x.tier === 5), line);
+});
+
+// ---------------------------------------------------------------------------------- recipe levels and collections
+import { RECIPE_LEVELS, COLLECTIONS } from '../src/data/economy.js';
+test('recipe levels: every unlocked product levels 1..5, a sale pays more, locked recipes cannot level, saved', () => {
+  const c = make({ level: 30, gold: 1e7 });
+  assert.equal(c.shop.recipeLevel('bread'), 1);
+  assert.equal(c.shop.recipeLevel('simit'), 0);
+  assert.equal(c.shop.nextRecipeLevel('simit'), null);
+  const base = c.game.unitEconomics('bread').customer;
+  const n = c.shop.nextRecipeLevel('bread');
+  assert.equal(n.cost, Math.round(30 * RECIPE_LEVELS.baseFactor * RECIPE_LEVELS.cost[1] / 10) * 10);
+  assert.ok(c.shop.upgradeRecipe('bread').ok);
+  assert.ok(c.game.unitEconomics('bread').customer > base);
+  for (let i = 3; i <= 5; i++) assert.equal(c.shop.upgradeRecipe('bread').level, i);
+  assert.equal(c.shop.upgradeRecipe('bread').ok, false);
+  assert.equal(c.game.unitEconomics('bread').customer, c.game.saleIncome(30 * RECIPE_LEVELS.sale[4]));
+  // a guest pays the raised price
+  c.game.products.bread = 3; const g = c.cafe.arrive(); c.cafe.seatQueued(); const o = c.cafe.orderOf(g); o.product = 'bread'; o.price = 30;
+  assert.equal(c.cafe.deliver(o.id).income, c.game.unitEconomics('bread', 30).customer);
+  assert.ok(c.shop.buy('recipeSimit').ok); assert.equal(c.shop.recipeLevel('simit'), 1);
+  const lowLevel = make({ level: 1, gold: 1e7 });
+  lowLevel.shop.upgradeRecipe('bread');
+  assert.equal(lowLevel.shop.upgradeRecipe('bread').reason, 'level');      // level 3 needs player level 5
+  assert.deepEqual(validateShop({ ...c.shop.exportState(), recipeLevels: { bread: 5, nope: 3, coffee: 9 } }, c.shop).recipeLevels, { bread: 5 });
+});
+
+test('collections: owning a whole decoration group pays once, raising it all to 5 pays once more', () => {
+  const c = make({ level: 30, gold: 1e8 });
+  c.shop.stageId = 4;
+  const lights = c.shop.collectionList().find((x) => x.group === 'Aydınlatma');
+  assert.ok(lights.items.length >= 2);
+  const paid = []; c.game.on('collection', (e) => paid.push(`${e.group}:${e.kind}`));
+  for (const d of [{ id: 'areaAisle' }, ...lights.items]) c.shop.buy(d.id);
+  assert.ok(paid.includes('Aydınlatma:owned'));
+  const gold = c.player.gold;
+  for (const d of lights.items) for (let i = 0; i < 4; i++) c.shop.upgradeItem(d.id);
+  assert.ok(paid.includes('Aydınlatma:max'));
+  assert.equal(paid.filter((k) => k === 'Aydınlatma:owned').length, 1);
+  assert.equal(c.game.ledger.filter((e) => e.source === 'collection' && /Aydınlatma/.test(e.label)).length, 2);
+  for (const d of lights.items) c.shop.upgradeItem(d.id);
+  assert.equal(paid.filter((k) => k.startsWith('Aydınlatma')).length, 2);   // never again
+  assert.ok(c.player.gold < gold);                                           // (the upgrades cost more than the reward)
+  assert.deepEqual(validateShop({ ...c.shop.exportState(), collections: ['Aydınlatma:max', 'Uydurma:owned', 'x'] }, c.shop).collections, ['Aydınlatma:max']);
+  assert.ok(COLLECTIONS.max.min > COLLECTIONS.owned.min);
 });

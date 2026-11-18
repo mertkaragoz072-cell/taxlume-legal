@@ -161,7 +161,9 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, header, t
   const inner = (
     <>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: u * 2.2, paddingTop: portrait ? 0 : u * 1.6, paddingBottom: u * 0.6 }}>
-        <Rich text={title} size={fs(u, TYPE.title)} style={{ color: C.brownDark, fontFamily: FONT.bold }} />
+        <View style={{ flexShrink: 1, paddingHorizontal: u * 2, paddingVertical: u * 0.5, borderRadius: u * 2, backgroundColor: "#8A5A36", borderWidth: u * 0.45, borderColor: "#5E3A20", shadowColor: "#3B2412", shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 0.6, shadowRadius: 0, elevation: 2 }}>
+          <Rich text={title} size={fs(u, TYPE.heading)} style={{ color: "#FFF4DE", fontFamily: FONT.bold }} />
+        </View>
         {onClose ? (
           <Pressable onPress={onClose} accessibilityLabel="Kapat" style={{ width: Math.max(44, u * 6), height: Math.max(44, u * 6), alignItems: "center", justifyContent: "center", marginRight: -u * 0.8 }}>
             <Image source={ASSET_MODULES["assets/icons/ui-close.webp"]} style={{ width: Math.max(40, u * 7.4), height: Math.max(40, u * 7.4) * (144 / 140), resizeMode: "contain" }} />

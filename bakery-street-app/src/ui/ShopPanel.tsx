@@ -76,6 +76,17 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
     act.peek(2400);
   };
 
+  const raiseRecipe = (pid: string) => {
+    const now = Date.now();
+    if (now < lock.current.until) return;
+    lock.current.until = now + 450;
+    const def = game.productsDef[pid], r = shop.upgradeRecipe(pid, `rcp-${++lock.current.seq}-${now}`);
+    if (!r.ok) { act.warn(r.message); return; }
+    act.sfx("buy"); act.buzz([30, 40, 30]);
+    setFlash(`r:${pid}`); if (flashTimer.current) clearTimeout(flashTimer.current); flashTimer.current = setTimeout(() => setFlash(null), 1400);
+    act.toast(`⬆ ${def.icon} ${def.name} tarifi · Seviye ${r.level} · satış ${fmt(r.price)} altın · −${fmt(r.cost)} altın`, 2600);
+  };
+
   // the order of a tab is decided when it is opened (ready first, then short of gold, then locked, owned last) and then kept, so a card does not jump away when it is bought
   const { width: winW, height: winH } = useWindowDimensions(), portrait = winH >= winW;
   const rank = (v: any) => (v.status === "owned" ? 3 : v.status === "locked" ? 2 : v.missingGold > 0 ? 1 : 0);
@@ -91,7 +102,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
     const byId = Object.fromEntries(list.map((v) => [v.def.id, v]));
     return orders.current[cat].map((id) => byId[id]).filter(Boolean);
   };
-  const dot = (id: string) => id !== "goal" && id !== "ingredients" && (shop.list(id) as any[]).some((v) => v.status === "ready" && v.missingGold === 0);
+  const dot = (id: string) => id !== "goal" && id !== "ingredients" && ((shop.list(id) as any[]).some((v) => v.status === "ready" && v.missingGold === 0) || (id === "recipes" && (Object.keys(game.productsDef) as string[]).some((p) => shop.nextRecipeLevel(p)?.ok)));
 
   const collection = (() => { const all = (shop.items as any[]).filter((d) => d.category !== "ingredients" && d.kind !== "upgrade"); return { owned: all.filter((d) => shop.has(d.id)).length, total: all.length }; })();
   const tabs = (
@@ -113,6 +124,11 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
     const body = tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : tab === "equipment" ? (
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4 }}>
         {LINES.map((l) => <LineCard key={l} line={l} onBuy={buy} flash={flash} onOpen={(id) => setDetail(id)} />)}
+      </View>
+    ) : tab === "recipes" ? (
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4 }}>
+        {(Object.keys(game.productsDef) as string[]).filter((pid) => shop.recipeLevel(pid) > 0).map((pid) => <RecipeLevelCard key={pid} pid={pid} flash={flash === `r:${pid}`} onRaise={raiseRecipe} />)}
+        {items("recipes").filter((v) => v.status !== "owned").map((v) => <GridCard key={v.def.id} v={v} onBuy={buy} flash={flash === v.def.id} onOpen={() => setDetail(v.def.id)} />)}
       </View>
     ) : (
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4, justifyContent: "flex-start" }}>
@@ -236,6 +252,52 @@ function ItemPicture({ d, game, size, level = 0, tier = 0 }: { d: any; game: any
   if (d.kind === "recipe") return <EmojiIcon emoji={game.productsDef[d.recipe]?.icon ?? "🍞"} size={size * 0.85} />;
   if (d.art?.icon && !SPECIAL_EMOJI[d.art.icon]) return <GameIcon id={d.art.icon} size={size * 0.85} />;
   return <Text allowFontScaling={false} style={{ fontSize: size * 0.6 }}>{SPECIAL_EMOJI[d.art?.icon] ?? "⭐"}</Text>;
+}
+
+/** A product's recipe with its five levels: picture, name, what a guest pays now and at the next level, and the button for the next level. */
+function RecipeLevelCard({ pid, flash, onRaise }: { pid: string; flash: boolean; onRaise: (pid: string) => void }) {
+  const { world, act } = useWorld();
+  const { game, shop } = world, u = useU();
+  const { width } = useWindowDimensions();
+  const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
+  const d = game.productsDef[pid], lvl = shop.recipeLevel(pid) as number, n = shop.nextRecipeLevel(pid), now = game.unitEconomics(pid).customer;
+  const press = () => { if (!n) return; if (!n.ok) act.warn(n.reason); else onRaise(pid); };
+  return (
+    <Pulse on={flash}>
+      <View style={{ width: w, padding: u * 0.8, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: "#E2C69B", backgroundColor: "#FFF9EE" }}>
+        <View style={{ height: w * 0.62, alignItems: "center", justifyContent: "center" }}><EmojiIcon emoji={d.icon} size={w * 0.5} /></View>
+        <LevelPill level={lvl} />
+        <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
+        <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
+          <Text allowFontScaling={false} numberOfLines={2} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{`Satış ${fmt(now)}${n ? ` → ${fmt(game.saleIncome(n.price))}` : ""} altın`}</Text>
+        </View>
+        <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={n ? `Tarifi yükselt: ${d.name}, seviye ${n.level}, ${n.cost} altın` : `${d.name}: en üst seviye`}
+          style={({ pressed }) => ({ height: Math.max(40, u * 7), borderRadius: 99, borderWidth: u * 0.35, borderColor: !n ? C.greenDark : n.ok ? "#4E7A2C" : "#B9A07C", backgroundColor: !n ? C.greenPale : n.ok ? "#7DAF46" : n.levelOk ? "#EBD9B8" : "#E8DCC6", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: u * 0.6, transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+          {!n ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>★ En üst seviye</Text>
+            : !n.levelOk ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Seviye {n.needLevel}</Text></>
+            : <><Text allowFontScaling={false} style={{ color: n.ok ? "#FFFFFF" : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>⬆</Text><GameIcon id="coin" size={u * 4} /><Text allowFontScaling={false} style={{ color: n.ok ? "#FFFFFF" : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(n.cost)}</Text></>}
+        </Pressable>
+      </View>
+    </Pulse>
+  );
+}
+
+/** The decoration collections in the goal tab: progress of each group and its two rewards. */
+function Collections() {
+  const { world } = useWorld();
+  const { shop } = world, u = useU();
+  return (
+    <Card>
+      <Title name="Koleksiyonlar" note="her grup iki kez ödül verir" />
+      {(shop.collectionList() as any[]).map((c) => (
+        <View key={c.group} style={{ gap: u * 0.4 }}>
+          <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{c.group}</Text>
+          <Bar value={c.owned / c.items.length} color={c.ownedPaid ? C.green : C.honey} text={`${c.ownedPaid ? "✓ " : ""}Hepsini al ${c.owned}/${c.items.length} · 💰 ${fmt(c.ownedReward.gold)}`} />
+          <Bar value={c.maxed / c.items.length} color={c.maxPaid ? C.green : C.honey} text={`${c.maxPaid ? "✓ " : ""}Hepsi Sv 5 ${c.maxed}/${c.items.length} · 💰 ${fmt(c.maxReward.gold)}`} />
+        </View>
+      ))}
+    </Card>
+  );
 }
 
 const LINES = ["oven", "coffee", "counter", "showcase", "storage"];
@@ -395,6 +457,7 @@ function GoalTab({ go }: { go: (t: ShopTab) => void }) {
         <Meta text={goal.text} />
         {goal.item ? <Bar value={goal.progress} color={goal.kind === "ready" ? C.green : C.honey} text={goal.kind === "level" ? "Seviye / aşama gerekli" : goal.kind === "ready" ? "Altın yeterli" : `${fmt(Math.min(game.gold, goal.price))}/${fmt(goal.price)}`} /> : null}
       </Card>
+      <Collections />
       <Card>
         <Title name="Kafe çekiciliği" note={`${appeal} puan`} />
         <Meta text={`Müşteri akışı +%${flow} · Bahşiş ihtimali %${tip}${vip ? ` · VIP misafir %${Math.round(vip.chance * 100)}` : ""}`} />

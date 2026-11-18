@@ -13,7 +13,9 @@ test('playthrough: from 0 gold, 55 days of 30 minutes reach the last stage, the 
     assert.deepEqual(r.researchLeft, []);
     assert.deepEqual(r.questsLeft, []);
     assert.equal(r.end.album, '8/8');
-    assert.ok(+r.end.decorAt5.split('/')[0] >= 3, `decoration raised to level 5: ${r.end.decorAt5}`);
+    assert.ok(+r.end.decorAt5.split('/')[0] >= 1, `decoration raised to level 5: ${r.end.decorAt5}`);
+    assert.ok(r.end.recipesAt5 >= 6, `recipes at level 5: ${r.end.recipesAt5}`);
+    assert.ok(r.end.collections >= 5, `collection rewards: ${r.end.collections}`);
     for (const d of r.days) assert.ok(d.gold >= 0 && d.sold > 30, `day ${d.day}`);
   }
 });

@@ -54,6 +54,7 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
     const reserve = 400;
     const ready = shop.items.filter((x) => x.category !== 'ingredients' && shop.status(x.id) === 'ready').sort((x, y) => shop.priceOf(x.id) - shop.priceOf(y.id));   // what the shop shows as buyable, cheapest first
     for (const x of ready) { if (game.gold - shop.priceOf(x.id) < reserve) break; shop.buy(x.id); }
+    for (const pid of Object.keys(game.productsDef)) { const n = shop.nextRecipeLevel(pid); if (n?.ok && game.gold - n.cost > reserve * 4) shop.upgradeRecipe(pid); }   // recipe levels pay back through every sale
     if (!ready.length) for (const id of [...shop.owned]) { const n = shop.nextLevel(id); if (n?.ok && game.gold - n.cost > reserve * 2) shop.upgradeItem(id); }   // decoration levels, once nothing new is left to buy
     for (const id of Object.keys(game.upgradesDef)) { const c = game.nextCost(id); if (c != null && game.gold - c > reserve * 3) game.buyUpgrade(id); }
     for (const b of town.list()) if (b.status === 'available' && game.gold > (b.need?.gold ?? 0) + reserve) { if (town.open(b.def.id).ok) mile(`open:${b.def.id}`, `${b.def.name} açıldı`); }
@@ -87,7 +88,7 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   const decor = shop.items.filter((x) => shop.levelable(x));
   const decorLevels = decor.map((x) => shop.itemLevel(x.id));
   const questsLeft = quests.list().filter((q) => !q.claimed).map((q) => `${q.def.id} ${q.progress}/${q.def.target}`);
-  return { days: days_, log: log.filter((l) => l.text), end: { level: prog.level, stage: shop.stageId, owned: `${shop.owned.size}/${total}`, gold: Math.round(game.gold), album: `${album.count()}/${album.looks.length}`, bookshop: town.isOpen('bookshop') ? town.level('bookshop') : 'kapalı', explorations: Object.values(ex.done).reduce((a, b) => a + b, 0), decorAt5: `${decorLevels.filter((n) => n === 5).length}/${decor.length}`, appeal: shop.appeal() }, left, upgradesLeft, researchLeft, questsLeft };
+  return { days: days_, log: log.filter((l) => l.text), end: { level: prog.level, stage: shop.stageId, owned: `${shop.owned.size}/${total}`, gold: Math.round(game.gold), album: `${album.count()}/${album.looks.length}`, bookshop: town.isOpen('bookshop') ? town.level('bookshop') : 'kapalı', explorations: Object.values(ex.done).reduce((a, b) => a + b, 0), recipesAt5: Object.keys(game.productsDef).filter((p) => shop.recipeLevel(p) === 5).length, collections: shop.collections.size, decorAt5: `${decorLevels.filter((n) => n === 5).length}/${decor.length}`, appeal: shop.appeal() }, left, upgradesLeft, researchLeft, questsLeft };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

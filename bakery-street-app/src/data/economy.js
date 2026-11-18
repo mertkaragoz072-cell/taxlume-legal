@@ -472,6 +472,20 @@ export const SHOP_ITEMS = [
  */
 export const ITEM_LEVELS = { max: 5, price: [1, 1.6, 2.6, 4.2, 6.5], appeal: [1, 1.5, 2, 2.75, 3.5], levelStep: 2 };
 
+/**
+ * Recipe levels: every product (the four starting ones and the recipes bought in the shop) can be raised from level 1 to 5 in the shop's Tarifler tab.
+ *  - sale price at level n: the product's price × sale[n-1] (guests and the showcase pay it; ingredients and time stay the same)
+ *  - cost to reach level n: base × cost[n-1], base = the recipe's shop price, or the product's price × baseFactor for a starting product
+ *  - player level needed: the recipe's level (1 for starting products) + levelStep × (n-1)
+ */
+export const RECIPE_LEVELS = { max: 5, sale: [1, 1.1, 1.2, 1.32, 1.45], cost: [1, 1.4, 2.3, 3.6, 5.5], baseFactor: 25, levelStep: 2 };
+
+/**
+ * Collections: the decoration groups of the shop. Owning every piece of a group pays `owned` once; raising every piece of it to the top level
+ * pays `max` once. The rewards grow with the group's total price (share of it), at least `min`.
+ */
+export const COLLECTIONS = { owned: { share: 0.15, xp: 120, min: 500 }, max: { share: 0.6, xp: 400, min: 3000 } };
+
 export const EQUIPMENT_ART = {
   oven: { 2: 'oven-t2', 3: 'oven-t3', 4: 'oven-t4', 5: 'oven-t5' },
   coffee: { 2: 'coffee-t2', 3: 'coffee-t3', 4: 'coffee-t4', 5: 'coffee-t5' },

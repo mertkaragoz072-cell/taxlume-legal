@@ -3,7 +3,7 @@
 // small queries (speedBonus, capacityBonus, showcaseBonus, refundBonus, ingredientCap, queueBonus, vip, appeal ...) that Game / Cafe call.
 // A purchase is one atomic step: checks -> gold (Game.spend) -> owned + placed -> XP -> one 'change' event; if anything in it throws, gold and
 // state are restored. Prices, gates and effects come only from data/economy.js.
-import { SHOP_ITEMS, SHOP_CATEGORIES, SHARED_SLOTS, DECOR_SLOT_TYPES, STAGES, STORAGE, RECIPES, APPEAL, ITEM_LEVELS } from '../data/economy.js';
+import { SHOP_ITEMS, SHOP_CATEGORIES, SHARED_SLOTS, DECOR_SLOT_TYPES, STAGES, STORAGE, RECIPES, APPEAL, ITEM_LEVELS, RECIPE_LEVELS, COLLECTIONS } from '../data/economy.js';
 
 const fmt = (n) => n.toLocaleString('tr-TR');
 
@@ -20,6 +20,8 @@ export class Shop {
     this.placed = {};              // slot -> item id (decoration that is standing in the café)
     this.stored = new Set();       // decoration bought but not standing anywhere (taken down, or no free slot): gives no appeal until it is placed
     this.levels = {};              // decoration id -> its level (2..5); an owned piece without an entry is level 1
+    this.recipeLevels = {};        // product id -> its recipe level (2..5); a product without an entry is level 1
+    this.collections = new Set();  // collection rewards already paid: '<group>:owned' / '<group>:max'
     this.introduced = new Set();   // equipment items whose first-use introduction has played
     this.stageId = 1;              // highest stage reached (its reward is paid when it is reached, never again)
     this.stats = { lastGoal: null };
@@ -28,6 +30,7 @@ export class Shop {
     game.on('change', (e) => {
       if (!e || e.type === 'load' || e.type === 'shopIntro') return;
       this.checkStage();
+      if (e.type === 'shop') this.checkCollections();
       if (e.type === 'start') { this.introduce(game.productsDef[e.product]?.station); this.introduce('counter'); }   // first use of a better oven / machine / prep counter
       else if (e.type === 'sale' || e.type === 'sell') this.introduce('showcase');
       else if (e.type === 'buy') this.introduce('storage');
@@ -175,6 +178,65 @@ export class Shop {
     g.emit('shop', { item: d, level: n.level });
     g.emit('change', { type: 'shop', item: id, level: n.level });
     return { ok: true, cost: n.cost, level: n.level, item: d, xp };
+  }
+
+  // ---- recipe levels (RECIPE_LEVELS) ---------------------------------------------------------------
+  /** The shop item that unlocks a product, or null for a starting product. */
+  recipeItem(pid) { return this.items.find((d) => d.kind === 'recipe' && d.recipe === pid) ?? null; }
+  /** Level of a product's recipe: 0 while it is locked, else 1..5. */
+  recipeLevel(pid) { return this.game.productsDef[pid] && this.game.isUnlocked(pid) ? this.recipeLevels[pid] ?? 1 : 0; }
+  /** Factor on a product's sale price from its recipe level (read once, in Game.unitEconomics). */
+  priceFactor(pid) { const n = this.recipeLevels[pid] ?? 1; return RECIPE_LEVELS.sale[n - 1] ?? 1; }
+  /** The next recipe level: { level, cost, needLevel, price, ok, levelOk, missingGold, reason } or null at the top / while locked. */
+  nextRecipeLevel(pid) {
+    const cur = this.recipeLevel(pid), def = this.game.productsDef[pid];
+    if (!cur || cur >= RECIPE_LEVELS.max) return null;
+    const item = this.recipeItem(pid), level = cur + 1;
+    const base = item ? item.price : def.price * RECIPE_LEVELS.baseFactor;
+    const cost = Math.round(base * RECIPE_LEVELS.cost[level - 1] / 10) * 10, needLevel = (item?.minLevel ?? 1) + RECIPE_LEVELS.levelStep * (level - 1);
+    const missingGold = Math.max(0, cost - this.game.player.gold), levelOk = this.playerLevel >= needLevel;
+    const reason = !levelOk ? `Seviye ${needLevel} gerekli (şu an ${this.playerLevel}).` : missingGold ? `${fmt(missingGold)} altın eksik (${fmt(cost)} gerekli).` : null;
+    return { level, cost, needLevel, price: Math.round(def.price * RECIPE_LEVELS.sale[level - 1]), ok: !reason, levelOk, missingGold, reason };
+  }
+  /** Raises a recipe one level: gold, level, XP and one 'change' event in one step. */
+  upgradeRecipe(pid, requestId = null) {
+    const g = this.game, def = g.productsDef[pid], n = this.nextRecipeLevel(pid);
+    if (!n) return { ok: false, reason: 'max', message: this.recipeLevel(pid) ? `${def?.name ?? 'Tarif'} en üst seviyede.` : 'Önce tarifi aç.' };
+    if (requestId != null && g.handledRequests.has(requestId)) return { ok: false, reason: 'duplicate', message: 'Bu yükseltme zaten uygulandı.' };
+    if (!n.ok) return { ok: false, reason: n.levelOk ? 'gold' : 'level', message: n.reason };
+    if (!g.spend(n.cost, `${def.name} tarifi · Seviye ${n.level}`)) return { ok: false, reason: 'gold', message: n.reason ?? 'Altın yetmiyor.' };
+    this.recipeLevels[pid] = n.level;
+    const xp = Math.max(10, Math.min(300, Math.round(n.cost / 40)));
+    g.progression?.gain(xp);
+    if (requestId != null) { if (g.handledRequests.size > 200) g.handledRequests.clear(); g.handledRequests.add(requestId); }
+    g.emit('change', { type: 'shop', recipe: pid, level: n.level });
+    return { ok: true, cost: n.cost, level: n.level, xp, price: n.price };
+  }
+
+  // ---- collections (COLLECTIONS) ----------------------------------------------------------------------
+  /** The decoration groups with their progress: [{ group, items, owned, maxed, ownedPaid, maxPaid, ownedReward, maxReward }]. */
+  collectionList() {
+    const groups = [];
+    for (const d of this.items) if (this.levelable(d) && d.group && !groups.includes(d.group)) groups.push(d.group);
+    return groups.map((group) => {
+      const items = this.items.filter((d) => this.levelable(d) && d.group === group), total = items.reduce((s, d) => s + d.price, 0);
+      const reward = (c) => ({ gold: Math.max(c.min, Math.round(total * c.share / 10) * 10), xp: c.xp });
+      return { group, items, owned: items.filter((d) => this.owned.has(d.id)).length, maxed: items.filter((d) => this.itemLevel(d.id) >= ITEM_LEVELS.max).length,
+        ownedPaid: this.collections.has(`${group}:owned`), maxPaid: this.collections.has(`${group}:max`), ownedReward: reward(COLLECTIONS.owned), maxReward: reward(COLLECTIONS.max) };
+    });
+  }
+  /** Pays every collection reward that has just been earned (once each); emits 'collection' for each. */
+  checkCollections() {
+    for (const c of this.collectionList()) {
+      for (const [kind, done, reward] of [['owned', c.owned === c.items.length, c.ownedReward], ['max', c.maxed === c.items.length, c.maxReward]]) {
+        const key = `${c.group}:${kind}`;
+        if (!done || this.collections.has(key)) continue;
+        this.collections.add(key);
+        this.game.earn(reward.gold, 'collection', `Koleksiyon: ${c.group}${kind === 'max' ? ' (en üst seviye)' : ''}`);
+        this.game.progression?.gain(reward.xp);
+        this.game.emit('collection', { group: c.group, kind, reward });
+      }
+    }
   }
 
   /** XP for a purchase grows with its price (about 1 XP per 40 gold, at least 10, at most 300). */
@@ -361,7 +423,7 @@ export class Shop {
   }
 
   // ---- persistence ------------------------------------------------------------------------------
-  exportState() { return { owned: [...this.owned], placed: { ...this.placed }, stored: [...this.stored], introduced: [...this.introduced], stage: this.stageId, levels: { ...this.levels } }; }
+  exportState() { return { owned: [...this.owned], placed: { ...this.placed }, stored: [...this.stored], introduced: [...this.introduced], stage: this.stageId, levels: { ...this.levels }, recipeLevels: { ...this.recipeLevels }, collections: [...this.collections] }; }
 
   importState(state) {
     const v = validateShop(state, this);
@@ -371,6 +433,8 @@ export class Shop {
     this.introduced = new Set(v.introduced);
     this.stageId = v.stage;
     this.levels = { ...v.levels };
+    this.recipeLevels = { ...v.recipeLevels };
+    this.collections = new Set(v.collections);
   }
 }
 
@@ -399,7 +463,11 @@ export function validateShop(raw, shop) {
   const stage = Number.isInteger(raw?.stage) && raw.stage >= 1 ? Math.min(raw.stage, maxStage) : 1;
   const levels = {};                                          // decoration levels: only owned pieces that level, 2..max (level 1 is not stored)
   for (const [id, n] of Object.entries(raw?.levels ?? {})) if (owned.includes(id) && shop.levelable(shop.def(id)) && Number.isInteger(n) && n >= 2 && n <= ITEM_LEVELS.max) levels[id] = n;
-  return { owned, placed, stored: [...stored], introduced, stage, levels };
+  const recipeLevels = {};                                    // recipe levels: known products only, 2..max
+  for (const [id, n] of Object.entries(raw?.recipeLevels ?? {})) if (shop.game.productsDef[id] && Number.isInteger(n) && n >= 2 && n <= RECIPE_LEVELS.max) recipeLevels[id] = n;
+  const groups = new Set(shop.items.filter((d) => shop.levelable(d) && d.group).map((d) => d.group));
+  const collections = [...new Set(Array.isArray(raw?.collections) ? raw.collections.filter((k) => typeof k === 'string' && /:(owned|max)$/.test(k) && groups.has(k.replace(/:(owned|max)$/, ''))) : [])];
+  return { owned, placed, stored: [...stored], introduced, stage, levels, recipeLevels, collections };
 }
 
 /** One line of what an item does, built from its effect so the text can never disagree with the numbers. */

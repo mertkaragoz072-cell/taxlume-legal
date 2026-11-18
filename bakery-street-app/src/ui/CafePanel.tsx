@@ -7,7 +7,7 @@ import { formatTime } from "../game/game.js";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Chip, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon } from "./icons";
-import { C, FONT, fmt, fs, useU } from "./theme";
+import { C, FONT, fmt, fs, TYPE, useU } from "./theme";
 
 const TITLE: Record<string, string> = { oven: "Fırın", coffee: "Kahve Makinesi", counter: "Üretim Tezgâhı", showcase: "Satış Vitrini", storage: "Depo · Malzeme Al", upgrades: "Geliştirmeler" };
 const HINT: Record<string, string> = {
@@ -29,14 +29,53 @@ export function CafePanel({ id, side }: { id: string; side: "left" | "right" }) 
   const products = (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => game.isUnlocked(pid) && (id === "counter" || d.station === id));
   return (
     <Sheet title={TITLE[id]} hint={HINT[id] + stationNote} side={side} lowered={side === "left"} onClose={act.closePanel}>
-      {id === "showcase" ? <Showcase /> : id === "storage" ? <Storage /> : id === "upgrades" ? <Upgrades /> : products.map(([pid, d]) => <Recipe key={pid} pid={pid} d={d} />)}
+      {id === "showcase" ? <Showcase /> : id === "storage" ? <Storage /> : id === "upgrades" ? <Upgrades /> : <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.2 }}>{products.map(([pid, d]) => <RecipeTile key={pid} pid={pid} d={d} />)}</View>}
       {id === "oven" || id === "coffee" || id === "counter" ? (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => !game.isUnlocked(pid) && (id === "counter" || d.station === id)).map(([pid, d]) => <LockedRecipe key={pid} pid={pid} d={d} />) : null}
       {id === "upgrades" ? <Btn label="◀ Geri" variant="alt" onPress={act.closePanel} style={{ alignSelf: "stretch" }} /> : null}
     </Sheet>
   );
 }
 
-function Recipe({ pid, d }: { pid: string; d: any }) {
+/**
+ * A recipe as a tile (two per row): the product's picture with its recipe level, stock, time and what a guest pays, the ingredients (red when
+ * short), the progress of the job under way and the buttons. The same rules as before; only the look is the shop's.
+ */
+function RecipeTile({ pid, d }: { pid: string; d: any }) {
+  const { world, act } = useWorld();
+  const game = world.game, u = useU();
+  const jobs = game.jobsOf(d.station), mine = jobs.filter((j: any) => j.product === pid);
+  const cap = game.capacity(d.station), full = jobs.length >= cap;
+  const soon = mine.length ? mine.reduce((a: any, b: any) => (game.remainingOf(a) <= game.remainingOf(b) ? a : b)) : null;
+  const lack = !full && (game.missingFor(pid).length > 0 || game.committed(pid) >= game.showcaseLimit());
+  const label = full ? (cap > 1 ? "Dolu" : mine.length ? "Hazırlanıyor" : "Meşgul") : "Üret";
+  const dur = game.duration(pid), eco = game.unitEconomics(pid), lvl = world.shop?.recipeLevel(pid) ?? 1;
+  return (
+    <View style={{ flexBasis: "47%", flexGrow: 1, padding: u * 1, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: "#E2C69B", backgroundColor: "#FFF9EE" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: u * 1 }}>
+        <EmojiIcon emoji={d.icon} size={u * 9} />
+        <View style={{ flex: 1 }}>
+          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{d.name}</Text>
+          <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Sv {lvl} {"★".repeat(lvl)}</Text>
+          <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny) }}>Stok {game.products[pid]}/{game.showcaseLimit()}</Text>
+        </View>
+      </View>
+      <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny) }}>⏱ {formatTime(dur)} · 💰 {fmt(eco.customer)} · net {fmt(eco.customerNet)}</Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.5 }}>
+        {Object.entries(d.ingredients as Record<string, number>).map(([ing, need]) => {
+          const def = game.ingredientsDef[ing], have = game.ingredients[ing];
+          return <Chip key={ing} ok={have >= need} text={`${def.icon}${need} (${have})`} />;
+        })}
+      </View>
+      {soon ? <Bar value={1 - game.remainingOf(soon) / soon.duration} text={`${formatTime(game.remainingOf(soon))}${mine.length > 1 ? ` ×${mine.length}` : ""}`} /> : null}
+      <View style={{ flexDirection: "row", gap: u * 0.6 }}>
+        <Btn small label={label} variant={full ? "busy" : lack ? "lack" : "go"} style={{ flex: 1 }} onPress={() => { const r = game.startProduction(pid); if (!r.ok) act.warn(r.message); }} />
+        {cap > 1 && !full ? <Btn small variant="alt" label="×3" onPress={() => { const r = game.startMany(pid, 3); if (!r.started) act.warn(r.message || "Üretim başlatılamadı."); else if (r.started < 3 && r.message) act.toast(`${r.started} adet başlatıldı · ${r.message}`, 2200); }} /> : null}
+      </View>
+    </View>
+  );
+}
+
+export function Recipe({ pid, d }: { pid: string; d: any }) {
   const { world, act } = useWorld();
   const game = world.game, u = useU();
   const jobs = game.jobsOf(d.station), mine = jobs.filter((j: any) => j.product === pid);

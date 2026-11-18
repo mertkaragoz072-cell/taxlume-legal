@@ -230,3 +230,8 @@ Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda 
 - **Ekipman**: her istasyon 5 kademe (1 = başlangıç, 2-5 Mağaza'da). 5. kademe yeni: Aşama 4, seviye 14-17, 50.000-95.000 altın.
 - Baştan sona robot (günde 30 dk): 50. günde her şey alınmış, 60. günde tüm dekorlar 5. seviyede.
 - Tarifler, genişletme ve özel içerik seviyelenmez.
+
+### Tarif seviyeleri ve koleksiyonlar (kayıt alanları `shop.recipeLevels`, `shop.collections`)
+- **Tarif seviyeleri** (`RECIPE_LEVELS`): açık her ürün (başlangıçtaki 4 ürün ve satın alınan tarifler) Mağaza → Tarifler'den 1'den 5'e yükseltilir. Satış fiyatı × [1; 1,1; 1,2; 1,32; 1,45] (malzeme ve süre aynı). Bedel: tarifin mağaza fiyatı, başlangıç ürünlerinde ürün fiyatı × 25, × [1; 1,4; 2,3; 3,6; 5,5]. Gereken seviye: tarifin seviyesi + 2×(n−1).
+- **Koleksiyonlar** (`COLLECTIONS`): dekorasyonun 5 grubu (Halı & Paspas, Bitki & Çiçek, Raf & Duvar, Aydınlatma, Masa & Sandalye). Gruptaki her eşya alınınca bir kez (grup fiyat toplamının %15'i, en az 500 altın, 120 XP), hepsi 5. seviyeye çıkınca bir kez daha (%60, en az 3.000 altın, 400 XP). Mağaza → Hedef'te ilerleme.
+- Robot (günde 30 dk, 55 gün): tüm mağaza, ürünlerin çoğu 5. seviye tarif, 5 koleksiyon ödülü.

@@ -152,7 +152,7 @@ export class Game {
    */
   unitEconomics(id, basePrice = this.productsDef[id].price) {
     const cost = this.ingredientCost(id) - this.ingredientRebate(id);
-    const customer = this.saleIncome(basePrice), customerNet = customer - cost;
+    const customer = this.saleIncome(basePrice * (this.shop?.priceFactor(id) ?? 1)), customerNet = customer - cost;   // the recipe level raises what a sale pays
     const showcase = customer - Math.max(0, Math.round(customerNet * (1 - this.sales.showcaseNetShare)));
     return { cost, customer, customerNet, showcase, showcaseNet: showcase - cost };
   }

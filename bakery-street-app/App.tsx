@@ -189,6 +189,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     // a calm cafe: an ordinary sale needs no message (the coins fly to the counter and the "+N" shows on it); only a sale with a bonus says why it paid more
     offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income && e.bonus?.pct >= 0.1) showToast(`+${fmt(e.income)} altın${saleNotes(e)}`, 1600); }));
     offs.push(game.on("album", (e: any) => showToast(e.completed ? `📖 Müşteri albümü tamamlandı! +${fmt(e.gold)} altın` : `📖 Yeni müşteri: ${world.album.nameOf(e.look)} · +${fmt(e.gold)} altın`, 2600)));
+    offs.push(game.on("collection", (e: any) => { showToast(`🏅 Koleksiyon: ${e.group}${e.kind === "max" ? " (hepsi en üst seviyede)" : " tamamlandı"} · +${fmt(e.reward.gold)} altın`, 3400); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
     offs.push(game.on("goalComplete", ({ goal }: any) => showToast(`🎯 Günlük hedef tamamlandı: ${goal.name} — Görevler'den ödülünü al`, 3000)));
     // (a finished product needs no message either: the "+1" rises from the machine and the stock shows on the showcase)
     offs.push(game.on("questComplete", ({ quest }: any) => showToast(`🎯 Görev tamamlandı: ${quest.name} — Görevler'den ödülünü al`, 3000)));
