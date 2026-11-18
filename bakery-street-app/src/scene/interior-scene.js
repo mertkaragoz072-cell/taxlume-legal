@@ -51,6 +51,7 @@ export class InteriorScene {
     this.staff = new StaffLayer(game);
     this.shopDecor = new DecorLayer(this);        // what the player bought (decoration, equipment tiers, themes, reveals)
     this.staff.guests = () => this.customers.v.values();
+    this.customers.chairSeat = () => !!this.levelSetArt();     // guests sit on the chairs of a raised table set
     this.staff.seated = (id) => { const v = this.customers.v.get(id); return !!v && v.sit >= 0.999 && !v.moving; };
     this.customers.warp = this.staff.warp = (y) => this.warpAt(y);
     this.customers.extra = () => [this.staff.waiter];          // guests give way to the waiter too
@@ -196,7 +197,7 @@ export class InteriorScene {
     for (const a of AREAS) {                                      // the chairs of seated cats (behind the cat, which is drawn at the table's depth - 2)
       if (!a.id.startsWith('table') || !this.tableOpen(a)) continue;
       const i = +a.id.slice(5) - 1, owner = this.customers.ownerAt(i), v = owner ? this.customers.v.get(owner.id) : null;
-      if (v && v.sit > 0 && hasSitFrames(v.look)) items.push({ y: depthOf(a) - 3, draw: () => this.shifted(ctx, 'floor', () => this.guestChair(ctx, a, v)) });
+      if (v && v.sit > 0 && hasSitFrames(v.look) && !this.levelSetArt()) items.push({ y: depthOf(a) - 3, draw: () => this.shifted(ctx, 'floor', () => this.guestChair(ctx, a, v)) });
     }
     for (const it of this.shopDecor.items()) items.push({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) });
     items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
@@ -285,7 +286,22 @@ export class InteriorScene {
    * A table with its two chairs as separate pieces: each table has its own chair offsets and tilt, the chair a guest uses is pulled out
    * while they walk up and slid in when they sit, and a mirrored table swaps the chairs' roles.
    */
+  /** The picture of the placed table set at its level (a whole set: table and both chairs), or null: then the plain pieces are drawn. */
+  levelSetArt() {
+    const shop = this.game.shop, id = shop?.placed?.tableTop;
+    if (!id || !shop.isPlaced(id)) return null;
+    for (let n = shop.itemLevel(id); n >= 2; n--) { const img = getImage(`lvl-${id}-${n}`); if (img) return img; }
+    return null;
+  }
+
   tableSet(ctx, a, tableImg, dx, dy, w, h) {
+    const set = this.levelSetArt();
+    if (set) {                                                  // a raised table set: one picture (table + chairs) on the set's floor line; a guest sits behind it
+      const sw = w * 1.12, sh = sw * set.naturalHeight / set.naturalWidth, sx = dx + (w - sw) / 2, sy = dy + h - sh;
+      this.grounding(ctx, dx + w / 2, dy + h, sw * 0.5);
+      ctx.drawImage(set, sx, sy, sw, sh);
+      return;
+    }
     const i = +a.id.slice(5) - 1, tw = CHAIRS[i % CHAIRS.length], s = w / 1000;
     const owner = this.customers.ownerAt(i), v = owner ? this.customers.v.get(owner.id) : null;
     const plain = v && v.sit > 0.5 && hasSitFrames(v.look) ? getImage('int-table-plain') : null;       // a seated cat eats at a table without the vase

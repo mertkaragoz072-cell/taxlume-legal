@@ -248,7 +248,8 @@ export class CustomerLayer {
   /** Cats with sitting frames sit behind the middle of their table (the table covers their lower body): where their seat is drawn. */
   sitPos(v, c) {
     const a = AREAS.find((q) => q.id === `table${c.table + 1}`), e = v.sit * v.sit * (3 - 2 * v.sit);
-    const tx = a.x + a.w / 2, ty = a.y + a.h - 0.55 * a.w;
+    const onChair = this.chairSeat?.();                         // a raised table set (one picture with its chairs): the guest sits on the chair at the side, in front of the set
+    const tx = a.x + a.w / 2 + (onChair ? (a.side ?? -1) * 0.34 * a.w : 0), ty = a.y + a.h - (onChair ? 0.2 : 0.55) * a.w;
     return { x: v.x + (tx - v.x) * e, y: v.y + (ty - v.y) * e };
   }
 
@@ -270,7 +271,7 @@ export class CustomerLayer {
       const c = this.cafe.customers.find((x) => x.id === id) ?? v.ghost;
       const table = c && c.state === 'seated' && v.sit > 0 ? AREAS.find((a) => a.id === `table${c.table + 1}`) : null;
       out.push({
-        y: table ? depthOf(table) + (hasSitFrames(v.look) ? -2 : 1) : v.y,
+        y: table ? depthOf(table) + (hasSitFrames(v.look) && !this.chairSeat?.() ? -2 : 1) : v.y,
         draw: (ctx0) => this.shaken(ctx0, this.shake(v, c, t), (ctx) => {
           if (c?.vip && !v.leaving) {                                // a VIP guest stands in a soft golden light
             const gx = this.bodyX(v, c), gy = this.drawY(v, c);
