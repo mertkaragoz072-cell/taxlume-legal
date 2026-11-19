@@ -261,6 +261,12 @@ def build_sfx():
     x[: len(thud)] += thud
     sfx("crash", x, wet=0.24, rms_db=-22, ceiling=0.6, decay=3)
 
+    # bells: three slow strikes of a large bell, a fifth apart, for a rank-up
+    bl = np.zeros((int(SR * 4.2), 2))
+    for i, (m, g) in enumerate(((55, 1.0), (62, 0.8), (55, 0.9))):
+        place(bl, pan(bell(midi(m), 3.0, 1.5, ratios=(1, 2.0, 2.76, 4.1, 5.4), amps=(1, 0.6, 0.5, 0.3, 0.18)) * g, (i - 1) * 0.3), 0.9 * i)
+    sfx("bells", bl, wet=0.28, rms_db=-24, ceiling=0.55, dur=2.6, decay=2.2)
+
     # fanfare: a little brass arpeggio resolving on a major chord, bell on top
     d = np.zeros((int(SR * 3.4), 2))
     for i, m in enumerate((60, 64, 67, 72)):

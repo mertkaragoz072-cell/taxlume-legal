@@ -9,6 +9,7 @@ const crashSource = require("../../assets/sounds/crash.wav");
 const fanfareSource = require("../../assets/sounds/fanfare.wav");
 const successSource = require("../../assets/sounds/success.wav");
 const tapSource = require("../../assets/sounds/tap.wav");
+const bellsSource = require("../../assets/sounds/bells.wav");
 // Two different loops (see scripts/gen-audio.py) — one is picked at random
 // per session in startMusic() rather than loading both, so a replay doesn't
 // always open on the identical tune, without doubling the audio the app
@@ -37,6 +38,7 @@ export function useSoundEffects() {
   const fanfarePlayer = useAudioPlayer(fanfareSource);
   const successPlayer = useAudioPlayer(successSource);
   const tapPlayer = useAudioPlayer(tapSource);
+  const bellsPlayer = useAudioPlayer(bellsSource);
   // No initial source: which of the two tracks plays is chosen (and loaded
   // via .replace()) inside startMusic(), not here, so only the one actually
   // used gets fetched.
@@ -138,6 +140,8 @@ export function useSoundEffects() {
     },
     // The softest sound in the set: a wooden tick for changing tabs.
     playTap: () => play(tapPlayer),
+    // Town bells for the rank-up reveal.
+    playBells: () => play(bellsPlayer),
     // Reserved for a town rank-up — separate from playEvent so the one
     // moment that says "you've genuinely grown" doesn't sound like every
     // other notification blip.

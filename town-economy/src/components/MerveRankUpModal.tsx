@@ -8,6 +8,7 @@ import { ConfettiBurst } from "./ConfettiBurst";
 import { ModalBackdrop } from "./ModalBackdrop";
 import frameArt from "../../assets/ui/merve/frame.webp";
 import { BigButton } from "./ModalKit";
+import { RankUpReveal } from "./RankUpReveal";
 
 interface Props {
   rankUp: { icon: string; title: string; lore: string } | null;
@@ -20,20 +21,43 @@ interface Props {
  * city, and every tier after. The rank-up event still lands in the log
  * (see applyTownRankUp) for the player who wants the full record; this is
  * the one that actually stops them and makes the milestone feel earned. */
-export function MerveRankUpModal({ rankUp, onDismiss }: Props) {
-  const { t } = useEconomyContext();
+export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
+  const { t, state } = useEconomyContext();
+  // The rank held before this jump: remembered while no rank-up is showing, so
+  // the reveal can list everything a multi-tier jump passed through.
+  const lastRank = useRef(state.townRankIndex);
+  if (!rankUp) lastRank.current = state.townRankIndex;
+  const [phase, setPhase] = useState<"reveal" | "merve">("reveal");
+  const soundsRef = useRef(sounds);
+  soundsRef.current = sounds;
   const enter = useRef(new Animated.Value(0)).current;
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const [w, setW] = useState(340);
 
   useEffect(() => {
     if (!rankUp) return;
-    setConfettiTrigger((n) => n + 1);
+    setPhase("reveal");
+    soundsRef.current.playBells();
     enter.setValue(0);
     Animated.spring(enter, { toValue: 1, useNativeDriver: true, friction: 7, tension: 55 }).start();
   }, [rankUp, enter]);
 
   if (!rankUp) return null;
+  if (phase === "reveal") {
+    return (
+      <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
+        <RankUpReveal
+          fromIndex={Math.min(lastRank.current, state.townRankIndex - 1)}
+          toIndex={state.townRankIndex}
+          onContinue={() => {
+            setConfettiTrigger((n) => n + 1);
+            setPhase("merve");
+          }}
+        />
+        <ConfettiBurst trigger={confettiTrigger} big />
+      </Modal>
+    );
+  }
   const k = w / ART_W;
   const u = Math.max(0.82, Math.min(1.08, w / 350));
   const box = (x: number, y: number, bw: number, bh: number) => ({

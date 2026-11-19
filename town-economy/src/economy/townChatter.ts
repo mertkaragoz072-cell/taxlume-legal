@@ -22,9 +22,9 @@ const VARIANT_COUNTS: Record<string, number> = {
   loanActive: 2,
   prestige: 2,
   workers: 1,
-  "rank.low": 2,
-  "rank.mid": 2,
-  "rank.high": 2,
+  "rank.low": 3,
+  "rank.mid": 4,
+  "rank.high": 4,
   general: 3,
 };
 

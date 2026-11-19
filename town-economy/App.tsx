@@ -429,6 +429,7 @@ function Game() {
               <SpotlightTarget id="inflation">
                 <InflationHeader
                   topInset={insets.top}
+                  townRankIndex={state.townRankIndex}
                   townName={state.townName}
                   rankIcon={townRankIcon(state.townRankIndex)}
                   rankTitle={rankTitle}

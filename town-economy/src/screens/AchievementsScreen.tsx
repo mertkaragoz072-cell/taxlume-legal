@@ -18,6 +18,8 @@ import { ScalePressable } from "../components/ScalePressable";
 import { GoalFrame, GoalIcon, GoalIconName, GoalProgress, GoalRibbon } from "../components/GoalPanels";
 import { ACHIEVEMENTS, ACHIEVEMENTS_BY_ID, AchievementId } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { rankTheme } from "../economy/rankTheme";
+import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { GOODS } from "../economy/goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
@@ -150,6 +152,38 @@ export function AchievementsScreen() {
               : t("achievements.noStreak")}
           </Text>
         </View>
+      </GoalFrame>
+
+      <GoalRibbon text={t("achievements.rankSectionLabel")} />
+      <GoalFrame lit>
+        {(() => {
+          const idx = state.townRankIndex;
+          const theme = rankTheme(idx);
+          const lo = townRankThreshold(idx);
+          const hi = townRankThreshold(idx + 1);
+          const pct = hi > lo ? (netWorth - lo) / (hi - lo) : 0;
+          return (
+            <>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Text style={{ fontSize: 34 }}>{townRankIcon(idx)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.summaryBig, { color: theme.accent }]} numberOfLines={1}>
+                    {townRankTitle(idx, t)}
+                  </Text>
+                  <Text style={styles.summaryLabel} numberOfLines={2}>
+                    {t("achievements.rankNext", {
+                      title: townRankTitle(idx + 1, t),
+                      amount: formatCoins(hi, 0),
+                    })}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ marginTop: 8 }}>
+                <GoalProgress pct={pct} color={theme.accent} />
+              </View>
+            </>
+          );
+        })()}
       </GoalFrame>
 
       {state.unlockedAchievements.length > 0 && (

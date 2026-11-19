@@ -2,7 +2,11 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { upperForUi } from "../utils/uiLanguage";
 import { Text } from "./AppText";
-import headerMarketImage from "../../assets/ui/header-market.webp";
+import headerTier1 from "../../assets/ui/header-market.webp";
+import headerTier2 from "../../assets/tier2-happy-marketplace.webp";
+import headerTier3 from "../../assets/tier3-happy-marketplace.webp";
+import headerTier4 from "../../assets/tier4-happy-marketplace.webp";
+import { rankTheme } from "../economy/rankTheme";
 import statBarChart from "../../assets/ui/statpanel2/barchart.png";
 import statCoinBullet from "../../assets/ui/statpanel2/coinbullet.png";
 import statCoins from "../../assets/ui/statpanel2/coins.png";
@@ -35,6 +39,8 @@ import { SpotlightTarget } from "./Spotlight";
 import { SettingsMenu } from "./SettingsMenu";
 
 interface Props {
+  /** rank index of the town: picks the street scene and accent colour */
+  townRankIndex?: number;
   /** height of the notch / status bar the header scene is extended under */
   topInset?: number;
   townName: string;
@@ -104,6 +110,7 @@ function dayTintColor(tick: number): string {
 // keep them on screen truncated "Golden Town" — flexing to whatever room
 // is actually left of the controls is the only width that's never both.
 const SCENE_HEIGHT = 112;
+const SCENES = { 1: headerTier1, 2: headerTier2, 3: headerTier3, 4: headerTier4 } as const;
 const PLATE_HEIGHT = 46;
 const PLATE_CAP_LEFT_W = 32;
 const PLATE_CAP_RIGHT_W = 35;
@@ -112,6 +119,7 @@ const PLATE_CAP_RIGHT_W = 35;
 const COMPACT_WIDTH = 380;
 
 export function InflationHeader({
+  townRankIndex = 0,
   topInset = 0,
   townName,
   rankIcon,
@@ -161,6 +169,7 @@ export function InflationHeader({
   // is shown. The rank chip below opens the name editor either way.
   const defaultNames = [t("app.defaultTownName"), "Altın Kasaba", "Golden Town"];
   const showPlate = !defaultNames.includes(townName.trim());
+  const theme = rankTheme(townRankIndex);
   const hot = inflationRate > 0.006;
   const dayTint = dayTintColor(tick);
   const difficultyConfig = DIFFICULTIES[difficulty];
@@ -253,7 +262,7 @@ export function InflationHeader({
           solid backgrounds so they read without any darkening. */}
       <View style={[styles.scene, { height: SCENE_HEIGHT + topInset }]} pointerEvents="none">
         <Image
-          source={headerMarketImage}
+          source={SCENES[theme.band]}
           style={[styles.sceneImage, { height: SCENE_HEIGHT + 40 + topInset }]}
           resizeMode="cover"
         />
@@ -262,7 +271,7 @@ export function InflationHeader({
           <GradientFill colors={["rgba(42,26,14,0)", "rgba(42,26,14,1)"]} x1="0" y1="0" x2="0" y2="1" />
         </View>
       </View>
-      <View style={styles.goldLine} />
+      <View style={[styles.goldLine, { backgroundColor: theme.accent }]} />
       {/* Name and controls share a line; the chips get one of their own.
           They used to sit in a single row with the chip strip allowed to
           wrap, and on a phone it broke into three ragged lines beside a
@@ -331,7 +340,7 @@ export function InflationHeader({
           style={[
             styles.streakBadge,
             styles.streakBadgeRow,
-            { backgroundColor: "#5a3a1a", borderColor: "#d1a860" },
+            { backgroundColor: "#5a3a1a", borderColor: theme.accent },
           ]}
         >
           <Text style={styles.streakBadgeText} numberOfLines={1}>

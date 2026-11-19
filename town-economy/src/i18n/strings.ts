@@ -498,14 +498,19 @@ export const STRINGS = {
         low: {
           v0: "Meydan küçük ama herkes birbirini tanıyor.",
           v1: "Birkaç ev, bir çeşme, bir pazar yeri — daha yeni başlıyoruz.",
+          v2: "Çeşmenin başında çocuklar oynuyor, pazarcılar sesleniyor.",
         },
         mid: {
           v0: "Sokaklar kalabalıklaşıyor, yeni dükkanlar birer birer açılıyor.",
           v1: "Şehir büyüyor; artık her köşede tanımadığın bir yüz var.",
+          v2: "Meydanda fener bekçileri akşamları sokak sokak yürümeye başladı.",
+          v3: "Yeni bir han açıldı; yabancı tüccarlar geceyi şehrimizde geçiriyor.",
         },
         high: {
           v0: "Uzak diyarlardan elçiler ve tüccarlar akın ediyor.",
           v1: "Meydandan altın yaldızlı arabalar geçiyor, kasabanın adı her yerde anılıyor.",
+          v2: "Saray kapısında nöbet değişiyor; halk meydanda törenleri izliyor.",
+          v3: "Limanda gemiler sıra bekliyor, ambarlar ağzına kadar dolu.",
         },
       },
       general: {
@@ -536,6 +541,8 @@ export const STRINGS = {
       festivalClaimed: "✅ Amblem kazanıldı, ödül alındı",
       sectionLabel: "BAŞARIMLAR",
       statsSectionLabel: "ÖMÜR BOYU İSTATİSTİKLER",
+      rankSectionLabel: "Rütbe",
+      rankNext: "Sonraki rütbe: {title} · {amount} net servet",
       hallOfFameSectionLabel: "ONUR LİSTESİ",
       netWorthHistorySectionLabel: "NET SERVET GEÇMİŞİ",
       compendiumSectionLabel: "KOLEKSİYON",
@@ -586,6 +593,14 @@ export const STRINGS = {
       achievementsSectionLabel: "KAZANILAN BAŞARIMLAR",
       eventsSectionLabel: "SON OLAYLAR",
       confirmBtn: "Kasabaya Dön",
+    },
+    rankReveal: {
+      promoted: "YÜKSELDİN",
+      unlocked: "AÇILANLAR",
+      good: "{icon} {good} artık alınıp satılıyor",
+      research: "Üçüncü kademe araştırmalar açıldı",
+      reward: "Rütbe ödülü: +{amount}",
+      continue: "Devam",
     },
     merveRankUp: {
       eyebrow: "MERVE",
@@ -1949,14 +1964,19 @@ export const STRINGS = {
         low: {
           v0: "The square is small, but everyone here knows everyone.",
           v1: "A few houses, a well, a market stall — we're just getting started.",
+          v2: "Children play by the well while the stallholders call out their prices.",
         },
         mid: {
           v0: "The streets are getting busier, new shops keep opening up.",
           v1: "The city is growing — there's an unfamiliar face on every corner now.",
+          v2: "Lamplighters now walk the streets at dusk, one lantern at a time.",
+          v3: "A new inn has opened; foreign merchants are spending the night in our city.",
         },
         high: {
           v0: "Envoys and merchants pour in from distant lands.",
           v1: "Gilded carriages cross the square — this town's name travels far now.",
+          v2: "The guard changes at the palace gate while crowds watch the ceremony.",
+          v3: "Ships queue in the harbour and the warehouses are full to the rafters.",
         },
       },
       general: {
@@ -1987,6 +2007,8 @@ export const STRINGS = {
       festivalClaimed: "✅ Emblem earned, reward claimed",
       sectionLabel: "ACHIEVEMENTS",
       statsSectionLabel: "LIFETIME STATS",
+      rankSectionLabel: "Rank",
+      rankNext: "Next rank: {title} · {amount} net worth",
       hallOfFameSectionLabel: "HALL OF FAME",
       netWorthHistorySectionLabel: "NET WORTH HISTORY",
       compendiumSectionLabel: "COMPENDIUM",
@@ -2036,6 +2058,14 @@ export const STRINGS = {
       achievementsSectionLabel: "ACHIEVEMENTS EARNED",
       eventsSectionLabel: "RECENT EVENTS",
       confirmBtn: "Back to Town",
+    },
+    rankReveal: {
+      promoted: "PROMOTED",
+      unlocked: "UNLOCKED",
+      good: "{icon} {good} can now be traded",
+      research: "Tier-3 research unlocked",
+      reward: "Rank reward: +{amount}",
+      continue: "Continue",
     },
     merveRankUp: {
       eyebrow: "MERVE",
