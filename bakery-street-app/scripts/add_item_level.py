@@ -4,6 +4,7 @@ transparent background, trimmed, scaled to the level-1 picture's height and save
 
     python3 scripts/add_item_level.py plantA 2 ~/Downloads/saksi_2.png
     python3 scripts/add_item_level.py plantA sheet ~/Downloads/saksi_2-5.png    # one picture with levels 2, 3, 4, 5 side by side, left to right
+    python3 scripts/add_item_level.py plantA sheet5 ~/Downloads/saksi_1-5.png   # the same with level 1 drawn first (skipped)
     node scripts/gen-assets.mjs            # (once, after adding files) so the app bundles it
 
 Item ids and their level-1 pictures are in src/data/economy.js (SHOP_ITEMS, category 'decor'). The café and the shop card draw the picture of
@@ -23,13 +24,13 @@ def base_image(item):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('item'); ap.add_argument('level', choices=('2', '3', '4', '5', 'sheet')); ap.add_argument('source')
+    ap.add_argument('item'); ap.add_argument('level', choices=('2', '3', '4', '5', 'sheet', 'sheet5')); ap.add_argument('source')
     ap.add_argument('--fit', choices=('height', 'width'), default='height')
     a = ap.parse_args()
     base = Image.open(os.path.join(INTERIOR, f'{base_image(a.item)}.webp')); bw, bh = base.size
     rgba = Image.fromarray(cut(np.array(Image.open(a.source).convert('RGB'))), 'RGBA')
-    if a.level == 'sheet':
-        parts = split_sheet(rgba, 4)
+    if a.level in ('sheet', 'sheet5'):                         # sheet5: five objects, the first is level 1 drawn again (it is skipped)
+        parts = split_sheet(rgba, 5)[1:] if a.level == 'sheet5' else split_sheet(rgba, 4)
         for n, part in zip((2, 3, 4, 5), parts): save(a, part, n, bw, bh)
     else:
         save(a, rgba, int(a.level), bw, bh)
