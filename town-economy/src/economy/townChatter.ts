@@ -1,3 +1,4 @@
+import { eraForRank, ERAS } from "./eras";
 import type { EconomyState } from "./types";
 
 /** Random ambient flavor-text for the Town screen's chatter ticker — picks
@@ -26,6 +27,9 @@ const VARIANT_COUNTS: Record<string, number> = {
   "rank.mid": 4,
   "rank.high": 4,
   general: 3,
+  // One pair of headlines per era (see eras.ts), so the street talk changes
+  // with every promotion and not only across the three coarse tiers.
+  ...Object.fromEntries(ERAS.map((era) => [`era.${era.key}`, 2])),
 };
 
 function happinessTier(happiness: number): string {
@@ -70,6 +74,10 @@ export function pickTownChatterKey(state: EconomyState, rng: () => number = Math
   if (state.prestigeLevel > 0) pool.push(...poolKeys("prestige"));
   if (Object.values(state.workers).some((count: number) => count > 0)) pool.push(...poolKeys("workers"));
   pool.push(...poolKeys(`rank.${rankTier(state.townRankIndex)}`));
+  // The current era's own headlines, listed twice so they come up often
+  // enough to be noticed.
+  const eraBase = `era.${eraForRank(state.townRankIndex).key}`;
+  pool.push(...poolKeys(eraBase), ...poolKeys(eraBase));
   pool.push(...poolKeys("general"));
   return pool[Math.floor(rng() * pool.length)];
 }

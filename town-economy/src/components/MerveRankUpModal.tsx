@@ -8,6 +8,7 @@ import { ConfettiBurst } from "./ConfettiBurst";
 import { ModalBackdrop } from "./ModalBackdrop";
 import frameArt from "../../assets/ui/merve/frame.webp";
 import { BigButton } from "./ModalKit";
+import { EraChapterCard } from "./EraChapterCard";
 import { RankUpReveal } from "./RankUpReveal";
 
 interface Props {
@@ -27,7 +28,7 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
   // the reveal can list everything a multi-tier jump passed through.
   const lastRank = useRef(state.townRankIndex);
   if (!rankUp) lastRank.current = state.townRankIndex;
-  const [phase, setPhase] = useState<"reveal" | "merve">("reveal");
+  const [phase, setPhase] = useState<"reveal" | "chapter" | "merve">("reveal");
   const soundsRef = useRef(sounds);
   soundsRef.current = sounds;
   const enter = useRef(new Animated.Value(0)).current;
@@ -51,10 +52,17 @@ export function MerveRankUpModal({ rankUp, onDismiss, sounds }: Props) {
           toIndex={state.townRankIndex}
           onContinue={() => {
             setConfettiTrigger((n) => n + 1);
-            setPhase("merve");
+            setPhase("chapter");
           }}
         />
         <ConfettiBurst trigger={confettiTrigger} big />
+      </Modal>
+    );
+  }
+  if (phase === "chapter") {
+    return (
+      <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
+        <EraChapterCard rankIndex={state.townRankIndex} onContinue={() => setPhase("merve")} />
       </Modal>
     );
   }

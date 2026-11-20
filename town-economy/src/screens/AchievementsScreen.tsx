@@ -18,9 +18,10 @@ import { ScalePressable } from "../components/ScalePressable";
 import { GoalFrame, GoalIcon, GoalIconName, GoalProgress, GoalRibbon } from "../components/GoalPanels";
 import { ACHIEVEMENTS, ACHIEVEMENTS_BY_ID, AchievementId } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { ERAS, eraTitleKey } from "../economy/eras";
 import { rankGainLines } from "../economy/rankPerks";
 import { rankTheme } from "../economy/rankTheme";
-import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
+import { townRankIcon, townRankNameKey, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { GOODS } from "../economy/goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
 import { QUEST_TEMPLATES_BY_ID } from "../economy/quests";
@@ -192,6 +193,44 @@ export function AchievementsScreen() {
               ))}
             </>
           );
+        })()}
+      </GoalFrame>
+
+      <GoalRibbon text={t("achievements.eraPathSection")} />
+      <GoalFrame>
+        {(() => {
+          const now = Math.min(state.townRankIndex, ERAS.length - 1);
+          // every era already lived through, the current one, and a peek at
+          // the next two — the rest stays a closed door
+          const shown = Math.min(ERAS.length - 1, now + 2);
+          return Array.from({ length: shown + 1 }, (_, i) => {
+            const reached = i <= now;
+            const theme = rankTheme(i);
+            return (
+              <View
+                key={i}
+                style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 5 }}
+              >
+                <Text style={{ fontSize: 26, opacity: reached ? 1 : 0.45 }}>
+                  {reached ? townRankIcon(i) : "🔒"}
+                </Text>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[styles.summaryBig, { fontSize: 15, color: reached ? theme.accent : "#9a8a70" }]}
+                    numberOfLines={1}
+                  >
+                    {t(townRankNameKey(i))}
+                    {i === now ? `  ·  ${t("achievements.eraPathNow")}` : ""}
+                  </Text>
+                  <Text style={styles.summaryLabel} numberOfLines={2}>
+                    {reached
+                      ? t(eraTitleKey(i))
+                      : t("achievements.eraPathLocked", { amount: formatCoins(townRankThreshold(i), 0) })}
+                  </Text>
+                </View>
+              </View>
+            );
+          });
         })()}
       </GoalFrame>
 

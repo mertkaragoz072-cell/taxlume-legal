@@ -513,6 +513,60 @@ export const STRINGS = {
           v3: "Limanda gemiler sıra bekliyor, ambarlar ağzına kadar dolu.",
         },
       },
+      era: {
+        village: {
+          v0: "Horozlar ötmeden pazarcılar tezgâhlarını kuruyor.",
+          v1: "Kuyunun başında herkes bugünün fiyatlarını konuşuyor.",
+        },
+        town: {
+          v0: "Belediye meclisi ilk kez toplandı; herkes kürsüde konuşmak istiyor.",
+          v1: "Fırının önünde kuyruk var; kasabada sıra beklemek bile haber artık.",
+        },
+        city: {
+          v0: "Surların taş ustaları gece vardiyasına kaldı.",
+          v1: "Pazara ilk kez yabancı dilde pazarlık eden bir tüccar geldi.",
+        },
+        metropolis: {
+          v0: "Yeni fenerler yakıldı; şehir artık geceleri de uyumuyor.",
+          v1: "Meydandaki saat kulesi ilk kez tam vaktinde öğleyi çaldı.",
+        },
+        tradeHub: {
+          v0: "Limanda ve han kapısında kervanlar sıra bekliyor.",
+          v1: "Aynı tezgâhta üç farklı dilde pazarlık duyuluyor.",
+        },
+        capital: {
+          v0: "Saray kapısında elçiler sıra bekliyor.",
+          v1: "Başkentin yeni sancağı ilk kez meydanda dalgalandı.",
+        },
+        kingdom: {
+          v0: "Sınır kalesinde yeni bir birlik göreve başladı.",
+          v1: "Köylüler hasattan sonra yöneticileri için şarkı söylüyor.",
+        },
+        empire: {
+          v0: "Elçiler yeni haritaları meydanda açıp inceliyor.",
+          v1: "Saray tarihçileri adını çoktan kayda geçirdi.",
+        },
+        goldenAge: {
+          v0: "Meydanda ozanlar, tezgâhlarda altın tozu var.",
+          v1: "Şairler adına destanlar düzüyor.",
+        },
+        legendaryMarket: {
+          v0: "Gezginler pazarın efsanesini anlatmak için her akşam meydanda toplanıyor.",
+          v1: "Uzak diyarlardan gelen baharat kokusu meydanı sardı.",
+        },
+        worldPower: {
+          v0: "Elçilik binasına yeni bayraklar asıldı.",
+          v1: "Dünya haritasında senin renginle işaretlenmiş yeni yollar var.",
+        },
+        tradeDynasty: {
+          v0: "Hanedan arması meydandaki çeşmeye oyuldu.",
+          v1: "Yaşlılar bu pazarın kuruluş hikâyesini torunlarına anlatıyor.",
+        },
+        immortalLegend: {
+          v0: "Duvarlara senin hikâyen resmediliyor.",
+          v1: "Çocuklar oyunlarında seni oynuyor.",
+        },
+      },
       general: {
         v0: "Pazar yerinde her zamanki gevezelik sürüyor.",
         v1: "Bir köylü havanın gidişatından, bir diğeri hasattan söz ediyor.",
@@ -541,6 +595,9 @@ export const STRINGS = {
       festivalClaimed: "✅ Amblem kazanıldı, ödül alındı",
       sectionLabel: "BAŞARIMLAR",
       statsSectionLabel: "ÖMÜR BOYU İSTATİSTİKLER",
+      eraPathSection: "Çağların Yolu",
+      eraPathNow: "Şu anki çağ",
+      eraPathLocked: "{amount} net servette açılır",
       rankSectionLabel: "Rütbe",
       rankPreview: "{title} rütbesinde kazanacakların:",
       rankNext: "Sonraki rütbe: {title} · {amount} net servet",
@@ -594,6 +651,163 @@ export const STRINGS = {
       achievementsSectionLabel: "KAZANILAN BAŞARIMLAR",
       eventsSectionLabel: "SON OLAYLAR",
       confirmBtn: "Kasabaya Dön",
+    },
+    era: {
+      village: {
+        title: "Tek Bir Pazar Tezgâhı",
+        story: "Her şey bir tezgâhla ve bir avuç tahılla başladı. Köyün geleceği senin terazinde.",
+      },
+      town: {
+        title: "Kasaba Doğuyor",
+        story:
+          "Sokaklara isimler verildi, kapılara kilit takıldı. Artık yalnızca bir köy değilsiniz: komşular sizi tanıyor, tüccarlar yolunu buraya düşürüyor.",
+        decree: {
+          title: "Belediye Fermanı",
+          description: "Kasabanın ilk meclisi sana ilk ferman yetkisini veriyor. Seçimin?",
+          a: "Taş Döşeli Meydan",
+          b: "Hasat Şenliği",
+        },
+      },
+      city: {
+        title: "Surların Gölgesinde",
+        story:
+          "Taş duvarlar yükseliyor, kapıda nöbetçiler var. Tüccarlar şehrin adını komşu topraklarda anıyor: artık yalnızca satmıyorsun, itibar kuruyorsun.",
+        decree: {
+          title: "Şehir Fermanı",
+          description: "Şehir konseyi savunma ile ilim arasında bir seçim yapmanı istiyor.",
+          a: "Sur Kulesi",
+          b: "Tüccar Loncası",
+        },
+      },
+      metropolis: {
+        title: "Kuleler Gökyüzünde",
+        story:
+          "Meydanlar dolup taşıyor, kuleler bulutlara değiyor. Büyükşehirde her gün yeni bir yüz, yeni bir fırsat ve yeni bir rakip var.",
+        decree: {
+          title: "Büyükşehir Fermanı",
+          description: "Büyüyen nüfus için ya daha çok depo ya da daha çok bilgi lazım.",
+          a: "Büyük Ambar",
+          b: "Şehir Kütüphanesi",
+        },
+      },
+      tradeHub: {
+        title: "Yolların Kesiştiği Yer",
+        story:
+          "Kervan yolları senin pazarında birleşiyor. Her tüccar er ya da geç buraya uğruyor; fiyatları artık yalnızca sen belirlemiyorsun, fiyatlar seni konuşuyor.",
+        decree: {
+          title: "Ticaret Fermanı",
+          description: "Kervan yolları kalabalık: yolları mı geliştirsin, gümrüğü mü gevşetsin?",
+          a: "Kervansaray Genişletmesi",
+          b: "Gümrük Muafiyeti",
+        },
+      },
+      capital: {
+        title: "Taç Senin",
+        story:
+          "Başkent artık sensin; bölgenin kaderi terazinde tartılıyor. Elçiler geliyor, sarayda toplantılar yapılıyor ve herkes senden bir şey istiyor.",
+        decree: {
+          title: "Başkent Fermanı",
+          description: "Başkentin ilk kararı: hazine mi, halk mı?",
+          a: "Kraliyet Bankası",
+          b: "Taç Giyme Şenliği",
+        },
+      },
+      kingdom: {
+        title: "Bir Krallığın İlk Taşı",
+        story:
+          "Adın sınırların ötesinde bile geçiyor. Halk sana artık 'efendimiz' diyor; ama taç ağır: krallıkta ticaret savaşları ve ağır sorumluluklar var.",
+        decree: {
+          title: "Kraliyet Fermanı",
+          description: "Sandık sınırlı: sarsıntı fonu mu, sınır kuleleri mi?",
+          a: "Kraliyet Yedek Akçesi",
+          b: "Sınır Kuleleri",
+        },
+      },
+      empire: {
+        title: "Haritalar Yeniden Çiziliyor",
+        story:
+          "İmparatorluğunun gölgesi ufukları aşıyor. Artık komşuların değil, rakip imparatorlukların var; her kararın bir bedeli, her sessizliğin bir anlamı.",
+        decree: {
+          title: "İmparatorluk Fermanı",
+          description: "İmparatorluk ya yönetimi güçlendirir ya da ganimetle şişer.",
+          a: "Yüce Divan",
+          b: "Fetih Ganimeti",
+        },
+      },
+      goldenAge: {
+        title: "Altın Çağ Başlıyor",
+        story:
+          "Şiirler yazılıyor, şarkılar söyleniyor. Bu çağ tarihe altın harflerle geçecek; artık yalnızca zengin değil, unutulmaz olmak istiyorsun.",
+        decree: {
+          title: "Altın Çağ Fermanı",
+          description: "Çağın ruhu iki yoldan beslenir: şenlik ve bilgelik.",
+          a: "Büyük Şölenler",
+          b: "Bilgeler Meclisi",
+        },
+      },
+      legendaryMarket: {
+        title: "Efsanevi Pazar",
+        story:
+          "Tüccarlar dünyanın öbür ucundan sırf pazarını görmek için yola çıkıyor. Artık bir ticaret yeri değil, bir söylencesin.",
+        decree: {
+          title: "Efsane Fermanı",
+          description: "Efsane hem depolanmış hem anlatılmış bir mirastır.",
+          a: "Efsane Ambarları",
+          b: "Pazar Şölenleri",
+        },
+      },
+      worldPower: {
+        title: "Dünya Sahnesinde",
+        story:
+          "Artık kimse senin onayın olmadan büyük bir anlaşma imzalamıyor. Kervan yolları senin ağında, elçiler senin masanda.",
+        decree: {
+          title: "Dünya Fermanı",
+          description: "Dünya gücü olmak için banka mı, kervan yolları mı?",
+          a: "Dünya Bankası",
+          b: "Büyük Kervan Yolları",
+        },
+      },
+      tradeDynasty: {
+        title: "Bir Hanedanın Doğuşu",
+        story:
+          "Nesiller boyu sürecek bir miras kuruldu. Çocukların adını senin pazarında, torunların adını senin hanında anacak.",
+        decree: {
+          title: "Hanedan Fermanı",
+          description: "Bir hanedan hem bilgiye hem hazineye yatırım yapar.",
+          a: "Hanedan Akademisi",
+          b: "Hanedan Hazinesi",
+        },
+      },
+      immortalLegend: {
+        title: "Ölümsüz Efsane",
+        story:
+          "Zaman bile seni unutamıyor: sen artık bir kasaba değil, bir efsanesin. Buradan sonrası yazılacak bir sayfa değil, anlatılacak bir masal.",
+        decree: {
+          title: "Ölümsüzlük Fermanı",
+          description: "Efsaneler hem unutulmaz hem hazırlıklıdır.",
+          a: "Ölümsüz Şölen",
+          b: "Efsanenin Bilgeliği",
+        },
+      },
+    },
+    eraChapter: {
+      label: "BÖLÜM {n}",
+      decree: "📜 Çağın fermanı seni bekliyor",
+      continue: "Devam",
+    },
+    eraDecree: {
+      hint: {
+        market: "🏪 Pazar Yeri +1 seviye (bedava)",
+        caravanserai: "🏕️ Kervansaray +1 seviye (bedava)",
+        townhall: "🏛️ Belediye +1 seviye (bedava)",
+        bank: "🏦 Banka +1 seviye (bedava)",
+        guardTower: "🗼 Gözetleme Kulesi +1 seviye (bedava)",
+        earthquakeFund: "🏚️ Deprem Fonu +1 seviye (bedava)",
+        storageYard: "📦 Ambar +1 seviye (bedava)",
+        research: "🔬 Bir araştırma hemen açılır",
+        festival: "🎉 Mutluluk +25 ve hazineye ödül",
+        cash: "💰 Hazineye büyük bir ödül",
+      },
     },
     rankGain: {
       good: "{icon} {good} artık alınıp satılıyor",
@@ -1436,6 +1650,12 @@ export const STRINGS = {
       gambleLose: "🎲 Şansın dönmedi, bahsi kaybettin: -{amount} 🪙.",
       gambleDecline: "🎲 Bahisten vazgeçtin, güvenli tarafta kaldın.",
       mysteryStrangerNoCash: "🕵️ Bilgiyi almak istedin ama paran yetmedi.",
+      eraDecreeUpgrade: "📜 Ferman uygulandı: {icon} {upgrade} bir seviye yükseldi!",
+      eraDecreeUpgradeMaxed: "📜 {icon} {upgrade} zaten en üst seviyede; hazineye {amount} girdi.",
+      eraDecreeResearch: "📜 Ferman uygulandı: {research} araştırması hemen tamamlandı!",
+      eraDecreeResearchNone: "📜 Açılacak araştırma kalmamış; hazineye {amount} girdi.",
+      eraDecreeFestival: "📜 Halk coştu! Mutluluk +{happy}, hazineye {amount} girdi.",
+      eraDecreeCash: "📜 Ferman uygulandı: hazineye {amount} girdi.",
       mysteryStrangerSuccess: "🕵️ Yabancı doğru söylemiş! {research} araştırması hemen tamamlandı.",
       mysteryStrangerNothingLeft:
         "🕵️ Yabancının bildiği her şeyi zaten biliyordun — parandan hiçbir şey alınmadı.",
@@ -1988,6 +2208,60 @@ export const STRINGS = {
           v3: "Ships queue in the harbour and the warehouses are full to the rafters.",
         },
       },
+      era: {
+        village: {
+          v0: "Stallholders set up before the roosters crow.",
+          v1: "Everyone at the well is talking about today's prices.",
+        },
+        town: {
+          v0: "The council met for the first time; everyone wants a turn at the lectern.",
+          v1: "There is a queue outside the bakery; even waiting in line is news in town now.",
+        },
+        city: {
+          v0: "The masons on the city wall are working night shifts.",
+          v1: "A merchant who haggles in a foreign tongue has reached the market for the first time.",
+        },
+        metropolis: {
+          v0: "New lamps are lit; the city no longer sleeps at night.",
+          v1: "The great clock tower struck noon right on time for once.",
+        },
+        tradeHub: {
+          v0: "Caravans queue at the harbour and at the inn gate alike.",
+          v1: "Haggling in three different languages at a single stall.",
+        },
+        capital: {
+          v0: "Envoys queue at the palace gate.",
+          v1: "The capital's new banner flew over the square for the first time.",
+        },
+        kingdom: {
+          v0: "A new company took post at the border fortress.",
+          v1: "Villagers sing for their ruler after the harvest.",
+        },
+        empire: {
+          v0: "Envoys unroll fresh maps in the square.",
+          v1: "The court historians have already written your name down.",
+        },
+        goldenAge: {
+          v0: "Bards in the square and gold dust on the stalls.",
+          v1: "Poets are composing epics in your name.",
+        },
+        legendaryMarket: {
+          v0: "Travellers gather in the square each evening to tell the market's legend.",
+          v1: "The scent of far-off spices fills the square.",
+        },
+        worldPower: {
+          v0: "New flags hang from the embassy.",
+          v1: "The world map has new roads marked in your colours.",
+        },
+        tradeDynasty: {
+          v0: "The dynasty's crest has been carved into the fountain.",
+          v1: "Elders tell their grandchildren how this market was founded.",
+        },
+        immortalLegend: {
+          v0: "Your story is being painted on the walls.",
+          v1: "Children play at being you in their games.",
+        },
+      },
       general: {
         v0: "The usual market chatter carries on as always.",
         v1: "One villager talks about the weather, another about the harvest.",
@@ -2016,6 +2290,9 @@ export const STRINGS = {
       festivalClaimed: "✅ Emblem earned, reward claimed",
       sectionLabel: "ACHIEVEMENTS",
       statsSectionLabel: "LIFETIME STATS",
+      eraPathSection: "Path of the Ages",
+      eraPathNow: "Current age",
+      eraPathLocked: "Opens at {amount} net worth",
       rankSectionLabel: "Rank",
       rankPreview: "At {title} you will get:",
       rankNext: "Next rank: {title} · {amount} net worth",
@@ -2068,6 +2345,164 @@ export const STRINGS = {
       achievementsSectionLabel: "ACHIEVEMENTS EARNED",
       eventsSectionLabel: "RECENT EVENTS",
       confirmBtn: "Back to Town",
+    },
+    era: {
+      village: {
+        title: "A Single Market Stall",
+        story:
+          "It all began with one stall and a handful of grain. The village's future sits on your scales.",
+      },
+      town: {
+        title: "A Town Is Born",
+        story:
+          "The streets have names and the doors have locks. You are no longer just a village: neighbours know you, and traders are bending their routes your way.",
+        decree: {
+          title: "Town Charter",
+          description: "The first town council hands you your first decree. Your pick?",
+          a: "Paved Square",
+          b: "Harvest Festival",
+        },
+      },
+      city: {
+        title: "In the Shadow of the Walls",
+        story:
+          "Stone walls rise and guards stand at the gate. Merchants speak the city's name in neighbouring lands: you are not just selling now, you are building a reputation.",
+        decree: {
+          title: "City Charter",
+          description: "The city council wants you to choose between defence and learning.",
+          a: "Watchtower",
+          b: "Merchants' Guild",
+        },
+      },
+      metropolis: {
+        title: "Towers in the Sky",
+        story:
+          "The squares overflow and the towers touch the clouds. In a metropolis there is a new face, a new chance and a new rival every day.",
+        decree: {
+          title: "Metropolis Charter",
+          description: "A growing population needs either more storage or more learning.",
+          a: "Grand Granary",
+          b: "City Library",
+        },
+      },
+      tradeHub: {
+        title: "Where the Roads Meet",
+        story:
+          "Caravan roads converge on your market. Every merchant stops here sooner or later; you no longer just set prices, prices talk about you.",
+        decree: {
+          title: "Trade Charter",
+          description: "The roads are crowded: improve them, or loosen the customs?",
+          a: "Caravanserai Expansion",
+          b: "Customs Holiday",
+        },
+      },
+      capital: {
+        title: "The Crown Is Yours",
+        story:
+          "You are the capital now; the region's fate is weighed on your scales. Envoys arrive, councils meet in the palace, and everyone wants something from you.",
+        decree: {
+          title: "Capital Charter",
+          description: "The capital's first decision: the treasury, or the people?",
+          a: "Royal Bank",
+          b: "Coronation Festival",
+        },
+      },
+      kingdom: {
+        title: "The First Stone of a Kingdom",
+        story:
+          "Your name is spoken beyond your borders. The people call you 'my lord' now, but the crown is heavy: a kingdom brings trade wars and heavy duties.",
+        decree: {
+          title: "Royal Decree",
+          description: "The coffers are limited: a tremor fund, or border towers?",
+          a: "Royal Reserve",
+          b: "Border Towers",
+        },
+      },
+      empire: {
+        title: "The Maps Are Redrawn",
+        story:
+          "The shadow of your empire crosses the horizon. You have rival empires now, not neighbours; every decision carries a price and every silence a meaning.",
+        decree: {
+          title: "Imperial Decree",
+          description: "An empire either strengthens its rule or swells on conquered wealth.",
+          a: "High Council",
+          b: "Spoils of Conquest",
+        },
+      },
+      goldenAge: {
+        title: "The Golden Age Begins",
+        story:
+          "Poems are written and songs are sung. This age will enter history in letters of gold; you no longer want to be merely rich, but unforgettable.",
+        decree: {
+          title: "Golden Age Charter",
+          description: "The spirit of the age feeds on two things: celebration and wisdom.",
+          a: "Grand Feasts",
+          b: "Council of Sages",
+        },
+      },
+      legendaryMarket: {
+        title: "The Legendary Market",
+        story:
+          "Merchants travel from the far ends of the earth just to see your market. You are no longer a place of trade; you are a legend.",
+        decree: {
+          title: "Legend's Charter",
+          description: "A legend is a legacy both stored and told.",
+          a: "Legendary Storehouses",
+          b: "Market Festivals",
+        },
+      },
+      worldPower: {
+        title: "On the World Stage",
+        story:
+          "No one signs a major deal without your say-so now. Caravan roads run through your network and envoys sit at your table.",
+        decree: {
+          title: "World Charter",
+          description: "To be a world power: the bank, or the caravan roads?",
+          a: "World Bank",
+          b: "Great Caravan Roads",
+        },
+      },
+      tradeDynasty: {
+        title: "Birth of a Dynasty",
+        story:
+          "A legacy for generations has been founded. Your children's names will be spoken in your market, your grandchildren's in your halls.",
+        decree: {
+          title: "Dynasty Charter",
+          description: "A dynasty invests in both knowledge and treasure.",
+          a: "Dynasty Academy",
+          b: "Dynasty Treasury",
+        },
+      },
+      immortalLegend: {
+        title: "The Immortal Legend",
+        story:
+          "Even time cannot forget you: you are no longer a town but a legend. What comes next is not a page to write but a tale to tell.",
+        decree: {
+          title: "Immortal Charter",
+          description: "Legends are both unforgettable and prepared.",
+          a: "Immortal Feast",
+          b: "Legend's Wisdom",
+        },
+      },
+    },
+    eraChapter: {
+      label: "CHAPTER {n}",
+      decree: "📜 The charter of the age awaits you",
+      continue: "Continue",
+    },
+    eraDecree: {
+      hint: {
+        market: "🏪 Market +1 level (free)",
+        caravanserai: "🏕️ Caravanserai +1 level (free)",
+        townhall: "🏛️ Town Hall +1 level (free)",
+        bank: "🏦 Bank +1 level (free)",
+        guardTower: "🗼 Guard Tower +1 level (free)",
+        earthquakeFund: "🏚️ Earthquake Fund +1 level (free)",
+        storageYard: "📦 Storage Yard +1 level (free)",
+        research: "🔬 One research finishes instantly",
+        festival: "🎉 Happiness +25 and a treasury reward",
+        cash: "💰 A large reward for the treasury",
+      },
     },
     rankGain: {
       good: "{icon} {good} can now be traded",
@@ -2893,6 +3328,12 @@ export const STRINGS = {
       gambleLose: "🎲 Luck didn't hold — you lost the bet: -{amount} 🪙.",
       gambleDecline: "🎲 You walked away from the bet, safe and sound.",
       mysteryStrangerNoCash: "🕵️ You wanted to buy the secret, but couldn't afford it.",
+      eraDecreeUpgrade: "📜 Decree enacted: {icon} {upgrade} rose one level!",
+      eraDecreeUpgradeMaxed: "📜 {icon} {upgrade} is already at its peak; {amount} went to the treasury.",
+      eraDecreeResearch: "📜 Decree enacted: {research} research finished instantly!",
+      eraDecreeResearchNone: "📜 No research left to unlock; {amount} went to the treasury.",
+      eraDecreeFestival: "📜 The people rejoice! Happiness +{happy}, {amount} went to the treasury.",
+      eraDecreeCash: "📜 Decree enacted: {amount} went to the treasury.",
       mysteryStrangerSuccess: "🕵️ The stranger was right! {research} research finished instantly.",
       mysteryStrangerNothingLeft: "🕵️ You already knew everything the stranger did — nothing was charged.",
       mysteryStrangerRefuse: "🕵️ You refused the stranger and played it safe.",

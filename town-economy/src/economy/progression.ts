@@ -7,6 +7,7 @@
  * reducer can chain them without caring which one fired. */
 
 import { ACHIEVEMENTS } from "./achievements";
+import { eraDecreeId, eraForRank } from "./eras";
 import { GOODS } from "./goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
 import { ONBOARDING_STEPS } from "./onboarding";
@@ -214,10 +215,28 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     }
   }
 
+  // Every promotion opens a new era, and an era opens with a charter to sign
+  // (see eras.ts). It replaces any random decision still waiting — those are
+  // routine, this one is the player's first act in the new age — and the
+  // modal queue holds it back until Merve's rank-up scene has been closed.
+  const decreeId = eraDecreeId(targetIndex);
+  let pendingDecision = state.pendingDecision;
+  if (decreeId) {
+    pendingDecision = { id: nextId++, templateId: decreeId, triggeredAtTick: state.tick };
+    newEvents.push({
+      id: nextId++,
+      ...eventFields(state.language, "msg.decisionPending", {
+        title: { key: `era.${eraForRank(targetIndex).key}.decree.title` },
+      }),
+      tone: "neutral",
+    });
+  }
+
   return {
     ...state,
     cash,
     nextId,
+    pendingDecision,
     townRankIndex: targetIndex,
     // Merve steps in for this one specifically — a personal congratulation
     // on the highest tier reached, on top of (not instead of) the event
