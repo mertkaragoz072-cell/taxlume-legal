@@ -3,9 +3,12 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { useEconomyContext } from "../economy/EconomyContext";
 import { getGuildApi } from "./getGuildApi";
 import { guildRewardFor } from "./reward";
-import { CheerEmote, GuildApi, GuildErrorCode, GuildError, GuildInfo } from "./types";
+import { CheerEmote, GuildApi, GuildErrorCode, GuildError, GuildInfo, ReportReason } from "./types";
 
 const BASELINE_KEY = "guild.baseline.v1";
+// Set once the player has made or joined a guild. Until then the app never
+// talks to the server at all: no account is created just for having guilds.
+const MEMBER_KEY = "guild.member.v1";
 const SYNC_MS = 60_000;
 const HUB_REFRESH_MS = 20_000;
 
@@ -25,6 +28,7 @@ interface GuildContextValue {
   leave: () => Promise<void>;
   cheer: (toUserId: string, emote: CheerEmote) => Promise<void>;
   claim: () => Promise<void>;
+  report: (reason: ReportReason) => Promise<boolean>;
   clearError: () => void;
 }
 
@@ -44,6 +48,7 @@ export function GuildProvider({
   const { state, netWorth, grantGuildReward } = useEconomyContext();
   const api = useMemo(() => (apiProp !== undefined ? apiProp : getGuildApi()), [apiProp]);
   const [status, setStatus] = useState<Status>(api ? "loading" : "unavailable");
+  const [remembered, setRemembered] = useState<boolean | null>(null);
   const [guild, setGuild] = useState<GuildInfo | null>(null);
   const [error, setError] = useState<GuildErrorCode | null>(null);
   const [busy, setBusy] = useState(false);
@@ -82,9 +87,46 @@ export function GuildProvider({
     }
   }, [api, apply]);
 
+  const markMember = useCallback(async (on: boolean) => {
+    try {
+      if (on) await AsyncStorage.setItem(MEMBER_KEY, "1");
+      else await AsyncStorage.removeItem(MEMBER_KEY);
+    } catch {
+      // without the flag the player simply starts from "no guild" next launch
+    }
+    setRemembered(on);
+  }, []);
+
+  // On launch, only a player who already belongs to a guild contacts the server.
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (!api) return;
+    let cancelled = false;
+    (async () => {
+      const flag = await AsyncStorage.getItem(MEMBER_KEY)
+        .then((v) => v === "1")
+        .catch(() => false);
+      if (cancelled) return;
+      setRemembered(flag);
+      if (flag) {
+        try {
+          const g = await api.getMyGuild();
+          if (cancelled) return;
+          apply(g);
+          if (!g) await markMember(false);
+        } catch (e) {
+          if (!cancelled) {
+            setError(asCode(e));
+            setStatus("none");
+          }
+        }
+      } else {
+        setStatus("none");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, apply, markMember]);
 
   /** reports finished trades since the last report and refreshes the profile */
   const sync = useCallback(async () => {
@@ -142,7 +184,7 @@ export function GuildProvider({
       hubOpen,
       openHub: () => {
         setHubOpen(true);
-        void refresh();
+        if (remembered) void refresh();
       },
       closeHub: () => setHubOpen(false),
       refresh,
@@ -152,6 +194,7 @@ export function GuildProvider({
         const g = await run(() => api.createGuild(name));
         if (!g) return false;
         await setBaseline(live.current.trades);
+        await markMember(true);
         apply(g);
         return true;
       },
@@ -160,18 +203,25 @@ export function GuildProvider({
         const g = await run(() => api.joinGuild(code));
         if (!g) return false;
         await setBaseline(live.current.trades);
+        await markMember(true);
         apply(g);
         return true;
       },
       leave: async () => {
         if (!api) return;
-        await run(() => api.leaveGuild());
+        // run() gives back null when the call failed: stay in the guild then
+        if ((await run(() => api.leaveGuild())) === null) return;
         try {
           await AsyncStorage.removeItem(BASELINE_KEY);
         } catch {
           // nothing to clean up
         }
+        await markMember(false);
         apply(null);
+      },
+      report: async (reason) => {
+        if (!api) return false;
+        return (await run(() => api.reportGuild(reason))) !== null;
       },
       cheer: async (toUserId, emote) => {
         if (!api) return;
@@ -185,7 +235,21 @@ export function GuildProvider({
         await refresh();
       },
     }),
-    [status, guild, error, busy, hubOpen, api, refresh, run, apply, setBaseline, grantGuildReward]
+    [
+      status,
+      guild,
+      error,
+      busy,
+      hubOpen,
+      api,
+      remembered,
+      refresh,
+      run,
+      apply,
+      setBaseline,
+      markMember,
+      grantGuildReward,
+    ]
   );
 
   return <GuildContext.Provider value={value}>{children}</GuildContext.Provider>;

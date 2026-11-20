@@ -154,6 +154,8 @@ export function createSupabaseGuildApi(cfg: SupabaseConfig): GuildApi {
     },
     async leaveGuild() {
       await rpc("leave_guild");
+      // Leaving deletes the anonymous account on the server, so forget its session too.
+      await save(null);
     },
     async syncProfile(p: SyncProfile) {
       await rpc("sync_profile", { p_name: p.displayName, p_rank: p.rankIndex, p_net_worth: p.netWorth });
@@ -163,6 +165,9 @@ export function createSupabaseGuildApi(cfg: SupabaseConfig): GuildApi {
     },
     async sendCheer(toUserId: string, emote: CheerEmote) {
       await rpc("send_cheer", { p_to: toUserId, p_emote: emote });
+    },
+    async reportGuild(reason) {
+      await rpc("report_guild", { p_reason: reason });
     },
     async claimWeeklyReward() {
       return Boolean(await rpc<boolean>("claim_weekly_reward"));

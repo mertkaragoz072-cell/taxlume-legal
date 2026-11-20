@@ -824,6 +824,14 @@ export const STRINGS = {
       cheerNone: "Henüz alkış yok. Bir arkadaşına 👏 gönder!",
       cheerToYou: "{name} sana {emote} gönderdi",
       cheerToOther: "{name} {emote} gönderdi",
+      report: "Bu loncayı bildir",
+      reportWhy: "Neyi bildirmek istiyorsun?",
+      reportThanks: "✓ Bildirimin için teşekkürler, inceleyeceğiz.",
+      reportReason: {
+        guild_name: "Lonca adı uygunsuz",
+        member_name: "Bir üyenin adı uygunsuz",
+        other: "Başka bir sorun",
+      },
       leave: "Loncadan Ayrıl",
       leaveConfirm: "Emin misin? Ayrılmak için tekrar dokun",
       error: {
@@ -2566,6 +2574,14 @@ export const STRINGS = {
       cheerNone: "No cheers yet. Send a friend a 👏!",
       cheerToYou: "{name} sent you {emote}",
       cheerToOther: "{name} sent {emote}",
+      report: "Report this guild",
+      reportWhy: "What do you want to report?",
+      reportThanks: "✓ Thanks for your report, we will review it.",
+      reportReason: {
+        guild_name: "The guild name is inappropriate",
+        member_name: "A member's name is inappropriate",
+        other: "Something else",
+      },
       leave: "Leave Guild",
       leaveConfirm: "Are you sure? Tap again to leave",
       error: {

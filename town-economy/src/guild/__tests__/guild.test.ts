@@ -106,6 +106,13 @@ describe("mock guild backend", () => {
     await expect(api.leaveGuild()).rejects.toMatchObject({ code: "not_in_guild" });
   });
 
+  it("only accepts a report from a guild member", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await expect(api.reportGuild("other")).rejects.toMatchObject({ code: "not_in_guild" });
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await expect(api.reportGuild("member_name")).resolves.toBeUndefined();
+  });
+
   it("keeps your profile current in the member list", async () => {
     const api = createMockGuildApi(memoryStore(), () => MONDAY);
     await api.joinGuild(MOCK_DEMO_CODE);

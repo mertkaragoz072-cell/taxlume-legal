@@ -227,6 +227,11 @@ export function createMockGuildApi(
       s.guild.cheers.push({ id: "c" + now(), fromId: ME, toId: toUserId, emote, at: now() });
       await save(s);
     },
+    async reportGuild() {
+      const s = await load();
+      if (!s.guild) throw new GuildError("not_in_guild");
+      // nothing to send anywhere: the mock only checks that you are in a guild
+    },
     async claimWeeklyReward() {
       const s = await load();
       const g = s.guild;

@@ -157,6 +157,43 @@ describe("supabase guild adapter", () => {
     expect(signups).toBe(2);
   });
 
+  it("drops its session after leaving, because the server deletes the account", async () => {
+    let signups = 0;
+    const srv = fakeServer({
+      "/auth/v1/signup": () => {
+        signups++;
+        return { json: { access_token: `tok${signups}`, refresh_token: "r", expires_in: 3600 } };
+      },
+      "rpc/leave_guild": () => ({ status: 204 }),
+      "rpc/get_my_guild": () => ({ json: null }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await api.leaveGuild();
+    await api.getMyGuild();
+    expect(signups).toBe(2);
+    expect(srv.calls[srv.calls.length - 1].auth).toBe("Bearer tok2");
+  });
+
+  it("reports a guild with one of the fixed reasons", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/report_guild": () => ({ status: 204 }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await api.reportGuild("guild_name");
+    expect(srv.calls[srv.calls.length - 1].body).toEqual({ p_reason: "guild_name" });
+  });
+
   it("claims the weekly chest as a plain boolean", async () => {
     const srv = fakeServer({
       "/auth/v1/signup": () => ({ json: SESSION }),

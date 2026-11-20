@@ -134,6 +134,10 @@ begin
   insert into guild_members(user_id, guild_id) values (auth.uid(), v_id);
 end $$;
 
+-- Leaving a guild deletes everything the server holds about the player: the
+-- anonymous account itself, their profile, contributions and cheers (all of
+-- it cascades from auth.users). The app then starts a brand-new anonymous
+-- account the next time the player makes or joins a guild.
 create or replace function leave_guild() returns void
 language plpgsql security definer set search_path = public as $$
 declare v_guild uuid; v_next uuid;
@@ -147,6 +151,7 @@ begin
   else
     update guilds set owner_id = v_next where id = v_guild and owner_id = auth.uid();
   end if;
+  delete from auth.users where id = auth.uid();
 end $$;
 
 -- Adds finished trades to this week's goal. Guarded against inflated numbers:

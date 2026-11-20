@@ -23,6 +23,7 @@ import {
   GUILD_MAX_MEMBERS,
   GUILD_NAME_MAX,
   guildLevel,
+  REPORT_REASONS,
 } from "../guild/types";
 import { FONT } from "../theme";
 import { Text } from "./AppText";
@@ -37,16 +38,33 @@ const MUTED = "#b9a88a";
  * members and a few friendly cheers. Everything is read from the guild
  * backend (see src/guild); no free text exists except the guild's own name. */
 export function GuildHub() {
-  const { hubOpen, closeHub, status, guild, error, busy, create, join, leave, cheer, claim, clearError } =
-    useGuild();
+  const {
+    hubOpen,
+    closeHub,
+    status,
+    guild,
+    error,
+    busy,
+    create,
+    join,
+    leave,
+    cheer,
+    claim,
+    report,
+    clearError,
+  } = useGuild();
   const { t, formatCoins, state } = useEconomyContext();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reported, setReported] = useState(false);
 
   useEffect(() => {
     if (!hubOpen) {
       setConfirmLeave(false);
+      setReporting(false);
+      setReported(false);
       clearError();
     }
   }, [hubOpen, clearError]);
@@ -221,6 +239,31 @@ export function GuildHub() {
                 )}
               </GoalFrame>
 
+              <View style={styles.reportBox}>
+                {reported ? (
+                  <Text style={styles.claimed}>{t("guild.reportThanks")}</Text>
+                ) : reporting ? (
+                  <>
+                    <Text style={styles.hint}>{t("guild.reportWhy")}</Text>
+                    {REPORT_REASONS.map((reason) => (
+                      <Pressable
+                        key={reason}
+                        style={styles.reasonBtn}
+                        disabled={busy}
+                        onPress={() => void report(reason).then((sent) => sent && setReported(true))}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.reasonText}>{t(`guild.reportReason.${reason}`)}</Text>
+                      </Pressable>
+                    ))}
+                  </>
+                ) : (
+                  <Pressable onPress={() => setReporting(true)} accessibilityRole="button">
+                    <Text style={styles.reportLink}>{t("guild.report")}</Text>
+                  </Pressable>
+                )}
+              </View>
+
               <View style={{ marginTop: 6 }}>
                 <BigButton
                   tone="red"
@@ -298,6 +341,24 @@ const styles = StyleSheet.create({
   progressText: { color: INK, fontFamily: FONT.bold, fontSize: 18, marginBottom: 6 },
   done: { color: "#f6d36a", fontFamily: FONT.bold, fontSize: 15, marginBottom: 8, textAlign: "center" },
   claimed: { color: "#9fd68f", fontFamily: FONT.medium, fontSize: 13, textAlign: "center" },
+  reportBox: { alignItems: "stretch", marginTop: 4, marginBottom: 10, gap: 6 },
+  reportLink: {
+    color: MUTED,
+    fontFamily: FONT.medium,
+    fontSize: 13,
+    textAlign: "center",
+    textDecorationLine: "underline",
+    paddingVertical: 8,
+  },
+  reasonBtn: {
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#c8843c",
+    backgroundColor: "rgba(0,0,0,0.28)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  reasonText: { color: INK, fontFamily: FONT.medium, fontSize: 14 },
   memberRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
   memberIcon: { fontSize: 26 },
   memberName: { fontFamily: FONT.bold, fontSize: 15 },

@@ -59,6 +59,10 @@ export class GuildError extends Error {
   }
 }
 
+/** Why a player reports a guild; fixed choices, so a report is never free text. */
+export const REPORT_REASONS = ["guild_name", "member_name", "other"] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+
 export interface SyncProfile {
   displayName: string;
   rankIndex: number;
@@ -77,6 +81,8 @@ export interface GuildApi {
   sendCheer(toUserId: string, emote: CheerEmote): Promise<void>;
   /** marks the week's chest as taken; true if this call is the one that took it */
   claimWeeklyReward(): Promise<boolean>;
+  /** flags the player's guild (its name or a member's name) for review */
+  reportGuild(reason: ReportReason): Promise<void>;
 }
 
 export function goalTargetFor(memberCount: number): number {
