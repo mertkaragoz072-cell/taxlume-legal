@@ -265,6 +265,7 @@ type Action =
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "CLAIM_SPEED_BOOST" }
+  | { type: "GUILD_REWARD"; amount: number }
   | { type: "ADVANCE_MENTOR"; to: number }
   | { type: "DISMISS_DAILY_BONUS" };
 function makeInitialGoodState(good: Good): GoodState {
@@ -1429,6 +1430,23 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "CLAIM_SPEED_BOOST":
       return claimSpeedBoost(state);
+    case "GUILD_REWARD": {
+      // The weekly guild chest: the server has already decided this player
+      // may take it once; here it only lands in the treasury and the log.
+      if (!(action.amount > 0)) return state;
+      const event: EconomyEvent = {
+        id: state.nextId,
+        ...eventFields(state.language, "msg.guildReward", { amount: Math.round(action.amount) }),
+        tone: "good",
+      };
+      return {
+        ...state,
+        cash: state.cash + action.amount,
+        nextId: state.nextId + 1,
+        lastEvent: event,
+        eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+      };
+    }
     case "RESET": {
       // A new difficulty starts the economy over, but the player's chosen
       // town name, language, and any earned prestige bonus are identity,
@@ -1704,6 +1722,7 @@ export function useEconomy() {
   const advanceMentor = useCallback((to: number) => dispatch({ type: "ADVANCE_MENTOR", to }), []);
   const setLanguage_ = useCallback((language: Language) => dispatch({ type: "SET_LANGUAGE", language }), []);
   const claimSpeedBoost_ = useCallback(() => dispatch({ type: "CLAIM_SPEED_BOOST" }), []);
+  const grantGuildReward = useCallback((amount: number) => dispatch({ type: "GUILD_REWARD", amount }), []);
   const translate = useCallback(
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
     [state.language]
@@ -1762,6 +1781,7 @@ export function useEconomy() {
     setEmblemColor: setEmblemColor_,
     setLanguage: setLanguage_,
     claimSpeedBoost: claimSpeedBoost_,
+    grantGuildReward,
     t: translate,
     tPlural: translatePlural,
     formatCoins: (value: number, decimals?: number) => formatCoinsUtil(value, state.language, decimals),

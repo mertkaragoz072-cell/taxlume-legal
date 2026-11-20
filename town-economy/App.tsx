@@ -37,6 +37,7 @@ import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
 import { QuestBadge } from "./src/components/QuestBadge";
+import { GuildHub } from "./src/components/GuildHub";
 import { QuestHub } from "./src/components/QuestHub";
 import { AmbientGlow } from "./src/components/AmbientGlow";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
@@ -51,6 +52,7 @@ import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { GuildProvider } from "./src/guild/GuildContext";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
 import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
@@ -486,6 +488,7 @@ function Game() {
               <QuestBadge onOpen={() => setQuestHubOpen(true)} hidden={holdInterruptions} />
             </View>
             <QuestHub visible={questHubOpen} onClose={() => setQuestHubOpen(false)} />
+            <GuildHub />
 
             {/* She sits above the tab bar in the layout but paints above the dim
             as well, which is what the zIndex on her dock is for — source
@@ -636,7 +639,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <EconomyProvider>
-        <Game />
+        <GuildProvider>
+          <Game />
+        </GuildProvider>
       </EconomyProvider>
     </ErrorBoundary>
   );
