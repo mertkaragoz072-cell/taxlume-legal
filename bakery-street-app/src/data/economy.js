@@ -90,6 +90,28 @@ export const CAFE = {
     types: { hurried: { chance: 0.15, patience: 0.6, share: 0.1 }, gourmet: { chance: 0.12, share: 0.1 }, kid: { chance: 0.15, patience: 1.3 } } },
 };
 
+/**
+ * Café life (gameplay that needs no new pictures). Every part is optional for a save: an older save starts with the defaults.
+ *  queue    : a busy machine takes up to `max` more jobs in a waiting line; ingredients are taken when a job joins the line, the job starts by itself
+ *  menu     : the player picks one "dish of the day" each day: ordered `weight`x as often and pays +`share`
+ *  set      : from player level `minLevel` a guest sometimes (`chance`) orders a pair (two different products, served together, +`share` of both)
+ *  friend   : served visits that fill each heart of a guest look (5 hearts); every heart pays `gold[i]` once and adds `tipPerHeart` to that guest's sales
+ *  letters  : short notes from guests (some with a small gift); at most `perDay` random ones a day, after a sale with `chance`; the inbox keeps `max`
+ *  critic   : from level `minLevel`, at most once a day an ordinary-looking guest is a food critic (`chance` per arrival); served happily they pay a reward
+ *  deals    : the Market sells one ingredient a day `off` cheaper
+ *  orders   : one optional special order at a time on the board (from level `minLevel`): two products in larger amounts, `hours` to deliver, then a new one
+ */
+export const LIFE = {
+  queue: { max: 3 },
+  menu: { weight: 2.5, share: 0.08 },
+  set: { minLevel: 3, chance: 0.12, share: 0.1 },
+  friend: { visits: [3, 10, 25, 50, 90], gold: [40, 80, 140, 220, 320], tipPerHeart: 0.01 },
+  letters: { max: 20, perDay: 2, chance: 0.05, giftChance: 0.4, gift: [40, 120] },
+  critic: { minLevel: 4, chance: 0.06, gold: 200, perStage: 100, gems: 2 },
+  deals: { off: 0.3 },
+  orders: { minLevel: 2, hours: 4, restMin: 40, reward: 1.25, xp: 40 },
+};
+
 /** Guest album: names of the guest looks, and the one-time rewards (a look served for the first time; every look served). */
 export const ALBUM = {
   newLook: 60,

@@ -10,6 +10,8 @@ import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon, Rich } from "./icons";
 import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
+import { DishCard, SpecialOrderCard } from "./LifePanels";
+import { askPermission } from "../runtime/notify";
 
 const fmtReward = (game: any, r: any) => [
   r.gold ? `💰 ${fmt(r.gold)}` : "",
@@ -36,6 +38,8 @@ export function QuestPanel() {
     <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
       <Meta text={`${rainy ? "🌧 Bugün yağmurlu: sıcak içecekler daha çok istenir, müşteri biraz az gelir" : "☀ Bugün hava açık"} · Kafe puanı: ★ ${rating.stars.toFixed(1)}${rating.total < 5 ? " (henüz yeni)" : ""}`} />
       {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
+      <DishCard />
+      <SpecialOrderCard />
       <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
       {todays.map((g) => (
         <Card key={g.id} tone={g.claimed ? "locked" : g.complete ? "ready" : undefined} left={<EmojiIcon emoji={g.icon} size={u * 7} />}
@@ -117,7 +121,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
   };
   useEffect(() => () => { if (dirty.current) world.game.setCafeName(nameRef.current); }, [world]);
   const [, bump] = useState(0);
-  const toggle = (key: string) => { settings.toggle(key); act.sfx("tap"); bump((n) => n + 1); };
+  const toggle = (key: string) => { settings.toggle(key); act.sfx("tap"); bump((n) => n + 1); if (key === "notify" && settings.values.notify) void askPermission().then((ok) => { if (!ok) act.warn("Bildirim izni verilmedi. Telefonun Ayarlar › Fırın & Kafe › Bildirimler bölümünden açabilirsin.", 3600); }); };
   const row = (key: string, icon: string, label: string) => (
     <Card key={key} left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>{icon}</Text>} right={<Btn label={settings.values[key] ? "Açık" : "Kapalı"} variant={settings.values[key] ? "go" : "busy"} onPress={() => toggle(key)} />}>
       <Title name={label} />
@@ -135,6 +139,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
       {row("music", "🎵", "Müzik")}
       {row("vibration", "📳", "Titreşim")}
       {row("tips", "💡", "İlk adım ipuçları")}
+      {row("notify", "🔔", "Hatırlatmalar (fırın hazır, keşif döndü, kasa doldu; gece 22:00–09:00 sessiz)")}
       {row("lowfx", "🐢", "Düşük grafik (eski telefonlar: parıltı, ışık, yağmur ve gün ışığı kapanır)")}
       {__DEV__ ? <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>⏱</Text>}>
         <Title name="Açılış süresi" />

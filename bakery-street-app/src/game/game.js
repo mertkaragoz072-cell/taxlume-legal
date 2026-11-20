@@ -1,6 +1,6 @@
 // Pure game logic for production, stock and gold. No DOM or canvas here, so it can be unit-tested in Node.
 import { cleanName } from './profile.js';
-import { INGREDIENTS, PRODUCTS, STATIONS, MARKET, UPGRADES, SALES } from '../data/economy.js';
+import { INGREDIENTS, PRODUCTS, STATIONS, MARKET, UPGRADES, SALES, LIFE } from '../data/economy.js';
 
 const fmtGold = (n) => n.toLocaleString('tr-TR');
 
@@ -34,6 +34,9 @@ export class Game {
     this.products = Object.fromEntries(Object.entries(this.productsDef).map(([id, d]) => [id, d.start ?? 0]));
     /** station id -> [{ product, startedAt, duration }] while jobs are running (key absent when the station is idle) */
     this.jobs = {};
+    /** station id -> [product id] waiting for a free slot (ingredients already taken); see queueProduction */
+    this.queue = {};
+    this.queueMax = data.queueMax ?? LIFE.queue.max;
     this.listeners = {};
   }
 
@@ -170,7 +173,8 @@ export class Game {
   ingredientCap() { return this.shop ? this.shop.ingredientCap() : Infinity; }
   /** Units of `id` in stock plus units still being made (these will land in the showcase). */
   committed(id) {
-    return this.products[id] + (this.jobs[this.productsDef[id].station] ?? []).filter((j) => j.product === id).length;
+    const st = this.productsDef[id].station;
+    return this.products[id] + (this.jobs[st] ?? []).filter((j) => j.product === id).length + (this.queue[st] ?? []).filter((p) => p === id).length;
   }
 
   /** Why `id` cannot start right now, or null when it can. */
@@ -209,6 +213,58 @@ export class Game {
     return rebate ? { ok: true, rebate } : { ok: true };
   }
 
+  // ---- production line: a busy machine keeps a short waiting line ----------------------------------------------------
+  /** Products waiting at `station` (oldest first). */
+  queueOf(station) { return this.queue[station] ?? []; }
+  /** Room left in the waiting line of `station`. */
+  queueRoom(station) { return Math.max(0, this.queueMax - this.queueOf(station).length); }
+
+  /** Why `id` cannot join the waiting line now (the machine being busy is the point of the line, so that is not a reason), or null. */
+  queueBlock(id) {
+    const def = this.productsDef[id];
+    if (!def) return { reason: 'unknown', message: 'Bilinmeyen ürün.' };
+    if (!this.isUnlocked(id)) return { reason: 'locked', message: `${def.name} tarifi henüz açılmadı. Mağazadan satın al.` };
+    if (!this.queueRoom(def.station)) return { reason: 'queue', message: `${this.stationsDef[def.station].name} sırası dolu (${this.queueMax}/${this.queueMax}).` };
+    const limit = this.showcaseLimit();
+    if (this.committed(id) >= limit) return { reason: 'showcase', message: `Vitrin dolu: ${def.name} ${this.committed(id)}/${limit}. Sat ya da vitrini geliştir.` };
+    const missing = this.missingFor(id);
+    if (missing.length) return { reason: 'ingredients', missing, message: `Yetersiz malzeme: ${missing.map((m) => `${m.need - m.have} ${this.ingredientsDef[m.id].name}`).join(', ')} eksik.` };
+    return null;
+  }
+
+  /**
+   * Starts `id` now when its machine has a free slot, otherwise puts it in the machine's waiting line (ingredients are taken now, so a queued job
+   * can never fail later). The line starts by itself, oldest first, as soon as a slot is free.
+   */
+  produceOrQueue(id) {
+    const def = this.productsDef[id];
+    if (!def) return { ok: false, reason: 'unknown', message: 'Bilinmeyen ürün.' };
+    if (this.jobsOf(def.station).length < this.capacity(def.station)) return this.startProduction(id);
+    const block = this.queueBlock(id);
+    if (block) return { ok: false, ...block };
+    for (const [ing, need] of Object.entries(def.ingredients)) this.ingredients[ing] -= need;
+    const rebate = this.ingredientRebate(id);
+    if (rebate) this.earn(rebate, 'rebate', `${def.name}: malzeme iadesi`);
+    (this.lastMade ??= {})[def.station] = id;
+    (this.queue[def.station] ??= []).push(id);
+    this.emit('change', { type: 'queue', product: id });
+    return { ok: true, queued: true, position: this.queue[def.station].length, ...(rebate ? { rebate } : {}) };
+  }
+
+  /** Moves waiting products into free slots of `station`. Returns how many started. */
+  startQueued(station, freedAt = []) {
+    let n = 0;
+    const q = this.queue[station], now = this.clock();
+    while (q?.length && this.jobsOf(station).length < this.capacity(station)) {
+      const id = q.shift(), at = Math.min(now, freedAt.shift() ?? now);       // a waiting job starts the moment its slot came free (also while the app was closed)
+      (this.jobs[station] ??= []).push({ product: id, startedAt: at, duration: this.duration(id) });
+      n++;
+      this.emit('change', { type: 'start', product: id, fromQueue: true });
+    }
+    if (q && !q.length) delete this.queue[station];
+    return n;
+  }
+
   /** Names the cafe (see profile.js). Returns the name that was kept. */
   setCafeName(text) {
     this.profile.name = cleanName(text);
@@ -222,25 +278,29 @@ export class Game {
     this.exploration?.tick();
     const now = this.clock();
     for (const station of Object.keys(this.jobs)) {
-      const done = [];
-      for (const job of this.jobs[station]) {
-        if (job.startedAt > now) job.startedAt = now;   // device clock moved backwards: restart the countdown from now, never stall
-        if (this.remainingOf(job) <= 0) done.push(job);
+      for (let pass = 0; pass < 100; pass++) {          // a queued job started in the past can be finished already: repeat until nothing more finishes
+        const done = [];
+        for (const job of this.jobs[station] ?? []) {
+          if (job.startedAt > now) job.startedAt = now;   // device clock moved backwards: restart the countdown from now, never stall
+          if (this.remainingOf(job) <= 0) done.push(job);
+        }
+        if (!done.length) break;
+        // jobs are removed in the same step their stock is added, so a job can only complete once
+        this.jobs[station] = this.jobs[station].filter((j) => !done.includes(j));
+        if (!this.jobs[station].length) delete this.jobs[station];
+        for (const job of done) {
+          this.products[job.product] += 1;
+          this.stats.produced[job.product] += 1;
+          this.stats.producedTotal += 1;
+          this.progression?.award('produce', job.product);
+          this.emit('complete', { station, product: job.product });
+          this.emit('change', { type: 'complete', product: job.product });
+        }
+        const freed = done.map((j) => j.startedAt + j.duration * 1000).sort((a, b) => a - b);
+        if (!this.startQueued(station, freed)) { this.repeatLast(station); break; }
       }
-      if (!done.length) continue;
-      // jobs are removed in the same step their stock is added, so a job can only complete once
-      this.jobs[station] = this.jobs[station].filter((j) => !done.includes(j));
-      if (!this.jobs[station].length) delete this.jobs[station];
-      for (const job of done) {
-        this.products[job.product] += 1;
-        this.stats.produced[job.product] += 1;
-        this.stats.producedTotal += 1;
-        this.progression?.award('produce', job.product);
-        this.emit('complete', { station, product: job.product });
-        this.emit('change', { type: 'complete', product: job.product });
-      }
-      this.repeatLast(station);
     }
+    for (const station of Object.keys(this.queue)) this.startQueued(station);     // a slot freed some other way (a bigger machine bought)
   }
 
   /** Starts up to `n` units of one product in a row (stops at the first refusal). Returns { started, message } (message = why it stopped early, if it did). */
@@ -305,6 +365,7 @@ export class Game {
       ingredients: { ...this.ingredients },
       products: { ...this.products },
       jobs: Object.fromEntries(Object.entries(this.jobs).map(([st, list]) => [st, list.map((j) => ({ product: j.product, startedAt: j.startedAt, duration: j.duration }))])),
+      queue: Object.fromEntries(Object.entries(this.queue).map(([st, list]) => [st, [...list]])),
       upgrades: { ...this.upgrades },
       stats: JSON.parse(JSON.stringify(this.stats)),
       ...(this.quests ? { quests: this.quests.exportState() } : {}),
@@ -317,6 +378,8 @@ export class Game {
       ...(this.album ? { album: this.album.exportState() } : {}),
       ...(this.till ? { till: this.till.exportState() } : {}),
       ...(this.goals ? { goals: this.goals.exportState() } : {}),
+      ...(this.life ? { life: this.life.exportState() } : {}),
+      ...(this.achievements ? { achievements: this.achievements.exportState() } : {}),
     };
   }
 
@@ -328,6 +391,7 @@ export class Game {
     this.products = { ...state.products };
     this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, list]) => [st, list.map((j) => ({ ...j }))]));
     this.upgrades = { ...state.upgrades };
+    this.queue = Object.fromEntries(Object.entries(state.queue ?? {}).map(([st, list]) => [st, [...list]]));
     this.stats = JSON.parse(JSON.stringify(state.stats));
     this.profile = { name: state.profile?.name ?? '' };
     this.quests?.importState(state.quests);
@@ -340,6 +404,8 @@ export class Game {
     this.album?.importState(state.album);
     this.till?.importState(state.till);        // after the shop: the stage sets the rate
     this.goals?.importState(state.goals);
+    this.life?.importState(state.life);
+    this.achievements?.importState(state.achievements);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -352,6 +418,7 @@ export class Game {
       ingredients: Object.fromEntries(Object.entries(this.ingredientsDef).map(([id, d]) => [id, d.start ?? 0])),
       products: Object.fromEntries(Object.entries(this.productsDef).map(([id, d]) => [id, d.start ?? 0])),
       jobs: {},
+      queue: {},
       upgrades: Object.fromEntries(Object.keys(this.upgradesDef).map((id) => [id, 0])),
       stats: blankStats(this.productsDef),
       profile: { name: '' },
@@ -365,6 +432,8 @@ export class Game {
       album: { seen: {}, completed: false },
       till: { stored: 0, lastAt: null },
       goals: { date: null, baseline: {}, claimed: [] },
+      life: null,
+      achievements: null,
     };
   }
 
@@ -373,7 +442,7 @@ export class Game {
   buyIngredient(id, qty = 1, fromMarket = false) {
     const def = this.ingredientsDef[id];
     if (!def || !Number.isSafeInteger(qty) || qty < 1) return { ok: false, reason: 'unknown', message: 'Geçersiz satın alma.' };
-    const cost = def.price * qty;
+    const cost = this.ingredientPrice(id) * qty;                 // the Market's deal of the day is applied here
     const room = this.ingredientCap() - this.ingredients[id];
     if (qty > room) return { ok: false, reason: 'storage', message: room > 0 ? `Depoda ${def.name} için ${room} adetlik yer var. Depoyu genişlet.` : `Depo dolu: ${def.name} ${this.ingredients[id]}/${this.ingredientCap()}. Depoyu genişlet.` };
     if (!this.spend(cost, `${def.name} ×${qty}`)) {
@@ -385,10 +454,13 @@ export class Game {
     return { ok: true, cost };
   }
 
+  /** What one unit of an ingredient costs to buy today (the deal of the day, see life.js; the base price otherwise). */
+  ingredientPrice(id) { return this.life ? this.life.price(id) : this.ingredientsDef[id].price; }
+
   /** How many units of an ingredient the player can afford right now. */
   maxAffordable(id) {
     const def = this.ingredientsDef[id];
-    return def ? Math.floor(this.player.gold / def.price) : 0;
+    return def ? Math.floor(this.player.gold / this.ingredientPrice(id)) : 0;
   }
 
   /**

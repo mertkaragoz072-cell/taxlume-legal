@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, Text, View } from "react-native";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
-import { GameIcon } from "./icons";
+import { EmojiIcon, GameIcon } from "./icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Present, useAppear } from "./kit";
 import { C, FONT, fmt, fs, navHeight, useU, TYPE } from "./theme";
@@ -73,7 +73,7 @@ function MenuPop({ u, top, children }: { u: number; top: number; children: React
 }
 
 /** Portrait top bar: cat-ear level badge, gold and XP counters, and a menu button (Görevler / Günlük Ödül / Ayarlar open from it). */
-export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings") => void; badges: { quests: boolean; daily: boolean } }) {
+export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "letters" | "achievements") => void; badges: { quests: boolean; daily: boolean; letters?: boolean; achievements?: boolean } }) {
   const { world, act } = useWorld();
   const { game, progression } = world, u = useU();
   useRefresh();
@@ -105,9 +105,9 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
     lastLevel.current = progression.level;
   }, [progression.level, progression.xp, progression.isMax, xpAnim, badgePop]);   // eslint-disable-line react-hooks/exhaustive-deps
   const bh = u * 11, bw = bh * (192 / 170), mh = Math.max(44, u * 11.4);
-  const entry = (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings", icon: string, label: string, badge: boolean) => (
+  const entry = (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "letters" | "achievements", icon: string, label: string, badge: boolean) => (
     <Pressable key={id} onPress={() => { act.sfx("tap"); setMenu(false); onOpen(id); }} accessibilityLabel={label} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: u * 1.6, height: Math.max(46, u * 11), paddingHorizontal: u * 1.8, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper })}>
-      <GameIcon id={icon} size={u * 6.4} />
+      {icon.startsWith("emoji:") ? <EmojiIcon emoji={icon.slice(6)} size={u * 6.4} /> : <GameIcon id={icon} size={u * 6.4} />}
       <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }} numberOfLines={1}>{label}</Text>
       {badge ? <View style={{ width: u * 2.6, height: u * 2.6, borderRadius: 99, backgroundColor: C.terracotta }} /> : null}
     </Pressable>
@@ -139,7 +139,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
         <View style={{ marginLeft: "auto" }}>
           <Pressable onPress={() => { act.sfx("tap"); setMenu((m) => !m); }} accessibilityLabel="Menü" style={({ pressed }) => ({ width: mh, height: mh, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
             <Image source={img("ui-menu")} style={{ width: mh, height: mh, resizeMode: "contain" }} />
-            {badges.quests || badges.daily ? <View style={{ position: "absolute", right: -u * 0.4, top: -u * 0.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
+            {badges.quests || badges.daily || badges.letters || badges.achievements ? <View style={{ position: "absolute", right: -u * 0.4, top: -u * 0.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
           </Pressable>
         </View>
       </View>
@@ -147,6 +147,8 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
         <MenuPop u={u} top={u * 1 + mh + u * 1}>
           {entry("quests", "hud-quests", "Görevler", badges.quests)}
           {entry("daily", "hud-events", "Günlük Ödül", badges.daily)}
+          {entry("letters", "emoji:💌", "Mektuplar", !!badges.letters)}
+          {entry("achievements", "emoji:🏅", "Başarımlar", !!badges.achievements)}
           {entry("album", "q-explorer", "Müşteri Albümü", false)}
           {entry("stats", "xp", "İstatistikler", false)}
           {entry("photo", "gift", "Fotoğraf Modu", false)}

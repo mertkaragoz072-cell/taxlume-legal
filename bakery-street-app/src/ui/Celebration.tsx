@@ -34,6 +34,6 @@ export class PanelBoundary extends React.Component<{ onFail: () => void; childre
 export function saleNotes(e: any): string {
   const b = e.bonus;
   if (!b?.pct) return "";
-  return ` · ${[b.event ? "⭐ haftanın ürünü" : "", b.variety ? "🎨 çeşitlilik" : "", b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
+  return ` · ${[e.extra ? "🍽 set menü" : "", b.dish ? "📋 günün menüsü" : "", b.friend ? "💛 dost müşteri" : "", b.event ? "⭐ haftanın ürünü" : "", b.variety ? "🎨 çeşitlilik" : "", b.favorite ? "♥ favori" : "", b.fast ? "⚡ hızlı servis" : "", b.combo > 1 ? `🔥 ×${b.combo} seri` : ""].filter(Boolean).join(" ")}`;
 }
 

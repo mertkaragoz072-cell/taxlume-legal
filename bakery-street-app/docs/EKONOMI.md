@@ -235,3 +235,22 @@ Cihazda denenmedi. Ekonomiye etkisi tahmindir: bonuslar ve kasa kutusu toplamda 
 - **Tarif seviyeleri** (`RECIPE_LEVELS`): açık her ürün (başlangıçtaki 4 ürün ve satın alınan tarifler) Mağaza → Tarifler'den 1'den 5'e yükseltilir. Satış fiyatı × [1; 1,1; 1,2; 1,32; 1,45] (malzeme ve süre aynı). Bedel: tarifin mağaza fiyatı, başlangıç ürünlerinde ürün fiyatı × 25, × [1; 1,4; 2,3; 3,6; 5,5]. Gereken seviye: tarifin seviyesi + 2×(n−1).
 - **Koleksiyonlar** (`COLLECTIONS`): dekorasyonun 5 grubu (Halı & Paspas, Bitki & Çiçek, Raf & Duvar, Aydınlatma, Masa & Sandalye). Gruptaki her eşya alınınca bir kez (grup fiyat toplamının %15'i, en az 500 altın, 120 XP), hepsi 5. seviyeye çıkınca bir kez daha (%60, en az 3.000 altın, 400 XP). Mağaza → Hedef'te ilerleme.
 - Robot (günde 30 dk, 55 gün): tüm mağaza, ürünlerin çoğu 5. seviye tarif, 5 koleksiyon ödülü.
+
+## Kafe hayatı (LIFE, src/data/economy.js)
+
+Görsel gerektirmeyen oynanış eklemeleri; hepsi eski kayıtlarla uyumlu (eksikse varsayılanla başlar).
+
+| Özellik | Kural | Değer |
+|---|---|---|
+| Üretim sırası | Makine meşgulken sıraya eklenir, malzeme hemen alınır, sırası gelince kendisi başlar (uygulama kapalıyken de) | 3 iş |
+| Günün menüsü | Oyuncu her gün bir ürün seçer: daha sık sipariş + kazanç | ×2,5 sıklık, +%8 |
+| Set menü | Seviye 3'ten sonra bazı müşteriler iki ürün ister; ikisi birlikte servis edilir | %12 sipariş, +%10 |
+| Müşteri dostluğu | Her müşteri görünümü için 5 kalp; her kalp bir kez ödül, kalp başına bahşiş | 3/10/25/50/90 ziyaret, 40–320 altın, +%1/kalp |
+| Mektuplar | Satıştan sonra küçük bir not (bazen hediye); kalp dolunca dostluk mektubu | günde en çok 2, kutu 20 |
+| Gizemli eleştirmen | Seviye 4'ten sonra günde en çok bir; mutlu servis edilince ödül | 200 + 100×(aşama−1) altın (hızlıysa ×1,5), 2 elmas |
+| Özel sipariş panosu | Seviye 2'den sonra isteğe bağlı büyük sipariş; vitrin stoğundan teslim | 4 saat süre, ödül ürün değerinin ×1,25'i, 40 dk ara |
+| Market indirimi | Her gün bir Market malzemesi ucuz | %30 |
+| Başarımlar | 20 uzun vadeli hedef (src/game/achievements.js) | 150–3000 altın, bazılarında elmas |
+| Hatırlatmalar | Uygulama arka plana geçince: makine bitti, keşif döndü, kasa doldu, özel sipariş bitiyor; 22:00–09:00 sessiz | Ayarlar'dan kapatılabilir |
+
+Robot oyuncu (scripts/playthrough.mjs, 30 gün × 30 dk): aşama 4'e eskiden 20. günde, şimdi 17. günde ulaşıyor. Farkın çoğu üretim sırasından geliyor: robot makineyi hiç boş bırakmıyor.

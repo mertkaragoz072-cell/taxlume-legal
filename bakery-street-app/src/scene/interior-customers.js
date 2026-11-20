@@ -401,8 +401,8 @@ export class CustomerLayer {
   orderBubble(ctx, v, c, t) {
     const order = this.cafe.orderOf(c);
     if (!order) return;
-    const def = this.game.productsDef[order.product], inStock = this.game.products[order.product] >= 1;
-    const w = 92, h = 52, x = v.x - w / 2, top = this.bubbleTop(v, c), y = top - h - 10, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
+    const def = this.game.productsDef[order.product], inStock = this.cafe.orderReady(order), set = !!order.extra;
+    const w = set ? 118 : 92, h = 52, x = v.x - w / 2, top = this.bubbleTop(v, c), y = top - h - 10, pulse = inStock ? 1 + Math.sin(t * 5) * 0.03 : 1;
     const edge = inStock ? PAL.green : PAL.terracottaLight;
     ctx.save(); ctx.translate(v.x, y + h); ctx.scale(pulse, pulse); ctx.translate(-v.x, -(y + h));
     poly(ctx, [[v.x - 7, y + h - 1], [v.x + 7, y + h - 1], [v.x, y + h + 10]]); paint(ctx, PAL.paper, 3, edge);
@@ -411,9 +411,11 @@ export class CustomerLayer {
     ctx.font = '30px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.globalAlpha *= inStock ? 1 : 0.45;                                   // out of stock: the same bubble, faded, with a small red mark instead of the price
     if (!drawIcon(ctx, order.product, x + 27, y + 24, 38)) { ctx.fillStyle = PAL.brownDark; ctx.fillText(def.icon, x + 27, y + 24); }
+    if (set && !drawIcon(ctx, order.extra, x + 56, y + 24, 34)) { ctx.fillStyle = PAL.brownDark; ctx.fillText(this.game.productsDef[order.extra].icon, x + 56, y + 24); }   // a set: both products side by side
     ctx.globalAlpha = Math.min(1, ctx.globalAlpha / (inStock ? 1 : 0.45));
-    if (inStock) label(ctx, `${order.price}`, x + 66, y + 23, { font: '700 21px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
-    else { ctx.beginPath(); ctx.arc(x + 66, y + 23, 11, 0, 7); paint(ctx, PAL.terracotta, 2, PAL.terracottaDark); label(ctx, '!', x + 66, y + 24, { font: '800 17px "Trebuchet MS", sans-serif', fill: PAL.paper, lw: 0 }); }
+    const px = x + w - 26;
+    if (inStock) label(ctx, `${order.price + (order.extraPrice ?? 0)}`, px, y + 23, { font: '700 21px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
+    else { ctx.beginPath(); ctx.arc(px, y + 23, 11, 0, 7); paint(ctx, PAL.terracotta, 2, PAL.terracottaDark); label(ctx, '!', px, y + 24, { font: '800 17px "Trebuchet MS", sans-serif', fill: PAL.paper, lw: 0 }); }
     const f = this.cafe.patienceFraction(c);                                  // patience bar
     rrect(ctx, x + 10, y + h - 13, w - 20, 7, 3.5); paint(ctx, PAL.vanilla, 1.2, PAL.honeyDark);
     ctx.save(); rrect(ctx, x + 11, y + h - 12, w - 22, 5, 2.5); ctx.clip();

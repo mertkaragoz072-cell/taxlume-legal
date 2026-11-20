@@ -11,6 +11,8 @@ import { validateTill } from './till.js';
 import { validateAlbum } from './album.js';
 import { validateGoals } from './goals.js';
 import { cleanName } from './profile.js';
+import { validateLife } from './life.js';
+import { validateAchievements } from './achievements.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
@@ -71,6 +73,8 @@ export function validate(raw, game) {
   const profile = { name: cleanName(raw.profile?.name) };
   const till = game.till ? validateTill(raw.till) : undefined;
   const goals = game.goals ? validateGoals(raw.goals) : undefined;
+  const life = game.life ? validateLife(raw.life, game) : undefined;
+  const achievements = game.achievements ? validateAchievements(raw.achievements, game.achievements) : undefined;
   const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
   const upgrades = {};
   for (const [id, def] of Object.entries(game.upgradesDef)) {
@@ -94,9 +98,15 @@ export function validate(raw, game) {
     if (list.length > cap) throw new Error(`fazla üretim kaydı (${station})`);
     if (list.length) jobs[station] = list;
   }
+  const queue = {};
+  for (const [station, list] of Object.entries(raw.queue ?? {})) {      // the production line (optional; older saves have none)
+    if (!game.stationsDef[station] || !Array.isArray(list)) continue;
+    const ok = list.filter((id) => game.productsDef[id]?.station === station).slice(0, game.queueMax);
+    if (ok.length) queue[station] = ok;
+  }
   const queueMax = game.cafe ? game.cafe.cfg.queueMax + (shop ? game.shop.queueBonusFor(shop.owned) : 0) : 0;     // the waiting area the SAVED shop state has bought, not the one in memory now
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks, queueMax) : null;
-  return { gold: raw.gold, gems, profile, ingredients, products, jobs, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, profile, ingredients, products, jobs, queue, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, life, achievements, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {

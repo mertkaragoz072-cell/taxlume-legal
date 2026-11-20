@@ -16,6 +16,8 @@ import { DailyGoals } from '../src/game/goals.js';
 import { Cafe } from '../src/game/customers.js';
 import { Album } from '../src/game/album.js';
 import { PLAYER } from '../src/config.js';
+import { Life } from '../src/game/life.js';
+import { Achievements } from '../src/game/achievements.js';
 
 export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   let seed = s0 * 7919;
@@ -24,7 +26,7 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   const game = new Game({ gold: PLAYER.gold, gems: 0 }, {}, () => clock.now);
   const prog = new Progression(game), town = new Town(game), ex = new Exploration(game, { rng }), research = new Research(game);
   const shop = new Shop(game), quests = new Quests(game), daily = new DailyReward(game), till = new Till(game), goals = new DailyGoals(game);
-  const cafe = new Cafe(game, { rng }); const album = new Album(game, cafe.looks);
+  const cafe = new Cafe(game, { rng }); const album = new Album(game, cafe.looks); const life = new Life(game, undefined, rng); const ach = new Achievements(game);
   const log = [], seen = new Set();
   const mile = (key, text) => { if (!seen.has(key)) { seen.add(key); log.push({ day: curDay, min: Math.round(curMin), text }); } };
   let curDay = 0, curMin = 0;
@@ -34,18 +36,19 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   const serve = () => {
     for (const o of cafe.openOrders()) {
       if (!seenAt.has(o.id)) seenAt.set(o.id, clock.now);
-      if (game.products[o.product] > 0 && clock.now - seenAt.get(o.id) >= 7000) cafe.deliver(o.id);
+      if (cafe.orderReady(o) && clock.now - seenAt.get(o.id) >= 7000) cafe.deliver(o.id);
     }
   };
   const produce = () => {
-    const wanted = new Set(cafe.openOrders().map((o) => o.product));
+    const wanted = new Set(cafe.openOrders().flatMap((o) => cafe.orderItems(o)));
+    const sp = life.special(); if (sp && !sp.resting) for (const i of sp.items) if (i.have < i.need) wanted.add(i.id);
     const ids = Object.keys(game.productsDef).filter((id) => game.isUnlocked(id));
     for (const st of Object.keys(game.stationsDef)) {
-      for (let g = 0; g < 8 && (game.jobs[st]?.length ?? 0) < game.capacity(st); g++) {
+      for (let g = 0; g < 8 && ((game.jobs[st]?.length ?? 0) < game.capacity(st) || game.queueRoom(st) > 0); g++) {     // the line too
         const mine = ids.filter((id) => game.productsDef[id].station === st).sort((a, b) => (wanted.has(b) - wanted.has(a)) || game.products[a] - game.products[b]);
         const pick = mine.find((id) => game.products[id] < 5); if (!pick) break;
-        let r = game.startProduction(pick);
-        if (!r.ok && r.reason === 'ingredients') { for (const [ing, n] of Object.entries(game.productsDef[pick].ingredients)) { const need = n - game.ingredients[ing]; if (need > 0) game.buyIngredient(ing, need + 6, true); } r = game.startProduction(pick); }
+        let r = game.produceOrQueue(pick);
+        if (!r.ok && r.reason === 'ingredients') { for (const [ing, n] of Object.entries(game.productsDef[pick].ingredients)) { const need = n - game.ingredients[ing]; if (need > 0) game.buyIngredient(ing, need + 6, true); } r = game.produceOrQueue(pick); }
         if (!r.ok) break;
       }
     }
@@ -62,6 +65,10 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
     for (const q of quests.claimable()) quests.claim(q.def.id);
     for (const g of goals.claimable()) (g.id.startsWith('w') ? goals.claimWeekly() : goals.claim(g.id));
     if (ex.isReady()) ex.claim();
+    if (!life.dish()) { const best = Object.keys(game.productsDef).filter((id) => game.isUnlocked(id)).sort((a, b) => game.unitEconomics(b).customerNet - game.unitEconomics(a).customerNet)[0]; if (best) life.setDish(best); }
+    if (life.special()?.ready) { const r = life.deliverSpecial(); if (r.ok) mile('order1', 'İlk özel sipariş teslim edildi'); }
+    for (const l of life.letters) if (!l.read || (l.gift && !l.claimed)) life.open(l.id);
+    for (const a of ach.claimable()) { ach.claim(a.def.id); mile(`ach:${a.def.id}`, `Başarım: ${a.def.name}`); }
     if (!ex.active) { const open = ex.list().filter((r) => r.status === 'available' || r.status === 'idle' || r.missing.length === 0); const r = open[open.length - 1]; if (r) ex.start(r.def.id); }
   };
   const days_ = [];
@@ -88,7 +95,7 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   const decor = shop.items.filter((x) => shop.levelable(x));
   const decorLevels = decor.map((x) => shop.itemLevel(x.id));
   const questsLeft = quests.list().filter((q) => !q.claimed).map((q) => `${q.def.id} ${q.progress}/${q.def.target}`);
-  return { days: days_, log: log.filter((l) => l.text), end: { level: prog.level, stage: shop.stageId, owned: `${shop.owned.size}/${total}`, gold: Math.round(game.gold), album: `${album.count()}/${album.looks.length}`, bookshop: town.isOpen('bookshop') ? town.level('bookshop') : 'kapalı', explorations: Object.values(ex.done).reduce((a, b) => a + b, 0), recipesAt5: Object.keys(game.productsDef).filter((p) => shop.recipeLevel(p) === 5).length, collections: shop.collections.size, decorAt5: `${decorLevels.filter((n) => n === 5).length}/${decor.length}`, appeal: shop.appeal() }, left, upgradesLeft, researchLeft, questsLeft };
+  return { days: days_, log: log.filter((l) => l.text), end: { level: prog.level, stage: shop.stageId, owned: `${shop.owned.size}/${total}`, gold: Math.round(game.gold), album: `${album.count()}/${album.looks.length}`, hearts: album.looks.reduce((n, l) => n + album.heartsOf(l), 0), letters: life.letters.length, critics: life.critics, specialOrders: life.ordersDone, achievements: `${ach.claimed.size}/${ach.defs.length}`, bookshop: town.isOpen('bookshop') ? town.level('bookshop') : 'kapalı', explorations: Object.values(ex.done).reduce((a, b) => a + b, 0), recipesAt5: Object.keys(game.productsDef).filter((p) => shop.recipeLevel(p) === 5).length, collections: shop.collections.size, decorAt5: `${decorLevels.filter((n) => n === 5).length}/${decor.length}`, appeal: shop.appeal() }, left, upgradesLeft, researchLeft, questsLeft };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

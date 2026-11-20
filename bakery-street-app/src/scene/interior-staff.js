@@ -115,7 +115,7 @@ export class StaffLayer {
     for (const c of cafe?.customers ?? []) {
       if (c.state !== 'seated' || !this.seated(c.id)) continue;
       const o = cafe.orderOf(c);
-      if (!o || o.status !== 'open' || !(this.game.products[o.product] >= 1)) continue;
+      if (!o || o.status !== 'open' || !cafe.orderReady(o)) continue;               // a set needs both products
       return { c, o };
     }
     return null;
@@ -153,7 +153,8 @@ export class StaffLayer {
       w.t += dt; this.pickT += dt;
       if (this.pickT >= 0.45) {
         const open = this.game.cafe?.orders.some((o) => o.id === this.job.order && o.status === 'open');
-        if (!open || !(this.game.products[this.job.product] >= 1)) { this.carry = null; this.job = null; this.phase = 'post'; return; }     // sold or gone meanwhile: nothing to bring
+        const o = this.game.cafe?.orders.find((x) => x.id === this.job.order);
+        if (!open || !o || !this.game.cafe.orderReady(o)) { this.carry = null; this.job = null; this.phase = 'post'; return; }     // sold or gone meanwhile: nothing to bring
         this.phase = 'carry'; w.target = this.route.shift();
       }
       return;

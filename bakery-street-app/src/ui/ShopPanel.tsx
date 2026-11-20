@@ -489,9 +489,10 @@ function Ingredients() {
   const sq = (extra?: any) => ({ minWidth: Math.max(44, u * 6), height: Math.max(44, u * 6), borderRadius: u * 1.6, borderWidth: u * 0.35, borderColor: C.brown, backgroundColor: C.cream, alignItems: "center" as const, justifyContent: "center" as const, ...extra });
   return (
     <>
+      {world.life?.deal() ? <Meta tone="reward" text={`🏷 Günün indirimi: ${game.ingredientsDef[world.life.deal()].icon} ${game.ingredientsDef[world.life.deal()].name} %${Math.round(world.life.cfg.deals.off * 100)} ucuz (her gün başka bir malzeme)`} /> : null}
       <Meta tone="muted" text={`Depo her malzemeden ${cap} adet tutar${cap < 500 ? "; daha fazlası için Ekipman'dan depoyu geliştir." : "."}`} />
       {(game.marketDef.items as string[]).map((id) => {
-        const d = game.ingredientsDef[id], room = Math.max(0, cap - game.ingredients[id]), q = Math.max(1, Math.min(get(id), Math.min(max, Math.max(1, room)))), total = d.price * q;
+        const d = game.ingredientsDef[id], room = Math.max(0, cap - game.ingredients[id]), q = Math.max(1, Math.min(get(id), Math.min(max, Math.max(1, room)))), unit = game.ingredientPrice(id) as number, deal = unit < d.price, total = unit * q;
         const setQ = (n: number) => setQty({ ...qty, [id]: Math.max(1, Math.min(max, Math.max(1, room), n)) });
         return (
           <Card key={id} left={<EmojiIcon emoji={d.icon} size={u * 7} />}
@@ -503,7 +504,7 @@ function Ingredients() {
               if (r.ok) { act.sfx("buy"); act.toast(`${d.icon} ${d.name} ×${q} alındı · −${fmt(r.cost)} altın`, 1600); } else act.warn(r.message);
             }} />}>
             <Title name={d.name} note={`Stok: ${game.ingredients[id]}/${cap}`} />
-            <Meta text={`💰 ${fmt(d.price)} / adet`} />
+            <Meta tone={deal ? "reward" : undefined} text={deal ? `🏷 Bugünün indirimi: 💰 ${fmt(unit)} / adet (normalde ${fmt(d.price)})` : `💰 ${fmt(d.price)} / adet`} />
             <Meta tone="muted" text={`Tarif: ${usedBy(id)}`} />
             <View style={{ flexDirection: "row", alignItems: "center", gap: u * 0.8, flexWrap: "wrap" }}>
               <Pressable onPress={() => setQ(q - 1)} accessibilityRole="button" accessibilityLabel="Bir azalt" style={sq({ width: Math.max(44, u * 6) })}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>−</Text></Pressable>

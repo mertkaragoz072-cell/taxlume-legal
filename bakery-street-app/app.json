@@ -35,7 +35,8 @@
         }
       ],
       "expo-audio",
-      "expo-font"
+      "expo-font",
+      "expo-notifications"
     ],
     "web": {
       "bundler": "metro"

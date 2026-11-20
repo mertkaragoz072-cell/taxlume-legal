@@ -13,6 +13,8 @@ import { DailyGoals } from '../src/game/goals.js';
 import { Cafe } from '../src/game/customers.js';
 import { Album } from '../src/game/album.js';
 import { SaveManager, SAVE_KEY } from '../src/game/save.js';
+import { Life } from '../src/game/life.js';
+import { Achievements } from '../src/game/achievements.js';
 
 class FakeStorage { constructor() { this.m = new Map(); } getItem(k) { return this.m.has(k) ? this.m.get(k) : null; } setItem(k, v) { this.m.set(k, String(v)); } removeItem(k) { this.m.delete(k); } }
 
@@ -21,7 +23,7 @@ function world(storage, clock, rng) {
   const game = new Game({ gold: 0, gems: 0 }, {}, () => clock.now);
   const parts = { progression: new Progression(game), town: new Town(game), exploration: new Exploration(game, { rng }), research: new Research(game) };
   parts.shop = new Shop(game); parts.quests = new Quests(game); parts.daily = new DailyReward(game); parts.till = new Till(game); parts.goals = new DailyGoals(game);
-  parts.cafe = new Cafe(game, { rng }); parts.album = new Album(game, parts.cafe.looks);
+  parts.cafe = new Cafe(game, { rng }); parts.album = new Album(game, parts.cafe.looks); parts.life = new Life(game, undefined, rng); parts.achievements = new Achievements(game);
   const saves = new SaveManager(game, storage); saves.attach();
   const status = saves.load();
   parts.cafe.setActive(true);
@@ -40,7 +42,7 @@ function firstDiff(a, b) {
 const same = (a, b, note) => assert.ok(a === b, `${note}: ${firstDiff(a, b)}`);
 const pick = (rng, list) => list[Math.floor(rng() * list.length)];
 const stable = (v) => (Array.isArray(v) ? v.map(stable) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, stable(v[k])])) : v);
-const keyState = (w) => { const s = w.game.exportState(); return JSON.stringify(stable({ gold: s.gold, gems: s.gems, ingredients: s.ingredients, products: s.products, jobs: s.jobs, upgrades: s.upgrades, stats: s.stats, quests: s.quests, daily: s.daily, progression: s.progression, town: s.town, research: s.research, shop: s.shop, album: s.album, profile: s.profile, goals: s.goals, cafe: { customers: s.cafe?.customers, open: s.cafe?.orders?.filter((o) => o.status === 'open') } })); };
+const keyState = (w) => { const s = w.game.exportState(); return JSON.stringify(stable({ gold: s.gold, gems: s.gems, ingredients: s.ingredients, products: s.products, jobs: s.jobs, upgrades: s.upgrades, stats: s.stats, quests: s.quests, daily: s.daily, progression: s.progression, town: s.town, research: s.research, shop: s.shop, album: s.album, profile: s.profile, goals: s.goals, queue: s.queue, life: s.life, achievements: s.achievements, cafe: { customers: s.cafe?.customers, open: s.cafe?.orders?.filter((o) => o.status === 'open') } })); };
 
 function sane(w, note) {
   const g = w.game;
@@ -53,6 +55,9 @@ function sane(w, note) {
   const used = new Set();
   for (const c of w.cafe.customers) { if (c.state === 'seated') { assert.ok(!used.has(c.table), `${note}: two guests at table ${c.table}`); used.add(c.table); assert.ok(w.cafe.orderOf(c)?.status === 'open', `${note}: seated guest without open order`); } }
   for (const o of w.cafe.openOrders()) assert.ok(w.cafe.customers.some((c) => c.orderId === o.id), `${note}: open order without guest`);
+  for (const [st, q] of Object.entries(g.queue)) { assert.ok(q.length <= g.queueMax, `${note}: line too long at ${st}`); for (const id of q) assert.equal(g.productsDef[id].station, st, `${note}: queued on the wrong machine`); }
+  for (const id of Object.keys(g.products)) assert.ok(g.committed(id) <= Math.max(g.showcaseLimit(), g.products[id]) + g.capacity(g.productsDef[id].station), `${note}: over the showcase limit`);
+  assert.ok(w.life.letters.length <= 20, `${note}: inbox`);
   const e = g.exportState();
   JSON.parse(JSON.stringify(e));                                           // always serialisable
 }
@@ -64,7 +69,7 @@ test('fuzz: random play (production, shop, upgrades, quests, goals, service, tim
     let w = world(storage, clock, rng);
     for (let step = 0; step < 400; step++) {
       const g = w.game, note = `seed ${seed} step ${step}`;
-      const action = Math.floor(rng() * 14);
+      const action = Math.floor(rng() * 18);
       if (action === 0) g.startProduction(pick(rng, Object.keys(g.productsDef)));
       else if (action === 1) g.startMany(pick(rng, Object.keys(g.productsDef)), 3);
       else if (action === 2) { const d = pick(rng, w.shop.items); w.shop.buy(d.id); }
@@ -78,6 +83,10 @@ test('fuzz: random play (production, shop, upgrades, quests, goals, service, tim
       else if (action === 10) { clock.now += Math.floor(rng() * 90) * 1000; }
       else if (action === 11) { clock.now += (rng() < 0.3 ? -1 : 1) * Math.floor(rng() * 8) * 3600_000; }          // hours forward or back
       else if (action === 12) { w.till.collect(); w.daily.claim?.(); }
+      else if (action === 14) g.produceOrQueue(pick(rng, Object.keys(g.productsDef)));
+      else if (action === 15) { w.life.setDish(pick(rng, Object.keys(g.productsDef))); w.life.deliverSpecial(); }
+      else if (action === 16) { for (const l of w.life.letters) w.life.open(l.id); for (const a of w.achievements.claimable()) w.achievements.claim(a.def.id); }
+      else if (action === 17) { const id = pick(rng, g.marketDef.items); g.purchase(id, 1 + Math.floor(rng() * 5)); }
       else if (action === 13) { w.saves.save(); const before = keyState(w); const w2 = world(storage, clock, rng); assert.equal(w2.status.status, 'loaded', `${note}: save did not load (${w2.status.message ?? ''})`); same(keyState(w2), before, note); w = w2; }
       for (let i = 0; i < 1 + Math.floor(rng() * 6); i++) { clock.now += 1000 + Math.floor(rng() * 4000); g.tick(); w.goals.announce(); }
       sane(w, note);

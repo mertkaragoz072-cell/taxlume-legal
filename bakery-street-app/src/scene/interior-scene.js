@@ -258,8 +258,10 @@ export class InteriorScene {
     if (!cafe?.active) return;
     const need = new Set();
     for (const o of cafe.openOrders()) {
-      const def = this.game.productsDef[o.product];
-      if (def && this.game.products[o.product] < 1 && !this.game.jobsOf(def.station).some((j) => j.product === o.product)) need.add(def.station);
+      for (const id of cafe.orderItems(o)) {                    // a set: both products count
+        const def = this.game.productsDef[id];
+        if (def && this.game.products[id] < 1 && !this.game.jobsOf(def.station).some((j) => j.product === id) && !this.game.queueOf(def.station).includes(id)) need.add(def.station);
+      }
     }
     for (const station of need) {
       const a = AREAS.find((x) => x.station === station);
