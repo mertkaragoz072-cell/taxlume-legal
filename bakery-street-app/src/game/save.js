@@ -13,6 +13,7 @@ import { validateGoals } from './goals.js';
 import { cleanName } from './profile.js';
 import { validateLife } from './life.js';
 import { validateAchievements } from './achievements.js';
+import { validateBranch } from './branch.js';
 
 // Persistent save: validation, versioning, backup of unreadable saves and failure reporting. DOM-free (storage is injected).
 // Saved: gold, ingredient stock, product stock, upgrade levels and running production jobs
@@ -75,6 +76,7 @@ export function validate(raw, game) {
   const goals = game.goals ? validateGoals(raw.goals) : undefined;
   const life = game.life ? validateLife(raw.life, game) : undefined;
   const achievements = game.achievements ? validateAchievements(raw.achievements, game.achievements) : undefined;
+  const branch = game.branch ? validateBranch(raw.branch) : undefined;
   const quests = game.quests ? validateQuests(raw.quests, game.quests.defs) : undefined;
   const upgrades = {};
   for (const [id, def] of Object.entries(game.upgradesDef)) {
@@ -106,7 +108,7 @@ export function validate(raw, game) {
   }
   const queueMax = game.cafe ? game.cafe.cfg.queueMax + (shop ? game.shop.queueBonusFor(shop.owned) : 0) : 0;     // the waiting area the SAVED shop state has bought, not the one in memory now
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks, queueMax) : null;
-  return { gold: raw.gold, gems, profile, ingredients, products, jobs, queue, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, life, achievements, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, profile, ingredients, products, jobs, queue, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, life, achievements, branch, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {
@@ -210,6 +212,29 @@ export class SaveManager {
     this.apply(this.game.defaultState());
     const saved = this.save();
     return saved.ok ? { ok: true } : { ok: true, warning: saved.message };
+  }
+
+  /**
+   * Opens a new branch (see branch.js): needs { confirmed: true } like a reset, backs up the current save first, then loads the new branch's state
+   * through the same validation a saved game goes through.
+   */
+  openBranch({ confirmed = false } = {}) {
+    const b = this.game.branch;
+    if (!b) return { ok: false, reason: 'none', message: 'Şube açılamıyor.' };
+    const miss = b.missing();
+    if (miss.length) return { ok: false, reason: 'locked', message: `Yeni şube için: ${miss.join(', ')}.` };
+    if (confirmed !== true) return { ok: false, reason: 'unconfirmed', message: 'Yeni şube için onay gerekir.' };
+    if (!this.storage || !this.enabled) return { ok: false, reason: 'storage', message: 'Kayıt kapalı olduğu için şube açılamadı.' };
+    try { const current = this.storage.getItem(this.key); if (current != null) this.storage.setItem(this.backupKey.replace('.corrupt', '.before-branch'), current); }
+    catch { return { ok: false, reason: 'backup', message: 'Eski kayıt yedeklenemediği için şube açılmadı.' }; }
+    const raw = { version: SAVE_VERSION, ...b.nextState() };
+    let state;
+    try { state = validate(JSON.parse(JSON.stringify(raw)), this.game); } catch (err) { return { ok: false, reason: 'state', message: `Şube açılamadı (${err.message}).` }; }
+    this.apply(state);
+    this.game.life?.remember('🏪', `${b.count + 0}. yeni şube açıldı: her satış kalıcı olarak +%${Math.round(b.bonus() * 100)}`);
+    this.game.emit('branch', { count: b.count });
+    const saved = this.save();
+    return { ok: true, count: b.count, ...(saved.ok ? {} : { warning: saved.message }) };
   }
 
   problem(kind, message) { this.onProblem({ kind, message }); }

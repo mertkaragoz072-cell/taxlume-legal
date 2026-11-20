@@ -10,7 +10,9 @@ export function useU(): number {
   return height >= width ? Math.min(width * 0.0102, 5.6) : Math.min(height / 100, width * 0.0058);
 }
 /** Text size: a multiple of the unit, never below 12. */
-export const fs = (u: number, mult: number) => Math.max(12, u * mult);
+/** Text size setting (Ayarlar › Büyük yazı): every size from fs() is multiplied by `k`. */
+export const TEXT = { k: 1 };
+export const fs = (u: number, mult: number) => Math.max(12, u * mult) * TEXT.k;
 /**
  * The type scale: every text in the interface uses one of these sizes (multiples of the UI unit), so panels read alike.
  *   title: panel and card titles' big brother (panel heading, celebration title) · heading: card titles, toasts, main buttons

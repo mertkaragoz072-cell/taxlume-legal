@@ -251,6 +251,15 @@ Görsel gerektirmeyen oynanış eklemeleri; hepsi eski kayıtlarla uyumlu (eksik
 | Özel sipariş panosu | Seviye 2'den sonra isteğe bağlı büyük sipariş; vitrin stoğundan teslim | 4 saat süre, ödül ürün değerinin ×1,25'i, 40 dk ara |
 | Market indirimi | Her gün bir Market malzemesi ucuz | %30 |
 | Başarımlar | 20 uzun vadeli hedef (src/game/achievements.js) | 150–3000 altın, bazılarında elmas |
+| Kedi sevme | Kasaba'daki kedilere ya da kafedeki garsona dokun: kalpler çıkar | günün ilk 5 sevgisi 10'ar altın |
+| Gün sonu özeti | Yeni günün ilk açılışında dünkü satış, kazanç, en sevilen ürün, yeni kalpler (bir kez) | — |
+| Anı defteri | Önemli anlar kendiliğinden yazılır (ilk satış, eleştirmen, can dostu, aşama, her 5 seviye) | en çok 60 anı |
+| Hafta sonu pazarı | Cumartesi–pazar vitrindeki ürünler müşteri fiyatına satılır | günde 20 ürün |
+| Müşteri hikâyeleri | Her müşteriye 3 bölüm: 5 servis → favorisi → 3 kalp; sonunda mektup | 100 / 200 / 400 altın |
+| Haftalık tema | Haftanın ürünüyle adlı hafta ("Kahve Haftası"), ortak satış hedefi | 25×aşama ürün, 600×aşama altın |
+| Hepsini al | Görevler'de, 2+ hazır ödül varsa tek tuşla hepsi | — |
+| Büyük yazı | Ayarlar'dan; paneller ve menüler ×1,15 (alt menü hariç) | — |
+| Yeni şube | Son aşama + seviye 30: ekonomi baştan; dekorasyon, dostluk, hikâye, mektup, anı, başarım, elmas, isim korunur | her şube satışlara kalıcı +%10, en çok 5 |
 | Hatırlatmalar | Uygulama arka plana geçince: makine bitti, keşif döndü, kasa doldu, özel sipariş bitiyor; 22:00–09:00 sessiz | Ayarlar'dan kapatılabilir |
 
 Robot oyuncu (scripts/playthrough.mjs, 30 gün × 30 dk): aşama 4'e eskiden 20. günde, şimdi 17. günde ulaşıyor. Farkın çoğu üretim sırasından geliyor: robot makineyi hiç boş bırakmıyor.

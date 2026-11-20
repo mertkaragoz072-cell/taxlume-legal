@@ -4,6 +4,7 @@
 //   - cats strolling across the plaza (they gather at the paw circle when it is tapped), water glitter on the fountain, petals in the air,
 //     the lamps glowing in the evening.
 // What a tap does is decided by the app (App.tsx, onPress): this scene only says what was hit.
+import { Hearts } from './hearts.js';
 import { getImage, drawIcon } from '../assets.js';
 import { drawSprite } from '../characters/sprites.js';
 import { LOOKS } from '../game/customers.js';
@@ -48,6 +49,7 @@ export class TownScene {
     this.ripples = [];                   // fountain taps: rings on the water
     this.petals = Array.from({ length: 10 }, (_, i) => ({ x: (i * 97) % IMG_W, y: (i * 131) % 700, s: 0.6 + (i % 3) * 0.3, p: i }));
     this.walkers = [0, 1, 2, 3].map((i) => this.newWalker(i));
+    this.hearts = new Hearts();
     this.notes = [];                     // little speech bubbles: { x, y, text, life }
   }
 
@@ -76,6 +78,10 @@ export class TownScene {
 
   hitTest(x, y) {
     const p = this.toPic(x, y);
+    for (let i = this.walkers.length - 1; i >= 0; i--) {         // a cat on the plaza can be petted (it stands in front of everything)
+      const w = this.walkers[i];
+      if (Math.abs(p.x - w.x) < 48 && p.y > w.y - 125 && p.y < w.y + 12) return `cat:${i}`;
+    }
     for (const sp of TOWN_SPOTS) {
       if (sp.circle) { const [cx, cy, r] = sp.circle; if (Math.hypot(p.x - cx, p.y - cy) <= r) return sp.id; continue; }
       const [x0, y0, x1, y1] = sp.box; if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) return sp.id;
@@ -86,6 +92,11 @@ export class TownScene {
 
   /** The scene's own answer to a tap (the app opens screens): a glow, and for the plaza pieces a small calm reaction. */
   tapBuilding(id) {
+    if (id.startsWith('cat:')) {                               // petting: the cat stops, purrs and hearts float up
+      const w = this.walkers[+id.slice(4)];
+      if (w) { w.moving = false; w.wait = 3.5; this.hearts.add(w.x, w.y - 105); this.say([w.x, w.y - 150], ['Mırr…', 'Prrr…', 'Miyav!', 'Ne güzel!'][Math.floor(Math.random() * 4)]); }
+      return;
+    }
     this.flash[id] = 0;
     if (id === 'fountain') { this.ripples.push({ t: 0 }, { t: -0.25 }); this.say(P(905, 930), ['Bir dilek tuttum', 'Şırıl şırıl…', 'Ne serin!'][Math.floor(Math.random() * 3)]); }
     else if (id === 'bench') this.say(P(100, 1010), ['Biraz dinlenelim', 'Güneş çok güzel', 'Burası çok huzurlu'][Math.floor(Math.random() * 3)]);
@@ -101,6 +112,7 @@ export class TownScene {
     this.t += dt;
     for (const k of Object.keys(this.flash)) { this.flash[k] += dt; if (this.flash[k] > 0.6) delete this.flash[k]; }
     for (const r of this.ripples) r.t += dt;
+    this.hearts.update(dt);
     this.ripples = this.ripples.filter((r) => r.t < 1.4);
     for (const n of this.notes) n.life -= dt;
     this.notes = this.notes.filter((n) => n.life > 0);
@@ -159,6 +171,7 @@ export class TownScene {
       const sc = 1.15 + (w.y - PLAZA.y0) / (PLAZA.y1 - PLAZA.y0) * 0.25;
       drawSprite(ctx, w.look, w.x, w.y, w.moving ? t : 0, { dir: w.dir, back: w.view === 'back', side: w.view === 'side', fps: 8, phase: w.phase, frame: w.moving ? null : 0, bob: 0.012, scale: sc });
     }
+    this.hearts.draw(ctx);
     for (const p of this.petals) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.sin(t + p.p) * 0.8); ctx.fillStyle = 'rgba(246,190,205,0.85)'; ctx.beginPath(); ctx.ellipse(0, 0, 6 * p.s, 3.5 * p.s, 0, 0, 7); ctx.fill(); ctx.restore(); }
     for (const sp of TOWN_SPOTS) { if (!sp.plate) continue; const p = this.plateFor(sp.id); if (p) this.plate(ctx, sp.plate[0], sp.plate[1], p); }
     const b = this.badges();

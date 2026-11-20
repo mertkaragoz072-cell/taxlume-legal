@@ -1,13 +1,13 @@
 // The always-visible UI: the top bar (level, gold, quick buttons), the bottom menu on the street, the back button and the toast.
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Pressable, Text, View } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
 import { EmojiIcon, GameIcon } from "./icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Present, useAppear } from "./kit";
-import { C, FONT, fmt, fs, navHeight, useU, TYPE } from "./theme";
+import { C, FONT, fmt, fs, navHeight, TEXT, useU, TYPE } from "./theme";
 import { currentTip } from "../game/tips.js";
 import { MOTION } from "./motion";
 
@@ -67,13 +67,14 @@ function GainPop({ value, u }: { value: number; u: number }) {
 /** The menu popover: fades and drops in, and out again when closed (see Present). */
 function MenuPop({ u, top, children }: { u: number; top: number; children: React.ReactNode }) {
   const a = useAppear(MOTION.enter, MOTION.leave);
+  const { height } = useWindowDimensions();
   return (
-    <Animated.View style={{ position: "absolute", right: u * 1.6, top, width: u * 44, padding: u * 0.8, borderRadius: u * 2.6, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.paper, gap: u * 0.4, zIndex: 20, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: u * 1.4, shadowOffset: { width: 0, height: u * 0.6 }, elevation: 8, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.6, 0] }) }, { scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }}>{children}</Animated.View>
+    <Animated.View style={{ position: "absolute", right: u * 1.6, top, width: u * 44, padding: u * 0.8, borderRadius: u * 2.6, borderWidth: u * 0.5, borderColor: C.brown, backgroundColor: C.paper, gap: u * 0.4, zIndex: 20, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: u * 1.4, shadowOffset: { width: 0, height: u * 0.6 }, elevation: 8, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [-u * 1.6, 0] }) }, { scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }}><ScrollView style={{ maxHeight: Math.max(u * 40, height - top - u * 34) }} contentContainerStyle={{ gap: u * 0.4 }} showsVerticalScrollIndicator={false}>{children}</ScrollView></Animated.View>
   );
 }
 
 /** Portrait top bar: cat-ear level badge, gold and XP counters, and a menu button (Görevler / Günlük Ödül / Ayarlar open from it). */
-export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "letters" | "achievements") => void; badges: { quests: boolean; daily: boolean; letters?: boolean; achievements?: boolean } }) {
+export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "letters" | "achievements" | "memories" | "help") => void; badges: { quests: boolean; daily: boolean; letters?: boolean; achievements?: boolean; album?: boolean } }) {
   const { world, act } = useWorld();
   const { game, progression } = world, u = useU();
   useRefresh();
@@ -105,8 +106,8 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
     lastLevel.current = progression.level;
   }, [progression.level, progression.xp, progression.isMax, xpAnim, badgePop]);   // eslint-disable-line react-hooks/exhaustive-deps
   const bh = u * 11, bw = bh * (192 / 170), mh = Math.max(44, u * 11.4);
-  const entry = (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "letters" | "achievements", icon: string, label: string, badge: boolean) => (
-    <Pressable key={id} onPress={() => { act.sfx("tap"); setMenu(false); onOpen(id); }} accessibilityLabel={label} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: u * 1.6, height: Math.max(46, u * 11), paddingHorizontal: u * 1.8, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper })}>
+  const entry = (id: "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "letters" | "achievements" | "memories" | "help", icon: string, label: string, badge: boolean) => (
+    <Pressable key={id} onPress={() => { act.sfx("tap"); setMenu(false); onOpen(id); }} accessibilityLabel={label} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: u * 1.6, height: Math.max(44, u * 9.6), paddingHorizontal: u * 1.8, borderRadius: u * 2, backgroundColor: pressed ? C.vanilla : C.paper })}>
       {icon.startsWith("emoji:") ? <EmojiIcon emoji={icon.slice(6)} size={u * 6.4} /> : <GameIcon id={icon} size={u * 6.4} />}
       <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }} numberOfLines={1}>{label}</Text>
       {badge ? <View style={{ width: u * 2.6, height: u * 2.6, borderRadius: 99, backgroundColor: C.terracotta }} /> : null}
@@ -139,7 +140,7 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
         <View style={{ marginLeft: "auto" }}>
           <Pressable onPress={() => { act.sfx("tap"); setMenu((m) => !m); }} accessibilityLabel="Menü" style={({ pressed }) => ({ width: mh, height: mh, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
             <Image source={img("ui-menu")} style={{ width: mh, height: mh, resizeMode: "contain" }} />
-            {badges.quests || badges.daily || badges.letters || badges.achievements ? <View style={{ position: "absolute", right: -u * 0.4, top: -u * 0.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
+            {badges.quests || badges.daily || badges.letters || badges.achievements || badges.album ? <View style={{ position: "absolute", right: -u * 0.4, top: -u * 0.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
           </Pressable>
         </View>
       </View>
@@ -149,9 +150,11 @@ export function Hud({ onOpen, badges }: { onOpen: (id: "quests" | "daily" | "alb
           {entry("daily", "hud-events", "Günlük Ödül", badges.daily)}
           {entry("letters", "emoji:💌", "Mektuplar", !!badges.letters)}
           {entry("achievements", "emoji:🏅", "Başarımlar", !!badges.achievements)}
-          {entry("album", "q-explorer", "Müşteri Albümü", false)}
+          {entry("album", "q-explorer", "Müşteri Albümü", !!badges.album)}
+          {entry("memories", "emoji:📔", "Anı Defteri", false)}
           {entry("stats", "xp", "İstatistikler", false)}
           {entry("photo", "gift", "Fotoğraf Modu", false)}
+          {entry("help", "emoji:❓", "Nasıl Oynanır", false)}
           {entry("settings", "hud-settings", "Ayarlar", false)}
         </MenuPop>
       </Present>
@@ -294,7 +297,7 @@ export function Nav({ active, onSelect, exploreBadge, questBadge = false }: { ac
           <Image source={img(on ? `ui-nav-${id}-on` : `ui-nav-${id}`)} style={{ width: w * s, height: h * s, resizeMode: "contain" }} />
           {(id === "explore" && exploreBadge) || (id === "quests" && questBadge) ? <View style={{ position: "absolute", right: -u * 0.4, top: on ? u * 1.4 : u * 3.6, width: u * 3.1, height: u * 3.1, borderRadius: 99, backgroundColor: C.terracotta, borderWidth: u * 0.3, borderColor: C.paper }} /> : null}
         </View>
-        <Text allowFontScaling={false} numberOfLines={1} style={{ color: on ? C.brownDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body), marginTop: u * 0.3 }}>{label}</Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={{ color: on ? C.brownDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) / TEXT.k, marginTop: u * 0.3 }}>{label}</Text>
       </Pressable>
     );
   };

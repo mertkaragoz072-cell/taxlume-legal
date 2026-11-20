@@ -1,4 +1,5 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
+import { Hearts } from './hearts.js';
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
 import { AREAS, DRAW_ORDER, FLOOR_Y, FLOOR_K, ROOM_JOIN, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect, perspScale } from './interior-layout.js';
@@ -141,7 +142,13 @@ export class InteriorScene {
   hitTest(x, y) {
     const p = this.toWorld(x, y), f = this.shift('floor');
     p.y = this.unwarp(p.y);
-    return this.customers.hitTest(p.x - f, p.y) ?? AREAS.find((a) => { const q = p.x - this.shift(this.planeOf(a)); return q >= a.x && q <= a.x + a.w && p.y >= a.y && p.y <= a.y + a.h; })?.id ?? null;
+    const cust = this.customers.hitTest(p.x - f, p.y);
+    if (cust) return cust;
+    const area = AREAS.find((a) => { const q = p.x - this.shift(this.planeOf(a)); return q >= a.x && q <= a.x + a.w && p.y >= a.y && p.y <= a.y + a.h; })?.id ?? null;
+    if (area) return area;                                         // the machines keep their taps; the waiter can be petted anywhere else
+    const w = this.staff.waiter;
+    if (w && Math.abs(p.x - f - w.x) < 45 && p.y > w.y - 120 && p.y < w.y + 10) return 'staff:waiter';
+    return null;
   }
   snap() { this.customers.snap(); }
   press(on, x, y) {
@@ -160,6 +167,12 @@ export class InteriorScene {
     for (let i = 0; i < n; i++) this.sparks.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread * 0.5, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
   }
   select(id) { this.selected = id; }
+  /** Petting the waiter or the chef: hearts over the cat (scene units). */
+  pet(id) {
+    const c = this.staff.waiter;
+    if (!c) return;
+    (this.hearts ??= new Hearts()).add(c.x + this.shift('floor'), c.y - 120);
+  }
 
   update(dt) {
     this.t += dt;
@@ -176,6 +189,7 @@ export class InteriorScene {
     this.sparks = this.sparks.filter((p) => p.life > 0);
     for (const p of this.pops) p.life -= dt * 0.8;
     this.pops = this.pops.filter((p) => p.life > 0);
+    this.hearts?.update(dt);
   }
 
   render(ctx) {
@@ -227,6 +241,7 @@ export class InteriorScene {
       label(ctx, p.text, p.x - (p.icon ? 18 : 0), p.y - (1 - p.life) * 60, { font: '700 34px sans-serif', fill: PAL.cream, lw: 5 });
       if (p.icon) drawIconOrEmoji(ctx, p.icon, this.game.productsDef[p.icon]?.icon, p.x + 22, p.y - (1 - p.life) * 60, 44);
     }
+    this.hearts?.draw(ctx);
     ctx.globalCompositeOperation = 'lighter';
     for (const p of this.sparks) { ctx.fillStyle = `rgba(255,222,150,${clamp(p.life, 0, 1) * 0.9})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, 7); ctx.fill(); }
     ctx.globalCompositeOperation = 'source-over';

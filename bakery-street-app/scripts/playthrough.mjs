@@ -18,6 +18,7 @@ import { Album } from '../src/game/album.js';
 import { PLAYER } from '../src/config.js';
 import { Life } from '../src/game/life.js';
 import { Achievements } from '../src/game/achievements.js';
+import { Branch } from '../src/game/branch.js';
 
 export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   let seed = s0 * 7919;
@@ -26,7 +27,7 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
   const game = new Game({ gold: PLAYER.gold, gems: 0 }, {}, () => clock.now);
   const prog = new Progression(game), town = new Town(game), ex = new Exploration(game, { rng }), research = new Research(game);
   const shop = new Shop(game), quests = new Quests(game), daily = new DailyReward(game), till = new Till(game), goals = new DailyGoals(game);
-  const cafe = new Cafe(game, { rng }); const album = new Album(game, cafe.looks); const life = new Life(game, undefined, rng); const ach = new Achievements(game);
+  const cafe = new Cafe(game, { rng }); const album = new Album(game, cafe.looks); const life = new Life(game, undefined, rng); const ach = new Achievements(game); const branch = new Branch(game);
   const log = [], seen = new Set();
   const mile = (key, text) => { if (!seen.has(key)) { seen.add(key); log.push({ day: curDay, min: Math.round(curMin), text }); } };
   let curDay = 0, curMin = 0;
@@ -68,6 +69,10 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
     if (!life.dish()) { const best = Object.keys(game.productsDef).filter((id) => game.isUnlocked(id)).sort((a, b) => game.unitEconomics(b).customerNet - game.unitEconomics(a).customerNet)[0]; if (best) life.setDish(best); }
     if (life.special()?.ready) { const r = life.deliverSpecial(); if (r.ok) mile('order1', 'İlk özel sipariş teslim edildi'); }
     for (const l of life.letters) if (!l.read || (l.gift && !l.claimed)) life.open(l.id);
+    for (const l of album.looks) life.claimStory(l);
+    if (life.weekTheme()?.complete) life.claimTheme();
+    if (life.weekendOpen()) for (const id of Object.keys(game.productsDef)) if (game.products[id] > 6) life.sellWeekend(id, game.products[id] - 6);
+    life.pet();
     for (const a of ach.claimable()) { ach.claim(a.def.id); mile(`ach:${a.def.id}`, `Başarım: ${a.def.name}`); }
     if (!ex.active) { const open = ex.list().filter((r) => r.status === 'available' || r.status === 'idle' || r.missing.length === 0); const r = open[open.length - 1]; if (r) ex.start(r.def.id); }
   };

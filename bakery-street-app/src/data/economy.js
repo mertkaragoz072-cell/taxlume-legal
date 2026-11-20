@@ -110,6 +110,16 @@ export const LIFE = {
   critic: { minLevel: 4, chance: 0.06, gold: 200, perStage: 100, gems: 2 },
   deals: { off: 0.3 },
   orders: { minLevel: 2, hours: 4, restMin: 40, reward: 1.25, xp: 40 },
+  /** petting a cat: the first `paid` pets of a day pay `gold` each (the rest are just for fun) */
+  pet: { paid: 5, gold: 10 },
+  /** weekend market (Saturday, Sunday): products sell at the guest price, up to `perDay` units a day */
+  weekend: { perDay: 20 },
+  /** guest stories: three steps per guest look (served visits, their favourite, hearts); each step pays its gold once */
+  stories: { visits: 5, hearts: 3, gold: [100, 200, 400] },
+  /** weekly theme: sell `target` (x stage) of the week's star product this week for `gold` (x stage) */
+  theme: { target: 25, gold: 600 },
+  /** a new branch (after the last stage at the top level): every branch adds `share` to all sales, up to `max` branches */
+  branch: { minLevel: 30, share: 0.1, max: 5 },
 };
 
 /** Guest album: names of the guest looks, and the one-time rewards (a look served for the first time; every look served). */

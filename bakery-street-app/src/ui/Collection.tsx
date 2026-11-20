@@ -1,4 +1,5 @@
 // The guest album and the statistics page (menu entries "Müşteri Albümü" and "İstatistikler").
+import { StoryLine } from "./LifePanels";
 import React from "react";
 import { Text } from "react-native";
 import { useRefresh, useWorld } from "../runtime/context";
@@ -20,6 +21,7 @@ export function AlbumPanel() {
           <Card key={look} tone={e ? undefined : "locked"} left={<EmojiIcon emoji={e ? "🐱" : "❔"} size={u * 7} />}>
             <Title name={e ? album.nameOf(look) : "Henüz tanışmadın"} />
             <Meta text={e ? `${e.served} kez servis yapıldı` : "Bu müşteriye bir ürün servis et"} />
+            <StoryLine look={look} />
             {e ? <Meta tone={album.heartsOf(look) ? "reward" : "muted"} text={`Dostluk: ${"♥".repeat(album.heartsOf(look))}${"♡".repeat(5 - album.heartsOf(look))}${album.toNextHeart(look) == null ? " · can dostu!" : ` · sonraki kalp ${album.toNextHeart(look)} servis sonra (+%${Math.round(album.friend.tipPerHeart * 100)} bahşiş her kalpte)`}`} /> : null}
             <Meta tone={e?.fav ? "reward" : undefined} text={e?.fav ? `Favorisi: ${def.icon} ${def.name} (+%${Math.round(cafe.cfg.bonuses.favorite.share * 100)})` : "Favorisi: ? (denerken öğrenirsin)"} />
           </Card>

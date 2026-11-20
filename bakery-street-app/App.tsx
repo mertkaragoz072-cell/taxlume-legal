@@ -22,14 +22,14 @@ import { CafePanel } from "./src/ui/CafePanel";
 import { Present } from "./src/ui/kit";
 import { MOTION } from "./src/ui/motion";
 import { PanelBoundary, StageCard, saleNotes } from "./src/ui/Celebration";
-import { AchievementsPanel, LettersPanel } from "./src/ui/LifePanels";
+import { AchievementsPanel, HelpPanel, LettersPanel, MemoriesPanel, summaryLines } from "./src/ui/LifePanels";
 import { askPermission, clearReminders, scheduleReminders } from "./src/runtime/notify";
 import { ExploreBoardPanel, useBoardTop } from "./src/ui/ExploreBoard";
 import { MarketPanel } from "./src/ui/MarketPanel";
 import { ShopPanel, type ShopTab } from "./src/ui/ShopPanel";
 import { AlbumPanel, StatsPanel } from "./src/ui/Collection";
 import { DailyPanel, ExplorePanel, QuestPanel, ResearchPanel, SettingsPanel, TownPanel, formatReward } from "./src/ui/Overlays";
-import { C, FONT, fmt, fs, useU } from "./src/ui/theme";
+import { C, FONT, fmt, fs, TEXT, useU } from "./src/ui/theme";
 
 
 /** Start-up diagnostics: any error (also in render or outside React) is shown on screen instead of leaving the splash screen forever. */
@@ -104,9 +104,12 @@ function App() {
   );
 }
 
-type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "town" | "shop" | "letters" | "achievements";
+type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "town" | "shop" | "letters" | "achievements" | "memories" | "help";
 
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
+  TEXT.k = world.settings.values.bigText ? 1.15 : 1;                     // Ayarlar › Büyük yazı
+  const [, setTextBump] = useState(0);
+  useEffect(() => { world.settings.on((name: string) => { if (name === "bigText") { TEXT.k = world.settings.values.bigText ? 1.15 : 1; setTextBump((n) => n + 1); } }); }, [world]);
   const insets = useSafeAreaInsets();
   const feedback = useMemo(() => new Feedback(world.settings), [world]);
   const { width: winW, height: winH } = useWindowDimensions(), isPortrait = winH >= winW;
@@ -204,6 +207,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     offs.push(game.on("collection", () => rewardCoins()));
     offs.push(game.on("letter", (l: any) => { if (l.from !== "Gizemli Eleştirmen") showToast(`💌 ${l.from} sana bir mektup bıraktı${l.gift ? " (içinde küçük bir hediye var)" : ""} — Menü › Mektuplar`, 3200); }));
     offs.push(game.on("friend", (e: any) => { showToast(`💛 ${world.album.nameOf(e.look)} ile dostluğun büyüdü: ${"♥".repeat(e.hearts)}${"♡".repeat(5 - e.hearts)}`, 3000); feedback.sfx("claim"); rewardCoins(); }));
+    offs.push(game.on("branch", ({ count }: any) => setCelebrate({ icon: "🏪", title: `${count}. şube açıldı!`, lines: ["Yeni bir kafe, aynı dostlar.", `Her satış artık kalıcı +%${Math.round(world.branch.bonus() * 100)}.`, "Dekorasyonun ve müşterilerinle dostluğun seninle geldi."] })));
     offs.push(game.on("critic", (e: any) => { setCelebrate((prev) => prev ?? { icon: "🎩", title: "Gizemli eleştirmendi!", lines: [e.fast ? "Hızlı ve sıcak servisine bayıldı." : "Lezzetini çok beğendi.", `Ödül: +${fmt(e.gold)} altın${e.gems ? ` · +${e.gems} 💎` : ""}`, "Yorumu Mektuplar'da."] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); rewardCoins(); }));
     offs.push(game.on("album", (e: any) => { if (e.gold) rewardCoins(); }));
     offs.push(game.on("collection", (e: any) => { showToast(`🏅 Koleksiyon: ${e.group}${e.kind === "max" ? " (hepsi en üst seviyede)" : " tamamlandı"} · +${fmt(e.reward.gold)} altın`, 3400); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
@@ -249,9 +253,11 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       const parts = [...Object.entries(done).map(([id, n]) => `${world.game.productsDef[id].icon}×${n}`), ...(till > 0 ? [`kasada +${fmt(world.till.stored)} altın`] : [])];
       if (parts.length) showToast(`Sen yokken: ${parts.join(" · ")}`, 3600);
       if (world.daily.status().canClaim) setOverlay((o) => o ?? "daily");
+      showSummary();
     });
     if (world.loadResult.summary && world.loadResult.status === "loaded") showToast(`Sen yokken hazırlananlar: ${world.loadResult.summary}`, 4200);
     if (world.daily.status().canClaim) setOverlay("daily");  // first visit of the day: offer the daily reward
+    showSummary();
     return () => sub.remove();
   }, [feedback, storage, world, showToast]);
 
@@ -274,6 +280,19 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     showToast(r.warning ? `İlerleme sıfırlandı. ${r.warning}` : "İlerleme sıfırlandı. Eski kayıt yedeklendi.", 3800);
   }, [world, warn, showToast]);
 
+  /** The first visit of a new day: a short, warm card about the day before (once). */
+  const showSummary = () => {
+    world.life?.rollDay();
+    const sum = world.life?.takeSummary();
+    if (sum) setCelebrate((prev) => prev ?? { icon: "🌙", title: "Dün kafende", lines: summaryLines(world, sum) });
+  };
+
+  const petted = () => {                                     // a cat was petted: the first few a day pay a little
+    const r = world.life.pet();
+    feedback.buzz(12);
+    if (r.gold) showToast(`🐾 Mırr… +${r.gold} altın${r.left ? "" : " · bugünlük sevgi ödülleri bitti, sevmeye devam edebilirsin"}`, 1600);
+  };
+
   // ---- taps on the scene ------------------------------------------------------------------------------------------------------------
   const onPress = useCallback((scene: any, p: { x: number; y: number }, down: boolean) => {
     feedback.init();
@@ -286,6 +305,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       const target: Record<string, SceneId> = { bakery: "interior", market: "market", bookshop: "bookshop" };
       if (!hit) return;
       scene.tapBuilding(hit); feedback.sfx("tap");
+      if (hit.startsWith("cat:")) { petted(); return; }
       const later = (fn: () => void) => setTimeout(fn, 220);    // the tapped piece glows first; a panel opening under the finger also cannot catch the same tap
       if (target[hit]) { if (world.town.isOpen(hit)) later(() => go(target[hit])); else later(() => setOverlay("town")); }   // a building that is not open yet: the town panel says what it needs and opens it
       else if (hit === "daily") later(() => setOverlay("daily"));
@@ -299,6 +319,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       if (hit) { scene.selected = hit; setExploreSel(hit); }
     } else if (id === "interior") {
       if (!hit) { act.closePanel(); }
+      else if (hit === "staff:waiter") { scene.pet(hit); feedback.sfx("tap"); petted(); }
       else if (hit.startsWith("customer:")) {
         const cust = world.cafe.customers.find((x: any) => x.id === +hit.slice(9));
         if (cust?.orderId && scene.staff.claims(cust.orderId)) { showToast("Garson siparişi getiriyor…", 1100); return; }     // already on its way: do not serve it a second time
@@ -339,6 +360,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Present show={overlay === "album"}><PanelBoundary onFail={failPanel}><AlbumPanel /></PanelBoundary></Present>
           <Present show={overlay === "letters"}><PanelBoundary onFail={failPanel}><LettersPanel /></PanelBoundary></Present>
           <Present show={overlay === "achievements"}><PanelBoundary onFail={failPanel}><AchievementsPanel /></PanelBoundary></Present>
+          <Present show={overlay === "memories"}><PanelBoundary onFail={failPanel}><MemoriesPanel /></PanelBoundary></Present>
+          <Present show={overlay === "help"}><PanelBoundary onFail={failPanel}><HelpPanel /></PanelBoundary></Present>
           <Present show={overlay === "stats"}><PanelBoundary onFail={failPanel}><StatsPanel /></PanelBoundary></Present>
           <Present show={overlay === "settings"}><PanelBoundary onFail={failPanel}><SettingsPanel onReset={reset} /></PanelBoundary></Present>
           <Present show={overlay === "shop" && !peeking}><PanelBoundary onFail={failPanel}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></PanelBoundary></Present>
@@ -360,7 +383,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
 function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId; overlay: Overlay | null; setOverlay: (o: Overlay | null) => void; navSelect: (id: NavId) => void }) {
   const { world, act } = useWorldOnly();
   useRefresh(5000);
-  const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0 || !!world.life?.special()?.ready, daily: world.daily.status().canClaim, letters: (world.life?.unread() ?? 0) > 0, achievements: (world.achievements?.claimable().length ?? 0) > 0 };
+  const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0 || !!world.life?.special()?.ready, daily: world.daily.status().canClaim, letters: (world.life?.unread() ?? 0) > 0, achievements: (world.achievements?.claimable().length ?? 0) > 0, album: (world.life?.storiesReady() ?? 0) > 0 };
   const toggle = (o: Overlay) => { if (o === "photo") act.toast("📷 Fotoğraf modu: ekran görüntüsü al, çıkmak için ekrana dokun", 3200); setOverlay(overlay === o ? null : o); };
   const active: NavId | null = overlay === "quests" ? "quests" : overlay === "town" || sceneId === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (

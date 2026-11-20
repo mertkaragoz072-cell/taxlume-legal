@@ -21,12 +21,25 @@ const centre = (scene, id) => { const sp = TOWN_SPOTS.find((s) => s.id === id), 
 
 test('town square: each building is found where it is drawn, the sky and plaza are not buildings', () => {
   const { scene } = make();
+  for (const w of scene.walkers) { w.x = -999; w.y = -999; }        // the cats are tested on their own below (a cat in front of a building takes the tap)
   for (const id of ['market', 'bakery', 'bookshop', 'daily', 'quests', 'board', 'map', 'fountain', 'bench', 'paw', 'flowers']) { const p = centre(scene, id); assert.equal(scene.hitTest(p.x, p.y), id, id); }
   assert.equal(scene.hitTest(400, 100), null);
   { const f = scene.fit(); assert.equal(scene.hitTest(300 * f.s + f.ox, 1000 * f.s + f.oy), null, 'open plaza'); }
   const f = scene.fit();
   assert.ok(f.ox <= 0 && f.ox + 1024 * f.s >= scene.view.vw - 0.5, 'the picture covers the width');
   assert.ok(f.oy + 1267 * f.s >= scene.view.vh - 200, 'the picture reaches the bottom bar');
+});
+
+test('town square: a cat on the plaza can be petted: it stops and hearts float up', () => {
+  const { scene } = make();
+  const w = scene.walkers[1], f = scene.fit();
+  w.x = 500; w.y = 1000; w.moving = true;
+  const hit = scene.hitTest(500 * f.s + f.ox, 960 * f.s + f.oy);
+  assert.equal(hit, 'cat:1');
+  scene.tapBuilding(hit);
+  assert.equal(w.moving, false);
+  assert.ok(scene.hearts.list.length > 0);
+  scene.update(3); assert.equal(scene.hearts.list.length, 0, 'the hearts fade away');
 });
 
 test('town square: a closed building shows what it needs, an open one shows nothing; the scene runs and draws', () => {

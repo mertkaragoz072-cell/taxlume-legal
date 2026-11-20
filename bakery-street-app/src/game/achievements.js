@@ -1,8 +1,8 @@
 // Achievements: long-term milestones read from what the game already counts (stats, album, shop, life). Each one is collected once by hand,
 // for gold and sometimes gems. Pure logic; the progress is never stored, only which ones were collected.
 
-const s = (k) => (g) => g.stats[k] ?? 0;
-const sold = (id) => (g) => g.stats.sold?.[id] ?? 0;
+const s = (k) => (g) => (g.branch ? g.branch.total(k) : g.stats[k] ?? 0);              // lifetime: every branch counts
+const sold = (id) => (g) => (g.branch ? g.branch.total(`sold.${id}`) : g.stats.sold?.[id] ?? 0);
 const hearts = (g) => (g.album ? g.album.looks.reduce((n, l) => n + g.album.heartsOf(l), 0) : 0);
 const fullFriends = (g) => (g.album ? g.album.looks.filter((l) => g.album.heartsOf(l) >= 5).length : 0);
 const maxedDecor = (g) => (g.shop ? g.shop.items.filter((d) => d.kind === 'decor' && g.shop.owned.has(d.id) && g.shop.levelable?.(d) && g.shop.itemLevel(d.id) >= 5).length : 0);
@@ -28,7 +28,10 @@ export const ACHIEVEMENTS = [
   { id: 'explore10', name: 'Gezgin Kedi', icon: '🗺', text: 'keşif tamamla', value: s('explorationsDone'), target: 10, gold: 450 },
   { id: 'critic1', name: 'Eleştirmen Onayı', icon: '🎩', text: 'gizemli eleştirmeni ağırla', value: (g) => g.life?.critics ?? 0, target: 1, gold: 300, gems: 2 },
   { id: 'orders5', name: 'Güvenilir Fırın', icon: '📦', text: 'özel sipariş teslim et', value: (g) => g.life?.ordersDone ?? 0, target: 5, gold: 750, gems: 3 },
-  { id: 'play60', name: 'Huzur Köşesi', icon: '🍵', text: 'dakika kafede vakit geçir', value: (g) => Math.floor((g.stats.playSec ?? 0) / 60), target: 60, gold: 350 },
+  { id: 'pets50', name: 'Sevgi Dolu', icon: '🐾', text: 'kez kedi sev', value: (g) => g.life?.petsTotal ?? 0, target: 50, gold: 300 },
+  { id: 'stories3', name: 'Hikâye Anlatıcısı', icon: '📗', text: 'müşteri hikâyesi tamamla', value: (g) => Object.values(g.life?.stories ?? {}).filter((n) => n >= 3).length, target: 3, gold: 800, gems: 3 },
+  { id: 'branch1', name: 'Kafeler Zinciri', icon: '🏪', text: 'yeni şube aç', value: (g) => g.branch?.count ?? 0, target: 1, gold: 2000, gems: 10 },
+  { id: 'play60', name: 'Huzur Köşesi', icon: '🍵', text: 'dakika kafede vakit geçir', value: (g) => Math.floor(s('playSec')(g) / 60), target: 60, gold: 350 },
 ];
 
 export class Achievements {

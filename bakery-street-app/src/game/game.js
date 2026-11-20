@@ -141,7 +141,7 @@ export class Game {
   /** Current bonus fraction of a research effect (0 when there is no research system or nothing bought). */
   bonus(effect) { return this.research?.bonus(effect) ?? 0; }
   /** Gold earned by one customer order whose base price is `base` (Usta Satıcı). */
-  saleIncome(base) { return Math.round(base * (1 + this.bonus('saleIncome'))); }
+  saleIncome(base) { return Math.round(base * (1 + this.bonus('saleIncome') + (this.branch?.bonus() ?? 0))); }   // research + the branches opened
   /** Gold value of the ingredients one unit of `id` consumes (from the single INGREDIENTS price list). */
   ingredientCost(id) {
     return Object.entries(this.productsDef[id].ingredients).reduce((sum, [ing, n]) => sum + n * this.ingredientsDef[ing].price, 0);
@@ -380,6 +380,7 @@ export class Game {
       ...(this.goals ? { goals: this.goals.exportState() } : {}),
       ...(this.life ? { life: this.life.exportState() } : {}),
       ...(this.achievements ? { achievements: this.achievements.exportState() } : {}),
+      ...(this.branch ? { branch: this.branch.exportState() } : {}),
     };
   }
 
@@ -406,6 +407,7 @@ export class Game {
     this.goals?.importState(state.goals);
     this.life?.importState(state.life);
     this.achievements?.importState(state.achievements);
+    this.branch?.importState(state.branch);
     this.cafe?.importState(state.cafe);
     this.emit('change', { type: 'load' });
   }
@@ -434,6 +436,7 @@ export class Game {
       goals: { date: null, baseline: {}, claimed: [] },
       life: null,
       achievements: null,
+      branch: this.branch ? this.branch.exportState() : null,
     };
   }
 

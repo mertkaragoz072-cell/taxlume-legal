@@ -10,7 +10,7 @@ import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon, Rich } from "./icons";
 import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
-import { DishCard, SpecialOrderCard } from "./LifePanels";
+import { BranchCard, CollectAll, DishCard, SpecialOrderCard, ThemeCard, WeekendCard } from "./LifePanels";
 import { askPermission } from "../runtime/notify";
 
 const fmtReward = (game: any, r: any) => [
@@ -38,8 +38,11 @@ export function QuestPanel() {
     <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
       <Meta text={`${rainy ? "🌧 Bugün yağmurlu: sıcak içecekler daha çok istenir, müşteri biraz az gelir" : "☀ Bugün hava açık"} · Kafe puanı: ★ ${rating.stars.toFixed(1)}${rating.total < 5 ? " (henüz yeni)" : ""}`} />
       {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
+      <CollectAll />
       <DishCard />
+      <ThemeCard />
       <SpecialOrderCard />
+      <WeekendCard />
       <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
       {todays.map((g) => (
         <Card key={g.id} tone={g.claimed ? "locked" : g.complete ? "ready" : undefined} left={<EmojiIcon emoji={g.icon} size={u * 7} />}
@@ -75,6 +78,7 @@ export function QuestPanel() {
           </Card>
         );
       })}
+      <BranchCard />
     </Sheet>
   );
 }
@@ -139,6 +143,7 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
       {row("music", "🎵", "Müzik")}
       {row("vibration", "📳", "Titreşim")}
       {row("tips", "💡", "İlk adım ipuçları")}
+      {row("bigText", "🔠", "Büyük yazı (menüler ve paneller)")}
       {row("notify", "🔔", "Hatırlatmalar (fırın hazır, keşif döndü, kasa doldu; gece 22:00–09:00 sessiz)")}
       {row("lowfx", "🐢", "Düşük grafik (eski telefonlar: parıltı, ışık, yağmur ve gün ışığı kapanır)")}
       {__DEV__ ? <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>⏱</Text>}>
