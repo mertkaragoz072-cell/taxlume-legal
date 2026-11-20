@@ -1,16 +1,16 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, View } from "react-native";
 import tier2 from "../../assets/tier2-happy-marketplace.webp";
 import tier3 from "../../assets/tier3-happy-marketplace.webp";
 import tier4 from "../../assets/tier4-happy-marketplace.webp";
 import tier1 from "../../assets/ui/header-market.webp";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { GOODS } from "../economy/goods";
-import { RESEARCH_TIER3_UNLOCK_RANK } from "../economy/constants";
+import { rankGainLines } from "../economy/rankPerks";
 import { rankTheme, sceneBandForRank } from "../economy/rankTheme";
 import { townRankIcon, townRankReward, townRankTitle } from "../economy/townRanks";
 import { FONT } from "../theme";
 import { Text } from "./AppText";
+import { RankAtmosphere } from "./RankAtmosphere";
 import { BigButton } from "./ModalKit";
 
 const SCENES = { 1: tier1, 2: tier2, 3: tier3, 4: tier4 } as const;
@@ -31,6 +31,7 @@ export function RankUpReveal({ fromIndex, toIndex, onContinue }: Props) {
   const to = useRef(new Animated.Value(0)).current;
   const title = useRef(new Animated.Value(0)).current;
   const list = useRef(new Animated.Value(0)).current;
+  const [size, setSize] = useState({ w: 0, h: 0 });
   const theme = rankTheme(toIndex);
   const fromBand = sceneBandForRank(fromIndex);
   const toBand = sceneBandForRank(toIndex);
@@ -62,13 +63,7 @@ export function RankUpReveal({ fromIndex, toIndex, onContinue }: Props) {
   }, [from, to, title, list, fromIndex, toIndex]);
 
   // everything this jump passed through, so a double promotion lists both
-  const unlockedGoods = GOODS.filter(
-    (g) => g.unlockRank !== undefined && g.unlockRank > fromIndex && g.unlockRank <= toIndex
-  );
-  const rows: string[] = unlockedGoods.map((g) => t("rankReveal.good", { icon: g.icon, good: t(g.nameKey) }));
-  if (RESEARCH_TIER3_UNLOCK_RANK > fromIndex && RESEARCH_TIER3_UNLOCK_RANK <= toIndex) {
-    rows.push(t("rankReveal.research"));
-  }
+  const rows: string[] = rankGainLines(fromIndex, toIndex, t);
   let reward = 0;
   for (let i = fromIndex + 1; i <= toIndex; i++) reward += townRankReward(i);
   rows.push(t("rankReveal.reward", { amount: formatCoins(reward, 0) }));
@@ -80,12 +75,23 @@ export function RankUpReveal({ fromIndex, toIndex, onContinue }: Props) {
   return (
     <Pressable
       style={[StyleSheet.absoluteFill, styles.root]}
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       onPress={onContinue}
       accessibilityLabel={t("rankReveal.continue")}
     >
       <Image source={SCENES[fromBand]} style={styles.scene} resizeMode="cover" />
       <Animated.Image source={SCENES[toBand]} style={[styles.scene, { opacity: to }]} resizeMode="cover" />
       <Animated.View style={[styles.fromFade, { opacity: from }]} pointerEvents="none" />
+      {size.w > 0 && (
+        <>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: from }]} pointerEvents="none">
+            <RankAtmosphere rankIndex={fromIndex} width={size.w} height={size.h} />
+          </Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: to }]} pointerEvents="none">
+            <RankAtmosphere rankIndex={toIndex} width={size.w} height={size.h} boost={1.6} />
+          </Animated.View>
+        </>
+      )}
       <View style={styles.dim} pointerEvents="none" />
 
       <View style={styles.center} pointerEvents="box-none">
@@ -156,6 +162,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(246,211,106,0.55)",
   },
   listTitle: { color: "#f6e2a0", fontFamily: FONT.display, fontSize: 13, letterSpacing: 2, marginBottom: 6 },
-  row: { color: "#f4e8d0", fontFamily: FONT.medium, fontSize: 14, lineHeight: 21 },
+  row: { color: "#f4e8d0", fontFamily: FONT.medium, fontSize: 13, lineHeight: 19 },
   btn: { alignSelf: "stretch", marginTop: 14 },
 });

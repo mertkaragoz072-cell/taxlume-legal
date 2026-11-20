@@ -29,6 +29,7 @@ import tier4HappyMarketplaceImage from "../../assets/tier4-happy-marketplace.web
 import tier4MixedMarketplaceImage from "../../assets/tier4-mixed-marketplace.webp";
 import tier4AngryMarketplaceImage from "../../assets/tier4-angry-marketplace.webp";
 import { seasonFromTick, SeasonId } from "../economy/seasons";
+import { RankAtmosphere } from "./RankAtmosphere";
 import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
@@ -264,6 +265,7 @@ export function TownSquareScene({ happiness, tick, townRankIndex, label, moodLab
               fill="url(#sceneBottomScrim)"
             />
           </Svg>
+          <RankAtmosphere rankIndex={townRankIndex} width={width} height={height} />
           {season === "winter" && SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={height} />)}
         </>
       )}

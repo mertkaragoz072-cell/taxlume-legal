@@ -7,6 +7,7 @@ import headerTier2 from "../../assets/tier2-happy-marketplace.webp";
 import headerTier3 from "../../assets/tier3-happy-marketplace.webp";
 import headerTier4 from "../../assets/tier4-happy-marketplace.webp";
 import { rankTheme } from "../economy/rankTheme";
+import { RankAtmosphere } from "./RankAtmosphere";
 import statBarChart from "../../assets/ui/statpanel2/barchart.png";
 import statCoinBullet from "../../assets/ui/statpanel2/coinbullet.png";
 import statCoins from "../../assets/ui/statpanel2/coins.png";
@@ -267,6 +268,7 @@ export function InflationHeader({
           resizeMode="cover"
         />
         <View style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(dayTint, 0.08) }]} />
+        <RankAtmosphere rankIndex={townRankIndex} width={windowWidth} height={SCENE_HEIGHT + topInset} />
         <View style={styles.sceneFade}>
           <GradientFill colors={["rgba(42,26,14,0)", "rgba(42,26,14,1)"]} x1="0" y1="0" x2="0" y2="1" />
         </View>

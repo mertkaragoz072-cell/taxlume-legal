@@ -18,6 +18,7 @@ import { ScalePressable } from "../components/ScalePressable";
 import { GoalFrame, GoalIcon, GoalIconName, GoalProgress, GoalRibbon } from "../components/GoalPanels";
 import { ACHIEVEMENTS, ACHIEVEMENTS_BY_ID, AchievementId } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { rankGainLines } from "../economy/rankPerks";
 import { rankTheme } from "../economy/rankTheme";
 import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { GOODS } from "../economy/goods";
@@ -181,6 +182,14 @@ export function AchievementsScreen() {
               <View style={{ marginTop: 8 }}>
                 <GoalProgress pct={pct} color={theme.accent} />
               </View>
+              <Text style={[styles.summaryLabel, { marginTop: 10, color: theme.accent }]}>
+                {t("achievements.rankPreview", { title: townRankTitle(idx + 1, t) })}
+              </Text>
+              {rankGainLines(idx, idx + 1, t).map((line) => (
+                <Text key={line} style={styles.summaryLabel}>
+                  {line}
+                </Text>
+              ))}
             </>
           );
         })()}
