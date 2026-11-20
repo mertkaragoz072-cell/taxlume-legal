@@ -9,8 +9,6 @@
 -- every operation goes through the SECURITY DEFINER functions below, which
 -- act on auth.uid() (an anonymous Supabase user created on first launch).
 
-create extension if not exists pgcrypto;
-
 -- ---------------------------------------------------------------- tables
 
 create table if not exists profiles (
@@ -114,8 +112,9 @@ begin
   if char_length(v_name) not between 3 and 20 or v_name ~ '[^[:alnum:] ]' then raise exception 'name_invalid'; end if;
   if exists (select 1 from guilds where name_key = lower(v_name)) then raise exception 'name_taken'; end if;
   loop
-    v_code := upper(substr(translate(encode(gen_random_bytes(6), 'base64'), '+/=Il0O1', 'ABCDEFG'), 1, 6));
-    exit when v_code ~ '^[A-Z0-9]{6}$' and not exists (select 1 from guilds where code = v_code);
+    -- 6 hex characters (0-9, A-F): no look-alike letters, and gen_random_uuid() is core Postgres
+    v_code := upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6));
+    exit when not exists (select 1 from guilds where code = v_code);
   end loop;
   insert into guilds(name, code, owner_id) values (v_name, v_code, auth.uid()) returning id into v_id;
   insert into guild_members(user_id, guild_id) values (auth.uid(), v_id);
