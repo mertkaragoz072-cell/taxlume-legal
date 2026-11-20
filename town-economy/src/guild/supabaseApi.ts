@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyValueStore } from "./mockApi";
 import {
-  CheerEmote,
+  CheerCode,
   GuildApi,
   GuildDelivery,
   GuildError,
@@ -175,7 +175,7 @@ export function createSupabaseGuildApi(cfg: SupabaseConfig): GuildApi {
     async reportContribution(trades) {
       await rpc("report_contribution", { p_trades: Math.floor(trades) });
     },
-    async sendCheer(toUserId: string, emote: CheerEmote) {
+    async sendCheer(toUserId: string, emote: CheerCode) {
       await rpc("send_cheer", { p_to: toUserId, p_emote: emote });
     },
     async donateToOrder(qty) {

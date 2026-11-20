@@ -52,10 +52,15 @@ create table if not exists guild_cheers (
   guild_id   uuid not null references guilds(id) on delete cascade,
   from_user  uuid not null references auth.users(id) on delete cascade,
   to_user    uuid not null references auth.users(id) on delete cascade,
-  emote      text not null check (emote in ('👏','🎉','💪','🔥','❤️')),
+  emote      text not null,
   created_at timestamptz not null default now()
 );
 create index if not exists guild_cheers_guild_idx on guild_cheers(guild_id, created_at desc);
+-- Five emoji and five fixed phrases (the game shows the phrases in the player's
+-- language). Rewritten as a named constraint so it can be widened later.
+alter table guild_cheers drop constraint if exists guild_cheers_emote_check;
+alter table guild_cheers add constraint guild_cheers_emote_check
+  check (emote in ('👏','🎉','💪','🔥','❤️','hi','thanks','help','gg','wait'));
 
 -- Reports on guild names (App Store rule 1.2: user-generated content needs a
 -- way to report it). The game has no report button yet; see README.
@@ -293,6 +298,7 @@ begin
   insert into guild_week_contrib(guild_id, user_id, week_start, donated)
   values (v_guild, auth.uid(), guild_week_start(), v_take)
   on conflict (guild_id, user_id, week_start) do update set donated = guild_week_contrib.donated + v_take;
+  update guilds set total_contribution = total_contribution + v_take where id = v_guild;   -- goods count towards the guild's level too
   return v_take;
 end $$;
 
@@ -354,6 +360,7 @@ begin
   insert into guild_week_contrib(guild_id, user_id, week_start, gifted)
   values (v_guild, auth.uid(), guild_week_start(), v_take)
   on conflict (guild_id, user_id, week_start) do update set gifted = guild_week_contrib.gifted + v_take;
+  update guilds set total_contribution = total_contribution + v_take where id = v_guild;
   return v_take;
 end $$;
 
@@ -378,6 +385,7 @@ create or replace function get_my_guild() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare v_guild guilds; v_week date := guild_week_start(); v_members int; v_progress bigint; v_claimed boolean;
   v_order_good text; v_order_progress bigint; v_mine int; v_order_claimed boolean;
+  v_streak int := 0; v_w date; v_ok boolean;
 begin
   select g.* into v_guild from guilds g join guild_members m on m.guild_id = g.id where m.user_id = auth.uid();
   if v_guild.id is null then return null; end if;
@@ -385,11 +393,24 @@ begin
   select coalesce(sum(trades), 0) into v_progress from guild_week_contrib where guild_id = v_guild.id and week_start = v_week;
   select coalesce(bool_or(claimed), false) into v_claimed from guild_week_contrib
     where guild_id = v_guild.id and week_start = v_week and user_id = auth.uid();
+  -- Weeks in a row (before this one) the guild reached its trade goal. Uses
+  -- today's member count for every week, and stops at twelve.
+  v_w := v_week - 7;
+  while v_streak < 12 loop
+    select coalesce(sum(trades), 0) >= guild_goal_per_member() * greatest(1, v_members) into v_ok
+      from guild_week_contrib where guild_id = v_guild.id and week_start = v_w;
+    exit when not v_ok;
+    v_streak := v_streak + 1;
+    v_w := v_w - 7;
+  end loop;
   v_order_good := ensure_week_order(v_guild.id);
   select coalesce(sum(donated), 0) into v_order_progress from guild_week_contrib where guild_id = v_guild.id and week_start = v_week;
   select coalesce(donated, 0), coalesce(order_claimed, false) into v_mine, v_order_claimed from guild_week_contrib
     where guild_id = v_guild.id and user_id = auth.uid() and week_start = v_week;
   return jsonb_build_object(
+    'streak', v_streak,
+    'myTotals', (select jsonb_build_object('trades', coalesce(sum(trades), 0), 'donated', coalesce(sum(donated), 0),
+                   'gifted', coalesce(sum(gifted), 0)) from guild_week_contrib where guild_id = v_guild.id and user_id = auth.uid()),
     'order', jsonb_build_object('goodId', v_order_good,
       'target', guild_order_units_per_member() * greatest(1, v_members),
       'progress', v_order_progress, 'myDonated', coalesce(v_mine, 0), 'rewardClaimed', coalesce(v_order_claimed, false)),

@@ -41,6 +41,12 @@ export const GUILD_REQUEST_GOODS = [
  * nothing to moderate. */
 export const CHEER_EMOTES = ["👏", "🎉", "💪", "🔥", "❤️"] as const;
 export type CheerEmote = (typeof CHEER_EMOTES)[number];
+/** Ready-made phrases, shown in each player's own language. */
+export const GUILD_PHRASES = ["hi", "thanks", "help", "gg", "wait"] as const;
+export type GuildPhrase = (typeof GUILD_PHRASES)[number];
+/** Everything one player can send another: an emoji or a fixed phrase. */
+export type CheerCode = CheerEmote | GuildPhrase;
+export const CHEER_CODES: readonly CheerCode[] = [...CHEER_EMOTES, ...GUILD_PHRASES];
 
 export interface GuildMember {
   id: string;
@@ -59,7 +65,7 @@ export interface GuildMember {
 export interface GuildCheer {
   id: string;
   fromName: string;
-  emote: CheerEmote;
+  emote: CheerCode;
   at: number;
   toYou: boolean;
 }
@@ -106,6 +112,10 @@ export interface GuildInfo {
   rewardClaimed: boolean;
   /** all-time trades the guild has made together; drives its level */
   totalContribution: number;
+  /** weeks in a row (before this one) the guild reached its trade goal */
+  streak: number;
+  /** everything this player has ever contributed to this guild */
+  myTotals: { trades: number; donated: number; gifted: number };
   order: GuildOrder;
   requests: GuildRequest[];
   cheers: GuildCheer[];
@@ -150,7 +160,7 @@ export interface GuildApi {
   syncProfile(profile: SyncProfile): Promise<void>;
   /** adds finished trades to this week's goal */
   reportContribution(trades: number): Promise<void>;
-  sendCheer(toUserId: string, emote: CheerEmote): Promise<void>;
+  sendCheer(toUserId: string, emote: CheerCode): Promise<void>;
   /** marks the week's chest as taken; true if this call is the one that took it */
   claimWeeklyReward(): Promise<boolean>;
   /** gives goods to the weekly order; returns how many were accepted (remove exactly that many) */
@@ -164,6 +174,11 @@ export interface GuildApi {
   claimDeliveries(room: number): Promise<GuildDelivery[]>;
   /** flags the player's guild (its name or a member's name) for review */
   reportGuild(reason: ReportReason): Promise<void>;
+}
+
+/** Chest bonus for a guild on a streak: +10% per week in a row, up to +50%. */
+export function streakMultiplier(streak: number): number {
+  return 1 + 0.1 * Math.max(0, Math.min(5, Math.floor(streak)));
 }
 
 export function orderTargetFor(memberCount: number): number {

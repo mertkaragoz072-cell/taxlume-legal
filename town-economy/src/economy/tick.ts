@@ -5,6 +5,7 @@
  * settlement, random events, and the in-game day roll. Kept in its own module
  * because it is by far the largest single transition in the game. */
 
+import { guildProductionBonus } from "./guildPerks";
 import { ASSETS } from "./assets";
 import { DECISION_TEMPLATES } from "./decisions";
 import { DIFFICULTIES } from "./difficulty";
@@ -507,7 +508,9 @@ export function tick(state: EconomyState): EconomyState {
     // Every town rank ever reached (see townRanks.ts) adds a small sliver
     // too — sticky like prestige, but earned within a single run instead
     // of requiring a reset, so there's always a next rank worth chasing.
-    state.townRankIndex * TOWN_RANK_PRODUCTION_BONUS_PER_RANK;
+    state.townRankIndex * TOWN_RANK_PRODUCTION_BONUS_PER_RANK +
+    // A leveled guild adds a little more (see guildPerks.ts).
+    guildProductionBonus(state.guildLevel);
   const seasonalTemplate = activeSeasonalEvent
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId]
     : null;

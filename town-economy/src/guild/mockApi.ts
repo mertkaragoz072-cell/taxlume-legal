@@ -1,13 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { normalizeGuildCode, normalizeGuildName, validateGuildName } from "./guildName";
 import {
-  CHEER_EMOTES,
+  CHEER_CODES,
   GUILD_ORDER_GOODS,
   GUILD_REQUEST_GOODS,
   GuildDelivery,
   GuildRequest,
   orderTargetFor,
-  CheerEmote,
+  CheerCode,
   GUILD_MAX_MEMBERS,
   GuildApi,
   GuildCheer,
@@ -39,6 +39,8 @@ function orderGoodFor(weekStart: number): string {
   return GUILD_ORDER_GOODS[Math.floor(weekStart / 604_800_000) % GUILD_ORDER_GOODS.length];
 }
 
+const WEEK_MS = 7 * 86_400_000;
+
 const BOTS: { id: string; name: string; rankIndex: number; netWorth: number; perHour: number }[] = [
   { id: "b1", name: "Ayşe", rankIndex: 4, netWorth: 52_000, perHour: 14 },
   { id: "b2", name: "Mehmet", rankIndex: 3, netWorth: 21_500, perHour: 9 },
@@ -57,7 +59,7 @@ interface Stored {
     members: { id: string; name: string; rankIndex: number; netWorth: number; bot: boolean }[];
     weeks: Record<string, Record<string, number>>; // weekStart -> memberId -> trades
     claimed: Record<string, string[]>; // weekStart -> member ids
-    cheers: { id: string; fromId: string; toId: string; emote: CheerEmote; at: number }[];
+    cheers: { id: string; fromId: string; toId: string; emote: CheerCode; at: number }[];
     donated: Record<string, Record<string, number>>; // weekStart -> memberId -> units given to the order
     gifted: Record<string, Record<string, number>>;
     orderClaimed: Record<string, string[]>;
@@ -143,6 +145,18 @@ export function createMockGuildApi(
     }
   }
 
+  /** weeks in a row before this one the guild reached its trade goal */
+  function streakOf(g: NonNullable<Stored["guild"]>, week: number): number {
+    const need = goalTargetFor(g.members.length);
+    let n = 0;
+    for (let w = week - WEEK_MS; n < 12; w -= WEEK_MS) {
+      const total = Object.values(g.weeks[String(w)] ?? {}).reduce((a, b) => a + b, 0);
+      if (total < need) break;
+      n++;
+    }
+    return n;
+  }
+
   function view(s: Stored): GuildInfo | null {
     const g = s.guild;
     if (!g) return null;
@@ -196,6 +210,12 @@ export function createMockGuildApi(
       goalProgress: Object.values(contrib).reduce((a, b) => a + b, 0),
       rewardClaimed: (g.claimed[week] ?? []).includes(ME),
       totalContribution: g.total,
+      streak: streakOf(g, Number(week)),
+      myTotals: {
+        trades: Object.values(g.weeks).reduce((a, w) => a + (w[ME] ?? 0), 0),
+        donated: Object.values(g.donated).reduce((a, w) => a + (w[ME] ?? 0), 0),
+        gifted: Object.values(g.gifted).reduce((a, w) => a + (w[ME] ?? 0), 0),
+      },
       order: {
         goodId: orderGoodFor(Number(week)),
         target: orderTargetFor(g.members.length),
@@ -274,7 +294,12 @@ export function createMockGuildApi(
           })),
           me(),
         ],
-        weeks: { [week]: { b1: 96, b2: 54, b3: 118, b4: 31 } },
+        weeks: {
+          [week]: { b1: 96, b2: 54, b3: 118, b4: 31 },
+          // two earlier weeks the guild finished its goal, so the demo shows a streak
+          [String(Number(week) - WEEK_MS)]: { b1: 200, b2: 150, b3: 220, b4: 90 },
+          [String(Number(week) - 2 * WEEK_MS)]: { b1: 210, b2: 140, b3: 200, b4: 120 },
+        },
         claimed: {},
         cheers: [{ id: "c0", fromId: "b3", toId: ME, emote: "👏", at: t - 3_600_000 }],
         donated: { [week]: { b1: 6, b2: 4, b3: 9, b4: 2 } },
@@ -319,7 +344,7 @@ export function createMockGuildApi(
     async sendCheer(toUserId, emote) {
       const s = await load();
       if (!s.guild) throw new GuildError("not_in_guild");
-      if (!CHEER_EMOTES.includes(emote)) return;
+      if (!CHEER_CODES.includes(emote)) return;
       s.guild.cheers.push({ id: "c" + now(), fromId: ME, toId: toUserId, emote, at: now() });
       await save(s);
     },

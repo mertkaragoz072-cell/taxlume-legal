@@ -5,7 +5,15 @@ import { guildStorageRoom } from "../economy/guildTrade";
 import { GoodId } from "../economy/types";
 import { getGuildApi } from "./getGuildApi";
 import { guildRewardFor } from "./reward";
-import { CheerEmote, GuildApi, GuildErrorCode, GuildError, GuildInfo, ReportReason } from "./types";
+import {
+  CheerCode,
+  GuildApi,
+  GuildErrorCode,
+  GuildError,
+  GuildInfo,
+  guildLevel,
+  ReportReason,
+} from "./types";
 
 const BASELINE_KEY = "guild.baseline.v1";
 // Set once the player has made or joined a guild. Until then the app never
@@ -28,7 +36,7 @@ interface GuildContextValue {
   create: (name: string) => Promise<boolean>;
   join: (code: string) => Promise<boolean>;
   leave: () => Promise<void>;
-  cheer: (toUserId: string, emote: CheerEmote) => Promise<void>;
+  cheer: (toUserId: string, emote: CheerCode) => Promise<void>;
   claim: () => Promise<void>;
   /** gives up to `qty` of this week's order good from the player's stock */
   donate: (qty: number) => Promise<void>;
@@ -54,7 +62,8 @@ export function GuildProvider({
   children: React.ReactNode;
   api?: GuildApi | null;
 }) {
-  const { state, netWorth, grantGuildReward, guildGoodsOut, guildGoodsIn } = useEconomyContext();
+  const { state, netWorth, grantGuildReward, guildGoodsOut, guildGoodsIn, setGuildLevel } =
+    useEconomyContext();
   const api = useMemo(() => (apiProp !== undefined ? apiProp : getGuildApi()), [apiProp]);
   const [status, setStatus] = useState<Status>(api ? "loading" : "unavailable");
   const [remembered, setRemembered] = useState<boolean | null>(null);
@@ -70,21 +79,28 @@ export function GuildProvider({
     rank: number;
     netWorth: number;
     room: number;
+    streak: number;
     held: Record<string, number>;
-  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, held: {} });
+  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, streak: 0, held: {} });
   live.current = {
     trades: state.stats.totalTrades,
     name: state.townName,
     rank: state.townRankIndex,
     netWorth,
     room: guildStorageRoom(state),
+    streak: guild?.streak ?? 0,
     held: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, Math.floor(g.holding)])),
   };
 
-  const apply = useCallback((g: GuildInfo | null) => {
-    setGuild(g);
-    setStatus(g ? "in" : "none");
-  }, []);
+  const apply = useCallback(
+    (g: GuildInfo | null) => {
+      setGuild(g);
+      setStatus(g ? "in" : "none");
+      // the guild's level gives the town a small output bonus (see guildPerks.ts)
+      setGuildLevel(g ? guildLevel(g.totalContribution) : 0);
+    },
+    [setGuildLevel]
+  );
 
   const setBaseline = useCallback(async (trades: number) => {
     try {
@@ -267,7 +283,7 @@ export function GuildProvider({
       claimOrder: async () => {
         if (!api) return;
         const took = await run(() => api.claimOrderReward());
-        if (took) grantGuildReward(guildRewardFor(live.current.rank));
+        if (took) grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
         await refresh();
       },
       requestGood: async (goodId, qty) => {
@@ -292,7 +308,7 @@ export function GuildProvider({
       claim: async () => {
         if (!api) return;
         const took = await run(() => api.claimWeeklyReward());
-        if (took) grantGuildReward(guildRewardFor(live.current.rank));
+        if (took) grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
         await refresh();
       },
     }),

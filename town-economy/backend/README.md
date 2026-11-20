@@ -21,6 +21,13 @@ first use. No email, no password, no third-party login.
 | `claim_weekly_reward`                         | `true` only for the call that takes this week's chest                                                                                          |
 | `report_guild`                                | a player reports a guild or a member's name (fixed reasons); the game has a "Report this guild" button                                         |
 
+Perks, streaks and messages:
+
+- **Guild level** comes from everything the guild has done together (trades, order units, gifts). From level 2 each member's town earns up to +0.5% output per level, capped at +5%; leaving the guild gives it up. The game stores only the level in the save (`guildLevel`, optional, no save-version bump).
+- **Weekly streak**: `get_my_guild` counts the weeks in a row (before this one) the guild reached its trade goal, up to 12. Each streak week adds +10% to both weekly chests, up to +50%.
+- **Messages** stay free of free text: `send_cheer` accepts five emoji and five fixed phrases (`hi`, `thanks`, `help`, `gg`, `wait`); the game shows the phrases in the player's language.
+- **Badges** (Trader, Giver, Friend, Streak, Founder, Veteran) are worked out in the app from `myTotals`, `streak` and the guild level; nothing extra is stored.
+
 Guild trade (goods moving between friends):
 
 | Function                            | Does                                                                                                                                    |

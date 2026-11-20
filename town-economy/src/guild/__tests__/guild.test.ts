@@ -1,7 +1,9 @@
 import { isGuildCode, normalizeGuildCode, validateGuildName } from "../guildName";
 import { createMockGuildApi, KeyValueStore, MOCK_DEMO_CODE } from "../mockApi";
+import { guildProductionBonus } from "../../economy/guildPerks";
+import { GUILD_BADGES } from "../badges";
 import { guildRewardFor } from "../reward";
-import { GuildError, goalTargetFor, guildLevel, weekStartOf } from "../types";
+import { GuildError, goalTargetFor, guildLevel, streakMultiplier, weekStartOf } from "../types";
 
 function memoryStore(): KeyValueStore {
   const m = new Map<string, string>();
@@ -195,5 +197,48 @@ describe("guild trade (mock backend)", () => {
     const later = await api.claimDeliveries(100);
     expect(later[0].qty).toBe(5);
     expect((await api.getMyGuild())!.requests.some((r) => r.isMine)).toBe(false); // filled, so closed
+  });
+});
+
+describe("guild perks", () => {
+  it("pays streaks more, up to +50%", () => {
+    expect(streakMultiplier(0)).toBe(1);
+    expect(streakMultiplier(3)).toBeCloseTo(1.3);
+    expect(streakMultiplier(99)).toBeCloseTo(1.5);
+    expect(guildRewardFor(2, 5)).toBeGreaterThan(guildRewardFor(2, 0));
+  });
+
+  it("gives a small output bonus from guild level 2, capped", () => {
+    expect(guildProductionBonus(undefined)).toBe(0);
+    expect(guildProductionBonus(0)).toBe(0);
+    expect(guildProductionBonus(1)).toBe(0);
+    expect(guildProductionBonus(2)).toBeCloseTo(0.005);
+    expect(guildProductionBonus(500)).toBeCloseTo(0.05);
+  });
+
+  it("counts a streak of finished weeks in the demo guild and earns badges", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    expect(g.streak).toBe(2);
+    const badge = (id: string, level = 1) => GUILD_BADGES.find((b) => b.id === id)!.earned(g, level);
+    expect(badge("streak")).toBe(false); // two weeks is not yet three
+    expect(badge("trader")).toBe(false);
+    expect(badge("veteran", 5)).toBe(true);
+    await api.reportContribution(150);
+    await api.donateToOrder(60);
+    const after = (await api.getMyGuild())!;
+    expect(after.myTotals).toMatchObject({ trades: 150, donated: 60 });
+    expect(GUILD_BADGES.find((b) => b.id === "trader")!.earned(after, 1)).toBe(true);
+    expect(GUILD_BADGES.find((b) => b.id === "giver")!.earned(after, 1)).toBe(true);
+  });
+
+  it("sends fixed phrases like emoji, and refuses anything else", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.sendCheer("b1", "thanks");
+    await api.sendCheer("b1", "not a phrase" as never);
+    const cheers = (await api.getMyGuild())!.cheers;
+    expect(cheers[0].emote).toBe("thanks");
+    expect(cheers.some((c) => (c.emote as string) === "not a phrase")).toBe(false);
   });
 });

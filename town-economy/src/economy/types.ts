@@ -320,6 +320,10 @@ export interface EconomyState {
   mythicUnlocked: boolean;
   /** highest town-rank tier (see townRanks.ts) this town's net worth has ever reached; sticky, never re-locks */
   townRankIndex: number;
+  /** level of the guild the player belongs to (0 = none), kept current by the
+   * guild screen; gives a small output bonus (see guildPerks.ts). Optional so
+   * saves from before guilds load unchanged. */
+  guildLevel?: number;
   /** set right after townRankIndex climbs, so Merve can step in and
    * congratulate the player on the new title; null once dismissed. Carries
    * the already-resolved icon/title rather than a rank index so the modal

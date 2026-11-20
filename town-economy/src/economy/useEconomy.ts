@@ -267,6 +267,7 @@ type Action =
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "CLAIM_SPEED_BOOST" }
   | { type: "GUILD_REWARD"; amount: number }
+  | { type: "SET_GUILD_LEVEL"; level: number }
   | { type: "GUILD_GOODS_OUT"; goodId: GoodId; qty: number; to: "order" | "friend" }
   | { type: "GUILD_GOODS_IN"; goodId: GoodId; qty: number; from: string }
   | { type: "ADVANCE_MENTOR"; to: number }
@@ -1433,6 +1434,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "CLAIM_SPEED_BOOST":
       return claimSpeedBoost(state);
+    case "SET_GUILD_LEVEL": {
+      const level = Math.max(0, Math.floor(action.level));
+      return (state.guildLevel ?? 0) === level ? state : { ...state, guildLevel: level };
+    }
     case "GUILD_GOODS_OUT":
       return applyGuildGoodsOut(state, action.goodId, action.qty, action.to);
     case "GUILD_GOODS_IN":
@@ -1729,6 +1734,7 @@ export function useEconomy() {
   const advanceMentor = useCallback((to: number) => dispatch({ type: "ADVANCE_MENTOR", to }), []);
   const setLanguage_ = useCallback((language: Language) => dispatch({ type: "SET_LANGUAGE", language }), []);
   const claimSpeedBoost_ = useCallback(() => dispatch({ type: "CLAIM_SPEED_BOOST" }), []);
+  const setGuildLevel = useCallback((level: number) => dispatch({ type: "SET_GUILD_LEVEL", level }), []);
   const guildGoodsOut = useCallback(
     (goodId: GoodId, qty: number, to: "order" | "friend") =>
       dispatch({ type: "GUILD_GOODS_OUT", goodId, qty, to }),
@@ -1798,6 +1804,7 @@ export function useEconomy() {
     setLanguage: setLanguage_,
     claimSpeedBoost: claimSpeedBoost_,
     grantGuildReward,
+    setGuildLevel,
     guildGoodsOut,
     guildGoodsIn,
     t: translate,

@@ -14,14 +14,18 @@ import {
 import { useEconomyContext } from "../economy/EconomyContext";
 import { isGoodUnlocked } from "../economy/formulas";
 import { GOODS, GOODS_BY_ID } from "../economy/goods";
+import { guildProductionBonus } from "../economy/guildPerks";
 import { rankTheme } from "../economy/rankTheme";
 import { GoodId } from "../economy/types";
 import { townRankIcon } from "../economy/townRanks";
 import { normalizeGuildCode } from "../guild/guildName";
 import { useGuild } from "../guild/GuildContext";
+import { GUILD_BADGES } from "../guild/badges";
 import { guildRewardFor } from "../guild/reward";
 import {
-  CHEER_EMOTES,
+  CHEER_CODES,
+  GUILD_PHRASES,
+  streakMultiplier,
   GUILD_CODE_LENGTH,
   GUILD_MAX_MEMBERS,
   GUILD_NAME_MAX,
@@ -65,6 +69,7 @@ export function GuildHub() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [cheerFor, setCheerFor] = useState<string | null>(null);
   const [wantGood, setWantGood] = useState<GoodId>("grain");
   const [wantQty, setWantQty] = useState(10);
   const [reporting, setReporting] = useState(false);
@@ -79,7 +84,7 @@ export function GuildHub() {
     }
   }, [hubOpen, clearError]);
 
-  const reward = guildRewardFor(state.townRankIndex);
+  const reward = guildRewardFor(state.townRankIndex, guild?.streak ?? 0);
 
   return (
     <Modal visible={hubOpen} transparent animationType="fade" onRequestClose={closeHub}>
@@ -156,6 +161,22 @@ export function GuildHub() {
                 <Text style={styles.hint}>
                   {t("guild.level", { n: guildLevel(guild.totalContribution) })} ·{" "}
                   {t("guild.members", { n: guild.memberCount, max: GUILD_MAX_MEMBERS })}
+                </Text>
+                <Text style={styles.perk}>
+                  {guildLevel(guild.totalContribution) >= 2
+                    ? t("guild.levelPerk", {
+                        pct:
+                          Math.round(guildProductionBonus(guildLevel(guild.totalContribution)) * 1000) / 10,
+                      })
+                    : t("guild.levelPerkLocked")}
+                </Text>
+                <Text style={styles.perk}>
+                  {guild.streak > 0
+                    ? t("guild.streak", {
+                        n: guild.streak,
+                        pct: Math.round((streakMultiplier(guild.streak) - 1) * 100),
+                      })
+                    : t("guild.streakNone")}
                 </Text>
                 <View style={styles.codeRow}>
                   <View style={{ flex: 1 }}>
@@ -367,36 +388,84 @@ export function GuildHub() {
               <GoalRibbon text={t("guild.membersSection")} />
               <GoalFrame>
                 {guild.members.map((m) => (
-                  <View key={m.id} style={styles.memberRow}>
-                    <Text style={styles.memberIcon}>{townRankIcon(m.rankIndex)}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[styles.memberName, { color: m.isYou ? rankTheme(m.rankIndex).accent : INK }]}
-                        numberOfLines={1}
-                      >
-                        {m.name}
-                        {m.isYou ? ` · ${t("guild.you")}` : ""}
-                        {m.isOwner ? ` · ${t("guild.owner")}` : ""}
-                      </Text>
-                      <Text style={styles.hint}>
-                        {t("guild.contribution", { n: m.weekContribution })}
-                        {m.donated + m.gifted > 0
-                          ? ` · ${t("guild.tradeExtra", { d: m.donated, g: m.gifted })}`
-                          : ""}
-                      </Text>
+                  <View key={m.id}>
+                    <View style={styles.memberRow}>
+                      <Text style={styles.memberIcon}>{townRankIcon(m.rankIndex)}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[
+                            styles.memberName,
+                            { color: m.isYou ? rankTheme(m.rankIndex).accent : INK },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {m.name}
+                          {m.isYou ? ` · ${t("guild.you")}` : ""}
+                          {m.isOwner ? ` · ${t("guild.owner")}` : ""}
+                        </Text>
+                        <Text style={styles.hint}>
+                          {t("guild.contribution", { n: m.weekContribution })}
+                          {m.donated + m.gifted > 0
+                            ? ` · ${t("guild.tradeExtra", { d: m.donated, g: m.gifted })}`
+                            : ""}
+                        </Text>
+                      </View>
+                      {!m.isYou && (
+                        <Pressable
+                          style={styles.cheerBtn}
+                          disabled={busy}
+                          onPress={() => setCheerFor(cheerFor === m.id ? null : m.id)}
+                          accessibilityLabel={`${CHEER_CODES[0]} ${m.name}`}
+                        >
+                          <Text style={{ fontSize: 20 }}>{CHEER_CODES[0]}</Text>
+                        </Pressable>
+                      )}
                     </View>
-                    {!m.isYou && (
-                      <Pressable
-                        style={styles.cheerBtn}
-                        disabled={busy}
-                        onPress={() => void cheer(m.id, CHEER_EMOTES[0])}
-                        accessibilityLabel={`${CHEER_EMOTES[0]} ${m.name}`}
-                      >
-                        <Text style={{ fontSize: 20 }}>{CHEER_EMOTES[0]}</Text>
-                      </Pressable>
+                    {cheerFor === m.id && (
+                      <View style={styles.cheerPicker}>
+                        {CHEER_CODES.map((code) => {
+                          const phrase = (GUILD_PHRASES as readonly string[]).includes(code);
+                          return (
+                            <Pressable
+                              key={code}
+                              style={phrase ? styles.phrasePill : styles.chip}
+                              disabled={busy}
+                              onPress={() => {
+                                setCheerFor(null);
+                                void cheer(m.id, code);
+                              }}
+                              accessibilityRole="button"
+                            >
+                              <Text style={phrase ? styles.phraseText : { fontSize: 22 }}>
+                                {phrase ? t(`guild.phrase.${code}`) : code}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
                     )}
                   </View>
                 ))}
+              </GoalFrame>
+
+              <GoalRibbon text={t("guild.badgeSection")} />
+              <GoalFrame>
+                <View style={styles.badgeGrid}>
+                  {GUILD_BADGES.map((b) => {
+                    const on = b.earned(guild, guildLevel(guild.totalContribution));
+                    return (
+                      <View key={b.id} style={[styles.badge, on && styles.badgeOn]}>
+                        <Text style={{ fontSize: 26, opacity: on ? 1 : 0.35 }}>{on ? b.icon : "🔒"}</Text>
+                        <Text style={[styles.badgeName, !on && { color: MUTED }]} numberOfLines={1}>
+                          {t(`guild.badge.${b.id}.name`)}
+                        </Text>
+                        <Text style={styles.badgeHint} numberOfLines={3}>
+                          {t(`guild.badge.${b.id}.hint`)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
               </GoalFrame>
 
               <GoalRibbon text={t("guild.cheerSection")} />
@@ -408,7 +477,9 @@ export function GuildHub() {
                     <Text key={c.id} style={[styles.hint, { color: c.toYou ? INK : MUTED }]}>
                       {t(c.toYou ? "guild.cheerToYou" : "guild.cheerToOther", {
                         name: c.fromName,
-                        emote: c.emote,
+                        emote: (GUILD_PHRASES as readonly string[]).includes(c.emote)
+                          ? t(`guild.phrase.${c.emote}`)
+                          : c.emote,
                       })}
                     </Text>
                   ))
@@ -556,6 +627,33 @@ const styles = StyleSheet.create({
   },
   qtyChip: { width: 48 },
   chipOn: { borderColor: "#f6d36a", backgroundColor: "rgba(246,211,106,0.18)" },
+  perk: { color: "#9fd68f", fontFamily: FONT.medium, fontSize: 13, marginBottom: 4 },
+  cheerPicker: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingBottom: 8, paddingLeft: 36 },
+  phrasePill: {
+    minHeight: 40,
+    borderRadius: 12,
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(200,132,60,0.5)",
+    backgroundColor: "rgba(0,0,0,0.28)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  phraseText: { color: INK, fontFamily: FONT.medium, fontSize: 13 },
+  badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  badge: {
+    width: "31%",
+    flexGrow: 1,
+    alignItems: "center",
+    padding: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(200,132,60,0.3)",
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
+  badgeOn: { borderColor: "#f6d36a", backgroundColor: "rgba(246,211,106,0.12)" },
+  badgeName: { color: INK, fontFamily: FONT.bold, fontSize: 12, marginTop: 2 },
+  badgeHint: { color: MUTED, fontFamily: FONT.medium, fontSize: 10, textAlign: "center", marginTop: 2 },
   memberRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
   memberIcon: { fontSize: 26 },
   memberName: { fontFamily: FONT.bold, fontSize: 15, color: INK },
