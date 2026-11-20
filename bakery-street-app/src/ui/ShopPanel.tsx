@@ -206,7 +206,7 @@ function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any
   const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
   const need = locked ? (v.missing[0]?.text ?? "Kilitli") : "";
   const lvl = owned && shop.levelable(d) ? (shop.itemLevel(d.id) as number) : 0, nxt = lvl ? shop.nextLevel(d.id) : null;
-  const line = lvl ? (nxt && nxt.steps > 1 ? `Sv ${nxt.level}: ${nxt.step - 1}/${nxt.steps} masa · sıradaki ${nxt.step}. masa` : `Çekicilik +${shop.appealNow(d)}${nxt ? ` → +${nxt.appeal}` : ""}`) + (v.placed ? "" : " · depoda") : owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? need : v.effectText || d.desc;
+  const line = lvl ? (nxt && nxt.steps > 1 ? `Sv ${nxt.level}: ${nxt.step - 1}/${nxt.steps} masa · sıradaki ${nxt.step}. masa` : `Çekicilik +${shop.appealNow(d)}${nxt ? ` → +${nxt.appeal}` : ""}`) + (v.placed ? "" : " · depoda") : owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? (v.effectText || need) : v.effectText || d.desc;
   const press = () => {
     if (lvl) { if (!nxt) onOpen(); else if (!nxt.ok) act.warn(nxt.reason); else onRaise?.(d); return; }
     if (owned) { onOpen(); return; }
@@ -225,7 +225,7 @@ function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any
         {nxt && nxt.steps > 1 ? <View style={{ position: "absolute", right: u * 0.7, top: u * 0.7, flexDirection: "row", gap: u * 0.3 }}>{Array.from({ length: nxt.steps }, (_, i) => <View key={i} style={{ width: u * 1.6, height: u * 1.6, borderRadius: 99, borderWidth: u * 0.25, borderColor: C.honeyDark, backgroundColor: i < nxt.step - 1 ? C.honey : C.paper }} />)}</View> : null}
         {d.kind === "equipment" && d.tier > 1 ? <View style={{ position: "absolute", left: u * 0.8, top: u * 0.8, paddingHorizontal: u * 0.8, borderRadius: 99, backgroundColor: TIER_BG[d.tier] || C.vanilla, borderWidth: u * 0.25, borderColor: C.honeyDark }}><Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{"★".repeat(d.tier - 1)}</Text></View> : null}
         {locked ? <View style={{ position: "absolute", right: u * 0.8, top: u * 0.8 }}><GameIcon id="lock" size={u * 5} /></View> : null}
-        <Text allowFontScaling={false} numberOfLines={1} style={{ color: locked ? C.brown : C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
+        <Text allowFontScaling={false} numberOfLines={2} style={{ minHeight: fs(u, TYPE.small) * 2.6, textAlignVertical: "center", lineHeight: fs(u, TYPE.small) * 1.3, color: locked ? C.brown : C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
         <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
           <Text allowFontScaling={false} numberOfLines={2} style={{ color: locked ? C.terracottaDark : C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{line}</Text>
         </View>
@@ -268,7 +268,7 @@ function RecipeLevelCard({ pid, flash, onRaise }: { pid: string; flash: boolean;
       <View style={{ width: w, padding: u * 0.8, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: "#E2C69B", backgroundColor: "#FFF9EE" }}>
         <View style={{ height: w * 0.62, alignItems: "center", justifyContent: "center" }}><EmojiIcon emoji={d.icon} size={w * 0.5} /></View>
         <LevelPill level={lvl} />
-        <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
+        <Text allowFontScaling={false} numberOfLines={2} style={{ minHeight: fs(u, TYPE.small) * 2.6, textAlignVertical: "center", lineHeight: fs(u, TYPE.small) * 1.3, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{d.name}</Text>
         <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
           <Text allowFontScaling={false} numberOfLines={2} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{`Satış ${fmt(now)}${n ? ` → ${fmt(game.saleIncome(n.price))}` : ""} altın`}</Text>
         </View>
@@ -335,7 +335,7 @@ function LineCard({ line, onBuy, flash, onOpen }: { line: string; onBuy: (d: any
         style={({ pressed }) => ({ width: w, padding: u * 0.8, gap: u * 0.6, borderRadius: u * 2.2, borderWidth: u * 0.4, borderColor: "#E2C69B", backgroundColor: "#FFF9EE", transform: [{ scale: pressed ? 0.97 : 1 }] })}>
         <View style={{ height: w * 0.62, alignItems: "center", justifyContent: "center" }}><ItemPicture d={cur ?? base} game={game} size={w * 0.6} tier={tier} /></View>
         <LevelPill level={tier} />
-        <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{cur?.name ?? BASE_NAME[line]}</Text>
+        <Text allowFontScaling={false} numberOfLines={2} style={{ minHeight: fs(u, TYPE.small) * 2.6, textAlignVertical: "center", lineHeight: fs(u, TYPE.small) * 1.3, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>{cur?.name ?? BASE_NAME[line]}</Text>
         <View style={{ minHeight: u * 6, borderRadius: u * 1.4, backgroundColor: "#F3E6CF", paddingHorizontal: u * 0.6, paddingVertical: u * 0.4, justifyContent: "center" }}>
           <Text allowFontScaling={false} numberOfLines={2} style={{ color: locked ? C.terracottaDark : C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny), textAlign: "center" }}>{next ? `Sv ${tier + 1}: ${nv?.effectText ?? ""}` : cur ? cur.desc : ""}</Text>
         </View>
@@ -402,7 +402,7 @@ function ItemCard({ v, onBuy, flash }: { v: any; onBuy: (d: any) => void; flash:
       : <Btn label="Yerleştir" sub="Şu an kafede değil" variant="alt" onPress={() => setPicker((p) => !p)} />;
   } else if (owned) button = <Btn label="✓ Alındı" disabled />;
   else if (locked) button = <Btn label="Kilitli" sub={v.missing[0]?.text} variant="lack" onPress={() => act.warn(shop.blockReason(d.id).message)} />;
-  else button = <Btn label={short ? "Altın yetersiz" : "Satın Al"} sub={short ? `${fmt(v.missingGold)} altın eksik` : `💰 ${fmt(v.price)}`} variant={short ? "lack" : "alt"} onPress={() => (short ? act.warn(shop.blockReason(d.id).message) : onBuy(d))} />;
+  else button = <Btn label={short ? "Altın yetersiz" : "Satın Al"} sub={short ? `${fmt(v.missingGold)} altın eksik` : `💰 ${fmt(v.price)}`} variant={short ? "lack" : "go"} onPress={() => (short ? act.warn(shop.blockReason(d.id).message) : onBuy(d))} />;
   const choose = (slot: string) => { const r = shop.place(slot, d.id); if (r.ok) { act.sfx("tap"); setPicker(false); act.peek(2400); } else act.warn(r.message); };
   return (
     <Pulse on={flash}>
@@ -448,7 +448,7 @@ function GoalTab({ go }: { go: (t: ShopTab) => void }) {
         {next ? (
           <>
             <Meta tone="next" text={`Sonraki: Aşama ${next.id} — ${next.name}`} />
-            {(shop.stageProgress(next) as any[]).map((p) => <Bar key={p.key} value={p.have / p.need} color={p.ok ? C.green : C.honey} text={`${p.ok ? "✓ " : ""}${COND_LABEL[p.key]} ${fmt(p.have)}/${fmt(p.need)}`} />)}
+            <View style={{ gap: u * 0.5 }}>{(shop.stageProgress(next) as any[]).map((p) => <Bar key={p.key} value={p.have / p.need} color={p.ok ? C.green : C.honey} text={`${p.ok ? "✓ " : ""}${COND_LABEL[p.key]} ${fmt(p.have)}/${fmt(p.need)}`} />)}</View>
             <Meta tone="reward" text={`Aşama ödülü: ${reward(next.reward)}`} />
           </>
         ) : <Meta tone="ok" text="En yüksek aşamadasın: Ünlü Kedi Kafesi!" />}
@@ -495,7 +495,7 @@ function Ingredients() {
         const setQ = (n: number) => setQty({ ...qty, [id]: Math.max(1, Math.min(max, Math.max(1, room), n)) });
         return (
           <Card key={id} left={<EmojiIcon emoji={d.icon} size={u * 7} />}
-            right={<Btn label={room < 1 ? "Depo dolu" : "Satın Al"} sub={room < 1 ? undefined : `💰 ${fmt(total)}`} variant={room < 1 || total > game.gold ? "lack" : "alt"} onPress={() => {
+            right={<Btn label={room < 1 ? "Depo dolu" : "Satın Al"} sub={room < 1 ? undefined : `💰 ${fmt(total)}`} variant={room < 1 || total > game.gold ? "lack" : "go"} onPress={() => {
               const now = Date.now();
               if (now < lock.current.until) return;
               lock.current.until = now + 450;

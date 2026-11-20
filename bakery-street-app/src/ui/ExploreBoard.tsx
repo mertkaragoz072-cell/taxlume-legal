@@ -41,8 +41,8 @@ export function ExploreBoardPanel({ selected, onSelect }: { selected: string | n
   const small = { color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) };
   return (
     <View pointerEvents="box-none" style={{ position: "absolute", left: u * 1.6, right: u * 1.6, top, bottom: navHeight(u) + u * 1.2, zIndex: 16, gap: u * 1.2 }}>
-    <View onLayout={(e) => setStripH(e.nativeEvent.layout.height)} style={{ flex: 1, justifyContent: "center" }}>
-      {stripH >= u * 21 ? <RegionStrip selected={id} onSelect={onSelect} /> : null}
+    <View onLayout={(e) => setStripH(e.nativeEvent.layout.height)} style={{ flex: 1, justifyContent: "center", paddingTop: u * 1.4 }}>
+      {stripH >= u * 14 ? <RegionStrip selected={id} onSelect={onSelect} room={stripH} /> : null}
     </View>
     <View style={{ padding: u * 1.6, gap: u * 1.2, borderRadius: u * 3, borderWidth: u * 0.6, borderColor: "#8A5A36", backgroundColor: C.cream, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: u * 1.5, shadowOffset: { width: 0, height: u * 0.6 }, elevation: 6 }}>
       <View style={{ flexDirection: "row", gap: u * 1.4 }}>
@@ -75,22 +75,29 @@ export function ExploreBoardPanel({ selected, onSelect }: { selected: string | n
 }
 
 /** All regions in a row (when the screen has room for it): picture, name and state; a tap selects one, like a tap on the map. */
-function RegionStrip({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+function RegionStrip({ selected, onSelect, room }: { selected: string; onSelect: (id: string) => void; room: number }) {
   const { world, act } = useWorld(), u = useU();
-  const ex = world.exploration;
+  const { width } = useWindowDimensions();
+  const ex = world.exploration, n = (ex.regions as any[]).length;
+  // Two rows of three big tiles when there is room for them, else one row of small ones; names may take two lines (never cut).
+  const avail = width - u * 3.2, gap = u * 1;
+  const one = (avail - gap * (n - 1)) / n;                                     // one row of all regions
+  const fit = Math.min((avail - gap * 2) / 3, ((room - gap - u * 2) / 2 - u * 8.6) / 0.7 + u * 1.2);   // two rows of three, as big as the room allows
+  const tw = fit > one * 1.15 ? fit : one, pic = tw - u * 1.2;
+  const nf = Math.min(fs(u, TYPE.tiny), (tw - u * 1.2) / 5.6);                // small tiles: a smaller name, so a word like "Harabeler" is never cut
   const mark = (st: string, done: boolean) => (st === "locked" ? "lock" : st === "ready" ? "gift" : st === "active" ? "timer" : done ? "check" : null);
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u * 1 }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap, maxWidth: tw > one ? tw * 3 + gap * 2 + 1 : undefined, alignSelf: "center" }}>
       {(ex.regions as any[]).map((r) => {
         const st = ex.status(r.id) as string, on = r.id === selected, icon = mark(st, ex.timesDone(r.id) > 0);
         return (
           <Pressable key={r.id} onPress={() => { act.sfx("tap"); onSelect(r.id); }} accessibilityRole="button" accessibilityLabel={r.name} accessibilityState={{ selected: on }}
-            style={({ pressed }) => ({ width: u * 14.5, alignItems: "center", gap: u * 0.4, padding: u * 0.6, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: on ? C.honey : "rgba(245,230,200,0.35)", backgroundColor: on ? "rgba(255,247,234,0.95)" : "rgba(255,247,234,0.8)", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
+            style={({ pressed }) => ({ width: tw, alignItems: "center", gap: u * 0.4, padding: u * 0.6, borderRadius: u * 2, borderWidth: u * 0.4, borderColor: on ? C.honey : "rgba(245,230,200,0.35)", backgroundColor: on ? "rgba(255,247,234,0.95)" : "rgba(255,247,234,0.8)", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
             <View style={{ borderRadius: u * 1.4, overflow: "hidden", opacity: st === "locked" ? 0.55 : 1 }}>
-              <GameIcon id={`xr-${r.id}`} size={u * 13} style={{ width: u * 13, height: u * 9.1 }} />
+              <GameIcon id={`xr-${r.id}`} size={pic} style={{ width: pic, height: pic * 0.7 }} />
             </View>
             {icon ? <View style={{ position: "absolute", right: u * 0.3, top: u * 0.3 }}><GameIcon id={icon} size={u * 4.2} /></View> : null}
-            <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{r.name}</Text>
+            <Text allowFontScaling={false} numberOfLines={2} style={{ minHeight: nf * 2.5, textAlign: "center", textAlignVertical: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: nf, lineHeight: nf * 1.2 }}>{r.name}</Text>
           </Pressable>
         );
       })}

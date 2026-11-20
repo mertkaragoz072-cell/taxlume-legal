@@ -118,9 +118,9 @@ export function Chip({ text, ok }: { text: string; ok: boolean }) {
 export function Bar({ value, text, color }: { value: number; text?: string; color?: string }) {
   const u = useU();
   return (
-    <View style={{ height: u * 3.4, borderRadius: 99, backgroundColor: C.brown, borderWidth: u * 0.25, borderColor: C.brownDark, overflow: "hidden", justifyContent: "center" }}>
+    <View style={{ height: Math.max(u * 3.8, fs(u, TYPE.small) * 1.55), flexShrink: 0, borderRadius: 99, backgroundColor: C.brown, borderWidth: u * 0.25, borderColor: C.brownDark, overflow: "hidden", justifyContent: "center" }}>
       <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.max(0, Math.min(1, value)) * 100}%`, backgroundColor: color ?? C.green }} />
-      {text ? <Text allowFontScaling={false} style={{ textAlign: "center", color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{text}</Text> : null}
+      {text ? <Text allowFontScaling={false} numberOfLines={1} style={{ textAlign: "center", color: C.paper, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), lineHeight: fs(u, TYPE.small) * 1.25, textShadowColor: C.brownDark, textShadowRadius: u * 0.6, textShadowOffset: { width: 0, height: u * 0.15 } }}>{text}</Text> : null}
     </View>
   );
 }

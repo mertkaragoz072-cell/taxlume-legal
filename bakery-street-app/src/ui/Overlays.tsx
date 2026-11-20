@@ -136,10 +136,10 @@ export function SettingsPanel({ onReset }: { onReset: () => void }) {
       {row("vibration", "📳", "Titreşim")}
       {row("tips", "💡", "İlk adım ipuçları")}
       {row("lowfx", "🐢", "Düşük grafik (eski telefonlar: parıltı, ışık, yağmur ve gün ışığı kapanır)")}
-      <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>⏱</Text>}>
+      {__DEV__ ? <Card left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>⏱</Text>}>
         <Title name="Açılış süresi" />
         <Meta tone="muted" text={Object.keys(timings).length ? `Toplam ${(timings.toplam / 1000).toFixed(1).replace(".", ",")} sn · ${Object.entries(timings).filter(([k]) => k !== "toplam").map(([k, v]) => `${k} ${(v / 1000).toFixed(1).replace(".", ",")} sn`).join(" · ")}` : "Ölçüm yok"} />
-      </Card>
+      </Card> : null}
       <Card tone="danger" right={confirming
         ? <View style={{ gap: u * 0.6 }}><Btn small variant="lack" label="Evet, sıfırla" onPress={() => { dirty.current = false; setConfirming(false); onReset(); }} /><Btn small variant="alt" label="Vazgeç" onPress={() => setConfirming(false)} /></View>
         : <Btn variant="lack" label="Sıfırla…" onPress={() => setConfirming(true)} />}>

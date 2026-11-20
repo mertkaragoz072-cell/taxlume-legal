@@ -348,7 +348,7 @@ export class InteriorScene {
       const guest = (key === 'chair-left') === (side === -1), cw = img.naturalWidth * f * 0.62, ch = img.naturalHeight * f * 0.62;       // a chair is about half as wide as the table (the pictures were drawn at one scale)
       const px = dx + cx * s + t.dx * 1.6 + (guest ? slide * (key === 'chair-left' ? -1 : 1) : 0);
       if (guest && sc > 0) continue;
-      pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px, fade: sc });
+      pieces.push({ key, img, x: px - cw / 2, y: base - ch + t.dy, w: cw, h: ch, rot: t.rot, pivot: px, fade: 0 });   // the other chair stays where it is (a table never loses its chairs)
     }
     for (const p of pieces) { const keep = ctx.globalAlpha; ctx.globalAlpha = keep * (1 - p.fade); this.grounding(ctx, p.x + p.w / 2, p.y + p.h, p.w * 0.62); this.castShadow(ctx, p.key, p.img, p.x, p.y, p.w, p.h); ctx.globalAlpha = keep; }
     this.grounding(ctx, dx + 500 * s, base - 1, tW * 0.36);                  // the table's foot (it stands on a pedestal about a third as wide as the top)
