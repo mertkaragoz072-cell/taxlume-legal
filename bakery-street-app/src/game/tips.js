@@ -10,6 +10,7 @@ export const TIPS = [
 
 /** The hint to show now, or null (every step done, or the next one cannot be done yet). */
 export function currentTip(game, tips = TIPS) {
+  if ((game.branch?.count ?? 0) > 0) return null;              // a new branch: the player already knows the first steps
   for (const t of tips) {
     if (t.done(game)) continue;
     if (t.show && !t.show(game)) continue;

@@ -231,7 +231,7 @@ export class SaveManager {
     let state;
     try { state = validate(JSON.parse(JSON.stringify(raw)), this.game); } catch (err) { return { ok: false, reason: 'state', message: `Şube açılamadı (${err.message}).` }; }
     this.apply(state);
-    this.game.life?.remember('🏪', `${b.count + 0}. yeni şube açıldı: her satış kalıcı olarak +%${Math.round(b.bonus() * 100)}`);
+    this.game.life?.remember('🏡', `${b.count + 0}. yeni şube açıldı: her satış kalıcı olarak +%${Math.round(b.bonus() * 100)}`);
     this.game.emit('branch', { count: b.count });
     const saved = this.save();
     return { ok: true, count: b.count, ...(saved.ok ? {} : { warning: saved.message }) };

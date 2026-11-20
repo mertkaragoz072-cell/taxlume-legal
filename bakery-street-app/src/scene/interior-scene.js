@@ -709,6 +709,12 @@ export class InteriorScene {
       const tx = bcx + 10, hasIcon = drawIcon(ctx, job.product, bcx - 30, by + bh / 2, bh * 1.1);
       label(ctx, hasIcon ? formatTime(rem) : `${def.icon} ${formatTime(rem)}`, hasIcon ? tx : bcx, by + bh / 2 + 1, { font: `700 ${many ? 13 : 15}px sans-serif`, fill: PAL.paper, lw: 4 });
     });
+    const queued = this.game.queueOf?.(a.station) ?? [];
+    if (queued.length && jobs.length) {                            // the waiting line: a small "+N" pill next to the top bar
+      const by = a.barDown ? top + 34 : barTop - bh, px = bcx + bw / 2 + 8, pw = 46, ph = Math.max(22, bh);
+      rrect(ctx, px, by + bh / 2 - ph / 2, pw, ph, ph / 2); paint(ctx, PAL.cream, 2.5, PAL.honeyDark);
+      label(ctx, `+${queued.length}`, px + pw / 2, by + bh / 2 + 1, { font: '700 15px sans-serif', fill: PAL.brownDark, lw: 0 });
+    }
     if (a.station && jobs.length && this.game.capacity(a.station) > 1) label(ctx, `${jobs.length}/${this.game.capacity(a.station)}`, a.x + a.w - 22, a.y + 20, { font: '700 20px sans-serif', fill: PAL.creamLight, lw: 4 });
   }
 }

@@ -205,9 +205,9 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     offs.push(game.on("customer", (e: any) => { if (e?.type === "leave" && e.income && e.bonus?.pct >= 0.1) showToast(`+${fmt(e.income)} altın${saleNotes(e)}`, 1600); }));
     offs.push(game.on("album", (e: any) => showToast(e.completed ? `📖 Müşteri albümü tamamlandı! +${fmt(e.gold)} altın` : `📖 Yeni müşteri: ${world.album.nameOf(e.look)} · +${fmt(e.gold)} altın`, 2600)));
     offs.push(game.on("collection", () => rewardCoins()));
-    offs.push(game.on("letter", (l: any) => { if (l.from !== "Gizemli Eleştirmen") showToast(`💌 ${l.from} sana bir mektup bıraktı${l.gift ? " (içinde küçük bir hediye var)" : ""} — Menü › Mektuplar`, 3200); }));
+    offs.push(game.on("letter", (l: any) => { if (!l.quiet && l.from !== "Gizemli Eleştirmen") showToast(`💌 ${l.from} sana bir mektup bıraktı${l.gift ? " (içinde küçük bir hediye var)" : ""} — Menü › Mektuplar`, 3200); }));
     offs.push(game.on("friend", (e: any) => { showToast(`💛 ${world.album.nameOf(e.look)} ile dostluğun büyüdü: ${"♥".repeat(e.hearts)}${"♡".repeat(5 - e.hearts)}`, 3000); feedback.sfx("claim"); rewardCoins(); }));
-    offs.push(game.on("branch", ({ count }: any) => setCelebrate({ icon: "🏪", title: `${count}. şube açıldı!`, lines: ["Yeni bir kafe, aynı dostlar.", `Her satış artık kalıcı +%${Math.round(world.branch.bonus() * 100)}.`, "Dekorasyonun ve müşterilerinle dostluğun seninle geldi."] })));
+    offs.push(game.on("branch", ({ count }: any) => setCelebrate({ icon: "🏡", title: `${count}. şube açıldı!`, lines: ["Yeni bir kafe, aynı dostlar.", `Her satış artık kalıcı +%${Math.round(world.branch.bonus() * 100)}.`, "Dekorasyonun ve müşterilerinle dostluğun seninle geldi."] })));
     offs.push(game.on("critic", (e: any) => { setCelebrate((prev) => prev ?? { icon: "🎩", title: "Gizemli eleştirmendi!", lines: [e.fast ? "Hızlı ve sıcak servisine bayıldı." : "Lezzetini çok beğendi.", `Ödül: +${fmt(e.gold)} altın${e.gems ? ` · +${e.gems} 💎` : ""}`, "Yorumu Mektuplar'da."] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); rewardCoins(); }));
     offs.push(game.on("album", (e: any) => { if (e.gold) rewardCoins(); }));
     offs.push(game.on("collection", (e: any) => { showToast(`🏅 Koleksiyon: ${e.group}${e.kind === "max" ? " (hepsi en üst seviyede)" : " tamamlandı"} · +${fmt(e.reward.gold)} altın`, 3400); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
@@ -333,7 +333,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     }
   }, [act, feedback, game, go, showToast, world]);
 
-  if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast, openShop: act.openShop, peek: act.peek, scene: () => sceneRef.current, overlay: () => overlay };   // development screenshots only
+  if (Platform.OS === "web") (window as any).__shell = { go, setOverlay, setPanel, showToast, openShop: act.openShop, peek: act.peek, scene: () => sceneRef.current, overlay: () => overlay, summary: showSummary };   // development screenshots only
   const navSelect = (id: NavId) => {
     feedback.sfx("tap");
     if (id === "town") { setOverlay(null); go("town"); return; }
@@ -383,7 +383,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
 function Chrome({ sceneId, overlay, setOverlay, navSelect }: { sceneId: SceneId; overlay: Overlay | null; setOverlay: (o: Overlay | null) => void; navSelect: (id: NavId) => void }) {
   const { world, act } = useWorldOnly();
   useRefresh(5000);
-  const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0 || !!world.life?.special()?.ready, daily: world.daily.status().canClaim, letters: (world.life?.unread() ?? 0) > 0, achievements: (world.achievements?.claimable().length ?? 0) > 0, album: (world.life?.storiesReady() ?? 0) > 0 };
+  const theme = world.life?.weekTheme();
+  const badges = { quests: world.quests.claimable().length > 0 || world.goals.claimable().length > 0 || !!world.life?.special()?.ready || !!(theme?.complete && !theme.claimed), daily: world.daily.status().canClaim, letters: (world.life?.unread() ?? 0) > 0, achievements: (world.achievements?.claimable().length ?? 0) > 0, album: (world.life?.storiesReady() ?? 0) > 0 };
   const toggle = (o: Overlay) => { if (o === "photo") act.toast("📷 Fotoğraf modu: ekran görüntüsü al, çıkmak için ekrana dokun", 3200); setOverlay(overlay === o ? null : o); };
   const active: NavId | null = overlay === "quests" ? "quests" : overlay === "town" || sceneId === "town" ? "town" : overlay === "shop" ? "market" : sceneId === "interior" ? "cafe" : sceneId === "explore" ? "explore" : sceneId === "market" ? "market" : null;
   return (

@@ -61,7 +61,7 @@ export class StaffLayer {
     this.onServed = null;       // set by the scene: called with the table area when the waiter puts an order down
     game.on('complete', () => { this.cheer = 0.55; });
     game.on('customer', (e) => {   // the sale was made at the table: the product stands there while the guest eats, the table is cleared when the logic frees it
-      if (e.type === 'leave' && e.income && e.table != null && e.eatSec > 0) this.plates.set(e.table, { product: e.product, t: 0, eat: e.eatSec, hold: e.holdSec || e.eatSec });
+      if (e.type === 'leave' && e.income && e.table != null && e.eatSec > 0) this.plates.set(e.table, { product: e.product, extra: e.extra ?? null, t: 0, eat: e.eatSec, hold: e.holdSec || e.eatSec });
       else if (e.type === 'tableFree') this.plates.delete(e.table);
     });
     this.ovenT = -1;            // seconds into the put-it-in-the-oven animation, -1 = not playing
@@ -198,7 +198,7 @@ export class StaffLayer {
       ctx.save(); ctx.translate(0, this.warp(a.y + a.h - 35)); ctx.globalAlpha = fade;
       this.plate(ctx, cx, cy);
       if (eaten < 0.85 && this.game.productsDef[pl.product]?.station === 'coffee') steam(ctx, cx, cy - 26, pl.t + ti, 0.7 * (1 - eaten));   // a hot drink steams while it is drunk
-      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIconOrEmoji(ctx, pl.product, this.game.productsDef[pl.product]?.icon, 0, -10 / k, 44); ctx.restore(); }   // exactly what the guest ordered, big enough to read
+      if (eaten < 1) { const k = 1 - 0.7 * eaten; ctx.save(); ctx.translate(cx, cy - 4); ctx.scale(k, k); drawIconOrEmoji(ctx, pl.product, this.game.productsDef[pl.product]?.icon, pl.extra ? -20 : 0, -10 / k, 44); if (pl.extra) drawIconOrEmoji(ctx, pl.extra, this.game.productsDef[pl.extra]?.icon, 22, -8 / k, 38); ctx.restore(); }   // a set: both products   // exactly what the guest ordered, big enough to read
       else { ctx.fillStyle = 'rgba(121,82,56,.5)'; for (const [dx, dy] of [[-9, 0], [4, 2], [11, -1]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 1.8, 0, 7); ctx.fill(); } }     // crumbs
       ctx.restore();
     }

@@ -54,7 +54,7 @@ export class Life {
     game.on('levelUp', ({ level }) => { if (level % 5 === 0) this.remember('⭐', `Seviye ${level}'e ulaştın`); });
     game.on('critic', ({ fast }) => this.remember('🎩', fast ? 'Gizemli eleştirmen geldi ve 5 yıldız verdi' : 'Gizemli eleştirmen geldi ve 4 yıldız verdi'));
     game.on('friend', ({ look, hearts }) => { if (hearts === 1 || hearts === 5) this.remember(hearts === 5 ? '💖' : '💛', hearts === 5 ? `${ALBUM.names[look] ?? 'Bir müşteri'} ile can dostu oldun` : `${ALBUM.names[look] ?? 'Bir müşteri'} ile dostluk başladı`); });
-    game.on('album', ({ look, first, completed }) => { if (completed) this.remember('📖', 'Bütün müşterilerle tanıştın'); else if (first && this.memories.length < 3) this.remember('🐱', `İlk kez ${ALBUM.names[look] ?? 'bir müşteri'} geldi`); });
+    game.on('album', ({ look, first, completed }) => { if (completed) this.remember('📖', 'Bütün müşterilerle tanıştın'); else if (first && game.album?.count() === 1) this.remember('🐱', `İlk müşterin ${ALBUM.names[look] ?? 'bir müşteri'} geldi`); });
     game.on('change', (e) => { if (e?.type !== 'load') this.rollDay(); if (e?.type === 'sale' && game.stats.soldTotal === 1) this.remember('☕', 'İlk satışını yaptın, kafe açıldı!'); });
   }
 
@@ -142,7 +142,7 @@ export class Life {
     if (!step.done) return { ok: false, message: `${s.title}: ${step.text} (${step.have}/${step.need}).` };
     this.stories[look] = s.next + 1;
     const gold = this.game.earn(step.gold, 'story', `${s.title}: ${s.next + 1}. bölüm`);
-    if (this.stories[look] === 3) { this.addLetter(ALBUM.names[look] ?? 'Bir müşteri', STORY_END); this.remember('📗', `"${s.title}" hikâyesi tamamlandı`); }
+    if (this.stories[look] === 3) { this.addLetter(ALBUM.names[look] ?? 'Bir müşteri', STORY_END, 0, true); this.remember('📗', `"${s.title}" hikâyesi tamamlandı`); }
     this.game.emit('change', { type: 'story', look });
     return { ok: true, gold, finished: this.stories[look] === 3 };
   }
@@ -220,7 +220,7 @@ export class Life {
 
   // ---- letters -----------------------------------------------------------------------------------------------------
   unread() { return this.letters.filter((l) => !l.read || (l.gift && !l.claimed)).length; }
-  addLetter(from, text, gift = 0) {
+  addLetter(from, text, gift = 0, quiet = false) {
     const l = { id: this.nextLetter++, from, text, gift: Math.max(0, Math.round(gift)), read: false, claimed: false, t: this.game.clock() };
     this.letters.unshift(l);
     // the inbox keeps `max` letters; an unclaimed gift is never dropped before older read letters
@@ -228,7 +228,7 @@ export class Life {
       const i = this.letters.map((x) => !x.gift || x.claimed).lastIndexOf(true);
       this.letters.splice(i >= 0 ? i : this.letters.length - 1, 1);
     }
-    this.game.emit('letter', l);
+    this.game.emit('letter', { ...l, quiet });
     this.game.emit('change', { type: 'letter' });
     return l;
   }
@@ -253,7 +253,7 @@ export class Life {
     return this.addLetter(ALBUM.names[look] ?? 'Bir müşteri', text, gift);
   }
   /** A guest's friendship grew a heart: they write about it. */
-  heartLetter(look, hearts) { return this.addLetter(ALBUM.names[look] ?? 'Bir müşteri', `${'♥'.repeat(hearts)}  ${HEART_LETTERS[Math.min(HEART_LETTERS.length, hearts) - 1]}`); }
+  heartLetter(look, hearts) { return this.addLetter(ALBUM.names[look] ?? 'Bir müşteri', `${'♥'.repeat(hearts)}  ${HEART_LETTERS[Math.min(HEART_LETTERS.length, hearts) - 1]}`, 0, true); }
 
   // ---- the food critic ---------------------------------------------------------------------------------------------
   /** Whether a guest arriving now should secretly be a critic (one random number, drawn only when one can come today). */

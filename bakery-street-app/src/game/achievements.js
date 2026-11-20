@@ -30,7 +30,7 @@ export const ACHIEVEMENTS = [
   { id: 'orders5', name: 'Güvenilir Fırın', icon: '📦', text: 'özel sipariş teslim et', value: (g) => g.life?.ordersDone ?? 0, target: 5, gold: 750, gems: 3 },
   { id: 'pets50', name: 'Sevgi Dolu', icon: '🐾', text: 'kez kedi sev', value: (g) => g.life?.petsTotal ?? 0, target: 50, gold: 300 },
   { id: 'stories3', name: 'Hikâye Anlatıcısı', icon: '📗', text: 'müşteri hikâyesi tamamla', value: (g) => Object.values(g.life?.stories ?? {}).filter((n) => n >= 3).length, target: 3, gold: 800, gems: 3 },
-  { id: 'branch1', name: 'Kafeler Zinciri', icon: '🏪', text: 'yeni şube aç', value: (g) => g.branch?.count ?? 0, target: 1, gold: 2000, gems: 10 },
+  { id: 'branch1', name: 'Kafeler Zinciri', icon: '🏡', text: 'yeni şube aç', value: (g) => g.branch?.count ?? 0, target: 1, gold: 2000, gems: 10 },
   { id: 'play60', name: 'Huzur Köşesi', icon: '🍵', text: 'dakika kafede vakit geçir', value: (g) => Math.floor(s('playSec')(g) / 60), target: 60, gold: 350 },
 ];
 

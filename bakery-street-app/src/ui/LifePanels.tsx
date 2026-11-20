@@ -71,7 +71,7 @@ export function LettersPanel() {
         const fresh = !l.read || (l.gift && !l.claimed);
         return (
           <Card key={l.id} tone={fresh ? "ready" : undefined} left={<EmojiIcon emoji={l.gift && !l.claimed ? "🎁" : fresh ? "💌" : "✉"} size={u * 7} />}
-            right={fresh ? <Btn small label={l.gift && !l.claimed ? "Hediyeyi Al" : "Okundu"} sub={l.gift && !l.claimed ? `💰 ${fmt(l.gift)}` : undefined} onPress={() => { const r = life.open(l.id); if (r.ok && r.gold) act.toast(`🎁 ${l.from}: +${fmt(r.gold)} altın`, 2000); }} /> : undefined}>
+            right={fresh ? <Btn small label={l.gift && !l.claimed ? "Hediyeyi Al" : "Okudum"} sub={l.gift && !l.claimed ? `💰 ${fmt(l.gift)}` : undefined} onPress={() => { const r = life.open(l.id); if (r.ok && r.gold) act.toast(`🎁 ${l.from}: +${fmt(r.gold)} altın`, 2000); }} /> : undefined}>
             <Title name={l.from} />
             <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.regular, fontSize: fs(u, TYPE.body), fontStyle: "italic" }}>“{l.text}”</Text>
           </Card>
@@ -168,9 +168,9 @@ export function BranchCard() {
   if (!branch) return null;
   const miss = branch.missing() as string[], share = Math.round(branch.cfg.share * 100);
   return (
-    <Card tone={miss.length ? "locked" : "ready"} left={<EmojiIcon emoji="🏪" size={u * 7} />}
+    <Card tone={miss.length ? "locked" : "ready"} left={<EmojiIcon emoji="🏡" size={u * 7} />}
       right={miss.length ? undefined : ask
-        ? <View style={{ gap: u * 0.6 }}><Btn small variant="lack" label="Evet, şubeyi aç" onPress={() => { setAsk(false); const r = saves.openBranch({ confirmed: true }); if (r.ok) { world.scenes.interior.snap(); act.openOverlay(null); act.toast(`🏪 ${r.count}. şube açıldı! Her satış artık kalıcı +%${r.count * share}`, 4200); } else act.warn(r.message, 3600); }} /><Btn small variant="alt" label="Vazgeç" onPress={() => setAsk(false)} /></View>
+        ? <View style={{ gap: u * 0.6 }}><Btn small variant="lack" label="Evet, şubeyi aç" onPress={() => { setAsk(false); const r = saves.openBranch({ confirmed: true }); if (r.ok) { world.scenes.interior.snap(); act.openOverlay(null); act.toast(`🏡 ${r.count}. şube açıldı! Her satış artık kalıcı +%${r.count * share}`, 4200); } else act.warn(r.message, 3600); }} /><Btn small variant="alt" label="Vazgeç" onPress={() => setAsk(false)} /></View>
         : <Btn label="Yeni Şube Aç" onPress={() => setAsk(true)} />}>
       <Title name="Yeni Şube" note={branch.count ? `${branch.count} şube · satışlar +%${branch.count * share}` : undefined} />
       <Meta text={ask ? "Emin misin? Altın, stok, makineler, geliştirmeler, tarifler, kasaba, araştırma ve seviye baştan başlar. Eski kayıt yedeklenir." : `Kafeni büyüttün! Yeni bir şubede baştan başla: her şube bütün satışlara kalıcı +%${share} katar (en çok ${branch.cfg.max} şube).`} />
@@ -224,7 +224,7 @@ const HELP: [string, string, string][] = [
   ["📦", "Özel sipariş ve pazar", "Görevler'deki özel siparişleri vitrinden teslim et. Hafta sonları pazar tezgâhında ürünler müşteri fiyatına satılır."],
   ["🛍", "Mağaza", "Ekipman, dekorasyon, tarif ve genişleme al. Dekorasyonu 5 seviyeye kadar yükselt; kafe daha çekici olur, daha çok müşteri gelir."],
   ["🗺", "Keşif ve Kasaba", "Keşfe kedi gönder, dönünce ödülünü al. Kasaba'da binaları aç; meydandaki kedileri sevmeyi unutma."],
-  ["🏪", "Yeni şube", "Son aşamaya ve en üst seviyeye ulaşınca yeni bir şube açıp baştan başlayabilirsin; her şube satışlara kalıcı bonus katar."],
+  ["🏡", "Yeni şube", "Son aşamaya ve en üst seviyeye ulaşınca yeni bir şube açıp baştan başlayabilirsin; her şube satışlara kalıcı bonus katar."],
 ];
 
 /** "Nasıl Oynanır": every system in one short paragraph. */

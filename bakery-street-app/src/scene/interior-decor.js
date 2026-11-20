@@ -58,6 +58,8 @@ export class DecorLayer {
     this.born[d.id] = 0;
     this.reveals = this.reveals.filter((r) => r.x !== p.x || r.y !== p.y);      // a quick second upgrade of the same piece replaces its label instead of stacking a copy
     this.reveals.push({ x: p.x, y: p.y, t: 0, text: d.kind === 'recipe' ? `Yeni tarif: ${d.name.replace(' Tarifi', '')}` : d.name });
+    const small = this.reveals.filter((r) => !r.big);
+    if (small.length > 3) { const drop = new Set(small.slice(0, small.length - 3)); this.reveals = this.reveals.filter((r) => !drop.has(r)); }   // a shopping spree: only the last three labels stay, the screen never fills up
     s.burst(p.x, p.y + s.warpAt(p.y), d.kind === 'equipment' ? 22 : 14, 120);
     const areaId = d.line && AREA_OF_LINE[d.line];
     if (areaId) s.spring[areaId] = 0;
