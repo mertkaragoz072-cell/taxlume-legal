@@ -21,6 +21,19 @@ first use. No email, no password, no third-party login.
 | `claim_weekly_reward`                         | `true` only for the call that takes this week's chest                                                                                          |
 | `report_guild`                                | a player reports a guild or a member's name (fixed reasons); the game has a "Report this guild" button                                         |
 
+Guild trade (goods moving between friends):
+
+| Function                            | Does                                                                                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `donate_to_order`                   | gives goods to the weekly guild order (an everyday good picked per guild and week, 40 units per member); returns how many were accepted |
+| `claim_order_reward`                | the order's chest: once per member per week, only if the order is complete and the member gave at least one unit                        |
+| `create_request` / `cancel_request` | a member asks friends for up to 50 units of a good (one open request each)                                                              |
+| `fulfill_request`                   | sends goods to a friend's request; returns how many were accepted. The goods wait in `guild_deliveries`                                 |
+| `claim_deliveries`                  | the receiver's app collects waiting deliveries, as many whole deliveries as fit in its free storage                                     |
+
+The app removes goods from the sender only **after** the server says how many it accepted, so a failed call never loses stock. Goods in transit
+(a delivery the server has marked collected but the app never applied, e.g. a crash in that instant) can be lost; that is accepted for a casual feature.
+
 The weekly goal is 120 trades per member, resetting every Monday 00:00 UTC.
 
 ## Setting it up
@@ -43,6 +56,8 @@ The weekly goal is 120 trades per member, resetting every Monday 00:00 UTC.
 - A 21st player gets `full`; a wrong code gets `not_found`; a taken name gets `name_taken`.
 - Reporting 1000 trades in one call adds only 200; two calls within 20 s add once.
 - `claim_weekly_reward` returns `true` once per member per week, `false` after.
+- Order: donating 500 units to a 200-unit order accepts only what is still needed; `claim_order_reward` is false before completion, false without a donation, true once, then false.
+- Market: a second open request is refused (`request_open`); sending to your own request is refused (`own_request`); a delivery shows up once in `claim_deliveries`; a delivery larger than the free room waits.
 - Owner leaves: the oldest member becomes owner; last member leaving deletes the guild; the leaver's account and data are gone (`auth.users` row deleted).
 - With the anon key and no session, `select * from guilds` is refused.
 

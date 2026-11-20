@@ -1,6 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyValueStore } from "./mockApi";
-import { CheerEmote, GuildApi, GuildError, GuildErrorCode, GuildInfo, SyncProfile } from "./types";
+import {
+  CheerEmote,
+  GuildApi,
+  GuildDelivery,
+  GuildError,
+  GuildErrorCode,
+  GuildInfo,
+  SyncProfile,
+} from "./types";
 
 /** The real guild backend: a Supabase project running backend/supabase/schema.sql.
  * Talks to it with plain fetch (no SDK): GoTrue for the anonymous account the
@@ -29,6 +37,10 @@ const KNOWN: GuildErrorCode[] = [
   "full",
   "already_in_guild",
   "not_in_guild",
+  "request_open",
+  "request_invalid",
+  "request_gone",
+  "own_request",
 ];
 
 function toCode(message: unknown): GuildErrorCode {
@@ -165,6 +177,31 @@ export function createSupabaseGuildApi(cfg: SupabaseConfig): GuildApi {
     },
     async sendCheer(toUserId: string, emote: CheerEmote) {
       await rpc("send_cheer", { p_to: toUserId, p_emote: emote });
+    },
+    async donateToOrder(qty) {
+      return Number(await rpc<number>("donate_to_order", { p_qty: Math.floor(qty) })) || 0;
+    },
+    async claimOrderReward() {
+      return Boolean(await rpc<boolean>("claim_order_reward"));
+    },
+    async createRequest(goodId, qty) {
+      await rpc("create_request", { p_good: goodId, p_qty: Math.floor(qty) });
+    },
+    async cancelRequest() {
+      await rpc("cancel_request");
+    },
+    async fulfillRequest(requestId, qty) {
+      return (
+        Number(
+          await rpc<number>("fulfill_request", { p_request: Number(requestId), p_qty: Math.floor(qty) })
+        ) || 0
+      );
+    },
+    async claimDeliveries(room) {
+      return (
+        (await rpc<GuildDelivery[] | null>("claim_deliveries", { p_room: Math.max(0, Math.floor(room)) })) ??
+        []
+      );
     },
     async reportGuild(reason) {
       await rpc("report_guild", { p_reason: reason });

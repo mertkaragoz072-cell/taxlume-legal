@@ -12,7 +12,10 @@ import {
   View,
 } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { isGoodUnlocked } from "../economy/formulas";
+import { GOODS, GOODS_BY_ID } from "../economy/goods";
 import { rankTheme } from "../economy/rankTheme";
+import { GoodId } from "../economy/types";
 import { townRankIcon } from "../economy/townRanks";
 import { normalizeGuildCode } from "../guild/guildName";
 import { useGuild } from "../guild/GuildContext";
@@ -50,6 +53,11 @@ export function GuildHub() {
     leave,
     cheer,
     claim,
+    donate,
+    claimOrder,
+    requestGood,
+    cancelRequest,
+    fulfill,
     report,
     clearError,
   } = useGuild();
@@ -57,6 +65,8 @@ export function GuildHub() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [wantGood, setWantGood] = useState<GoodId>("grain");
+  const [wantQty, setWantQty] = useState(10);
   const [reporting, setReporting] = useState(false);
   const [reported, setReported] = useState(false);
 
@@ -193,6 +203,167 @@ export function GuildHub() {
                 )}
               </GoalFrame>
 
+              <GoalRibbon text={t("guild.orderSection")} />
+              <GoalFrame>
+                {(() => {
+                  const o = guild.order;
+                  const good = GOODS_BY_ID[o.goodId];
+                  if (!good) return null;
+                  const held = Math.floor(state.goods[good.id]?.holding ?? 0);
+                  const left = Math.max(0, o.target - o.progress);
+                  const done = o.progress >= o.target;
+                  return (
+                    <>
+                      <Text style={styles.hint}>
+                        {t("guild.orderText", { icon: good.icon, good: t(good.nameKey) })}
+                      </Text>
+                      <Text style={styles.progressText}>
+                        {Math.min(o.progress, o.target)} / {o.target} {good.icon}
+                      </Text>
+                      <GoalProgress pct={o.progress / o.target} color="#9fd68f" />
+                      <Text style={[styles.hint, { marginTop: 8 }]}>
+                        {t("guild.orderMine", { n: o.myDonated, held })}
+                      </Text>
+                      {!done && (
+                        <View style={styles.btnRow}>
+                          <View style={{ flex: 1 }}>
+                            <BigButton
+                              label={t("guild.give", { n: Math.min(10, held, left) || 10 })}
+                              height={40}
+                              fontSize={13}
+                              disabled={busy || held <= 0}
+                              onPress={() => void donate(Math.min(10, left))}
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <BigButton
+                              label={t("guild.giveAll")}
+                              height={40}
+                              fontSize={13}
+                              disabled={busy || held <= 0}
+                              onPress={() => void donate(left)}
+                            />
+                          </View>
+                        </View>
+                      )}
+                      {done && (
+                        <View style={{ marginTop: 10 }}>
+                          <Text style={styles.done}>{t("guild.orderDone")}</Text>
+                          {o.rewardClaimed ? (
+                            <Text style={styles.claimed}>{t("guild.orderClaimed")}</Text>
+                          ) : o.myDonated >= 1 ? (
+                            <BigButton
+                              laurel
+                              label={t("guild.orderClaim", { amount: formatCoins(reward, 0) })}
+                              disabled={busy}
+                              onPress={() => void claimOrder()}
+                            />
+                          ) : (
+                            <Text style={styles.hint}>{t("guild.orderNeedGive")}</Text>
+                          )}
+                        </View>
+                      )}
+                    </>
+                  );
+                })()}
+              </GoalFrame>
+
+              <GoalRibbon text={t("guild.marketSection")} />
+              <GoalFrame>
+                <Text style={styles.hint}>{t("guild.marketHint")}</Text>
+                {guild.requests.length === 0 && <Text style={styles.hint}>{t("guild.marketEmpty")}</Text>}
+                {guild.requests.map((r) => {
+                  const good = GOODS_BY_ID[r.goodId];
+                  if (!good) return null;
+                  const held = Math.floor(state.goods[good.id]?.holding ?? 0);
+                  const need = r.qty - r.filled;
+                  return (
+                    <View key={r.id} style={styles.memberRow}>
+                      <Text style={styles.memberIcon}>{good.icon}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.memberName} numberOfLines={2}>
+                          {r.isMine ? t("guild.yourRequest") : r.fromName}
+                        </Text>
+                        <Text style={styles.hint}>
+                          {t("guild.requestWants", {
+                            filled: r.filled,
+                            qty: r.qty,
+                            icon: good.icon,
+                            good: t(good.nameKey),
+                          })}
+                        </Text>
+                      </View>
+                      <View style={{ width: 96 }}>
+                        {r.isMine ? (
+                          <BigButton
+                            tone="red"
+                            label={t("guild.cancel")}
+                            height={38}
+                            fontSize={12}
+                            disabled={busy}
+                            onPress={() => void cancelRequest()}
+                          />
+                        ) : (
+                          <BigButton
+                            label={
+                              held > 0 ? t("guild.send", { n: Math.min(held, need) }) : t("guild.noneHeld")
+                            }
+                            height={38}
+                            fontSize={12}
+                            disabled={busy || held <= 0}
+                            onPress={() => void fulfill(r.id, good.id, need)}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+
+                {!guild.requests.some((r) => r.isMine) && (
+                  <View style={styles.askBox}>
+                    <Text style={styles.askTitle}>{t("guild.newRequest")}</Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: 6 }}
+                    >
+                      {GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => (
+                        <Pressable
+                          key={g.id}
+                          onPress={() => setWantGood(g.id)}
+                          style={[styles.chip, wantGood === g.id && styles.chipOn]}
+                          accessibilityRole="button"
+                          accessibilityLabel={t(g.nameKey)}
+                        >
+                          <Text style={{ fontSize: 22 }}>{g.icon}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                    <View style={styles.btnRow}>
+                      {[5, 10, 25].map((n) => (
+                        <Pressable
+                          key={n}
+                          onPress={() => setWantQty(n)}
+                          style={[styles.chip, styles.qtyChip, wantQty === n && styles.chipOn]}
+                          accessibilityRole="button"
+                        >
+                          <Text style={styles.reasonText}>{n}</Text>
+                        </Pressable>
+                      ))}
+                      <View style={{ flex: 1 }}>
+                        <BigButton
+                          label={t("guild.ask")}
+                          height={40}
+                          fontSize={13}
+                          disabled={busy}
+                          onPress={() => void requestGood(wantGood, wantQty)}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </GoalFrame>
+
               <GoalRibbon text={t("guild.membersSection")} />
               <GoalFrame>
                 {guild.members.map((m) => (
@@ -207,7 +378,12 @@ export function GuildHub() {
                         {m.isYou ? ` · ${t("guild.you")}` : ""}
                         {m.isOwner ? ` · ${t("guild.owner")}` : ""}
                       </Text>
-                      <Text style={styles.hint}>{t("guild.contribution", { n: m.weekContribution })}</Text>
+                      <Text style={styles.hint}>
+                        {t("guild.contribution", { n: m.weekContribution })}
+                        {m.donated + m.gifted > 0
+                          ? ` · ${t("guild.tradeExtra", { d: m.donated, g: m.gifted })}`
+                          : ""}
+                      </Text>
                     </View>
                     {!m.isYou && (
                       <Pressable
@@ -359,9 +535,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   reasonText: { color: INK, fontFamily: FONT.medium, fontSize: 14 },
+  btnRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 },
+  askBox: {
+    marginTop: 12,
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(246,211,106,0.2)",
+    paddingTop: 10,
+  },
+  askTitle: { color: INK, fontFamily: FONT.bold, fontSize: 14 },
+  chip: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(200,132,60,0.5)",
+    backgroundColor: "rgba(0,0,0,0.28)",
+  },
+  qtyChip: { width: 48 },
+  chipOn: { borderColor: "#f6d36a", backgroundColor: "rgba(246,211,106,0.18)" },
   memberRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
   memberIcon: { fontSize: 26 },
-  memberName: { fontFamily: FONT.bold, fontSize: 15 },
+  memberName: { fontFamily: FONT.bold, fontSize: 15, color: INK },
   cheerBtn: {
     width: 40,
     height: 40,

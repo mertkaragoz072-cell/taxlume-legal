@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useEconomyContext } from "../economy/EconomyContext";
+import { guildStorageRoom } from "../economy/guildTrade";
+import { GoodId } from "../economy/types";
 import { getGuildApi } from "./getGuildApi";
 import { guildRewardFor } from "./reward";
 import { CheerEmote, GuildApi, GuildErrorCode, GuildError, GuildInfo, ReportReason } from "./types";
@@ -28,6 +30,13 @@ interface GuildContextValue {
   leave: () => Promise<void>;
   cheer: (toUserId: string, emote: CheerEmote) => Promise<void>;
   claim: () => Promise<void>;
+  /** gives up to `qty` of this week's order good from the player's stock */
+  donate: (qty: number) => Promise<void>;
+  claimOrder: () => Promise<void>;
+  requestGood: (goodId: GoodId, qty: number) => Promise<boolean>;
+  cancelRequest: () => Promise<void>;
+  /** sends up to `qty` of a requested good to a friend, from the player's stock */
+  fulfill: (requestId: string, goodId: GoodId, qty: number) => Promise<void>;
   report: (reason: ReportReason) => Promise<boolean>;
   clearError: () => void;
 }
@@ -45,7 +54,7 @@ export function GuildProvider({
   children: React.ReactNode;
   api?: GuildApi | null;
 }) {
-  const { state, netWorth, grantGuildReward } = useEconomyContext();
+  const { state, netWorth, grantGuildReward, guildGoodsOut, guildGoodsIn } = useEconomyContext();
   const api = useMemo(() => (apiProp !== undefined ? apiProp : getGuildApi()), [apiProp]);
   const [status, setStatus] = useState<Status>(api ? "loading" : "unavailable");
   const [remembered, setRemembered] = useState<boolean | null>(null);
@@ -55,12 +64,21 @@ export function GuildProvider({
   const [hubOpen, setHubOpen] = useState(false);
 
   // latest game numbers for the background sync, without restarting its timer
-  const live = useRef({ trades: 0, name: "", rank: 0, netWorth: 0 });
+  const live = useRef<{
+    trades: number;
+    name: string;
+    rank: number;
+    netWorth: number;
+    room: number;
+    held: Record<string, number>;
+  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, held: {} });
   live.current = {
     trades: state.stats.totalTrades,
     name: state.townName,
     rank: state.townRankIndex,
     netWorth,
+    room: guildStorageRoom(state),
+    held: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, Math.floor(g.holding)])),
   };
 
   const apply = useCallback((g: GuildInfo | null) => {
@@ -128,6 +146,13 @@ export function GuildProvider({
     };
   }, [api, apply, markMember]);
 
+  /** collects goods friends sent, as many as the warehouse has room for */
+  const collectDeliveries = useCallback(async () => {
+    if (!api || live.current.room <= 0) return;
+    const got = await api.claimDeliveries(live.current.room);
+    for (const d of got) guildGoodsIn(d.goodId as GoodId, d.qty, d.fromName);
+  }, [api, guildGoodsIn]);
+
   /** reports finished trades since the last report and refreshes the profile */
   const sync = useCallback(async () => {
     if (!api) return;
@@ -142,11 +167,12 @@ export function GuildProvider({
         rankIndex: live.current.rank,
         netWorth: live.current.netWorth,
       });
+      await collectDeliveries();
       apply(await api.getMyGuild());
     } catch (e) {
       setError(asCode(e));
     }
-  }, [api, apply, setBaseline]);
+  }, [api, apply, setBaseline, collectDeliveries]);
 
   const inGuild = status === "in";
   useEffect(() => {
@@ -184,7 +210,7 @@ export function GuildProvider({
       hubOpen,
       openHub: () => {
         setHubOpen(true);
-        if (remembered) void refresh();
+        if (remembered) void collectDeliveries().then(refresh);
       },
       closeHub: () => setHubOpen(false),
       refresh,
@@ -228,6 +254,41 @@ export function GuildProvider({
         await run(() => api.sendCheer(toUserId, emote));
         await refresh();
       },
+      donate: async (qty) => {
+        if (!api || !guild) return;
+        const goodId = guild.order.goodId as GoodId;
+        const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
+        if (amount <= 0) return;
+        const accepted = await run(() => api.donateToOrder(amount));
+        // take from the player only what the server accepted
+        if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "order");
+        await refresh();
+      },
+      claimOrder: async () => {
+        if (!api) return;
+        const took = await run(() => api.claimOrderReward());
+        if (took) grantGuildReward(guildRewardFor(live.current.rank));
+        await refresh();
+      },
+      requestGood: async (goodId, qty) => {
+        if (!api) return false;
+        const ok = (await run(() => api.createRequest(goodId, qty))) !== null;
+        await refresh();
+        return ok;
+      },
+      cancelRequest: async () => {
+        if (!api) return;
+        await run(() => api.cancelRequest());
+        await refresh();
+      },
+      fulfill: async (requestId, goodId, qty) => {
+        if (!api) return;
+        const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
+        if (amount <= 0) return;
+        const accepted = await run(() => api.fulfillRequest(requestId, amount));
+        if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "friend");
+        await refresh();
+      },
       claim: async () => {
         if (!api) return;
         const took = await run(() => api.claimWeeklyReward());
@@ -244,11 +305,13 @@ export function GuildProvider({
       api,
       remembered,
       refresh,
+      collectDeliveries,
       run,
       apply,
       setBaseline,
       markMember,
       grantGuildReward,
+      guildGoodsOut,
     ]
   );
 

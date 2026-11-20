@@ -194,6 +194,50 @@ describe("supabase guild adapter", () => {
     expect(srv.calls[srv.calls.length - 1].body).toEqual({ p_reason: "guild_name" });
   });
 
+  it("maps the trade functions to their server calls", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/donate_to_order": () => ({ json: 7 }),
+      "rpc/claim_order_reward": () => ({ json: true }),
+      "rpc/create_request": () => ({ status: 204 }),
+      "rpc/cancel_request": () => ({ status: 204 }),
+      "rpc/fulfill_request": () => ({ json: 3 }),
+      "rpc/claim_deliveries": () => ({ json: [{ goodId: "wool", qty: 4, fromName: "Ayse" }] }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    expect(await api.donateToOrder(10)).toBe(7);
+    expect(await api.claimOrderReward()).toBe(true);
+    await api.createRequest("grain", 12);
+    await api.cancelRequest();
+    expect(await api.fulfillRequest("42", 5)).toBe(3);
+    expect(await api.claimDeliveries(30)).toEqual([{ goodId: "wool", qty: 4, fromName: "Ayse" }]);
+    const bodies = srv.calls.filter((c) => c.url.includes("/rpc/")).map((c) => c.body);
+    expect(bodies).toContainEqual({ p_good: "grain", p_qty: 12 });
+    expect(bodies).toContainEqual({ p_request: 42, p_qty: 5 });
+    expect(bodies).toContainEqual({ p_room: 30 });
+  });
+
+  it("maps trade errors", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/create_request": () => ({ status: 400, json: { message: "request_open" } }),
+      "rpc/fulfill_request": () => ({ status: 400, json: { message: "request_gone" } }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await expect(api.createRequest("grain", 5)).rejects.toMatchObject({ code: "request_open" });
+    await expect(api.fulfillRequest("1", 5)).rejects.toMatchObject({ code: "request_gone" });
+  });
+
   it("claims the weekly chest as a plain boolean", async () => {
     const srv = fakeServer({
       "/auth/v1/signup": () => ({ json: SESSION }),

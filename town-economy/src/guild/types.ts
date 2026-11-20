@@ -7,6 +7,35 @@ export const GUILD_NAME_MAX = 20;
 export const GUILD_CODE_LENGTH = 6;
 /** A guild's weekly goal: this many trades per member (see goalTargetFor). */
 export const GOAL_TRADES_PER_MEMBER = 120;
+/** The weekly guild order asks this many units of one good per member. */
+export const ORDER_UNITS_PER_MEMBER = 40;
+export const REQUEST_MAX_QTY = 50;
+/** The everyday goods the server picks each week's order from: cheap and
+ * available to every town from the first day (no luxuries). */
+export const GUILD_ORDER_GOODS = [
+  "grain",
+  "wool",
+  "sand",
+  "bread",
+  "milk",
+  "wood",
+  "iron",
+  "cloth",
+  "fish",
+] as const;
+/** Every good a member may ask friends for. */
+export const GUILD_REQUEST_GOODS = [
+  ...GUILD_ORDER_GOODS,
+  "wine",
+  "leather",
+  "spice",
+  "silk",
+  "jewelry",
+  "honey",
+  "cheese",
+  "paper",
+  "glass",
+] as const;
 
 /** The only things a player can send each other: no free text, so there is
  * nothing to moderate. */
@@ -20,6 +49,9 @@ export interface GuildMember {
   netWorth: number;
   /** trades this member added to the weekly goal */
   weekContribution: number;
+  /** units this member gave to the weekly order, and sent to friends' requests */
+  donated: number;
+  gifted: number;
   isOwner: boolean;
   isYou: boolean;
 }
@@ -30,6 +62,34 @@ export interface GuildCheer {
   emote: CheerEmote;
   at: number;
   toYou: boolean;
+}
+
+/** The good the whole guild is asked for this week. */
+export interface GuildOrder {
+  goodId: string;
+  target: number;
+  progress: number;
+  /** what this player gave to it */
+  myDonated: number;
+  rewardClaimed: boolean;
+}
+
+/** A member asking friends for a good. */
+export interface GuildRequest {
+  id: string;
+  fromId: string;
+  fromName: string;
+  goodId: string;
+  qty: number;
+  filled: number;
+  isMine: boolean;
+}
+
+/** Goods a friend sent, waiting to be collected. */
+export interface GuildDelivery {
+  goodId: string;
+  qty: number;
+  fromName: string;
 }
 
 export interface GuildInfo {
@@ -46,11 +106,23 @@ export interface GuildInfo {
   rewardClaimed: boolean;
   /** all-time trades the guild has made together; drives its level */
   totalContribution: number;
+  order: GuildOrder;
+  requests: GuildRequest[];
   cheers: GuildCheer[];
 }
 
 export type GuildErrorCode =
-  "name_invalid" | "name_taken" | "not_found" | "full" | "already_in_guild" | "not_in_guild" | "network";
+  | "name_invalid"
+  | "name_taken"
+  | "not_found"
+  | "full"
+  | "already_in_guild"
+  | "not_in_guild"
+  | "request_open"
+  | "request_invalid"
+  | "request_gone"
+  | "own_request"
+  | "network";
 
 export class GuildError extends Error {
   constructor(public code: GuildErrorCode) {
@@ -81,8 +153,21 @@ export interface GuildApi {
   sendCheer(toUserId: string, emote: CheerEmote): Promise<void>;
   /** marks the week's chest as taken; true if this call is the one that took it */
   claimWeeklyReward(): Promise<boolean>;
+  /** gives goods to the weekly order; returns how many were accepted (remove exactly that many) */
+  donateToOrder(qty: number): Promise<number>;
+  claimOrderReward(): Promise<boolean>;
+  createRequest(goodId: string, qty: number): Promise<void>;
+  cancelRequest(): Promise<void>;
+  /** sends goods to a friend's request; returns how many were accepted (remove exactly that many) */
+  fulfillRequest(requestId: string, qty: number): Promise<number>;
+  /** collects goods friends sent, as many as fit in `room` units of storage */
+  claimDeliveries(room: number): Promise<GuildDelivery[]>;
   /** flags the player's guild (its name or a member's name) for review */
   reportGuild(reason: ReportReason): Promise<void>;
+}
+
+export function orderTargetFor(memberCount: number): number {
+  return ORDER_UNITS_PER_MEMBER * Math.max(1, memberCount);
 }
 
 export function goalTargetFor(memberCount: number): number {

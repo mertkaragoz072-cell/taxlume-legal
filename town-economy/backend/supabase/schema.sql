@@ -67,6 +67,51 @@ create table if not exists guild_reports (
   created_at timestamptz not null default now()
 );
 
+-- ---------------------------------------------- guild trade (orders, market)
+-- Goods move between friends: a weekly guild order everybody donates to, and a
+-- small market where a member asks for a good and others send it.
+
+alter table guild_week_contrib add column if not exists donated int not null default 0;       -- units given to the weekly order
+alter table guild_week_contrib add column if not exists gifted int not null default 0;        -- units sent to friends' requests
+alter table guild_week_contrib add column if not exists order_claimed boolean not null default false;
+
+create table if not exists guild_week_order (
+  guild_id   uuid not null references guilds(id) on delete cascade,
+  week_start date not null,
+  good_id    text not null check (good_id in ('grain','wool','sand','bread','milk','wood','iron','cloth','fish','wine','leather','spice','silk','jewelry','honey','cheese','paper','glass')),
+  primary key (guild_id, week_start)
+);
+
+create table if not exists guild_requests (
+  id         bigserial primary key,
+  guild_id   uuid not null references guilds(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  good_id    text not null check (good_id in ('grain','wool','sand','bread','milk','wood','iron','cloth','fish','wine','leather','spice','silk','jewelry','honey','cheese','paper','glass')),
+  qty        int  not null check (qty between 1 and 50),
+  filled     int  not null default 0 check (filled between 0 and 50),
+  closed     boolean not null default false,
+  created_at timestamptz not null default now()
+);
+-- one open request per player
+create unique index if not exists guild_requests_one_open on guild_requests(user_id) where not closed;
+create index if not exists guild_requests_guild_idx on guild_requests(guild_id) where not closed;
+
+-- Goods on their way to a player; the receiving app collects them with claim_deliveries.
+create table if not exists guild_deliveries (
+  id         bigserial primary key,
+  to_user    uuid not null references auth.users(id) on delete cascade,
+  from_name  text not null,
+  good_id    text not null,
+  qty        int  not null check (qty > 0),
+  claimed    boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists guild_deliveries_to_idx on guild_deliveries(to_user) where not claimed;
+
+alter table guild_week_order enable row level security;
+alter table guild_requests   enable row level security;
+alter table guild_deliveries enable row level security;
+
 alter table profiles           enable row level security;
 alter table guilds             enable row level security;
 alter table guild_members      enable row level security;
@@ -210,11 +255,129 @@ begin
   insert into guild_reports(guild_id, reporter, reason) values (v_guild, auth.uid(), left(coalesce(p_reason, ''), 200));
 end $$;
 
+-- ------------------------------------------------------ trade functions
+
+create or replace function guild_order_units_per_member() returns int language sql immutable as $$ select 40 $$;
+
+-- This week's order for a guild, created on first look: one of the goods
+-- every town can make, picked by a hash so each guild and week differs.
+create or replace function ensure_week_order(p_guild uuid) returns text
+language plpgsql security definer set search_path = public as $$
+declare
+  -- everyday goods only: cheap, and available to every town from day one
+  v_goods text[] := array['grain','wool','sand','bread','milk','wood','iron','cloth','fish'];
+  v_good text;
+begin
+  insert into guild_week_order(guild_id, week_start, good_id)
+  values (p_guild, guild_week_start(),
+          v_goods[1 + (abs(hashtext(p_guild::text || guild_week_start()::text)) % array_length(v_goods, 1))])
+  on conflict (guild_id, week_start) do nothing;
+  select good_id into v_good from guild_week_order where guild_id = p_guild and week_start = guild_week_start();
+  return v_good;
+end $$;
+
+-- Gives goods to the weekly order. Returns how many were accepted (never more
+-- than the order still needs); the app removes exactly that many from the player.
+create or replace function donate_to_order(p_qty int) returns int
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; v_members int; v_progress bigint; v_target bigint; v_take int;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  perform ensure_week_order(v_guild);
+  select count(*) into v_members from guild_members where guild_id = v_guild;
+  select coalesce(sum(donated), 0) into v_progress from guild_week_contrib where guild_id = v_guild and week_start = guild_week_start();
+  v_target := guild_order_units_per_member() * greatest(1, v_members);
+  v_take := greatest(0, least(greatest(0, coalesce(p_qty, 0)), 200, v_target - v_progress));
+  if v_take = 0 then return 0; end if;
+  insert into guild_week_contrib(guild_id, user_id, week_start, donated)
+  values (v_guild, auth.uid(), guild_week_start(), v_take)
+  on conflict (guild_id, user_id, week_start) do update set donated = guild_week_contrib.donated + v_take;
+  return v_take;
+end $$;
+
+-- True only for the call that takes this week's order chest: the order must be
+-- complete and the player must have given something to it.
+create or replace function claim_order_reward() returns boolean
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; v_members int; v_progress bigint; v_mine int; v_done boolean;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  select count(*) into v_members from guild_members where guild_id = v_guild;
+  select coalesce(sum(donated), 0) into v_progress from guild_week_contrib where guild_id = v_guild and week_start = guild_week_start();
+  select coalesce(donated, 0) into v_mine from guild_week_contrib
+    where guild_id = v_guild and user_id = auth.uid() and week_start = guild_week_start();
+  if v_progress < guild_order_units_per_member() * greatest(1, v_members) or coalesce(v_mine, 0) < 1 then return false; end if;
+  update guild_week_contrib set order_claimed = true
+    where guild_id = v_guild and user_id = auth.uid() and week_start = guild_week_start() and not order_claimed
+    returning true into v_done;
+  return coalesce(v_done, false);
+end $$;
+
+create or replace function create_request(p_good text, p_qty int) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  if p_good is null or p_good not in ('grain','wool','sand','bread','milk','wood','iron','cloth','fish','wine','leather','spice','silk','jewelry','honey','cheese','paper','glass') or p_qty is null or p_qty not between 1 and 50 then
+    raise exception 'request_invalid';
+  end if;
+  if exists (select 1 from guild_requests where user_id = auth.uid() and not closed) then raise exception 'request_open'; end if;
+  insert into guild_requests(guild_id, user_id, good_id, qty) values (v_guild, auth.uid(), p_good, p_qty);
+end $$;
+
+create or replace function cancel_request() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update guild_requests set closed = true where user_id = auth.uid() and not closed;
+end $$;
+
+-- Sends goods to a friend's request. Returns how many were accepted (at most
+-- what the request still needs); the app removes exactly that many from the
+-- sender. The goods wait in guild_deliveries until the friend's app collects them.
+create or replace function fulfill_request(p_request bigint, p_qty int) returns int
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; r guild_requests; v_take int; v_name text;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  select * into r from guild_requests where id = p_request and guild_id = v_guild and not closed for update;
+  if r.id is null then raise exception 'request_gone'; end if;
+  if r.user_id = auth.uid() then raise exception 'own_request'; end if;
+  v_take := greatest(0, least(greatest(0, coalesce(p_qty, 0)), 50, r.qty - r.filled));
+  if v_take = 0 then return 0; end if;
+  select coalesce(display_name, 'Player') into v_name from profiles where id = auth.uid();
+  update guild_requests set filled = filled + v_take, closed = (filled + v_take >= qty) where id = r.id;
+  insert into guild_deliveries(to_user, from_name, good_id, qty) values (r.user_id, coalesce(v_name, 'Player'), r.good_id, v_take);
+  insert into guild_week_contrib(guild_id, user_id, week_start, gifted)
+  values (v_guild, auth.uid(), guild_week_start(), v_take)
+  on conflict (guild_id, user_id, week_start) do update set gifted = guild_week_contrib.gifted + v_take;
+  return v_take;
+end $$;
+
+-- Hands over goods that friends sent, oldest first, as many whole deliveries
+-- as fit in p_room units of storage; the rest stay waiting.
+create or replace function claim_deliveries(p_room int) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare d guild_deliveries; v_left int := greatest(0, coalesce(p_room, 0)); v_out jsonb := '[]'::jsonb;
+begin
+  for d in select * from guild_deliveries where to_user = auth.uid() and not claimed order by id for update loop
+    exit when d.qty > v_left;
+    update guild_deliveries set claimed = true where id = d.id;
+    v_left := v_left - d.qty;
+    v_out := v_out || jsonb_build_object('goodId', d.good_id, 'qty', d.qty, 'fromName', d.from_name);
+  end loop;
+  return v_out;
+end $$;
+
 -- Everything the guild screen shows, in one call; the keys match GuildInfo in
 -- src/guild/types.ts so the adapter can hand it straight through.
 create or replace function get_my_guild() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare v_guild guilds; v_week date := guild_week_start(); v_members int; v_progress bigint; v_claimed boolean;
+  v_order_good text; v_order_progress bigint; v_mine int; v_order_claimed boolean;
 begin
   select g.* into v_guild from guilds g join guild_members m on m.guild_id = g.id where m.user_id = auth.uid();
   if v_guild.id is null then return null; end if;
@@ -222,7 +385,21 @@ begin
   select coalesce(sum(trades), 0) into v_progress from guild_week_contrib where guild_id = v_guild.id and week_start = v_week;
   select coalesce(bool_or(claimed), false) into v_claimed from guild_week_contrib
     where guild_id = v_guild.id and week_start = v_week and user_id = auth.uid();
+  v_order_good := ensure_week_order(v_guild.id);
+  select coalesce(sum(donated), 0) into v_order_progress from guild_week_contrib where guild_id = v_guild.id and week_start = v_week;
+  select coalesce(donated, 0), coalesce(order_claimed, false) into v_mine, v_order_claimed from guild_week_contrib
+    where guild_id = v_guild.id and user_id = auth.uid() and week_start = v_week;
   return jsonb_build_object(
+    'order', jsonb_build_object('goodId', v_order_good,
+      'target', guild_order_units_per_member() * greatest(1, v_members),
+      'progress', v_order_progress, 'myDonated', coalesce(v_mine, 0), 'rewardClaimed', coalesce(v_order_claimed, false)),
+    'requests', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', q.id::text, 'fromId', q.user_id, 'fromName', coalesce(p.display_name, 'Player'),
+        'goodId', q.good_id, 'qty', q.qty, 'filled', q.filled, 'isMine', q.user_id = auth.uid())
+        order by (q.user_id = auth.uid()) desc, q.created_at)
+      from guild_requests q left join profiles p on p.id = q.user_id
+      where q.guild_id = v_guild.id and not q.closed and q.created_at > now() - interval '7 days'), '[]'::jsonb),
     'id', v_guild.id, 'name', v_guild.name, 'code', v_guild.code,
     'memberCount', v_members,
     'weekStart', (extract(epoch from v_week::timestamp at time zone 'utc') * 1000)::bigint,
@@ -234,6 +411,7 @@ begin
         'id', m.user_id, 'name', coalesce(p.display_name, 'Player'),
         'rankIndex', coalesce(p.rank_index, 0), 'netWorth', coalesce(p.net_worth, 0),
         'weekContribution', coalesce(w.trades, 0),
+        'donated', coalesce(w.donated, 0), 'gifted', coalesce(w.gifted, 0),
         'isOwner', m.user_id = v_guild.owner_id, 'isYou', m.user_id = auth.uid())
         order by coalesce(w.trades, 0) desc, m.joined_at)
       from guild_members m
@@ -255,5 +433,7 @@ end $$;
 revoke all on all functions in schema public from public;
 grant execute on function
   sync_profile(text, int, double precision), create_guild(text), join_guild(text), leave_guild(),
-  report_contribution(int), send_cheer(uuid, text), claim_weekly_reward(), report_guild(text), get_my_guild()
+  report_contribution(int), send_cheer(uuid, text), claim_weekly_reward(), report_guild(text), get_my_guild(),
+  donate_to_order(int), claim_order_reward(), create_request(text, int), cancel_request(),
+  fulfill_request(bigint, int), claim_deliveries(int)
   to authenticated;

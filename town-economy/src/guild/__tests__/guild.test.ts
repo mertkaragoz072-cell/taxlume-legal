@@ -121,3 +121,79 @@ describe("mock guild backend", () => {
     expect(me).toMatchObject({ name: "Kasaba X", rankIndex: 3, netWorth: 12345 });
   });
 });
+
+describe("guild trade (mock backend)", () => {
+  it("shows a weekly order the guild fills together, capped at its target", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    expect(g.order.target).toBe(200); // 40 per member, 5 members
+    expect(g.order.progress).toBe(21);
+    expect(await api.claimOrderReward()).toBe(false); // not complete
+    expect(await api.donateToOrder(50)).toBe(50);
+    expect(await api.donateToOrder(500)).toBe(200 - 21 - 50); // never past what it needs
+    expect(await api.donateToOrder(10)).toBe(0);
+    const done = await api.getMyGuild();
+    expect(done!.order.progress).toBe(200);
+    expect(done!.order.myDonated).toBe(179);
+    expect(await api.claimOrderReward()).toBe(true);
+    expect(await api.claimOrderReward()).toBe(false);
+  });
+
+  it("only pays the order chest to someone who gave something", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    now += 6 * DAY; // the guild's computer players keep chipping in
+    for (let i = 0; i < 3; i++) {
+      now += 1000;
+      await api.getMyGuild();
+    }
+    await api.donateToOrder(0);
+    // nobody can claim without giving
+    expect(await api.claimOrderReward()).toBe(false);
+  });
+
+  it("lets you ask for a good, once at a time, and cancel", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.createRequest("grain", 10);
+    await expect(api.createRequest("wool", 5)).rejects.toMatchObject({ code: "request_open" });
+    await expect(api.createRequest("diamond", 5)).rejects.toMatchObject({ code: "request_invalid" });
+    const mine = (await api.getMyGuild())!.requests.find((r) => r.isMine)!;
+    expect(mine).toMatchObject({ goodId: "grain", qty: 10, filled: 0 });
+    await api.cancelRequest();
+    expect((await api.getMyGuild())!.requests.some((r) => r.isMine)).toBe(false);
+    await api.createRequest("wool", 5); // a new one is allowed again
+  });
+
+  it("sends goods to a friend's request and refuses your own", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    const theirs = g.requests.find((r) => !r.isMine)!;
+    const need = theirs.qty - theirs.filled;
+    expect(await api.fulfillRequest(theirs.id, 1000)).toBe(need); // at most what is still needed
+    await expect(api.fulfillRequest(theirs.id, 1)).rejects.toMatchObject({ code: "request_gone" });
+    const me = (await api.getMyGuild())!.members.find((m) => m.isYou)!;
+    expect(me.gifted).toBe(need);
+    await api.createRequest("sand", 5);
+    const own = (await api.getMyGuild())!.requests.find((r) => r.isMine)!;
+    await expect(api.fulfillRequest(own.id, 1)).rejects.toMatchObject({ code: "own_request" });
+  });
+
+  it("delivers goods friends sent, as many whole deliveries as fit", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.createRequest("grain", 10);
+    expect(await api.claimDeliveries(100)).toEqual([]); // nobody has answered yet
+    now += 25_000;
+    const first = await api.claimDeliveries(100);
+    expect(first).toHaveLength(1);
+    expect(first[0]).toMatchObject({ goodId: "grain", qty: 5 });
+    now += 25_000;
+    expect(await api.claimDeliveries(3)).toEqual([]); // no room: it waits
+    const later = await api.claimDeliveries(100);
+    expect(later[0].qty).toBe(5);
+    expect((await api.getMyGuild())!.requests.some((r) => r.isMine)).toBe(false); // filled, so closed
+  });
+});
