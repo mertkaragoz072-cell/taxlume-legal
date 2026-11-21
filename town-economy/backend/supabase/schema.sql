@@ -117,6 +117,65 @@ alter table guild_week_order enable row level security;
 alter table guild_requests   enable row level security;
 alter table guild_deliveries enable row level security;
 
+-- ------------------------------------------- guild fun (feed, duels, draw, hall)
+
+alter table guild_members add column if not exists cash_given bigint not null default 0;   -- coins given to the guild hall
+alter table guilds add column if not exists project_progress bigint not null default 0;    -- coins towards the next hall project
+
+-- What happened in the guild lately. Rows tied to a player disappear with the
+-- player's account (on delete cascade), like everything else about them.
+create table if not exists guild_feed (
+  id         bigserial primary key,
+  guild_id   uuid not null references guilds(id) on delete cascade,
+  actor_id   uuid references auth.users(id) on delete cascade,
+  actor_name text not null default '',
+  kind       text not null check (kind in ('joined','goal_done','order_done','duel_won','project_done','big_draw')),
+  detail     text,
+  created_at timestamptz not null default now()
+);
+create index if not exists guild_feed_guild_idx on guild_feed(guild_id, created_at desc);
+
+-- Friendly duels: two members, 24 hours, most trades wins.
+create table if not exists guild_duels (
+  id         bigserial primary key,
+  guild_id   uuid not null references guilds(id) on delete cascade,
+  challenger uuid not null references auth.users(id) on delete cascade,
+  opponent   uuid not null references auth.users(id) on delete cascade,
+  status     text not null default 'pending' check (status in ('pending','active','done','declined')),
+  created_at timestamptz not null default now(),
+  ends_at    timestamptz,
+  c_trades   int not null default 0,
+  o_trades   int not null default 0,
+  winner     uuid references auth.users(id) on delete set null,
+  claimed    boolean not null default false
+);
+create index if not exists guild_duels_guild_idx on guild_duels(guild_id, id desc);
+
+-- One free draw per player per day (UTC).
+create table if not exists guild_draws (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day     date not null,
+  tier    int  not null check (tier between 1 and 3),
+  primary key (user_id, day)
+);
+
+-- Hall projects the guild has built, in order.
+create table if not exists guild_projects (
+  guild_id uuid not null references guilds(id) on delete cascade,
+  idx      int  not null check (idx between 1 and 6),
+  built_at timestamptz not null default now(),
+  primary key (guild_id, idx)
+);
+
+-- Reports on a guild listed in the weekly ranking (any player may report it).
+alter table guild_reports drop constraint if exists guild_reports_reporter_fkey;
+alter table guild_reports add constraint guild_reports_reporter_fkey foreign key (reporter) references auth.users(id) on delete cascade;
+
+alter table guild_feed     enable row level security;
+alter table guild_duels    enable row level security;
+alter table guild_draws    enable row level security;
+alter table guild_projects enable row level security;
+
 alter table profiles           enable row level security;
 alter table guilds             enable row level security;
 alter table guild_members      enable row level security;
@@ -182,6 +241,7 @@ begin
   perform 1 from guilds where id = v_id for update;
   if (select count(*) from guild_members where guild_id = v_id) >= guild_max_members() then raise exception 'full'; end if;
   insert into guild_members(user_id, guild_id) values (auth.uid(), v_id);
+  perform guild_log(v_id, auth.uid(), 'joined');
 end $$;
 
 -- Leaving a guild deletes everything the server holds about the player: the
@@ -209,16 +269,25 @@ end $$;
 create or replace function report_contribution(p_trades int) returns void
 language plpgsql security definer set search_path = public as $$
 declare v_guild uuid; v_last timestamptz; v_add int := greatest(0, least(coalesce(p_trades, 0), 200));
+  v_members int; v_before bigint; v_goal bigint;
 begin
   select guild_id, last_report_at into v_guild, v_last from guild_members where user_id = auth.uid();
   if v_guild is null then raise exception 'not_in_guild'; end if;
   if v_add = 0 then return; end if;
   if v_last is not null and now() - v_last < interval '20 seconds' then return; end if;
   update guild_members set last_report_at = now() where user_id = auth.uid();
+  select coalesce(sum(trades), 0) into v_before from guild_week_contrib where guild_id = v_guild and week_start = guild_week_start();
   insert into guild_week_contrib(guild_id, user_id, week_start, trades)
   values (v_guild, auth.uid(), guild_week_start(), v_add)
   on conflict (guild_id, user_id, week_start) do update set trades = guild_week_contrib.trades + v_add;
   update guilds set total_contribution = total_contribution + v_add where id = v_guild;
+  -- trades also count for an active duel this player is in
+  update guild_duels set c_trades = c_trades + v_add where status = 'active' and challenger = auth.uid() and ends_at > now();
+  update guild_duels set o_trades = o_trades + v_add where status = 'active' and opponent = auth.uid() and ends_at > now();
+  -- tell the guild the moment its weekly goal is reached
+  select count(*) into v_members from guild_members where guild_id = v_guild;
+  v_goal := guild_goal_per_member() * greatest(1, v_members);
+  if v_before < v_goal and v_before + v_add >= v_goal then perform guild_log(v_guild, null, 'goal_done'); end if;
 end $$;
 
 create or replace function send_cheer(p_to uuid, p_emote text) returns void
@@ -299,6 +368,7 @@ begin
   values (v_guild, auth.uid(), guild_week_start(), v_take)
   on conflict (guild_id, user_id, week_start) do update set donated = guild_week_contrib.donated + v_take;
   update guilds set total_contribution = total_contribution + v_take where id = v_guild;   -- goods count towards the guild's level too
+  if v_progress < v_target and v_progress + v_take >= v_target then perform guild_log(v_guild, null, 'order_done'); end if;
   return v_take;
 end $$;
 
@@ -379,16 +449,166 @@ begin
   return v_out;
 end $$;
 
+-- ------------------------------------------------------- fun functions
+
+create or replace function guild_log(p_guild uuid, p_actor uuid, p_kind text, p_detail text default null) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_name text;
+begin
+  select coalesce(display_name, '') into v_name from profiles where id = p_actor;
+  insert into guild_feed(guild_id, actor_id, actor_name, kind, detail) values (p_guild, p_actor, coalesce(v_name, ''), p_kind, p_detail);
+end $$;
+
+-- Hall project costs, in coins, for projects 1..6.
+create or replace function guild_project_cost(p_idx int) returns bigint language sql immutable as $$
+  select (array[5000, 25000, 100000, 400000, 1500000, 6000000])[p_idx]::bigint
+$$;
+
+-- Closes duels whose 24 hours are up and lets unanswered challenges lapse.
+create or replace function settle_duels(p_guild uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare d guild_duels; v_win uuid;
+begin
+  update guild_duels set status = 'declined' where guild_id = p_guild and status = 'pending' and created_at < now() - interval '24 hours';
+  for d in select * from guild_duels where guild_id = p_guild and status = 'active' and ends_at <= now() for update loop
+    v_win := case when d.c_trades > d.o_trades then d.challenger when d.o_trades > d.c_trades then d.opponent else null end;
+    update guild_duels set status = 'done', winner = v_win where id = d.id;
+    if v_win is not null then perform guild_log(p_guild, v_win, 'duel_won'); end if;
+  end loop;
+end $$;
+
+create or replace function challenge_duel(p_opponent uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  perform settle_duels(v_guild);
+  if p_opponent is null or p_opponent = auth.uid()
+     or not exists (select 1 from guild_members where user_id = p_opponent and guild_id = v_guild) then
+    raise exception 'duel_invalid';
+  end if;
+  if exists (select 1 from guild_duels where status in ('pending', 'active')
+             and (challenger in (auth.uid(), p_opponent) or opponent in (auth.uid(), p_opponent))) then
+    raise exception 'duel_busy';
+  end if;
+  insert into guild_duels(guild_id, challenger, opponent) values (v_guild, auth.uid(), p_opponent);
+end $$;
+
+-- The challenged player accepts (the 24 hours start now) or declines; the
+-- challenger can withdraw a challenge nobody has answered yet.
+create or replace function respond_duel(p_id bigint, p_accept boolean) returns void
+language plpgsql security definer set search_path = public as $$
+declare d guild_duels;
+begin
+  select * into d from guild_duels where id = p_id and status = 'pending'
+    and (opponent = auth.uid() or challenger = auth.uid()) for update;
+  if d.id is null then raise exception 'duel_gone'; end if;
+  if d.challenger = auth.uid() and p_accept then raise exception 'duel_invalid'; end if;   -- you cannot accept your own challenge
+  if d.opponent = auth.uid() and p_accept then
+    update guild_duels set status = 'active', ends_at = now() + interval '24 hours' where id = d.id;
+  else
+    update guild_duels set status = 'declined' where id = d.id;
+  end if;
+end $$;
+
+-- True only for the call that takes the winner's prize.
+create or replace function claim_duel_reward(p_id bigint) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare v_done boolean;
+begin
+  update guild_duels set claimed = true where id = p_id and status = 'done' and winner = auth.uid() and not claimed
+    returning true into v_done;
+  return coalesce(v_done, false);
+end $$;
+
+-- One draw a day. Returns the prize tier (1 small 60%, 2 medium 30%, 3 big 10%);
+-- the app turns the tier into coins. A big one is announced to the guild.
+create or replace function daily_draw() returns int
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; v_roll double precision := random(); v_tier int;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  if exists (select 1 from guild_draws where user_id = auth.uid() and day = (now() at time zone 'utc')::date) then
+    raise exception 'already_drawn';
+  end if;
+  v_tier := case when v_roll < 0.6 then 1 when v_roll < 0.9 then 2 else 3 end;
+  insert into guild_draws(user_id, day, tier) values (auth.uid(), (now() at time zone 'utc')::date, v_tier);
+  if v_tier = 3 then perform guild_log(v_guild, auth.uid(), 'big_draw'); end if;
+  return v_tier;
+end $$;
+
+-- Gives coins to the guild hall. Returns how many were accepted (never more
+-- than the current project still needs); the app removes exactly that many
+-- coins from the player. A finished project is built and the next one starts.
+create or replace function donate_cash(p_amount bigint) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; v_built int; v_idx int; v_cost bigint; v_progress bigint; v_take bigint;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  select project_progress into v_progress from guilds where id = v_guild for update;
+  select count(*) into v_built from guild_projects where guild_id = v_guild;
+  v_idx := v_built + 1;
+  if v_idx > 6 then return 0; end if;
+  v_cost := guild_project_cost(v_idx);
+  v_take := greatest(0, least(greatest(0, coalesce(p_amount, 0)), 5000000, v_cost - v_progress));
+  if v_take = 0 then return 0; end if;
+  update guild_members set cash_given = cash_given + v_take where user_id = auth.uid();
+  if v_progress + v_take >= v_cost then
+    insert into guild_projects(guild_id, idx) values (v_guild, v_idx);
+    update guilds set project_progress = 0 where id = v_guild;
+    perform guild_log(v_guild, auth.uid(), 'project_done', v_idx::text);
+  else
+    update guilds set project_progress = project_progress + v_take where id = v_guild;
+  end if;
+  return v_take;
+end $$;
+
+-- The ten most active guilds this week (trades + order units + gifts), plus
+-- the player's own guild if it is not among them.
+create or replace function top_guilds() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_mine uuid;
+begin
+  select guild_id into v_mine from guild_members where user_id = auth.uid();
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('id', t.id, 'name', t.name, 'totalContribution', t.total_contribution,
+             'members', t.members, 'score', t.score, 'isMine', t.id = v_mine) order by t.score desc, t.created_at)
+    from (
+      select g.id, g.name, g.total_contribution, g.created_at,
+             (select count(*) from guild_members m where m.guild_id = g.id) as members,
+             coalesce((select sum(w.trades + w.donated + w.gifted) from guild_week_contrib w
+                       where w.guild_id = g.id and w.week_start = guild_week_start()), 0) as score
+      from guilds g
+      order by 6 desc, g.created_at
+      limit 10
+    ) t where t.score > 0 or t.id = v_mine), '[]'::jsonb);
+end $$;
+
+-- Any player can report a guild they see in the ranking.
+create or replace function report_guild_id(p_guild uuid, p_reason text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or not exists (select 1 from guilds where id = p_guild) then raise exception 'not_found'; end if;
+  if exists (select 1 from guild_reports where reporter = auth.uid() and guild_id = p_guild and created_at > now() - interval '1 hour') then return; end if;
+  insert into guild_reports(guild_id, reporter, reason) values (p_guild, auth.uid(), left(coalesce(p_reason, ''), 200));
+end $$;
+
 -- Everything the guild screen shows, in one call; the keys match GuildInfo in
 -- src/guild/types.ts so the adapter can hand it straight through.
 create or replace function get_my_guild() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare v_guild guilds; v_week date := guild_week_start(); v_members int; v_progress bigint; v_claimed boolean;
   v_order_good text; v_order_progress bigint; v_mine int; v_order_claimed boolean;
-  v_streak int := 0; v_w date; v_ok boolean;
+  v_streak int := 0; v_w date; v_ok boolean; v_built int; v_drawn boolean;
 begin
   select g.* into v_guild from guilds g join guild_members m on m.guild_id = g.id where m.user_id = auth.uid();
   if v_guild.id is null then return null; end if;
+  perform settle_duels(v_guild.id);
+  select count(*) into v_built from guild_projects where guild_id = v_guild.id;
+  select exists (select 1 from guild_draws where user_id = auth.uid() and day = (now() at time zone 'utc')::date) into v_drawn;
   select count(*) into v_members from guild_members where guild_id = v_guild.id;
   select coalesce(sum(trades), 0) into v_progress from guild_week_contrib where guild_id = v_guild.id and week_start = v_week;
   select coalesce(bool_or(claimed), false) into v_claimed from guild_week_contrib
@@ -408,6 +628,25 @@ begin
   select coalesce(donated, 0), coalesce(order_claimed, false) into v_mine, v_order_claimed from guild_week_contrib
     where guild_id = v_guild.id and user_id = auth.uid() and week_start = v_week;
   return jsonb_build_object(
+    'drawnToday', v_drawn,
+    'projects', jsonb_build_object('built', v_built, 'progress', v_guild.project_progress),
+    'feed', coalesce((
+      select jsonb_agg(jsonb_build_object('id', f.id::text, 'kind', f.kind, 'actorName', f.actor_name,
+               'detail', f.detail, 'at', (extract(epoch from f.created_at) * 1000)::bigint) order by f.id desc)
+      from (select * from guild_feed where guild_id = v_guild.id order by id desc limit 12) f), '[]'::jsonb),
+    'duels', coalesce((
+      select jsonb_agg(jsonb_build_object('id', d.id::text, 'status', d.status,
+               'challengerId', d.challenger, 'challengerName', coalesce(pc.display_name, 'Player'),
+               'opponentId', d.opponent, 'opponentName', coalesce(po.display_name, 'Player'),
+               'endsAt', case when d.ends_at is null then null else (extract(epoch from d.ends_at) * 1000)::bigint end,
+               'cTrades', d.c_trades, 'oTrades', d.o_trades, 'winnerId', d.winner,
+               'canClaim', d.winner = auth.uid() and not d.claimed) order by d.id desc)
+      from (select * from guild_duels
+            where guild_id = v_guild.id and (challenger = auth.uid() or opponent = auth.uid())
+              and (status in ('pending', 'active') or (status = 'done' and ends_at > now() - interval '3 days'))
+            order by id desc limit 5) d
+      left join profiles pc on pc.id = d.challenger
+      left join profiles po on po.id = d.opponent), '[]'::jsonb),
     'streak', v_streak,
     'myTotals', (select jsonb_build_object('trades', coalesce(sum(trades), 0), 'donated', coalesce(sum(donated), 0),
                    'gifted', coalesce(sum(gifted), 0)) from guild_week_contrib where guild_id = v_guild.id and user_id = auth.uid()),
@@ -432,7 +671,7 @@ begin
         'id', m.user_id, 'name', coalesce(p.display_name, 'Player'),
         'rankIndex', coalesce(p.rank_index, 0), 'netWorth', coalesce(p.net_worth, 0),
         'weekContribution', coalesce(w.trades, 0),
-        'donated', coalesce(w.donated, 0), 'gifted', coalesce(w.gifted, 0),
+        'donated', coalesce(w.donated, 0), 'gifted', coalesce(w.gifted, 0), 'cashGiven', m.cash_given,
         'isOwner', m.user_id = v_guild.owner_id, 'isYou', m.user_id = auth.uid())
         order by coalesce(w.trades, 0) desc, m.joined_at)
       from guild_members m
@@ -456,5 +695,7 @@ grant execute on function
   sync_profile(text, int, double precision), create_guild(text), join_guild(text), leave_guild(),
   report_contribution(int), send_cheer(uuid, text), claim_weekly_reward(), report_guild(text), get_my_guild(),
   donate_to_order(int), claim_order_reward(), create_request(text, int), cancel_request(),
-  fulfill_request(bigint, int), claim_deliveries(int)
+  fulfill_request(bigint, int), claim_deliveries(int),
+  challenge_duel(uuid), respond_duel(bigint, boolean), claim_duel_reward(bigint), daily_draw(),
+  donate_cash(bigint), top_guilds(), report_guild_id(uuid, text)
   to authenticated;
