@@ -100,7 +100,7 @@ export default tseslint.config(
   // Build/tooling scripts are plain CommonJS running under Node — and so are
   // the Expo config plugins, which prebuild requires() the same way.
   {
-    files: ["scripts/**/*.js", "plugins/**/*.js", "test/**/*.js"],
+    files: ["scripts/**/*.js", "backend/scripts/**/*.js", "plugins/**/*.js", "test/**/*.js"],
     languageOptions: {
       sourceType: "commonjs",
       globals: { ...globals.node, ...globals.jest },

@@ -58,7 +58,7 @@ async function rpc(u, fn, args = {}) {
     body: JSON.stringify(args),
   });
   const t = await r.text();
-  let j = null;
+  let j;
   try {
     j = t ? JSON.parse(t) : null;
   } catch {
@@ -172,13 +172,13 @@ const err = (r) => r.body && r.body.message;
   ok("gifted counts show on the member list", bob.gifted === 4 && bob.donated === 30, JSON.stringify(bob));
   r = await rpc(A, "create_request", { p_good: "sand", p_qty: 5 });
   ok("A can ask again after the first was filled", r.status < 300);
-  r = await rpc(A, "cancel_request");
+  await rpc(A, "cancel_request");
   g = (await rpc(A, "get_my_guild")).body;
   ok("cancel closes it", !g.requests.some((x) => x.isMine));
   // phrases
   const bid = g.members.find((m) => m.name === "Bob T").id;
   await sleep(5500);
-  r = await rpc(A, "send_cheer", { p_to: bid, p_emote: "thanks" });
+  await rpc(A, "send_cheer", { p_to: bid, p_emote: "thanks" });
   const gb = (await rpc(B, "get_my_guild")).body;
   ok(
     'phrase "thanks" delivered',
