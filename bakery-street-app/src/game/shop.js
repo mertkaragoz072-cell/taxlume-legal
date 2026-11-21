@@ -260,15 +260,15 @@ export class Shop {
   xpFor(d) { return Math.max(10, Math.min(300, Math.round((d.price ?? 0) / 40))); }
 
   // ---- placement ------------------------------------------------------------------------------
-  /** Slots a decoration can stand in (every slot of its type). */
-  slotsOf(id) { const d = this.def(id); return d?.type ? Object.keys(DECOR_SLOT_TYPES).filter((sl) => DECOR_SLOT_TYPES[sl].type === d.type) : []; }
+  /** The place a decoration stands in: its own slot (`slot` on the item), or for an item without one every slot of its type. */
+  slotsOf(id) { const d = this.def(id); if (d?.slot && DECOR_SLOT_TYPES[d.slot]) return [d.slot]; return d?.type ? Object.keys(DECOR_SLOT_TYPES).filter((sl) => DECOR_SLOT_TYPES[sl].type === d.type) : []; }
   /** The slot an item stands in now, or null. */
   slotOf(id) { return Object.keys(this.placed).find((sl) => this.placed[sl] === id) ?? null; }
   isPlaced(id) { return this.owned.has(id) && this.slotOf(id) !== null; }
   /** For the picker: every slot of the item's type with its label and what stands there. */
   slotChoices(id) { return this.slotsOf(id).map((slot) => ({ slot, label: DECOR_SLOT_TYPES[slot].label, here: this.placed[slot] === id, occupant: this.placed[slot] && this.placed[slot] !== id ? this.def(this.placed[slot])?.name : null })); }
 
-  /** A newly bought piece goes into the first free slot of its type; a shared slot (table top, theme) takes the new piece and stores the old one; with no free slot it is stored. */
+  /** A newly bought piece goes straight into its own place; the shared theme slot takes the new theme and stores the old one. */
   autoPlace(d) {
     const slots = this.slotsOf(d.id), free = slots.find((sl) => !this.placed[sl]);
     if (free) { this.placed[free] = d.id; this.stored.delete(d.id); return free; }
@@ -289,8 +289,9 @@ export class Shop {
     this.game.emit('change', { type: 'shopPlace', item: id });
     return { ok: true, slot };
   }
-  /** Takes a piece down (it stays owned, gives no appeal, can be placed again). */
+  /** Takes a theme down (decoration has fixed places and always stays where it belongs). */
   unplace(id) {
+    if (this.def(id)?.type !== 'theme') return { ok: false, message: 'Dekorasyonun yeri sabit; kaldırılamaz.' };
     const from = this.slotOf(id);
     if (!from || !this.owned.has(id)) return { ok: false, message: 'Bu eşya zaten yerleştirilmemiş.' };
     delete this.placed[from]; this.stored.add(id);
@@ -343,8 +344,17 @@ export class Shop {
   }
   /** VIP guests: { chance, mult } from the best owned tier, or null. */
   vip() { return this.lineEffect('vip', 'vip') ?? null; }
-  /** Which top the tables carry: 'cake' | 'cup' | null (default vase). */
-  tableTop() { return this.slotEffect('tableTop', 'tableTop'); }
+  /**
+   * What stands on table `i` when it is free: 'cake' | 'cup' (the cake and cup sets share the tables, every other table), 'plain' (the plain set:
+   * an empty top) or null (the starting vase).
+   */
+  tableTopAt(i) {
+    const cake = this.slotEffect('tables-cake', 'tableTop'), cup = this.slotEffect('tables-cup', 'tableTop');
+    if (cake && cup) return i % 2 === 0 ? cake : cup;
+    return cake ?? cup ?? this.slotEffect('tables', 'tableTop');
+  }
+  /** The table set pieces standing in the café (their levels raise the tables' picture). */
+  tableSets() { return ['tables', 'tables-cake', 'tables-cup'].map((sl) => this.placed[sl]).filter((id) => id && this.isPlaced(id)); }
   theme() { return this.slotEffect('theme', 'theme'); }
 
   /** Appeal points of everything standing in the café. */
@@ -469,11 +479,14 @@ export function validateShop(raw, shop) {
     const d = shop.def(id);
     if (d && owned.includes(id) && !used.has(id) && DECOR_SLOT_TYPES[slot]?.type === d.type) { placed[slot] = id; used.add(id); }
   }
-  const stored = new Set((Array.isArray(raw?.stored) ? raw.stored : []).filter((id) => owned.includes(id) && !used.has(id) && shop.def(id)?.type));
+  // fixed places: every owned piece stands in its own slot (an older save that moved or stored pieces gets them back where they belong);
+  // only the shared theme slot keeps the saved choice
+  for (const sl of Object.keys(placed)) if (!SHARED_SLOTS.includes(sl)) { used.delete(placed[sl]); delete placed[sl]; }
+  const stored = new Set();
   for (const id of owned) {
     const d = shop.def(id);
-    if (!d?.type || used.has(id) || stored.has(id)) continue;
-    const free = Object.keys(DECOR_SLOT_TYPES).find((sl) => DECOR_SLOT_TYPES[sl].type === d.type && !placed[sl]);
+    if (!d?.type || used.has(id)) continue;
+    const own = shop.slotsOf(id), free = own.find((sl) => !placed[sl]);
     if (free) { placed[free] = id; used.add(id); } else stored.add(id);
   }
   const introduced = [...new Set(Array.isArray(raw?.introduced) ? raw.introduced.filter((id) => owned.includes(id)) : [])];

@@ -285,9 +285,9 @@ export class DecorLayer {
       const top = sl.y - h0 + wy, sway = Math.sin(t * 0.9 + sl.y) * 2;
       ctx.save();
       ctx.translate(sl.x, sl.y + wy); ctx.scale(pop, pop); ctx.translate(-sl.x, -(sl.y + wy));
-      const g = ctx.createLinearGradient(0, top - 120, 0, top + 6);
+      const g = ctx.createLinearGradient(0, top - 70, 0, top + 6);
       g.addColorStop(0, 'rgba(70,48,32,0)'); g.addColorStop(1, 'rgba(70,48,32,.9)');
-      ctx.strokeStyle = g; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sl.x, top - 120); ctx.lineTo(sl.x + sway * 0.3, top + 8); ctx.stroke();
+      ctx.strokeStyle = g; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sl.x, top - 70); ctx.lineTo(sl.x + sway * 0.3, top + 8); ctx.stroke();   // a short cord that fades out: it does not cross the rug above
       if (img) ctx.drawImage(img, sl.x - w / 2 + sway, top, w, h);
       else { ctx.fillStyle = '#C97A3A'; ctx.beginPath(); ctx.moveTo(sl.x - w * 0.4, top + h * 0.7); ctx.quadraticCurveTo(sl.x, top - h * 0.1, sl.x + w * 0.4, top + h * 0.7); ctx.closePath(); ctx.fill(); }
       ctx.globalCompositeOperation = 'lighter';

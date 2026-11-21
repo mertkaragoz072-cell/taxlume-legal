@@ -2,7 +2,7 @@
 // shows the catalogue (preview, name, price, gate, effect, state) and forwards taps. Opens over the café so a purchase can be watched.
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
-import { SHOP_CATEGORIES } from "../data/economy.js";
+import { DECOR_SLOT_TYPES, SHOP_CATEGORIES } from "../data/economy.js";
 import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Chip, Meta, Sheet, Title } from "./kit";
@@ -120,6 +120,7 @@ export function ShopPanel({ request, onClose }: { request: { tab: ShopTab; n: nu
   );
 
   const [detail, setDetail] = useState<string | null>(null);
+  useEffect(() => { setDetail(null); }, [tab]);                          // a piece's details close when another tab opens
   if (portrait) {
     const body = tab === "goal" ? <GoalTab go={setTab} /> : tab === "ingredients" ? <Ingredients /> : tab === "equipment" ? (
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.4 }}>
@@ -206,7 +207,7 @@ function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any
   const w = (width - u * 1.6 * 2 - u * 0.6 * 2 - u * 1.6 * 2 - u * 1.4 * 2) / 3;
   const need = locked ? (v.missing[0]?.text ?? "Kilitli") : "";
   const lvl = owned && shop.levelable(d) ? (shop.itemLevel(d.id) as number) : 0, nxt = lvl ? shop.nextLevel(d.id) : null;
-  const line = lvl ? (nxt && nxt.steps > 1 ? `Sv ${nxt.level}: ${nxt.step - 1}/${nxt.steps} masa · sıradaki ${nxt.step}. masa` : `Çekicilik +${shop.appealNow(d)}${nxt ? ` → +${nxt.appeal}` : ""}`) + (v.placed ? "" : " · depoda") : owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : locked ? (v.effectText || need) : v.effectText || d.desc;
+  const line = lvl ? (nxt && nxt.steps > 1 ? `Sv ${nxt.level}: ${nxt.step - 1}/${nxt.steps} masa · sıradaki ${nxt.step}. masa` : `Çekicilik +${shop.appealNow(d)}${nxt ? ` → +${nxt.appeal}` : ""}`) + (v.placed || d.type !== "theme" ? "" : " · kapalı") : owned ? (decor ? (d.type === "theme" ? (v.placed ? "Açık" : "Kapalı") : "Kafede") : "Alındı") : locked ? (v.effectText || need) : v.effectText || d.desc;
   const press = () => {
     if (lvl) { if (!nxt) onOpen(); else if (!nxt.ok) act.warn(nxt.reason); else onRaise?.(d); return; }
     if (owned) { onOpen(); return; }
@@ -234,7 +235,7 @@ function GridCard({ v, onBuy, onRaise, flash, onOpen }: { v: any; onBuy: (d: any
           {lvl ? (!nxt ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>★ En üst seviye</Text>
               : !nxt.levelOk ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Seviye {nxt.needLevel}</Text></>
               : <><Text allowFontScaling={false} style={{ color: nxt.missingGold ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>⬆</Text><GameIcon id="coin" size={u * 4} /><Text allowFontScaling={false} style={{ color: nxt.missingGold ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(nxt.cost)}</Text></>)
-            : owned ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{decor ? "Taşı" : "✓ Alındı"}</Text>
+            : owned ? <Text allowFontScaling={false} style={{ color: C.greenDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{d.type === "theme" ? (v.placed ? "✓ Açık" : "Aç") : "✓ Alındı"}</Text>
             : locked ? <><GameIcon id="lock" size={u * 3.6} /><Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{shortNeed(v)}</Text></>
             : <><GameIcon id="coin" size={u * 4.2} /><Text allowFontScaling={false} style={{ color: short ? C.brown : "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(v.price)}</Text></>}
         </Pressable>
@@ -392,22 +393,22 @@ function Pulse({ on, children }: { on: boolean; children: React.ReactNode }) {
 function ItemCard({ v, onBuy, flash }: { v: any; onBuy: (d: any) => void; flash: boolean }) {
   const { world, act } = useWorld();
   const { game, shop } = world, u = useU();
-  const [picker, setPicker] = useState(false);
   const d = v.def, owned = v.status === "owned", locked = v.status === "locked", short = v.missingGold > 0, decor = d.kind === "decor";
   const gold = game.gold as number, after = gold - v.price;
   let button: React.ReactNode;
+  const theme = d.type === "theme";
   if (owned && decor) {
-    button = v.placed
-      ? <View style={{ gap: u * 0.6 }}><Btn small label="Taşı" variant="alt" onPress={() => setPicker((p) => !p)} /><Btn small label="Kaldır" variant="plain" onPress={() => { shop.unplace(d.id); act.sfx("tap"); }} /></View>
-      : <Btn label="Yerleştir" sub="Şu an kafede değil" variant="alt" onPress={() => setPicker((p) => !p)} />;
+    // decoration has fixed places: it stands where it belongs from the moment it is bought; only a theme can be switched on
+    button = theme
+      ? (v.placed ? <Btn label="✓ Açık" disabled /> : <Btn label="Bu temayı aç" variant="alt" onPress={() => { const r = shop.place("theme", d.id); if (r.ok) { act.sfx("tap"); act.peek(2400); } else act.warn(r.message); }} />)
+      : <Btn label="✓ Kafede" sub={(DECOR_SLOT_TYPES as any)[shop.slotOf(d.id)]?.label} disabled />;
   } else if (owned) button = <Btn label="✓ Alındı" disabled />;
   else if (locked) button = <Btn label="Kilitli" sub={v.missing[0]?.text} variant="lack" onPress={() => act.warn(shop.blockReason(d.id).message)} />;
   else button = <Btn label={short ? "Altın yetersiz" : "Satın Al"} sub={short ? `${fmt(v.missingGold)} altın eksik` : `💰 ${fmt(v.price)}`} variant={short ? "lack" : "go"} onPress={() => (short ? act.warn(shop.blockReason(d.id).message) : onBuy(d))} />;
-  const choose = (slot: string) => { const r = shop.place(slot, d.id); if (r.ok) { act.sfx("tap"); setPicker(false); act.peek(2400); } else act.warn(r.message); };
   return (
     <Pulse on={flash}>
       <Card tone={owned ? "open" : locked ? "locked" : undefined} left={<Preview d={d} game={game} />} right={button}>
-        <Title name={d.name} note={owned ? (decor ? (v.placed ? "Kafede" : "Depoda") : "Alındı") : `${fmt(v.price)} altın`} />
+        <Title name={d.name} note={owned ? (decor ? (theme ? (v.placed ? "Açık" : "Kapalı") : "Kafede") : "Alındı") : `${fmt(v.price)} altın`} />
         {v.effectText ? <Meta tone={owned ? "ok" : "reward"} text={`${owned ? "" : "Kazanım: "}${v.effectText}`} /> : null}
         {owned && shop.levelable(d) ? (() => { const lv = shop.itemLevel(d.id), n = shop.nextLevel(d.id); return <Meta tone="next" text={`Seviye ${lv}/5 · Çekicilik +${shop.appealAt(d, lv)}${n ? ` · Seviye ${n.level}: +${n.appeal} çekicilik, ${fmt(n.cost)} altın${n.levelOk ? "" : ` (oyuncu seviyesi ${n.needLevel} gerekli)`}` : " · en üst seviye"}`} />; })() : null}
         <Meta tone="muted" text={d.desc} />
@@ -417,18 +418,7 @@ function ItemCard({ v, onBuy, flash }: { v: any; onBuy: (d: any) => void; flash:
           </View>
         ) : null}
         {!owned && !locked ? <Meta tone={short ? "bad" : "muted"} text={short ? `Altın: ${fmt(gold)} / ${fmt(v.price)} · ${fmt(v.missingGold)} eksik` : `Altın: ${fmt(gold)} → ${fmt(after)}`} /> : null}
-        {picker && owned && decor ? (
-          <View style={{ gap: u * 0.6 }}>
-            <Meta tone="next" text={v.placed ? "Nereye taşınsın?" : "Nereye yerleştirilsin?"} />
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6 }}>
-              {(shop.slotChoices(d.id) as any[]).map((c) => (
-                <Pressable key={c.slot} onPress={() => (c.here ? setPicker(false) : choose(c.slot))} accessibilityRole="button" accessibilityLabel={`Yer: ${c.label ?? c.slot}`} style={({ pressed }) => ({ minHeight: Math.max(44, u * 5.4), paddingHorizontal: u * 1.6, borderRadius: 99, borderWidth: u * 0.3, borderColor: c.here ? C.greenDark : C.brown, backgroundColor: c.here ? C.greenPale : C.cream, justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
-                  <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{c.here ? "✓ " : ""}{c.label}{c.occupant ? ` · ${c.occupant}` : ""}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        ) : null}
+        {!owned && decor && !theme ? <Meta tone="muted" text={`Yeri: ${(DECOR_SLOT_TYPES as any)[shop.slotsOf(d.id)[0]]?.label ?? "kafe"} (alınca hemen oraya konur)`} /> : null}
       </Card>
     </Pulse>
   );

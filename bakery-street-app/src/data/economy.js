@@ -446,20 +446,20 @@ export const SHOP_ITEMS = [
   T('storageT5', 'storage', 5, 'Kraliyet Kileri', 50000, 14, { storage: 800 }, { desc: 'Her malzemeden 800 adet.', stage: 4 }),
 
   // ---- furniture and decoration (each placed piece adds appeal points)
-  { id: 'matPaw', category: 'decor', kind: 'decor', name: 'Pati Paspası', desc: 'Girişte misafirleri karşılar.', price: 350, minLevel: 1, type: 'mat', group: 'Halı & Paspas', appeal: 1, art: { image: 'mat-paw' } },
-  { id: 'plantA', category: 'decor', kind: 'decor', name: 'Çiçekli Saksı', desc: 'Servis alanının soluna taze bir köşe.', price: 450, minLevel: 1, type: 'plant', group: 'Bitki & Çiçek', appeal: 2, art: { image: 'plant-1' } },
-  { id: 'rugAisle', category: 'decor', kind: 'decor', name: 'Koridor Halısı', desc: 'Masaların arasındaki yolu yumuşatır.', price: 700, minLevel: 2, type: 'rug', group: 'Halı & Paspas', appeal: 2, requires: [{ item: 'areaAisle' }], art: { image: 'rug-green' } },
-  { id: 'shelfPlants', category: 'decor', kind: 'decor', name: 'Raflı Bitki', desc: 'Duvara asılan küçük bir bitki rafı.', price: 1100, minLevel: 3, type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf-plants' } },
-  { id: 'plantB', category: 'decor', kind: 'decor', name: 'Pembe Çiçekli Saksı', desc: 'Sağ köşeye renk katar.', price: 900, minLevel: 4, type: 'plant', group: 'Bitki & Çiçek', appeal: 3, art: { image: 'plant-2' } },
-  { id: 'lampA', category: 'decor', kind: 'decor', name: 'Bakır Sarkıt Lamba', desc: 'Koridora sıcak bir ışık havuzu.', price: 1200, minLevel: 4, type: 'lamp', group: 'Aydınlatma', appeal: 4, requires: [{ item: 'areaAisle' }], art: { image: 'lamp' } },
-  { id: 'shelfBread', category: 'decor', kind: 'decor', name: 'Ekmek Rafı', desc: 'Sepetler ve taze ekmekler.', price: 1800, minLevel: 5, type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf' } },
-  { id: 'tableCake', category: 'decor', kind: 'decor', name: 'Pastalı Masa Takımı', desc: 'Boş masalar çilekli pasta ile süslenir. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, type: 'tabletop', group: 'Masa & Sandalye', appeal: 4, effect: { tableTop: 'cake' }, art: { image: 'table-cake' } },
-  { id: 'tableCup', category: 'decor', kind: 'decor', name: 'Fincanlı Masa Takımı', desc: 'Boş masalarda buğulu kahve fincanı. (Masa süsü: tek seferde biri yerleştirilir.)', price: 2200, minLevel: 5, type: 'tabletop', group: 'Masa & Sandalye', appeal: 4, effect: { tableTop: 'cup' }, art: { image: 'table-cup' } },
-  { id: 'rugRunner', category: 'decor', kind: 'decor', name: 'Kırmızı Yolluk', desc: 'Koridora ikinci bir halı.', price: 1600, minLevel: 6, type: 'rug', group: 'Halı & Paspas', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'rug-runner' } },
-  { id: 'plantC', category: 'decor', kind: 'decor', name: 'Sarkık Bitki', desc: 'Koridorun başında sarmaşıklı saksı.', price: 1500, minLevel: 6, type: 'plant', group: 'Bitki & Çiçek', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'plant-3' } },
-  { id: 'lampB', category: 'decor', kind: 'decor', name: 'İkinci Bakır Lamba', desc: 'Koridorun sonuna ikinci lamba.', price: 2400, minLevel: 8, type: 'lamp', group: 'Aydınlatma', appeal: 4, requires: [{ item: 'lampA' }], art: { image: 'lamp' } },
-  { id: 'tablePlain', category: 'decor', kind: 'decor', name: 'Sade Masa Takımı', desc: 'Vazosuz, sade ahşap masalar. (Masa süsü: tek seferde biri yerleştirilir.)', price: 500, minLevel: 2, type: 'tabletop', group: 'Masa & Sandalye', appeal: 1, effect: { tableTop: 'plain' }, art: { image: 'table-plain' } },
-  { id: 'rackPots', category: 'decor', kind: 'decor', name: 'Bakır Tencere Askısı', desc: 'Duvara asılan bakır tencereler ve kepçeler. (Duvar rafı: iki raf yeri var, hangisini asacağını sen seç.)', price: 1400, minLevel: 4, type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'rack' } },
+  { id: 'matPaw', category: 'decor', kind: 'decor', name: 'Pati Paspası', desc: 'Girişte misafirleri karşılar.', price: 350, minLevel: 1, slot: 'doormat', type: 'mat', group: 'Halı & Paspas', appeal: 1, art: { image: 'mat-paw' } },
+  { id: 'plantA', category: 'decor', kind: 'decor', name: 'Çiçekli Saksı', desc: 'Servis alanının soluna taze bir köşe.', price: 450, minLevel: 1, slot: 'edge-left', type: 'plant', group: 'Bitki & Çiçek', appeal: 2, art: { image: 'plant-1' } },
+  { id: 'rugAisle', category: 'decor', kind: 'decor', name: 'Koridor Halısı', desc: 'Masaların arasındaki yolu yumuşatır.', price: 700, minLevel: 2, slot: 'rug-aisle', type: 'rug', group: 'Halı & Paspas', appeal: 2, requires: [{ item: 'areaAisle' }], art: { image: 'rug-green' } },
+  { id: 'shelfPlants', category: 'decor', kind: 'decor', name: 'Raflı Bitki', desc: 'Duvara asılan küçük bir bitki rafı.', price: 1100, minLevel: 3, slot: 'wall-r1', type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf-plants' } },
+  { id: 'plantB', category: 'decor', kind: 'decor', name: 'Pembe Çiçekli Saksı', desc: 'Sağ köşeye renk katar.', price: 900, minLevel: 4, slot: 'edge-right', type: 'plant', group: 'Bitki & Çiçek', appeal: 3, art: { image: 'plant-2' } },
+  { id: 'lampA', category: 'decor', kind: 'decor', name: 'Bakır Sarkıt Lamba', desc: 'Koridora sıcak bir ışık havuzu.', price: 1200, minLevel: 4, slot: 'lamp-1', type: 'lamp', group: 'Aydınlatma', appeal: 4, requires: [{ item: 'areaAisle' }], art: { image: 'lamp' } },
+  { id: 'shelfBread', category: 'decor', kind: 'decor', name: 'Ekmek Rafı', desc: 'Sepetler ve taze ekmekler.', price: 1800, minLevel: 5, slot: 'wall-r2', type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'shelf' } },
+  { id: 'tableCake', category: 'decor', kind: 'decor', name: 'Pastalı Masa Takımı', desc: 'Boş masalara çilekli pasta konur (fincanlı takım da varsa masalar paylaşılır).', price: 2200, minLevel: 5, slot: 'tables-cake', type: 'tabletop', group: 'Masa & Sandalye', appeal: 4, effect: { tableTop: 'cake' }, art: { image: 'table-cake' } },
+  { id: 'tableCup', category: 'decor', kind: 'decor', name: 'Fincanlı Masa Takımı', desc: 'Boş masalarda buğulu kahve fincanı (pastalı takım da varsa masalar paylaşılır).', price: 2200, minLevel: 5, slot: 'tables-cup', type: 'tabletop', group: 'Masa & Sandalye', appeal: 4, effect: { tableTop: 'cup' }, art: { image: 'table-cup' } },
+  { id: 'rugRunner', category: 'decor', kind: 'decor', name: 'Kırmızı Yolluk', desc: 'Koridora ikinci bir halı.', price: 1600, minLevel: 6, slot: 'rug-aisle-2', type: 'rug', group: 'Halı & Paspas', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'rug-runner' } },
+  { id: 'plantC', category: 'decor', kind: 'decor', name: 'Sarkık Bitki', desc: 'Koridorun başında sarmaşıklı saksı.', price: 1500, minLevel: 6, slot: 'aisle-top', type: 'plant', group: 'Bitki & Çiçek', appeal: 3, requires: [{ item: 'areaAisle' }], art: { image: 'plant-3' } },
+  { id: 'lampB', category: 'decor', kind: 'decor', name: 'İkinci Bakır Lamba', desc: 'Koridorun sonuna ikinci lamba.', price: 2400, minLevel: 8, slot: 'lamp-2', type: 'lamp', group: 'Aydınlatma', appeal: 4, requires: [{ item: 'lampA' }], art: { image: 'lamp' } },
+  { id: 'tablePlain', category: 'decor', kind: 'decor', name: 'Sade Masa Takımı', desc: 'Masalar ve sandalyeler yenilenir; her seviyede masalar tek tek güzelleşir.', price: 500, minLevel: 2, slot: 'tables', type: 'tabletop', group: 'Masa & Sandalye', appeal: 1, effect: { tableTop: 'plain' }, art: { image: 'table-plain' } },
+  { id: 'rackPots', category: 'decor', kind: 'decor', name: 'Bakır Tencere Askısı', desc: 'Fırının üstündeki duvara bakır tencereler ve kepçeler asılır.', price: 1400, minLevel: 4, slot: 'wall-l1', type: 'shelf', group: 'Raf & Duvar', appeal: 3, requires: [{ item: 'areaWall' }], art: { image: 'rack' } },
 
   // ---- recipes
   { id: 'recipeSimit', category: 'recipes', kind: 'recipe', recipe: 'simit', name: 'Simit Tarifi', desc: 'Susamlı, çıtır halka ekmek.', price: 600, minLevel: 1, art: { icon: 'simit' } },
@@ -484,8 +484,8 @@ export const SHOP_ITEMS = [
   // ---- special content: VIP guests and themes
   { id: 'vip1', category: 'special', kind: 'special', name: 'VIP Misafirler', desc: 'Bazı misafirler VIP gelir: altın taçlı, daha çok öder.', price: 9000, minLevel: 8, stage: 3, effect: { vip: { chance: 0.1, mult: 1.6 } }, line: 'vip', tier: 2, art: { icon: 'vip' } },
   { id: 'vip2', category: 'special', kind: 'special', name: 'Ünlü Ziyaretçiler', desc: 'VIP misafir sıklığı ve ödemesi artar.', price: 30000, minLevel: 13, stage: 4, effect: { vip: { chance: 0.2, mult: 2 } }, line: 'vip', tier: 3, requires: [{ item: 'vip1' }], art: { icon: 'vip' } },
-  { id: 'themeSpring', category: 'special', kind: 'decor', name: 'Bahar Teması', desc: 'Pembe çiçek yaprakları süzülür. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, type: 'theme', appeal: 5, effect: { theme: 'spring' }, art: { icon: 'spring' } },
-  { id: 'themeCozy', category: 'special', kind: 'decor', name: 'Kış Köşesi Teması', desc: 'Sıcak ışık ve kar taneleri. (Tema: tek seferde biri yerleştirilir.)', price: 5000, minLevel: 6, stage: 2, type: 'theme', appeal: 5, effect: { theme: 'cozy' }, art: { icon: 'cozy' } },
+  { id: 'themeSpring', category: 'special', kind: 'decor', name: 'Bahar Teması', desc: 'Pembe çiçek yaprakları süzülür. (Tema: aynı anda biri açık olur, Mağaza\'dan değiştirebilirsin.)', price: 5000, minLevel: 6, stage: 2, slot: 'theme', type: 'theme', appeal: 5, effect: { theme: 'spring' }, art: { icon: 'spring' } },
+  { id: 'themeCozy', category: 'special', kind: 'decor', name: 'Kış Köşesi Teması', desc: 'Sıcak ışık ve kar taneleri. (Tema: aynı anda biri açık olur, Mağaza\'dan değiştirebilirsin.)', price: 5000, minLevel: 6, stage: 2, slot: 'theme', type: 'theme', appeal: 5, effect: { theme: 'cozy' }, art: { icon: 'cozy' } },
 ];
 
 /**
@@ -527,12 +527,11 @@ export const EQUIPMENT_ART = {
 };
 
 /**
- * Decoration slots: where a piece can stand (positions are in scene/interior-layout.js DECOR_SLOTS under the same id). A decoration has a
- * `type`; it can be placed in any slot of its type, and the player moves pieces between them (Shop.place). 'tableTop' and 'theme' hold one piece
- * for the whole café.
+ * Decoration slots: every piece has its own place (`slot` on the item; positions in scene/interior-layout.js DECOR_SLOTS under the same id), so a
+ * bought piece appears there at once and nothing ever stands on top of something else. Only the theme slot is shared: one theme at a time.
  */
 export const DECOR_SLOT_TYPES = {
-  'doormat': { type: 'mat', label: 'Giriş' },
+  'doormat': { type: 'mat', label: 'Kapı önü' },
   'rug-aisle': { type: 'rug', label: 'Koridor ortası' },
   'rug-aisle-2': { type: 'rug', label: 'Koridor başı' },
   'edge-left': { type: 'plant', label: 'Sol köşe' },
@@ -540,9 +539,12 @@ export const DECOR_SLOT_TYPES = {
   'aisle-top': { type: 'plant', label: 'Koridor girişi' },
   'lamp-1': { type: 'lamp', label: 'Üst lamba' },
   'lamp-2': { type: 'lamp', label: 'Alt lamba' },
-  'wall-r1': { type: 'shelf', label: 'Üst raf yeri' },
-  'wall-r2': { type: 'shelf', label: 'Alt raf yeri' },
-  'tableTop': { type: 'tabletop', label: 'Tüm masalar' },
+  'wall-r1': { type: 'shelf', label: 'Sağ duvar, üst' },
+  'wall-r2': { type: 'shelf', label: 'Sağ duvar, alt' },
+  'wall-l1': { type: 'shelf', label: 'Fırının üstü' },
+  'tables': { type: 'tabletop', label: 'Masalar' },
+  'tables-cake': { type: 'tabletop', label: 'Masaların üstü (pasta)' },
+  'tables-cup': { type: 'tabletop', label: 'Masaların üstü (fincan)' },
   'theme': { type: 'theme', label: 'Tüm kafe' },
 };
-export const SHARED_SLOTS = ['tableTop', 'theme'];
+export const SHARED_SLOTS = ['theme'];

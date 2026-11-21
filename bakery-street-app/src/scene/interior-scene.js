@@ -309,10 +309,12 @@ export class InteriorScene {
    */
   /** The picture of the placed table set at its level (a whole set: table and both chairs), or null: then the plain pieces are drawn. */
   levelSetArt(i) {
-    const shop = this.game.shop, id = shop?.placed?.tableTop;
-    if (!id || !shop.isPlaced(id)) return null;
-    for (let n = shop.tableLevel(id, i); n >= 2; n--) { const img = getImage(`lvl-${id}-${n}`); if (img) return img; }
-    return null;
+    const shop = this.game.shop;
+    let best = null, lv = 1;
+    for (const id of shop?.tableSets?.() ?? []) {               // the highest table level among the sets standing in the café shows
+      for (let n = shop.tableLevel(id, i); n > lv; n--) { const img = getImage(`lvl-${id}-${n}`); if (img) { best = img; lv = n; break; } }
+    }
+    return best;
   }
 
   tableSet(ctx, a, tableImg, dx, dy, w, h) {
@@ -322,7 +324,7 @@ export class InteriorScene {
       this.grounding(ctx, dx + w / 2, dy + h, sw * 0.5);
       ctx.drawImage(set, sx, sy, sw, sh);
       // the set's pictures have an empty table top: a free table shows the set's decoration (cake / cup), a taken one stays clear for the order
-      const i = +a.id.slice(5) - 1, top = this.game.shop?.tableTop(), taken = !!this.customers.ownerAt(i) || this.staff.plates.has(i);
+      const i = +a.id.slice(5) - 1, top = this.game.shop?.tableTopAt(i), taken = !!this.customers.ownerAt(i) || this.staff.plates.has(i);
       if (!taken && (top === 'cake' || top === 'cup')) drawIconOrEmoji(ctx, top === 'cake' ? 'cake' : 'coffee', top === 'cake' ? '🍰' : '☕', dx + w / 2, dy + h - sw * 0.5, sw * 0.17);
       return;
     }
@@ -429,7 +431,7 @@ export class InteriorScene {
    * showcase stock) are drawn on top so the machines still show what they are doing.
    */
   areaAsset(ctx, a) {
-    const top = a.id.startsWith('table') ? this.game.shop?.tableTop() : null;      // the shop's table set: cake or cup instead of the vase
+    const top = a.id.startsWith('table') ? this.game.shop?.tableTopAt(+a.id.slice(5) - 1) : null;      // the shop's table set: cake or cup instead of the vase
     const img = getImage(`int-${a.id.startsWith('table') ? (top && getImage(`int-table-${top}`) ? `table-${top}` : 'table') : a.id}`);
     if (!img) return false;
     const isTable = a.id.startsWith('table') && getImage('int-chair-left') && getImage('int-chair-right');

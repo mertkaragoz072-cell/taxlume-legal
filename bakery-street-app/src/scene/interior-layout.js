@@ -107,16 +107,18 @@ export const depthOf = (a) => (a.id.startsWith('table') ? a.y + a.h - 35 : a.id 
  * All of them sit in the central aisle or at the edges, clear of the walking lanes (guests use the gaps at x 350 and 550, the waiter lane is above y 740).
  */
 export const DECOR_SLOTS = {
-  'doormat': { x: 450, y: 1335, kind: 'flat', w: 150 },
-  'rug-aisle': { x: 450, y: 1185, kind: 'flat', w: 250 },
-  'rug-aisle-2': { x: 450, y: 1010, kind: 'flat', w: 250 },
+  // the aisle between the tables, top to bottom, each piece in its own band so nothing overlaps: plant, rug, lamp, rug, lamp; the mat lies at the door
+  'aisle-top': { x: 450, y: 935, kind: 'stand', h: 120 },
+  'rug-aisle-2': { x: 450, y: 988, kind: 'flat', w: 220 },
+  'lamp-1': { x: 450, y: 1128, kind: 'hang', h: 88 },
+  'rug-aisle': { x: 450, y: 1215, kind: 'flat', w: 220 },
+  'lamp-2': { x: 450, y: 1356, kind: 'hang', h: 88 },
+  'doormat': { x: 450, y: 1418, kind: 'flat', w: 140 },
   'edge-left': { x: 52, y: 885, kind: 'stand', h: 128 },
   'edge-right': { x: 848, y: 890, kind: 'stand', h: 128 },
-  'aisle-top': { x: 450, y: 940, kind: 'stand', h: 135 },
-  'lamp-1': { x: 450, y: 1085, kind: 'hang', h: 105 },
-  'lamp-2': { x: 450, y: 1290, kind: 'hang', h: 105 },
   'wall-r1': { x: 806, y: 335, kind: 'wall', w: 150 },
   'wall-r2': { x: 806, y: 452, kind: 'wall', w: 150 },
+  'wall-l1': { x: 655, y: 314, kind: 'wall', w: 124 },   // the copper rack: on the wall between the chalkboard and the shelves, over the upgrades board
 };
 
 /** Waiting spots in front of the showcase (centre 422), one body width apart. */

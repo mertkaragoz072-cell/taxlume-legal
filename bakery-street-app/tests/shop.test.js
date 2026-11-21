@@ -299,14 +299,13 @@ test('decoration: placed items add appeal; guests come faster and sometimes tip;
   assert.equal(c.shop.appeal(), 1 + 2 + 2);
   assert.ok(Math.abs(c.shop.arrivalFactor() - (1 - 5 * APPEAL.arrivalPerPoint)) < 1e-9);
   assert.ok(Math.abs(c.shop.tipChance() - 5 * APPEAL.tipPerPoint) < 1e-9);
-  // shared slot: the latest bought is placed; the other can be placed again
+  // table sets have their own places too: the cake and cup sets share the tables (every other one), both count
   c.progression.level = 6;
-  assert.ok(c.shop.buy('tableCake').ok); assert.equal(c.shop.tableTop(), 'cake');
-  assert.ok(c.shop.buy('tableCup').ok); assert.equal(c.shop.tableTop(), 'cup');
-  assert.equal(c.shop.isPlaced('tableCake'), false);
+  assert.ok(c.shop.buy('tableCake').ok); assert.deepEqual([0, 1, 2, 3].map((i) => c.shop.tableTopAt(i)), ['cake', 'cake', 'cake', 'cake']);
   const appealBefore = c.shop.appeal();
-  c.shop.place('tableTop', 'tableCake'); assert.equal(c.shop.tableTop(), 'cake');
-  assert.equal(c.shop.appeal(), appealBefore);                       // one table top counts once
+  assert.ok(c.shop.buy('tableCup').ok); assert.deepEqual([0, 1, 2, 3].map((i) => c.shop.tableTopAt(i)), ['cake', 'cup', 'cake', 'cup']);
+  assert.ok(c.shop.isPlaced('tableCake') && c.shop.isPlaced('tableCup'));
+  assert.ok(c.shop.appeal() > appealBefore, 'every table set counts');
 });
 
 test('tips: a guest with a tip pays the bill plus the tip once; without appeal no random number is drawn', () => {
@@ -404,58 +403,51 @@ test('the next goal: nearest thing to save for, then "ready", then the level gat
 });
 
 // ---------------------------------------------------------------------------------- save
-test('validateShop repairs garbage and never loses an owned decoration', () => {
+test('validateShop repairs garbage and never loses an owned decoration; every piece goes back to its own place', () => {
   const c = make({ level: 6 });
-  const v = validateShop({ owned: ['plantA', 'nope', 'plantA', 'tableCake', 'plantB'], placed: { 'edge-left': 'nope', tableTop: 'plantA', 'edge-right': 'plantA', 'wall-r1': 'plantB' }, stored: ['plantB', 'matPaw'], introduced: ['ovenT2', 'plantA'], stage: 99 }, c.shop);
+  const v = validateShop({ owned: ['plantA', 'nope', 'plantA', 'tableCake', 'plantB'], placed: { 'edge-left': 'nope', tableTop: 'plantA', 'edge-right': 'plantA', 'wall-r1': 'plantB' }, stored: ['plantB', 'matPaw'], introduced: ['ovenT2', 'plantA'], stage: 9 }, c.shop);
   assert.deepEqual(v.owned, ['plantA', 'tableCake', 'plantB']);
-  assert.equal(v.placed['edge-right'], 'plantA');                     // a plant in a plant slot stays
-  assert.equal(v.placed.tableTop, 'tableCake');                       // wrong-type entries ignored, the owned piece placed where it belongs
-  assert.equal(v.placed['wall-r1'], undefined);                       // a plant cannot stand on a shelf
-  assert.ok(Object.values(v.placed).includes('plantB') || v.stored.includes('plantB'), 'plantB is placed or stored, never lost');
-  assert.deepEqual(v.stored.filter((id) => !['plantB'].includes(id)), []);   // matPaw is not owned: dropped from stored
+  assert.equal(v.placed['edge-left'], 'plantA');                      // moved back to where it belongs
+  assert.equal(v.placed['edge-right'], 'plantB');
+  assert.equal(v.placed['tables-cake'], 'tableCake');
+  assert.equal(v.placed['wall-r1'], undefined);
+  assert.deepEqual(v.stored, [], 'nothing waits in storage: decoration always stands in its place');
   assert.deepEqual(v.introduced, ['plantA']);
   assert.equal(v.stage, 4);                                           // clamped, not trusted
   assert.deepEqual(validateShop(undefined, c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, parts: {}, recipeLevels: {}, collections: [] });
   assert.deepEqual(validateShop('x', c.shop), { owned: [], placed: {}, stored: [], introduced: [], stage: 1, levels: {}, parts: {}, recipeLevels: {}, collections: [] });
-  // a v10 save (no `stored`) loads: pieces keep their slots
-  const old = validateShop({ owned: ['plantA', 'lampA'], placed: { 'edge-left': 'plantA', 'lamp-1': 'lampA' }, introduced: [], stage: 2 }, c.shop);
-  assert.deepEqual(old.placed, { 'edge-left': 'plantA', 'lamp-1': 'lampA' }); assert.deepEqual(old.stored, []);
+  // an older save that had moved or stored pieces: they come back to their own places
+  const old = validateShop({ owned: ['plantA', 'plantB', 'lampA'], placed: { 'edge-right': 'plantA', 'lamp-2': 'lampA' }, stored: ['plantB'], introduced: [], stage: 2 }, c.shop);
+  assert.deepEqual(old.placed, { 'edge-left': 'plantA', 'edge-right': 'plantB', 'lamp-1': 'lampA' }); assert.deepEqual(old.stored, []);
 });
 
-test('placement mode: pieces move between the slots of their type, swap, are taken down and put back; appeal follows what stands; it all survives a reload', () => {
+test('fixed places: a bought piece appears in its own place at once, cannot be moved or taken down, and two pieces never share a place', () => {
   const storage = new FakeStorage(), clock = { now: T0 };
   const c = make({ level: 8, gold: 400_000, storage, clock });
   for (const id of ['plantA', 'plantB', 'areaAisle', 'plantC']) assert.ok(c.shop.buy(id).ok, id);
-  assert.deepEqual(c.shop.placed, { 'edge-left': 'plantA', 'edge-right': 'plantB', 'aisle-top': 'plantC' });   // each in the first free slot
+  assert.deepEqual(c.shop.placed, { 'edge-left': 'plantA', 'edge-right': 'plantB', 'aisle-top': 'plantC' });
   assert.equal(c.shop.appeal(), 2 + 3 + 3);
-  assert.deepEqual(c.shop.slotChoices('plantA').map((x) => [x.slot, x.here, x.occupant]), [['edge-left', true, null], ['edge-right', false, 'Pembe Çiçekli Saksı'], ['aisle-top', false, 'Sarkık Bitki']]);
-  assert.equal(c.shop.place('wall-r1', 'plantA').ok, false);          // wrong type of slot
-  assert.equal(c.shop.place('edge-right', 'matPaw').ok, false);       // not owned / wrong type
-  assert.ok(c.shop.place('edge-right', 'plantA').ok);                 // swap: plantB takes plantA's old slot
-  assert.deepEqual(c.shop.placed, { 'edge-left': 'plantB', 'edge-right': 'plantA', 'aisle-top': 'plantC' });
-  assert.ok(c.shop.unplace('plantC').ok);                             // taken down: owned, stored, no appeal
-  assert.equal(c.shop.has('plantC'), true); assert.equal(c.shop.isPlaced('plantC'), false);
-  assert.equal(c.shop.appeal(), 2 + 3); assert.deepEqual([...c.shop.stored], ['plantC']);
-  assert.equal(c.shop.unplace('plantC').ok, false);                   // twice: nothing to do
-  const gold = c.player.gold; assert.ok(c.shop.place('aisle-top', 'plantC').ok); assert.equal(c.player.gold, gold);   // placing is free
-  assert.ok(c.shop.unplace('plantA').ok);
-  const b = make({ storage, clock });                                 // reopen: the arrangement is still there, the stored piece still stored
-  assert.deepEqual(b.shop.placed, { 'edge-left': 'plantB', 'aisle-top': 'plantC' });
-  assert.deepEqual([...b.shop.stored], ['plantA']);
-  assert.equal(b.shop.appeal(), 3 + 3);
+  assert.equal(c.shop.place('edge-right', 'plantA').ok, false, 'no moving');
+  assert.equal(c.shop.place('wall-r1', 'plantA').ok, false);
+  assert.equal(c.shop.unplace('plantC').ok, false, 'no taking down');
+  const b = make({ storage, clock });
+  assert.deepEqual(b.shop.placed, c.shop.placed);
+  assert.equal(b.shop.appeal(), 2 + 3 + 3);
 });
 
-test('wall shelves: three pieces compete for two places, so the player chooses; the extra one waits in storage; a shared slot swaps in the newest', () => {
-  const c = make({ level: 8, gold: 400_000 });
-  for (const id of ['areaWall', 'shelfPlants', 'shelfBread', 'rackPots']) assert.ok(c.shop.buy(id).ok, id);
-  assert.equal(Object.keys(c.shop.placed).filter((s) => s.startsWith('wall')).length, 2);
-  assert.deepEqual([...c.shop.stored], ['rackPots']);
-  assert.ok(c.shop.place('wall-r1', 'rackPots').ok);                 // rack replaces what stood there, which goes to storage (it does not fit anywhere else)
-  assert.equal(c.shop.placed['wall-r1'], 'rackPots');
-  assert.equal(c.shop.appeal(), 3 + 3);
-  assert.ok(c.shop.buy('tableCake').ok); assert.ok(c.shop.buy('tablePlain').ok);
-  assert.equal(c.shop.tableTop(), 'plain');                          // the newest table set stands; the old one is stored and can come back
-  assert.ok(c.shop.place('tableTop', 'tableCake').ok); assert.equal(c.shop.tableTop(), 'cake'); assert.ok(c.shop.stored.has('tablePlain'));
+test('every decoration has its own place, and all of them fit at once (only the theme is one at a time)', () => {
+  const c = make({ level: 30, gold: 9e7 });
+  c.shop.stageId = 4;
+  for (let pass = 0; pass < 5; pass++) for (const d of c.shop.items) if (d.category !== 'ingredients') c.shop.buy(d.id);
+  const decor = c.shop.items.filter((d) => d.kind === 'decor' && d.type !== 'theme');
+  for (const d of decor) assert.ok(c.shop.isPlaced(d.id), `${d.id} stands in the café`);
+  assert.equal(new Set(decor.map((d) => d.slot)).size, decor.length, 'one place each');
+  assert.deepEqual([...c.shop.stored].filter((id) => c.shop.def(id).type !== 'theme'), []);
+  const themes = c.shop.items.filter((d) => d.type === 'theme' && c.shop.owned.has(d.id));
+  assert.equal(themes.filter((d) => c.shop.isPlaced(d.id)).length, 1);
+  const other = themes.find((d) => !c.shop.isPlaced(d.id));
+  assert.ok(c.shop.place('theme', other.id).ok, 'a theme can be switched');
+  assert.ok(c.shop.isPlaced(other.id));
 });
 
 test('everything bought and where it stands survives a reload; reset starts clean', () => {
@@ -502,7 +494,7 @@ test('descriptions are built from the numbers (they cannot disagree with the eff
 
 test('the catalogue is consistent: unique ids, valid requirements, equipment lines are chains, slots exist for every decoration', async () => {
   const { DECOR_SLOTS } = await import('../src/scene/interior-layout.js');
-  for (const slot of Object.keys(DECOR_SLOT_TYPES)) assert.ok(DECOR_SLOTS[slot] || ['tableTop', 'theme'].includes(slot), `slot ${slot} has a position`);
+  for (const slot of Object.keys(DECOR_SLOT_TYPES)) assert.ok(DECOR_SLOTS[slot] || ['tables', 'tables-cake', 'tables-cup', 'theme'].includes(slot), `slot ${slot} has a position`);
   for (const slot of Object.keys(DECOR_SLOTS)) assert.ok(DECOR_SLOT_TYPES[slot], `slot ${slot} has a type`);
   const ids = SHOP_ITEMS.map((d) => d.id);
   assert.equal(new Set(ids).size, ids.length);
@@ -543,8 +535,8 @@ test('decoration levels: bought at 1, raised one by one to 5 for gold and player
   assert.equal(c.shop.upgradeItem('plantA').ok, false);
   assert.equal(c.shop.itemLevel('plantA'), ITEM_LEVELS.max);
   assert.equal(c.shop.appealAt(d, 5), Math.round(d.appeal * ITEM_LEVELS.appeal[4]));
-  // a piece taken down gives no appeal at any level
-  c.shop.unplace('plantA'); assert.ok(c.shop.appeal() < a1 + 1);
+  // decoration cannot be taken down: its appeal stays
+  assert.equal(c.shop.unplace('plantA').ok, false); assert.ok(c.shop.isPlaced('plantA'));
   // save round trip, and garbage levels are dropped
   const st = c.shop.exportState();
   assert.equal(st.levels.plantA, 5);

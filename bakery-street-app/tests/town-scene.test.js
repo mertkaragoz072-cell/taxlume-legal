@@ -33,6 +33,7 @@ test('town square: each building is found where it is drawn, the sky and plaza a
 test('town square: a cat on the plaza can be petted: it stops and hearts float up', () => {
   const { scene } = make();
   const w = scene.walkers[1], f = scene.fit();
+  for (const o of scene.walkers) if (o !== w) { o.x = -999; o.y = -999; }   // the other cats wander anywhere: keep them out of the way
   w.x = 500; w.y = 1000; w.moving = true;
   const hit = scene.hitTest(500 * f.s + f.ox, 960 * f.s + f.oy);
   assert.equal(hit, 'cat:1');

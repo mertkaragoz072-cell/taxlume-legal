@@ -143,7 +143,7 @@ test('gold, spending, equipment, recipes, decoration (and where it stands), stag
   const storage = new FakeStorage(), clock = { now: T0 };
   const a = make({ level: 8, gold: 200_000, storage, clock });
   for (const id of ['ovenT2', 'recipeSimit', 'plantA', 'plantB', 'areaAisle', 'lampA', 'table3']) assert.ok(a.shop.buy(id).ok, id);
-  a.shop.place('edge-left', 'plantB'); a.shop.unplace('plantA');
+  assert.equal(a.shop.place('edge-left', 'plantB').ok, false);   // decoration stays in its own place
   a.game.products.bread = 4; a.game.sellProduct('bread', 3);
   const snap = { gold: a.player.gold, shop: a.shop.exportState(), stats: JSON.parse(JSON.stringify(a.game.stats)), ups: { ...a.game.upgrades } };
   const b = make({ gold: 1, storage, clock });
