@@ -47,7 +47,7 @@ The weekly goal is 120 trades per member, resetting every Monday 00:00 UTC.
 
 1. Create a Supabase project (free tier is enough to start).
 2. Authentication → Providers: enable **Anonymous sign-ins**.
-3. SQL editor: run `supabase/schema.sql`.
+3. Apply the schema: `npm run backend:apply` (see "Updating the server" below), or paste `supabase/schema.sql` into the SQL editor.
 4. Give the app the project URL and anon key as build-time variables:
    `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`
    (Codemagic: environment variables; locally: `.env`). The anon key is meant
@@ -55,6 +55,25 @@ The weekly goal is 120 trades per member, resetting every Monday 00:00 UTC.
 5. Without these two variables the Guild card reads "coming soon" and no
    network call is ever made. `EXPO_PUBLIC_GUILD_MOCK=1` runs the on-device
    mock instead (development and screenshots only; never set it in a release).
+
+## Updating the server
+
+The schema is idempotent: every change to `supabase/schema.sql` is applied by running it again.
+
+```
+EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co SUPABASE_ACCESS_TOKEN=sbp_... npm run backend:apply
+```
+
+The access token is created under Supabase → Account → Access Tokens; give it
+**Database read-write on this one project only** and a short expiry (30 days),
+and revoke it when you are done. In a Claude cloud session whose environment
+has a network secret for `api.supabase.com`, leave the token variable unset:
+the proxy adds it and Claude never sees it.
+
+`npm run backend:e2e` (same variables, plus `EXPO_PUBLIC_SUPABASE_ANON_KEY`)
+runs the guild server end to end as several anonymous players (orders, market,
+deliveries, phrases, streaks, leaving deletes the account) and cleans up after
+itself. Run it after every schema change.
 
 ## Checks to run against the real project before shipping
 

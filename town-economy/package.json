@@ -62,7 +62,9 @@
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:i18n && npm run check:native && npm test",
     "smoke": "node scripts/smoke-test.js",
     "qa:ui": "node scripts/ui-qa.js",
-    "gen:audio": "python3 scripts/gen-audio.py"
+    "gen:audio": "python3 scripts/gen-audio.py",
+    "backend:apply": "node backend/scripts/apply-schema.js",
+    "backend:e2e": "node backend/scripts/guild-e2e.js"
   },
   "jest": {
     "preset": "jest-expo",
