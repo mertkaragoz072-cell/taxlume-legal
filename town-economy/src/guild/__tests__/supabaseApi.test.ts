@@ -238,6 +238,55 @@ describe("supabase guild adapter", () => {
     await expect(api.fulfillRequest("1", 5)).rejects.toMatchObject({ code: "request_gone" });
   });
 
+  it("maps the fun functions to their server calls", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/challenge_duel": () => ({ status: 204 }),
+      "rpc/respond_duel": () => ({ status: 204 }),
+      "rpc/claim_duel_reward": () => ({ json: true }),
+      "rpc/daily_draw": () => ({ json: 3 }),
+      "rpc/donate_cash": () => ({ json: 4000 }),
+      "rpc/top_guilds": () => ({
+        json: [{ id: "g", name: "N", totalContribution: 1, members: 2, score: 9, isMine: true }],
+      }),
+      "rpc/report_guild_id": () => ({ status: 204 }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await api.challengeDuel("uuid-1");
+    await api.respondDuel("7", true);
+    expect(await api.claimDuelReward("7")).toBe(true);
+    expect(await api.dailyDraw()).toBe(3);
+    expect(await api.donateCash(5000.9)).toBe(4000);
+    expect((await api.topGuilds())[0]).toMatchObject({ name: "N", isMine: true });
+    await api.reportGuildById("g", "guild_name");
+    const bodies = srv.calls.filter((c) => c.url.includes("/rpc/")).map((c) => c.body);
+    expect(bodies).toContainEqual({ p_opponent: "uuid-1" });
+    expect(bodies).toContainEqual({ p_id: 7, p_accept: true });
+    expect(bodies).toContainEqual({ p_amount: 5000 });
+    expect(bodies).toContainEqual({ p_guild: "g", p_reason: "guild_name" });
+  });
+
+  it("maps the fun errors", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/challenge_duel": () => ({ status: 400, json: { message: "duel_busy" } }),
+      "rpc/daily_draw": () => ({ status: 400, json: { message: "already_drawn" } }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await expect(api.challengeDuel("x")).rejects.toMatchObject({ code: "duel_busy" });
+    await expect(api.dailyDraw()).rejects.toMatchObject({ code: "already_drawn" });
+  });
+
   it("claims the weekly chest as a plain boolean", async () => {
     const srv = fakeServer({
       "/auth/v1/signup": () => ({ json: SESSION }),

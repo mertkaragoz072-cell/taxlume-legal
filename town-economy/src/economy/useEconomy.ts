@@ -266,7 +266,9 @@ type Action =
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "CLAIM_SPEED_BOOST" }
-  | { type: "GUILD_REWARD"; amount: number }
+  | { type: "GUILD_REWARD"; amount: number; source?: "chest" | "draw" | "duel" }
+  | { type: "GUILD_CASH_OUT"; amount: number }
+  | { type: "SET_GUILD_PROJECTS"; built: number }
   | { type: "SET_GUILD_LEVEL"; level: number }
   | { type: "GUILD_GOODS_OUT"; goodId: GoodId; qty: number; to: "order" | "friend" }
   | { type: "GUILD_GOODS_IN"; goodId: GoodId; qty: number; from: string }
@@ -1434,6 +1436,27 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "CLAIM_SPEED_BOOST":
       return claimSpeedBoost(state);
+    case "SET_GUILD_PROJECTS": {
+      const built = Math.max(0, Math.floor(action.built));
+      return (state.guildProjects ?? 0) === built ? state : { ...state, guildProjects: built };
+    }
+    case "GUILD_CASH_OUT": {
+      // Coins given to the guild hall; the server decided how much it took.
+      const amount = Math.min(Math.max(0, Math.floor(action.amount)), Math.floor(state.cash));
+      if (amount <= 0) return state;
+      const event: EconomyEvent = {
+        id: state.nextId,
+        ...eventFields(state.language, "msg.guildCashGiven", { amount }),
+        tone: "good",
+      };
+      return {
+        ...state,
+        cash: state.cash - amount,
+        nextId: state.nextId + 1,
+        lastEvent: event,
+        eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+      };
+    }
     case "SET_GUILD_LEVEL": {
       const level = Math.max(0, Math.floor(action.level));
       return (state.guildLevel ?? 0) === level ? state : { ...state, guildLevel: level };
@@ -1448,7 +1471,15 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       if (!(action.amount > 0)) return state;
       const event: EconomyEvent = {
         id: state.nextId,
-        ...eventFields(state.language, "msg.guildReward", { amount: Math.round(action.amount) }),
+        ...eventFields(
+          state.language,
+          action.source === "draw"
+            ? "msg.guildDrawReward"
+            : action.source === "duel"
+              ? "msg.guildDuelReward"
+              : "msg.guildReward",
+          { amount: Math.round(action.amount) }
+        ),
         tone: "good",
       };
       return {
@@ -1744,7 +1775,16 @@ export function useEconomy() {
     (goodId: GoodId, qty: number, from: string) => dispatch({ type: "GUILD_GOODS_IN", goodId, qty, from }),
     []
   );
-  const grantGuildReward = useCallback((amount: number) => dispatch({ type: "GUILD_REWARD", amount }), []);
+  const grantGuildReward = useCallback(
+    (amount: number, source: "chest" | "draw" | "duel" = "chest") =>
+      dispatch({ type: "GUILD_REWARD", amount, source }),
+    []
+  );
+  const guildCashOut = useCallback((amount: number) => dispatch({ type: "GUILD_CASH_OUT", amount }), []);
+  const setGuildProjects = useCallback(
+    (built: number) => dispatch({ type: "SET_GUILD_PROJECTS", built }),
+    []
+  );
   const translate = useCallback(
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
     [state.language]
@@ -1805,6 +1845,8 @@ export function useEconomy() {
     claimSpeedBoost: claimSpeedBoost_,
     grantGuildReward,
     setGuildLevel,
+    guildCashOut,
+    setGuildProjects,
     guildGoodsOut,
     guildGoodsIn,
     t: translate,

@@ -21,6 +21,20 @@ first use. No email, no password, no third-party login.
 | `claim_weekly_reward`                         | `true` only for the call that takes this week's chest                                                                                          |
 | `report_guild`                                | a player reports a guild or a member's name (fixed reasons); the game has a "Report this guild" button                                         |
 
+Fun (feed, duels, draw, hall, ranking):
+
+| Function                          | Does                                                                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `guild_log` / `guild_feed`        | the guild's activity feed: joined, goal reached, order complete, duel won, hall building finished, big draw prize                     |
+| `challenge_duel` / `respond_duel` | a member dares another to a 24-hour trading duel; the challenged accepts or declines, the challenger can withdraw; one duel at a time |
+| `claim_duel_reward`               | the winner's prize, once                                                                                                              |
+| `settle_duels`                    | (internal) ends duels whose 24 hours are up and lets unanswered challenges lapse after a day                                          |
+| `daily_draw`                      | one draw per player per UTC day; returns a tier (1 small 60%, 2 medium 30%, 3 big 10%); big ones are announced                        |
+| `donate_cash`                     | coins to the guild hall (six buildings in order, costs in `guild_project_cost`); returns how many were accepted                       |
+| `top_guilds` / `report_guild_id`  | the week's ten most active guilds (trades + order units + gifts), and a report on any listed guild                                    |
+
+Building bonuses (storage and output for every member's town) and the draw/duel prize sizes live in the app (`src/economy/guildPerks.ts`, `src/guild/types.ts`, `src/guild/reward.ts`); the server only decides who gets what and how many times.
+
 Perks, streaks and messages:
 
 - **Guild level** comes from everything the guild has done together (trades, order units, gifts). From level 2 each member's town earns up to +0.5% output per level, capped at +5%; leaving the guild gives it up. The game stores only the level in the save (`guildLevel`, optional, no save-version bump).

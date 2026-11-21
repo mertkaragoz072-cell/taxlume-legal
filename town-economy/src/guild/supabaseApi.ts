@@ -7,6 +7,7 @@ import {
   GuildError,
   GuildErrorCode,
   GuildInfo,
+  RankedGuild,
   SyncProfile,
 } from "./types";
 
@@ -41,6 +42,10 @@ const KNOWN: GuildErrorCode[] = [
   "request_invalid",
   "request_gone",
   "own_request",
+  "duel_invalid",
+  "duel_busy",
+  "duel_gone",
+  "already_drawn",
 ];
 
 function toCode(message: unknown): GuildErrorCode {
@@ -202,6 +207,28 @@ export function createSupabaseGuildApi(cfg: SupabaseConfig): GuildApi {
         (await rpc<GuildDelivery[] | null>("claim_deliveries", { p_room: Math.max(0, Math.floor(room)) })) ??
         []
       );
+    },
+    async challengeDuel(opponentId) {
+      await rpc("challenge_duel", { p_opponent: opponentId });
+    },
+    async respondDuel(duelId, accept) {
+      await rpc("respond_duel", { p_id: Number(duelId), p_accept: accept });
+    },
+    async claimDuelReward(duelId) {
+      return Boolean(await rpc<boolean>("claim_duel_reward", { p_id: Number(duelId) }));
+    },
+    async dailyDraw() {
+      const tier = Number(await rpc<number>("daily_draw"));
+      return (tier === 3 ? 3 : tier === 2 ? 2 : 1) as 1 | 2 | 3;
+    },
+    async donateCash(amount) {
+      return Number(await rpc<number>("donate_cash", { p_amount: Math.floor(amount) })) || 0;
+    },
+    async topGuilds() {
+      return (await rpc<RankedGuild[] | null>("top_guilds")) ?? [];
+    },
+    async reportGuildById(guildId, reason) {
+      await rpc("report_guild_id", { p_guild: guildId, p_reason: reason });
     },
     async reportGuild(reason) {
       await rpc("report_guild", { p_reason: reason });

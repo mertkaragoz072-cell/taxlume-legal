@@ -324,6 +324,9 @@ export interface EconomyState {
    * guild screen; gives a small output bonus (see guildPerks.ts). Optional so
    * saves from before guilds load unchanged. */
   guildLevel?: number;
+  /** how many hall projects the player's guild has built (0 = none); each adds
+   * warehouse room or output (see guildPerks.ts). Optional like guildLevel. */
+  guildProjects?: number;
   /** set right after townRankIndex climbs, so Merve can step in and
    * congratulate the player on the new title; null once dismissed. Carries
    * the already-resolved icon/title rather than a rank index so the modal

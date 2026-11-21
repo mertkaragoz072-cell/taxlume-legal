@@ -1,6 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { normalizeGuildCode, normalizeGuildName, validateGuildName } from "./guildName";
 import {
+  DuelStatus,
+  GuildFeedKind,
+  HALL_PROJECTS,
+  RankedGuild,
+  ReportReason,
+  DUEL_HOURS,
   CHEER_CODES,
   GUILD_ORDER_GOODS,
   GUILD_REQUEST_GOODS,
@@ -80,6 +86,23 @@ interface Stored {
       qty: number;
       claimed: boolean;
     }[];
+    feed: { id: string; kind: GuildFeedKind; actorName: string; detail: string | null; at: number }[];
+    duels: {
+      id: string;
+      challengerId: string;
+      opponentId: string;
+      status: DuelStatus;
+      createdAt: number;
+      endsAt: number | null;
+      cTrades: number;
+      oTrades: number;
+      winnerId: string | null;
+      claimed: boolean;
+    }[];
+    draws: Record<string, number>; // UTC day -> tier, for this player
+    built: number;
+    projectProgress: number;
+    cashGiven: Record<string, number>;
     lastBotTick: number;
     lastBotHelp: number;
   } | null;
@@ -92,12 +115,47 @@ export function createMockGuildApi(
   async function load(): Promise<Stored> {
     try {
       const raw = await store.getItem(KEY);
-      return raw ? (JSON.parse(raw) as Stored) : { guild: null };
+      const stored = raw ? (JSON.parse(raw) as Stored) : { guild: null };
+      const g = stored.guild;
+      if (g) {
+        // a guild saved by an older build: fill in what it did not have yet
+        g.feed ??= [];
+        g.duels ??= [];
+        g.draws ??= {};
+        g.built ??= 0;
+        g.projectProgress ??= 0;
+        g.cashGiven ??= {};
+      }
+      return stored;
     } catch {
       return { guild: null };
     }
   }
   const save = (s: Stored) => store.setItem(KEY, JSON.stringify(s));
+  const dayKey = () => new Date(now()).toISOString().slice(0, 10);
+  const log = (
+    g: NonNullable<Stored["guild"]>,
+    kind: GuildFeedKind,
+    actorName = "",
+    detail: string | null = null
+  ) => {
+    g.feed.push({ id: "f" + g.feed.length + "-" + now(), kind, actorName, detail, at: now() });
+  };
+  const nameOf = (g: NonNullable<Stored["guild"]>, id: string) =>
+    g.members.find((m) => m.id === id)?.name ?? "?";
+
+  /** closes finished duels and lets unanswered challenges lapse */
+  function settleDuels(g: NonNullable<Stored["guild"]>) {
+    const t = now();
+    for (const d of g.duels) {
+      if (d.status === "pending" && t - d.createdAt > DUEL_HOURS * 3_600_000) d.status = "declined";
+      if (d.status === "active" && d.endsAt !== null && d.endsAt <= t) {
+        d.status = "done";
+        d.winnerId = d.cTrades > d.oTrades ? d.challengerId : d.oTrades > d.cTrades ? d.opponentId : null;
+        if (d.winnerId) log(g, "duel_won", nameOf(g, d.winnerId));
+      }
+    }
+  }
 
   /** lets the computer-played members trade for the time that has passed */
   function advanceBots(s: Stored) {
@@ -124,6 +182,21 @@ export function createMockGuildApi(
       g.donated[week][m.id] =
         (g.donated[week][m.id] ?? 0) + Math.min(open, Math.floor(hours * (bot.perHour / 3)));
     }
+    // the computer players take a duel they are dared to and keep trading in it
+    for (const d of g.duels) {
+      const bot = (id: string) => BOTS.find((b) => b.id === id);
+      if (d.status === "pending" && bot(d.opponentId) && t - d.createdAt >= 5_000) {
+        d.status = "active";
+        d.endsAt = t + DUEL_HOURS * 3_600_000;
+      }
+      if (d.status === "active") {
+        const cb = bot(d.challengerId);
+        const ob = bot(d.opponentId);
+        if (cb) d.cTrades += Math.max(1, Math.floor(hours * cb.perHour));
+        if (ob) d.oTrades += Math.max(1, Math.floor(hours * ob.perHour));
+      }
+    }
+    settleDuels(g);
     // a friend answers your open request, a few units every 20 seconds
     const mine = g.requests.find((r) => r.fromId === ME && !r.closed);
     if (mine && t - g.lastBotHelp >= 20_000) {
@@ -169,6 +242,7 @@ export function createMockGuildApi(
       rankIndex: m.rankIndex,
       netWorth: m.netWorth,
       weekContribution: contrib[m.id] ?? 0,
+      cashGiven: g.cashGiven[m.id] ?? 0,
       donated: g.donated[week]?.[m.id] ?? 0,
       gifted: g.gifted[week]?.[m.id] ?? 0,
       isOwner: m.id === g.ownerId,
@@ -224,6 +298,35 @@ export function createMockGuildApi(
         rewardClaimed: (g.orderClaimed[week] ?? []).includes(ME),
       },
       requests,
+      feed: g.feed
+        .slice(-12)
+        .reverse()
+        .map((f) => ({ ...f })),
+      duels: g.duels
+        .filter((d) => d.challengerId === ME || d.opponentId === ME)
+        .filter(
+          (d) =>
+            d.status === "pending" ||
+            d.status === "active" ||
+            (d.status === "done" && now() - (d.endsAt ?? 0) < 3 * 86_400_000)
+        )
+        .slice(-5)
+        .reverse()
+        .map((d) => ({
+          id: d.id,
+          status: d.status,
+          challengerId: d.challengerId,
+          challengerName: nameOf(g, d.challengerId),
+          opponentId: d.opponentId,
+          opponentName: nameOf(g, d.opponentId),
+          endsAt: d.endsAt,
+          cTrades: d.cTrades,
+          oTrades: d.oTrades,
+          winnerId: d.winnerId,
+          canClaim: d.winnerId === ME && !d.claimed,
+        })),
+      drawnToday: g.draws[dayKey()] !== undefined,
+      projects: { built: g.built, progress: g.projectProgress },
       cheers,
     };
   }
@@ -265,6 +368,12 @@ export function createMockGuildApi(
         orderClaimed: {},
         requests: [],
         deliveries: [],
+        feed: [],
+        duels: [],
+        draws: {},
+        built: 0,
+        projectProgress: 0,
+        cashGiven: {},
         lastBotTick: now(),
         lastBotHelp: 0,
       };
@@ -310,6 +419,29 @@ export function createMockGuildApi(
           { id: "r2", fromId: "b4", goodId: "sand", qty: 8, filled: 0, closed: false, at: t - 1_000_000 },
         ],
         deliveries: [],
+        feed: [
+          { id: "f1", kind: "joined", actorName: "Can", detail: null, at: t - 7_200_000 },
+          { id: "f2", kind: "project_done", actorName: "Elif", detail: "1", at: t - 5_400_000 },
+          { id: "f3", kind: "big_draw", actorName: "Mehmet", detail: null, at: t - 1_800_000 },
+        ],
+        duels: [
+          {
+            id: "d1",
+            challengerId: "b3",
+            opponentId: ME,
+            status: "pending",
+            createdAt: t - 600_000,
+            endsAt: null,
+            cTrades: 0,
+            oTrades: 0,
+            winnerId: null,
+            claimed: false,
+          },
+        ],
+        draws: {},
+        built: 1,
+        projectProgress: 1_800,
+        cashGiven: { b1: 1_200, b3: 3_800 },
         lastBotTick: t,
         lastBotHelp: t,
       };
@@ -339,6 +471,12 @@ export function createMockGuildApi(
       s.guild.weeks[week] ??= {};
       s.guild.weeks[week][ME] = (s.guild.weeks[week][ME] ?? 0) + Math.floor(trades);
       s.guild.total += Math.floor(trades);
+      // trades also count in a duel this player is in
+      for (const d of s.guild.duels) {
+        if (d.status !== "active") continue;
+        if (d.challengerId === ME) d.cTrades += Math.floor(trades);
+        if (d.opponentId === ME) d.oTrades += Math.floor(trades);
+      }
       await save(s);
     },
     async sendCheer(toUserId, emote) {
@@ -436,6 +574,117 @@ export function createMockGuildApi(
       }
       await save(s);
       return out;
+    },
+    async challengeDuel(opponentId) {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      settleDuels(g);
+      if (opponentId === ME || !g.members.some((m) => m.id === opponentId))
+        throw new GuildError("duel_invalid");
+      const busy = (id: string) =>
+        g.duels.some(
+          (d) =>
+            (d.status === "pending" || d.status === "active") &&
+            (d.challengerId === id || d.opponentId === id)
+        );
+      if (busy(ME) || busy(opponentId)) throw new GuildError("duel_busy");
+      g.duels.push({
+        id: "d" + now(),
+        challengerId: ME,
+        opponentId,
+        status: "pending",
+        createdAt: now(),
+        endsAt: null,
+        cTrades: 0,
+        oTrades: 0,
+        winnerId: null,
+        claimed: false,
+      });
+      await save(s);
+    },
+    async respondDuel(duelId, accept) {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      settleDuels(g);
+      const d = g.duels.find((x) => x.id === duelId && x.status === "pending");
+      if (!d || (d.opponentId !== ME && d.challengerId !== ME)) throw new GuildError("duel_gone");
+      if (d.challengerId === ME && accept) throw new GuildError("duel_invalid");
+      if (d.opponentId === ME && accept) {
+        d.status = "active";
+        d.endsAt = now() + DUEL_HOURS * 3_600_000;
+      } else {
+        d.status = "declined";
+      }
+      await save(s);
+    },
+    async claimDuelReward(duelId) {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      settleDuels(g);
+      const d = g.duels.find((x) => x.id === duelId);
+      if (!d || d.status !== "done" || d.winnerId !== ME || d.claimed) return false;
+      d.claimed = true;
+      await save(s);
+      return true;
+    },
+    async dailyDraw() {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      if (g.draws[dayKey()] !== undefined) throw new GuildError("already_drawn");
+      const roll = Math.random();
+      const tier = (roll < 0.6 ? 1 : roll < 0.9 ? 2 : 3) as 1 | 2 | 3;
+      g.draws[dayKey()] = tier;
+      if (tier === 3) log(g, "big_draw", nameOf(g, ME));
+      await save(s);
+      return tier;
+    },
+    async donateCash(amount) {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      if (g.built >= HALL_PROJECTS.length) return 0;
+      const cost = HALL_PROJECTS[g.built].cost;
+      const take = Math.max(0, Math.min(Math.floor(amount), 5_000_000, cost - g.projectProgress));
+      if (take === 0) return 0;
+      g.cashGiven[ME] = (g.cashGiven[ME] ?? 0) + take;
+      if (g.projectProgress + take >= cost) {
+        g.built += 1;
+        g.projectProgress = 0;
+        log(g, "project_done", nameOf(g, ME), String(g.built));
+      } else {
+        g.projectProgress += take;
+      }
+      await save(s);
+      return take;
+    },
+    async topGuilds(): Promise<RankedGuild[]> {
+      const s = await load();
+      const g = s.guild;
+      const mine = g ? view(s) : null;
+      const others: RankedGuild[] = [
+        { id: "x1", name: "Kervan Yolu", totalContribution: 9_000, members: 18, score: 1_450, isMine: false },
+        { id: "x2", name: "Demir Eller", totalContribution: 4_200, members: 12, score: 980, isMine: false },
+        { id: "x3", name: "Gece Pazarı", totalContribution: 2_100, members: 9, score: 610, isMine: false },
+        { id: "x4", name: "Yeşil Vadi", totalContribution: 800, members: 5, score: 240, isMine: false },
+      ];
+      if (mine) {
+        others.push({
+          id: mine.id,
+          name: mine.name,
+          totalContribution: mine.totalContribution,
+          members: mine.memberCount,
+          score: mine.goalProgress + mine.order.progress,
+          isMine: true,
+        });
+      }
+      return others.sort((a, b) => b.score - a.score).slice(0, 10);
+    },
+    async reportGuildById(_guildId: string, _reason: ReportReason) {
+      // nothing to send anywhere in the mock
     },
     async reportGuild() {
       const s = await load();

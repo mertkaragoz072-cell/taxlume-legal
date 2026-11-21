@@ -5,6 +5,7 @@
  * a number or a boolean, so both the reducer and the screens can call them and
  * never disagree about a figure. */
 
+import { hallStorageBonus } from "./guildPerks";
 import { ASSETS } from "./assets";
 import { DIFFICULTIES } from "./difficulty";
 import { GOODS } from "./goods";
@@ -205,7 +206,9 @@ export function storageCapacity(state: EconomyState): number {
   return (
     STORAGE_BASE_CAPACITY +
     state.upgrades.storageYard * UPGRADES_BY_ID.storageYard.effectPerLevel +
-    state.townRankIndex * TOWN_RANK_STORAGE_BONUS_PER_RANK
+    state.townRankIndex * TOWN_RANK_STORAGE_BONUS_PER_RANK +
+    // warehouses in the guild hall, for every member
+    hallStorageBonus(state.guildProjects)
   );
 }
 /** LOAN_MAX_NET_WORTH_PCT, a little more generous every rank — a well-ranked

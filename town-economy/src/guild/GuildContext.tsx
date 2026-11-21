@@ -4,7 +4,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { guildStorageRoom } from "../economy/guildTrade";
 import { GoodId } from "../economy/types";
 import { getGuildApi } from "./getGuildApi";
-import { guildRewardFor } from "./reward";
+import { drawRewardFor, duelRewardFor, guildRewardFor } from "./reward";
 import {
   CheerCode,
   GuildApi,
@@ -12,6 +12,7 @@ import {
   GuildError,
   GuildInfo,
   guildLevel,
+  RankedGuild,
   ReportReason,
 } from "./types";
 
@@ -45,6 +46,16 @@ interface GuildContextValue {
   cancelRequest: () => Promise<void>;
   /** sends up to `qty` of a requested good to a friend, from the player's stock */
   fulfill: (requestId: string, goodId: GoodId, qty: number) => Promise<void>;
+  challenge: (opponentId: string) => Promise<void>;
+  respondDuel: (duelId: string, accept: boolean) => Promise<void>;
+  claimDuel: (duelId: string) => Promise<void>;
+  /** takes today's draw; resolves to its tier (null if it failed) and pays the prize */
+  draw: () => Promise<1 | 2 | 3 | null>;
+  /** gives up to `amount` coins to the guild hall */
+  donateHall: (amount: number) => Promise<void>;
+  ranking: RankedGuild[];
+  loadRanking: () => Promise<void>;
+  reportRanked: (guildId: string, reason: ReportReason) => Promise<boolean>;
   report: (reason: ReportReason) => Promise<boolean>;
   clearError: () => void;
 }
@@ -62,12 +73,21 @@ export function GuildProvider({
   children: React.ReactNode;
   api?: GuildApi | null;
 }) {
-  const { state, netWorth, grantGuildReward, guildGoodsOut, guildGoodsIn, setGuildLevel } =
-    useEconomyContext();
+  const {
+    state,
+    netWorth,
+    grantGuildReward,
+    guildGoodsOut,
+    guildGoodsIn,
+    setGuildLevel,
+    guildCashOut,
+    setGuildProjects,
+  } = useEconomyContext();
   const api = useMemo(() => (apiProp !== undefined ? apiProp : getGuildApi()), [apiProp]);
   const [status, setStatus] = useState<Status>(api ? "loading" : "unavailable");
   const [remembered, setRemembered] = useState<boolean | null>(null);
   const [guild, setGuild] = useState<GuildInfo | null>(null);
+  const [ranking, setRanking] = useState<RankedGuild[]>([]);
   const [error, setError] = useState<GuildErrorCode | null>(null);
   const [busy, setBusy] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
@@ -79,15 +99,17 @@ export function GuildProvider({
     rank: number;
     netWorth: number;
     room: number;
+    cash: number;
     streak: number;
     held: Record<string, number>;
-  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, streak: 0, held: {} });
+  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, cash: 0, streak: 0, held: {} });
   live.current = {
     trades: state.stats.totalTrades,
     name: state.townName,
     rank: state.townRankIndex,
     netWorth,
     room: guildStorageRoom(state),
+    cash: state.cash,
     streak: guild?.streak ?? 0,
     held: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, Math.floor(g.holding)])),
   };
@@ -98,8 +120,10 @@ export function GuildProvider({
       setStatus(g ? "in" : "none");
       // the guild's level gives the town a small output bonus (see guildPerks.ts)
       setGuildLevel(g ? guildLevel(g.totalContribution) : 0);
+      // ... and the hall's buildings add room and output (same file)
+      setGuildProjects(g ? g.projects.built : 0);
     },
-    [setGuildLevel]
+    [setGuildLevel, setGuildProjects]
   );
 
   const setBaseline = useCallback(async (trades: number) => {
@@ -190,6 +214,16 @@ export function GuildProvider({
     }
   }, [api, apply, setBaseline, collectDeliveries]);
 
+  /** puts the player's current name, rank and net worth on the server (so feed lines carry a real name) */
+  const syncMe = useCallback(async () => {
+    if (!api) return;
+    await api.syncProfile({
+      displayName: live.current.name,
+      rankIndex: live.current.rank,
+      netWorth: live.current.netWorth,
+    });
+  }, [api]);
+
   const inGuild = status === "in";
   useEffect(() => {
     if (!inGuild) return;
@@ -217,6 +251,13 @@ export function GuildProvider({
     }
   }, []);
 
+  // stable on purpose: the ranking panel loads it from an effect
+  const loadRanking = useCallback(async () => {
+    if (!api) return;
+    const list = await run(() => api.topGuilds());
+    if (list) setRanking(list);
+  }, [api, run]);
+
   const value = useMemo<GuildContextValue>(
     () => ({
       status,
@@ -233,7 +274,10 @@ export function GuildProvider({
       clearError: () => setError(null),
       create: async (name) => {
         if (!api) return false;
-        const g = await run(() => api.createGuild(name));
+        const g = await run(async () => {
+          await syncMe();
+          return api.createGuild(name);
+        });
         if (!g) return false;
         await setBaseline(live.current.trades);
         await markMember(true);
@@ -242,7 +286,10 @@ export function GuildProvider({
       },
       join: async (code) => {
         if (!api) return false;
-        const g = await run(() => api.joinGuild(code));
+        const g = await run(async () => {
+          await syncMe();
+          return api.joinGuild(code);
+        });
         if (!g) return false;
         await setBaseline(live.current.trades);
         await markMember(true);
@@ -305,6 +352,44 @@ export function GuildProvider({
         if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "friend");
         await refresh();
       },
+      challenge: async (opponentId) => {
+        if (!api) return;
+        await run(() => api.challengeDuel(opponentId));
+        await refresh();
+      },
+      respondDuel: async (duelId, accept) => {
+        if (!api) return;
+        await run(() => api.respondDuel(duelId, accept));
+        await refresh();
+      },
+      claimDuel: async (duelId) => {
+        if (!api) return;
+        const took = await run(() => api.claimDuelReward(duelId));
+        if (took) grantGuildReward(duelRewardFor(live.current.rank), "duel");
+        await refresh();
+      },
+      draw: async () => {
+        if (!api) return null;
+        const tier = await run(() => api.dailyDraw());
+        if (tier) grantGuildReward(drawRewardFor(live.current.rank, tier), "draw");
+        await refresh();
+        return tier;
+      },
+      donateHall: async (amount) => {
+        if (!api) return;
+        const amountNow = Math.min(Math.floor(amount), live.current.cash);
+        if (amountNow <= 0) return;
+        const accepted = await run(() => api.donateCash(amountNow));
+        // take from the player only what the server accepted
+        if (accepted && accepted > 0) guildCashOut(accepted);
+        await refresh();
+      },
+      ranking,
+      loadRanking,
+      reportRanked: async (guildId, reason) => {
+        if (!api) return false;
+        return (await run(() => api.reportGuildById(guildId, reason))) !== null;
+      },
       claim: async () => {
         if (!api) return;
         const took = await run(() => api.claimWeeklyReward());
@@ -328,6 +413,10 @@ export function GuildProvider({
       markMember,
       grantGuildReward,
       guildGoodsOut,
+      guildCashOut,
+      ranking,
+      loadRanking,
+      syncMe,
     ]
   );
 

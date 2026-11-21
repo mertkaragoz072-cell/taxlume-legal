@@ -48,6 +48,54 @@ export type GuildPhrase = (typeof GUILD_PHRASES)[number];
 export type CheerCode = CheerEmote | GuildPhrase;
 export const CHEER_CODES: readonly CheerCode[] = [...CHEER_EMOTES, ...GUILD_PHRASES];
 
+/** What can show up in the guild's activity feed. */
+export type GuildFeedKind = "joined" | "goal_done" | "order_done" | "duel_won" | "project_done" | "big_draw";
+
+export interface GuildFeedItem {
+  id: string;
+  kind: GuildFeedKind;
+  /** the member it is about; empty for guild-wide news (goal reached, order complete) */
+  actorName: string;
+  /** which hall project, for project_done */
+  detail: string | null;
+  at: number;
+}
+
+export type DuelStatus = "pending" | "active" | "done" | "declined";
+
+/** A friendly 24-hour trading duel between two members. */
+export interface GuildDuel {
+  id: string;
+  status: DuelStatus;
+  challengerId: string;
+  challengerName: string;
+  opponentId: string;
+  opponentName: string;
+  /** when an active duel ends, ms */
+  endsAt: number | null;
+  cTrades: number;
+  oTrades: number;
+  winnerId: string | null;
+  /** this player won and has not taken the prize yet */
+  canClaim: boolean;
+}
+
+/** Hall projects the guild has built, and the coins towards the next one. */
+export interface GuildProjects {
+  built: number;
+  progress: number;
+}
+
+/** One line of the weekly ranking of guilds. */
+export interface RankedGuild {
+  id: string;
+  name: string;
+  totalContribution: number;
+  members: number;
+  score: number;
+  isMine: boolean;
+}
+
 export interface GuildMember {
   id: string;
   name: string;
@@ -58,6 +106,8 @@ export interface GuildMember {
   /** units this member gave to the weekly order, and sent to friends' requests */
   donated: number;
   gifted: number;
+  /** coins this member gave to the guild hall */
+  cashGiven: number;
   isOwner: boolean;
   isYou: boolean;
 }
@@ -118,6 +168,11 @@ export interface GuildInfo {
   myTotals: { trades: number; donated: number; gifted: number };
   order: GuildOrder;
   requests: GuildRequest[];
+  feed: GuildFeedItem[];
+  duels: GuildDuel[];
+  /** this player already took today's draw */
+  drawnToday: boolean;
+  projects: GuildProjects;
   cheers: GuildCheer[];
 }
 
@@ -132,6 +187,10 @@ export type GuildErrorCode =
   | "request_invalid"
   | "request_gone"
   | "own_request"
+  | "duel_invalid"
+  | "duel_busy"
+  | "duel_gone"
+  | "already_drawn"
   | "network";
 
 export class GuildError extends Error {
@@ -172,6 +231,19 @@ export interface GuildApi {
   fulfillRequest(requestId: string, qty: number): Promise<number>;
   /** collects goods friends sent, as many as fit in `room` units of storage */
   claimDeliveries(room: number): Promise<GuildDelivery[]>;
+  /** dares a guild friend to a 24-hour trading duel */
+  challengeDuel(opponentId: string): Promise<void>;
+  /** the challenged player accepts or declines; the challenger can withdraw (accept = false) */
+  respondDuel(duelId: string, accept: boolean): Promise<void>;
+  claimDuelReward(duelId: string): Promise<boolean>;
+  /** today's free draw: the prize tier, 1 (small) to 3 (big) */
+  dailyDraw(): Promise<1 | 2 | 3>;
+  /** gives coins to the guild hall; returns how many were accepted (remove exactly that many) */
+  donateCash(amount: number): Promise<number>;
+  /** this week's most active guilds */
+  topGuilds(): Promise<RankedGuild[]>;
+  /** flags a guild from the ranking */
+  reportGuildById(guildId: string, reason: ReportReason): Promise<void>;
   /** flags the player's guild (its name or a member's name) for review */
   reportGuild(reason: ReportReason): Promise<void>;
 }
@@ -180,6 +252,29 @@ export interface GuildApi {
 export function streakMultiplier(streak: number): number {
   return 1 + 0.1 * Math.max(0, Math.min(5, Math.floor(streak)));
 }
+
+/** The hall projects a guild builds in order with its members' coins. */
+export interface HallProject {
+  id: string;
+  icon: string;
+  /** coins to build it (mirrors guild_project_cost in the server schema) */
+  cost: number;
+  /** extra warehouse room for every member's town */
+  storage: number;
+  /** extra output for every member's town (a fraction: 0.005 = +0.5%) */
+  output: number;
+}
+
+export const HALL_PROJECTS: HallProject[] = [
+  { id: "market", icon: "🏪", cost: 5_000, storage: 80, output: 0 },
+  { id: "workshop", icon: "⚒️", cost: 25_000, storage: 0, output: 0.005 },
+  { id: "granary", icon: "🌾", cost: 100_000, storage: 160, output: 0 },
+  { id: "library", icon: "📚", cost: 400_000, storage: 0, output: 0.005 },
+  { id: "monument", icon: "🗿", cost: 1_500_000, storage: 240, output: 0.01 },
+  { id: "palace", icon: "🏰", cost: 6_000_000, storage: 0, output: 0.015 },
+];
+
+export const DUEL_HOURS = 24;
 
 export function orderTargetFor(memberCount: number): number {
   return ORDER_UNITS_PER_MEMBER * Math.max(1, memberCount);
