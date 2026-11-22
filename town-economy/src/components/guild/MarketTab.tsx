@@ -9,6 +9,7 @@ import { GuildInfo } from "../../guild/types";
 import { Text } from "../AppText";
 import { GoalFrame, GoalRibbon } from "../GoalPanels";
 import { BigButton } from "../ModalKit";
+import { CaravanPanel } from "./CaravanPanel";
 import { styles } from "./guildStyles";
 
 export function MarketTab({ guild }: { guild: GuildInfo }) {
@@ -19,6 +20,8 @@ export function MarketTab({ guild }: { guild: GuildInfo }) {
 
   return (
     <>
+      <CaravanPanel guild={guild} />
+
       <GoalRibbon text={t("guild.marketSection")} />
       <GoalFrame>
         <Text style={styles.hint}>{t("guild.marketHint")}</Text>

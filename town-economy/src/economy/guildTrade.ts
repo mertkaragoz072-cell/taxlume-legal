@@ -11,7 +11,7 @@ export function applyGuildGoodsOut(
   state: EconomyState,
   goodId: GoodId,
   qty: number,
-  to: "order" | "friend"
+  to: "order" | "friend" | "caravan"
 ): EconomyState {
   const good = GOODS_BY_ID[goodId];
   const held = state.goods[goodId];
@@ -21,11 +21,19 @@ export function applyGuildGoodsOut(
   const holding = held.holding - taken;
   const event: EconomyEvent = {
     id: state.nextId,
-    ...eventFields(state.language, to === "order" ? "msg.guildOrderGiven" : "msg.guildGiftGiven", {
-      qty: taken,
-      icon: good.icon,
-      good: { key: good.nameKey },
-    }),
+    ...eventFields(
+      state.language,
+      to === "order"
+        ? "msg.guildOrderGiven"
+        : to === "caravan"
+          ? "msg.guildCaravanLoaded"
+          : "msg.guildGiftGiven",
+      {
+        qty: taken,
+        icon: good.icon,
+        good: { key: good.nameKey },
+      }
+    ),
     tone: "good",
   };
   return {

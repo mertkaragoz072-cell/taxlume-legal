@@ -2,7 +2,7 @@ import { isGuildCode, normalizeGuildCode, validateGuildName } from "../guildName
 import { createMockGuildApi, KeyValueStore, MOCK_DEMO_CODE } from "../mockApi";
 import { guildProductionBonus } from "../../economy/guildPerks";
 import { GUILD_BADGES } from "../badges";
-import { guildRewardFor } from "../reward";
+import { caravanPayout, guildRewardFor } from "../reward";
 import { GuildError, goalTargetFor, guildLevel, streakMultiplier, weekStartOf } from "../types";
 
 function memoryStore(): KeyValueStore {
@@ -316,5 +316,82 @@ describe("guild fun (mock backend)", () => {
     expect(top.some((x) => x.isMine)).toBe(true);
     expect(top.every((x, i, a) => i === 0 || a[i - 1].score >= x.score)).toBe(true);
     await expect(api.reportGuildById(top[0].id, "guild_name")).resolves.toBeUndefined();
+  });
+});
+
+describe("guild caravan (mock backend)", () => {
+  it("is loaded by several players, sent, travels and pays each loader their own share", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    // the demo guild already has a caravan to Ironforge being loaded
+    expect(g.caravan).toMatchObject({
+      dest: "ironforge",
+      status: "loading",
+      capacity: 150,
+      loaded: 52,
+      myLoaded: 0,
+    });
+    await expect(api.startCaravan("portcity")).rejects.toMatchObject({ code: "caravan_busy" });
+    await expect(api.loadCaravan("dragon", 5)).rejects.toMatchObject({ code: "caravan_invalid" });
+    expect(await api.loadCaravan("iron", 30)).toBe(30);
+    expect(await api.loadCaravan("iron", 500)).toBe(150 - 52 - 30); // only what still fits
+    expect(await api.loadCaravan("iron", 5)).toBe(0);
+    const full = (await api.getMyGuild())!.caravan!;
+    expect(full.loaded).toBe(150);
+    expect(full.myLoaded).toBe(98);
+
+    await api.sendCaravan();
+    const onRoad = (await api.getMyGuild())!.caravan!;
+    expect(onRoad.status).toBe("travelling");
+    expect(onRoad.arrivesAt! - now).toBe(3 * 3_600_000);
+    await expect(api.loadCaravan("iron", 1)).rejects.toMatchObject({ code: "caravan_none" });
+    expect((await api.getMyGuild())!.claimable).toEqual([]);
+
+    now += 3 * 3_600_000 + 1000;
+    const home = (await api.getMyGuild())!;
+    expect(home.caravan).toBeNull();
+    expect(home.feed.some((f) => f.kind === "caravan_arrived" && f.detail === "ironforge")).toBe(true);
+    expect(home.claimable).toHaveLength(1);
+    const share = home.claimable[0];
+    expect(share.loads).toEqual([{ goodId: "iron", qty: 98 }]);
+    expect([1, 2, 3]).toContain(share.tier);
+    expect(await api.claimCaravan(share.id)).toMatchObject({
+      dest: "ironforge",
+      loads: [{ goodId: "iron", qty: 98 }],
+    });
+    expect(await api.claimCaravan(share.id)).toBeNull(); // only once
+    expect((await api.getMyGuild())!.claimable).toEqual([]);
+    await expect(api.startCaravan("windyhill")).resolves.toBeUndefined(); // a new one can start
+  });
+
+  it("will not send an empty caravan or start one to nowhere", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.createGuild("Dostlar");
+    await expect(api.sendCaravan()).rejects.toMatchObject({ code: "caravan_none" });
+    await expect(api.startCaravan("moon" as never)).rejects.toMatchObject({ code: "caravan_invalid" });
+    await api.startCaravan("windyhill");
+    expect((await api.getMyGuild())!.caravan).toMatchObject({ capacity: 30, loaded: 0 });
+    await expect(api.sendCaravan()).rejects.toMatchObject({ code: "caravan_empty" });
+  });
+});
+
+describe("caravan payout", () => {
+  it("is the goods' value times the trip's luck and the town's bonus", () => {
+    const share = {
+      id: "k",
+      dest: "windyhill" as const,
+      tier: 2 as const,
+      loads: [
+        { goodId: "grain", qty: 10 },
+        { goodId: "wool", qty: 5 },
+      ],
+    };
+    const price = (id: string) => (id === "grain" ? 3 : 5);
+    expect(caravanPayout(share, price)).toBe(Math.round((10 * 3 + 5 * 5) * 1.6 * 1));
+    expect(caravanPayout({ ...share, dest: "grandbazaar", tier: 3 }, price)).toBe(
+      Math.round(55 * 2.2 * 1.35)
+    );
+    expect(caravanPayout({ ...share, loads: [] }, price)).toBe(0);
   });
 });

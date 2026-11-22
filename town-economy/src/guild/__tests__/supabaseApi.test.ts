@@ -271,6 +271,54 @@ describe("supabase guild adapter", () => {
     expect(bodies).toContainEqual({ p_guild: "g", p_reason: "guild_name" });
   });
 
+  it("maps the caravan functions", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/start_caravan": () => ({ status: 204 }),
+      "rpc/load_caravan": () => ({ json: 12 }),
+      "rpc/send_caravan": () => ({ status: 204 }),
+      "rpc/claim_caravan": (b) =>
+        b.p_id === 5
+          ? { json: { dest: "portcity", tier: 2, loads: [{ goodId: "iron", qty: 4 }] } }
+          : { json: null },
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await api.startCaravan("portcity");
+    expect(await api.loadCaravan("iron", 20.7)).toBe(12);
+    await api.sendCaravan();
+    expect(await api.claimCaravan("5")).toEqual({
+      id: "5",
+      dest: "portcity",
+      tier: 2,
+      loads: [{ goodId: "iron", qty: 4 }],
+    });
+    expect(await api.claimCaravan("6")).toBeNull();
+    const bodies = srv.calls.filter((c) => c.url.includes("/rpc/")).map((c) => c.body);
+    expect(bodies).toContainEqual({ p_dest: "portcity" });
+    expect(bodies).toContainEqual({ p_good: "iron", p_qty: 20 });
+  });
+
+  it("maps the caravan errors", async () => {
+    const srv = fakeServer({
+      "/auth/v1/signup": () => ({ json: SESSION }),
+      "rpc/start_caravan": () => ({ status: 400, json: { message: "caravan_busy" } }),
+      "rpc/send_caravan": () => ({ status: 400, json: { message: "caravan_empty" } }),
+    });
+    const api = createSupabaseGuildApi({
+      url: "https://x.supabase.co",
+      anonKey: "k",
+      fetchImpl: srv.fetchImpl,
+      store: memoryStore(),
+    });
+    await expect(api.startCaravan("windyhill")).rejects.toMatchObject({ code: "caravan_busy" });
+    await expect(api.sendCaravan()).rejects.toMatchObject({ code: "caravan_empty" });
+  });
+
   it("maps the fun errors", async () => {
     const srv = fakeServer({
       "/auth/v1/signup": () => ({ json: SESSION }),

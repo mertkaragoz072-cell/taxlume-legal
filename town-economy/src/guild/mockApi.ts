@@ -1,6 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { normalizeGuildCode, normalizeGuildName, validateGuildName } from "./guildName";
 import {
+  CARAVAN_DESTS,
+  CaravanDest,
+  CaravanShare,
+  GuildCaravan,
   DuelStatus,
   GuildFeedKind,
   HALL_PROJECTS,
@@ -99,6 +103,16 @@ interface Stored {
       winnerId: string | null;
       claimed: boolean;
     }[];
+    caravans: {
+      id: string;
+      dest: CaravanDest;
+      status: "loading" | "travelling" | "arrived";
+      capacity: number;
+      loads: Record<string, Record<string, number>>; // memberId -> goodId -> units
+      claimed: string[]; // member ids that took their share
+      arrivesAt: number | null;
+      tier: 1 | 2 | 3 | null;
+    }[];
     draws: Record<string, number>; // UTC day -> tier, for this player
     built: number;
     projectProgress: number;
@@ -122,6 +136,7 @@ export function createMockGuildApi(
         g.feed ??= [];
         g.duels ??= [];
         g.draws ??= {};
+        g.caravans ??= [];
         g.built ??= 0;
         g.projectProgress ??= 0;
         g.cashGiven ??= {};
@@ -143,6 +158,18 @@ export function createMockGuildApi(
   };
   const nameOf = (g: NonNullable<Stored["guild"]>, id: string) =>
     g.members.find((m) => m.id === id)?.name ?? "?";
+
+  /** lands caravans whose trip is over */
+  function settleCaravans(g: NonNullable<Stored["guild"]>) {
+    for (const c of g.caravans) {
+      if (c.status === "travelling" && c.arrivesAt !== null && c.arrivesAt <= now()) {
+        c.status = "arrived";
+        log(g, "caravan_arrived", "", c.dest);
+      }
+    }
+  }
+  const loadedOf = (c: NonNullable<Stored["guild"]>["caravans"][number]) =>
+    Object.values(c.loads).reduce((a, m) => a + Object.values(m).reduce((x, y) => x + y, 0), 0);
 
   /** closes finished duels and lets unanswered challenges lapse */
   function settleDuels(g: NonNullable<Stored["guild"]>) {
@@ -197,6 +224,7 @@ export function createMockGuildApi(
       }
     }
     settleDuels(g);
+    settleCaravans(g);
     // a friend answers your open request, a few units every 20 seconds
     const mine = g.requests.find((r) => r.fromId === ME && !r.closed);
     if (mine && t - g.lastBotHelp >= 20_000) {
@@ -326,6 +354,39 @@ export function createMockGuildApi(
           canClaim: d.winnerId === ME && !d.claimed,
         })),
       drawnToday: g.draws[dayKey()] !== undefined,
+      caravan: ((): GuildCaravan | null => {
+        const c = g.caravans.find((x) => x.status === "loading" || x.status === "travelling");
+        if (!c) return null;
+        const byGood: Record<string, number> = {};
+        for (const m of Object.values(c.loads))
+          for (const [good, q] of Object.entries(m)) byGood[good] = (byGood[good] ?? 0) + q;
+        return {
+          id: c.id,
+          dest: c.dest,
+          status: c.status as "loading" | "travelling",
+          capacity: c.capacity,
+          loaded: loadedOf(c),
+          myLoaded: Object.values(c.loads[ME] ?? {}).reduce((a, b) => a + b, 0),
+          arrivesAt: c.arrivesAt,
+          byGood: Object.entries(byGood)
+            .map(([goodId, qty]) => ({ goodId, qty }))
+            .sort((a, b) => b.qty - a.qty),
+        };
+      })(),
+      claimable: g.caravans
+        .filter(
+          (c) =>
+            c.status === "arrived" &&
+            c.tier &&
+            !c.claimed.includes(ME) &&
+            Object.keys(c.loads[ME] ?? {}).length > 0
+        )
+        .map((c) => ({
+          id: c.id,
+          dest: c.dest,
+          tier: c.tier as 1 | 2 | 3,
+          loads: Object.entries(c.loads[ME]).map(([goodId, qty]) => ({ goodId, qty })),
+        })),
       projects: { built: g.built, progress: g.projectProgress },
       cheers,
     };
@@ -371,6 +432,7 @@ export function createMockGuildApi(
         feed: [],
         duels: [],
         draws: {},
+        caravans: [],
         built: 0,
         projectProgress: 0,
         cashGiven: {},
@@ -439,6 +501,18 @@ export function createMockGuildApi(
           },
         ],
         draws: {},
+        caravans: [
+          {
+            id: "k1",
+            dest: "ironforge",
+            status: "loading",
+            capacity: 150,
+            loads: { b1: { grain: 20 }, b3: { wool: 24 }, b4: { sand: 8 } },
+            claimed: [],
+            arrivesAt: null,
+            tier: null,
+          },
+        ],
         built: 1,
         projectProgress: 1_800,
         cashGiven: { b1: 1_200, b3: 3_800 },
@@ -574,6 +648,72 @@ export function createMockGuildApi(
       }
       await save(s);
       return out;
+    },
+    async startCaravan(dest) {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      settleCaravans(g);
+      if (!CARAVAN_DESTS.some((d) => d.id === dest)) throw new GuildError("caravan_invalid");
+      if (g.caravans.some((c) => c.status === "loading" || c.status === "travelling"))
+        throw new GuildError("caravan_busy");
+      g.caravans.push({
+        id: "k" + now(),
+        dest,
+        status: "loading",
+        capacity: Math.min(600, 30 * Math.max(1, g.members.length)),
+        loads: {},
+        claimed: [],
+        arrivesAt: null,
+        tier: null,
+      });
+      await save(s);
+    },
+    async loadCaravan(goodId, qty) {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      if (!(GUILD_REQUEST_GOODS as readonly string[]).includes(goodId))
+        throw new GuildError("caravan_invalid");
+      const c = g.caravans.find((x) => x.status === "loading");
+      if (!c) throw new GuildError("caravan_none");
+      const take = Math.max(0, Math.min(Math.floor(qty), 200, c.capacity - loadedOf(c)));
+      if (take > 0) {
+        c.loads[ME] ??= {};
+        c.loads[ME][goodId] = (c.loads[ME][goodId] ?? 0) + take;
+        await save(s);
+      }
+      return take;
+    },
+    async sendCaravan() {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      const c = g.caravans.find((x) => x.status === "loading");
+      if (!c) throw new GuildError("caravan_none");
+      if (loadedOf(c) === 0) throw new GuildError("caravan_empty");
+      const roll = Math.random();
+      c.status = "travelling";
+      c.tier = (roll < 0.6 ? 1 : roll < 0.9 ? 2 : 3) as 1 | 2 | 3;
+      c.arrivesAt = now() + (CARAVAN_DESTS.find((d) => d.id === c.dest)?.hours ?? 2) * 3_600_000;
+      log(g, "caravan_sent", nameOf(g, ME), c.dest);
+      await save(s);
+    },
+    async claimCaravan(caravanId): Promise<CaravanShare | null> {
+      const s = await load();
+      const g = s.guild;
+      if (!g) throw new GuildError("not_in_guild");
+      settleCaravans(g);
+      const c = g.caravans.find((x) => x.id === caravanId && x.status === "arrived");
+      if (!c || !c.tier || c.claimed.includes(ME) || !c.loads[ME]) return null;
+      c.claimed.push(ME);
+      await save(s);
+      return {
+        id: c.id,
+        dest: c.dest,
+        tier: c.tier,
+        loads: Object.entries(c.loads[ME]).map(([goodId, qty]) => ({ goodId, qty })),
+      };
     },
     async challengeDuel(opponentId) {
       const s = await load();

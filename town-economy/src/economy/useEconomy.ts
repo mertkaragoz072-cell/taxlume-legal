@@ -266,11 +266,11 @@ type Action =
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "CLAIM_SPEED_BOOST" }
-  | { type: "GUILD_REWARD"; amount: number; source?: "chest" | "draw" | "duel" }
+  | { type: "GUILD_REWARD"; amount: number; source?: "chest" | "draw" | "duel" | "caravan" }
   | { type: "GUILD_CASH_OUT"; amount: number }
   | { type: "SET_GUILD_PROJECTS"; built: number }
   | { type: "SET_GUILD_LEVEL"; level: number }
-  | { type: "GUILD_GOODS_OUT"; goodId: GoodId; qty: number; to: "order" | "friend" }
+  | { type: "GUILD_GOODS_OUT"; goodId: GoodId; qty: number; to: "order" | "friend" | "caravan" }
   | { type: "GUILD_GOODS_IN"; goodId: GoodId; qty: number; from: string }
   | { type: "ADVANCE_MENTOR"; to: number }
   | { type: "DISMISS_DAILY_BONUS" };
@@ -1767,7 +1767,7 @@ export function useEconomy() {
   const claimSpeedBoost_ = useCallback(() => dispatch({ type: "CLAIM_SPEED_BOOST" }), []);
   const setGuildLevel = useCallback((level: number) => dispatch({ type: "SET_GUILD_LEVEL", level }), []);
   const guildGoodsOut = useCallback(
-    (goodId: GoodId, qty: number, to: "order" | "friend") =>
+    (goodId: GoodId, qty: number, to: "order" | "friend" | "caravan") =>
       dispatch({ type: "GUILD_GOODS_OUT", goodId, qty, to }),
     []
   );
@@ -1776,7 +1776,7 @@ export function useEconomy() {
     []
   );
   const grantGuildReward = useCallback(
-    (amount: number, source: "chest" | "draw" | "duel" = "chest") =>
+    (amount: number, source: "chest" | "draw" | "duel" | "caravan" = "chest") =>
       dispatch({ type: "GUILD_REWARD", amount, source }),
     []
   );

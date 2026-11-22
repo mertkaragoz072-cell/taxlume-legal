@@ -13,6 +13,8 @@ const ICONS: Record<GuildFeedItem["kind"], string> = {
   duel_won: "⚔️",
   project_done: "🏛️",
   big_draw: "💎",
+  caravan_sent: "🐪",
+  caravan_arrived: "🐪",
 };
 
 /** What has been going on in the guild lately. */
@@ -28,12 +30,14 @@ export function FeedPanel({ guild }: { guild: GuildInfo }) {
         ) : (
           guild.feed.map((f) => {
             const project = f.kind === "project_done" ? HALL_PROJECTS[Number(f.detail) - 1] : undefined;
+            const dest = f.kind.startsWith("caravan") && f.detail ? t(`place.${f.detail}.name`) : "";
             return (
               <Text key={f.id} style={[styles.hint, { color: INK, marginBottom: 6 }]}>
                 {ICONS[f.kind]}{" "}
                 {t(`guild.feed.${f.kind}`, {
                   name: f.actorName || "?",
                   project: project ? `${project.icon} ${t(`guild.project.${project.id}.name`)}` : "",
+                  dest,
                 })}
                 <Text style={{ color: MUTED }}>{`  ·  ${timeAgo(f.at, now, t)}`}</Text>
               </Text>

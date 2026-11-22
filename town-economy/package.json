@@ -64,7 +64,7 @@
     "qa:ui": "node scripts/ui-qa.js",
     "gen:audio": "python3 scripts/gen-audio.py",
     "backend:apply": "node backend/scripts/apply-schema.js",
-    "backend:e2e": "node backend/scripts/guild-e2e.js && node backend/scripts/guild-e2e-fun.js"
+    "backend:e2e": "node backend/scripts/guild-e2e.js && node backend/scripts/guild-e2e-fun.js && node backend/scripts/guild-e2e-caravan.js"
   },
   "jest": {
     "preset": "jest-expo",

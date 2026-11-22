@@ -4,8 +4,9 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { guildStorageRoom } from "../economy/guildTrade";
 import { GoodId } from "../economy/types";
 import { getGuildApi } from "./getGuildApi";
-import { drawRewardFor, duelRewardFor, guildRewardFor } from "./reward";
+import { caravanPayout, drawRewardFor, duelRewardFor, guildRewardFor } from "./reward";
 import {
+  CaravanDest,
   CheerCode,
   GuildApi,
   GuildErrorCode,
@@ -46,6 +47,12 @@ interface GuildContextValue {
   cancelRequest: () => Promise<void>;
   /** sends up to `qty` of a requested good to a friend, from the player's stock */
   fulfill: (requestId: string, goodId: GoodId, qty: number) => Promise<void>;
+  startCaravan: (dest: CaravanDest) => Promise<void>;
+  /** puts up to `qty` of a good from the player's stock on the loading caravan */
+  loadCaravan: (goodId: GoodId, qty: number) => Promise<void>;
+  sendCaravan: () => Promise<void>;
+  /** collects the player's share of an arrived caravan and pays it in coins */
+  claimCaravan: (caravanId: string) => Promise<void>;
   challenge: (opponentId: string) => Promise<void>;
   respondDuel: (duelId: string, accept: boolean) => Promise<void>;
   claimDuel: (duelId: string) => Promise<void>;
@@ -102,7 +109,8 @@ export function GuildProvider({
     cash: number;
     streak: number;
     held: Record<string, number>;
-  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, cash: 0, streak: 0, held: {} });
+    prices: Record<string, number>;
+  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, cash: 0, streak: 0, held: {}, prices: {} });
   live.current = {
     trades: state.stats.totalTrades,
     name: state.townName,
@@ -112,6 +120,7 @@ export function GuildProvider({
     cash: state.cash,
     streak: guild?.streak ?? 0,
     held: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, Math.floor(g.holding)])),
+    prices: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, g.price])),
   };
 
   const apply = useCallback(
@@ -350,6 +359,34 @@ export function GuildProvider({
         if (amount <= 0) return;
         const accepted = await run(() => api.fulfillRequest(requestId, amount));
         if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "friend");
+        await refresh();
+      },
+      startCaravan: async (dest) => {
+        if (!api) return;
+        await run(() => api.startCaravan(dest));
+        await refresh();
+      },
+      loadCaravan: async (goodId, qty) => {
+        if (!api) return;
+        const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
+        if (amount <= 0) return;
+        const accepted = await run(() => api.loadCaravan(goodId, amount));
+        // take from the player only what the server accepted
+        if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "caravan");
+        await refresh();
+      },
+      sendCaravan: async () => {
+        if (!api) return;
+        await run(() => api.sendCaravan());
+        await refresh();
+      },
+      claimCaravan: async (caravanId) => {
+        if (!api) return;
+        const share = await run(() => api.claimCaravan(caravanId));
+        if (share) {
+          const pay = caravanPayout(share, (id) => live.current.prices[id] ?? 0);
+          if (pay > 0) grantGuildReward(pay, "caravan");
+        }
         await refresh();
       },
       challenge: async (opponentId) => {

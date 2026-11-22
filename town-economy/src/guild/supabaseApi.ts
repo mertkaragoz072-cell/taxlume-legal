@@ -7,6 +7,7 @@ import {
   GuildError,
   GuildErrorCode,
   GuildInfo,
+  CaravanShare,
   RankedGuild,
   SyncProfile,
 } from "./types";
@@ -46,6 +47,10 @@ const KNOWN: GuildErrorCode[] = [
   "duel_busy",
   "duel_gone",
   "already_drawn",
+  "caravan_invalid",
+  "caravan_busy",
+  "caravan_none",
+  "caravan_empty",
 ];
 
 function toCode(message: unknown): GuildErrorCode {
@@ -207,6 +212,23 @@ export function createSupabaseGuildApi(cfg: SupabaseConfig): GuildApi {
         (await rpc<GuildDelivery[] | null>("claim_deliveries", { p_room: Math.max(0, Math.floor(room)) })) ??
         []
       );
+    },
+    async startCaravan(dest) {
+      await rpc("start_caravan", { p_dest: dest });
+    },
+    async loadCaravan(goodId, qty) {
+      return Number(await rpc<number>("load_caravan", { p_good: goodId, p_qty: Math.floor(qty) })) || 0;
+    },
+    async sendCaravan() {
+      await rpc("send_caravan");
+    },
+    async claimCaravan(caravanId) {
+      const r = await rpc<{
+        dest: CaravanShare["dest"];
+        tier: 1 | 2 | 3;
+        loads: CaravanShare["loads"];
+      } | null>("claim_caravan", { p_id: Number(caravanId) });
+      return r ? { id: caravanId, dest: r.dest, tier: r.tier, loads: r.loads } : null;
     },
     async challengeDuel(opponentId) {
       await rpc("challenge_duel", { p_opponent: opponentId });

@@ -183,4 +183,12 @@ export const styles = StyleSheet.create({
   },
   tabOn: { borderColor: "#f6d36a", backgroundColor: "rgba(246,211,106,0.16)" },
   tabText: { color: MUTED, fontFamily: FONT.bold, fontSize: 11, marginTop: 2 },
+  destChip: {
+    minWidth: 116,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(200,132,60,0.5)",
+    backgroundColor: "rgba(0,0,0,0.28)",
+  },
 });

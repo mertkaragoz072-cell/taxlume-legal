@@ -49,14 +49,22 @@ export type CheerCode = CheerEmote | GuildPhrase;
 export const CHEER_CODES: readonly CheerCode[] = [...CHEER_EMOTES, ...GUILD_PHRASES];
 
 /** What can show up in the guild's activity feed. */
-export type GuildFeedKind = "joined" | "goal_done" | "order_done" | "duel_won" | "project_done" | "big_draw";
+export type GuildFeedKind =
+  | "joined"
+  | "goal_done"
+  | "order_done"
+  | "duel_won"
+  | "project_done"
+  | "big_draw"
+  | "caravan_sent"
+  | "caravan_arrived";
 
 export interface GuildFeedItem {
   id: string;
   kind: GuildFeedKind;
   /** the member it is about; empty for guild-wide news (goal reached, order complete) */
   actorName: string;
-  /** which hall project, for project_done */
+  /** which hall project (project_done) or destination town (caravan_sent / caravan_arrived) */
   detail: string | null;
   at: number;
 }
@@ -84,6 +92,31 @@ export interface GuildDuel {
 export interface GuildProjects {
   built: number;
   progress: number;
+}
+
+export type CaravanDest = "windyhill" | "ironforge" | "portcity" | "grandbazaar";
+
+/** The guild's caravan while it is being loaded or is on the road. */
+export interface GuildCaravan {
+  id: string;
+  dest: CaravanDest;
+  status: "loading" | "travelling";
+  capacity: number;
+  loaded: number;
+  /** what this player put on it */
+  myLoaded: number;
+  /** when a travelling caravan arrives, ms */
+  arrivesAt: number | null;
+  byGood: { goodId: string; qty: number }[];
+}
+
+/** This player's share of a caravan that came home, ready to be turned into coins. */
+export interface CaravanShare {
+  id: string;
+  dest: CaravanDest;
+  /** 1 calm trip, 2 lively market, 3 festival */
+  tier: 1 | 2 | 3;
+  loads: { goodId: string; qty: number }[];
 }
 
 /** One line of the weekly ranking of guilds. */
@@ -173,6 +206,9 @@ export interface GuildInfo {
   /** this player already took today's draw */
   drawnToday: boolean;
   projects: GuildProjects;
+  caravan: GuildCaravan | null;
+  /** arrived caravans this player has not collected their share of yet */
+  claimable: CaravanShare[];
   cheers: GuildCheer[];
 }
 
@@ -191,6 +227,10 @@ export type GuildErrorCode =
   | "duel_busy"
   | "duel_gone"
   | "already_drawn"
+  | "caravan_invalid"
+  | "caravan_busy"
+  | "caravan_none"
+  | "caravan_empty"
   | "network";
 
 export class GuildError extends Error {
@@ -244,6 +284,13 @@ export interface GuildApi {
   topGuilds(): Promise<RankedGuild[]>;
   /** flags a guild from the ranking */
   reportGuildById(guildId: string, reason: ReportReason): Promise<void>;
+  /** starts the guild's caravan to a destination (one at a time) */
+  startCaravan(dest: CaravanDest): Promise<void>;
+  /** puts goods on the loading caravan; returns how many were accepted (remove exactly that many) */
+  loadCaravan(goodId: string, qty: number): Promise<number>;
+  sendCaravan(): Promise<void>;
+  /** collects this player's share of an arrived caravan (null if there is none to take) */
+  claimCaravan(caravanId: string): Promise<CaravanShare | null>;
   /** flags the player's guild (its name or a member's name) for review */
   reportGuild(reason: ReportReason): Promise<void>;
 }
@@ -275,6 +322,16 @@ export const HALL_PROJECTS: HallProject[] = [
 ];
 
 export const DUEL_HOURS = 24;
+
+/** Where the guild caravan can go: hours on the road, and the pay bonus for the longer trips. */
+export const CARAVAN_DESTS: { id: CaravanDest; hours: number; bonus: number }[] = [
+  { id: "windyhill", hours: 2, bonus: 1 },
+  { id: "ironforge", hours: 3, bonus: 1.1 },
+  { id: "portcity", hours: 4, bonus: 1.2 },
+  { id: "grandbazaar", hours: 6, bonus: 1.35 },
+];
+/** What the trip's luck multiplies the goods' value by (tier 1, 2, 3). */
+export const CARAVAN_TIER_MULT = [1.3, 1.6, 2.2] as const;
 
 export function orderTargetFor(memberCount: number): number {
   return ORDER_UNITS_PER_MEMBER * Math.max(1, memberCount);

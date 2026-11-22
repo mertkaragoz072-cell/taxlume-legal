@@ -1,5 +1,5 @@
 import { townRankThreshold } from "../economy/townRanks";
-import { streakMultiplier } from "./types";
+import { CARAVAN_DESTS, CARAVAN_TIER_MULT, CaravanShare, streakMultiplier } from "./types";
 
 /** The weekly chest a member takes when the guild reaches its goal: a base
  * purse plus a slice of what their own rank asks for, so it stays worth
@@ -16,4 +16,12 @@ export function drawRewardFor(rankIndex: number, tier: 1 | 2 | 3): number {
 /** The prize for winning a duel: one and a half chests. */
 export function duelRewardFor(rankIndex: number): number {
   return Math.round(guildRewardFor(rankIndex) * 1.5);
+}
+
+/** What a caravan share is worth in coins: the goods the player loaded at their
+ * current prices, times the trip's luck and the destination's bonus. */
+export function caravanPayout(share: CaravanShare, priceOf: (goodId: string) => number): number {
+  const bonus = CARAVAN_DESTS.find((d) => d.id === share.dest)?.bonus ?? 1;
+  const value = share.loads.reduce((sum, l) => sum + l.qty * priceOf(l.goodId), 0);
+  return Math.round(value * CARAVAN_TIER_MULT[share.tier - 1] * bonus);
 }

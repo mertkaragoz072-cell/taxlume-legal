@@ -129,11 +129,14 @@ create table if not exists guild_feed (
   guild_id   uuid not null references guilds(id) on delete cascade,
   actor_id   uuid references auth.users(id) on delete cascade,
   actor_name text not null default '',
-  kind       text not null check (kind in ('joined','goal_done','order_done','duel_won','project_done','big_draw')),
+  kind       text not null,
   detail     text,
   created_at timestamptz not null default now()
 );
 create index if not exists guild_feed_guild_idx on guild_feed(guild_id, created_at desc);
+alter table guild_feed drop constraint if exists guild_feed_kind_check;
+alter table guild_feed add constraint guild_feed_kind_check
+  check (kind in ('joined','goal_done','order_done','duel_won','project_done','big_draw','caravan_sent','caravan_arrived'));
 
 -- Friendly duels: two members, 24 hours, most trades wins.
 create table if not exists guild_duels (
@@ -170,6 +173,36 @@ create table if not exists guild_projects (
 -- Reports on a guild listed in the weekly ranking (any player may report it).
 alter table guild_reports drop constraint if exists guild_reports_reporter_fkey;
 alter table guild_reports add constraint guild_reports_reporter_fkey foreign key (reporter) references auth.users(id) on delete cascade;
+
+
+-- The guild caravan: the whole guild loads one caravan, it travels for a few
+-- hours, and everyone who loaded something collects a share of what it earned.
+create table if not exists guild_caravans (
+  id         bigserial primary key,
+  guild_id   uuid not null references guilds(id) on delete cascade,
+  dest       text not null check (dest in ('windyhill','ironforge','portcity','grandbazaar')),
+  capacity   int  not null check (capacity between 1 and 600),
+  status     text not null default 'loading' check (status in ('loading','travelling','arrived')),
+  started_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  arrives_at timestamptz,
+  tier       int check (tier between 1 and 3)
+);
+create index if not exists guild_caravans_guild_idx on guild_caravans(guild_id, id desc);
+-- only one caravan per guild is being loaded or on the road at a time
+create unique index if not exists guild_caravans_one_live on guild_caravans(guild_id) where status in ('loading','travelling');
+
+create table if not exists guild_caravan_loads (
+  caravan_id bigint not null references guild_caravans(id) on delete cascade,
+  user_id    uuid   not null references auth.users(id) on delete cascade,
+  good_id    text   not null check (good_id in ('grain','wool','sand','bread','milk','wood','iron','cloth','fish','wine','leather','spice','silk','jewelry','honey','cheese','paper','glass')),
+  qty        int    not null check (qty > 0),
+  claimed    boolean not null default false,
+  primary key (caravan_id, user_id, good_id)
+);
+
+alter table guild_caravans      enable row level security;
+alter table guild_caravan_loads enable row level security;
 
 alter table guild_feed     enable row level security;
 alter table guild_duels    enable row level security;
@@ -596,6 +629,90 @@ begin
   insert into guild_reports(guild_id, reporter, reason) values (p_guild, auth.uid(), left(coalesce(p_reason, ''), 200));
 end $$;
 
+-- ------------------------------------------------------- guild caravan
+
+-- Hours on the road to each destination.
+create or replace function caravan_hours(p_dest text) returns int language sql immutable as $$
+  select case p_dest when 'windyhill' then 2 when 'ironforge' then 3 when 'portcity' then 4 when 'grandbazaar' then 6 end
+$$;
+
+-- Lands caravans whose trip is over and tells the guild.
+create or replace function settle_caravans(p_guild uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare c guild_caravans;
+begin
+  for c in select * from guild_caravans where guild_id = p_guild and status = 'travelling' and arrives_at <= now() for update loop
+    update guild_caravans set status = 'arrived' where id = c.id;
+    perform guild_log(p_guild, null, 'caravan_arrived', c.dest);
+  end loop;
+end $$;
+
+create or replace function start_caravan(p_dest text) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; v_members int;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  perform settle_caravans(v_guild);
+  if p_dest is null or caravan_hours(p_dest) is null then raise exception 'caravan_invalid'; end if;
+  if exists (select 1 from guild_caravans where guild_id = v_guild and status in ('loading', 'travelling')) then raise exception 'caravan_busy'; end if;
+  select count(*) into v_members from guild_members where guild_id = v_guild;
+  insert into guild_caravans(guild_id, dest, capacity, started_by) values (v_guild, p_dest, least(600, 30 * greatest(1, v_members)), auth.uid());
+end $$;
+
+-- Puts goods on the loading caravan. Returns how many were accepted (never
+-- more than it still has room for); the app removes exactly that many.
+create or replace function load_caravan(p_good text, p_qty int) returns int
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; c guild_caravans; v_loaded bigint; v_take int;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  if p_good is null or p_good not in ('grain','wool','sand','bread','milk','wood','iron','cloth','fish','wine','leather','spice','silk','jewelry','honey','cheese','paper','glass') then raise exception 'caravan_invalid'; end if;
+  select * into c from guild_caravans where guild_id = v_guild and status = 'loading' for update;
+  if c.id is null then raise exception 'caravan_none'; end if;
+  select coalesce(sum(qty), 0) into v_loaded from guild_caravan_loads where caravan_id = c.id;
+  v_take := greatest(0, least(greatest(0, coalesce(p_qty, 0)), 200, c.capacity - v_loaded));
+  if v_take = 0 then return 0; end if;
+  insert into guild_caravan_loads(caravan_id, user_id, good_id, qty) values (c.id, auth.uid(), p_good, v_take)
+  on conflict (caravan_id, user_id, good_id) do update set qty = guild_caravan_loads.qty + v_take;
+  return v_take;
+end $$;
+
+-- Sends the loaded caravan on its way. The prize tier is rolled now and kept
+-- secret until it arrives: 1 calm trip 60%, 2 good market 30%, 3 festival boom 10%.
+create or replace function send_caravan() returns void
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; c guild_caravans; v_roll double precision := random();
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  select * into c from guild_caravans where guild_id = v_guild and status = 'loading' for update;
+  if c.id is null then raise exception 'caravan_none'; end if;
+  if not exists (select 1 from guild_caravan_loads where caravan_id = c.id) then raise exception 'caravan_empty'; end if;
+  update guild_caravans set status = 'travelling', arrives_at = now() + (caravan_hours(c.dest) * interval '1 hour'),
+    tier = case when v_roll < 0.6 then 1 when v_roll < 0.9 then 2 else 3 end where id = c.id;
+  perform guild_log(v_guild, auth.uid(), 'caravan_sent', c.dest);
+end $$;
+
+-- Collects this player's share of an arrived caravan: the goods they loaded and
+-- the prize tier; the app turns that into coins at current prices. Once only.
+create or replace function claim_caravan(p_id bigint) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_guild uuid; c guild_caravans; v_loads jsonb;
+begin
+  select guild_id into v_guild from guild_members where user_id = auth.uid();
+  if v_guild is null then raise exception 'not_in_guild'; end if;
+  perform settle_caravans(v_guild);
+  select * into c from guild_caravans where id = p_id and guild_id = v_guild and status = 'arrived';
+  if c.id is null then return null; end if;
+  select jsonb_agg(jsonb_build_object('goodId', good_id, 'qty', qty)) into v_loads
+    from (select good_id, qty from guild_caravan_loads where caravan_id = c.id and user_id = auth.uid() and not claimed for update) l;
+  if v_loads is null then return null; end if;
+  update guild_caravan_loads set claimed = true where caravan_id = c.id and user_id = auth.uid();
+  return jsonb_build_object('dest', c.dest, 'tier', c.tier, 'loads', v_loads);
+end $$;
+
 -- Everything the guild screen shows, in one call; the keys match GuildInfo in
 -- src/guild/types.ts so the adapter can hand it straight through.
 create or replace function get_my_guild() returns jsonb
@@ -607,6 +724,7 @@ begin
   select g.* into v_guild from guilds g join guild_members m on m.guild_id = g.id where m.user_id = auth.uid();
   if v_guild.id is null then return null; end if;
   perform settle_duels(v_guild.id);
+  perform settle_caravans(v_guild.id);
   select count(*) into v_built from guild_projects where guild_id = v_guild.id;
   select exists (select 1 from guild_draws where user_id = auth.uid() and day = (now() at time zone 'utc')::date) into v_drawn;
   select count(*) into v_members from guild_members where guild_id = v_guild.id;
@@ -629,6 +747,22 @@ begin
     where guild_id = v_guild.id and user_id = auth.uid() and week_start = v_week;
   return jsonb_build_object(
     'drawnToday', v_drawn,
+    'caravan', (
+      select jsonb_build_object('id', c.id::text, 'dest', c.dest, 'status', c.status, 'capacity', c.capacity,
+               'arrivesAt', case when c.arrives_at is null then null else (extract(epoch from c.arrives_at) * 1000)::bigint end,
+               'loaded', coalesce((select sum(qty) from guild_caravan_loads where caravan_id = c.id), 0),
+               'myLoaded', coalesce((select sum(qty) from guild_caravan_loads where caravan_id = c.id and user_id = auth.uid()), 0),
+               'byGood', coalesce((select jsonb_agg(jsonb_build_object('goodId', good_id, 'qty', q) order by q desc)
+                                   from (select good_id, sum(qty) q from guild_caravan_loads where caravan_id = c.id group by good_id) g), '[]'::jsonb))
+      from guild_caravans c where c.guild_id = v_guild.id and c.status in ('loading', 'travelling')
+      limit 1),
+    'claimable', coalesce((
+      select jsonb_agg(jsonb_build_object('id', c.id::text, 'dest', c.dest, 'tier', c.tier,
+               'loads', (select jsonb_agg(jsonb_build_object('goodId', l.good_id, 'qty', l.qty))
+                         from guild_caravan_loads l where l.caravan_id = c.id and l.user_id = auth.uid() and not l.claimed)) order by c.id desc)
+      from guild_caravans c
+      where c.guild_id = v_guild.id and c.status = 'arrived' and c.arrives_at > now() - interval '3 days'
+        and exists (select 1 from guild_caravan_loads l where l.caravan_id = c.id and l.user_id = auth.uid() and not l.claimed)), '[]'::jsonb),
     'projects', jsonb_build_object('built', v_built, 'progress', v_guild.project_progress),
     'feed', coalesce((
       select jsonb_agg(jsonb_build_object('id', f.id::text, 'kind', f.kind, 'actorName', f.actor_name,
@@ -697,5 +831,6 @@ grant execute on function
   donate_to_order(int), claim_order_reward(), create_request(text, int), cancel_request(),
   fulfill_request(bigint, int), claim_deliveries(int),
   challenge_duel(uuid), respond_duel(bigint, boolean), claim_duel_reward(bigint), daily_draw(),
-  donate_cash(bigint), top_guilds(), report_guild_id(uuid, text)
+  donate_cash(bigint), top_guilds(), report_guild_id(uuid, text),
+  start_caravan(text), load_caravan(text, int), send_caravan(), claim_caravan(bigint)
   to authenticated;
