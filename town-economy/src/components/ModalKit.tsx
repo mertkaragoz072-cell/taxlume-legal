@@ -205,7 +205,10 @@ export function BigButton({
         style={{ alignSelf: "stretch", height: 52, marginTop: 4 }}
       >
         <Bar kind="laurel" height={52} dim={disabled} />
-        <View style={[styles.bigBtnLabel, { paddingHorizontal: 46 }]} pointerEvents="none">
+        <View
+          style={[styles.bigBtnLabel, { paddingHorizontal: 46 }, disabled ? { opacity: 0.5 } : null]}
+          pointerEvents="none"
+        >
           <Text style={styles.laurelText} numberOfLines={1}>
             {label}
           </Text>
@@ -222,7 +225,7 @@ export function BigButton({
       style={[styles.bigBtn, { height }]}
     >
       <Bar kind={tone === "red" ? "btnR" : "btn"} height={height} dim={disabled} />
-      <View style={styles.bigBtnLabel} pointerEvents="none">
+      <View style={[styles.bigBtnLabel, disabled ? { opacity: 0.5 } : null]} pointerEvents="none">
         {icon ? (
           <Image source={icon} style={{ width: 26, height: 26, marginRight: 8 }} resizeMode="contain" />
         ) : null}

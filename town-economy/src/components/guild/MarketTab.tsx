@@ -84,6 +84,7 @@ export function MarketTab({ guild }: { guild: GuildInfo }) {
                   accessibilityLabel={t(g.nameKey)}
                 >
                   <Text style={{ fontSize: 22 }}>{g.icon}</Text>
+                  <Text style={styles.badgeHint}>{Math.floor(state.goods[g.id].holding)}</Text>
                 </Pressable>
               ))}
             </ScrollView>

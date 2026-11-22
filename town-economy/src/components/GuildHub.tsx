@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, SafeAreaView, ScrollView, TextInput, View } from "react-native";
+import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { normalizeGuildCode } from "../guild/guildName";
 import { useGuild } from "../guild/GuildContext";
 import { GUILD_CODE_LENGTH, GUILD_NAME_MAX } from "../guild/types";
 import { Text } from "./AppText";
+import { ConfettiBurst } from "./ConfettiBurst";
 import { GoalFrame, GoalRibbon } from "./GoalPanels";
 import { HallTab } from "./guild/HallTab";
 import { MarketTab } from "./guild/MarketTab";
@@ -25,12 +27,61 @@ const TABS: { id: TabId; icon: string }[] = [
 /** The guild screen. Not in a guild yet: start one or join with a code. In
  * one: four tabs (overview, market, members, hall), everything read from the
  * guild backend (see src/guild). No free text exists except the guild's own name. */
-export function GuildHub() {
-  const { hubOpen, closeHub, status, guild, error, busy, create, join, clearError } = useGuild();
+export function GuildHub({ sounds }: { sounds?: ReturnType<typeof useSoundEffects> }) {
+  const {
+    hubOpen,
+    closeHub,
+    status,
+    guild,
+    error,
+    busy,
+    create,
+    join,
+    clearError,
+    refresh,
+    celebrate,
+    setFx,
+  } = useGuild();
   const { t } = useEconomyContext();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [tab, setTab] = useState<TabId>("overview");
+  const scrollRef = useRef<ScrollView>(null);
+
+  // the guild actions play their sounds through the game's own sound effects
+  const soundsRef = useRef(sounds);
+  soundsRef.current = sounds;
+  useEffect(() => {
+    setFx((kind) => {
+      const s = soundsRef.current;
+      if (!s) return;
+      if (kind === "success") s.playSuccess();
+      else if (kind === "buy") s.playBuy();
+      else s.playTap();
+    });
+    return () => setFx(null);
+  }, [setFx]);
+
+  // an error shows for a few seconds, or until it is tapped
+  useEffect(() => {
+    if (!error) return;
+    const id = setTimeout(clearError, 6000);
+    return () => clearTimeout(id);
+  }, [error, clearError]);
+
+  // leaving a guild clears what was typed for the last one
+  useEffect(() => {
+    if (status === "in") {
+      setName("");
+      setCode("");
+    }
+  }, [status]);
+
+  const openTab = (id: TabId) => {
+    setTab(id);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    void refresh(); // the other members may have done something since
+  };
 
   useEffect(() => {
     if (!hubOpen) {
@@ -61,7 +112,7 @@ export function GuildHub() {
             {TABS.map((x) => (
               <Pressable
                 key={x.id}
-                onPress={() => setTab(x.id)}
+                onPress={() => openTab(x.id)}
                 style={[styles.tab, tab === x.id && styles.tabOn]}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: tab === x.id }}
@@ -75,14 +126,16 @@ export function GuildHub() {
           </View>
         )}
 
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {error && (
-            <View style={styles.errorBox}>
+            <Pressable style={styles.errorBox} onPress={clearError} accessibilityRole="alert">
               <Text style={styles.errorText}>{t(`guild.error.${error}`)}</Text>
-            </View>
+            </Pressable>
           )}
 
-          {status !== "in" && (
+          {status === "loading" && <Text style={styles.hint}>{t("guild.loading")}</Text>}
+
+          {(status === "none" || status === "unavailable") && (
             <>
               <GoalRibbon text={t("guild.createSection")} />
               <GoalFrame>
@@ -94,6 +147,8 @@ export function GuildHub() {
                   placeholderTextColor="#6b5f4d"
                   style={styles.input}
                   maxLength={GUILD_NAME_MAX}
+                  returnKeyType="done"
+                  onSubmitEditing={() => name.trim().length >= 3 && !busy && void create(name)}
                 />
                 <BigButton
                   label={t("guild.createBtn")}
@@ -114,6 +169,8 @@ export function GuildHub() {
                   maxLength={GUILD_CODE_LENGTH}
                   autoCapitalize="characters"
                   autoCorrect={false}
+                  returnKeyType="go"
+                  onSubmitEditing={() => code.length === GUILD_CODE_LENGTH && !busy && void join(code)}
                 />
                 <BigButton
                   label={t("guild.joinBtn")}
@@ -133,6 +190,7 @@ export function GuildHub() {
             </>
           )}
         </ScrollView>
+        <ConfettiBurst trigger={celebrate.n} big={celebrate.big} />
       </SafeAreaView>
     </Modal>
   );

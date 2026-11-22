@@ -33,6 +33,16 @@ Fun (feed, duels, draw, hall, ranking):
 | `donate_cash`                     | coins to the guild hall (six buildings in order, costs in `guild_project_cost`); returns how many were accepted                       |
 | `top_guilds` / `report_guild_id`  | the week's ten most active guilds (trades + order units + gifts), and a report on any listed guild                                    |
 
+Caravan:
+
+| Function          | Does                                                                                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_caravan`   | any member starts the guild's caravan to Windyhill (2 h), Ironforge (3 h), Portcity (4 h) or Grand Bazaar (6 h); one at a time; room for 30 goods per member (max 600)                               |
+| `load_caravan`    | puts goods on it from the member's own stock; returns how many were accepted (never more than fit)                                                                                                   |
+| `send_caravan`    | sends it (needs at least one unit loaded); the prize tier is rolled now and stays secret until it arrives                                                                                            |
+| `claim_caravan`   | after arrival, each loader collects their own share once: destination, tier and exactly what they loaded; the app turns it into coins at current prices (value x 1.3 / 1.6 / 2.2 x the town's bonus) |
+| `settle_caravans` | (internal) lands caravans whose trip is over and tells the guild                                                                                                                                     |
+
 Building bonuses (storage and output for every member's town) and the draw/duel prize sizes live in the app (`src/economy/guildPerks.ts`, `src/guild/types.ts`, `src/guild/reward.ts`); the server only decides who gets what and how many times.
 
 Perks, streaks and messages:

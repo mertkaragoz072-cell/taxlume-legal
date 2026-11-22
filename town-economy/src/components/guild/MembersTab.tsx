@@ -12,7 +12,7 @@ import { INK, MUTED, styles } from "./guildStyles";
 
 export function MembersTab({ guild }: { guild: GuildInfo }) {
   const { busy, cheer, challenge } = useGuild();
-  const { t, formatCoins } = useEconomyContext();
+  const { t, tPlural, formatCoins } = useEconomyContext();
   const [cheerFor, setCheerFor] = useState<string | null>(null);
 
   // a duel needs two free players
@@ -38,7 +38,7 @@ export function MembersTab({ guild }: { guild: GuildInfo }) {
                   {m.isOwner ? ` · ${t("guild.owner")}` : ""}
                 </Text>
                 <Text style={styles.hint}>
-                  {t("guild.contribution", { n: m.weekContribution })}
+                  {tPlural("guild.contribution", m.weekContribution, { n: m.weekContribution })}
                   {m.donated + m.gifted > 0
                     ? ` · ${t("guild.tradeExtra", { d: m.donated, g: m.gifted })}`
                     : ""}

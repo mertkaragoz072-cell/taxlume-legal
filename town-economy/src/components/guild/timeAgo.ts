@@ -1,13 +1,15 @@
 type T = (key: string, params?: Record<string, string | number>) => string;
+type TP = (key: string, count: number, params?: Record<string, string | number>) => string;
 
 /** "5 min ago" style label for a feed line. */
-export function timeAgo(at: number, now: number, t: T): string {
+export function timeAgo(at: number, now: number, t: T, tp: TP): string {
   const mins = Math.max(0, Math.round((now - at) / 60_000));
   if (mins < 1) return t("guild.ago.now");
   if (mins < 60) return t("guild.ago.min", { n: mins });
   const hours = Math.round(mins / 60);
   if (hours < 48) return t("guild.ago.hour", { n: hours });
-  return t("guild.ago.day", { n: Math.round(hours / 24) });
+  const days = Math.round(hours / 24);
+  return tp("guild.ago.day", days, { n: days });
 }
 
 /** "5h 12m" style countdown for an active duel. */

@@ -13,7 +13,7 @@ import { timeLeft } from "./timeAgo";
 /** Friendly 24-hour trading duels between two members: most trades wins. */
 export function DuelsPanel({ guild }: { guild: GuildInfo }) {
   const { busy, respondDuel, claimDuel } = useGuild();
-  const { t, formatCoins, state } = useEconomyContext();
+  const { t, tPlural, formatCoins, state } = useEconomyContext();
   const now = useNow();
   const mine = (d: GuildDuel) => (d.challengerId === guild.members.find((m) => m.isYou)?.id ? "c" : "o");
   const live = guild.duels.filter((d) => d.status !== "declined");
@@ -72,10 +72,10 @@ export function DuelsPanel({ guild }: { guild: GuildInfo }) {
                     {t("guild.duelVs", { name: rival })}
                     {d.endsAt ? `  ·  ${timeLeft(d.endsAt, now)}` : ""}
                   </Text>
-                  <Text style={styles.hint}>{t("guild.duelYou", { n: you })}</Text>
+                  <Text style={styles.hint}>{tPlural("guild.duelYou", you, { n: you })}</Text>
                   <GoalProgress pct={you / top} color="#9fd68f" />
                   <Text style={[styles.hint, { marginTop: 6 }]}>
-                    {t("guild.duelThem", { name: rival, n: them })}
+                    {tPlural("guild.duelThem", them, { name: rival, n: them })}
                   </Text>
                   <GoalProgress pct={them / top} color="#e07a5f" />
                 </>

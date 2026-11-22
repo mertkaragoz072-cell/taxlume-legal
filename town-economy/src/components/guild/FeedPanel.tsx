@@ -19,7 +19,7 @@ const ICONS: Record<GuildFeedItem["kind"], string> = {
 
 /** What has been going on in the guild lately. */
 export function FeedPanel({ guild }: { guild: GuildInfo }) {
-  const { t } = useEconomyContext();
+  const { t, tPlural } = useEconomyContext();
   const now = useNow();
   return (
     <>
@@ -39,7 +39,7 @@ export function FeedPanel({ guild }: { guild: GuildInfo }) {
                   project: project ? `${project.icon} ${t(`guild.project.${project.id}.name`)}` : "",
                   dest,
                 })}
-                <Text style={{ color: MUTED }}>{`  ·  ${timeAgo(f.at, now, t)}`}</Text>
+                <Text style={{ color: MUTED }}>{`  ·  ${timeAgo(f.at, now, t, tPlural)}`}</Text>
               </Text>
             );
           })

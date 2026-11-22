@@ -488,7 +488,7 @@ function Game() {
               <QuestBadge onOpen={() => setQuestHubOpen(true)} hidden={holdInterruptions} />
             </View>
             <QuestHub visible={questHubOpen} onClose={() => setQuestHubOpen(false)} />
-            <GuildHub />
+            <GuildHub sounds={sounds} />
 
             {/* She sits above the tab bar in the layout but paints above the dim
             as well, which is what the zIndex on her dock is for — source

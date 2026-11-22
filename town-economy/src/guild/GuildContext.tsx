@@ -13,6 +13,7 @@ import {
   GuildError,
   GuildInfo,
   guildLevel,
+  HALL_PROJECTS,
   RankedGuild,
   ReportReason,
 } from "./types";
@@ -61,6 +62,10 @@ interface GuildContextValue {
   /** gives up to `amount` coins to the guild hall */
   donateHall: (amount: number) => Promise<void>;
   ranking: RankedGuild[];
+  /** bumps whenever something worth a cheer happened (a prize, a finished building); big = a bigger one */
+  celebrate: { n: number; big: boolean };
+  /** the screen registers how a sound is played; the guild actions call it */
+  setFx: (fx: ((kind: "success" | "buy" | "tap") => void) | null) => void;
   loadRanking: () => Promise<void>;
   reportRanked: (guildId: string, reason: ReportReason) => Promise<boolean>;
   report: (reason: ReportReason) => Promise<boolean>;
@@ -95,6 +100,19 @@ export function GuildProvider({
   const [remembered, setRemembered] = useState<boolean | null>(null);
   const [guild, setGuild] = useState<GuildInfo | null>(null);
   const [ranking, setRanking] = useState<RankedGuild[]>([]);
+  const [celebrate, setCelebrate] = useState({ n: 0, big: false });
+  const fxRef = useRef<((kind: "success" | "buy" | "tap") => void) | null>(null);
+  const fx = useCallback((kind: "success" | "buy" | "tap") => fxRef.current?.(kind), []);
+  const cheerUp = useCallback(
+    (big = false) => {
+      setCelebrate((c) => ({ n: c.n + 1, big }));
+      fx("success");
+    },
+    [fx]
+  );
+  const setFx = useCallback((f: ((kind: "success" | "buy" | "tap") => void) | null) => {
+    fxRef.current = f;
+  }, []);
   const [error, setError] = useState<GuildErrorCode | null>(null);
   const [busy, setBusy] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
@@ -323,7 +341,7 @@ export function GuildProvider({
       },
       cheer: async (toUserId, emote) => {
         if (!api) return;
-        await run(() => api.sendCheer(toUserId, emote));
+        if ((await run(() => api.sendCheer(toUserId, emote))) !== null) fx("tap");
         await refresh();
       },
       donate: async (qty) => {
@@ -333,13 +351,19 @@ export function GuildProvider({
         if (amount <= 0) return;
         const accepted = await run(() => api.donateToOrder(amount));
         // take from the player only what the server accepted
-        if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "order");
+        if (accepted && accepted > 0) {
+          guildGoodsOut(goodId, accepted, "order");
+          fx("buy");
+        }
         await refresh();
       },
       claimOrder: async () => {
         if (!api) return;
         const took = await run(() => api.claimOrderReward());
-        if (took) grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
+        if (took) {
+          grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
+          cheerUp();
+        }
         await refresh();
       },
       requestGood: async (goodId, qty) => {
@@ -358,7 +382,10 @@ export function GuildProvider({
         const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
         if (amount <= 0) return;
         const accepted = await run(() => api.fulfillRequest(requestId, amount));
-        if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "friend");
+        if (accepted && accepted > 0) {
+          guildGoodsOut(goodId, accepted, "friend");
+          fx("buy");
+        }
         await refresh();
       },
       startCaravan: async (dest) => {
@@ -372,12 +399,15 @@ export function GuildProvider({
         if (amount <= 0) return;
         const accepted = await run(() => api.loadCaravan(goodId, amount));
         // take from the player only what the server accepted
-        if (accepted && accepted > 0) guildGoodsOut(goodId, accepted, "caravan");
+        if (accepted && accepted > 0) {
+          guildGoodsOut(goodId, accepted, "caravan");
+          fx("buy");
+        }
         await refresh();
       },
       sendCaravan: async () => {
         if (!api) return;
-        await run(() => api.sendCaravan());
+        if ((await run(() => api.sendCaravan())) !== null) fx("success");
         await refresh();
       },
       claimCaravan: async (caravanId) => {
@@ -386,6 +416,7 @@ export function GuildProvider({
         if (share) {
           const pay = caravanPayout(share, (id) => live.current.prices[id] ?? 0);
           if (pay > 0) grantGuildReward(pay, "caravan");
+          cheerUp(share.tier === 3);
         }
         await refresh();
       },
@@ -402,13 +433,19 @@ export function GuildProvider({
       claimDuel: async (duelId) => {
         if (!api) return;
         const took = await run(() => api.claimDuelReward(duelId));
-        if (took) grantGuildReward(duelRewardFor(live.current.rank), "duel");
+        if (took) {
+          grantGuildReward(duelRewardFor(live.current.rank), "duel");
+          cheerUp();
+        }
         await refresh();
       },
       draw: async () => {
         if (!api) return null;
         const tier = await run(() => api.dailyDraw());
-        if (tier) grantGuildReward(drawRewardFor(live.current.rank, tier), "draw");
+        if (tier) {
+          grantGuildReward(drawRewardFor(live.current.rank, tier), "draw");
+          cheerUp(tier === 3);
+        }
         await refresh();
         return tier;
       },
@@ -418,10 +455,18 @@ export function GuildProvider({
         if (amountNow <= 0) return;
         const accepted = await run(() => api.donateCash(amountNow));
         // take from the player only what the server accepted
-        if (accepted && accepted > 0) guildCashOut(accepted);
+        if (accepted && accepted > 0) {
+          guildCashOut(accepted);
+          // a building that just got finished is worth a cheer
+          const left = guild ? (HALL_PROJECTS[guild.projects.built]?.cost ?? 0) - guild.projects.progress : 0;
+          if (left > 0 && accepted >= left) cheerUp(true);
+          else fx("buy");
+        }
         await refresh();
       },
       ranking,
+      celebrate,
+      setFx,
       loadRanking,
       reportRanked: async (guildId, reason) => {
         if (!api) return false;
@@ -430,7 +475,10 @@ export function GuildProvider({
       claim: async () => {
         if (!api) return;
         const took = await run(() => api.claimWeeklyReward());
-        if (took) grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
+        if (took) {
+          grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
+          cheerUp();
+        }
         await refresh();
       },
     }),
@@ -451,6 +499,10 @@ export function GuildProvider({
       grantGuildReward,
       guildGoodsOut,
       guildCashOut,
+      cheerUp,
+      fx,
+      celebrate,
+      setFx,
       ranking,
       loadRanking,
       syncMe,
