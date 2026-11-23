@@ -3,6 +3,10 @@
 // it in step with the game's language.
 let current: "tr" | "en" = "tr";
 
+export function getUiLanguage(): "tr" | "en" {
+  return current;
+}
+
 export function setUiLanguage(lang: "tr" | "en"): void {
   current = lang;
 }

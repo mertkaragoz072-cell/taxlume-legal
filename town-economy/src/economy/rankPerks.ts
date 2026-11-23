@@ -1,3 +1,4 @@
+import { fixedUi } from "../utils/formatNumber";
 import {
   AUTO_TRADE_RULES_PER_RANK,
   BULK_CONTRACT_SLOTS_PER_RANK,
@@ -16,7 +17,7 @@ type T = (key: string, params?: Record<string, string | number>) => string;
 
 const pct = (fraction: number) => {
   const v = Math.round(fraction * 1000) / 10;
-  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+  return Number.isInteger(v) ? String(v) : fixedUi(v, 1);
 };
 
 /** Everything that changes for the town when it climbs from rank `from` to

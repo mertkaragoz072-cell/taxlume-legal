@@ -1,5 +1,5 @@
 import React from "react";
-import { formatPercent } from "../utils/formatNumber";
+import { formatPercent, fixedUi } from "../utils/formatNumber";
 import { Animated, Image, StyleSheet, View } from "react-native";
 import { Text } from "./AppText";
 import coinIcon from "../../assets/ui/statpanel2/coinbullet.png";
@@ -205,7 +205,7 @@ export function GoodCard({ good, state, selected, onPress, badge, width = BASE_W
             )}
             <View style={styles.priceRow}>
               <Text style={styles.price} numberOfLines={1}>
-                {state.price.toFixed(2)}
+                {fixedUi(state.price, 2)}
               </Text>
               <Image source={coinIcon} style={styles.coin} resizeMode="contain" />
             </View>

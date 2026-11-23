@@ -6,7 +6,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { DIFFICULTIES } from "../economy/difficulty";
 import { effectiveDifficultyConfig } from "../economy/ngPlusModifiers";
 import { currentMentorStep, isWaitingOnPlayer, MENTOR_STEPS } from "../economy/mentor";
-import { FONT, SCREEN_PADDING, SPACING } from "../theme";
+import { FONT, SPACING } from "../theme";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -95,7 +95,9 @@ export function MentorCoach({ onNext, onSkip }: Props) {
   const tip = step.tipKey ? say(step.tipKey) : "";
   const progress = t("mentor.progress", { current: index + 1, total: MENTOR_STEPS.length });
   const nextLabel = waitingOnPlayer ? t("mentor.waiting") : isLast ? t("mentor.done") : t("mentor.next");
-  const cardW = Math.min(windowWidth - SCREEN_PADDING * 2, 480);
+  // Full width: the card sits over the tab bar, and any gap beside it would let
+  // the tab labels peek out past its frame.
+  const cardW = Math.min(windowWidth, 480);
   const s = cardW / ART_W;
   const cardH = ART_H * s;
   const w = (px: number) => px * s;

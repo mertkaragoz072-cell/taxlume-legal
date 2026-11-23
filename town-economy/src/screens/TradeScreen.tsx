@@ -52,6 +52,7 @@ import {
   WOOD_RIM,
   glowShadow,
 } from "../theme";
+import { fixedUi } from "../utils/formatNumber";
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -448,7 +449,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
           summary={t("trade.summaryLine", {
             qty: resolvedQty,
             good: t(good.nameKey),
-            price: theirPrice.toFixed(2),
+            price: fixedUi(theirPrice, 2),
             town: t(town.nameKey),
           })}
           total={`${direction === "export" ? "+" : "-"}${formatCoins(net)}`}
@@ -530,7 +531,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                 onPress: () => setContractTermDays(days),
               }))}
               accent={good.color}
-              note={t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
+              note={t("trade.contract.marginPreview", { amount: fixedUi(margin, 1) })}
               maxNote={t("trade.contract.maxActiveNote", { max: maxContracts })}
               openLabel={t("trade.contract.openBtn")}
               openDisabled={contractDisabled}
@@ -563,7 +564,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                 sub={t("trade.contract.contractRow", {
                   qty: c.qty,
                   good: t(cGood.nameKey),
-                  price: c.strikePrice.toFixed(2),
+                  price: fixedUi(c.strikePrice, 2),
                 })}
                 progress={progress}
               />
@@ -597,7 +598,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                 onPress: () => setBulkTermDays(days),
               }))}
               accent={good.color}
-              payout={t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
+              payout={t("trade.bulkContract.payoutPreview", { amount: fixedUi(payout, 1) })}
               warning={
                 !hasEnough
                   ? t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })
@@ -635,7 +636,7 @@ export function TradeScreen({ sounds, compactMap }: Props) {
                 sub={t("trade.bulkContract.contractRow", {
                   qty: c.qty,
                   good: t(cGood.nameKey),
-                  price: c.lockedPricePerUnit.toFixed(2),
+                  price: fixedUi(c.lockedPricePerUnit, 2),
                 })}
                 progress={progress}
               />

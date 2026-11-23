@@ -1,5 +1,5 @@
 import React from "react";
-import { formatPercent } from "../utils/formatNumber";
+import { formatPercent, fixedUi } from "../utils/formatNumber";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
 import bagImg from "../../assets/ui/inventory/bag.png";
 import coinsImg from "../../assets/ui/inventory/coins.png";
@@ -193,7 +193,7 @@ export function InventoryScreen() {
                     adjustsFontSizeToFit
                     minimumFontScale={0.6}
                   >
-                    {t("inventory.rowSub", { qty: gs.holding, price: gs.price.toFixed(2) })} ·{" "}
+                    {t("inventory.rowSub", { qty: gs.holding, price: fixedUi(gs.price, 2) })} ·{" "}
                     {formatPercent(share, state.language)}
                   </Text>
                   <View style={styles.barTrack}>

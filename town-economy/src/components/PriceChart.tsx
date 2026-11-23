@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GestureResponderEvent, View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
+import { fixedUi } from "../utils/formatNumber";
 
 interface Props {
   history: number[];
@@ -180,10 +181,10 @@ export function PriceChart({
               fontWeight="700"
               opacity={0.8}
             >
-              {max.toFixed(2)}
+              {fixedUi(max, 2)}
             </SvgText>
             <SvgText x={2} y={height - padY + 14} fill={color} fontSize={10} fontWeight="700" opacity={0.8}>
-              {min.toFixed(2)}
+              {fixedUi(min, 2)}
             </SvgText>
           </>
         )}
@@ -208,7 +209,7 @@ export function PriceChart({
               strokeWidth={1.5}
             />
             {(() => {
-              const label = touchValue.toFixed(2);
+              const label = fixedUi(touchValue, 2);
               const bubbleWidth = 14 + label.length * 6.5;
               const bubbleX = Math.min(Math.max(touchPoint.x - bubbleWidth / 2, 0), width - bubbleWidth);
               const bubbleY = Math.max(touchPoint.y - 26, 0);

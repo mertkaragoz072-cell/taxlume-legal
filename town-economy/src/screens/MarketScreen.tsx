@@ -45,12 +45,12 @@ import {
   WEIGHT,
   withAlpha,
 } from "../theme";
-import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
+import { fixedUi, formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
 
 // Market Pulse is parked for now — flip to bring the panel back.
 const SHOW_MARKET_PULSE = false;
 
-const formatPrice = (v: number) => `${v.toFixed(2)} 🪙`;
+const formatPrice = (v: number) => `${fixedUi(v, 2)} 🪙`;
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -412,7 +412,7 @@ export function MarketScreen({ sounds }: Props) {
           <View style={styles.holdingRow}>
             <Text style={styles.holdingText}>
               {t("market.holdingLabel", { qty: selectedState.holding })} ·{" "}
-              {t("market.avgCostLabel", { price: selectedState.avgCost.toFixed(2) })}
+              {t("market.avgCostLabel", { price: fixedUi(selectedState.avgCost, 2) })}
             </Text>
             <Text style={[styles.holdingPnl, { color: unrealizedPnl >= 0 ? "#3fae5c" : "#c94b4b" }]}>
               {unrealizedPnl >= 0
@@ -555,7 +555,7 @@ export function MarketScreen({ sounds }: Props) {
             return (
               <>
                 <Text style={styles.autoTradePreview}>
-                  {t("market.autoTrade.preview", { qty: autoQty, price: triggerPrice.toFixed(2) })}
+                  {t("market.autoTrade.preview", { qty: autoQty, price: fixedUi(triggerPrice, 2) })}
                 </Text>
                 <Text style={styles.autoTradeMaxNote}>
                   {t("market.autoTrade.maxActiveNote", { max: maxRules })}
@@ -592,7 +592,7 @@ export function MarketScreen({ sounds }: Props) {
                 <Text style={styles.autoTradeRowSub}>
                   {t(rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell", {
                     qty: rule.qty,
-                    price: rule.triggerPrice.toFixed(2),
+                    price: fixedUi(rule.triggerPrice, 2),
                   })}
                 </Text>
               </View>

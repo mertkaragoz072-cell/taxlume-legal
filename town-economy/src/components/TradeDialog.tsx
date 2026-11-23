@@ -23,6 +23,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { FONT } from "../theme";
 import { CoinPop } from "./CoinPop";
 import { GoodIcon } from "./GoodIcon";
+import { fixedUi } from "../utils/formatNumber";
 
 type Qty = number | "ALL";
 
@@ -143,7 +144,7 @@ export function TradeDialog(p: Props) {
         {t(p.good.nameKey)}
       </Text>
       <View style={styles.meta}>
-        <Text style={[styles.metaText, { fontSize: f(0.062) }]}>{p.execPrice.toFixed(2)} 🪙</Text>
+        <Text style={[styles.metaText, { fontSize: f(0.062) }]}>{fixedUi(p.execPrice, 2)} 🪙</Text>
         <Image
           source={crateImg}
           style={{ width: f(0.07), height: f(0.062), marginLeft: f(0.03) }}

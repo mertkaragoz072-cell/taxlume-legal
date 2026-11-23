@@ -11,7 +11,7 @@ import { GoodCard } from "../components/GoodCard";
 import { PriceChart } from "../components/PriceChart";
 import { usePriceFlash } from "../hooks/usePriceFlash";
 import { COLORS, CONTENT_MAX_WIDTH, PANEL_GAP, SCREEN_PADDING, FONT, SPACING, TYPE } from "../theme";
-import { formatCompactNumber as formatNumber, formatPercent } from "../utils/formatNumber";
+import { formatCompactNumber as formatNumber, formatPercent, fixedUi } from "../utils/formatNumber";
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
@@ -85,7 +85,7 @@ export function InvestScreen({ sounds }: Props) {
         holding={
           selectedState.holding > 0
             ? `${t("invest.holdingLabel", { qty: selectedState.holding })} · ${t("invest.avgCostLabel", {
-                price: selectedState.avgCost.toFixed(2),
+                price: fixedUi(selectedState.avgCost, 2),
               })}`
             : t("invest.noHolding")
         }

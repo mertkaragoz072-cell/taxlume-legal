@@ -21,6 +21,7 @@ import { GradientFill } from "./GradientFill";
 import { BigButton } from "./ModalKit";
 import { TradeDialog } from "./TradeDialog";
 import { SpotlightTarget } from "./Spotlight";
+import { fixedUi } from "../utils/formatNumber";
 
 // Loosened to the fields this panel actually needs (rather than the full
 // Good/GoodState shape) so it can double as an asset buy/sell panel in
@@ -122,7 +123,7 @@ export function BuySellPanel({
             onPress: () => setQtyOption(q),
           }))}
           accent={good.color}
-          summary={`${resolvedQty} x ${t(good.nameKey)} @ ${execPrice.toFixed(2)}`}
+          summary={`${resolvedQty} x ${t(good.nameKey)} @ ${fixedUi(execPrice, 2)}`}
           total={formatCoins(total)}
           confirmLabel={`${side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} ${good.icon}`}
           disabled={disabled}
@@ -180,7 +181,7 @@ export function BuySellPanel({
 
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>
-          {resolvedQty} x {t(good.nameKey)} @ {execPrice.toFixed(2)}
+          {resolvedQty} x {t(good.nameKey)} @ {fixedUi(execPrice, 2)}
         </Text>
         <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
       </View>

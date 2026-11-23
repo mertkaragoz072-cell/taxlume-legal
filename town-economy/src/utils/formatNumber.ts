@@ -1,4 +1,5 @@
 import { Language } from "../i18n/t";
+import { getUiLanguage } from "./uiLanguage";
 
 // Hand-rolled rather than Intl.NumberFormat so the exact separator choice
 // (TR: "." thousands / "," decimal, EN: the reverse) is guaranteed
@@ -64,4 +65,11 @@ export function formatPercent(value: number, lang: Language, decimals = 0): stri
   const n = formatNumber(Math.abs(value), lang, decimals);
   const sign = value < 0 ? "-" : "";
   return lang === "tr" ? `${sign}%${n}` : `${sign}${n}%`;
+}
+
+/** `value` to a fixed number of decimals, with the separator of the language
+ * the UI is drawn in (Turkish 2,60 / English 2.60). A drop-in for toFixed in
+ * anything the player reads. */
+export function fixedUi(value: number, decimals: number): string {
+  return formatNumber(value, getUiLanguage(), decimals);
 }

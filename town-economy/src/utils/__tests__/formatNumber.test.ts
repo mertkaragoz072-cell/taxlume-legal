@@ -1,4 +1,5 @@
-import { formatCoins, formatCompactNumber, formatNumber, formatPercent } from "../formatNumber";
+import { fixedUi, formatCoins, formatCompactNumber, formatNumber, formatPercent } from "../formatNumber";
+import { setUiLanguage } from "../uiLanguage";
 
 describe("formatNumber", () => {
   it("groups thousands with a dot and uses a comma decimal in Turkish", () => {
@@ -89,5 +90,21 @@ describe("formatPercent", () => {
   it("rounds to whole numbers by default", () => {
     expect(formatPercent(7.6, "en")).toBe("8%");
     expect(formatPercent(7.4, "tr")).toBe("%7");
+  });
+});
+
+describe("fixedUi", () => {
+  afterEach(() => setUiLanguage("tr"));
+
+  it("writes decimals with the separator of the UI language", () => {
+    setUiLanguage("tr");
+    expect(fixedUi(2.6, 2)).toBe("2,60");
+    setUiLanguage("en");
+    expect(fixedUi(2.6, 2)).toBe("2.60");
+  });
+
+  it("groups thousands the same way", () => {
+    setUiLanguage("tr");
+    expect(fixedUi(1234.5, 1)).toBe("1.234,5");
   });
 });

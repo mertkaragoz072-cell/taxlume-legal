@@ -1,7 +1,7 @@
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
 import { MENTOR_STEPS } from "../economy/mentor";
 import React, { useEffect, useRef, useState } from "react";
-import { formatPercent } from "../utils/formatNumber";
+import { formatPercent, fixedUi } from "../utils/formatNumber";
 import { Animated, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../components/AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -159,7 +159,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         label={t("town.moodLabel")}
         mood={t(mood.labelKey)}
         emoji={mood.emoji}
-        index={state.inflationIndex.toFixed(1)}
+        index={fixedUi(state.inflationIndex, 1)}
         indexLabel={t("town.priceIndexLabel")}
       />
 
@@ -220,7 +220,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           description={t("town.tax.description")}
           income={
             taxIncomePerTick > 0
-              ? t("town.tax.incomePerTurn", { amount: (taxIncomePerTick * TICKS_PER_GAME_DAY).toFixed(2) })
+              ? t("town.tax.incomePerTurn", { amount: fixedUi(taxIncomePerTick * TICKS_PER_GAME_DAY, 2) })
               : t("town.tax.none")
           }
           rates={TAX_RATE_STEPS.map((rate) => ({
@@ -353,10 +353,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           chipLabel={t("town.bank.activeTitle")}
           info={[
             formatCoins(state.loan.remainingBalance),
-            `${(loanTickRateToDayRate(state.loan.interestRatePerTick) * 100).toFixed(2)}% · ${t("town.bank.termMonths", { months: state.loan.termMonths })}`,
+            `${fixedUi(loanTickRateToDayRate(state.loan.interestRatePerTick) * 100, 2)}% · ${t("town.bank.termMonths", { months: state.loan.termMonths })}`,
           ]}
           rateLine={t("town.bank.rate", {
-            pct: (loanTickRateToDayRate(state.loan.interestRatePerTick) * 100).toFixed(2),
+            pct: fixedUi(loanTickRateToDayRate(state.loan.interestRatePerTick) * 100, 2),
             months: state.loan.termMonths,
             days: state.loan.termMonths * LOAN_TERM_DAYS_PER_MONTH,
           })}
@@ -386,7 +386,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
             onPress: () => setSelectedTermMonths(months),
           }))}
           rateLine={t("town.bank.ratePreview", {
-            pct: (previewDayRate * 100).toFixed(2),
+            pct: fixedUi(previewDayRate * 100, 2),
             days: previewTermDays,
           })}
           pills={([0.25, 0.5, 1] as const).flatMap((frac) => {
@@ -509,7 +509,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
               info={
                 count > 0
                   ? `${t("town.workerWage", {
-                      amount: (count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY).toFixed(1),
+                      amount: fixedUi(count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY, 1),
                     })} · ${t("town.workerBonus", {
                       pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
                     })}`
