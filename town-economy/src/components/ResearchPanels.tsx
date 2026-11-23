@@ -215,6 +215,12 @@ interface ResearchCardProps {
   buttonLabel: string;
   researchedLabel: string;
   onResearch: () => void;
+  /** how long it takes once started, e.g. "0:30" */
+  wait?: string;
+  /** shown instead of the button while this node is being researched */
+  building?: React.ReactNode;
+  /** another node is being researched: only one at a time */
+  slotBusy?: boolean;
 }
 
 /** Parchment node card: stretchable painted frame, the node's art, its text
@@ -226,11 +232,13 @@ export function ResearchCard(p: ResearchCardProps) {
   const painted = NODE_ART[p.nodeId];
   // No hand-painted illustration for this node yet: use the good's own picture.
   const art = painted ?? (GOOD_IMAGES as Record<string, number | undefined>)[p.goodId];
-  const disabled = p.researched || p.locked || !p.affordable;
+  const disabled = p.researched || p.locked || !p.affordable || Boolean(p.slotBusy);
   const narrow = w < 250;
   const artSize = painted ? (narrow ? 52 : 64) : narrow ? 42 : 52;
 
-  const button = p.researched ? (
+  const button = p.building ? (
+    p.building
+  ) : p.researched ? (
     <View style={styles.doneBadge}>
       <Text style={styles.doneText} numberOfLines={2}>
         {p.researchedLabel}
@@ -280,6 +288,7 @@ export function ResearchCard(p: ResearchCardProps) {
               </Text>
             ))}
             {p.lockedText ? <Text style={styles.cardLocked}>{p.lockedText}</Text> : null}
+            {p.wait && !p.researched && !p.building ? <Text style={styles.cardWait}>⏱ {p.wait}</Text> : null}
             {narrow && <View style={{ alignSelf: "flex-end", marginTop: 6 }}>{button}</View>}
           </View>
           {!narrow && <View style={styles.btnCol}>{button}</View>}
@@ -395,6 +404,7 @@ const styles = StyleSheet.create({
   cardName: { color: INK, fontFamily: FONT.black, fontSize: 14, lineHeight: 17 },
   cardDesc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 10.5, lineHeight: 13, marginTop: 2 },
   cardEffect: { color: GREEN, fontFamily: FONT.bold, fontSize: 10.5, marginTop: 3 },
+  cardWait: { color: "#7a6140", fontFamily: FONT.medium, fontSize: 11, marginTop: 3 },
   cardLocked: { color: RED, fontFamily: FONT.medium, fontSize: 10, lineHeight: 12, marginTop: 3 },
   pips: { position: "absolute", bottom: -5, flexDirection: "row", gap: 3 },
   pip: { width: 7, height: 7, borderRadius: 4, backgroundColor: "rgba(60,36,16,0.25)" },

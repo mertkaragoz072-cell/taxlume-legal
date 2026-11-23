@@ -27,6 +27,8 @@ import {
 } from "../economy/useEconomy";
 import { DOCTRINES_BY_ID } from "../economy/doctrines";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
+import { BuildStatus } from "../components/BuildStatus";
+import { formatWait, improvementWaitMs, pendingOf } from "../economy/construction";
 import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
@@ -84,6 +86,8 @@ export function TownScreen({ onOpenDoctrine }: Props) {
     t,
     formatCoins,
   } = useEconomyContext();
+  const pendingUpgrade = pendingOf(state, "upgrade");
+  const pendingProperty = pendingOf(state, "property");
   const spotlightScroll = useSpotlightScroll();
   const mentorOn = state.mentorStep < MENTOR_STEPS.length;
   const activeDoctrine = state.doctrine ? DOCTRINES_BY_ID[state.doctrine] : null;
@@ -428,6 +432,7 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           const cost = maxed ? 0 : upgradeCost(u, level);
           const disabled = maxed || state.cash < cost;
           const effect = level > 0 ? u.effectLabel(level) : null;
+          const building = pendingUpgrade?.ref === u.id;
           return (
             <TownItemCard
               key={u.id}
@@ -439,8 +444,12 @@ export function TownScreen({ onOpenDoctrine }: Props) {
               effect={effect ? t(effect.key, effect.params) : undefined}
               pips={[level, u.maxLevel]}
               buttonLabel={maxed ? t("town.upgradeMaxed") : `${cost} 🪙`}
-              buttonDisabled={disabled}
+              buttonDisabled={disabled || Boolean(pendingUpgrade)}
               onPress={() => upgrade(u.id)}
+              wait={maxed ? undefined : formatWait(improvementWaitMs(cost))}
+              building={
+                building && pendingUpgrade ? <BuildStatus item={pendingUpgrade} kind="upgrade" /> : undefined
+              }
             />
           );
         })}
@@ -461,8 +470,14 @@ export function TownScreen({ onOpenDoctrine }: Props) {
               description={t(p.descriptionKey)}
               effect={t(effect.key, effect.params)}
               buttonLabel={owned ? t("town.propertyOwnedBtn") : `${p.cost} 🪙`}
-              buttonDisabled={disabled}
+              buttonDisabled={disabled || Boolean(pendingProperty)}
               onPress={() => buyProperty(p.id)}
+              wait={owned ? undefined : formatWait(improvementWaitMs(p.cost))}
+              building={
+                pendingProperty?.ref === p.id ? (
+                  <BuildStatus item={pendingProperty} kind="property" />
+                ) : undefined
+              }
             />
           );
         })}

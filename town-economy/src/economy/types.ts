@@ -269,6 +269,8 @@ export interface DailyQuest {
   completed: boolean;
 }
 
+import type { PendingImprovement } from "./construction";
+
 export interface EconomyState {
   townName: string;
   /** id of the emblem (see emblems.ts) shown next to the town name — purely cosmetic */
@@ -327,6 +329,9 @@ export interface EconomyState {
   /** how many hall projects the player's guild has built (0 = none); each adds
    * warehouse room or output (see guildPerks.ts). Optional like guildLevel. */
   guildProjects?: number;
+  /** upgrades, properties and research being built right now, one of each kind at
+   * most (see construction.ts). Optional so saves from before it load unchanged. */
+  construction?: PendingImprovement[];
   /** set right after townRankIndex climbs, so Merve can step in and
    * congratulate the player on the new title; null once dismissed. Carries
    * the already-resolved icon/title rather than a rank index so the modal

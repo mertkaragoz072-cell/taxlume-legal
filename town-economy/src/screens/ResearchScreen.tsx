@@ -5,6 +5,8 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS } from "../economy/goods";
 import { RESEARCH_NODES, RESEARCH_NODES_BY_ID, ResearchNode } from "../economy/research";
 import { researchCost } from "../economy/formulas";
+import { BuildStatus } from "../components/BuildStatus";
+import { formatWait, improvementWaitMs, pendingOf } from "../economy/construction";
 import { townRankNameKey } from "../economy/townRanks";
 import { PANEL_GAP, SCREEN_PADDING } from "../theme";
 
@@ -21,6 +23,7 @@ function NodeCard({ node }: { node: ResearchNode }) {
   const locked = prereqLocked || rankLocked;
   const cost = researchCost(state, node);
   const affordable = state.cash >= cost;
+  const pending = pendingOf(state, "research");
 
   const effects: string[] = [];
   if (node.productionBonusPct > 0) {
@@ -52,6 +55,9 @@ function NodeCard({ node }: { node: ResearchNode }) {
       buttonLabel={t("research.researchBtn", { cost })}
       researchedLabel={t("research.researchedBadge")}
       onResearch={() => research(node.id)}
+      wait={researched ? undefined : formatWait(improvementWaitMs(cost))}
+      slotBusy={Boolean(pending)}
+      building={pending?.ref === node.id ? <BuildStatus item={pending} kind="research" /> : undefined}
     />
   );
 }

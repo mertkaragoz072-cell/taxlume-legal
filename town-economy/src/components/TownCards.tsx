@@ -53,6 +53,10 @@ interface ItemCardProps {
   buttonLabel: string;
   buttonDisabled: boolean;
   onPress: () => void;
+  /** how long it takes once started, e.g. "0:30" */
+  wait?: string;
+  /** shown instead of the button while this one is being built */
+  building?: React.ReactNode;
 }
 
 /** One buildable thing on the parchment: its painting, what it does and the
@@ -68,6 +72,8 @@ export function TownItemCard({
   buttonLabel,
   buttonDisabled,
   onPress,
+  wait,
+  building,
 }: ItemCardProps) {
   return (
     <View style={styles.card}>
@@ -91,6 +97,7 @@ export function TownItemCard({
         </View>
         <Text style={styles.desc}>{description}</Text>
         {effect ? <Text style={styles.effect}>{effect}</Text> : null}
+        {wait && !building ? <Text style={styles.wait}>⏱ {wait}</Text> : null}
         {pips ? (
           <View style={styles.pipRow}>
             {Array.from({ length: pips[1] }).map((_, i) => (
@@ -99,7 +106,7 @@ export function TownItemCard({
           </View>
         ) : null}
       </View>
-      <GoldButton label={buttonLabel} onPress={onPress} disabled={buttonDisabled} height={34} />
+      {building ?? <GoldButton label={buttonLabel} onPress={onPress} disabled={buttonDisabled} height={34} />}
     </View>
   );
 }
@@ -148,6 +155,7 @@ export function EventRow({ tone, text, last }: EventRowProps) {
 }
 
 const styles = StyleSheet.create({
+  wait: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 11, marginTop: 3 },
   card: {
     flexDirection: "row",
     alignItems: "center",

@@ -988,6 +988,12 @@ export const STRINGS = {
         network: "Bağlantı kurulamadı. Biraz sonra tekrar dene.",
       },
     },
+    build: { adSkip: "📺 −5 dk", adFinish: "📺 Bitir" },
+    ads: {
+      mockTitle: "Reklam (deneme)",
+      mockNote: "Gerçek bir reklam ağı bağlı değil; bu bir deneme reklamıdır.",
+      mockClose: "Kapat (ödül yok)",
+    },
     eraChapter: {
       label: "BÖLÜM {n}",
       decree: "📜 Çağın fermanı seni bekliyor",
@@ -1187,6 +1193,8 @@ export const STRINGS = {
     },
     notif: {
       channelName: "Kasaba Bildirimleri",
+      buildTitle: "Yapı tamamlandı",
+      buildBody: "{name} hazır. Gel ve bir sonrakini başlat.",
       caravanTitle: "🚚 Kervan geldi!",
       caravanExportBody: "{town}'a gönderdiğin {qty} {good} satıldı.",
       caravanImportBody: "{town}'dan {qty} {good} teslim edildi.",
@@ -1856,6 +1864,7 @@ export const STRINGS = {
       guildCashGiven: "🏛️ Lonca salonuna {amount} bağışladın.",
       guildCaravanLoaded: "🐪 Lonca kervanına {qty} {icon} {good} yükledin.",
       guildCaravanReward: "🐪 Lonca kervanı kazancı: hazineye {amount} girdi!",
+      improvementDone: "✅ {name} tamamlandı!",
       guildReward: "🏆 Lonca sandığı açıldı: hazineye {amount} girdi!",
       eraDecreeUpgrade: "📜 Ferman uygulandı: {icon} {upgrade} bir seviye yükseldi!",
       eraDecreeUpgradeMaxed: "📜 {icon} {upgrade} zaten en üst seviyede; hazineye {amount} girdi.",
@@ -2890,6 +2899,12 @@ export const STRINGS = {
         network: "Couldn't connect. Try again in a moment.",
       },
     },
+    build: { adSkip: "📺 −5 min", adFinish: "📺 Finish" },
+    ads: {
+      mockTitle: "Ad (test)",
+      mockNote: "No real ad network is connected; this is a test ad.",
+      mockClose: "Close (no reward)",
+    },
     eraChapter: {
       label: "CHAPTER {n}",
       decree: "📜 The charter of the age awaits you",
@@ -3088,6 +3103,8 @@ export const STRINGS = {
     },
     notif: {
       channelName: "Town Notifications",
+      buildTitle: "Build finished",
+      buildBody: "{name} is ready. Come back and start the next one.",
       caravanTitle: "🚚 Caravan arrived!",
       caravanExportBody: "The {qty} {good} you sent to {town} was sold.",
       caravanImportBody: "{qty} {good} delivered from {town}.",
@@ -3741,6 +3758,7 @@ export const STRINGS = {
       guildCashGiven: "🏛️ You gave {amount} to the guild hall.",
       guildCaravanLoaded: "🐪 You loaded {qty} {icon} {good} onto the guild caravan.",
       guildCaravanReward: "🐪 Guild caravan earnings: {amount} went to the treasury!",
+      improvementDone: "✅ {name} is finished!",
       guildReward: "🏆 Guild chest opened: {amount} went to the treasury!",
       eraDecreeUpgrade: "📜 Decree enacted: {icon} {upgrade} rose one level!",
       eraDecreeUpgradeMaxed: "📜 {icon} {upgrade} is already at its peak; {amount} went to the treasury.",

@@ -15,10 +15,8 @@ import { RIVAL_TRADERS, rollRivalActivity } from "./rivals";
 import { generateDailyQuotas } from "./productionQuotas";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
-import { PROPERTIES_BY_ID } from "./properties";
 import { perkHeadStartBonus, PRESTIGE_PERKS_BY_ID } from "./prestigePerks";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
-import { RESEARCH_NODES_BY_ID } from "./research";
 import {
   isoWeekKey,
   WEEKLY_CHALLENGE_TEMPLATES_BY_ID,
@@ -33,7 +31,7 @@ import {
 } from "./townFestival";
 import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
-import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
+import { finishDueImprovements, ImprovementKind, skipImprovement, startImprovement } from "./construction";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
 import { deviceLanguage } from "../i18n/deviceLanguage";
 import { DEFAULT_LANGUAGE, eventFields, Language, NestedKey, Params, t, tPlural } from "../i18n/t";
@@ -107,7 +105,6 @@ import {
   marketDepthFactor,
   marketSpread,
   nextTradeStreak,
-  researchCost,
   scaledGoalReward,
   scaledGoalTarget,
   storageCapacity,
@@ -251,9 +248,11 @@ type Action =
   | { type: "FIRE_WORKER"; goodId: GoodId }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
-  | { type: "UPGRADE"; upgradeId: UpgradeId }
-  | { type: "RESEARCH"; nodeId: string }
-  | { type: "BUY_PROPERTY"; propertyId: string }
+  | { type: "UPGRADE"; upgradeId: UpgradeId; now: number }
+  | { type: "FINISH_IMPROVEMENTS"; now: number }
+  | { type: "SKIP_IMPROVEMENT"; kind: ImprovementKind; now: number }
+  | { type: "RESEARCH"; nodeId: string; now: number }
+  | { type: "BUY_PROPERTY"; propertyId: string; now: number }
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
@@ -1059,50 +1058,6 @@ export function applyFestivalClaim(state: EconomyState): EconomyState {
     festivalEmblemEarned: true,
   };
 }
-function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
-  if (state.gameOver) return state;
-  const def = UPGRADES_BY_ID[upgradeId];
-  const level = state.upgrades[upgradeId];
-  if (level >= def.maxLevel) return state;
-  const cost = upgradeCost(def, level);
-  if (state.cash < cost) return state;
-  return {
-    ...state,
-    cash: state.cash - cost,
-    upgrades: { ...state.upgrades, [upgradeId]: level + 1 },
-    dailyProgress: {
-      ...state.dailyProgress,
-      upgradesBought: state.dailyProgress.upgradesBought + 1,
-    },
-  };
-}
-function buyProperty(state: EconomyState, propertyId: string): EconomyState {
-  if (state.gameOver) return state;
-  if (state.ownedProperties.includes(propertyId)) return state;
-  const def = PROPERTIES_BY_ID[propertyId];
-  if (!def) return state;
-  if (state.cash < def.cost) return state;
-  return {
-    ...state,
-    cash: state.cash - def.cost,
-    ownedProperties: [...state.ownedProperties, propertyId],
-  };
-}
-function research(state: EconomyState, nodeId: string): EconomyState {
-  if (state.gameOver) return state;
-  if (state.researched.includes(nodeId)) return state;
-  const node = RESEARCH_NODES_BY_ID[nodeId];
-  if (!node) return state;
-  if (node.requires && !state.researched.includes(node.requires)) return state;
-  if (node.requiresRank !== undefined && state.townRankIndex < node.requiresRank) return state;
-  const cost = researchCost(state, node);
-  if (state.cash < cost) return state;
-  return {
-    ...state,
-    cash: state.cash - cost,
-    researched: [...state.researched, nodeId],
-  };
-}
 function setTaxRate(state: EconomyState, rate: number): EconomyState {
   if (state.gameOver) return state;
   return { ...state, taxRate: clamp(rate, 0, TAX_RATE_MAX) };
@@ -1540,12 +1495,18 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return action.state;
     case "DAILY_CHECKIN":
       return dailyCheckIn(state, action.today);
+    // Upgrades, research and properties are paid for now and finished later
+    // (see construction.ts).
     case "UPGRADE":
-      return upgrade(state, action.upgradeId);
+      return startImprovement(state, "upgrade", action.upgradeId, action.now);
     case "RESEARCH":
-      return research(state, action.nodeId);
+      return startImprovement(state, "research", action.nodeId, action.now);
     case "BUY_PROPERTY":
-      return buyProperty(state, action.propertyId);
+      return startImprovement(state, "property", action.propertyId, action.now);
+    case "FINISH_IMPROVEMENTS":
+      return finishDueImprovements(state, action.now);
+    case "SKIP_IMPROVEMENT":
+      return skipImprovement(state, action.kind, action.now);
     case "SET_TAX_RATE":
       return setTaxRate(state, action.rate);
     case "OFFLINE_ADVANCE":
@@ -1627,6 +1588,16 @@ export function useEconomy() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isSpeedBoosted, hydrated, started, isMentorActive]);
+
+  // Finishes upgrades, properties and research whose time is up. Real time, so
+  // it keeps counting while the game is closed and a return finishes them at once.
+  useEffect(() => {
+    if (!hydrated) return;
+    const finish = () => dispatch({ type: "FINISH_IMPROVEMENTS", now: Date.now() });
+    finish();
+    const id = setInterval(finish, 1000);
+    return () => clearInterval(id);
+  }, [hydrated]);
 
   // Load any previous save once on mount, fast-forward the town through
   // however long the app was closed, then start persisting future changes.
@@ -1731,14 +1702,24 @@ export function useEconomy() {
   const repayLoan_ = useCallback((amount: number) => dispatch({ type: "REPAY_LOAN", amount }), []);
   const hireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "HIRE_WORKER", goodId }), []);
   const fireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "FIRE_WORKER", goodId }), []);
-  const upgrade_ = useCallback((upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }), []);
-  const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
+  const upgrade_ = useCallback(
+    (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId, now: Date.now() }),
+    []
+  );
+  const skipImprovement_ = useCallback(
+    (kind: ImprovementKind) => dispatch({ type: "SKIP_IMPROVEMENT", kind, now: Date.now() }),
+    []
+  );
+  const research_ = useCallback(
+    (nodeId: string) => dispatch({ type: "RESEARCH", nodeId, now: Date.now() }),
+    []
+  );
   const hydrate_ = useCallback(
     (imported: EconomyState) => dispatch({ type: "HYDRATE", state: imported }),
     []
   );
   const buyProperty_ = useCallback(
-    (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId }),
+    (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId, now: Date.now() }),
     []
   );
   const tradeAsset_ = useCallback(
@@ -1827,6 +1808,7 @@ export function useEconomy() {
     hireWorker: hireWorker_,
     fireWorker: fireWorker_,
     upgrade: upgrade_,
+    skipImprovement: skipImprovement_,
     research: research_,
     buyProperty: buyProperty_,
     tradeAsset: tradeAsset_,

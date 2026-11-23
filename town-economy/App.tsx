@@ -52,6 +52,7 @@ import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
+import { AdsProvider } from "./src/ads/AdsContext";
 import { GuildProvider } from "./src/guild/GuildContext";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
 import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
@@ -640,7 +641,9 @@ export default function App() {
     <ErrorBoundary>
       <EconomyProvider>
         <GuildProvider>
-          <Game />
+          <AdsProvider>
+            <Game />
+          </AdsProvider>
         </GuildProvider>
       </EconomyProvider>
     </ErrorBoundary>

@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { improvementNameKey, pendingList } from "../economy/construction";
 import { GOODS_BY_ID } from "../economy/goods";
 import { computeNetWorth, PRESTIGE_UNLOCK_NET_WORTH, TICK_MS } from "../economy/useEconomy";
 import { EconomyState } from "../economy/types";
@@ -109,6 +110,19 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
         seconds,
         repeats: false,
       },
+    });
+  }
+
+  // Something under construction finishes while the player is away.
+  for (const item of pendingList(state)) {
+    const seconds = Math.max(MIN_SCHEDULE_SECONDS, Math.round((item.readyAt - Date.now()) / 1000));
+    if (item.readyAt <= Date.now()) continue;
+    await scheduleSafely({
+      content: {
+        title: t(state.language, "notif.buildTitle"),
+        body: t(state.language, "notif.buildBody", { name: t(state.language, improvementNameKey(item)) }),
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds, repeats: false },
     });
   }
 
