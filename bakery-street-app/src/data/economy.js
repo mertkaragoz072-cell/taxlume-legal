@@ -42,6 +42,14 @@ export const RECIPES = {
   mocha: { name: 'Mocha', icon: '🍫', station: 'coffee', time: 30, ingredients: { beans: 1, milk: 1, sugar: 2 }, price: 58, start: 0 },            // cost 29, net 29
   muffin: { name: 'Muffin', icon: '🧁', station: 'oven', time: 55, ingredients: { flour: 2, sugar: 2, egg: 1, milk: 1 }, price: 90, start: 0 },   // cost 40, net 50
   waffle: { name: 'Waffle', icon: '🧇', station: 'oven', time: 80, ingredients: { flour: 2, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 122, start: 0 },   // cost 54, net 68 over 80 s: the most per guest, the least per second of the oven line's new recipes
+  // more variety, unlocked step by step (same rule: net gold per second about 0.9 - 1.0, net per guest grows with the price)
+  brezel: { name: 'Brezel', icon: '🥨', station: 'oven', time: 28, ingredients: { flour: 2, egg: 1 }, price: 47, start: 0 },                     // cost 21, net 26
+  pankek: { name: 'Pankek', icon: '🥞', station: 'oven', time: 32, ingredients: { flour: 1, egg: 2, milk: 1 }, price: 53, start: 0 },            // cost 25, net 28
+  sogukkahve: { name: 'Soğuk Kahve', icon: '🥤', station: 'coffee', time: 28, ingredients: { beans: 1, milk: 2, sugar: 1 }, price: 58, start: 0 },   // cost 30, net 28
+  donut: { name: 'Donut', icon: '🍩', station: 'oven', time: 50, ingredients: { flour: 2, sugar: 1, egg: 1, milk: 1 }, price: 77, start: 0 },  // cost 34, net 43
+  puding: { name: 'Karamelli Puding', icon: '🍮', station: 'oven', time: 42, ingredients: { milk: 2, sugar: 1, egg: 2 }, price: 63, start: 0 },  // cost 30, net 33
+  affogato: { name: 'Affogato', icon: '🍨', station: 'coffee', time: 32, ingredients: { beans: 2, milk: 1, sugar: 1 }, price: 66, start: 0 },     // cost 33, net 33
+  turta: { name: 'Elmalı Turta', icon: '🥧', station: 'oven', time: 65, ingredients: { flour: 2, butter: 1, sugar: 2, egg: 1 }, price: 104, start: 0 },   // cost 48, net 56
 };
 
 /** Ingredient storage (only enforced once the Shop is attached): units of each ingredient that can be bought and kept. Rewards are never refused. */
@@ -72,7 +80,7 @@ export const CAFE = {
   eatSec: 5,                    // a served guest stays at the table this long eating (the table is not free meanwhile); 0 = the guest leaves at once
   cleanSec: 1.5,                // after the guest has gone the table is cleared this long before the next guest may sit
   maxStepSec: 2,                // longest time one tick may advance patience (a hidden tab never burns patience)
-  orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4, simit: 3, latte: 3, kurabiye: 2, mocha: 2, muffin: 2, waffle: 1 },   // how likely each product is ordered (recipes not bought yet are never ordered)
+  orderWeights: { bread: 4, croissant: 3, cake: 2, coffee: 4, simit: 3, latte: 3, kurabiye: 2, mocha: 2, muffin: 2, waffle: 1, brezel: 2, pankek: 2, sogukkahve: 2, donut: 2, puding: 2, affogato: 2, turta: 1 },   // how likely each product is ordered (recipes not bought yet are never ordered)
   history: 20,                  // closed orders kept for reference
   /**
    * Service bonuses, paid on top of a sale as extra percent of its income (they add up, never multiply; the sum is capped by the parts below).
@@ -249,8 +257,8 @@ export const DAILY = [
  *  - LEVEL_REWARD: given automatically once for every level reached (gold each level, ingredients every Nth level)
  */
 export const XP = {
-  produce: { bread: 5, croissant: 8, cake: 20, coffee: 4, simit: 6, latte: 5, kurabiye: 14, mocha: 8, muffin: 22, waffle: 28 },     // per finished unit
-  sale: { bread: 3, croissant: 5, cake: 12, coffee: 3, simit: 4, latte: 4, kurabiye: 9, mocha: 6, muffin: 13, waffle: 16 },        // per unit sold (showcase or customer)
+  produce: { bread: 5, croissant: 8, cake: 20, coffee: 4, simit: 6, latte: 5, kurabiye: 14, mocha: 8, muffin: 22, waffle: 28, brezel: 7, pankek: 7, sogukkahve: 7, donut: 12, puding: 11, affogato: 9, turta: 22 },     // per finished unit
+  sale: { bread: 3, croissant: 5, cake: 12, coffee: 3, simit: 4, latte: 4, kurabiye: 9, mocha: 6, muffin: 13, waffle: 16, brezel: 5, pankek: 5, sogukkahve: 5, donut: 8, puding: 7, affogato: 6, turta: 13 },        // per unit sold (showcase or customer)
   upgrade: { base: 50, perLevel: 25 },                           // base + perLevel * (new upgrade level)
   quest: { default: 40, byId: { produceTen: 80 } },              // per quest reward collected
   research: { base: 40, perLevel: 20 },                          // base + perLevel * (new research level)
@@ -468,6 +476,13 @@ export const SHOP_ITEMS = [
   { id: 'recipeMocha', category: 'recipes', kind: 'recipe', recipe: 'mocha', name: 'Mocha Tarifi', desc: 'Çikolatalı kahve.', price: 2400, minLevel: 6, requires: [{ item: 'recipeLatte' }], art: { icon: 'mocha' } },
   { id: 'recipeMuffin', category: 'recipes', kind: 'recipe', recipe: 'muffin', name: 'Muffin Tarifi', desc: 'Yumuşacık minik kek.', price: 3200, minLevel: 7, requires: [{ item: 'recipeKurabiye' }], art: { icon: 'muffin' } },
   { id: 'recipeWaffle', category: 'recipes', kind: 'recipe', recipe: 'waffle', name: 'Waffle Tarifi', desc: 'Kafenin en gösterişli tatlısı.', price: 6500, minLevel: 10, stage: 3, requires: [{ item: 'recipeMuffin' }], art: { icon: 'waffle' } },
+  { id: 'recipeBrezel', category: 'recipes', kind: 'recipe', recipe: 'brezel', name: 'Brezel Tarifi', desc: 'Tuzlu, düğüm şeklinde çıtır hamur.', price: 2000, minLevel: 5, requires: [{ item: 'recipeSimit' }], art: { icon: 'brezel' } },
+  { id: 'recipePankek', category: 'recipes', kind: 'recipe', recipe: 'pankek', name: 'Pankek Tarifi', desc: 'Tereyağlı, şuruplu kat kat pankek.', price: 2200, minLevel: 5, art: { icon: 'pankek' } },
+  { id: 'recipeSogukKahve', category: 'recipes', kind: 'recipe', recipe: 'sogukkahve', name: 'Soğuk Kahve Tarifi', desc: 'Buzlu, sütlü ferahlatıcı kahve.', price: 3600, minLevel: 7, requires: [{ item: 'recipeLatte' }], art: { icon: 'sogukkahve' } },
+  { id: 'recipeDonut', category: 'recipes', kind: 'recipe', recipe: 'donut', name: 'Donut Tarifi', desc: 'Pembe şekerlemeli, renkli serpintili.', price: 4200, minLevel: 8, requires: [{ item: 'recipeKurabiye' }], art: { icon: 'donut' } },
+  { id: 'recipePuding', category: 'recipes', kind: 'recipe', recipe: 'puding', name: 'Karamelli Puding Tarifi', desc: 'Titrek, karamel soslu puding.', price: 5000, minLevel: 9, art: { icon: 'puding' } },
+  { id: 'recipeAffogato', category: 'recipes', kind: 'recipe', recipe: 'affogato', name: 'Affogato Tarifi', desc: 'Dondurmanın üstüne sıcak espresso.', price: 7500, minLevel: 11, stage: 3, requires: [{ item: 'recipeMocha' }], art: { icon: 'affogato' } },
+  { id: 'recipeTurta', category: 'recipes', kind: 'recipe', recipe: 'turta', name: 'Elmalı Turta Tarifi', desc: 'Kafes desenli, tarçınlı ev turtası.', price: 9000, minLevel: 12, stage: 3, requires: [{ item: 'recipeMuffin' }], art: { icon: 'turta' } },
 
   // ---- café expansion: tables are the existing café upgrade (price from UPGRADES); the waiting area and the decoration areas are new
   { id: 'areaAisle', category: 'expansion', kind: 'area', name: 'Koridor Dekor Alanı', desc: 'Masaların arasındaki koridor düzenlenir (cilalı zemin): halılar, lambalar ve bitki yerleştirilebilir.', price: 1500, minLevel: 2, effect: { area: 'aisle' }, art: { image: 'rug-green' } },

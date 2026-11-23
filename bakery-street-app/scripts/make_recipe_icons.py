@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draws stand-in icons for the shop recipes (simit, latte, kurabiye, mocha, muffin, waffle) into assets/game/icons/<id>.webp (256 px, transparent).
+"""Draws stand-in icons for the shop recipes (simit, latte, kurabiye, mocha, muffin, waffle, brezel, pankek, donut, puding, turta, sogukkahve, affogato) into assets/game/icons/<id>.webp (256 px, transparent).
 
 They are simple cartoon shapes in the game's palette (thick brown outline, warm flat fills, a highlight) so the order bubbles, trays,
 plates and panels show a picture instead of an emoji until real art (ChatGPT, like the other icons) replaces them: just overwrite the files.
@@ -120,8 +120,105 @@ def cup(name, liquid, foam, drizzle=False, glass=False):
         d.rectangle((cx - 250, 470, cx - 215, 800), fill=(255, 255, 255, 150))
     save(im, name)
 
+def brezel():
+    im = canvas(); d = ImageDraw.Draw(im); cx, cy = S // 2, S // 2 + 20
+    shadow(d, cx, 880, 330, 48)
+    def loop(box, a0, a1):
+        d.arc(box, a0, a1, fill=BROWN, width=150); d.arc(box, a0, a1, fill=SYRUP, width=100)
+    loop((cx - 360, cy - 330, cx + 40, cy + 230), 90, 380)                     # left loop
+    loop((cx - 40, cy - 330, cx + 360, cy + 230), 160, 450)                    # right loop
+    d.line([(cx - 260, cy + 260), (cx + 120, cy - 160)], fill=BROWN, width=150); d.line([(cx - 260, cy + 260), (cx + 120, cy - 160)], fill=SYRUP, width=100)
+    d.line([(cx + 260, cy + 260), (cx - 120, cy - 160)], fill=BROWN, width=150); d.line([(cx + 260, cy + 260), (cx - 120, cy - 160)], fill=SYRUP, width=100)
+    random.seed(7)
+    for _ in range(40):                                                        # coarse salt
+        x, y = cx + random.randint(-330, 330), cy + random.randint(-300, 260)
+        if im.getpixel((x, y))[:3] == SYRUP[:3]: d.rectangle((x - 9, y - 9, x + 9, y + 9), fill=MILK)
+    save(im, 'brezel')
+
+def pankek():
+    im = canvas(); d = ImageDraw.Draw(im); cx = S // 2
+    shadow(d, cx, 900, 360, 50)
+    d.ellipse((cx - 400 - W, 760 - W, cx + 400 + W, 900 + W), fill=BROWN); d.ellipse((cx - 400, 760, cx + 400, 900), fill=MILK)   # plate
+    for i, y in enumerate([700, 590, 480, 370]):                               # the stack
+        d.rounded_rectangle((cx - 330 - W, y - 70 - W, cx + 330 + W, y + 70 + W), radius=90, fill=BROWN)
+        d.rounded_rectangle((cx - 330, y - 70, cx + 330, y + 70), radius=80, fill=GOLD)
+        d.rounded_rectangle((cx - 310, y - 66, cx + 310, y - 20), radius=40, fill=(246, 204, 130, 255))
+    d.rounded_rectangle((cx - 110 - 12, 250 - 12, cx + 110 + 12, 340 + 12), radius=24, fill=BROWN); d.rounded_rectangle((cx - 110, 250, cx + 110, 340), radius=18, fill=BUTTER)
+    d.polygon([(cx - 260, 330), (cx + 250, 330), (cx + 290, 470), (cx + 120, 420), (cx - 40, 520), (cx - 200, 440), (cx - 300, 470)], fill=SYRUP)   # syrup running down
+    save(im, 'pankek')
+
+def donut():
+    im = canvas(); d = ImageDraw.Draw(im); cx = cy = S // 2
+    shadow(d, cx, 880, 330, 50)
+    ring(d, cx, cy + 20, 370, 130, GOLD)
+    icing = Image.new('RGBA', (S, S), (0, 0, 0, 0)); g = ImageDraw.Draw(icing)
+    pts = [(cx + math.cos(t) * (300 + 26 * math.sin(t * 7)), cy + 10 + math.sin(t) * (290 + 26 * math.sin(t * 7))) for t in [i / 90 * math.tau for i in range(90)]]
+    g.polygon(pts, fill=PINK); g.ellipse((cx - 170, cy - 150, cx + 170, cy + 180), fill=(0, 0, 0, 0))
+    im.alpha_composite(icing); d = ImageDraw.Draw(im)
+    d.ellipse((cx - 130 - W, cy - 110 - W, cx + 130 + W, cy + 150 + W), outline=BROWN, width=W)
+    random.seed(3)
+    for _ in range(34):                                                        # sprinkles
+        a = random.uniform(0, math.tau); r = random.uniform(200, 280); x, y = cx + math.cos(a) * r, cy + 10 + math.sin(a) * r; b = random.uniform(0, math.pi)
+        d.line([(x - math.cos(b) * 22, y - math.sin(b) * 22), (x + math.cos(b) * 22, y + math.sin(b) * 22)], fill=random.choice([CREAM, GREEN, BUTTER, (120, 170, 220, 255)]), width=14)
+    save(im, 'donut')
+
+def puding():
+    im = canvas(); d = ImageDraw.Draw(im); cx = S // 2
+    shadow(d, cx, 900, 360, 50)
+    d.ellipse((cx - 400 - W, 760 - W, cx + 400 + W, 900 + W), fill=BROWN); d.ellipse((cx - 400, 760, cx + 400, 900), fill=MILK)
+    d.polygon([(cx - 230 - W, 330), (cx + 230 + W, 330), (cx + 310 + W, 820), (cx - 310 - W, 820)], fill=BROWN)          # custard
+    d.polygon([(cx - 230, 345), (cx + 230, 345), (cx + 305, 805), (cx - 305, 805)], fill=BUTTER)
+    d.ellipse((cx - 240 - W, 260 - W, cx + 240 + W, 400 + W), fill=BROWN); d.ellipse((cx - 240, 260, cx + 240, 400), fill=SYRUP)   # caramel top
+    d.polygon([(cx - 230, 340), (cx - 180, 470), (cx - 120, 360), (cx - 40, 520), (cx + 40, 370), (cx + 130, 480), (cx + 230, 340)], fill=SYRUP)
+    d.ellipse((cx - 150, 280, cx - 30, 320), fill=(226, 150, 70, 255))
+    d.rectangle((cx - 250, 500, cx - 215, 760), fill=(255, 255, 255, 120))
+    save(im, 'puding')
+
+def turta():
+    im = canvas(); d = ImageDraw.Draw(im); cx, cy = S // 2, S // 2 + 40
+    shadow(d, cx, 880, 380, 50)
+    d.ellipse((cx - 400 - W, cy - 280 - W, cx + 400 + W, cy + 280 + W), fill=BROWN); d.ellipse((cx - 400, cy - 280, cx + 400, cy + 280), fill=SYRUP)   # tin / crust edge
+    d.ellipse((cx - 340, cy - 230, cx + 340, cy + 230), fill=TERRA)                                       # apple filling
+    for i in range(-3, 4):                                                                                # lattice
+        d.line([(cx + i * 95 - 120, cy - 230), (cx + i * 95 + 120, cy + 230)], fill=BROWN, width=62); d.line([(cx + i * 95 - 120, cy - 230), (cx + i * 95 + 120, cy + 230)], fill=GOLD, width=40)
+        d.line([(cx + i * 95 + 120, cy - 230), (cx + i * 95 - 120, cy + 230)], fill=BROWN, width=62); d.line([(cx + i * 95 + 120, cy - 230), (cx + i * 95 - 120, cy + 230)], fill=GOLD, width=40)
+    mask = Image.new('L', (S, S), 0); ImageDraw.Draw(mask).ellipse((cx - 400, cy - 280, cx + 400, cy + 280), fill=255)
+    out = Image.new('RGBA', (S, S), (0, 0, 0, 0)); out.paste(im, (0, 0), mask)
+    d2 = ImageDraw.Draw(out); shadow(d2, cx, 880, 380, 50)
+    d2.ellipse((cx - 400, cy - 280, cx + 400, cy + 280), outline=BROWN, width=W)
+    d2.ellipse((cx - 370, cy - 255, cx + 370, cy + 255), outline=GOLD, width=34)
+    save(out, 'turta')
+
+def soguk_kahve():
+    im = canvas(); d = ImageDraw.Draw(im); cx = S // 2
+    shadow(d, cx, 900, 300, 46)
+    d.line([(cx + 60, 60), (cx + 140, 520)], fill=BROWN, width=70); d.line([(cx + 60, 60), (cx + 140, 520)], fill=TERRA, width=42)   # straw
+    d.polygon([(cx - 240 - W, 200), (cx + 240 + W, 200), (cx + 190 + W, 900), (cx - 190 - W, 900)], fill=BROWN)
+    d.polygon([(cx - 240, 220), (cx + 240, 220), (cx + 190, 880), (cx - 190, 880)], fill=(255, 255, 255, 235))
+    d.polygon([(cx - 226, 330), (cx + 226, 330), (cx + 188, 870), (cx - 188, 870)], fill=(196, 140, 92, 255))
+    d.polygon([(cx - 222, 290), (cx + 222, 290), (cx + 226, 330), (cx - 226, 330)], fill=MILK)
+    for x, y in [(-110, 420), (70, 380), (-30, 560), (110, 610)]:                                        # ice cubes
+        d.rounded_rectangle((cx + x - 70, y - 60, cx + x + 70, y + 60), radius=20, fill=(235, 245, 255, 200), outline=(255, 255, 255, 255), width=8)
+    d.line([(cx + 80, 200), (cx + 140, 520)], fill=TERRA, width=42)
+    d.rectangle((cx - 160, 240, cx - 125, 800), fill=(255, 255, 255, 130))
+    save(im, 'sogukkahve')
+
+def affogato():
+    im = canvas(); d = ImageDraw.Draw(im); cx = S // 2
+    shadow(d, cx, 900, 320, 46)
+    d.polygon([(cx - 320 - W, 430), (cx + 320 + W, 430), (cx + 180 + W, 860), (cx - 180 - W, 860)], fill=BROWN)   # glass bowl
+    d.polygon([(cx - 320, 445), (cx + 320, 445), (cx + 180, 845), (cx - 180, 845)], fill=(255, 255, 255, 230))
+    d.polygon([(cx - 290, 520), (cx + 290, 520), (cx + 180, 840), (cx - 180, 840)], fill=COFFEE)
+    d.ellipse((cx - 230 - W, 200 - W, cx + 230 + W, 580 + W), fill=BROWN); d.ellipse((cx - 230, 200, cx + 230, 580), fill=MILK)   # the scoop
+    d.ellipse((cx - 170, 240, cx - 40, 330), fill=(255, 255, 255, 255))
+    d.polygon([(cx - 190, 500), (cx - 120, 620), (cx - 60, 520), (cx + 30, 660), (cx + 100, 520), (cx + 170, 610), (cx + 210, 470)], fill=COFFEE)   # coffee poured over it
+    d.ellipse((cx - 40 - 14, 150 - 14, cx + 40 + 14, 230 + 14), fill=BROWN); d.ellipse((cx - 40, 150, cx + 40, 230), fill=CHOC)   # a coffee bean on top
+    d.line([(cx, 160), (cx, 220)], fill=CHOC_L, width=10)
+    save(im, 'affogato')
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     simit(); cookie(); muffin(); waffle()
     cup('latte', COFFEE, MILK, glass=True)
     cup('mocha', CHOC, MILK, drizzle=True)
+    brezel(); pankek(); donut(); puding(); turta(); soguk_kahve(); affogato()

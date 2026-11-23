@@ -263,3 +263,18 @@ Görsel gerektirmeyen oynanış eklemeleri; hepsi eski kayıtlarla uyumlu (eksik
 | Hatırlatmalar | Uygulama arka plana geçince: makine bitti, keşif döndü, kasa doldu, özel sipariş bitiyor; 22:00–09:00 sessiz | Ayarlar'dan kapatılabilir |
 
 Robot oyuncu (scripts/playthrough.mjs, 30 gün × 30 dk): aşama 4'e eskiden 20. günde, şimdi 17. günde ulaşıyor. Farkın çoğu üretim sırasından geliyor: robot makineyi hiç boş bırakmıyor.
+
+## Yeni ürünler (tarif olarak, Mağaza › Tarifler)
+
+| Ürün | Makine | Süre | Malzeme | Fiyat | Net | Açılış |
+|---|---|---|---|---|---|---|
+| 🥨 Brezel | Fırın | 28 sn | 2 un, 1 yumurta | 47 | 26 | Sv 5, Simit tarifi · 2.000 |
+| 🥞 Pankek | Fırın | 32 sn | 1 un, 2 yumurta, 1 süt | 53 | 28 | Sv 5 · 2.200 |
+| 🥤 Soğuk Kahve | Kahve | 28 sn | 1 çekirdek, 2 süt, 1 şeker | 58 | 28 | Sv 7, Latte tarifi · 3.600 |
+| 🍩 Donut | Fırın | 50 sn | 2 un, 1 şeker, 1 yumurta, 1 süt | 77 | 43 | Sv 8, Kurabiye tarifi · 4.200 |
+| 🍮 Karamelli Puding | Fırın | 42 sn | 2 süt, 1 şeker, 2 yumurta | 63 | 33 | Sv 9 · 5.000 |
+| 🍨 Affogato | Kahve | 32 sn | 2 çekirdek, 1 süt, 1 şeker | 66 | 33 | Sv 11, Aşama 3, Mocha tarifi · 7.500 |
+| 🥧 Elmalı Turta | Fırın | 65 sn | 2 un, 1 tereyağı, 2 şeker, 1 yumurta | 104 | 56 | Sv 12, Aşama 3, Muffin tarifi · 9.000 |
+
+Kural aynı: bir makinede uzun süren ürün tek satışta daha çok kazandırır, saniye başı kazanç hep 0,8–1,0 bandında kalır.
+Simgeler şimdilik scripts/make_recipe_icons.py ile çizilmiş geçici resimler; gerçek görsel gelince assets/game/icons/<id>.webp üzerine yazılır.

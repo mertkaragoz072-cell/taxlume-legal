@@ -53,7 +53,7 @@ for (const d of SHOP_ITEMS) if (d.category === 'decor' && d.kind === 'decor') fo
 // Item icons (assets/icons/<id>.webp, 256 px): products and ingredients, keyed 'icon-<id>'. The emoji in data/economy.js stay as the text
 // fallback; ui/icon-swap.js shows these pictures in their place everywhere in the DOM, and canvas scenes draw them with drawIcon().
 export const ICON_IDS = ['bread', 'croissant', 'cake', 'coffee', 'flour', 'butter', 'sugar', 'egg', 'milk', 'beans',
-  'simit', 'latte', 'kurabiye', 'mocha', 'muffin', 'waffle'];     // the last six are the shop recipes (stand-in pictures from scripts/make_recipe_icons.py until real art arrives)
+  'simit', 'latte', 'kurabiye', 'mocha', 'muffin', 'waffle', 'brezel', 'pankek', 'sogukkahve', 'donut', 'puding', 'affogato', 'turta'];     // the last six are the shop recipes (stand-in pictures from scripts/make_recipe_icons.py until real art arrives)
 /** Currency / status pictures (coin, XP star, gem, gift, lock, stopwatch, check, up-arrow, basket) and the upgrade, building (b-), region (r-) and order-bar (o-) pictures; the upgrade (u-), research (r-) and quest (q-) pictures. */
 export const UI_ICON_IDS = ['coin', 'xp', 'gem', 'gift', 'lock', 'timer', 'check', 'arrow', 'basket',
   'u-oven', 'u-speed', 'u-showcase', 'u-tables', 'r-knowledge', 'r-efficient', 'r-seller', 'r-culture', 'r-equipment', 'q-target', 'q-line', 'q-explorer',
