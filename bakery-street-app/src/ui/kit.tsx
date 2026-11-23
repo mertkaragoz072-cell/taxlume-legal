@@ -6,6 +6,7 @@ import { ASSET_MODULES } from "../generated/assetModules";
 import { C, FONT, fs, navHeight, useU, TYPE } from "./theme";
 import { Rich } from "./icons";
 import { MOTION } from "./motion";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type Variant = "go" | "alt" | "lack" | "busy" | "plain";
 
@@ -146,14 +147,16 @@ function useKeyboardHeight(): number {
 }
 
 /** A side panel: title row with an optional close button, a hint line and a scrolling body. `side` picks which edge it sticks to. */
-export function Sheet({ title, hint, onClose, side = "right", lowered, header, tall, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; header?: React.ReactNode; tall?: boolean; children: React.ReactNode }) {
+export function Sheet({ title, hint, onClose, side = "right", lowered, header, tall, full, children }: { title: string; hint?: string; onClose?: () => void; side?: "left" | "right"; lowered?: boolean; header?: React.ReactNode; tall?: boolean; full?: boolean; children: React.ReactNode }) {
   const u = useU();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const portrait = height >= width;
   // portrait: a bottom sheet above the fixed navigation bar (about half of the screen, so the cafe stays visible above it) in the picture frame
   // (wood border, cream inside, paw crest); wide windows keep the old plain side panel
   const kb = useKeyboardHeight();                                      // a panel with a text field (Ayarlar) rises above the keyboard
-  const panelH0 = Math.min(height * (tall && height < 720 ? 0.64 : 0.54), u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
+  // full: from just under the top bar down to the navigation (the screen's main focus, e.g. the kitchen counter)
+  const panelH0 = full ? Math.max(u * 80, height - insets.top - insets.bottom - navHeight(u) - u * 1.6 - u * 11.5) : Math.min(height * (tall && height < 720 ? 0.64 : 0.54), u * 150), panelW = Math.min(width - u * 2, u * 118);      // (on a tablet the panel stays phone-sized and centred)
   const panelH = kb > 0 ? Math.min(panelH0, Math.max(u * 40, height - kb - u * 12)) : panelH0;
   const place = portrait
     ? { left: (width - panelW) / 2, width: panelW, bottom: kb > 0 ? kb + u * 1.6 : navHeight(u) + u * 1.6, height: panelH }
@@ -182,7 +185,7 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, header, t
     return (
       <Animated.View style={[{ position: "absolute", zIndex: 20 }, place, shadow, motion]}>
         <Image source={ASSET_MODULES["assets/icons/ui-card.webp"]} resizeMode="stretch" style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
-        <View style={{ flex: 1, paddingTop: Math.round(Math.max(u * 8.6, panelH * 0.13)), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 3.2) }}>{inner}</View>
+        <View style={{ flex: 1, paddingTop: Math.round(full ? Math.max(u * 8.6, Math.min(panelH * 0.13, u * 11)) : Math.max(u * 8.6, panelH * 0.13)), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 3.2) }}>{inner}</View>
       </Animated.View>
     );
   }

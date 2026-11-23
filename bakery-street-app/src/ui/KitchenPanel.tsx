@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useRefresh, useWorld } from "../runtime/context";
-import { Btn, Meta, Sheet } from "./kit";
+import { Btn, Sheet } from "./kit";
 import { EmojiIcon } from "./icons";
 import { C, FONT, fmt, fs, TYPE, useU } from "./theme";
 
@@ -71,12 +71,27 @@ function Stars({ n, label, u }: { n: number; label: string; u: number }) {
   );
 }
 
+/** The kitchen's own big main button (the general Btn keeps the panel size). */
+function KBtn({ label, sub, onPress, u }: { label: string; sub?: string; onPress: () => void; u: number }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={sub ? `${label}, ${sub}` : label}
+      style={({ pressed }) => ({ alignSelf: "stretch", minHeight: Math.max(56, u * 9), borderRadius: u * 3, borderWidth: u * 0.4, borderColor: "#4E7A2C", backgroundColor: pressed ? "#6E9E3B" : "#7DAF46", alignItems: "center", justifyContent: "center", paddingVertical: u * 0.8,
+        shadowColor: "#2E4A18", shadowOpacity: 1, shadowRadius: 0, shadowOffset: { width: 0, height: pressed ? u * 0.2 : u * 0.7 }, transform: [{ translateY: pressed ? u * 0.5 : 0 }] })}>
+      <Text allowFontScaling={false} style={{ color: "#FFFFFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading), textShadowColor: "#3E6420", textShadowRadius: u * 0.4 }}>{label}</Text>
+      {sub ? <Text allowFontScaling={false} style={{ color: "#F1F8E4", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{sub}</Text> : null}
+    </Pressable>
+  );
+}
+
 export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   const { world, act } = useWorld();
-  const { game, cafe, album } = world, u = useU();
+  const { game, cafe, album } = world, u0 = useU();
   const { width, height } = useWindowDimensions();
+  const u = u0 * Math.min(1.7, Math.max(1.25, height / 560));       // the kitchen is the screen's focus: everything grows with the screen's height
+  const jar = Math.min(u0 * 12.8, (width - u0 * 18) / 6.6);         // six jars always fit one row
   useRefresh(250);
   const staff = (world.scenes.interior as any).staff;
+  const openedAt = useRef(Date.now());                           // the tap that opened the counter must not close it again on the dimmed backdrop
   const [sel, setSel] = useState<number | null>(null);          // the order being prepared
   const [step, setStep] = useState(0);                          // which product of the order (a set has two)
   const [bowl, setBowl] = useState<Bowl>({});
@@ -159,7 +174,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
           shadowColor: "#5E3A20", shadowOpacity: on ? 0.3 : 0.15, shadowRadius: u * (on ? 1.4 : 0.6), shadowOffset: { width: 0, height: u * (on ? 0.8 : 0.3) }, elevation: on ? 4 : 1,
           transform: [{ scale: pressed ? 0.96 : on ? 1.04 : 1 }, { translateY: on ? -u * 0.4 : 0 }, { rotate: on ? "0deg" : `${(o.id % 3) - 1}deg` }] })}>
         <View style={{ position: "absolute", top: u * 0.5, alignSelf: "center", width: u * 1.6, height: u * 1.6, borderRadius: 99, backgroundColor: on ? C.green : C.terracotta, borderWidth: u * 0.25, borderColor: "#FFF" }} />
-        <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{album.nameOf(c.look)}</Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{album.nameOf(c.look)}</Text>
         <View style={{ flexDirection: "row", gap: u * 0.5, alignItems: "center" }}>{cafe.orderItems(o).map((id: string, i: number) => <EmojiIcon key={i} emoji={game.productsDef[id].icon} size={u * 6} />)}</View>
         <View style={{ height: u * 0.9, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}><View style={{ width: `${Math.round(f * 100)}%`, height: "100%", backgroundColor: f > 0.5 ? C.green : f > 0.25 ? C.honey : C.terracotta }} /></View>
         {coming ? <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Garson götürüyor</Text> : null}
@@ -168,7 +183,10 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   };
 
   return (
-    <Sheet title="Mutfak Tezgâhı" hint={tickets.length ? undefined : "Şu an bekleyen sipariş yok. Müşteriler oturunca fişleri burada görünür."} tall onClose={() => act.openOverlay(null)}>
+    <>
+    {/* the café behind is dimmed (and does not take taps): the counter is the focus */}
+    <Pressable accessibilityLabel="Mutfağı kapat" onPress={() => { if (Date.now() - openedAt.current > 600) act.openOverlay(null); }} style={{ position: "absolute", left: -500, right: -500, top: -500, bottom: -500, backgroundColor: "rgba(40,24,12,.5)", zIndex: 19 }} />
+    <Sheet title="Mutfak Tezgâhı" hint={tickets.length ? undefined : "Şu an bekleyen sipariş yok. Müşteriler oturunca fişleri burada görünür."} full onClose={() => act.openOverlay(null)}>
       {/* order tickets */}
       {tickets.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1.2, paddingVertical: u * 0.8, paddingHorizontal: u * 0.4 }}>{tickets.map(({ c, o }) => ticket(c, o))}</ScrollView> : null}
 
@@ -187,7 +205,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
 
           {/* the recipe, on a little paper card */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: u * 1.2, backgroundColor: "#FFF8EA", borderRadius: u * 1.4, borderWidth: u * 0.3, borderColor: "#E2C69B", padding: u * 1, transform: [{ rotate: "-0.6deg" }] }}>
-            <EmojiIcon emoji={def.icon} size={u * 8} />
+            <EmojiIcon emoji={def.icon} size={u * 9} />
             <View style={{ flex: 1 }}>
               <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{def.name}{items.length > 1 ? ` (${step + 1}/${items.length})` : ""}</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6, marginTop: u * 0.3 }}>
@@ -200,7 +218,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
           </View>
 
           {/* the bowl (tap it to stir) */}
-          <View style={{ alignItems: "center", minHeight: u * 21, justifyContent: "center" }}>
+          <View style={{ alignItems: "center", minHeight: u * 23, justifyContent: "center" }}>
             {phase === "made" ? (
               <View style={{ gap: u * 1, alignItems: "center" }}><Pop emojis={made.map((id) => game.productsDef[id].icon)} u={u} /><Stars n={rateStars} label={rateText} u={u} /></View>
             ) : (
@@ -226,22 +244,22 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
               <View style={{ flexDirection: "row", gap: u * 0.7 }}>
                 {Array.from({ length: stirNeed }, (_, i) => <View key={i} style={{ width: u * 2.4, height: u * 2.4, borderRadius: 99, backgroundColor: i < stirs ? "#FFE08A" : "rgba(90,56,30,.35)", borderWidth: u * 0.3, borderColor: "#FFF4DE" }} />)}
               </View>
-              <View style={{ alignSelf: "stretch" }}><Btn label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} /></View>
+              <KBtn u={u} label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} />
             </View>
           ) : phase === "made" ? (
-            <Btn label="🛎 Servis Et" sub={`${album.nameOf(cur.c.look)} bekliyor`} onPress={serve} />
+            <KBtn u={u} label="🛎 Servis Et" sub={`${album.nameOf(cur.c.look)} bekliyor`} onPress={serve} />
           ) : (
             <>
               {/* the ingredient jars on a shelf: tap to drop one into the bowl */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u * 0.8, paddingVertical: u * 0.8, borderRadius: u * 1.6, backgroundColor: WOOD.shelf }}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u0 * 0.7, paddingVertical: u * 0.8, borderRadius: u * 1.6, backgroundColor: WOOD.shelf }}>
                 {(Object.keys(game.ingredientsDef) as string[]).map((k) => {
                   const d = game.ingredientsDef[k], stock = (game.ingredients[k] ?? 0) - (bowl[k] ?? 0), useful = (need[k] ?? 0) > (bowl[k] ?? 0);
                   return (
                     <Animated.View key={k} style={{ transform: [{ translateX: wrong === k ? shake.interpolate({ inputRange: [-1, 1], outputRange: [-u * 1.2, u * 1.2] }) : 0 }] }}>
                       <Pressable onPress={() => add(k)} accessibilityRole="button" accessibilityLabel={`${d.name} ekle, ${stock} var`}
-                        style={({ pressed }) => ({ width: u * 10.8, height: u * 10.8, borderRadius: 99, alignItems: "center", justifyContent: "center", borderWidth: u * 0.45, borderColor: useful ? "#9CC46A" : "#D8BE92", backgroundColor: useful ? "#F4F8E8" : "#FFFDF6", opacity: stock > 0 ? 1 : 0.45,
+                        style={({ pressed }) => ({ width: jar, height: jar, borderRadius: 99, alignItems: "center", justifyContent: "center", borderWidth: u * 0.45, borderColor: useful ? "#9CC46A" : "#D8BE92", backgroundColor: useful ? "#F4F8E8" : "#FFFDF6", opacity: stock > 0 ? 1 : 0.45,
                           shadowColor: "#3B2412", shadowOpacity: 0.25, shadowRadius: u * 0.4, shadowOffset: { width: 0, height: u * 0.3 }, transform: [{ scale: pressed ? 0.88 : 1 }, { translateY: pressed ? u * 0.3 : 0 }] })}>
-                        <EmojiIcon emoji={d.icon} size={u * 5.4} />
+                        <EmojiIcon emoji={d.icon} size={jar * 0.52} />
                         <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{stock}</Text>
                       </Pressable>
                     </Animated.View>
@@ -253,9 +271,16 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
             </>
           )}
         </View>
-      ) : tickets.length ? <Meta tone="muted" text="Bir sipariş fişi seç: malzemeleri kaseye at, karıştır ve servis et." /> : null}
+      ) : tickets.length ? (
+        <View style={{ alignItems: "center", gap: u * 1, paddingVertical: u * 3 }}>
+          <Text allowFontScaling={false} style={{ fontSize: u * 9 }}>👆</Text>
+          <Text allowFontScaling={false} style={{ textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>Bir sipariş fişi seç</Text>
+          <Text allowFontScaling={false} style={{ textAlign: "center", color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.body) }}>Malzemeleri kaseye at, karıştır ve servis et.</Text>
+        </View>
+      ) : null}
 
       <Btn small variant="plain" label="Makinede üret (tarif listesi)" onPress={onRecipes} />
     </Sheet>
+    </>
   );
 }
