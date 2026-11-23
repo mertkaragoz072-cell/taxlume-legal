@@ -16,6 +16,8 @@ import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
 import { PriceChart } from "../components/PriceChart";
 import { ScalePressable } from "../components/ScalePressable";
+import { RankCard } from "../components/RankCard";
+import { formatCompactNumber } from "../utils/formatNumber";
 import { GoalFrame, GoalIcon, GoalIconName, GoalProgress, GoalRibbon } from "../components/GoalPanels";
 import { ACHIEVEMENTS, ACHIEVEMENTS_BY_ID, AchievementId } from "../economy/achievements";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -170,33 +172,19 @@ export function AchievementsScreen() {
           const hi = townRankThreshold(idx + 1);
           const pct = hi > lo ? (netWorth - lo) / (hi - lo) : 0;
           return (
-            <>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Text style={{ fontSize: 34 }}>{townRankIcon(idx)}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.summaryBig, { color: theme.accent }]} numberOfLines={1}>
-                    {townRankTitle(idx, t)}
-                  </Text>
-                  <Text style={styles.summaryLabel} numberOfLines={2}>
-                    {t("achievements.rankNext", {
-                      title: townRankTitle(idx + 1, t),
-                      amount: formatCoins(hi, 0),
-                    })}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ marginTop: 8 }}>
-                <GoalProgress pct={pct} color={theme.accent} />
-              </View>
-              <Text style={[styles.summaryLabel, { marginTop: 10, color: theme.accent }]}>
-                {t("achievements.rankPreview", { title: townRankTitle(idx + 1, t) })}
-              </Text>
-              {rankGainLines(idx, idx + 1, t).map((line) => (
-                <Text key={line} style={styles.summaryLabel}>
-                  {line}
-                </Text>
-              ))}
-            </>
+            <RankCard
+              icon={townRankIcon(idx)}
+              title={townRankTitle(idx, t)}
+              next={t("achievements.rankNext", {
+                title: townRankTitle(idx + 1, t),
+                amount: formatCoins(hi, 0),
+              })}
+              pct={pct}
+              accent={theme.accent}
+              progressText={`${formatCompactNumber(netWorth, state.language, 0)} / ${formatCompactNumber(hi, state.language, 0)}`}
+              previewTitle={t("achievements.rankPreview", { title: townRankTitle(idx + 1, t) })}
+              gains={rankGainLines(idx, idx + 1, t)}
+            />
           );
         })()}
       </GoalFrame>
@@ -681,6 +669,9 @@ export function AchievementsScreen() {
   );
 }
 
+/** Secondary text on the dark cards: light enough to read, not a grey that sinks into the wood. */
+const READ = "#dccfae";
+
 const styles = StyleSheet.create({
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   summaryCard: {
@@ -697,10 +688,10 @@ const styles = StyleSheet.create({
     fontFamily: FONT.display,
     marginRight: SPACING.sm,
   },
-  summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
+  summaryLabel: { color: READ, fontSize: 14, lineHeight: 19 },
   streakRow: { flexDirection: "row", alignItems: "center" },
   streakEmoji: { fontSize: TYPE.title, marginRight: 6 },
-  streakText: { color: COLORS.textPrimary, fontSize: TYPE.label },
+  streakText: { color: COLORS.textPrimary, fontSize: 14 },
   statsCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
@@ -722,7 +713,7 @@ const styles = StyleSheet.create({
     fontWeight: WEIGHT.black,
     fontFamily: FONT.black,
   },
-  statLabel: { color: COLORS.textMuted, fontSize: TYPE.micro, textAlign: "center", marginTop: 2 },
+  statLabel: { color: READ, fontSize: 12, textAlign: "center", marginTop: 2 },
   hallOfFameRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: PANEL_GAP },
   hallOfFameChip: {
     flex: 1,
@@ -737,7 +728,7 @@ const styles = StyleSheet.create({
   },
   hallOfFameTitle: {
     color: "#fbeccb",
-    fontSize: TYPE.micro,
+    fontSize: 12,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     textAlign: "center",
@@ -765,8 +756,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#3a2d1e",
   },
-  rivalLabel: { color: COLORS.textMuted, fontSize: TYPE.caption },
-  rivalStatus: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: TYPE.caption },
+  rivalLabel: { color: READ, fontSize: 13 },
+  rivalStatus: { fontWeight: WEIGHT.bold, fontFamily: FONT.bold, fontSize: 13 },
   compendiumCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,
@@ -775,8 +766,8 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   compendiumGroupLabel: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.label,
+    color: READ,
+    fontSize: 14,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     marginBottom: SPACING.sm,
@@ -799,8 +790,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  questCount: { color: "#e8c777", fontSize: 11, fontWeight: "700", fontFamily: FONT.bold },
-  questNote: { color: "#8a7a62", fontSize: 10, flex: 1, marginRight: 8 },
+  questCount: { color: "#e8c777", fontSize: 13, fontWeight: "700", fontFamily: FONT.bold },
+  questNote: { color: READ, fontSize: 12, flex: 1, marginRight: 8 },
   card: {
     flexDirection: "row",
     borderRadius: 14,
@@ -822,17 +813,17 @@ const styles = StyleSheet.create({
   },
   miniQuestProgressFill: { backgroundColor: "#e8c777" },
   miniQuestFooterRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 3 },
-  miniQuestTicksLeft: { color: "#e8c777", fontSize: 10, fontWeight: "700", fontFamily: FONT.bold },
+  miniQuestTicksLeft: { color: "#e8c777", fontSize: 12, fontWeight: "700", fontFamily: FONT.bold },
   icon: { fontSize: 26, marginRight: 12 },
   iconLocked: { opacity: 0.5 },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { color: "#a0917a", fontWeight: "700", fontFamily: FONT.bold, fontSize: 13 },
+  title: { color: READ, fontWeight: "700", fontFamily: FONT.bold, fontSize: 15 },
   titleUnlocked: { color: "#f0e3c8" },
-  reward: { color: "#e8c777", fontSize: 11, fontWeight: "700", fontFamily: FONT.bold },
-  description: { color: "#a0917a", fontSize: 11, marginTop: 2, marginBottom: 6 },
+  reward: { color: "#e8c777", fontSize: 13, fontWeight: "700", fontFamily: FONT.bold },
+  description: { color: READ, fontSize: 13, lineHeight: 18, marginTop: 2, marginBottom: 6 },
   progressTrack: { height: 4, borderRadius: 2, backgroundColor: "#1a1410", overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: "#e8c777", borderRadius: 2 },
-  progressText: { color: "#a0917a", fontSize: 10, marginTop: 3 },
+  progressText: { color: READ, fontSize: 12, marginTop: 3 },
   backupCard: {
     borderRadius: 16,
     padding: 16,
@@ -864,15 +855,15 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   backupFeedbackSuccess: {
-    color: "#3fae5c",
-    fontSize: 11,
+    color: "#5fd884",
+    fontSize: 13,
     fontWeight: "700",
     fontFamily: FONT.bold,
     marginTop: 8,
   },
   backupFeedbackError: {
-    color: "#c94b4b",
-    fontSize: 11,
+    color: "#f08a8a",
+    fontSize: 13,
     fontWeight: "700",
     fontFamily: FONT.bold,
     marginTop: 8,

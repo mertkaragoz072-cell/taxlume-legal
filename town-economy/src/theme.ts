@@ -28,10 +28,10 @@ export const PANEL_GAP = 8;
 // the difference between "handmade" and "designed." Prefer these over a
 // bare fontSize/margin literal in new or touched code.
 export const TYPE = {
-  micro: 10, // fine print: chart axis labels, tiny meta text
-  caption: 11, // captions, secondary meta (badges, sub-labels)
-  label: 12, // stat labels, form labels
-  body: 13, // default body/paragraph text
+  micro: 11, // fine print: chart axis labels, tiny meta text
+  caption: 12, // captions, secondary meta (badges, sub-labels)
+  label: 13, // stat labels, form labels
+  body: 14, // default body/paragraph text
   title: 16, // card/row titles, emphasized values
   heading: 18, // section headings, prominent prices
   display: 24, // hero numbers (rare — one per screen at most)
@@ -98,7 +98,7 @@ export const RADIUS = {
  * actually making this read as tiring rather than the darkness itself. */
 export const COLORS = {
   textPrimary: "#f0e3c8",
-  textMuted: "#a0917a",
+  textMuted: "#c9bb9a",
   accent: "#e1c58c",
   onLight: "#1a1410",
   positive: "#4ea56a",

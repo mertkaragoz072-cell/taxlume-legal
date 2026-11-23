@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   body: { flex: 1, minWidth: 0, gap: 4 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   title: { flex: 1, color: "#f3e3b5", fontFamily: FONT.bold, fontSize: 12 },
-  time: { color: "#e8c777", fontFamily: FONT.medium, fontSize: 11 },
+  time: { color: "#e8c777", fontFamily: FONT.medium, fontSize: 12 },
   track: {
     flex: 1,
     height: 6,

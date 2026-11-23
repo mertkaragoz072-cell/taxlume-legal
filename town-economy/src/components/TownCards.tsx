@@ -155,7 +155,7 @@ export function EventRow({ tone, text, last }: EventRowProps) {
 }
 
 const styles = StyleSheet.create({
-  wait: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 11, marginTop: 3 },
+  wait: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 12.5, marginTop: 3 },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
   body: { flex: 1, marginRight: 8 },
   titleRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", columnGap: 8 },
   name: { color: INK, fontFamily: FONT.serif, fontSize: 14 },
-  tag: { color: "#8a5a2b", fontFamily: FONT.bold, fontSize: 10 },
-  desc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 10.5, lineHeight: 14, marginTop: 1 },
-  effect: { color: INK_GREEN, fontFamily: FONT.bold, fontSize: 10.5, lineHeight: 14, marginTop: 2 },
+  tag: { color: "#8a5a2b", fontFamily: FONT.bold, fontSize: 12 },
+  desc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 12.5, lineHeight: 17, marginTop: 1 },
+  effect: { color: INK_GREEN, fontFamily: FONT.bold, fontSize: 12.5, lineHeight: 17, marginTop: 2 },
   pipRow: { flexDirection: "row", gap: 4, marginTop: 5 },
   pip: { width: 18, height: 6, borderRadius: 3, backgroundColor: "#3b2616" },
   pipOn: { backgroundColor: "#f2b630" },

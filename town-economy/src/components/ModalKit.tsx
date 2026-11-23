@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   optEmoji: { fontSize: 26 },
   optTitleRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 },
   optTitle: { color: "#fff6dc", fontFamily: FONT.black, fontSize: 15 },
-  optHint: { color: "#f0e2c4", fontFamily: FONT.medium, fontSize: 11.5, marginTop: 1 },
+  optHint: { color: "#f0e2c4", fontFamily: FONT.medium, fontSize: 13, marginTop: 1 },
   tag: { backgroundColor: "#f4c43c", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 1 },
   tagText: { color: "#4a2a0e", fontFamily: FONT.black, fontSize: 9.5 },
   rowBar: { alignSelf: "stretch", height: 44, marginBottom: 6 },
