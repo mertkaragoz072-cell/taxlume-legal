@@ -4,9 +4,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { ASSET_MODULES } from "../generated/assetModules";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Btn } from "./kit";
-import { EmojiIcon } from "./icons";
+import { EmojiIcon, GameIcon } from "./icons";
 import { C, FONT, fmt, fs, navHeight, TYPE, useU } from "./theme";
 
 type Bowl = Record<string, number>;
@@ -92,6 +93,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   const jar = Math.min(u0 * 12.8, (width - u0 * 18) / 6.6);         // six jars always fit one row
   useRefresh(250);
   const staff = (world.scenes.interior as any).staff;
+  const insets = useSafeAreaInsets(), hud = insets.top + u0 * 10.6;   // the wall reaches the top of the screen, behind the top bar; the counter's own pieces start under the bar
   const openedAt = useRef(Date.now());                           // the tap that opened the counter must not close it again on the dimmed backdrop
   const [sel, setSel] = useState<number | null>(null);          // the order being prepared
   const [step, setStep] = useState(0);                          // which product of the order (a set has two)
@@ -200,15 +202,19 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
     <>
     <Pressable accessibilityLabel="Mutfağı kapat" onPress={() => { if (Date.now() - openedAt.current > 600) act.openOverlay(null); }} style={{ position: "absolute", left: -500, right: -500, top: -500, bottom: -500, backgroundColor: "rgba(40,24,12,.55)", zIndex: 19 }} />
     <View onLayout={(e) => { const { width: w, height: h } = e.nativeEvent.layout; if (Math.abs(w - box.w) > 1 || Math.abs(h - box.h) > 1) setBox({ w, h }); }}
-      style={{ position: "absolute", left: 0, right: 0, top: u0 * 10.6, bottom: navHeight(u0), zIndex: 20, overflow: "hidden", borderTopLeftRadius: u0 * 3, borderTopRightRadius: u0 * 3, backgroundColor: "#7A4A26" }}>
+      style={{ position: "absolute", left: 0, right: 0, top: -insets.top, bottom: navHeight(u0), zIndex: 20, overflow: "hidden", backgroundColor: "#7A4A26" }}>
       {/* above the picture (a tall phone): more of the tiled wall, its warm light fading upwards */}
       {oy > 0 ? <Image source={ASSET_MODULES["assets/kitchen-wall.webp"]} style={{ position: "absolute", left: 0, top: oy - box.w * 800 / 1024 + 2, width: box.w, height: box.w * 800 / 1024 }} /> : null}
       <Image source={ASSET_MODULES["assets/kitchen-counter.webp"]} style={{ position: "absolute", left: ox, top: oy, width: 1024 * sc, height: 1536 * sc }} />
 
       {/* title and close, on the wall */}
-      <View style={{ position: "absolute", left: u0 * 2, right: u0 * 1, top: u0 * 1.2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <View style={{ position: "absolute", left: u0 * 2, right: u0 * 1, top: hud + u0 * 1.2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <View style={{ paddingHorizontal: u0 * 2.2, paddingVertical: u0 * 0.6, borderRadius: u0 * 2, backgroundColor: "#8A5A36", borderWidth: u0 * 0.45, borderColor: "#5E3A20" }}>
           <Text allowFontScaling={false} style={{ color: "#FFF4DE", fontFamily: FONT.bold, fontSize: fs(u0, TYPE.heading) }}>Mutfak Tezgâhı</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: u0 * 0.8, paddingLeft: u0 * 1, paddingRight: u0 * 2, height: u0 * 7, borderRadius: 99, backgroundColor: "rgba(255,248,234,.95)", borderWidth: u0 * 0.35, borderColor: "#C9A06A", marginLeft: "auto", marginRight: u0 * 1.2 }}>
+          <GameIcon id="coin" size={u0 * 5.6} />
+          <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u0, TYPE.heading) }}>{fmt(game.gold)}</Text>
         </View>
         <Pressable onPress={() => act.openOverlay(null)} accessibilityLabel="Kapat" style={{ width: Math.max(44, u0 * 8), height: Math.max(44, u0 * 8), alignItems: "center", justifyContent: "center" }}>
           <Image source={ASSET_MODULES["assets/icons/ui-close.webp"]} style={{ width: Math.max(40, u0 * 7.6), height: Math.max(40, u0 * 7.6), resizeMode: "contain" }} />
@@ -216,7 +222,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
       </View>
 
       {/* order tickets pinned on the wall */}
-      <View style={{ position: "absolute", left: 0, right: 0, top: u0 * 11, height: Math.max(u * 14, counterTop - u0 * 12) }}>
+      <View style={{ position: "absolute", left: 0, right: 0, top: hud + u0 * 11, height: Math.max(u * 14, counterTop - hud - u0 * 12) }}>
         {tickets.length
           ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1.2, paddingVertical: u * 0.8, paddingHorizontal: u0 * 2, alignItems: "flex-start" }}>{tickets.map(({ c, o }) => ticket(c, o))}</ScrollView>
           : <View style={[paper, { marginHorizontal: u0 * 4, padding: u * 1.2, alignItems: "center" }]}><Text allowFontScaling={false} style={{ textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>Şu an bekleyen sipariş yok. Müşteriler oturunca fişleri buraya asılır.</Text></View>}
