@@ -103,6 +103,11 @@ export function MarketScreen({ sounds }: Props) {
   const [autoPct, setAutoPct] = useState(AUTO_TRADE_TRIGGER_PCT_STEPS[0]);
   const [autoQty, setAutoQty] = useState<1 | 5 | 10>(1);
   const unlockedGoods = GOODS.filter((g) => isGoodUnlocked(g, state));
+  // Automatic rules are a second-hour tool; shown from day one they are a wall
+  // of options under the very first trade. They appear once the player has made
+  // a few trades, or has a rule already (an older save), or the town has grown.
+  const showAutoRules =
+    state.stats.totalTrades >= 6 || state.townRankIndex >= 1 || state.autoTradeRules.length > 0;
   const lockedGoods = GOODS.filter((g) => !isGoodUnlocked(g, state));
   const selected = GOODS.find((g) => g.id === state.selectedGood)!;
   const selectedState = state.goods[selected.id];
@@ -495,127 +500,144 @@ export function MarketScreen({ sounds }: Props) {
         </Pressable>
       </Modal>
 
-      <GoalPanel title={t("market.autoTrade.sectionLabel")}>
-        <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>
-        <View style={styles.autoTradePanel}>
-          <View style={styles.sideToggle}>
-            <ScalePressable
-              style={[styles.sideBtn, autoSide === "buy" && styles.sideBtnActiveBuy]}
-              onPress={() => setAutoSide("buy")}
-            >
-              <Text style={[styles.sideBtnText, autoSide === "buy" && styles.sideBtnTextActive]}>
-                {t("market.buyShort")}
-              </Text>
-            </ScalePressable>
-            <ScalePressable
-              style={[styles.sideBtn, autoSide === "sell" && styles.sideBtnActiveSell]}
-              onPress={() => setAutoSide("sell")}
-            >
-              <Text style={[styles.sideBtnText, autoSide === "sell" && styles.sideBtnTextActive]}>
-                {t("market.sellShort")}
-              </Text>
-            </ScalePressable>
-          </View>
-
-          <Text style={styles.autoTradeSubLabel}>
-            {autoSide === "buy"
-              ? t("market.autoTrade.triggerBelowLabel")
-              : t("market.autoTrade.triggerAboveLabel")}
-          </Text>
-          <View style={styles.qtyRow}>
-            {AUTO_TRADE_TRIGGER_PCT_STEPS.map((pct) => (
-              <ScalePressable
-                key={pct}
-                style={[styles.qtyBtn, autoPct === pct && { borderColor: selected.color, borderWidth: 2 }]}
-                onPress={() => setAutoPct(pct)}
-              >
-                <Text style={styles.qtyBtnText}>{formatPercent(pct * 100, state.language)}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <Text style={styles.autoTradeSubLabel}>{t("market.autoTrade.qtyLabel")}</Text>
-          <View style={styles.qtyRow}>
-            {([1, 5, 10] as const).map((q) => (
-              <ScalePressable
-                key={q}
-                style={[styles.qtyBtn, autoQty === q && { borderColor: selected.color, borderWidth: 2 }]}
-                onPress={() => setAutoQty(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          {(() => {
-            const triggerPrice =
-              autoSide === "buy" ? selectedState.price * (1 - autoPct) : selectedState.price * (1 + autoPct);
-            const maxRules = effectiveAutoTradeMaxRules(state);
-            const disabled = state.autoTradeRules.length >= maxRules || !isGoodUnlocked(selected, state);
-            return (
-              <>
-                <Text style={styles.autoTradePreview}>
-                  {t("market.autoTrade.preview", { qty: autoQty, price: fixedUi(triggerPrice, 2) })}
-                </Text>
-                <Text style={styles.autoTradeMaxNote}>
-                  {t("market.autoTrade.maxActiveNote", { max: maxRules })}
-                </Text>
-                <BigButton
-                  tone={autoSide === "buy" ? "green" : "red"}
-                  height={48}
-                  disabled={disabled}
-                  label={t("market.autoTrade.addBtn")}
-                  onPress={() => {
-                    addAutoTradeRule(selected.id, autoSide, autoPct, autoQty);
-                    sounds.playBuy();
-                  }}
-                />
-              </>
-            );
-          })()}
-        </View>
-      </GoalPanel>
-
-      <GoalPanel title={t("market.autoTrade.activeSectionLabel")}>
-        {state.autoTradeRules.length === 0 && (
-          <Text style={styles.autoTradeEmptyText}>{t("market.autoTrade.noRules")}</Text>
-        )}
-        {state.autoTradeRules.map((rule) => {
-          const ruleGood = GOODS_BY_ID[rule.goodId];
-          return (
-            <View key={rule.id} style={styles.autoTradeRow}>
-              <GoodIcon id={ruleGood.id} fallback={ruleGood.icon} size={22} style={styles.autoTradeRowIcon} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.autoTradeRowTitle}>
-                  {rule.side === "buy" ? "📉" : "📈"} {t(ruleGood.nameKey)}
-                </Text>
-                <Text style={styles.autoTradeRowSub}>
-                  {t(rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell", {
-                    qty: rule.qty,
-                    price: fixedUi(rule.triggerPrice, 2),
-                  })}
-                </Text>
+      {showAutoRules && (
+        <>
+          <GoalPanel title={t("market.autoTrade.sectionLabel")}>
+            <Text style={styles.autoTradeDesc}>{t("market.autoTrade.description")}</Text>
+            <View style={styles.autoTradePanel}>
+              <View style={styles.sideToggle}>
+                <ScalePressable
+                  style={[styles.sideBtn, autoSide === "buy" && styles.sideBtnActiveBuy]}
+                  onPress={() => setAutoSide("buy")}
+                >
+                  <Text style={[styles.sideBtnText, autoSide === "buy" && styles.sideBtnTextActive]}>
+                    {t("market.buyShort")}
+                  </Text>
+                </ScalePressable>
+                <ScalePressable
+                  style={[styles.sideBtn, autoSide === "sell" && styles.sideBtnActiveSell]}
+                  onPress={() => setAutoSide("sell")}
+                >
+                  <Text style={[styles.sideBtnText, autoSide === "sell" && styles.sideBtnTextActive]}>
+                    {t("market.sellShort")}
+                  </Text>
+                </ScalePressable>
               </View>
-              <ScalePressable
-                style={[styles.switchTrack, rule.enabled && styles.switchTrackOn]}
-                onPress={() => toggleAutoTradeRule(rule.id)}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: rule.enabled }}
-                accessibilityLabel={rule.enabled ? t("market.autoTrade.on") : t("market.autoTrade.off")}
-              >
-                <View style={[styles.switchKnob, rule.enabled && styles.switchKnobOn]} />
-              </ScalePressable>
-              <ScalePressable
-                style={styles.autoTradeDeleteBtn}
-                onPress={() => removeAutoTradeRule(rule.id)}
-                accessibilityLabel="Delete"
-              >
-                <Text style={styles.autoTradeDeleteBtnText}>🗑️</Text>
-              </ScalePressable>
+
+              <Text style={styles.autoTradeSubLabel}>
+                {autoSide === "buy"
+                  ? t("market.autoTrade.triggerBelowLabel")
+                  : t("market.autoTrade.triggerAboveLabel")}
+              </Text>
+              <View style={styles.qtyRow}>
+                {AUTO_TRADE_TRIGGER_PCT_STEPS.map((pct) => (
+                  <ScalePressable
+                    key={pct}
+                    style={[
+                      styles.qtyBtn,
+                      autoPct === pct && { borderColor: selected.color, borderWidth: 2 },
+                    ]}
+                    onPress={() => setAutoPct(pct)}
+                  >
+                    <Text style={styles.qtyBtnText}>{formatPercent(pct * 100, state.language)}</Text>
+                  </ScalePressable>
+                ))}
+              </View>
+
+              <Text style={styles.autoTradeSubLabel}>{t("market.autoTrade.qtyLabel")}</Text>
+              <View style={styles.qtyRow}>
+                {([1, 5, 10] as const).map((q) => (
+                  <ScalePressable
+                    key={q}
+                    style={[styles.qtyBtn, autoQty === q && { borderColor: selected.color, borderWidth: 2 }]}
+                    onPress={() => setAutoQty(q)}
+                  >
+                    <Text style={styles.qtyBtnText}>{q}</Text>
+                  </ScalePressable>
+                ))}
+              </View>
+
+              {(() => {
+                const triggerPrice =
+                  autoSide === "buy"
+                    ? selectedState.price * (1 - autoPct)
+                    : selectedState.price * (1 + autoPct);
+                const maxRules = effectiveAutoTradeMaxRules(state);
+                const disabled = state.autoTradeRules.length >= maxRules || !isGoodUnlocked(selected, state);
+                return (
+                  <>
+                    <Text style={styles.autoTradePreview}>
+                      {t("market.autoTrade.preview", { qty: autoQty, price: fixedUi(triggerPrice, 2) })}
+                    </Text>
+                    <Text style={styles.autoTradeMaxNote}>
+                      {t("market.autoTrade.maxActiveNote", { max: maxRules })}
+                    </Text>
+                    <BigButton
+                      tone={autoSide === "buy" ? "green" : "red"}
+                      height={48}
+                      disabled={disabled}
+                      label={t("market.autoTrade.addBtn")}
+                      onPress={() => {
+                        addAutoTradeRule(selected.id, autoSide, autoPct, autoQty);
+                        sounds.playBuy();
+                      }}
+                    />
+                  </>
+                );
+              })()}
             </View>
-          );
-        })}
-      </GoalPanel>
+          </GoalPanel>
+
+          <GoalPanel title={t("market.autoTrade.activeSectionLabel")}>
+            {state.autoTradeRules.length === 0 && (
+              <Text style={styles.autoTradeEmptyText}>{t("market.autoTrade.noRules")}</Text>
+            )}
+            {state.autoTradeRules.map((rule) => {
+              const ruleGood = GOODS_BY_ID[rule.goodId];
+              return (
+                <View key={rule.id} style={styles.autoTradeRow}>
+                  <GoodIcon
+                    id={ruleGood.id}
+                    fallback={ruleGood.icon}
+                    size={22}
+                    style={styles.autoTradeRowIcon}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.autoTradeRowTitle}>
+                      {rule.side === "buy" ? "📉" : "📈"} {t(ruleGood.nameKey)}
+                    </Text>
+                    <Text style={styles.autoTradeRowSub}>
+                      {t(
+                        rule.side === "buy" ? "market.autoTrade.ruleRowBuy" : "market.autoTrade.ruleRowSell",
+                        {
+                          qty: rule.qty,
+                          price: fixedUi(rule.triggerPrice, 2),
+                        }
+                      )}
+                    </Text>
+                  </View>
+                  <ScalePressable
+                    style={[styles.switchTrack, rule.enabled && styles.switchTrackOn]}
+                    onPress={() => toggleAutoTradeRule(rule.id)}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: rule.enabled }}
+                    accessibilityLabel={rule.enabled ? t("market.autoTrade.on") : t("market.autoTrade.off")}
+                  >
+                    <View style={[styles.switchKnob, rule.enabled && styles.switchKnobOn]} />
+                  </ScalePressable>
+                  <ScalePressable
+                    style={styles.autoTradeDeleteBtn}
+                    onPress={() => removeAutoTradeRule(rule.id)}
+                    accessibilityLabel="Delete"
+                  >
+                    <Text style={styles.autoTradeDeleteBtnText}>🗑️</Text>
+                  </ScalePressable>
+                </View>
+              );
+            })}
+          </GoalPanel>
+        </>
+      )}
 
       {state.gameOver && (
         <View style={styles.gameOverBox}>

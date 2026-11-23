@@ -673,7 +673,7 @@ describe("telegraphed crises", () => {
 
   it("announces a crisis for later rather than striking on the spot", () => {
     Math.random = () => 0.001;
-    const next = tick({ ...initialState(), happiness: 50, paused: false });
+    const next = tick({ ...initialState(), tick: 200, happiness: 50, paused: false });
     expect(next.pendingCrisis).not.toBeNull();
     expect(next.pendingCrisis!.strikesAtTick).toBeGreaterThan(next.tick);
     // The warning is the whole feature: the damage must not land with it.

@@ -301,8 +301,12 @@ function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   }
   return { prices, supply };
 }
-function makeDailyQuests(townRankIndex: number, dateSeed: string): EconomyState["dailyQuests"] {
-  return pickDailyQuestTemplates(dateSeed, DAILY_QUEST_COUNT).map((template) => ({
+function makeDailyQuests(
+  townRankIndex: number,
+  dateSeed: string,
+  tradeUnlocked: boolean
+): EconomyState["dailyQuests"] {
+  return pickDailyQuestTemplates(dateSeed, DAILY_QUEST_COUNT, tradeUnlocked).map((template) => ({
     id: `${dateSeed}-${template.id}`,
     templateId: template.id,
     target: scaledGoalTarget(template.target, townRankIndex),
@@ -398,7 +402,7 @@ export function initialState(
     // a cooldown that has notionally been running since before tick 0.
     lastInterruptionTick: -INTERRUPTION_COOLDOWN_TICKS,
     dailyProgress: makeInitialDailyProgress(),
-    dailyQuests: makeDailyQuests(0, "init"),
+    dailyQuests: makeDailyQuests(0, "init", false),
     activeMiniQuest: null,
     prestigeLevel: 0,
     prestigePoints: 0,
@@ -941,7 +945,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
       ...state,
       streak: { count: 1, lastOpenedDate: today },
       dailyProgress: makeInitialDailyProgress(),
-      dailyQuests: makeDailyQuests(state.townRankIndex, today),
+      dailyQuests: makeDailyQuests(state.townRankIndex, today, state.tradeUnlocked),
       activeMiniQuest: null,
       productionQuotas: generateDailyQuotas(),
       productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
@@ -971,7 +975,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     // A genuinely new day (this function only reaches here when one
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),
-    dailyQuests: makeDailyQuests(state.townRankIndex, today),
+    dailyQuests: makeDailyQuests(state.townRankIndex, today, state.tradeUnlocked),
     // A mini quest's progress is measured against the daily counters above
     // via a baseline snapshot — resetting those out from under it would
     // make it unwinnable, so just drop it; a new one spawns again soon.
@@ -989,7 +993,7 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
 function ensureWeeklyChallenge(state: EconomyState, today: string): WeeklyChallenge {
   const weekKey = isoWeekKey(today);
   if (state.weeklyChallenge && state.weeklyChallenge.weekKey === weekKey) return state.weeklyChallenge;
-  const template = weeklyChallengeTemplateForWeek(weekKey);
+  const template = weeklyChallengeTemplateForWeek(weekKey, state.tradeUnlocked);
   return {
     weekKey,
     templateId: template.id,

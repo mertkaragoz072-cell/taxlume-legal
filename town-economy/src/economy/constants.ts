@@ -342,6 +342,10 @@ export const RIVAL_OFFER_CHANCE = 0.007;
  * fall, and in practice they arrive about once a game day.
  */
 export const INTERRUPTION_COOLDOWN_TICKS = 30;
+/** A new town gets a quiet start: for its first three minutes no decision,
+ * villager, rival offer, crisis or flash deal turns up, so the first trades are
+ * made at the player's own pace instead of between pop-ups. */
+export const NEWBIE_GRACE_TICKS = 60;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.

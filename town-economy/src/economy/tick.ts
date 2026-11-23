@@ -92,6 +92,7 @@ import {
   LOST_TREASURE_PCT_OF_CASH,
   MAX_PRICE_STEP_PCT,
   MINI_QUEST_CHANCE,
+  NEWBIE_GRACE_TICKS,
   MINI_QUEST_FIRST_DELAY_TICKS,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRICE_JITTER_PCT,
@@ -252,7 +253,8 @@ export function tick(state: EconomyState): EconomyState {
     }
     pendingCrisis = null;
   }
-  if (!pendingCrisis && Math.random() < CRISIS_CHANCE) {
+  const settling = state.tick < NEWBIE_GRACE_TICKS;
+  if (!pendingCrisis && !settling && Math.random() < CRISIS_CHANCE) {
     const template = rollCrisisTemplate(state.townRankIndex);
     pendingCrisis = {
       id: nextId,
@@ -292,7 +294,7 @@ export function tick(state: EconomyState): EconomyState {
   // its own. Whichever fires first stamps this, and the other two stay
   // quiet until the cooldown is up.
   let lastInterruptionTick = state.lastInterruptionTick;
-  const interruptionReady = state.tick - lastInterruptionTick >= INTERRUPTION_COOLDOWN_TICKS;
+  const interruptionReady = !settling && state.tick - lastInterruptionTick >= INTERRUPTION_COOLDOWN_TICKS;
 
   let pendingDecision: EconomyState["pendingDecision"] = state.pendingDecision;
   if (!pendingDecision && interruptionReady && Math.random() < DECISION_EVENT_CHANCE) {
@@ -458,7 +460,7 @@ export function tick(state: EconomyState): EconomyState {
     });
     activeFlashDeal = null;
   }
-  if (!activeFlashDeal && Math.random() < FLASH_DEAL_CHANCE) {
+  if (!activeFlashDeal && !settling && Math.random() < FLASH_DEAL_CHANCE) {
     const eligible = GOODS.filter((g) => isGoodUnlocked(g, state));
     if (eligible.length > 0) {
       const good = eligible[Math.floor(Math.random() * eligible.length)];
@@ -930,6 +932,10 @@ export function tick(state: EconomyState): EconomyState {
   // Award bonuses for completed quotas
   let quotaBonusCash = 0;
   for (const quota of state.productionQuotas) {
+    // Only for goods the town can actually trade: a "Paper target reached" bonus
+    // on day one, for a good that is still behind a locked door, means nothing
+    // to the player and reads as a mistake.
+    if (!isGoodUnlocked(GOODS_BY_ID[quota.goodId], state)) continue;
     const produced = productionToday[quota.goodId] ?? 0;
     if (produced >= quota.target && state.productionToday[quota.goodId] < quota.target) {
       quotaBonusCash += quota.bonus;
