@@ -36,6 +36,7 @@
       ],
       "expo-audio",
       "expo-font",
+      "./plugins/withoutPushEntitlement",
       "expo-notifications"
     ],
     "web": {
