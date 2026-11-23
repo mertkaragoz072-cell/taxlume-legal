@@ -101,6 +101,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   const [made, setMade] = useState<string[]>([]);               // products of the order prepared by hand so far
   const [slips, setSlips] = useState(0);                        // wrong jars tapped for this order (only for the stars)
   const [wrong, setWrong] = useState<string | null>(null);
+  const [book, setBook] = useState(false);                       // the recipe notebook is open
   const shake = useRef(new Animated.Value(0)).current, spin = useRef(new Animated.Value(0)).current, wob = useRef(new Animated.Value(0)).current;
   useEffect(() => () => { cafe.handOrder = null; }, []);       // eslint-disable-line react-hooks/exhaustive-deps -- closing the counter gives the order back to the waiter
 
@@ -117,14 +118,14 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   useEffect(() => {                                              // the guest left or was served by the waiter: start over, kindly
     if (sel != null && !cur) { if (made.length) act.toast("Bu sipariş artık açık değil; hazırladığın ürünler vitrine kondu.", 2400); reset(); setSel(null); }
   }, [sel, cur]);                                                // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (sel == null && tickets.length === 1) setSel(tickets[0].o.id); }, [tickets.length]);   // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (sel == null && tickets.length === 1) { setSel(tickets[0].o.id); setBook(true); } }, [tickets.length]);   // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { cafe.handOrder = sel; }, [sel]);          // eslint-disable-line react-hooks/exhaustive-deps -- the waiter leaves the order the player is preparing alone
   useEffect(() => { if (complete && phase === "gather") { setPhase("stir"); setStirs(0); act.sfx("done"); } }, [complete, phase]);   // eslint-disable-line react-hooks/exhaustive-deps -- a full bowl: time to stir
 
   const pick = (id: number) => {
     if (id === sel) return;
     if (staff?.claims(id)) { act.toast("Garson bu siparişi zaten götürüyor.", 1400); return; }
-    act.sfx("tap"); setSel(id); reset();
+    act.sfx("tap"); setSel(id); reset(); setBook(true);
   };
   const add = (ing: string) => {
     if (!def || phase !== "gather") return;
@@ -150,7 +151,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
     if (!r.ok) { act.warn(r.message, 2600); setPhase("gather"); setBowl({}); return; }
     act.sfx("done"); act.buzz([20, 40, 20]);
     setMade([...made, pid]);
-    if (step + 1 < items.length) { setStep(step + 1); setBowl({}); setStirs(0); setPhase("gather"); act.toast(`${def.icon} ${def.name} hazır! Sıradaki: ${game.productsDef[items[step + 1]].name}`, 1600); }   // a set: on to the second product
+    if (step + 1 < items.length) { setStep(step + 1); setBowl({}); setStirs(0); setPhase("gather"); setBook(true); act.toast(`${def.icon} ${def.name} hazır! Sıradaki: ${game.productsDef[items[step + 1]].name}`, 1600); }   // a set: on to the second product
     else setPhase("made");
   };
   const serve = () => {
@@ -191,7 +192,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   const X = (ix: number) => ox + ix * sc, Y = (iy: number) => oy + iy * sc;
   const SLOTS = [137, 287, 437, 588, 737, 887], jarS = Math.min(118 * sc, (box.w - u0 * 4) / 6.4);
   const [cardH, setCardH] = useState(u * 18);
-  const counterTop = Y(560), drawerTop = Y(1338), bowlTop = counterTop + u0 * 1 + cardH + u0 * 1.4, jarTop = Y(1252) - jarS * 0.62, bowlW = Math.max(u0 * 24, Math.min(box.w * 0.6, (jarTop - bowlTop - u * 8.5) / 0.84)), bowlCy = bowlTop + bowlW * 0.42;   // the bowl (and the stir hint under it) ends above the jars
+  const counterTop = Y(560), drawerTop = Y(1338), bowlTop = counterTop + u0 * 1 + cardH + u0 * 0.6, jarTop = Y(1252) - jarS * 0.62, room = jarTop - u * 7.5 - bowlTop, bowlW = Math.max(u0 * 26, Math.min(box.w * 0.8, room / 0.84)), bowlCy = bowlTop + Math.max(0, (room - bowlW * 0.84) / 2) + bowlW * 0.42;   // as big as the counter allows, in its middle   // the bowl (and the stir hint under it) ends above the jars
   const paper = { backgroundColor: "rgba(255,248,234,.96)", borderRadius: u * 1.4, borderWidth: u * 0.3, borderColor: "#E2C69B" };
   const shadowText = { textShadowColor: "#5E3A20", textShadowRadius: u * 0.6, textShadowOffset: { width: 0, height: u * 0.15 } };
 
@@ -223,7 +224,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
 
       {cur && def ? (
         <>
-          {/* steps and the recipe card, on the counter top */}
+          {/* steps (the recipe itself is in the notebook) */}
           <View onLayout={(e) => { const h = e.nativeEvent.layout.height; if (Math.abs(h - cardH) > 1) setCardH(h); }} style={{ position: "absolute", left: u0 * 3, right: u0 * 3, top: counterTop + u0 * 1, gap: u * 0.7 }}>
             <View style={{ flexDirection: "row", justifyContent: "center", gap: u * 0.6 }}>
               {["Malzeme", "Karıştır", "Servis"].map((t, i) => (
@@ -231,18 +232,6 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
                   <Text allowFontScaling={false} style={{ color: i === stage ? C.brownDark : WOOD.text, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{i < stage ? "✓" : `${i + 1}`} {t}</Text>
                 </View>
               ))}
-            </View>
-            <View style={[paper, { flexDirection: "row", alignItems: "center", gap: u * 1, padding: u * 0.9, transform: [{ rotate: "-0.8deg" }], shadowColor: "#3B2412", shadowOpacity: 0.25, shadowRadius: u * 0.6, shadowOffset: { width: 0, height: u * 0.4 } }]}>
-              <EmojiIcon emoji={def.icon} size={u * 8} />
-              <View style={{ flex: 1 }}>
-                <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{def.name}{items.length > 1 ? ` (${step + 1}/${items.length})` : ""}</Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6, marginTop: u * 0.3 }}>
-                  {Object.entries(need).map(([k, n]) => {
-                    const have = bowl[k] ?? 0, ok = have >= n;
-                    return <View key={k} style={{ flexDirection: "row", alignItems: "center", gap: u * 0.3, paddingHorizontal: u * 0.8, paddingVertical: u * 0.2, borderRadius: 99, backgroundColor: ok ? C.greenPale : "#F3E6CF" }}><EmojiIcon emoji={game.ingredientsDef[k].icon} size={u * 3.6} /><Text allowFontScaling={false} style={{ color: ok ? C.greenDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{have}/{n}{ok ? " ✓" : ""}</Text></View>;
-                  })}
-                </View>
-              </View>
             </View>
           </View>
 
@@ -305,12 +294,43 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
         );
       })}
 
+      {/* the recipe notebook: a paper page over the counter, opened by itself when an order is picked */}
+      {book && cur && def && phase === "gather" ? (
+        <Pressable onPress={() => { setBook(false); act.sfx("tap"); }} accessibilityLabel="Tarif defterini kapat" style={{ position: "absolute", left: 0, right: 0, top: counterTop - u0 * 2, bottom: 0, zIndex: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,24,12,.35)" }}>
+          <View style={{ width: Math.min(box.w - u0 * 8, u0 * 80), padding: u * 1.6, gap: u * 1, borderRadius: u * 1.2, backgroundColor: "#FFF8E8", borderWidth: u * 0.4, borderColor: "#C9A06A", transform: [{ rotate: "-1.2deg" }],
+            shadowColor: "#2A160A", shadowOpacity: 0.4, shadowRadius: u * 1.6, shadowOffset: { width: 0, height: u } }}>
+            {/* the notebook's rings and red margin line */}
+            <View pointerEvents="none" style={{ position: "absolute", left: u * 4.6, top: 0, bottom: 0, width: u * 0.3, backgroundColor: "rgba(184,95,59,.45)" }} />
+            <View pointerEvents="none" style={{ position: "absolute", left: -u * 1.3, top: u * 2, bottom: u * 2, justifyContent: "space-between" }}>{[0, 1, 2, 3, 4].map((i) => <View key={i} style={{ width: u * 2.6, height: u * 1.3, borderRadius: 99, borderWidth: u * 0.35, borderColor: "#8A6A44", backgroundColor: "#EADCC0" }} />)}</View>
+            <View style={{ paddingLeft: u * 5, gap: u * 0.9 }}>
+              <Text allowFontScaling={false} style={{ color: C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>📒 Tarif Defteri</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: u * 1 }}>
+                <EmojiIcon emoji={def.icon} size={u * 9} />
+                <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.title) }}>{def.name}{items.length > 1 ? ` (${step + 1}/${items.length})` : ""}</Text>
+              </View>
+              {Object.entries(need).map(([k, n]) => {
+                const have = bowl[k] ?? 0, ok = have >= n;
+                return (
+                  <View key={k} style={{ flexDirection: "row", alignItems: "center", gap: u * 1, paddingBottom: u * 0.5, borderBottomWidth: 1, borderColor: "rgba(150,120,80,.3)" }}>
+                    <EmojiIcon emoji={game.ingredientsDef[k].icon} size={u * 5.6} />
+                    <Text allowFontScaling={false} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{n} {game.ingredientsDef[k].name}</Text>
+                    <Text allowFontScaling={false} style={{ color: ok ? C.greenDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{ok ? "✓" : `${have}/${n}`}</Text>
+                  </View>
+                );
+              })}
+              <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>Malzemeleri raftan kaseye at, sonra karıştır. Kapatmak için dokun.</Text>
+            </View>
+          </View>
+        </Pressable>
+      ) : null}
+
       {/* the drawer: the main action */}
       <View style={{ position: "absolute", left: u0 * 4, right: u0 * 4, top: drawerTop, bottom: u0 * 1.4, justifyContent: "center", gap: u0 * 0.8 }}>
         {cur && def && phase === "stir" ? <KBtn u={u} label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} />
           : cur && def && phase === "made" ? <KBtn u={u} label="🛎 Servis Et" sub={`${album.nameOf(cur.c.look)} bekliyor`} onPress={serve} />
           : (
             <View style={{ flexDirection: "row", gap: u0 * 1, flexWrap: "wrap", justifyContent: "center" }}>
+              {cur && def ? <Btn small variant="alt" label="📒 Tarif Defteri" onPress={() => { setBook(true); act.sfx("tap"); }} /> : null}
               {cur && Object.keys(bowl).length ? <Btn small variant="plain" label="Kaseyi boşalt" onPress={() => { setBowl({}); act.sfx("tap"); }} /> : null}
               {fromStock ? <Btn small variant="alt" label="Vitrinde hazır: hemen ver" onPress={serve} /> : null}
               <Btn small variant="plain" label="Makinede üret" onPress={onRecipes} />
