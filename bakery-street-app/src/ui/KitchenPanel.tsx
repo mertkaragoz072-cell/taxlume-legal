@@ -2,11 +2,12 @@
 // ingredients into the bowl, stir it with a few taps, enjoy the little result moment and serve it. Optional: the waiter and the machines keep
 // working as before. Rules: Game.handMake (the product, from the ingredients) and Cafe.deliver (the sale). The stars are only for fun.
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { ASSET_MODULES } from "../generated/assetModules";
 import { useRefresh, useWorld } from "../runtime/context";
-import { Btn, Sheet } from "./kit";
+import { Btn } from "./kit";
 import { EmojiIcon } from "./icons";
-import { C, FONT, fmt, fs, TYPE, useU } from "./theme";
+import { C, FONT, fmt, fs, navHeight, TYPE, useU } from "./theme";
 
 type Bowl = Record<string, number>;
 type Phase = "gather" | "stir" | "made";
@@ -182,105 +183,137 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
     );
   };
 
+  // ---- the scene: the painted counter (assets/game/kitchen-counter.webp, 1024 x 1536) covers the screen between the top bar and the navigation;
+  // everything stands where the picture has room for it: tickets on the wall, the recipe and the bowl on the counter top, the jars in the
+  // six hollows of the shelf, the main button on the drawer
+  const [box, setBox] = useState({ w: width, h: height * 0.75 });
+  const sc = box.w / 1024, ox = 0, oy = box.h - 1536 * sc;        // as wide as the screen (all six hollows show), standing on the navigation; a tall phone sees more wall
+  const X = (ix: number) => ox + ix * sc, Y = (iy: number) => oy + iy * sc;
+  const SLOTS = [137, 287, 437, 588, 737, 887], jarS = Math.min(118 * sc, (box.w - u0 * 4) / 6.4);
+  const [cardH, setCardH] = useState(u * 18);
+  const counterTop = Y(560), drawerTop = Y(1338), bowlTop = counterTop + u0 * 1 + cardH + u0 * 1.4, bowlW = Math.min(box.w * 0.6, Math.max(u * 26, (Y(1150) - bowlTop - u * 6) * 2)), bowlCy = bowlTop + bowlW * 0.32;
+  const paper = { backgroundColor: "rgba(255,248,234,.96)", borderRadius: u * 1.4, borderWidth: u * 0.3, borderColor: "#E2C69B" };
+  const shadowText = { textShadowColor: "#5E3A20", textShadowRadius: u * 0.6, textShadowOffset: { width: 0, height: u * 0.15 } };
+
   return (
     <>
-    {/* the café behind is dimmed (and does not take taps): the counter is the focus */}
-    <Pressable accessibilityLabel="Mutfağı kapat" onPress={() => { if (Date.now() - openedAt.current > 600) act.openOverlay(null); }} style={{ position: "absolute", left: -500, right: -500, top: -500, bottom: -500, backgroundColor: "rgba(40,24,12,.5)", zIndex: 19 }} />
-    <Sheet title="Mutfak Tezgâhı" hint={tickets.length ? undefined : "Şu an bekleyen sipariş yok. Müşteriler oturunca fişleri burada görünür."} full onClose={() => act.openOverlay(null)}>
-      {/* order tickets */}
-      {tickets.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1.2, paddingVertical: u * 0.8, paddingHorizontal: u * 0.4 }}>{tickets.map(({ c, o }) => ticket(c, o))}</ScrollView> : null}
+    <Pressable accessibilityLabel="Mutfağı kapat" onPress={() => { if (Date.now() - openedAt.current > 600) act.openOverlay(null); }} style={{ position: "absolute", left: -500, right: -500, top: -500, bottom: -500, backgroundColor: "rgba(40,24,12,.55)", zIndex: 19 }} />
+    <View onLayout={(e) => { const { width: w, height: h } = e.nativeEvent.layout; if (Math.abs(w - box.w) > 1 || Math.abs(h - box.h) > 1) setBox({ w, h }); }}
+      style={{ position: "absolute", left: 0, right: 0, top: u0 * 10.6, bottom: navHeight(u0), zIndex: 20, overflow: "hidden", borderTopLeftRadius: u0 * 3, borderTopRightRadius: u0 * 3, backgroundColor: "#7A4A26" }}>
+      {/* above the picture (a tall phone): more of the tiled wall, its warm light fading upwards */}
+      {oy > 0 ? <Image source={ASSET_MODULES["assets/kitchen-wall.webp"]} style={{ position: "absolute", left: 0, top: oy - box.w * 800 / 1024 + 2, width: box.w, height: box.w * 800 / 1024 }} /> : null}
+      <Image source={ASSET_MODULES["assets/kitchen-counter.webp"]} style={{ position: "absolute", left: ox, top: oy, width: 1024 * sc, height: 1536 * sc }} />
+
+      {/* title and close, on the wall */}
+      <View style={{ position: "absolute", left: u0 * 2, right: u0 * 1, top: u0 * 1.2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ paddingHorizontal: u0 * 2.2, paddingVertical: u0 * 0.6, borderRadius: u0 * 2, backgroundColor: "#8A5A36", borderWidth: u0 * 0.45, borderColor: "#5E3A20" }}>
+          <Text allowFontScaling={false} style={{ color: "#FFF4DE", fontFamily: FONT.bold, fontSize: fs(u0, TYPE.heading) }}>Mutfak Tezgâhı</Text>
+        </View>
+        <Pressable onPress={() => act.openOverlay(null)} accessibilityLabel="Kapat" style={{ width: Math.max(44, u0 * 8), height: Math.max(44, u0 * 8), alignItems: "center", justifyContent: "center" }}>
+          <Image source={ASSET_MODULES["assets/icons/ui-close.webp"]} style={{ width: Math.max(40, u0 * 7.6), height: Math.max(40, u0 * 7.6), resizeMode: "contain" }} />
+        </Pressable>
+      </View>
+
+      {/* order tickets pinned on the wall */}
+      <View style={{ position: "absolute", left: 0, right: 0, top: u0 * 11, height: Math.max(u * 14, counterTop - u0 * 12) }}>
+        {tickets.length
+          ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1.2, paddingVertical: u * 0.8, paddingHorizontal: u0 * 2, alignItems: "flex-start" }}>{tickets.map(({ c, o }) => ticket(c, o))}</ScrollView>
+          : <View style={[paper, { marginHorizontal: u0 * 4, padding: u * 1.2, alignItems: "center" }]}><Text allowFontScaling={false} style={{ textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>Şu an bekleyen sipariş yok. Müşteriler oturunca fişleri buraya asılır.</Text></View>}
+      </View>
 
       {cur && def ? (
-        <View style={{ borderRadius: u * 2.2, borderWidth: u * 0.5, borderColor: WOOD.edge, backgroundColor: WOOD.top, padding: u * 1.2, gap: u * 1, overflow: "hidden" }}>
-          {[0.22, 0.48, 0.74].map((k) => <View key={k} pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, top: `${k * 100}%`, height: u * 0.35, backgroundColor: WOOD.plank }} />)}
-
-          {/* steps: ingredients → stir → serve */}
-          <View style={{ flexDirection: "row", justifyContent: "center", gap: u * 0.8 }}>
-            {["Malzeme", "Karıştır", "Servis"].map((t, i) => (
-              <View key={t} style={{ flexDirection: "row", alignItems: "center", gap: u * 0.5, paddingHorizontal: u * 1.2, paddingVertical: u * 0.3, borderRadius: 99, backgroundColor: i === stage ? "#FFF4DE" : i < stage ? "rgba(125,152,85,.85)" : "rgba(90,56,30,.35)" }}>
-                <Text allowFontScaling={false} style={{ color: i === stage ? C.brownDark : WOOD.text, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{i < stage ? "✓" : `${i + 1}`} {t}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* the recipe, on a little paper card */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: u * 1.2, backgroundColor: "#FFF8EA", borderRadius: u * 1.4, borderWidth: u * 0.3, borderColor: "#E2C69B", padding: u * 1, transform: [{ rotate: "-0.6deg" }] }}>
-            <EmojiIcon emoji={def.icon} size={u * 9} />
-            <View style={{ flex: 1 }}>
-              <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{def.name}{items.length > 1 ? ` (${step + 1}/${items.length})` : ""}</Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6, marginTop: u * 0.3 }}>
-                {Object.entries(need).map(([k, n]) => {
-                  const have = bowl[k] ?? 0, ok = have >= n;
-                  return <View key={k} style={{ flexDirection: "row", alignItems: "center", gap: u * 0.3, paddingHorizontal: u * 0.8, paddingVertical: u * 0.2, borderRadius: 99, backgroundColor: ok ? C.greenPale : "#F3E6CF" }}><EmojiIcon emoji={game.ingredientsDef[k].icon} size={u * 3.6} /><Text allowFontScaling={false} style={{ color: ok ? C.greenDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{have}/{n}{ok ? " ✓" : ""}</Text></View>;
-                })}
+        <>
+          {/* steps and the recipe card, on the counter top */}
+          <View onLayout={(e) => { const h = e.nativeEvent.layout.height; if (Math.abs(h - cardH) > 1) setCardH(h); }} style={{ position: "absolute", left: u0 * 3, right: u0 * 3, top: counterTop + u0 * 1, gap: u * 0.7 }}>
+            <View style={{ flexDirection: "row", justifyContent: "center", gap: u * 0.6 }}>
+              {["Malzeme", "Karıştır", "Servis"].map((t, i) => (
+                <View key={t} style={{ paddingHorizontal: u * 1.1, paddingVertical: u * 0.3, borderRadius: 99, backgroundColor: i === stage ? "#FFF4DE" : i < stage ? "rgba(125,152,85,.92)" : "rgba(94,58,32,.55)" }}>
+                  <Text allowFontScaling={false} style={{ color: i === stage ? C.brownDark : WOOD.text, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{i < stage ? "✓" : `${i + 1}`} {t}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={[paper, { flexDirection: "row", alignItems: "center", gap: u * 1, padding: u * 0.9, transform: [{ rotate: "-0.8deg" }], shadowColor: "#3B2412", shadowOpacity: 0.25, shadowRadius: u * 0.6, shadowOffset: { width: 0, height: u * 0.4 } }]}>
+              <EmojiIcon emoji={def.icon} size={u * 8} />
+              <View style={{ flex: 1 }}>
+                <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{def.name}{items.length > 1 ? ` (${step + 1}/${items.length})` : ""}</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6, marginTop: u * 0.3 }}>
+                  {Object.entries(need).map(([k, n]) => {
+                    const have = bowl[k] ?? 0, ok = have >= n;
+                    return <View key={k} style={{ flexDirection: "row", alignItems: "center", gap: u * 0.3, paddingHorizontal: u * 0.8, paddingVertical: u * 0.2, borderRadius: 99, backgroundColor: ok ? C.greenPale : "#F3E6CF" }}><EmojiIcon emoji={game.ingredientsDef[k].icon} size={u * 3.6} /><Text allowFontScaling={false} style={{ color: ok ? C.greenDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{have}/{n}{ok ? " ✓" : ""}</Text></View>;
+                  })}
+                </View>
               </View>
             </View>
           </View>
 
-          {/* the bowl (tap it to stir) */}
-          <View style={{ alignItems: "center", minHeight: u * 23, justifyContent: "center" }}>
+          {/* the bowl on the counter (tap it to stir), or the finished product */}
+          <View style={{ position: "absolute", left: 0, right: 0, top: bowlCy - bowlW * 0.32, alignItems: "center" }}>
             {phase === "made" ? (
-              <View style={{ gap: u * 1, alignItems: "center" }}><Pop emojis={made.map((id) => game.productsDef[id].icon)} u={u} /><Stars n={rateStars} label={rateText} u={u} /></View>
+              <View style={{ gap: u * 0.3, alignItems: "center", marginTop: -u * 5 }}><Pop emojis={made.map((id) => game.productsDef[id].icon)} u={u} /><Stars n={rateStars} label={rateText} u={u} /></View>
             ) : (
               <Pressable onPress={stir} disabled={phase !== "stir"} accessibilityRole="button" accessibilityLabel={phase === "stir" ? `Karıştır, ${stirs}/${stirNeed}` : "Kase"}>
-                <Animated.View style={{ width: u * 32, height: u * 15, borderBottomLeftRadius: u * 17, borderBottomRightRadius: u * 17, borderTopLeftRadius: u * 3, borderTopRightRadius: u * 3, backgroundColor: "#F3E2C3", borderWidth: u * 0.6, borderColor: phase === "stir" ? "#FFE08A" : "#A9774A", alignItems: "center", justifyContent: "center", padding: u * 1, overflow: "hidden",
-                  shadowColor: "#3B2412", shadowOpacity: 0.3, shadowRadius: u, shadowOffset: { width: 0, height: u * 0.6 },
+                <View style={{ position: "absolute", left: bowlW * 0.06, right: bowlW * 0.06, bottom: -bowlW * 0.04, height: bowlW * 0.1, borderRadius: 999, backgroundColor: "rgba(70,40,20,.16)" }} />
+                <Animated.View style={{ width: bowlW, height: bowlW * 0.5, borderBottomLeftRadius: bowlW * 0.5, borderBottomRightRadius: bowlW * 0.5, borderTopLeftRadius: bowlW * 0.1, borderTopRightRadius: bowlW * 0.1, backgroundColor: "#F6E8CC", borderWidth: u * 0.7, borderColor: phase === "stir" ? "#FFE08A" : "#A9774A", alignItems: "center", justifyContent: "center", padding: u, overflow: "hidden",
                   transform: [{ rotate: wob.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["0deg", "-3deg", "0deg"] }) }, { scale: spin.interpolate({ inputRange: [0, 0.3, 1], outputRange: [1, 1.05, 1] }) }] }}>
+                  <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: bowlW * 0.06, height: bowlW * 0.05, backgroundColor: "rgba(184,95,59,.55)" }} />
                   {made.length && phase === "gather" && !Object.keys(bowl).length
                     ? <View style={{ flexDirection: "row", gap: u }}>{made.map((id, i) => <EmojiIcon key={i} emoji={game.productsDef[id].icon} size={u * 8} />)}</View>
                     : <Animated.View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u * 0.3, transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] }) }] }}>
                         {Object.entries(bowl).flatMap(([k, n]) => Array.from({ length: n }, (_, i) => <Drop key={`${k}${i}`} emoji={game.ingredientsDef[k].icon} size={u * 5} />))}
                       </Animated.View>}
-                  {phase === "gather" && !Object.keys(bowl).length && !made.length ? <Text allowFontScaling={false} style={{ color: "#A9774A", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>Kase boş: malzemelere dokun</Text> : null}
+                  {phase === "gather" && !Object.keys(bowl).length && !made.length ? <Text allowFontScaling={false} style={{ color: "#A9774A", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>Kase boş:{"\n"}raftaki malzemelere dokun</Text> : null}
                 </Animated.View>
                 {phase === "stir" ? Array.from({ length: stirs }, (_, i) => <Puff key={i} steam={def.station === "coffee"} u={u} seed={i + step * 7} />) : null}
               </Pressable>
             )}
+            {phase === "stir" ? (
+              <View style={{ alignItems: "center", gap: u * 0.5, marginTop: u * 1.2 }}>
+                <Text allowFontScaling={false} style={[{ color: "#FFF8EA", fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }, shadowText]}>{STIR_TEXT[def.station]?.[0] ?? "Kaseye dokun, karıştır!"}</Text>
+                <View style={{ flexDirection: "row", gap: u * 0.7 }}>
+                  {Array.from({ length: stirNeed }, (_, i) => <View key={i} style={{ width: u * 2.4, height: u * 2.4, borderRadius: 99, backgroundColor: i < stirs ? "#FFE08A" : "rgba(94,58,32,.55)", borderWidth: u * 0.3, borderColor: "#FFF4DE" }} />)}
+                </View>
+              </View>
+            ) : null}
           </View>
-
-          {phase === "stir" ? (
-            <View style={{ gap: u * 0.7, alignItems: "center" }}>
-              <Text allowFontScaling={false} style={{ color: WOOD.text, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body), textShadowColor: "#7A4E2C", textShadowRadius: u * 0.5 }}>{STIR_TEXT[def.station]?.[0] ?? "Kaseye dokun, karıştır!"}</Text>
-              <View style={{ flexDirection: "row", gap: u * 0.7 }}>
-                {Array.from({ length: stirNeed }, (_, i) => <View key={i} style={{ width: u * 2.4, height: u * 2.4, borderRadius: 99, backgroundColor: i < stirs ? "#FFE08A" : "rgba(90,56,30,.35)", borderWidth: u * 0.3, borderColor: "#FFF4DE" }} />)}
-              </View>
-              <KBtn u={u} label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} />
-            </View>
-          ) : phase === "made" ? (
-            <KBtn u={u} label="🛎 Servis Et" sub={`${album.nameOf(cur.c.look)} bekliyor`} onPress={serve} />
-          ) : (
-            <>
-              {/* the ingredient jars on a shelf: tap to drop one into the bowl */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u0 * 0.7, paddingVertical: u * 0.8, borderRadius: u * 1.6, backgroundColor: WOOD.shelf }}>
-                {(Object.keys(game.ingredientsDef) as string[]).map((k) => {
-                  const d = game.ingredientsDef[k], stock = (game.ingredients[k] ?? 0) - (bowl[k] ?? 0), useful = (need[k] ?? 0) > (bowl[k] ?? 0);
-                  return (
-                    <Animated.View key={k} style={{ transform: [{ translateX: wrong === k ? shake.interpolate({ inputRange: [-1, 1], outputRange: [-u * 1.2, u * 1.2] }) : 0 }] }}>
-                      <Pressable onPress={() => add(k)} accessibilityRole="button" accessibilityLabel={`${d.name} ekle, ${stock} var`}
-                        style={({ pressed }) => ({ width: jar, height: jar, borderRadius: 99, alignItems: "center", justifyContent: "center", borderWidth: u * 0.45, borderColor: useful ? "#9CC46A" : "#D8BE92", backgroundColor: useful ? "#F4F8E8" : "#FFFDF6", opacity: stock > 0 ? 1 : 0.45,
-                          shadowColor: "#3B2412", shadowOpacity: 0.25, shadowRadius: u * 0.4, shadowOffset: { width: 0, height: u * 0.3 }, transform: [{ scale: pressed ? 0.88 : 1 }, { translateY: pressed ? u * 0.3 : 0 }] })}>
-                        <EmojiIcon emoji={d.icon} size={jar * 0.52} />
-                        <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{stock}</Text>
-                      </Pressable>
-                    </Animated.View>
-                  );
-                })}
-              </View>
-              {Object.keys(bowl).length ? <Btn small variant="plain" label="Kaseyi boşalt" onPress={() => { setBowl({}); act.sfx("tap"); }} /> : null}
-              {fromStock ? <Btn small variant="alt" label="Vitrinde hazır var: hemen ver" onPress={serve} /> : null}
-            </>
-          )}
-        </View>
+        </>
       ) : tickets.length ? (
-        <View style={{ alignItems: "center", gap: u * 1, paddingVertical: u * 3 }}>
-          <Text allowFontScaling={false} style={{ fontSize: u * 9 }}>👆</Text>
+        <View style={[paper, { position: "absolute", left: u0 * 8, right: u0 * 8, top: bowlCy - u * 10, alignItems: "center", gap: u * 0.6, padding: u * 1.6 }]}>
+          <Text allowFontScaling={false} style={{ fontSize: u * 7 }}>👆</Text>
           <Text allowFontScaling={false} style={{ textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>Bir sipariş fişi seç</Text>
           <Text allowFontScaling={false} style={{ textAlign: "center", color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.body) }}>Malzemeleri kaseye at, karıştır ve servis et.</Text>
         </View>
       ) : null}
 
-      <Btn small variant="plain" label="Makinede üret (tarif listesi)" onPress={onRecipes} />
-    </Sheet>
+      {/* the ingredient jars, standing in the six hollows of the shelf */}
+      {(Object.keys(game.ingredientsDef) as string[]).slice(0, 6).map((k, i) => {
+        const d = game.ingredientsDef[k], stock = (game.ingredients[k] ?? 0) - (bowl[k] ?? 0), useful = !!def && phase === "gather" && (need[k] ?? 0) > (bowl[k] ?? 0);
+        return (
+          <Animated.View key={k} style={{ position: "absolute", left: X(SLOTS[i]) - jarS / 2, top: Y(1252) - jarS * 0.62, width: jarS, alignItems: "center", transform: [{ translateX: wrong === k ? shake.interpolate({ inputRange: [-1, 1], outputRange: [-u * 1.2, u * 1.2] }) : 0 }] }}>
+            <Pressable onPress={() => add(k)} disabled={!def || phase !== "gather"} accessibilityRole="button" accessibilityLabel={`${d.name} ekle, ${stock} var`}
+              style={({ pressed }) => ({ width: jarS, height: jarS, borderRadius: jarS * 0.3, alignItems: "center", justifyContent: "center", borderWidth: u * 0.45, borderColor: useful ? "#9CC46A" : "#E4CFA8", backgroundColor: useful ? "#F4F8E8" : "#FFFAF0", opacity: stock > 0 ? 1 : 0.5,
+                shadowColor: "#3B2412", shadowOpacity: 0.35, shadowRadius: u * 0.5, shadowOffset: { width: 0, height: u * 0.4 }, transform: [{ scale: pressed ? 0.88 : useful ? 1.04 : 1 }, { translateY: pressed ? u * 0.3 : 0 }] })}>
+              <EmojiIcon emoji={d.icon} size={jarS * 0.56} />
+            </Pressable>
+            <View style={{ marginTop: -jarS * 0.16, minWidth: jarS * 0.5, paddingHorizontal: u * 0.6, borderRadius: 99, backgroundColor: "#8A5A36", borderWidth: u * 0.25, borderColor: "#FFF4DE", alignItems: "center" }}>
+              <Text allowFontScaling={false} style={{ color: "#FFF4DE", fontFamily: FONT.bold, fontSize: fs(u0, TYPE.small) }}>{stock}</Text>
+            </View>
+          </Animated.View>
+        );
+      })}
+
+      {/* the drawer: the main action */}
+      <View style={{ position: "absolute", left: u0 * 4, right: u0 * 4, top: drawerTop, bottom: u0 * 1.4, justifyContent: "center", gap: u0 * 0.8 }}>
+        {cur && def && phase === "stir" ? <KBtn u={u} label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} />
+          : cur && def && phase === "made" ? <KBtn u={u} label="🛎 Servis Et" sub={`${album.nameOf(cur.c.look)} bekliyor`} onPress={serve} />
+          : (
+            <View style={{ flexDirection: "row", gap: u0 * 1, flexWrap: "wrap", justifyContent: "center" }}>
+              {cur && Object.keys(bowl).length ? <Btn small variant="plain" label="Kaseyi boşalt" onPress={() => { setBowl({}); act.sfx("tap"); }} /> : null}
+              {fromStock ? <Btn small variant="alt" label="Vitrinde hazır: hemen ver" onPress={serve} /> : null}
+              <Btn small variant="plain" label="Makinede üret" onPress={onRecipes} />
+            </View>
+          )}
+      </View>
+    </View>
     </>
   );
 }
