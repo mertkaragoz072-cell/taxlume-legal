@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3),
   },
   statTextCol: { flexShrink: 1, minWidth: 0 },
-  statLabel: { color: "#5c3f26", fontFamily: FONT.bold, fontSize: TYPE.caption, marginBottom: 2 },
+  statLabel: { color: "#5c3f26", fontFamily: FONT.bold, fontSize: 11, marginBottom: 2 },
   statValueCompact: { fontSize: TYPE.title },
   statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   statBullet: { width: 12, height: 12 },
