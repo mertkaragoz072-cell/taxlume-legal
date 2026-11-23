@@ -9,6 +9,7 @@ import taxArt from "../../assets/ui/town/tax.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
 import { ScalePressable } from "./ScalePressable";
+import { SheetHeader } from "./SheetHeader";
 
 const INK = "#3d2415";
 const INK_SOFT = "#5a3d22";
@@ -46,52 +47,48 @@ interface PaintedProps {
   source: ImageSourcePropType;
   artW: number;
   artH: number;
+  /** the heading, drawn as the game's shared plaque over the painted banner */
+  title: string;
+  /** how much of the art's top (in art pixels) the painted banner takes up */
+  banner: number;
   children: (s: number) => React.ReactNode;
 }
 
+/** Height of the heading plaque that covers the painted banner: the banners
+ * are too small and sit crooked, so every panel wears the same plaque instead
+ * and only the part of the art below it shows. */
+const HEAD_H = 44;
+
 /** A painted panel at its own aspect ratio; children are laid out in the art's
  * own pixels (they receive the px-per-art-px scale). */
-function Painted({ source, artW, artH, children }: PaintedProps) {
+function Painted({ source, artW, artH, title, banner, children }: PaintedProps) {
   const [w, setW] = useState(360);
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
+  const s = w / artW;
+  const shift = HEAD_H - banner * s;
   return (
     <View
-      style={{ aspectRatio: artW / artH, alignSelf: "stretch", marginBottom: PANEL_GAP }}
+      style={{
+        height: (artH - banner) * s + HEAD_H,
+        alignSelf: "stretch",
+        marginBottom: PANEL_GAP,
+        overflow: "hidden",
+      }}
       onLayout={onLayout}
     >
-      <Image source={source} style={styles.fill} resizeMode="stretch" />
-      {children(w / artW)}
+      <View style={{ position: "absolute", left: 0, right: 0, top: shift, height: artH * s }}>
+        <Image source={source} style={styles.fill} resizeMode="stretch" />
+        {children(s)}
+      </View>
+      <View style={{ position: "absolute", left: 0, right: 0, top: 0, zIndex: 2 }}>
+        <SheetHeader text={plainTitle(title)} height={HEAD_H} />
+      </View>
     </View>
   );
 }
 
 function box(s: number, x: number, y: number, w: number, h: number) {
   return { position: "absolute" as const, left: x * s, top: y * s, width: w * s, height: h * s };
-}
-
-function Banner({
-  s,
-  text,
-  x,
-  y,
-  w,
-  h,
-}: {
-  s: number;
-  text: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  const size = fit(text, w, h * 0.55, 0.86);
-  return (
-    <View pointerEvents="none" style={[box(s, x, y, w, h), styles.center]}>
-      <Text style={[styles.banner, { fontSize: size * s }]} numberOfLines={1} accessibilityRole="header">
-        {text}
-      </Text>
-    </View>
-  );
 }
 
 /** A selectable (or plain) dark/gold slot, drawn like the sent art's wells. */
@@ -163,10 +160,9 @@ interface RankProps {
 
 export function RankPanel({ label, title, icon, nextIcon, nextLabel, pct }: RankProps) {
   return (
-    <Painted source={rankArt} artW={853} artH={247}>
+    <Painted title={label} banner={84} source={rankArt} artW={853} artH={247}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(label)} x={105} y={10} w={269} h={46} />
           <View style={[box(s, 338, 64, 70, 80), styles.center]}>
             <Text aria-hidden style={{ fontSize: 52 * s }}>
               {icon}
@@ -216,10 +212,9 @@ interface MoodProps {
 
 export function MoodPanel({ label, mood, emoji, index, indexLabel }: MoodProps) {
   return (
-    <Painted source={moodArt} artW={853} artH={200}>
+    <Painted title={label} banner={80} source={moodArt} artW={853} artH={200}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(label)} x={105} y={8} w={270} h={46} />
           {/* The art's own face is painted out; the live mood sits on a round
               wood-and-gold badge in its place. */}
           <View
@@ -282,10 +277,9 @@ interface HappyProps {
 
 export function HappinessPanel({ label, status, emoji, value, outOf, color }: HappyProps) {
   return (
-    <Painted source={happyArt} artW={853} artH={267}>
+    <Painted title={label} banner={84} source={happyArt} artW={853} artH={267}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(label)} x={105} y={8} w={270} h={46} />
           <View style={[box(s, 292, 70, 340, 80), { flexDirection: "row", alignItems: "center" }]}>
             <Text aria-hidden style={{ fontSize: 44 * s, marginRight: 10 * s }}>
               {emoji}
@@ -345,10 +339,9 @@ interface TaxProps {
 
 export function TaxPanel({ title, rateLabel, description, income, rates }: TaxProps) {
   return (
-    <Painted source={taxArt} artW={852} artH={535}>
+    <Painted title={title} banner={96} source={taxArt} artW={852} artH={535}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(title)} x={152} y={12} w={222} h={50} />
           <View style={[box(s, 360, 92, 425, 182), { justifyContent: "center" }]}>
             <Text
               style={[
@@ -428,10 +421,9 @@ interface BankProps {
 
 export function BankPanel({ title, description, cap, chipLabel, terms, info, rateLine, pills }: BankProps) {
   return (
-    <Painted source={bankArt} artW={852} artH={612}>
+    <Painted title={title} banner={100} source={bankArt} artW={852} artH={612}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(title)} x={165} y={12} w={209} h={50} />
           <View style={[box(s, 388, 90, 410, cap ? 150 : 190), { justifyContent: "center" }]}>
             <Text
               style={[
@@ -527,10 +519,9 @@ export function ChartPanel({
   children: (w: number, h: number) => React.ReactNode;
 }) {
   return (
-    <Painted source={chartArt} artW={853} artH={214}>
+    <Painted title={title} banner={66} source={chartArt} artW={853} artH={214}>
       {(s) => (
         <>
-          <Banner s={s} text={plainTitle(title)} x={92} y={10} w={282} h={42} />
           <View style={box(s, 62, 84, 750, 120)}>{children(750 * s, 120 * s)}</View>
         </>
       )}
@@ -541,7 +532,6 @@ export function ChartPanel({
 const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   center: { alignItems: "center", justifyContent: "center" },
-  banner: { color: GOLD, fontFamily: FONT.display, textAlign: "center", letterSpacing: 1 },
   display: { fontFamily: FONT.display },
   black: { fontFamily: FONT.black },
   small: { color: INK_SOFT, fontFamily: FONT.medium },

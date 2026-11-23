@@ -50,7 +50,7 @@ import { WorkerCard } from "../components/WorkerCard";
 import { WorkersLockedPanel } from "../components/WorkersLockedPanel";
 import { PerkCard, PointsLine } from "../components/PerkCard";
 import { PrestigePanel } from "../components/PrestigePanel";
-import { BUILDING_ART, EventRow, FactorRow, INK, INK_GREEN, TownItemCard } from "../components/TownCards";
+import { BUILDING_ART, EventRow, FactorRow, INK, TownItemCard } from "../components/TownCards";
 import { TownChatterTicker } from "../components/TownChatterTicker";
 import { happinessFor } from "../components/TownSquareScene";
 import { COLORS, SCREEN_PADDING, FONT, SPACING, TYPE } from "../theme";
@@ -528,41 +528,23 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         const badCount = state.eventLog.filter((e) => e.tone === "bad").length;
         const neutralCount = state.eventLog.length - goodCount - badCount;
         const shown = showAllEvents ? state.eventLog : state.eventLog.slice(0, 5);
-        // The filter bar's three icons are painted on the banner strip (853-px
-        // art, icon centres at 610 / 688 / 760); their counts sit just right.
         const counts = [
-          { x: 632, n: goodCount, color: INK_GREEN },
-          { x: 710, n: badCount, color: "#e8c777" },
-          { x: 782, n: neutralCount, color: "#f6e2a0" },
+          { mark: "✓", n: goodCount, color: "#2f7a3e", label: t("town.eventsGood") },
+          { mark: "!", n: badCount, color: "#b8741a", label: t("town.eventsBad") },
+          { mark: "i", n: neutralCount, color: "#2f6fb0", label: t("town.eventsNeutral") },
         ];
         return (
-          <StretchPanel
-            frame="events"
-            title={t("town.eventsSectionLabel")}
-            topOverlay={(w) =>
-              state.eventLog.length === 0
-                ? null
-                : counts.map((c) => (
-                    <Text
-                      key={c.x}
-                      pointerEvents="none"
-                      style={{
-                        position: "absolute",
-                        left: (c.x / 853) * w,
-                        top: (10 / 853) * w,
-                        width: (46 / 853) * w,
-                        height: (34 / 853) * w,
-                        lineHeight: (34 / 853) * w,
-                        fontSize: Math.max(10, (26 / 853) * w),
-                        color: c.color === INK_GREEN ? "#7fe39a" : c.color,
-                        fontFamily: FONT.black,
-                      }}
-                    >
-                      {c.n}
-                    </Text>
-                  ))
-            }
-          >
+          <StretchPanel frame="events" title={t("town.eventsSectionLabel")}>
+            {state.eventLog.length > 0 && (
+              <View style={styles.eventCounts}>
+                {counts.map((c) => (
+                  <View key={c.mark} style={styles.eventCount} accessibilityLabel={`${c.label}: ${c.n}`}>
+                    <Text style={[styles.eventCountMark, { color: c.color }]}>{c.mark}</Text>
+                    <Text style={[styles.eventCountNum, { color: c.color }]}>{c.n}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
             {state.eventLog.length === 0 && <Text style={styles.eventsEmpty}>{t("town.eventsEmpty")}</Text>}
             {shown.map((event, i) => (
               <EventRow
@@ -593,6 +575,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
 }
 
 const styles = StyleSheet.create({
+  eventCounts: { flexDirection: "row", justifyContent: "flex-end", gap: 14, marginBottom: 4 },
+  eventCount: { flexDirection: "row", alignItems: "center", gap: 4 },
+  eventCountMark: { fontFamily: FONT.black, fontSize: 14 },
+  eventCountNum: { fontFamily: FONT.black, fontSize: 15 },
   eventsEmpty: {
     color: INK,
     fontFamily: FONT.medium,

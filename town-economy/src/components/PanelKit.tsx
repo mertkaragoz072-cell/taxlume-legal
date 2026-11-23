@@ -15,6 +15,7 @@ import topUp from "../../assets/ui/town/top_up.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
 import { ScalePressable } from "./ScalePressable";
+import { SheetHeader } from "./SheetHeader";
 
 // All art is 853 wide; positions below are in those pixels and scale with the
 // rendered panel width.
@@ -78,54 +79,43 @@ function useBoxWidth(): [number, (e: LayoutChangeEvent) => void] {
   return [w, (e) => setW(e.nativeEvent.layout.width)];
 }
 
-/** The lettering for a banner: sized from its length so it stays on the
- * ribbon on any phone font. */
-export function bannerFontSize(text: string, boxW: number, boxH: number): number {
-  return Math.max(7, Math.min(boxH * 0.5, (boxW * 0.94) / (text.length * 0.84 + 1)));
-}
+/** Height of the heading plaque every panel wears. */
+const HEAD_H = 44;
 
 interface PanelProps {
   frame: FrameName;
   title: string;
   children: React.ReactNode;
-  /** extra content laid on the top slice (e.g. the events filter counts) */
-  topOverlay?: (w: number) => React.ReactNode;
   style?: { marginBottom?: number };
 }
 
-/** A painted parchment panel of any height: the banner/top frame, a stretchy
- * body and the bottom frame come from the sent Town art; the content is drawn
- * inside. */
-export function StretchPanel({ frame, title, children, topOverlay, style }: PanelProps) {
+/** A painted parchment panel of any height: the frame's top edge, a stretchy
+ * body and the bottom frame come from the sent Town art; the heading is the
+ * game's own plaque (the one every other screen uses), laid over the painted
+ * banner so every heading is the same size, straight and centred. */
+export function StretchPanel({ frame, title, children, style }: PanelProps) {
   const f: Frame = FRAMES[frame];
   const [w, onLayout] = useBoxWidth();
   const s = w / ART_W;
-  const size = bannerFontSize(title, f.title.w * s, f.title.h * s);
+  const topH = f.topH * s;
   return (
     <View style={[{ alignSelf: "stretch", marginBottom: PANEL_GAP }, style]} onLayout={onLayout}>
-      <View style={{ width: "100%", height: f.topH * s }}>
+      <View style={{ width: "100%", height: topH }}>
         <Image source={f.top} style={styles.fill} resizeMode="stretch" />
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: f.title.x * s,
-            top: f.title.y * s,
-            width: f.title.w * s,
-            height: f.title.h * s,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={[styles.bannerText, { fontSize: size }]} numberOfLines={1} accessibilityRole="header">
-            {title}
-          </Text>
-        </View>
-        {topOverlay?.(w)}
+      </View>
+      <View style={{ position: "absolute", left: 0, right: 0, top: 0, zIndex: 2 }}>
+        <SheetHeader text={title} height={HEAD_H} />
       </View>
       <View>
         <Image source={f.mid} style={styles.fill} resizeMode="stretch" />
-        <View style={{ paddingHorizontal: f.inset * s, paddingTop: 2 }}>{children}</View>
+        <View
+          style={{
+            paddingHorizontal: f.inset * s,
+            paddingTop: Math.max(2, HEAD_H - topH + 4),
+          }}
+        >
+          {children}
+        </View>
       </View>
       <View style={{ width: "100%", height: f.botH * s }}>
         <Image source={f.bot} style={styles.fill} resizeMode="stretch" />
@@ -184,7 +174,6 @@ export function GoldButton({ label, onPress, disabled, height = 34, accessibilit
 
 const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
-  bannerText: { color: "#f6e2a0", fontFamily: FONT.display, textAlign: "center", letterSpacing: 0.3 },
   btnLabel: {
     position: "absolute",
     top: 0,
