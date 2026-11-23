@@ -145,4 +145,15 @@ describe("tasks a new player can do", () => {
     for (let d = 1; d <= 60; d++) for (const q of pickDailyQuestTemplates(`s${d}`, 3, true)) seen.add(q.id);
     expect(seen.has("daily_caravan")).toBe(true);
   });
+
+  it("log small bonuses without raising a banner", () => {
+    const s = ready({ tick: 0, lastEvent: null });
+    const met = {
+      ...s,
+      productionQuotas: s.productionQuotas.map((q) => ({ ...q, target: 0.001, bonus: 1 })),
+    };
+    const next = tick(met);
+    expect(next.eventLog.some((e) => e.key === "msg.quotaMet")).toBe(true);
+    expect(next.lastEvent === null || next.lastEvent.key !== "msg.quotaMet").toBe(true);
+  });
 });

@@ -346,6 +346,8 @@ export const INTERRUPTION_COOLDOWN_TICKS = 30;
  * villager, rival offer, crisis or flash deal turns up, so the first trades are
  * made at the player's own pace instead of between pop-ups. */
 export const NEWBIE_GRACE_TICKS = 60;
+/** A production-quota bonus below this many coins is logged without a banner. */
+export const QUOTA_BANNER_MIN_BONUS = 10;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.

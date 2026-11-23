@@ -106,7 +106,7 @@ export function ResearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
   row: { flexDirection: "row", alignItems: "flex-start", gap: PANEL_GAP - 4 },
   cards: { flex: 1, minWidth: 0 },
 });

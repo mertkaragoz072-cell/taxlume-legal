@@ -92,6 +92,7 @@ import {
   LOST_TREASURE_PCT_OF_CASH,
   MAX_PRICE_STEP_PCT,
   MINI_QUEST_CHANCE,
+  QUOTA_BANNER_MIN_BONUS,
   NEWBIE_GRACE_TICKS,
   MINI_QUEST_FIRST_DELAY_TICKS,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
@@ -931,6 +932,7 @@ export function tick(state: EconomyState): EconomyState {
 
   // Award bonuses for completed quotas
   let quotaBonusCash = 0;
+  const quietEventIds = new Set<number>();
   for (const quota of state.productionQuotas) {
     // Only for goods the town can actually trade: a "Paper target reached" bonus
     // on day one, for a good that is still behind a locked door, means nothing
@@ -939,6 +941,10 @@ export function tick(state: EconomyState): EconomyState {
     const produced = productionToday[quota.goodId] ?? 0;
     if (produced >= quota.target && state.productionToday[quota.goodId] < quota.target) {
       quotaBonusCash += quota.bonus;
+      // A few coins for one good is bookkeeping, not news: it goes in the
+      // event log but does not pop a banner over the screen (fourteen goods
+      // used to mean fourteen banners a day).
+      if (quota.bonus < QUOTA_BANNER_MIN_BONUS) quietEventIds.add(nextId);
       newEvents.push({
         id: nextId++,
         ...eventFields(state.language, "msg.quotaMet", {
@@ -950,7 +956,8 @@ export function tick(state: EconomyState): EconomyState {
     }
   }
 
-  const lastEvent = newEvents.length > 0 ? newEvents[newEvents.length - 1] : state.lastEvent;
+  const loud = newEvents.filter((e) => !quietEventIds.has(e.id));
+  const lastEvent = loud.length > 0 ? loud[loud.length - 1] : state.lastEvent;
   const eventLog =
     newEvents.length > 0
       ? [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP)
