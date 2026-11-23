@@ -191,7 +191,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   const X = (ix: number) => ox + ix * sc, Y = (iy: number) => oy + iy * sc;
   const SLOTS = [137, 287, 437, 588, 737, 887], jarS = Math.min(118 * sc, (box.w - u0 * 4) / 6.4);
   const [cardH, setCardH] = useState(u * 18);
-  const counterTop = Y(560), drawerTop = Y(1338), bowlTop = counterTop + u0 * 1 + cardH + u0 * 1.4, bowlW = Math.min(box.w * 0.6, Math.max(u * 26, (Y(1150) - bowlTop - u * 6) * 2)), bowlCy = bowlTop + bowlW * 0.32;
+  const counterTop = Y(560), drawerTop = Y(1338), bowlTop = counterTop + u0 * 1 + cardH + u0 * 1.4, jarTop = Y(1252) - jarS * 0.62, bowlW = Math.max(u0 * 24, Math.min(box.w * 0.6, (jarTop - bowlTop - u * 8.5) / 0.84)), bowlCy = bowlTop + bowlW * 0.42;   // the bowl (and the stir hint under it) ends above the jars
   const paper = { backgroundColor: "rgba(255,248,234,.96)", borderRadius: u * 1.4, borderWidth: u * 0.3, borderColor: "#E2C69B" };
   const shadowText = { textShadowColor: "#5E3A20", textShadowRadius: u * 0.6, textShadowOffset: { width: 0, height: u * 0.15 } };
 
@@ -247,21 +247,25 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
           </View>
 
           {/* the bowl on the counter (tap it to stir), or the finished product */}
-          <View style={{ position: "absolute", left: 0, right: 0, top: bowlCy - bowlW * 0.32, alignItems: "center" }}>
+          <View style={{ position: "absolute", left: 0, right: 0, top: bowlCy - bowlW * 0.42, alignItems: "center" }}>
             {phase === "made" ? (
-              <View style={{ gap: u * 0.3, alignItems: "center", marginTop: -u * 5 }}><Pop emojis={made.map((id) => game.productsDef[id].icon)} u={u} /><Stars n={rateStars} label={rateText} u={u} /></View>
+              <View style={{ gap: u * 0.3, alignItems: "center", marginTop: u * 1 }}><Pop emojis={made.map((id) => game.productsDef[id].icon)} u={u} /><Stars n={rateStars} label={rateText} u={u} /></View>
             ) : (
               <Pressable onPress={stir} disabled={phase !== "stir"} accessibilityRole="button" accessibilityLabel={phase === "stir" ? `Karıştır, ${stirs}/${stirNeed}` : "Kase"}>
-                <View style={{ position: "absolute", left: bowlW * 0.06, right: bowlW * 0.06, bottom: -bowlW * 0.04, height: bowlW * 0.1, borderRadius: 999, backgroundColor: "rgba(70,40,20,.16)" }} />
-                <Animated.View style={{ width: bowlW, height: bowlW * 0.5, borderBottomLeftRadius: bowlW * 0.5, borderBottomRightRadius: bowlW * 0.5, borderTopLeftRadius: bowlW * 0.1, borderTopRightRadius: bowlW * 0.1, backgroundColor: "#F6E8CC", borderWidth: u * 0.7, borderColor: phase === "stir" ? "#FFE08A" : "#A9774A", alignItems: "center", justifyContent: "center", padding: u, overflow: "hidden",
+                <View style={{ position: "absolute", left: bowlW * 0.12, right: bowlW * 0.12, bottom: -bowlW * 0.02, height: bowlW * 0.09, borderRadius: 999, backgroundColor: "rgba(70,40,20,.2)" }} />
+                {/* the painted bowl (assets/game/kitchen-bowl.webp, 700 x 587); what is in it shows inside its opening */}
+                <Animated.View style={{ width: bowlW, height: bowlW * 587 / 700,
                   transform: [{ rotate: wob.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["0deg", "-3deg", "0deg"] }) }, { scale: spin.interpolate({ inputRange: [0, 0.3, 1], outputRange: [1, 1.05, 1] }) }] }}>
-                  <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: bowlW * 0.06, height: bowlW * 0.05, backgroundColor: "rgba(184,95,59,.55)" }} />
-                  {made.length && phase === "gather" && !Object.keys(bowl).length
-                    ? <View style={{ flexDirection: "row", gap: u }}>{made.map((id, i) => <EmojiIcon key={i} emoji={game.productsDef[id].icon} size={u * 8} />)}</View>
-                    : <Animated.View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u * 0.3, transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] }) }] }}>
-                        {Object.entries(bowl).flatMap(([k, n]) => Array.from({ length: n }, (_, i) => <Drop key={`${k}${i}`} emoji={game.ingredientsDef[k].icon} size={u * 5} />))}
-                      </Animated.View>}
-                  {phase === "gather" && !Object.keys(bowl).length && !made.length ? <Text allowFontScaling={false} style={{ color: "#A9774A", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>Kase boş:{"\n"}raftaki malzemelere dokun</Text> : null}
+                  <Image source={ASSET_MODULES["assets/kitchen-bowl.webp"]} style={{ position: "absolute", left: 0, top: 0, width: bowlW, height: bowlW * 587 / 700 }} />
+                  {phase === "stir" ? <View pointerEvents="none" style={{ position: "absolute", left: bowlW * 0.2, right: bowlW * 0.2, top: bowlW * 0.2, height: bowlW * 0.2, borderRadius: 999, backgroundColor: "rgba(255,224,138,.35)" }} /> : null}
+                  <View style={{ position: "absolute", left: bowlW * 0.14, right: bowlW * 0.14, top: bowlW * 0.1, height: bowlW * 0.3, alignItems: "center", justifyContent: "center" }}>
+                    {made.length && phase === "gather" && !Object.keys(bowl).length
+                      ? <View style={{ flexDirection: "row", gap: u }}>{made.map((id, i) => <EmojiIcon key={i} emoji={game.productsDef[id].icon} size={u * 8} />)}</View>
+                      : <Animated.View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u * 0.3, transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] }) }] }}>
+                          {Object.entries(bowl).flatMap(([k, n]) => Array.from({ length: n }, (_, i) => <Drop key={`${k}${i}`} emoji={game.ingredientsDef[k].icon} size={u * 5} />))}
+                        </Animated.View>}
+                    {phase === "gather" && !Object.keys(bowl).length && !made.length ? <Text allowFontScaling={false} style={{ color: "#A9774A", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>Kase boş</Text> : null}
+                  </View>
                 </Animated.View>
                 {phase === "stir" ? Array.from({ length: stirs }, (_, i) => <Puff key={i} steam={def.station === "coffee"} u={u} seed={i + step * 7} />) : null}
               </Pressable>
@@ -285,7 +289,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
       ) : null}
 
       {/* the ingredient jars, standing in the six hollows of the shelf */}
-      {(Object.keys(game.ingredientsDef) as string[]).slice(0, 6).map((k, i) => {
+      {phase === "made" ? null : (Object.keys(game.ingredientsDef) as string[]).slice(0, 6).map((k, i) => {   // (the result moment has the counter to itself)
         const d = game.ingredientsDef[k], stock = (game.ingredients[k] ?? 0) - (bowl[k] ?? 0), useful = !!def && phase === "gather" && (need[k] ?? 0) > (bowl[k] ?? 0);
         return (
           <Animated.View key={k} style={{ position: "absolute", left: X(SLOTS[i]) - jarS / 2, top: Y(1252) - jarS * 0.62, width: jarS, alignItems: "center", transform: [{ translateX: wrong === k ? shake.interpolate({ inputRange: [-1, 1], outputRange: [-u * 1.2, u * 1.2] }) : 0 }] }}>
