@@ -32,6 +32,7 @@ import {
 } from "./crises";
 import { EVENT_TEMPLATES } from "./events";
 import { MENTOR_DONE } from "./mentor";
+import { expireMerchantOffer, makeMerchantOffer, MERCHANT_CHANCE, merchantMayAppear } from "./merchantOffer";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
 import {
   propertyHappinessBonus,
@@ -358,12 +359,10 @@ export function tick(state: EconomyState): EconomyState {
   // Never while something else is asking for the player's attention (a
   // decision, a villager, a rival's offer, the tutorial), only after the
   // breather that follows the last one, and never the same one twice in a row.
+  const nothingWaiting =
+    !pendingDecision && !pendingRequest && !pendingRivalOffer && state.mentorStep >= MENTOR_DONE;
   const quietForQuest =
-    !pendingDecision &&
-    !pendingRequest &&
-    !pendingRivalOffer &&
-    state.mentorStep >= MENTOR_DONE &&
-    state.tick + 1 >= (state.miniQuestCooldownTick ?? MINI_QUEST_FIRST_DELAY_TICKS);
+    nothingWaiting && state.tick + 1 >= (state.miniQuestCooldownTick ?? MINI_QUEST_FIRST_DELAY_TICKS);
   if (!activeMiniQuest && quietForQuest && Math.random() < MINI_QUEST_CHANCE) {
     const candidates = MINI_QUEST_TEMPLATES.filter(
       (tpl) => (!tpl.requiresTrade || state.tradeUnlocked) && tpl.id !== state.lastMiniQuestId
@@ -388,6 +387,25 @@ export function tick(state: EconomyState): EconomyState {
         tone: "neutral",
       });
     }
+  }
+
+  // The travelling merchant: an optional gift for watching an ad. Same quiet
+  // rules as a flash quest (nothing waiting on the player, tutorial over), and
+  // a long breather between visits.
+  let merchantOffer = state.merchantOffer ?? null;
+  let merchantCooldownTick = state.merchantCooldownTick;
+  const afterExpiry = expireMerchantOffer(state);
+  if (afterExpiry !== state) {
+    merchantOffer = afterExpiry.merchantOffer ?? null;
+    merchantCooldownTick = afterExpiry.merchantCooldownTick;
+  }
+  if (
+    !merchantOffer &&
+    nothingWaiting &&
+    merchantMayAppear({ ...state, merchantOffer, merchantCooldownTick }) &&
+    Math.random() < MERCHANT_CHANCE
+  ) {
+    merchantOffer = makeMerchantOffer(state, nextId++);
   }
 
   // The demand cycle rolls over on its own fixed schedule (unlike the random
@@ -994,6 +1012,8 @@ export function tick(state: EconomyState): EconomyState {
     pendingRivalOffer,
     lastInterruptionTick,
     activeMiniQuest,
+    merchantOffer,
+    merchantCooldownTick,
     activeSeasonalEvent,
     activeFlashDeal,
     demandCycle,

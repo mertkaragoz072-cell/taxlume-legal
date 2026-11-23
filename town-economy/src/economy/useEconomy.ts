@@ -31,6 +31,7 @@ import {
 } from "./townFestival";
 import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
+import { claimMerchantOffer, dismissMerchantOffer } from "./merchantOffer";
 import { finishDueImprovements, ImprovementKind, skipImprovement, startImprovement } from "./construction";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
 import { deviceLanguage } from "../i18n/deviceLanguage";
@@ -256,6 +257,8 @@ type Action =
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
+  | { type: "CLAIM_MERCHANT_OFFER" }
+  | { type: "DISMISS_MERCHANT_OFFER" }
   | { type: "DISMISS_MERVE_RANK_UP" }
   | { type: "RESOLVE_DECISION"; optionId: string }
   | { type: "RESOLVE_REQUEST"; give: boolean }
@@ -1525,6 +1528,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return setTaxRate(state, action.rate);
     case "OFFLINE_ADVANCE":
       return offlineAdvance(state, action.ticks, action.elapsedMs);
+    case "CLAIM_MERCHANT_OFFER":
+      return claimMerchantOffer(state);
+    case "DISMISS_MERCHANT_OFFER":
+      return dismissMerchantOffer(state);
     case "DISMISS_OFFLINE_SUMMARY":
       return dismissOfflineSummary(state);
     case "DISMISS_MERVE_RANK_UP":
@@ -1742,6 +1749,8 @@ export function useEconomy() {
     []
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
+  const claimMerchantOffer_ = useCallback(() => dispatch({ type: "CLAIM_MERCHANT_OFFER" }), []);
+  const dismissMerchantOffer_ = useCallback(() => dispatch({ type: "DISMISS_MERCHANT_OFFER" }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
   const dismissMerveRankUp = useCallback(() => dispatch({ type: "DISMISS_MERVE_RANK_UP" }), []);
   const dismissDailyBonus = useCallback(() => dispatch({ type: "DISMISS_DAILY_BONUS" }), []);
@@ -1828,6 +1837,8 @@ export function useEconomy() {
     tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
+    claimMerchantOffer: claimMerchantOffer_,
+    dismissMerchantOffer: dismissMerchantOffer_,
     dismissMerveRankUp,
     dismissDailyBonus,
     resolveDecision: resolveDecision_,

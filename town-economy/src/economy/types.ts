@@ -377,6 +377,9 @@ export interface EconomyState {
   activeMiniQuest: MiniQuestInstance | null;
   /** no new flash quest before this tick, so they come in a rhythm, not a flood */
   miniQuestCooldownTick?: number;
+  /** a travelling merchant's offer of coins for watching an ad (see merchantOffer.ts) */
+  merchantOffer?: import("./merchantOffer").MerchantOffer | null;
+  merchantCooldownTick?: number;
   /** the flash quest that ran last, so the same one does not come twice in a row */
   lastMiniQuestId?: string;
   /** times the player has cashed in a run for a permanent bonus (see PRESTIGE

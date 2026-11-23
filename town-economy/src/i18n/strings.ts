@@ -993,6 +993,13 @@ export const STRINGS = {
       },
     },
     build: { adSkip: "📺 −5 dk", adFinish: "📺 Bitir" },
+    merchant: {
+      title: "Gezgin Tüccar",
+      offer: "Kısa bir reklam izlersen sana {reward} 🪙 hediye ederim.",
+      watch: "📺 İzle  +{reward} 🪙",
+      no: "Hayır, sağ ol",
+      seconds: "{seconds} sn",
+    },
     ads: {
       mockTitle: "Reklam (deneme)",
       mockNote: "Gerçek bir reklam ağı bağlı değil; bu bir deneme reklamıdır.",
@@ -1877,6 +1884,7 @@ export const STRINGS = {
       guildCaravanLoaded: "🐪 Lonca kervanına {qty} {icon} {good} yükledin.",
       guildCaravanReward: "🐪 Lonca kervanı kazancı: hazineye {amount} girdi!",
       improvementDone: "✅ {name} tamamlandı!",
+      merchantGift: "🧳 Gezgin tüccarın hediyesi: +{reward} 🪙",
       guildReward: "🏆 Lonca sandığı açıldı: hazineye {amount} girdi!",
       eraDecreeUpgrade: "📜 Ferman uygulandı: {icon} {upgrade} bir seviye yükseldi!",
       eraDecreeUpgradeMaxed: "📜 {icon} {upgrade} zaten en üst seviyede; hazineye {amount} girdi.",
@@ -2916,6 +2924,13 @@ export const STRINGS = {
       },
     },
     build: { adSkip: "📺 −5 min", adFinish: "📺 Finish" },
+    merchant: {
+      title: "Travelling Merchant",
+      offer: "Watch a short ad and I will give you {reward} 🪙.",
+      watch: "📺 Watch  +{reward} 🪙",
+      no: "No, thanks",
+      seconds: "{seconds}s",
+    },
     ads: {
       mockTitle: "Ad (test)",
       mockNote: "No real ad network is connected; this is a test ad.",
@@ -3780,6 +3795,7 @@ export const STRINGS = {
       guildCaravanLoaded: "🐪 You loaded {qty} {icon} {good} onto the guild caravan.",
       guildCaravanReward: "🐪 Guild caravan earnings: {amount} went to the treasury!",
       improvementDone: "✅ {name} is finished!",
+      merchantGift: "🧳 The travelling merchant's gift: +{reward} 🪙",
       guildReward: "🏆 Guild chest opened: {amount} went to the treasury!",
       eraDecreeUpgrade: "📜 Decree enacted: {icon} {upgrade} rose one level!",
       eraDecreeUpgradeMaxed: "📜 {icon} {upgrade} is already at its peak; {amount} went to the treasury.",
