@@ -1,7 +1,7 @@
 // Keşif (portrait, painted board): the card under the map for the selected region, as in the reference picture: a picture of the place, its name
 // and story, the possible rewards, the duration, the gold it pays and one button that follows the expedition's state.
 import React, { useState } from "react";
-import { Pressable } from "react-native";
+import { Pressable, ScrollView } from "react-native";
 import { Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatDuration } from "../game/exploration.js";
@@ -22,7 +22,8 @@ export function ExploreBoardPanel({ selected, onSelect }: { selected: string | n
   const { width } = useWindowDimensions();
   useRefresh(500);
   const insets = useSafeAreaInsets(), [stripH, setStripH] = useState(0);
-  const top = useBoardTop() - insets.top + width * BOARD_ASPECT - u * 1;            // (this view is inside the safe-area box)
+  const scene = world.scenes.explore as any;
+  const report = (y: number) => { const px = insets.top + y; if (Math.abs((scene.bottomPx ?? 0) - px) > 1) scene.bottomPx = px; };   // the map reaches down to the card
   const id = selected ?? (world.scenes.explore as any).defaultSelection();
   const d = ex.region(id), st = ex.status(id) as string, a = ex.active;
   if (!d) return null;
@@ -40,11 +41,12 @@ export function ExploreBoardPanel({ selected, onSelect }: { selected: string | n
   const box = { flexDirection: "row" as const, alignItems: "center" as const, gap: u * 1, minHeight: Math.max(44, u * 8), paddingHorizontal: u * 1.4, borderRadius: u * 2.4, borderWidth: u * 0.3, borderColor: C.honeyLight, backgroundColor: C.paper };
   const small = { color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) };
   return (
-    <View pointerEvents="box-none" style={{ position: "absolute", left: u * 1.6, right: u * 1.6, top, bottom: navHeight(u) + u * 1.2, zIndex: 16, gap: u * 1.2 }}>
-    <View onLayout={(e) => setStripH(e.nativeEvent.layout.height)} style={{ flex: 1, justifyContent: "center", paddingTop: u * 1.4 }}>
-      {stripH >= u * 14 ? <RegionStrip selected={id} onSelect={onSelect} room={stripH} /> : null}
+    <View pointerEvents="box-none" onLayout={(e) => report(e.nativeEvent.layout.y + stripH)} style={{ position: "absolute", left: 0, right: 0, bottom: navHeight(u) + u * 1.2, zIndex: 16, gap: u * 0.8 }}>
+    {/* the regions: one row along the map's lower edge (swipe for more) */}
+    <View onLayout={(e) => setStripH(e.nativeEvent.layout.height)}>
+      <RegionStrip selected={id} onSelect={onSelect} />
     </View>
-    <View style={{ padding: u * 1.6, gap: u * 1.2, borderRadius: u * 3, borderWidth: u * 0.6, borderColor: "#8A5A36", backgroundColor: C.cream, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: u * 1.5, shadowOffset: { width: 0, height: u * 0.6 }, elevation: 6 }}>
+    <View style={{ marginHorizontal: u * 1.6, padding: u * 1.6, gap: u * 1.2, borderRadius: u * 3, borderWidth: u * 0.6, borderColor: "#8A5A36", backgroundColor: C.cream, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: u * 1.5, shadowOffset: { width: 0, height: u * 0.6 }, elevation: 6 }}>
       <View style={{ flexDirection: "row", gap: u * 1.4 }}>
         <View style={{ borderRadius: u * 2, borderWidth: u * 0.4, borderColor: C.honeyDark, overflow: "hidden", opacity: st === "locked" ? 0.7 : 1 }}>
           <GameIcon id={`xr-${d.id}`} size={u * 19} style={{ width: u * 19, height: u * 13.3 }} />
@@ -75,19 +77,14 @@ export function ExploreBoardPanel({ selected, onSelect }: { selected: string | n
 }
 
 /** All regions in a row (when the screen has room for it): picture, name and state; a tap selects one, like a tap on the map. */
-function RegionStrip({ selected, onSelect, room }: { selected: string; onSelect: (id: string) => void; room: number }) {
+function RegionStrip({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
   const { world, act } = useWorld(), u = useU();
   const { width } = useWindowDimensions();
-  const ex = world.exploration, n = (ex.regions as any[]).length;
-  // Two rows of three big tiles when there is room for them, else one row of small ones; names may take two lines (never cut).
-  const avail = width - u * 3.2, gap = u * 1;
-  const one = (avail - gap * (n - 1)) / n;                                     // one row of all regions
-  const fit = Math.min((avail - gap * 2) / 3, ((room - gap - u * 2) / 2 - u * 8.6) / 0.7 + u * 1.2);   // two rows of three, as big as the room allows
-  const tw = fit > one * 1.15 ? fit : one, pic = tw - u * 1.2;
-  const nf = Math.min(fs(u, TYPE.tiny), (tw - u * 1.2) / 5.6);                // small tiles: a smaller name, so a word like "Harabeler" is never cut
+  const ex = world.exploration;
+  const tw = Math.max(u * 15, Math.min(u * 19, (width - u * 4) / 4.4)), pic = tw - u * 1.2, nf = fs(u, TYPE.tiny);   // about four tiles in view, the rest a swipe away
   const mark = (st: string, done: boolean) => (st === "locked" ? "lock" : st === "ready" ? "gift" : st === "active" ? "timer" : done ? "check" : null);
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap, maxWidth: tw > one ? tw * 3 + gap * 2 + 1 : undefined, alignSelf: "center" }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1, paddingHorizontal: u * 1.6, paddingVertical: u * 0.4 }}>
       {(ex.regions as any[]).map((r) => {
         const st = ex.status(r.id) as string, on = r.id === selected, icon = mark(st, ex.timesDone(r.id) > 0);
         return (
@@ -101,6 +98,6 @@ function RegionStrip({ selected, onSelect, room }: { selected: string; onSelect:
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }

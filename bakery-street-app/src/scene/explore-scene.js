@@ -10,7 +10,7 @@ const BOARD_W = 1024, BOARD_H = 853;                                            
 
 export class ExploreScene {
   /** @param {import('../game/exploration.js').Exploration} exploration */
-  constructor(exploration) { this.id = 'explore'; this.ex = exploration; this.t = 0; this.view = null; this.selected = null; this.pressedId = null; this.bg = null; this.bgKey = ''; this.topPx = 0; }   // topPx: set by the app, where the board starts on screen (below the top bar)
+  constructor(exploration) { this.id = 'explore'; this.ex = exploration; this.t = 0; this.view = null; this.selected = null; this.pressedId = null; this.bg = null; this.bgKey = ''; this.topPx = 0; this.bottomPx = 0; }   // bottomPx: where the map ends on screen (the card's top; 0 = not known yet)   // topPx: set by the app, where the board starts on screen (below the top bar)
   resize(view) { this.view = view; this.bgKey = ''; this.panX = null; }
   update(dt) {
     this.t += dt;
@@ -33,7 +33,18 @@ export class ExploreScene {
   }
   /** Portrait with the painted board (assets/explore-board.webp): the board fills the width right under the top bar. */
   usesBoard() { return !!this.view?.portrait && !!getImage('explore-board'); }
-  board() { const v = this.view, s = v.vw / BOARD_W; return { s, ox: 0, oy: this.topPx / v.scale }; }
+  board() {
+    // the map covers the screen from under the top bar down to the card: scaled to fill that height (the sides may be cut a little, the regions
+    // stay well inside), never narrower than the screen
+    const v = this.view, top = this.topPx / v.scale, bottom = this.bottomPx ? this.bottomPx / v.scale : top + v.vw * BOARD_H / BOARD_W;
+    // every region marker (x 240..790 on the map, plus a margin) must stay on screen, so the map grows only as far as that allows
+    const maxS = v.vw / (790 - 240 + 2 * 110);
+    const s = Math.max(v.vw / BOARD_W, Math.min(maxS, (bottom - top + 20) / (BOARD_H * 0.97)));
+    const cx = (240 + 790) / 2;                                                     // the regions' middle sits in the screen's middle
+    const ox = Math.min(0, Math.max(v.vw - BOARD_W * s, v.vw / 2 - cx * s));
+    const h = BOARD_H * s, room = bottom - top + 20, oy = h < room ? top + (room - h) / 2 - 10 : top - BOARD_H * 0.03 * s;
+    return { s, ox, oy };
+  }
 
   hitTest(x, y) {
     if (this.usesBoard()) {
@@ -109,18 +120,16 @@ export class ExploreScene {
 
   /** The painted board, its title, and one marker per region: lock, open, on an expedition (timer), reward waiting, done (tick); the selected one gets the paw pin. */
   renderBoard(ctx) {
-    const v = this.view, k = v.scale * v.dpr, t = this.t, { s, oy } = this.board(), img = getImage('explore-board');
+    const v = this.view, k = v.scale * v.dpr, t = this.t, { s, ox, oy } = this.board(), img = getImage('explore-board');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.setTransform(k, 0, 0, k, 0, 0);
     const sky = ctx.createLinearGradient(0, 0, 0, oy + 40); sky.addColorStop(0, '#A9D8FB'); sky.addColorStop(1, '#8CC8F4');
     ctx.fillStyle = sky; ctx.fillRect(-10, -10, v.vw + 20, oy + 60);
-    const wood = ctx.createLinearGradient(0, oy + BOARD_H * s - 20, 0, v.vh); wood.addColorStop(0, '#8A5A36'); wood.addColorStop(1, '#6E4529');
+    const wood = ctx.createLinearGradient(0, oy + BOARD_H * s - 20, 0, v.vh); wood.addColorStop(0, '#5E8A3A'); wood.addColorStop(1, '#4A6E2C');   // grass under the map (behind the card)
     ctx.fillStyle = wood; ctx.fillRect(-10, oy + BOARD_H * s - 20, v.vw + 20, v.vh);
-    ctx.strokeStyle = 'rgba(60,36,20,0.35)'; ctx.lineWidth = 3;                      // wooden planks under the board
-    for (let py = oy + BOARD_H * s + 40; py < v.vh; py += 70) { ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(v.vw, py); ctx.stroke(); }
-    ctx.drawImage(img, 0, oy, BOARD_W * s, BOARD_H * s);
-    ctx.save(); ctx.translate(0, oy); ctx.scale(s, s);
+    ctx.drawImage(img, ox, oy, BOARD_W * s, BOARD_H * s);
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(s, s);
     ctx.font = fontCss('800 54px "Trebuchet MS", system-ui, sans-serif'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = PAL.brownDark; ctx.fillText('Keşif', 540, 78);
     const sel = this.selected ?? this.defaultSelection();
