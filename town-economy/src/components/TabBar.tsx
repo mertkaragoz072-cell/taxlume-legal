@@ -43,7 +43,8 @@ export function TabBar({ active, onChange, spotlight = null, muted = false, bott
   const { width: windowWidth } = useWindowDimensions();
   const slot = Math.min(windowWidth, CONTENT_MAX_WIDTH) / TABS.length;
   const badgeSize = Math.max(34, Math.min(44, Math.floor(slot - 4)));
-  const labelSize = slot < 50 ? 9 : slot < 54 ? TYPE.micro : TYPE.caption;
+  // fixed sizes, not theme tokens: seven labels share one row, and "Araştırma" is the longest
+  const labelSize = slot < 50 ? 9 : slot < 54 ? 10 : 11;
   // A slow breath rather than a blink: the tour holds on one tab for as
   // long as the player takes to read a sentence, and anything faster turns
   // into a flicker sitting under the text they are reading.

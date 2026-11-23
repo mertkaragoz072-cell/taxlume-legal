@@ -227,22 +227,19 @@ export function AchievementsScreen() {
             const reached = i <= now;
             const theme = rankTheme(i);
             return (
-              <View
-                key={i}
-                style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 5 }}
-              >
-                <Text style={{ fontSize: 26, opacity: reached ? 1 : 0.45 }}>
-                  {reached ? townRankIcon(i) : "🔒"}
-                </Text>
-                <View style={{ flex: 1 }}>
+              <View key={i} style={[styles.eraRow, i === now && styles.eraRowNow]}>
+                <View style={[styles.eraChip, { opacity: reached ? 1 : 0.7 }]}>
+                  <Text style={{ fontSize: 22 }}>{reached ? townRankIcon(i) : "🔒"}</Text>
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
-                    style={[styles.summaryBig, { fontSize: 15, color: reached ? theme.accent : "#9a8a70" }]}
+                    style={[styles.eraName, { color: reached ? theme.accent : "#d8cba8" }]}
                     numberOfLines={1}
                   >
                     {t(townRankNameKey(i))}
                     {i === now ? `  ·  ${t("achievements.eraPathNow")}` : ""}
                   </Text>
-                  <Text style={styles.summaryLabel} numberOfLines={2}>
+                  <Text style={styles.eraSub} numberOfLines={2}>
                     {reached
                       ? t(eraTitleKey(i))
                       : t("achievements.eraPathLocked", { amount: formatCoins(townRankThreshold(i), 0) })}
@@ -673,6 +670,27 @@ export function AchievementsScreen() {
 const READ = "#dccfae";
 
 const styles = StyleSheet.create({
+  eraRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
+    borderRadius: 14,
+  },
+  eraRowNow: { backgroundColor: "rgba(246,226,160,0.1)" },
+  eraChip: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.38)",
+    borderWidth: 1,
+    borderColor: "rgba(246,226,160,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  eraName: { fontFamily: FONT.display, fontSize: 17, letterSpacing: 0.4 },
+  eraSub: { color: "#eadcb6", fontFamily: FONT.medium, fontSize: 14, lineHeight: 19, marginTop: 1 },
   body: { padding: SCREEN_PADDING, paddingBottom: 40 },
   summaryCard: {
     borderRadius: RADIUS.feature,

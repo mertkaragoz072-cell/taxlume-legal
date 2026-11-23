@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
-  counter: { color: "#6b5f4d", fontSize: 10, textAlign: "right", marginTop: 4, marginBottom: 14 },
+  counter: { color: "#a89c82", fontSize: 12, textAlign: "right", marginTop: 4, marginBottom: 14 },
   emblemSectionLabel: {
     color: COLORS.textMuted,
     fontSize: TYPE.micro,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 2,
   },
-  emblemDisclaimer: { color: "#6b5f4d", fontSize: TYPE.micro, marginBottom: SPACING.sm },
+  emblemDisclaimer: { color: "#a89c82", fontSize: TYPE.micro, marginBottom: SPACING.sm },
   emblemGrid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginBottom: SPACING.xs },
   emblemChip: {
     width: 44,
