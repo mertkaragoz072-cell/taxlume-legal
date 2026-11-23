@@ -259,6 +259,10 @@ export interface DailyProgress {
   profitMade: number;
   goodsHeld: number;
   tradeStreak: number;
+  /** goods bought / goods sold / investment trades today (older saves lack them) */
+  buys?: number;
+  sells?: number;
+  investTrades?: number;
 }
 
 export interface DailyQuest {
@@ -371,6 +375,10 @@ export interface EconomyState {
   dailyQuests: DailyQuest[];
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */
   activeMiniQuest: MiniQuestInstance | null;
+  /** no new flash quest before this tick, so they come in a rhythm, not a flood */
+  miniQuestCooldownTick?: number;
+  /** the flash quest that ran last, so the same one does not come twice in a row */
+  lastMiniQuestId?: string;
   /** times the player has cashed in a run for a permanent bonus (see PRESTIGE
    * in useEconomy.ts) — survives every reset, including a plain difficulty restart */
   prestigeLevel: number;

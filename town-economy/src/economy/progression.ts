@@ -26,6 +26,8 @@ import { EconomyEvent, EconomyState } from "./types";
 import {
   EVENT_LOG_CAP,
   LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+  MINI_QUEST_COOLDOWN_DONE_TICKS,
+  MINI_QUEST_COOLDOWN_EXPIRED_TICKS,
   MYTHIC_UNLOCK_LEGENDARY_POINTS,
   WORKERS_UNLOCK_NET_WORTH,
 } from "./constants";
@@ -348,6 +350,8 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
       ...state,
       cash: state.cash + mq.reward,
       activeMiniQuest: null,
+      miniQuestCooldownTick: state.tick + MINI_QUEST_COOLDOWN_DONE_TICKS,
+      lastMiniQuestId: mq.templateId,
       nextId: state.nextId + 1,
       lastEvent: event,
       eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
@@ -366,6 +370,8 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
     return {
       ...state,
       activeMiniQuest: null,
+      miniQuestCooldownTick: state.tick + MINI_QUEST_COOLDOWN_EXPIRED_TICKS,
+      lastMiniQuestId: mq.templateId,
       nextId: state.nextId + 1,
       lastEvent: event,
       eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),

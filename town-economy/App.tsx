@@ -32,6 +32,7 @@ import { DifficultyModal } from "./src/components/DifficultyModal";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { EventBanner } from "./src/components/EventBanner";
 import { FlashDealBanner } from "./src/components/FlashDealBanner";
+import { MiniQuestStrip } from "./src/components/MiniQuestStrip";
 import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
 import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
@@ -464,6 +465,9 @@ function Game() {
             they are preparing — market, trade or town hall. */}
             <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
             <FlashDealBanner deal={state.activeFlashDeal} tick={state.tick} />
+            {screen !== "achievements" && !mentorActive && (
+              <MiniQuestStrip onOpen={() => setScreen("achievements")} />
+            )}
             <EventBanner event={state.lastEvent} language={state.language} />
             <ComboBanner event={comboEvent} />
             <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />

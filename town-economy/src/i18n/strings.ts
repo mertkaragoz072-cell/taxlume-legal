@@ -1687,6 +1687,13 @@ export const STRINGS = {
       flash_quick_profit: { title: "Fırsat Çıktı", description: "{target} 🪙 hızla kazan!" },
       flash_holding_goods: { title: "Depo Dolu", description: "{target} ürün elinde tut!" },
       flash_streak: { title: "Seri Zafer", description: "Art arda {target} kârlı ticaret yap!" },
+      flash_buy: { title: "Pazar Turu", description: "Pazardan bir şey satın al!" },
+      flash_sell: { title: "Tezgâh Açık", description: "Elindeki bir ürünü sat!" },
+      flash_sell_3: { title: "Satış Hızı", description: "{target} satış yap!" },
+      flash_invest: {
+        title: "Yatırım Fırsatı",
+        description: "Yatırım sekmesinden bir alım ya da satım yap!",
+      },
     },
     weeklyChallenge: {
       weekly_trader: { title: "Haftanın Tüccarı", description: "Bu hafta {target} alım-satım yap." },
@@ -3579,6 +3586,10 @@ export const STRINGS = {
       flash_quick_profit: { title: "Quick Profit", description: "Earn {target} 🪙 fast!" },
       flash_holding_goods: { title: "Full Warehouse", description: "Hold {target} goods in inventory!" },
       flash_streak: { title: "Win Streak", description: "Make {target} profitable trades in a row!" },
+      flash_buy: { title: "Market Round", description: "Buy something at the market!" },
+      flash_sell: { title: "Stall Open", description: "Sell something you hold!" },
+      flash_sell_3: { title: "Selling Spree", description: "Make {target} sales!" },
+      flash_invest: { title: "Investor's Chance", description: "Buy or sell something in the Invest tab!" },
     },
     weeklyChallenge: {
       weekly_trader: { title: "Trader of the Week", description: "Make {target} trades this week." },

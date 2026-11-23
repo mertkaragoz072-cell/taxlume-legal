@@ -31,6 +31,7 @@ import {
   rollCrisisTemplate,
 } from "./crises";
 import { EVENT_TEMPLATES } from "./events";
+import { MENTOR_DONE } from "./mentor";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
 import {
   propertyHappinessBonus,
@@ -91,6 +92,7 @@ import {
   LOST_TREASURE_PCT_OF_CASH,
   MAX_PRICE_STEP_PCT,
   MINI_QUEST_CHANCE,
+  MINI_QUEST_FIRST_DELAY_TICKS,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRICE_JITTER_PCT,
   PRODUCTION_BONUS_FACTOR,
@@ -350,8 +352,19 @@ export function tick(state: EconomyState): EconomyState {
   // Mini quests run passively alongside everything else, so they don't
   // check pendingDecision/pendingRequest — only that none is already active.
   let activeMiniQuest: EconomyState["activeMiniQuest"] = state.activeMiniQuest;
-  if (!activeMiniQuest && Math.random() < MINI_QUEST_CHANCE) {
-    const candidates = MINI_QUEST_TEMPLATES.filter((tpl) => !tpl.requiresTrade || state.tradeUnlocked);
+  // Never while something else is asking for the player's attention (a
+  // decision, a villager, a rival's offer, the tutorial), only after the
+  // breather that follows the last one, and never the same one twice in a row.
+  const quietForQuest =
+    !pendingDecision &&
+    !pendingRequest &&
+    !pendingRivalOffer &&
+    state.mentorStep >= MENTOR_DONE &&
+    state.tick + 1 >= (state.miniQuestCooldownTick ?? MINI_QUEST_FIRST_DELAY_TICKS);
+  if (!activeMiniQuest && quietForQuest && Math.random() < MINI_QUEST_CHANCE) {
+    const candidates = MINI_QUEST_TEMPLATES.filter(
+      (tpl) => (!tpl.requiresTrade || state.tradeUnlocked) && tpl.id !== state.lastMiniQuestId
+    );
     if (candidates.length > 0) {
       const template = candidates[Math.floor(Math.random() * candidates.length)];
       activeMiniQuest = {

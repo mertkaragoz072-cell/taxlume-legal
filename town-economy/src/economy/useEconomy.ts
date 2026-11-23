@@ -509,7 +509,11 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
         [traderId]: updatedTraderRep,
       },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
-      dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
+      dailyProgress: {
+        ...state.dailyProgress,
+        trades: state.dailyProgress.trades + 1,
+        buys: (state.dailyProgress.buys ?? 0) + 1,
+      },
     };
   }
 
@@ -585,6 +589,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,
+      sells: (state.dailyProgress.sells ?? 0) + 1,
       cashEarned: state.dailyProgress.cashEarned + proceeds + bonus,
     },
   };
@@ -606,7 +611,11 @@ function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell",
       cash: state.cash - cost,
       assets: { ...state.assets, [assetId]: { ...as, holding, avgCost } },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
-      dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
+      dailyProgress: {
+        ...state.dailyProgress,
+        trades: state.dailyProgress.trades + 1,
+        investTrades: (state.dailyProgress.investTrades ?? 0) + 1,
+      },
     };
   }
 
@@ -658,6 +667,7 @@ function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell",
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,
+      investTrades: (state.dailyProgress.investTrades ?? 0) + 1,
       cashEarned: state.dailyProgress.cashEarned + proceeds + bonus,
     },
   };

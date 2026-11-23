@@ -345,7 +345,14 @@ export const INTERRUPTION_COOLDOWN_TICKS = 30;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.
-export const MINI_QUEST_CHANCE = 0.04;
+export const MINI_QUEST_CHANCE = 0.25;
+/** A flash quest comes in a rhythm: once one ends there is a breather first,
+ * longer when it ran out unnoticed (the player is busy or away) than when it
+ * was done, then a new one turns up within a few ticks. */
+export const MINI_QUEST_COOLDOWN_DONE_TICKS = 16; // ~48 s
+export const MINI_QUEST_COOLDOWN_EXPIRED_TICKS = 30; // ~90 s
+/** The very first one waits a little so a new game is not interrupted. */
+export const MINI_QUEST_FIRST_DELAY_TICKS = 20;
 // Much rarer than a mini quest — a seasonal event runs far longer (tens of
 // ticks) so overlapping spawns would just mean "always some price boost
 // active," which defeats the "special occasion" feel (see seasonalEvents.ts).
