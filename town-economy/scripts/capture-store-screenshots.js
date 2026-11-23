@@ -99,6 +99,14 @@ async function main() {
   // Boot once with empty storage to get a real initialState to patch.
   const probe = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: SCALE });
   await probe.goto(APP_URL, { waitUntil: "networkidle" });
+  // The game only writes a save once the title screen has been left (an
+  // untouched default state is not worth keeping), so press the button first.
+  await probe
+    .getByText(/^(BAŞLA|START)$/, { exact: true })
+    .click({ timeout: 30_000 })
+    .catch((err) => {
+      throw new Error("could not leave the title screen to get a save", { cause: err });
+    });
   await probe.waitForFunction((k) => localStorage.getItem(k) !== null, SAVE_KEY, { timeout: 90_000 });
   const raw = await probe.evaluate((k) => localStorage.getItem(k), SAVE_KEY);
   await probe.close();
