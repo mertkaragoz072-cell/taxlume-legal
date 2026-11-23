@@ -1,17 +1,19 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "../components/AppText";
-import titleArt from "../../assets/title/title-v3.webp";
-import { BigButton } from "../components/ModalKit";
+import titleEn from "../../assets/title/title-en.webp";
+import titleTr from "../../assets/title/title-tr.webp";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
 import { FONT } from "../theme";
 
-// The sent title painting, 941 x 1672: the Golden Town sign (the game's name,
-// the same in both languages) over the village, with the studio mark at the
-// foot. Only the pieces that change are drawn live on top of it: the button,
-// the language chip and the line about a saved town. Positions are in the
-// art's own pixels and follow it as it scales.
+// The sent title paintings, 941 x 1672, one per language: the Golden Town sign
+// (the game's name, the same in both) over the village, the start button
+// painted in the language's own word, the studio mark at the foot. Only what
+// changes is drawn live on top: the button's touch area, the language chip and
+// the line about a saved town. Positions are in the art's own pixels and
+// follow it as it scales.
+const ART = { tr: titleTr, en: titleEn } as const;
 const AW = 941;
 const AH = 1672;
 
@@ -61,7 +63,7 @@ export function TitleScreen({ onStart }: Props) {
   return (
     <View style={styles.root}>
       <Image
-        source={titleArt}
+        source={ART[state.language]}
         style={[styles.fill, { width, height }]}
         resizeMode="cover"
         accessibilityRole="header"
@@ -94,7 +96,7 @@ export function TitleScreen({ onStart }: Props) {
         </Pressable>
 
         {hydrated && inProgress ? (
-          <View style={[box(110, 1128, 830, 1190), styles.center]} pointerEvents="none">
+          <View style={[box(110, 1262, 830, 1322), styles.center]} pointerEvents="none">
             <View style={styles.saveChip}>
               <Text style={styles.saveLine} numberOfLines={1}>
                 {t("title.saveLine", {
@@ -107,15 +109,24 @@ export function TitleScreen({ onStart }: Props) {
           </View>
         ) : null}
 
-        <View style={box(165, 1205, 775, 1330)}>
-          <BigButton laurel label={label} onPress={onStart} disabled={!hydrated} />
-        </View>
+        {/* The button is in the painting; this is its touch area. Its label is
+            there for screen readers and is drawn transparent. */}
+        <Pressable
+          style={[box(215, 1335, 725, 1485), styles.center]}
+          onPress={onStart}
+          disabled={!hydrated}
+          accessibilityRole="button"
+          accessibilityLabel={label}
+        >
+          <Text style={styles.hiddenLabel}>{label}</Text>
+        </Pressable>
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  hiddenLabel: { color: "transparent", fontSize: 14 },
   root: { flex: 1, backgroundColor: "#180f09" },
   fill: { position: "absolute", top: 0, left: 0 },
   center: { alignItems: "center", justifyContent: "center" },
