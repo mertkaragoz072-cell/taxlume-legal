@@ -129,6 +129,9 @@ async function main() {
       // capture takes minutes, and a save that looks minutes old trips the
       // "while you were away" summary, which then covers the tab bar.
       state.lastSavedAt = Date.now();
+      // Already opened today: the seed says "yesterday" (a returning player),
+      // which would put the daily wheel over the tab bar in every frame.
+      state.streak = { ...state.streak, lastOpenedDate: new Date().toISOString().slice(0, 10) };
       if (shot.patch) shot.patch(state);
 
       const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: SCALE });
