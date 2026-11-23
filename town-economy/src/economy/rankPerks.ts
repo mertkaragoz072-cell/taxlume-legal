@@ -4,6 +4,7 @@ import {
   BULK_CONTRACT_SLOTS_PER_RANK,
   CONTRACT_SLOTS_PER_RANK,
   RANK_GOAL_REWARD_SCALE_PER_RANK,
+  GUILD_UNLOCK_RANK,
   RESEARCH_TIER3_UNLOCK_RANK,
   TOWN_RANK_LOAN_CAP_BONUS_PER_RANK,
   TOWN_RANK_PRODUCTION_BONUS_PER_RANK,
@@ -39,6 +40,8 @@ export function rankGainLines(from: number, to: number, t: T): string[] {
   if (RESEARCH_TIER3_UNLOCK_RANK > from && RESEARCH_TIER3_UNLOCK_RANK <= to) {
     lines.push(t("rankGain.research"));
   }
+
+  if (GUILD_UNLOCK_RANK > from && GUILD_UNLOCK_RANK <= to) lines.push(t("rankGain.guild"));
 
   const slots = (per: number) => Math.floor(to / per) - Math.floor(from / per);
   const contracts = slots(CONTRACT_SLOTS_PER_RANK);

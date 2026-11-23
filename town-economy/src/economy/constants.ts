@@ -123,6 +123,8 @@ export const WORKER_SLOTS_PER_RANK = 3;
 // tier3(). Reaching "Kingdom", the rank right after workers (Capital)
 // open up, continuing the same one-new-thing-per-rank cadence.
 export const RESEARCH_TIER3_UNLOCK_RANK = 6;
+/** The rank (index) at which guilds open: City, two promotions in. */
+export const GUILD_UNLOCK_RANK = 2;
 // Time-limited goals (daily/mini quests, the weekly challenge, rival
 // bounties) used to hand out the exact same target and reward regardless
 // of rank — "make 3 trades today" never got harder or more lucrative no

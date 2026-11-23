@@ -796,6 +796,7 @@ export const STRINGS = {
     guild: {
       title: "Lonca",
       soon: "Arkadaşlarınla lonca kurmak çok yakında!",
+      locked: "Lonca, kasaban {rank} rütbesine ulaşınca açılır.",
       loading: "Yükleniyor…",
       cardNone: "Arkadaşlarınla bir lonca kur ya da bir koda katıl.",
       cardIn: "{name} · bu hafta {done}/{goal} işlem",
@@ -1019,6 +1020,7 @@ export const STRINGS = {
     rankGain: {
       good: "{icon} {good} artık alınıp satılıyor",
       research: "🔬 Üçüncü kademe araştırmalar açıldı",
+      guild: "🛡️ Lonca açıldı: arkadaşlarınla birlikte oyna",
       contracts: "📜 +{n} sözleşme yuvası",
       bulk: "📦 +{n} toplu sözleşme yuvası",
       auto: "⚙️ +{n} otomatik alım-satım kuralı",
@@ -2710,6 +2712,7 @@ export const STRINGS = {
     guild: {
       title: "Guild",
       soon: "Guilds with your friends are coming soon!",
+      locked: "Guilds open when your town reaches the rank of {rank}.",
       loading: "Loading…",
       cardNone: "Start a guild with your friends, or join one with a code.",
       cardIn: "{name} · {done}/{goal} trades this week",
@@ -2933,6 +2936,7 @@ export const STRINGS = {
     rankGain: {
       good: "{icon} {good} can now be traded",
       research: "🔬 Tier-3 research unlocked",
+      guild: "🛡️ Guilds unlocked: play together with friends",
       contracts: "📜 +{n} contract slot",
       bulk: "📦 +{n} bulk contract slot",
       auto: "⚙️ +{n} auto-trade rule",

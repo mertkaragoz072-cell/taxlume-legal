@@ -23,6 +23,7 @@ import { ERAS, eraTitleKey } from "../economy/eras";
 import { useGuild } from "../guild/GuildContext";
 import { rankGainLines } from "../economy/rankPerks";
 import { rankTheme } from "../economy/rankTheme";
+import { GUILD_UNLOCK_RANK } from "../economy/constants";
 import { townRankIcon, townRankNameKey, townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { GOODS } from "../economy/goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "../economy/miniQuests";
@@ -60,6 +61,7 @@ type ImportFeedback = { type: "success" | "error"; text: string };
 export function AchievementsScreen() {
   const { state, netWorth, t, hydrate, formatCoins } = useEconomyContext();
   const guildCtx = useGuild();
+  const guildLocked = state.townRankIndex < GUILD_UNLOCK_RANK && guildCtx.status !== "in";
   // See MarketScreen's identical comment: a hook instead of a module-level
   // Dimensions.get() snapshot, which on native can be taken before the
   // bridge reports the real window size and then never self-corrects.
@@ -202,25 +204,27 @@ export function AchievementsScreen() {
       <GoalRibbon text={t("guild.title")} />
       <GoalFrame lit={guildCtx.status === "in"}>
         <Pressable
-          disabled={guildCtx.status === "unavailable" || guildCtx.status === "loading"}
+          disabled={guildLocked || guildCtx.status === "unavailable" || guildCtx.status === "loading"}
           onPress={guildCtx.openHub}
           accessibilityRole="button"
           accessibilityLabel={t("guild.title")}
           style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
         >
-          <Text style={{ fontSize: 30 }}>🛡️</Text>
+          <Text style={{ fontSize: 30 }}>{guildLocked ? "🔒" : "🛡️"}</Text>
           <Text style={[styles.summaryLabel, { flex: 1, marginBottom: 0 }]}>
-            {guildCtx.status === "unavailable"
-              ? t("guild.soon")
-              : guildCtx.status === "in" && guildCtx.guild
-                ? t("guild.cardIn", {
-                    name: guildCtx.guild.name,
-                    done: Math.min(guildCtx.guild.goalProgress, guildCtx.guild.goalTarget),
-                    goal: guildCtx.guild.goalTarget,
-                  })
-                : t("guild.cardNone")}
+            {guildLocked
+              ? t("guild.locked", { rank: townRankTitle(GUILD_UNLOCK_RANK, t) })
+              : guildCtx.status === "unavailable"
+                ? t("guild.soon")
+                : guildCtx.status === "in" && guildCtx.guild
+                  ? t("guild.cardIn", {
+                      name: guildCtx.guild.name,
+                      done: Math.min(guildCtx.guild.goalProgress, guildCtx.guild.goalTarget),
+                      goal: guildCtx.guild.goalTarget,
+                    })
+                  : t("guild.cardNone")}
           </Text>
-          {guildCtx.status !== "unavailable" && <Text style={styles.summaryBig}>›</Text>}
+          {!guildLocked && guildCtx.status !== "unavailable" && <Text style={styles.summaryBig}>›</Text>}
         </Pressable>
       </GoalFrame>
 

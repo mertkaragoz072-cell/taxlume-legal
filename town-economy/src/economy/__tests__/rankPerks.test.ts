@@ -4,6 +4,7 @@ import {
   effectiveWorkerMaxPerGood,
   storageCapacity,
 } from "../formulas";
+import { GUILD_UNLOCK_RANK } from "../constants";
 import { rankGainLines } from "../rankPerks";
 import { rankTheme } from "../rankTheme";
 import { initialState } from "../useEconomy";
@@ -57,5 +58,15 @@ describe("rankTheme", () => {
   it("keeps Golden Age ranks apart too", () => {
     const looks = [8, 9, 10, 11, 12, 13].map((i) => rankTheme(i).atmosphere.tint);
     expect(new Set(looks).size).toBe(6);
+  });
+});
+
+describe("guild unlock", () => {
+  it("is announced on the promotion that opens guilds, and only then", () => {
+    const has = (from: number, to: number) => rankGainLines(from, to, t).includes("rankGain.guild");
+    expect(has(GUILD_UNLOCK_RANK - 1, GUILD_UNLOCK_RANK)).toBe(true);
+    expect(has(GUILD_UNLOCK_RANK - 2, GUILD_UNLOCK_RANK)).toBe(true);
+    expect(has(GUILD_UNLOCK_RANK, GUILD_UNLOCK_RANK + 1)).toBe(false);
+    expect(has(0, GUILD_UNLOCK_RANK - 1)).toBe(false);
   });
 });
