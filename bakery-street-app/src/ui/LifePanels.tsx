@@ -217,6 +217,7 @@ export function StoryLine({ look }: { look: string }) {
 const HELP: [string, string, string][] = [
   ["🥐", "Üretim", "Fırına, kahve makinesine ya da tezgâha dokun ve ürün seç. Makine meşgulken 3 ürünü sıraya ekleyebilirsin; sırası gelen kendiliğinden başlar, sen oyunda olmasan da."],
   ["☕", "Servis", "Müşteri oturunca sipariş balonu çıkar. Ürün vitrinde varsa garson götürür; acelen varsa müşteriye dokunup kendin servis et. Bazı müşteriler iki ürünlü set menü ister."],
+  ["👨‍🍳", "Usta Şef", "Seviye 7'den sonra Mağaza › Genişletme'den bir usta şef işe al: bekleyen siparişleri makinede kendisi pişirir. Sonraki kademelerde vitrini hazır tutar ve eksik malzemeyi Market'ten alır. Makine panelinden molaya gönderebilirsin."],
   ["🥣", "Mutfak tezgâhı", "Üretim tezgâhına dokun: bekleyen siparişlerden birini seç, malzemeleri kaseye koy, hazırla ve servis et. İstersen hepsini garsona ve makinelere bırakabilirsin."],
   ["📋", "Günün menüsü", "Görevler'den her gün bir ürün seç: o gün daha sık sipariş edilir ve biraz daha çok kazandırır."],
   ["💛", "Dostluk ve hikâyeler", "Aynı müşteriye servis ettikçe dostluk kalpleri dolar: her kalp ödül ve daha çok bahşiş getirir. Albümde her müşterinin 3 bölümlük hikâyesi var."],

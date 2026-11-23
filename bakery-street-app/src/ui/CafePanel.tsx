@@ -30,6 +30,7 @@ export function CafePanel({ id, side }: { id: string; side: "left" | "right" }) 
   const products = (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => game.isUnlocked(pid) && (id === "counter" || d.station === id));
   return (
     <Sheet title={TITLE[id]} hint={HINT[id] + stationNote} side={side} lowered={side === "left"} onClose={act.closePanel}>
+      {game.stationsDef[id] || id === "counter" ? <ChefCard /> : null}
       {id === "showcase" ? <Showcase /> : id === "storage" ? <Storage /> : id === "upgrades" ? <Upgrades /> : <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 1.2 }}>{products.map(([pid, d]) => <RecipeTile key={pid} pid={pid} d={d} />)}</View>}
       {id === "oven" || id === "coffee" || id === "counter" ? (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => !game.isUnlocked(pid) && (id === "counter" || d.station === id)).map(([pid, d]) => <LockedRecipe key={pid} pid={pid} d={d} />) : null}
       {id === "upgrades" ? <Btn label="◀ Geri" variant="alt" onPress={act.closePanel} style={{ alignSelf: "stretch" }} /> : null}
@@ -117,6 +118,29 @@ function LockedRecipe({ pid, d }: { pid: string; d: any }) {
       <Title name={d.name} note="Kilitli tarif" />
       <Meta text={`⏱ ${formatTime(game.duration(pid))} · 💰 ${fmt(eco.customer)} müşteri · maliyet ${fmt(eco.cost)} · net ${fmt(eco.customerNet)}`} />
       {v && v.missing.length ? <Meta tone="muted" text={`Gerekli: ${v.missing.map((m: any) => m.text).join(" · ")}`} /> : <Meta tone="reward" text="Altının yetiyorsa Mağaza'dan açabilirsin." />}
+    </Card>
+  );
+}
+
+/** The head chef (an upgrade): what they do at their level, a break switch, or where to hire one. */
+function ChefCard() {
+  const { world, act } = useWorld();
+  const game = world.game, u = useU(), lv = game.chefLevel() as number, def = game.upgradesDef.headChef;
+  if (!def) return null;
+  if (!lv) {
+    const need = def.minLevels?.[0] ?? 1, locked = world.progression.level < need;
+    return (
+      <Card tone="locked" left={<EmojiIcon emoji="👨‍🍳" size={u * 7} />} right={<Btn small variant="alt" label={locked ? `Seviye ${need}` : "Mağazada"} sub={`💰 ${fmt(def.costs[0])}`} onPress={() => { act.closePanel(); act.openShop("expansion"); }} />}>
+        <Title name="Usta Şef" note="işe alınmadı" />
+        <Meta tone="muted" text={`Seviye ${need}'den sonra bir usta şef işe al: siparişleri makinede kendisi pişirir.`} />
+      </Card>
+    );
+  }
+  return (
+    <Card tone={game.chefOn ? "open" : undefined} left={<EmojiIcon emoji="👨‍🍳" size={u * 7} />}
+      right={<Btn small label={game.chefOn ? "Çalışıyor" : "Molada"} variant={game.chefOn ? "go" : "busy"} onPress={() => { const on = game.setChef(!game.chefOn); act.sfx("tap"); act.toast(on ? "👨‍🍳 Usta Şef işe döndü" : "👨‍🍳 Usta Şef molada: üretim senin elinde", 1800); }} />}>
+      <Title name={`Usta Şef · Sv ${lv}`} note={game.chefOn ? "otomatik pişiriyor" : "molada"} />
+      <Meta text={def.describe(lv)} />
     </Card>
   );
 }

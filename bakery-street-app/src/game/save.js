@@ -108,7 +108,7 @@ export function validate(raw, game) {
   }
   const queueMax = game.cafe ? game.cafe.cfg.queueMax + (shop ? game.shop.queueBonusFor(shop.owned) : 0) : 0;     // the waiting area the SAVED shop state has bought, not the one in memory now
   const cafe = game.cafe ? validateCafe(raw.cafe, game, game.cafe.cfg, game.cafe.looks, queueMax) : null;
-  return { gold: raw.gold, gems, profile, ingredients, products, jobs, queue, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, life, achievements, branch, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
+  return { gold: raw.gold, gems, profile, ingredients, products, jobs, queue, chefOn: raw.chefOn !== false, upgrades, stats, quests, daily, progression, town, research, exploration, shop, album, till, goals, life, achievements, branch, cafe: cafe?.state, cafeRepaired: cafe?.repaired ?? 0 };
 }
 
 export class SaveManager {

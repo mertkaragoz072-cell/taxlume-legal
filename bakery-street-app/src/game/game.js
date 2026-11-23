@@ -37,6 +37,8 @@ export class Game {
     /** station id -> [product id] waiting for a free slot (ingredients already taken); see queueProduction */
     this.queue = {};
     this.queueMax = data.queueMax ?? LIFE.queue.max;
+    this.chefOn = true;                // the head chef works (the player can send them on a break)
+    this.chefAt = 0;
     this.listeners = {};
   }
 
@@ -326,6 +328,7 @@ export class Game {
       }
     }
     for (const station of Object.keys(this.queue)) this.startQueued(station);     // a slot freed some other way (a bigger machine bought)
+    this.runChef();
   }
 
   /** Starts up to `n` units of one product in a row (stops at the first refusal). Returns { started, message } (message = why it stopped early, if it did). */
@@ -338,6 +341,48 @@ export class Game {
     }
     return { started, message };
   }
+
+  // ---- the head chef (upgrade headChef): cooks by themselves -----------------------------------------------------------------
+  /** Head chef level now (0 = none hired). */
+  chefLevel() { return this.upgradesDef.headChef ? this.upgrades.headChef ?? 0 : 0; }
+  /**
+   * The chef looks at the kitchen (about every 2 seconds): level 1 starts what waiting guests ordered and is not in stock or under way,
+   * level 2 also keeps 3 of every product ready, level 3 also buys missing ingredients (never below a 500 gold reserve). Only free machine
+   * slots are used (the player's waiting line stays the player's). Returns how many jobs were started.
+   */
+  runChef(force = false) {
+    const lv = this.chefLevel();
+    if (!lv || !this.chefOn) return 0;
+    const now = this.clock();
+    if (!force && now - this.chefAt < 2000 && now >= this.chefAt) return 0;
+    this.chefAt = now;
+    const want = {};                                              // product -> units wanted in stock or under way
+    for (const o of this.cafe?.openOrders() ?? []) {
+      if (o.id === this.cafe.handOrder) continue;                  // the player is making that one by hand
+      for (const id of this.cafe.orderItems(o)) want[id] = (want[id] ?? 0) + 1;
+    }
+    if (lv >= 2) {                                                 // keeps 2 ready of what guests have been ordering lately (and the dish of the day): no waste on what nobody asks for
+      const recent = new Set((this.cafe?.orders ?? []).slice(-12).flatMap((o) => this.cafe.orderItems(o)));
+      const dish = this.life?.dish(); if (dish) recent.add(dish);
+      for (const id of recent) if (this.isUnlocked(id)) want[id] = Math.max(want[id] ?? 0, Math.min(2, this.showcaseLimit()));
+    }
+    let started = 0;
+    for (const [id, n] of Object.entries(want)) {
+      const st = this.productsDef[id].station;
+      for (let k = 0; k < 6 && this.committed(id) < n && this.jobsOf(st).length < this.capacity(st); k++) {
+        if (lv >= 3 && this.missingFor(id).length) {
+          const miss = this.missingFor(id), cost = miss.reduce((s, m) => s + this.ingredientPrice(m.id) * (m.need - m.have), 0);
+          if (this.player.gold - cost < 500 || !miss.every((m) => this.marketDef.items.includes(m.id))) break;
+          for (const m of miss) if (!this.buyIngredient(m.id, m.need - m.have, true).ok) break;
+        }
+        if (!this.startProduction(id).ok) break;
+        started++;
+      }
+    }
+    if (started) this.emit('chef', { started });
+    return started;
+  }
+  setChef(on) { this.chefOn = !!on; this.emit('change', { type: 'chef', on: this.chefOn }); return this.chefOn; }
 
   /** Kitchen helper (upgrade): when a machine finishes work, the last product made there is started again if its ingredients and room are there. Never buys anything. */
   repeatLast(station) {
@@ -391,6 +436,7 @@ export class Game {
       products: { ...this.products },
       jobs: Object.fromEntries(Object.entries(this.jobs).map(([st, list]) => [st, list.map((j) => ({ product: j.product, startedAt: j.startedAt, duration: j.duration }))])),
       queue: Object.fromEntries(Object.entries(this.queue).map(([st, list]) => [st, [...list]])),
+      chefOn: this.chefOn,
       upgrades: { ...this.upgrades },
       stats: JSON.parse(JSON.stringify(this.stats)),
       ...(this.quests ? { quests: this.quests.exportState() } : {}),
@@ -418,6 +464,7 @@ export class Game {
     this.jobs = Object.fromEntries(Object.entries(state.jobs).map(([st, list]) => [st, list.map((j) => ({ ...j }))]));
     this.upgrades = { ...state.upgrades };
     this.queue = Object.fromEntries(Object.entries(state.queue ?? {}).map(([st, list]) => [st, [...list]]));
+    this.chefOn = state.chefOn !== false;
     this.stats = JSON.parse(JSON.stringify(state.stats));
     this.profile = { name: state.profile?.name ?? '' };
     this.quests?.importState(state.quests);

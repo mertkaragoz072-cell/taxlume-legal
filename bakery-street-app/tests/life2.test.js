@@ -177,3 +177,33 @@ test('kitchen counter: a product made by hand takes its ingredients, is ready at
   w.game.products.bread = 999; w.game.ingredients.flour = 2;
   assert.ok(w.game.handMake('bread').ok, 'the showcase limit does not apply: it goes straight to a guest');
 });
+
+test('head chef: level 1 cooks what waiting guests ordered, level 2 keeps recent orders ready, level 3 buys ingredients but keeps a reserve; can be sent on a break', () => {
+  const w = make({ level: 20 });
+  const g = w.game;
+  for (const k of Object.keys(g.ingredients)) g.ingredients[k] = 30;
+  for (const k of Object.keys(g.products)) g.products[k] = 0;
+  assert.equal(g.runChef(true), 0, 'no chef hired: nothing happens');
+  g.player.gold = 1e6;
+  assert.ok(g.buyUpgrade('headChef').ok);
+  const c = w.cafe.arrive(); w.cafe.seatQueued(); const o = w.cafe.orderOf(c); o.product = 'croissant'; delete o.extra;
+  assert.equal(g.runChef(true), 1);
+  assert.ok(g.jobsOf('oven').some((j) => j.product === 'croissant'));
+  assert.equal(g.runChef(true), 0, 'already under way: not made twice');
+  g.setChef(false); w.cafe.arrive(); w.cafe.seatQueued();
+  assert.equal(g.runChef(true), 0, 'on a break');
+  g.setChef(true);
+  // level 3: no flour, the chef buys it (and stops at the reserve)
+  g.buyUpgrade('headChef'); g.buyUpgrade('headChef');
+  assert.equal(g.chefLevel(), 3);
+  g.jobs = {}; g.queue = {};
+  g.ingredients.flour = 0; g.ingredients.butter = 0;
+  g.runChef(true);
+  assert.ok(g.jobsOf('oven').length > 0, 'it bought what it needed and started');
+  g.jobs = {}; g.ingredients.flour = 0; g.ingredients.butter = 0; g.player.gold = 510;
+  g.runChef(true);
+  assert.ok(g.player.gold >= 500, 'never below the reserve');
+  // saved: the break switch
+  g.setChef(false);
+  assert.equal(g.exportState().chefOn, false);
+});

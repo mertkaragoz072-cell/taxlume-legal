@@ -200,6 +200,10 @@ export const UPGRADES = {
     name: 'Mutfak yardımcısı', icon: '👩‍🍳', costs: [3500], values: [0, 1],
     describe: (v) => (v ? 'Bir makine işini bitirince en son yaptığın ürünü, malzeme varsa kendiliğinden yeniden başlatır' : 'Yok'),
   },
+  headChef: {
+    name: 'Usta şef', icon: '👨‍🍳', costs: [6000, 16000, 38000], values: [0, 1, 2, 3], minLevels: [7, 11, 15],
+    describe: (v) => ['Yok', 'Bekleyen siparişlerin ürünlerini kendisi pişirir', 'Siparişleri pişirir ve son zamanlarda istenen ürünlerden vitrinde 2 tane hazır tutar', 'Siparişleri ve vitrini hazırlar, eksik malzemeyi Market\'ten kendisi alır'][v] ?? 'Yok',
+  },
   waiterTraining: {
     name: 'Garson eğitimi', icon: '🧑‍🍳', costs: [1500, 4500, 11000], values: [1, 1.2, 1.4, 1.7],
     describe: (v) => (v === 1 ? 'Normal hız' : `Garson %${Math.round((v - 1) * 100)} daha hızlı yürür, siparişler masaya daha çabuk ulaşır`),
@@ -492,6 +496,9 @@ export const SHOP_ITEMS = [
   { id: 'waiter2', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 2, name: 'Garson Eğitimi II', desc: 'Daha da hızlı: servis süresi kısalır, hızlı servis bonusu kolaylaşır.', art: { icon: 'u-speed' } },
   { id: 'waiter3', category: 'expansion', kind: 'upgrade', upgrade: 'waiterTraining', level: 3, name: 'Garson Eğitimi III', desc: 'Usta garson: en hızlı servis.', art: { icon: 'u-speed' } },
   { id: 'helper1', category: 'expansion', kind: 'upgrade', upgrade: 'kitchenHelper', level: 1, name: 'Mutfak Yardımcısı', desc: 'Makine işini bitirince en son yapılan ürünü, malzeme varsa kendiliğinden tekrar başlatır.', art: { icon: 'u-oven' } },
+  { id: 'chef1', category: 'expansion', kind: 'upgrade', upgrade: 'headChef', level: 1, name: 'Usta Şef', desc: 'Bir usta şef işe alırsın: bekleyen siparişlerin ürünlerini makinede kendisi pişirir. Fırın panelinden açıp kapatabilirsin.', art: { icon: 'u-oven' } },
+  { id: 'chef2', category: 'expansion', kind: 'upgrade', upgrade: 'headChef', level: 2, name: 'Usta Şef II', desc: 'Şef vitrini de doldurur: son siparişlerde istenen ürünlerden ve günün menüsünden 2 tane hazır tutar.', art: { icon: 'u-oven' } },
+  { id: 'chef3', category: 'expansion', kind: 'upgrade', upgrade: 'headChef', level: 3, name: 'Usta Şef III', desc: 'Şef eksik malzemeyi Market\'ten kendisi alır (kasada en az 500 altın bırakır).', art: { icon: 'u-oven' } },
   { id: 'table4', category: 'expansion', kind: 'upgrade', upgrade: 'cafeTables', level: 2, name: '4. Masa Takımı', desc: 'Salon tamamen dolar.', art: { image: 'table' } },
   { id: 'waitingA', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 2, name: 'Bekleme Köşesi', desc: 'Vitrinin önünde bir misafir daha bekleyebilir. Halat ve direkler eklenir.', price: 2500, minLevel: 3, effect: { queue: 1 }, art: { image: 'rug-runner' } },
   { id: 'waitingB', category: 'expansion', kind: 'equipment', line: 'waiting', tier: 3, name: 'Geniş Bekleme Alanı', desc: 'İki misafir daha bekleyebilir.', price: 9000, minLevel: 8, stage: 2, effect: { queue: 2 }, requires: [{ item: 'waitingA' }], art: { image: 'rug-runner' } },

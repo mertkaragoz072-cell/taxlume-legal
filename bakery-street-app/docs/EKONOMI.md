@@ -278,3 +278,13 @@ Robot oyuncu (scripts/playthrough.mjs, 30 gün × 30 dk): aşama 4'e eskiden 20.
 
 Kural aynı: bir makinede uzun süren ürün tek satışta daha çok kazandırır, saniye başı kazanç hep 0,8–1,0 bandında kalır.
 Simgeler şimdilik scripts/make_recipe_icons.py ile çizilmiş geçici resimler; gerçek görsel gelince assets/game/icons/<id>.webp üzerine yazılır.
+
+## Usta Şef (UPGRADES.headChef, Mağaza › Genişletme)
+
+| Kademe | Seviye | Fiyat | Ne yapar |
+|---|---|---|---|
+| Usta Şef | 7 | 6.000 | Bekleyen siparişlerin ürünlerini boş makinede kendisi pişirir |
+| Usta Şef II | 11 | 16.000 | + son 12 siparişte istenen ürünlerden ve günün menüsünden vitrinde 2 tane hazır tutar |
+| Usta Şef III | 15 | 38.000 | + eksik malzemeyi Market'ten alır (kasada en az 500 altın bırakır) |
+
+Sadece boş makine yerlerini kullanır; oyuncunun sırasına ve mutfak tezgâhında hazırladığı siparişe dokunmaz. Makine panelinden molaya gönderilir (kayıtta saklanır).
