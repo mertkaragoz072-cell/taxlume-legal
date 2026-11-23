@@ -73,18 +73,12 @@ export function MerchantOfferModal() {
           <Image source={cardArt} style={styles.art} resizeMode="stretch" />
           {/* The merchant stands in front of the window, like Merve: his
               hat and the coin in his hand reach past the window's edge. */}
-          <Image
-            source={characterArt}
-            style={{
-              pointerEvents: "none",
-              position: "absolute",
-              left: w(14),
-              top: w(150),
-              width: w(690),
-              height: w(644),
-            }}
-            resizeMode="contain"
-          />
+          <View
+            pointerEvents="none"
+            style={{ position: "absolute", left: w(14), top: w(150), width: w(690), height: w(644) }}
+          >
+            <Image source={characterArt} style={styles.character} resizeMode="contain" />
+          </View>
 
           <View style={[styles.field, box(NAME)]}>
             <Text
@@ -146,6 +140,7 @@ export function MerchantOfferModal() {
 
 const styles = StyleSheet.create({
   art: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  character: { width: "100%", height: "100%" },
   field: { position: "absolute", alignItems: "center", justifyContent: "center" },
   bodyBox: { position: "absolute", overflow: "hidden" },
   name: { color: "#f6e2a0", fontFamily: FONT.display, textAlign: "center", letterSpacing: 0.5 },
