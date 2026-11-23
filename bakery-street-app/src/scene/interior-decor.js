@@ -326,7 +326,9 @@ export class DecorLayer {
       ctx.globalCompositeOperation = 'lighter'; glowAt(ctx, r.x, y, 110 + k * 60, '255,226,140', 0.35 * (1 - k)); ctx.globalCompositeOperation = 'source-over';
       const lt = clamp(r.t / (r.big ? 3.2 : 2.6), 0, 1);
       ctx.globalAlpha = clamp(Math.min(1, r.t * 4) * (1 - Math.max(0, lt - 0.7) / 0.3), 0, 1);
-      label(ctx, r.text, r.x, y - 70 - lt * 40, { font: `700 ${r.big ? 44 : 32}px sans-serif`, fill: PAL.cream, lw: 6 });
+      ctx.font = `700 ${r.big ? 44 : 32}px sans-serif`;
+      const half = ctx.measureText(r.text).width / 2 + 14, lx = clamp(r.x, s.cam.wl + half, s.cam.wr - half);   // the label stays on screen
+      label(ctx, r.text, lx, y - 70 - lt * 40, { font: `700 ${r.big ? 44 : 32}px sans-serif`, fill: PAL.cream, lw: 6 });
       ctx.restore();
     }
     for (const i of this.intros) {                                  // a light cone and the name over the equipment on its first use

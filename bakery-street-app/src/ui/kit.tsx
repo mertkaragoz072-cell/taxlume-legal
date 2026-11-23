@@ -173,7 +173,7 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, header, t
           </Pressable>
         ) : null}
       </View>
-      {hint ? <Rich text={hint} size={fs(u, TYPE.body)} style={{ color: C.brown, paddingHorizontal: u * 2.2, paddingBottom: u }} /> : null}
+      {hint ? <View style={{ paddingHorizontal: u * 2.2, paddingBottom: u }}><Rich text={hint} size={fs(u, TYPE.body)} style={{ color: C.brown, flexShrink: 1 }} /></View> : null}
       {header}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: u * 1.6, paddingBottom: u * 1.6, gap: u * 1.2 }}>{children}</ScrollView>
     </>
@@ -185,7 +185,7 @@ export function Sheet({ title, hint, onClose, side = "right", lowered, header, t
     return (
       <Animated.View style={[{ position: "absolute", zIndex: 20 }, place, shadow, motion]}>
         <Image source={ASSET_MODULES["assets/icons/ui-card.webp"]} resizeMode="stretch" style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
-        <View style={{ flex: 1, paddingTop: Math.round(full ? Math.max(u * 8.6, Math.min(panelH * 0.13, u * 11)) : Math.max(u * 8.6, panelH * 0.13)), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 3.2) }}>{inner}</View>
+        <View style={{ flex: 1, paddingTop: Math.round(full ? Math.max(u * 8.6, Math.min(panelH * 0.13, u * 11)) : Math.max(u * 8.6, panelH * 0.13)), paddingBottom: Math.round(u * 3.6), paddingHorizontal: Math.round(u * 4.2) }}>{inner}</View>
       </Animated.View>
     );
   }

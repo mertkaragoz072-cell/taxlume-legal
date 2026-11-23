@@ -25,7 +25,7 @@ export function CafePanel({ id, side }: { id: string; side: "left" | "right" }) 
   useRefresh(200);
   const u = useU();
   const q = game.stationsDef[id] ? (game.queueOf(id) as string[]) : [];
-  const stationNote = game.stationsDef[id] ? ` Aynı anda en fazla ${game.capacity(id)} ürün hazırlanır; makine meşgulken ${game.queueMax} ürün sıraya eklenebilir, sırası gelince kendiliğinden başlar.${q.length ? `\nSırada: ${q.map((p) => game.productsDef[p].icon).join(" ")}` : ""}` : "";
+  const stationNote = game.stationsDef[id] ? ` Aynı anda ${game.capacity(id)} ürün hazırlanır, meşgulken ${game.queueMax} ürün sıraya eklenir.${q.length ? `\nSırada: ${q.map((p) => game.productsDef[p].icon).join(" ")}` : ""}` : "";
 
   const products = (Object.entries(game.productsDef) as [string, any][]).filter(([pid, d]) => game.isUnlocked(pid) && (id === "counter" || d.station === id));
   return (
