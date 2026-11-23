@@ -154,7 +154,7 @@ original hand-rolled cutout above is a good first pass, not a guarantee.
 | `mark-mono.svg`               | Flat, one colour via `currentColor`. Favicons, print, stamps. |
 | `mark-dark.svg`               | Flat dark, for light backgrounds.                             |
 
-`<lang>` is `tr` (ALTIN KASABA) or `en` (GOLDEN TOWN).
+`<lang>` is `tr` or `en`: the wordmark reads GOLDEN TOWN in both, only the subtitle is translated.
 
 ## Rules
 

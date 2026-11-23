@@ -338,7 +338,7 @@ function seed(base) {
  * duplicated here.
  *
  * The capture boots the app to get a real initialState, and that boot is in
- * the app's default language — so `townName` comes back "Altın Kasaba" no
+ * the app's default language — so `townName` comes back as the default name no
  * matter which language the shot is for. Flipping `state.language` afterwards
  * does not rename the town, and it should not: renaming a player's own town
  * on a language switch would be wrong. The seed has to set it explicitly, or

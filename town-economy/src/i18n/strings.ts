@@ -14,7 +14,7 @@ export const STRINGS = {
       groupLuxury: "Lüks",
     },
     app: {
-      defaultTownName: "Altın Kasaba",
+      defaultTownName: "Golden Town",
     },
     settings: { title: "Ayarlar" },
     common: {
@@ -48,7 +48,7 @@ export const STRINGS = {
       closing: "Şimdi git, kervan gönder ve kâr et! Deneyim en iyi öğretmen olacak. İyi ticaretler! 🐪",
     },
     title: {
-      logoAlt: "Altın Kasaba",
+      logoAlt: "Golden Town",
       tagline: "Enflasyon her gün yiyip bitiriyor.\nSen kasabanı büyüt.",
       start: "BAŞLA",
       continue: "DEVAM ET",
@@ -815,7 +815,7 @@ export const STRINGS = {
       inviteSection: "Davet",
       code: "Davet kodu",
       invite: "Arkadaşını Davet Et",
-      inviteMessage: "Altın Kasaba'da loncama katıl! Davet kodum: {code}",
+      inviteMessage: "Golden Town'da loncama katıl! Davet kodum: {code}",
       goalSection: "Haftalık Hedef",
       goalText: "Hep birlikte {goal} işlem yapın. Hedef her pazartesi sıfırlanır.",
       goalDone: "🎉 Hedef tamamlandı!",
@@ -1105,7 +1105,7 @@ export const STRINGS = {
       next: "İleri",
       start: "İlk Alışverişine Başla",
       skip: "Atla",
-      slide1Title: "Altın Kasaba'ya Hoş Geldin",
+      slide1Title: "Golden Town'a Hoş Geldin",
       slide1Body:
         "Bu kasabanın yöneticisi sensin. Ekonomiyi büyüt, halkı memnun tut ve enflasyonu kontrolden çıkarma — hiperenflasyon kasabayı çökertir.",
       slide2Title: "Piyasa",

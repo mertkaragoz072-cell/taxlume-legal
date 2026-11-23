@@ -1,39 +1,27 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text } from "../components/AppText";
-import logoEn from "../../assets/title/logo_en.webp";
-import logoTr from "../../assets/title/logo_tr.webp";
-import titleArt from "../../assets/title/title-v2.webp";
+import titleArt from "../../assets/title/title-v3.webp";
 import { BigButton } from "../components/ModalKit";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
 import { FONT } from "../theme";
 
-// The sent title painting, 1054 x 2281 once placed on its walnut canvas (the
-// art itself is scaled 1.3x and sits at y=0). The lettering on the plaque,
-// the button and the language chip were erased from the art; they are drawn
-// live so both languages and the save state read correctly. Positions below
-// are in canvas pixels and follow the image as it scales.
-const CW = 1054;
-const CHT = 2281;
-const S = 1.3;
-const OY = 0;
-// The wordmark cut from the sent paintings, one per language: [x, y, w, h]
-// in the original art's pixels.
-const LOGOS = {
-  tr: { src: logoTr, box: [205, 452, 670, 113] },
-  en: { src: logoEn, box: [205, 452, 670, 114] },
-} as const;
-const ax = (x: number) => (x - CW / 2) * S + CW / 2;
-const ay = (y: number) => y * S + OY;
+// The sent title painting, 941 x 1672: the Golden Town sign (the game's name,
+// the same in both languages) over the village, with the studio mark at the
+// foot. Only the pieces that change are drawn live on top of it: the button,
+// the language chip and the line about a saved town. Positions are in the
+// art's own pixels and follow it as it scales.
+const AW = 941;
+const AH = 1672;
 
 interface Props {
   onStart: () => void;
 }
 
-/** The first screen of the app: the painted market square, the plaque with the
- * town's name, one button. It also stops the save from being invisible: a
- * returning player sees their town's name, day and worth above the button. */
+/** The first screen of the app: the painted Golden Town sign and one button.
+ * It also stops the save from being invisible: a returning player sees their
+ * town's name, day and worth above the button. */
 export function TitleScreen({ onStart }: Props) {
   const { state, t, formatCoins, netWorth, hydrated, hasSave, setLanguage } = useEconomyContext();
   const { width, height } = useWindowDimensions();
@@ -41,9 +29,9 @@ export function TitleScreen({ onStart }: Props) {
 
   // "cover": the canvas has a phone's shape, so this only trims a sliver on
   // other screens; the live pieces follow the same scale and offset.
-  const k = Math.max(width / CW, height / CHT);
-  const offX = (width - CW * k) / 2;
-  const offY = (height - CHT * k) / 2;
+  const k = Math.max(width / AW, height / AH);
+  const offX = (width - AW * k) / 2;
+  const offY = (height - AH * k) / 2;
   const px = (x: number) => offX + x * k;
   const py = (y: number) => offY + y * k;
   const box = (x0: number, y0: number, x1: number, y1: number) => ({
@@ -68,42 +56,45 @@ export function TitleScreen({ onStart }: Props) {
     transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
   };
 
-  const name = t("app.defaultTownName");
-  const logo = LOGOS[state.language];
   const label = !hydrated ? t("title.loading") : inProgress ? t("title.continue") : t("title.start");
 
   return (
     <View style={styles.root}>
-      <Image source={titleArt} style={[styles.fill, { width, height }]} resizeMode="cover" />
+      <Image
+        source={titleArt}
+        style={[styles.fill, { width, height }]}
+        resizeMode="cover"
+        accessibilityRole="header"
+        accessibilityLabel="Golden Town"
+      />
 
       <Animated.View style={[StyleSheet.absoluteFill, enterStyle]} pointerEvents="box-none">
-        <Image
-          source={logo.src}
-          style={box(
-            ax(logo.box[0]),
-            ay(logo.box[1]),
-            ax(logo.box[0] + logo.box[2]),
-            ay(logo.box[1] + logo.box[3])
-          )}
-          resizeMode="contain"
-          accessibilityRole="header"
-          accessibilityLabel={name}
-        />
-
         <Pressable
-          style={[box(878, 90, 1018, 154), styles.chip]}
+          style={[
+            styles.chip,
+            {
+              position: "absolute",
+              // Under the corner ornament, against the screen's own right edge:
+              // the painting is cropped at the sides on narrow phones, so a
+              // spot measured in its pixels can fall off the screen.
+              top: py(150),
+              right: 14,
+              width: Math.max(56, 120 * k),
+              height: Math.max(30, 56 * k),
+            },
+          ]}
           onPress={() => setLanguage(state.language === "tr" ? "en" : "tr")}
           accessibilityRole="button"
           accessibilityLabel={t("a11y.toggleLanguage")}
           hitSlop={8}
         >
-          <Text style={[styles.chipText, { fontSize: Math.max(13, 40 * k) }]}>
+          <Text style={[styles.chipText, { fontSize: Math.max(13, 38 * k) }]}>
             {state.language === "tr" ? "TR" : "EN"}
           </Text>
         </Pressable>
 
         {hydrated && inProgress ? (
-          <View style={[box(ax(120), ay(1160), ax(934), ay(1235)), styles.center]} pointerEvents="none">
+          <View style={[box(110, 1128, 830, 1190), styles.center]} pointerEvents="none">
             <View style={styles.saveChip}>
               <Text style={styles.saveLine} numberOfLines={1}>
                 {t("title.saveLine", {
@@ -116,7 +107,7 @@ export function TitleScreen({ onStart }: Props) {
           </View>
         ) : null}
 
-        <View style={box(ax(175), ay(1262), ax(885), ay(1398))}>
+        <View style={box(165, 1205, 775, 1330)}>
           <BigButton laurel label={label} onPress={onStart} disabled={!hydrated} />
         </View>
       </Animated.View>

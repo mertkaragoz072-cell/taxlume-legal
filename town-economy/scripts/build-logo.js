@@ -334,7 +334,7 @@ function markMono(fill) {
 
 // --- outputs --------------------------------------------------------------
 const WORDS = {
-  tr: { title: "ALTIN KASABA", sub: "EKONOMİ SİMÜLASYONU" },
+  tr: { title: "GOLDEN TOWN", sub: "EKONOMİ SİMÜLASYONU" },
   en: { title: "GOLDEN TOWN", sub: "TOWN ECONOMY SIM" },
 };
 

@@ -17,6 +17,9 @@ export async function loadEconomyState(): Promise<EconomyState | null> {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SaveFile;
     if (parsed.version !== SAVE_VERSION) return null;
+    // The Turkish game used to call itself "Altın Kasaba", and that was the
+    // default name of every town; the game is Golden Town in both languages now.
+    if (parsed.state.townName === "Altın Kasaba") return { ...parsed.state, townName: "Golden Town" };
     return parsed.state;
   } catch {
     return null;

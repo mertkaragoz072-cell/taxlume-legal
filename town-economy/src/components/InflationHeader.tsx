@@ -165,7 +165,7 @@ export function InflationHeader({
     nameRoom + capLeft + capRight,
     Math.round(townName.length * nameFontSize * 0.85 + 2 * Math.max(capLeft, capRight) + 14)
   );
-  // "Altın Kasaba" is also the game's own title, so while the town still has
+  // "Golden Town" is also the game's own title, so while the town still has
   // that default name the plate stays off the screen; a name the player chose
   // is shown. The rank chip below opens the name editor either way.
   const defaultNames = [t("app.defaultTownName"), "Altın Kasaba", "Golden Town"];
