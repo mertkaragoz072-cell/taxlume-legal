@@ -64,7 +64,43 @@ const ACHIEVEMENT_IDS = [
   "skilled_ruler",
   "speculator",
   "hot_hand",
+  "rank_capital",
+  "rank_kingdom",
+  "rank_empire",
+  "rank_goldenAge",
+  "rank_legendaryMarket",
+  "rank_worldPower",
+  "rank_tradeDynasty",
+  "rank_immortalLegend",
+  "trader_200",
+  "trader_1000",
+  "caravan_master_50",
+  "streak_100",
+  "survive_1000",
+  "prestige_5",
+  "researcher_all",
+  "speculator_10",
 ];
+
+// What the seeded town has genuinely not earned: left locked so nothing
+// unlocks the moment the app boots, and so the Goals screen has something
+// to chase.
+const STILL_LOCKED = new Set([
+  "streak_30",
+  "streak_100",
+  "real_estate_mogul",
+  "trader_1000",
+  "prestige_5",
+  "researcher_all",
+  "speculator_10",
+  "rank_kingdom",
+  "rank_empire",
+  "rank_goldenAge",
+  "rank_legendaryMarket",
+  "rank_worldPower",
+  "rank_tradeDynasty",
+  "rank_immortalLegend",
+]);
 
 function assertAchievementsInSync() {
   const source = fs.readFileSync(path.join(ROOT, "src/economy/achievements.ts"), "utf8");
@@ -209,11 +245,9 @@ function seed(base) {
   // Everything the seeded town has already earned. It has to be exhaustive:
   // an achievement whose target the seed meets but whose id is missing here
   // unlocks the moment the app boots, and the celebration lands over the tab
-  // bar. The two left out are genuinely unmet (a 30-day streak, three
+  // bar. The ones left out (STILL_LOCKED) are genuinely unmet (a 30-day streak, three
   // prestige perks), so the Goals screen still shows something to chase.
-  state.unlockedAchievements = ACHIEVEMENT_IDS.filter(
-    (id) => id !== "streak_30" && id !== "real_estate_mogul"
-  );
+  state.unlockedAchievements = ACHIEVEMENT_IDS.filter((id) => !STILL_LOCKED.has(id));
   // Yesterday, so this is a returning player and not a first launch. The
   // daily wheel only opens for someone coming back, and a fixture with no
   // last-opened date reads as day one — which made the "saved" scenarios
