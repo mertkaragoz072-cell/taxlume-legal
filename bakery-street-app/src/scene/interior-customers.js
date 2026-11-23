@@ -414,7 +414,7 @@ export class CustomerLayer {
     if (set && !drawIcon(ctx, order.extra, x + 56, y + 24, 34)) { ctx.fillStyle = PAL.brownDark; ctx.fillText(this.game.productsDef[order.extra].icon, x + 56, y + 24); }   // a set: both products side by side
     ctx.globalAlpha = Math.min(1, ctx.globalAlpha / (inStock ? 1 : 0.45));
     const px = x + w - 26;
-    if (inStock) label(ctx, `${order.price + (order.extraPrice ?? 0)}`, px, y + 23, { font: '700 21px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });
+    if (inStock) label(ctx, '×1', px, y + 23, { font: '700 21px "Trebuchet MS", sans-serif', fill: PAL.brownDark, lw: 0 });   // how many (always one of each); the price is not shown here, it read like a quantity
     else { ctx.beginPath(); ctx.arc(px, y + 23, 11, 0, 7); paint(ctx, PAL.terracotta, 2, PAL.terracottaDark); label(ctx, '!', px, y + 24, { font: '800 17px "Trebuchet MS", sans-serif', fill: PAL.paper, lw: 0 }); }
     const f = this.cafe.patienceFraction(c);                                  // patience bar
     rrect(ctx, x + 10, y + h - 13, w - 20, 7, 3.5); paint(ctx, PAL.vanilla, 1.2, PAL.honeyDark);

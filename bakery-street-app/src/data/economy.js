@@ -117,7 +117,7 @@ export const LIFE = {
   letters: { max: 20, perDay: 2, chance: 0.05, giftChance: 0.4, gift: [40, 120] },
   critic: { minLevel: 4, chance: 0.06, gold: 200, perStage: 100, gems: 2 },
   deals: { off: 0.3 },
-  orders: { minLevel: 2, hours: 4, restMin: 40, reward: 1.25, xp: 40 },
+  orders: { minLevel: 2, hours: 4, restMin: 40, reward: 1.4, xp: 40 },
   /**
    * popularity (0..100, kept): every happy guest adds `happy` (+`fast` more when served quickly), a guest who gave up takes `sad` away.
    * Each title (from `at` points) brings guests more often: the gap between arrivals is x(1 - arrival[i]).

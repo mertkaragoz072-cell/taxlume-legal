@@ -319,7 +319,7 @@ export class Life {
     pick.push(ids[first]);
     if (ids.length > 1) pick.push(ids[(first + 1 + Math.floor(this.rng() * (ids.length - 1))) % ids.length]);
     const items = {}, cap = Math.max(2, Math.min(8, this.game.showcaseLimit()));
-    for (const id of pick) items[id] = Math.max(2, Math.min(cap, 2 + Math.floor(this.rng() * (2 + this.stage()))));
+    for (const id of pick) items[id] = Math.min(cap, 2 + Math.floor(this.rng() * 2));      // a small order: 2 or 3 of each
     const value = Object.entries(items).reduce((s, [id, n]) => s + this.game.unitEconomics(id).customer * n, 0);
     const who = ['Okul gezisi', 'Kitapçının kutlaması', 'Komşunun doğum günü', 'Kasaba şenliği', 'Çiçekçinin toplantısı', 'Pazar kahvaltısı'][Math.floor(this.rng() * 6)];
     return { id: this.nextOrder++, who, items, reward: Math.round(value * c.reward), until: now + c.hours * HOUR };
