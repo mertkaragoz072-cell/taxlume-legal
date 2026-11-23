@@ -83,7 +83,8 @@ const SHOTS = [
       // Pick one, so the frame shows the choice being made rather than the
       // confirm button greyed out reading "pick a path".
       await page
-        .locator(`text=${lang === "tr" ? "Tüccar Loncası" : "Merchants' Guild"}`)
+        // the card is a button labelled with the guild name; its text sits under it
+        .locator(`[aria-label="${lang === "tr" ? "Tüccar Loncası" : "Merchants' Guild"}"]`)
         .first()
         .click({ timeout: 8_000 });
       await page.waitForTimeout(900);
@@ -196,6 +197,10 @@ async function main() {
       }
       // Long enough for the entry animations and the SVG map to settle.
       await page.waitForTimeout(2_500);
+      // Merve's task bubble opens over the lower right for seven seconds after
+      // the game starts and hides what is under it; wait until it has gone,
+      // leaving her round badge (which is part of the game) in place.
+      await page.waitForTimeout(6_000);
       if (shot.after) await shot.after(page, lang);
 
       const file = path.join(outDir, `${shot.name}.png`);
