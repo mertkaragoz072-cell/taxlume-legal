@@ -105,6 +105,13 @@ describe("building something", () => {
     expect(later.eventLog.filter((e) => e.key === "msg.improvementDone")).toHaveLength(2);
   });
 
+  it("pulls in a wait that a moved-back phone clock would stretch", () => {
+    const s = startImprovement(rich(), "research", "bread_t1", T0);
+    const far = { ...s, construction: s.construction!.map((p) => ({ ...p, readyAt: T0 + 5 * 3_600_000 })) };
+    const pulled = finishDueImprovements(far, T0);
+    expect(pulled.construction![0].readyAt).toBe(T0 + 30 * 60_000);
+  });
+
   it("reports progress from 0 to 1", () => {
     const item = { kind: "upgrade" as const, ref: "market", startedAt: T0, readyAt: T0 + 10_000 };
     expect(improvementProgress(item, T0)).toBe(0);

@@ -27,7 +27,6 @@ import silk3 from "../../assets/ui/research/silk3.webp";
 import jewelry1 from "../../assets/ui/research/jewelry1.webp";
 import jewelry2 from "../../assets/ui/research/jewelry2.webp";
 import jewelry3 from "../../assets/ui/research/jewelry3.webp";
-import banner from "../../assets/ui/research/banner.webp";
 import bread1 from "../../assets/ui/research/bread1.webp";
 import bread2 from "../../assets/ui/research/bread2.webp";
 import bread3 from "../../assets/ui/research/bread3.webp";
@@ -44,6 +43,7 @@ import btnL from "../../assets/ui/town/btn_l.webp";
 import btnM from "../../assets/ui/town/btn_m.webp";
 import btnOffL from "../../assets/ui/town/btn_off_l.webp";
 import btnOffM from "../../assets/ui/town/btn_off_m.webp";
+import { SheetHeader } from "./SheetHeader";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
 import { GOOD_IMAGES } from "../economy/goodImages";
@@ -100,48 +100,13 @@ function useWidth(initial = 360): [number, (e: LayoutChangeEvent) => void] {
 
 // -------------------------------------------------------------- banner
 
-const BANNER_W = 1264;
-const BANNER_H = 256;
-
-/** The "Araştırma" banner: green plaque, open book and inkwell are painted;
- * the title and the one-line description are drawn. */
+/** The Research heading: the game's shared plaque with the one-line description
+ * beneath it. */
 export function ResearchBanner({ title, note }: { title: string; note: string }) {
-  const [w, onLayout] = useWidth();
-  const s = w / BANNER_W;
-  const box = (x: number, y: number, bw: number, bh: number) => ({
-    position: "absolute" as const,
-    left: x * s,
-    top: y * s,
-    width: bw * s,
-    height: bh * s,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  });
-  const titleSize = Math.min(78 * s, (420 * s * 0.94) / (title.length * 0.85 + 1));
-  const noteSize = Math.max(9, Math.min(36 * s, (800 * s * 0.98 * 2) / (note.length * 0.52)));
   return (
-    <View
-      style={{ aspectRatio: BANNER_W / BANNER_H, alignSelf: "stretch", marginBottom: PANEL_GAP }}
-      onLayout={onLayout}
-    >
-      <Image source={banner} style={styles.fill} resizeMode="stretch" />
-      <View pointerEvents="none" style={box(215, 24, 430, 82)}>
-        <Text
-          style={[styles.bannerTitle, { fontSize: titleSize }]}
-          numberOfLines={1}
-          accessibilityRole="header"
-        >
-          {title}
-        </Text>
-      </View>
-      <View pointerEvents="none" style={box(215, 138, 800, 92)}>
-        <Text
-          style={[styles.bannerNote, { fontSize: noteSize, lineHeight: noteSize * 1.25 }]}
-          numberOfLines={3}
-        >
-          {note}
-        </Text>
-      </View>
+    <View style={{ alignSelf: "stretch", marginBottom: PANEL_GAP }}>
+      <SheetHeader text={title} />
+      <Text style={styles.bannerNote}>{note}</Text>
     </View>
   );
 }
@@ -378,16 +343,15 @@ const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   // Overlaps both caps by a pixel so no seam of wood shows between the slices.
   midFill: { position: "absolute", top: -1, bottom: -1, left: 0, right: 0 },
-  bannerTitle: {
-    color: "#f6e2a0",
-    fontFamily: FONT.display,
+  bannerNote: {
+    color: "#e9d9ad",
+    fontFamily: FONT.medium,
+    fontSize: 13,
+    lineHeight: 17,
     textAlign: "center",
-    letterSpacing: 0.4,
-    textShadowColor: "rgba(10,25,15,0.8)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    paddingHorizontal: 14,
+    marginTop: 2,
   },
-  bannerNote: { color: "#4a3320", fontFamily: FONT.medium, textAlign: "center" },
   tabRow: {
     position: "absolute",
     top: 0,

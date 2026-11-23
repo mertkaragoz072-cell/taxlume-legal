@@ -136,6 +136,17 @@ function applyDone(state: EconomyState, item: PendingImprovement): EconomyState 
 
 /** Completes every improvement whose time is up. */
 export function finishDueImprovements(state: EconomyState, now: number): EconomyState {
+  // A phone clock that was moved back after something was started would leave
+  // it waiting for hours (the wait is real time): nothing is ever more than the
+  // longest wait away, so pull it in.
+  const latest = now + IMPROVEMENT_MAX_MS;
+  const hasFar = pendingList(state).some((p) => p.readyAt > latest);
+  if (hasFar) {
+    state = {
+      ...state,
+      construction: pendingList(state).map((p) => (p.readyAt > latest ? { ...p, readyAt: latest } : p)),
+    };
+  }
   const list = pendingList(state);
   if (!list.some((p) => p.readyAt <= now)) return state;
   let next = state;

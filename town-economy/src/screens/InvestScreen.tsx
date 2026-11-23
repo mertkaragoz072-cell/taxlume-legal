@@ -6,6 +6,7 @@ import { useEconomyContext } from "../economy/EconomyContext";
 import { ASSETS, AssetId } from "../economy/assets";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { AssetChartPanel, PortfolioPanel } from "../components/InvestPanels";
+import { BeamTitle } from "../components/ImagePanels";
 import { BuySellPanel } from "../components/BuySellPanel";
 import { GoodCard } from "../components/GoodCard";
 import { PriceChart } from "../components/PriceChart";
@@ -51,6 +52,7 @@ export function InvestScreen({ sounds }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <BeamTitle title={t("tabs.invest")} />
       <PortfolioPanel
         label={t("invest.portfolioLabel")}
         value={formatCoins(assetsValue)}
