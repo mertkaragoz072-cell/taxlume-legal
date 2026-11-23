@@ -49,7 +49,7 @@ export class Branch {
       stats: fresh.stats,                                    // a new café counts from zero (stages and quests read these); the old numbers go to `carry`
       album: cur.album,
       achievements: cur.achievements,
-      life: cur.life ? { ...cur.life, order: null, orderRest: 0, menu: { date: null, product: null }, day: null, summary: null, theme: { week: null, base: 0, claimed: false } } : null,   // the day and week counters start again with the stats
+      life: cur.life ? { ...cur.life, order: null, orderRest: 0, menu: { date: null, product: null }, day: null, summary: null, popularity: LIFE.popularity?.start ?? 0, theme: { week: null, base: 0, claimed: false } } : null,   // the day and week counters start again with the stats
       shop: { ...fresh.shop, owned: cur.shop.owned.filter((id) => keep.has(id)), placed: pick(cur.shop.placed), stored: (cur.shop.stored ?? []).filter((id) => keep.has(id)), introduced: cur.shop.introduced, levels: pick(cur.shop.levels), parts: pick(cur.shop.parts), collections: cur.shop.collections ?? [] },
       quests: fresh.quests,
       branch: { count: this.count + 1, carry: addStats(this.carry, cur.stats) },

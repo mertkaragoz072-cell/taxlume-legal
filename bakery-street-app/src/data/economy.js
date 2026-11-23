@@ -118,6 +118,11 @@ export const LIFE = {
   critic: { minLevel: 4, chance: 0.06, gold: 200, perStage: 100, gems: 2 },
   deals: { off: 0.3 },
   orders: { minLevel: 2, hours: 4, restMin: 40, reward: 1.25, xp: 40 },
+  /**
+   * popularity (0..100, kept): every happy guest adds `happy` (+`fast` more when served quickly), a guest who gave up takes `sad` away.
+   * Each title (from `at` points) brings guests more often: the gap between arrivals is x(1 - arrival[i]).
+   */
+  popularity: { start: 5, happy: 1, fast: 0.5, sad: 2, max: 100, at: [0, 15, 35, 60, 85], names: ['Yeni Kafe', 'Sevilen Kafe', 'Popüler Kafe', 'Çok Popüler', 'Kasabanın Yıldızı'], arrival: [0, 0.07, 0.14, 0.21, 0.28] },
   /** petting a cat: the first `paid` pets of a day pay `gold` each (the rest are just for fun) */
   pet: { paid: 5, gold: 10 },
   /** weekend market (Saturday, Sunday): products sell at the guest price, up to `perDay` units a day */

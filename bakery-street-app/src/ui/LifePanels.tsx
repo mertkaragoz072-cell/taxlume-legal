@@ -257,3 +257,20 @@ export function summaryLines(world: any, s: any): string[] {
     "Bugün de güzel bir gün olsun!",
   ];
 }
+
+/** Popularity: the café's title, points to the next one and how much more often guests come. */
+export function PopularityCard() {
+  const { world } = useWorld();
+  const { life, cafe } = world, u = useU();
+  if (!life?.cfg.popularity) return null;
+  const t = life.popTitle() as any, r = cafe.rating() as any;
+  const frac = t.next == null ? 1 : (t.points - t.from) / (t.next - t.from);
+  return (
+    <Card tone={t.next == null ? "open" : undefined} left={<EmojiIcon emoji="🌟" size={u * 7} />}>
+      <Title name={`Popülerlik · ${t.name}`} note={`★ ${r.stars.toFixed(1)} memnuniyet`} />
+      <Bar value={frac} color={C.honey} text={t.next == null ? `${Math.round(t.points)} · en üst unvan` : `${Math.round(t.points)}/${t.next} · sonraki: ${life.cfg.popularity.names[t.i + 1]}`} />
+      <Meta tone={t.arrival ? "reward" : "muted"} text={t.arrival ? `Müşteriler %${Math.round(t.arrival * 100)} daha sık geliyor.` : "Mutlu müşteriler kafeni popüler yapar: daha çok müşteri gelir."} />
+      <Meta tone="muted" text="Hızlı ve güler yüzlü servis puanı artırır; bekleyip giden müşteri biraz düşürür." />
+    </Card>
+  );
+}

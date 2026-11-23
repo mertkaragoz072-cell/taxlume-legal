@@ -116,7 +116,7 @@ export class Cafe {
     const b2 = this.cfg.bonuses;
     const mood = b2?.rating ? 1 - b2.rating.pace * (this.rating().stars - 3) : 1;                       // a well-liked cafe fills up a little faster
     const rain = b2?.weather && this.weather() === 'rain' ? b2.weather.slower : 1;
-    return ms((a + this.rng() * (b - a)) * pace * mood * rain * (this.game.shop?.arrivalFactor() ?? 1));    // decoration makes guests come a little more often
+    return ms((a + this.rng() * (b - a)) * pace * mood * rain * (this.game.shop?.arrivalFactor() ?? 1) * (this.game.life?.arrivalFactor() ?? 1));    // decoration and popularity make guests come more often    // decoration makes guests come a little more often
   }
 
   /** 'rain' or 'clear' today (always 'clear' when the bonuses are switched off). */

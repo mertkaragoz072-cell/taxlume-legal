@@ -288,3 +288,17 @@ Simgeler şimdilik scripts/make_recipe_icons.py ile çizilmiş geçici resimler;
 | Usta Şef III | 15 | 38.000 | + eksik malzemeyi Market'ten alır (kasada en az 500 altın bırakır) |
 
 Sadece boş makine yerlerini kullanır; oyuncunun sırasına ve mutfak tezgâhında hazırladığı siparişe dokunmaz. Makine panelinden molaya gönderilir (kayıtta saklanır).
+
+## Popülerlik (LIFE.popularity)
+
+Kalıcı puan 0–100 (başlangıç 5). Mutlu müşteri +1, hızlı servis ayrıca +0,5; bekleyip giden müşteri −2. Unvanlar ve müşteri gelme sıklığı:
+
+| Puan | Unvan | Müşteriler |
+|---|---|---|
+| 0 | Yeni Kafe | normal |
+| 15 | Sevilen Kafe | %7 daha sık |
+| 35 | Popüler Kafe | %14 daha sık |
+| 60 | Çok Popüler | %21 daha sık |
+| 85 | Kasabanın Yıldızı | %28 daha sık |
+
+Yeni şubede popülerlik baştan başlar. Robot oyuncuda (30 gün) 10. gün satışı 167 → 215.

@@ -211,6 +211,10 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
     offs.push(game.on("branch", ({ count }: any) => setCelebrate({ icon: "🏡", title: `${count}. şube açıldı!`, lines: ["Yeni bir kafe, aynı dostlar.", `Her satış artık kalıcı +%${Math.round(world.branch.bonus() * 100)}.`, "Dekorasyonun ve müşterilerinle dostluğun seninle geldi."] })));
     let chefToastAt = 0;
     offs.push(game.on("chef", () => { const now = Date.now(); if (now - chefToastAt > 60_000) { chefToastAt = now; showToast("👨‍🍳 Usta Şef siparişleri pişiriyor", 1400); } }));   // at most once a minute
+    offs.push(game.on("popularity", ({ title, up }: any) => {
+      if (up) { setCelebrate((prev) => prev ?? { icon: "🌟", title: `Kafen artık "${title.name}"!`, lines: ["Mutlu müşteriler kafeni herkese anlatıyor.", `Müşteriler %${Math.round(title.arrival * 100)} daha sık gelecek.`] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }
+      else showToast(`Popülerlik biraz düştü: ${title.name}. Müşterileri bekletmemeye çalış.`, 2600);
+    }));
     offs.push(game.on("critic", (e: any) => { setCelebrate((prev) => prev ?? { icon: "🎩", title: "Gizemli eleştirmendi!", lines: [e.fast ? "Hızlı ve sıcak servisine bayıldı." : "Lezzetini çok beğendi.", `Ödül: +${fmt(e.gold)} altın${e.gems ? ` · +${e.gems} 💎` : ""}`, "Yorumu Mektuplar'da."] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); rewardCoins(); }));
     offs.push(game.on("album", (e: any) => { if (e.gold) rewardCoins(); }));
     offs.push(game.on("collection", (e: any) => { showToast(`🏅 Koleksiyon: ${e.group}${e.kind === "max" ? " (hepsi en üst seviyede)" : " tamamlandı"} · +${fmt(e.reward.gold)} altın`, 3400); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));

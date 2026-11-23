@@ -207,3 +207,23 @@ test('head chef: level 1 cooks what waiting guests ordered, level 2 keeps recent
   g.setChef(false);
   assert.equal(g.exportState().chefOn, false);
 });
+
+test('popularity: happy guests raise it (fast ones more), guests who give up lower it; titles bring guests more often; saved', () => {
+  const w = make();
+  const start = w.life.popularity, gap0 = w.life.arrivalFactor();
+  const titles = [];
+  w.game.on('popularity', (e) => titles.push(e.title.name));
+  for (let i = 0; i < 20; i++) serveLook(w, w.cafe.looks[i % 8], 'bread');
+  assert.ok(w.life.popularity >= start + 20, 'every happy guest adds');
+  assert.ok(w.life.arrivalFactor() < gap0, 'a better title: guests come more often');
+  assert.ok(titles.length >= 1);
+  const p = w.life.popularity;
+  const c = w.cafe.arrive(); w.cafe.leave(c, false);
+  assert.equal(w.life.popularity, p - LIFE.popularity.sad);
+  w.life.popularity = 99.5; for (let i = 0; i < 5; i++) serveLook(w, w.cafe.looks[0], 'bread');
+  assert.equal(w.life.popularity, LIFE.popularity.max, 'capped');
+  assert.equal(w.life.popTitle().next, null);
+  const st = new FakeStorage(), saves = new SaveManager(w.game, st); saves.save();
+  const w2 = make(); new SaveManager(w2.game, st).load();
+  assert.equal(w2.life.popularity, LIFE.popularity.max);
+});

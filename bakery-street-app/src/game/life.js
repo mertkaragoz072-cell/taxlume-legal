@@ -55,6 +55,7 @@ export class Life {
     game.on('critic', ({ fast }) => this.remember('🎩', fast ? 'Gizemli eleştirmen geldi ve 5 yıldız verdi' : 'Gizemli eleştirmen geldi ve 4 yıldız verdi'));
     game.on('friend', ({ look, hearts }) => { if (hearts === 1 || hearts === 5) this.remember(hearts === 5 ? '💖' : '💛', hearts === 5 ? `${ALBUM.names[look] ?? 'Bir müşteri'} ile can dostu oldun` : `${ALBUM.names[look] ?? 'Bir müşteri'} ile dostluk başladı`); });
     game.on('album', ({ look, first, completed }) => { if (completed) this.remember('📖', 'Bütün müşterilerle tanıştın'); else if (first && game.album?.count() === 1) this.remember('🐱', `İlk müşterin ${ALBUM.names[look] ?? 'bir müşteri'} geldi`); });
+    game.on('customer', (e) => { if (e?.type === 'leave') this.guestLeft(e); });
     game.on('change', (e) => { if (e?.type !== 'load') this.rollDay(); if (e?.type === 'sale' && game.stats.soldTotal === 1) this.remember('☕', 'İlk satışını yaptın, kafe açıldı!'); });
   }
 
@@ -63,6 +64,29 @@ export class Life {
   remember(icon, text) {
     this.memories.unshift({ t: this.game.clock(), icon, text: String(text).slice(0, 120) });
     if (this.memories.length > 60) this.memories.length = 60;
+  }
+
+  // ---- popularity ------------------------------------------------------------------------------------------------
+  /** The café's popularity title now: { i, name, points, next (points of the next title or null), arrival }. */
+  popTitle(points = this.popularity) {
+    const c = this.cfg.popularity;
+    if (!c) return { i: 0, name: '', points: 0, next: null, arrival: 0 };
+    let i = 0; while (i + 1 < c.at.length && points >= c.at[i + 1]) i++;
+    return { i, name: c.names[i], points, next: c.at[i + 1] ?? null, from: c.at[i], arrival: c.arrival[i] };
+  }
+  /** Factor on the gap between arriving guests (< 1 = more guests). */
+  arrivalFactor() { return 1 - this.popTitle().arrival; }
+  /** A guest left: happy ones raise popularity (more when served fast), one who gave up lowers it a little. */
+  guestLeft(e) {
+    const c = this.cfg.popularity;
+    if (!c || e.id == null) return;
+    const before = this.popTitle().i;
+    const d = e.happy ? (e.income ? c.happy + (e.bonus?.fast ? c.fast : 0) : 0) : -c.sad;
+    if (!d) return;
+    this.popularity = Math.max(0, Math.min(c.max, Math.round((this.popularity + d) * 10) / 10));
+    const t = this.popTitle();
+    if (t.i > before) { this.remember('🌟', `Kafe artık "${t.name}"`); this.game.emit('popularity', { title: t, up: true }); }
+    else if (t.i < before) this.game.emit('popularity', { title: t, up: false });
   }
 
   // ---- the end of the day ------------------------------------------------------------------------------------------
@@ -187,6 +211,7 @@ export class Life {
     this.weekend = { date: null, n: 0 };              // units sold at the weekend market today
     this.stories = {};                                // look -> steps collected (0..3)
     this.theme = { week: null, base: 0, claimed: false };
+    this.popularity = this.cfg.popularity?.start ?? 0;
   }
 
   today() { return dateKey(this.game.clock()); }
@@ -321,14 +346,14 @@ export class Life {
       menu: { ...this.menu }, letters: this.letters.map((l) => ({ ...l })), nextLetter: this.nextLetter, lettersToday: { ...this.lettersToday },
       criticToday: this.criticToday, critics: this.critics, order: this.order ? { ...this.order, items: { ...this.order.items } } : null, orderRest: this.orderRest, ordersDone: this.ordersDone, nextOrder: this.nextOrder,
       pets: { ...this.pets }, petsTotal: this.petsTotal, day: this.day ? { ...this.day, per: { ...this.day.per } } : null, summary: this.summary ? { ...this.summary } : null,
-      memories: this.memories.map((m) => ({ ...m })), weekend: { ...this.weekend }, stories: { ...this.stories }, theme: { ...this.theme },
+      memories: this.memories.map((m) => ({ ...m })), weekend: { ...this.weekend }, stories: { ...this.stories }, theme: { ...this.theme }, popularity: this.popularity,
     };
   }
   importState(s) {
     this.reset();
     if (!s) return;
     Object.assign(this, { menu: s.menu, letters: s.letters, nextLetter: s.nextLetter, lettersToday: s.lettersToday, criticToday: s.criticToday, critics: s.critics, order: s.order, orderRest: s.orderRest, ordersDone: s.ordersDone, nextOrder: s.nextOrder });
-    for (const k of ['pets', 'petsTotal', 'day', 'summary', 'memories', 'weekend', 'stories', 'theme']) if (s[k] !== undefined) this[k] = s[k];
+    for (const k of ['pets', 'petsTotal', 'day', 'summary', 'memories', 'weekend', 'stories', 'theme', 'popularity']) if (s[k] !== undefined) this[k] = s[k];
   }
 }
 
@@ -356,6 +381,7 @@ export function validateLife(raw, game) {
     memories: (Array.isArray(raw.memories) ? raw.memories : []).filter((m) => m && typeof m.text === 'string').slice(0, 60).map((m) => ({ t: isInt(m.t, 1e14) ? m.t : 0, icon: str(m.icon, 4) || '•', text: str(m.text, 120) })),
     weekend: { date: date(raw.weekend?.date), n: isInt(raw.weekend?.n, 1e4) ? raw.weekend.n : 0 },
     stories: Object.fromEntries(Object.entries(raw.stories && typeof raw.stories === 'object' ? raw.stories : {}).filter(([l, n]) => ALBUM.names[l] && isInt(n, 4))),
+    popularity: Number.isFinite(raw.popularity) ? Math.max(0, Math.min(LIFE.popularity?.max ?? 100, raw.popularity)) : (LIFE.popularity?.start ?? 0),
     theme: { week: Number.isInteger(raw.theme?.week) ? raw.theme.week : null, product: game.productsDef[raw.theme?.product] ? raw.theme.product : undefined, base: isInt(raw.theme?.base) ? raw.theme.base : 0, claimed: raw.theme?.claimed === true },
   };
   function counters(c, isDay) {
