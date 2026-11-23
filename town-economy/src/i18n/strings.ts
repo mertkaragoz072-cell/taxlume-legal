@@ -995,11 +995,12 @@ export const STRINGS = {
     build: { adSkip: "📺 −5 dk", adFinish: "📺 Bitir" },
     merchant: {
       title: "Gezgin Tüccar",
+      headline: "Hediye Var!",
       offer: "Kasabana uğradım! Kısa bir reklam izlersen sana {reward} 🪙 hediye ederim.",
-      watch: "Reklam izle  +{reward} 🪙",
-      watchHint: "Kısa bir reklam, hediye hemen kasana girer.",
-      no: "Hayır, sağ ol",
-      noHint: "Ayrılmama {seconds} sn var.",
+      tip: "Reklam bitince hediye hemen kasana girer.",
+      watch: "İzle  +{reward} 🪙",
+      no: "Hayır",
+      seconds: "{seconds} sn",
     },
     ads: {
       mockTitle: "Reklam (deneme)",
@@ -2927,11 +2928,12 @@ export const STRINGS = {
     build: { adSkip: "📺 −5 min", adFinish: "📺 Finish" },
     merchant: {
       title: "Travelling Merchant",
+      headline: "A Gift for You!",
       offer: "I am passing through! Watch a short ad and I will give you {reward} 🪙.",
-      watch: "Watch an ad  +{reward} 🪙",
-      watchHint: "A short ad, and the gift goes straight into your purse.",
-      no: "No, thanks",
-      noHint: "I leave in {seconds}s.",
+      tip: "When the ad ends the gift goes straight into your purse.",
+      watch: "Watch  +{reward} 🪙",
+      no: "No",
+      seconds: "{seconds}s",
     },
     ads: {
       mockTitle: "Ad (test)",
