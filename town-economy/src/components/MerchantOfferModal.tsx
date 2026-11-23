@@ -2,6 +2,7 @@ import React from "react";
 import { Image, Modal, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useAds } from "../ads/AdsContext";
 import cardArt from "../../assets/ui/mervecard/merchant.webp";
+import characterArt from "../../assets/ui/mervecard/merchant_char.webp";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICK_MS } from "../economy/useEconomy";
 import { FONT } from "../theme";
@@ -9,8 +10,8 @@ import { Text } from "./AppText";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
-// The card is Merve's tutorial card with the travelling merchant in the
-// portrait window: the same 1616 x 853 art, so every field sits where hers do
+// The card is Merve's tutorial card with the travelling merchant standing in
+// the portrait window: the same 1616 x 853 art, so every field sits where hers do
 // (positions in the art's own pixels, scaled by card width / ART_W).
 const ART_W = 1616;
 const ART_H = 853;
@@ -70,6 +71,20 @@ export function MerchantOfferModal() {
       <ModalBackdrop>
         <View style={{ width: cardW, height: cardH }}>
           <Image source={cardArt} style={styles.art} resizeMode="stretch" />
+          {/* The merchant stands in front of the window, like Merve: his
+              hat and the coin in his hand reach past the window's edge. */}
+          <Image
+            source={characterArt}
+            style={{
+              pointerEvents: "none",
+              position: "absolute",
+              left: w(14),
+              top: w(150),
+              width: w(690),
+              height: w(644),
+            }}
+            resizeMode="contain"
+          />
 
           <View style={[styles.field, box(NAME)]}>
             <Text
