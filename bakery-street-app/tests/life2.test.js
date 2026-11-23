@@ -155,3 +155,25 @@ test('a new branch: locked until the last stage and top level; then the economy 
   assert.equal(w2.branch.count, 1); assert.ok(w2.branch.carry.soldTotal >= 600);
   assert.deepEqual(validateBranch({ count: 99, carry: { soldTotal: -5, sold: { bread: 3, x: 'a' } } }), { count: LIFE.branch.max, carry: { sold: { bread: 3 } } });
 });
+
+test('kitchen counter: a product made by hand takes its ingredients, is ready at once for the order, and counts as made by hand', () => {
+  const w = make();
+  for (const k of Object.keys(w.game.ingredients)) w.game.ingredients[k] = 0;
+  assert.equal(w.game.handMake('croissant').ok, false, 'no ingredients, nothing made');
+  w.game.ingredients.flour = 2; w.game.ingredients.butter = 1;
+  const c = w.cafe.arrive(); w.cafe.seatQueued(); const o = w.cafe.orderOf(c); o.product = 'croissant'; delete o.extra;
+  w.game.products.croissant = 0;
+  const jobs = JSON.stringify(w.game.jobs);
+  const r = w.game.handMake('croissant');
+  assert.ok(r.ok);
+  assert.equal(w.game.ingredients.flour, 0); assert.equal(w.game.ingredients.butter, 0);
+  assert.equal(w.game.products.croissant, 1);
+  assert.equal(JSON.stringify(w.game.jobs), jobs, 'the machines are not touched');
+  assert.equal(w.game.stats.handMade, 1); assert.equal(w.game.stats.producedTotal, 1);
+  const s = w.cafe.deliver(o.id);
+  assert.ok(s.ok);
+  assert.equal(w.game.products.croissant, 0);
+  assert.equal(w.game.handMake('nope').ok, false);
+  w.game.products.bread = 999; w.game.ingredients.flour = 2;
+  assert.ok(w.game.handMake('bread').ok, 'the showcase limit does not apply: it goes straight to a guest');
+});

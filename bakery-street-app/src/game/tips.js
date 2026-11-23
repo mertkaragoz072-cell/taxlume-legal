@@ -5,6 +5,7 @@ export const TIPS = [
   { id: 'produce', area: 'oven', text: 'Fırına dokun ve bir ekmek üret.', done: (g) => g.stats.producedTotal > 0 || Object.keys(g.jobs).length > 0 },
   { id: 'serve', area: null, text: 'Müşteri oturunca garson siparişi götürür. Acelen varsa müşteriye dokunup kendin de servis edebilirsin.', done: (g) => g.stats.soldTotal > 0 },
   { id: 'quest', area: null, text: 'Bir görev tamamlandı! Alttaki Görevler\'e dokun ve ödülünü al.', show: (g) => (g.quests?.claimable().length ?? 0) > 0, done: (g) => (g.quests?.claimed.size ?? 1) > 0 },
+  { id: 'kitchen', area: 'counter', text: 'İstersen üretim tezgâhına dokun: siparişi kendi ellerinle hazırlayıp müşteriye götürebilirsin.', show: (g) => g.stats.soldTotal >= 3 && (g.cafe?.openOrders().length ?? 0) > 0, done: (g) => (g.stats.handMade ?? 0) > 0 || g.stats.soldTotal >= 40 },
   { id: 'shop', area: null, text: 'Kafeni büyüt: alttaki Mağaza\'dan ilk eşyanı al.', done: (g) => (g.stats.shopBought ?? 0) > 0 },
 ];
 

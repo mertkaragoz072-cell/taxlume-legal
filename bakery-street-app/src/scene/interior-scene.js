@@ -64,7 +64,8 @@ export class InteriorScene {
     this.look = 0; this.lk = 0; // parallax: target (-1..1, from touch) and the smoothed value in use
     this.motes = Array.from({ length: 34 }, (_, i) => ({ x: -120 + ((i * 97) % 1620), y: 110 + ((i * 53) % 620), r: 1.2 + (i % 3) * 0.6, p: i * 1.7, vx: 4 + (i % 5), vy: -3 - (i % 4) }));   // drifting dust
     game.on('complete', ({ station, product }) => {
-      const area = AREAS.find((a) => a.station === station);
+      const area = AREAS.find((a) => (station === 'hand' ? a.id === 'counter' : a.station === station));    // made by hand: the +1 rises from the prep counter
+      if (!area) return;
       this.pops.push({ x: area.x + area.w / 2, y: area.y + 20, text: '+1', icon: product, life: 1 });
       this.burst(area.x + area.w / 2, area.y + area.h * 0.35, 12);
       this.spring[area.id] = 0;

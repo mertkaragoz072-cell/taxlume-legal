@@ -115,7 +115,7 @@ export class StaffLayer {
     for (const c of cafe?.customers ?? []) {
       if (c.state !== 'seated' || !this.seated(c.id)) continue;
       const o = cafe.orderOf(c);
-      if (!o || o.status !== 'open' || !cafe.orderReady(o)) continue;               // a set needs both products
+      if (!o || o.status !== 'open' || !cafe.orderReady(o) || cafe.handOrder === o.id) continue;   // (an order the player prepares at the kitchen counter is theirs)               // a set needs both products
       return { c, o };
     }
     return null;

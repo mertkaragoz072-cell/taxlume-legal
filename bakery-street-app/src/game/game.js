@@ -7,7 +7,7 @@ const fmtGold = (n) => n.toLocaleString('tr-TR');
 /** Lifetime counters that quests read. Persisted with the rest of the game state. */
 export function blankStats(productsDef) {
   const per = () => Object.fromEntries(Object.keys(productsDef).map((id) => [id, 0]));
-  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0, bestCombo: 0, favoritesServed: 0, playSec: 0 };
+  return { produced: per(), sold: per(), producedTotal: 0, soldTotal: 0, marketPurchases: 0, upgradesBought: 0, researchBought: 0, explorationsDone: 0, buildingsOpened: 0, buildingUpgrades: 0, goldSpent: 0, goldEarned: 0, shopBought: 0, bestCombo: 0, favoritesServed: 0, playSec: 0, handMade: 0 };
 }
 
 export class Game {
@@ -263,6 +263,31 @@ export class Game {
     }
     if (q && !q.length) delete this.queue[station];
     return n;
+  }
+
+  // ---- the kitchen counter: the player prepares an order by hand -----------------------------------------------------------
+  /**
+   * Makes one unit of `id` by hand at the kitchen counter (the player put the ingredients in the bowl and prepared it): the ingredients are
+   * taken and the product is ready at once, for the order it was made for. Machines are not involved, so their jobs and line carry on.
+   * The showcase limit does not apply: the piece goes straight to a guest.
+   */
+  handMake(id) {
+    const def = this.productsDef[id];
+    if (!def) return { ok: false, reason: 'unknown', message: 'Bilinmeyen ürün.' };
+    if (!this.isUnlocked(id)) return { ok: false, reason: 'locked', message: `${def.name} tarifi henüz açılmadı.` };
+    const missing = this.missingFor(id);
+    if (missing.length) return { ok: false, reason: 'ingredients', missing, message: `Yetersiz malzeme: ${missing.map((m) => `${m.need - m.have} ${this.ingredientsDef[m.id].name}`).join(', ')} eksik.` };
+    for (const [ing, need] of Object.entries(def.ingredients)) this.ingredients[ing] -= need;
+    const rebate = this.ingredientRebate(id);
+    if (rebate) this.earn(rebate, 'rebate', `${def.name}: malzeme iadesi`);
+    this.products[id] += 1;
+    this.stats.produced[id] += 1;
+    this.stats.producedTotal += 1;
+    this.stats.handMade = (this.stats.handMade ?? 0) + 1;
+    this.progression?.award('produce', id);
+    this.emit('complete', { station: 'hand', product: id });
+    this.emit('change', { type: 'complete', product: id, hand: true });
+    return { ok: true, ...(rebate ? { rebate } : {}) };
   }
 
   /** Names the cafe (see profile.js). Returns the name that was kept. */

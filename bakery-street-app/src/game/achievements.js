@@ -31,6 +31,7 @@ export const ACHIEVEMENTS = [
   { id: 'pets50', name: 'Sevgi Dolu', icon: '🐾', text: 'kez kedi sev', value: (g) => g.life?.petsTotal ?? 0, target: 50, gold: 300 },
   { id: 'stories3', name: 'Hikâye Anlatıcısı', icon: '📗', text: 'müşteri hikâyesi tamamla', value: (g) => Object.values(g.life?.stories ?? {}).filter((n) => n >= 3).length, target: 3, gold: 800, gems: 3 },
   { id: 'branch1', name: 'Kafeler Zinciri', icon: '🏡', text: 'yeni şube aç', value: (g) => g.branch?.count ?? 0, target: 1, gold: 2000, gems: 10 },
+  { id: 'hand25', name: 'Usta Eller', icon: '🥣', text: 'siparişi tezgâhta kendin hazırla', value: s('handMade'), target: 25, gold: 400 },
   { id: 'play60', name: 'Huzur Köşesi', icon: '🍵', text: 'dakika kafede vakit geçir', value: (g) => Math.floor(s('playSec')(g) / 60), target: 60, gold: 350 },
 ];
 

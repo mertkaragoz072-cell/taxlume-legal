@@ -48,7 +48,7 @@ export function validate(raw, game) {
   const rs = raw.stats;
   if (rs !== undefined) {
     if (!rs || typeof rs !== 'object') throw new Error('istatistikler geçersiz');
-    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades', 'researchBought', 'explorationsDone', 'goldSpent', 'goldEarned', 'shopBought', 'bestCombo', 'favoritesServed', 'playSec']) {
+    for (const k of ['producedTotal', 'soldTotal', 'marketPurchases', 'upgradesBought', 'buildingsOpened', 'buildingUpgrades', 'researchBought', 'explorationsDone', 'goldSpent', 'goldEarned', 'shopBought', 'bestCombo', 'favoritesServed', 'playSec', 'handMade']) {
       if (rs[k] === undefined) continue;
       if (!isCount(rs[k])) throw new Error(`istatistik geçersiz (${k})`);
       stats[k] = rs[k];

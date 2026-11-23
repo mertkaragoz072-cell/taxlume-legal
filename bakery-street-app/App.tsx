@@ -23,6 +23,7 @@ import { Present } from "./src/ui/kit";
 import { MOTION } from "./src/ui/motion";
 import { PanelBoundary, StageCard, saleNotes } from "./src/ui/Celebration";
 import { AchievementsPanel, HelpPanel, LettersPanel, MemoriesPanel, summaryLines } from "./src/ui/LifePanels";
+import { KitchenPanel } from "./src/ui/KitchenPanel";
 import { askPermission, clearReminders, scheduleReminders } from "./src/runtime/notify";
 import { ExploreBoardPanel, useBoardTop } from "./src/ui/ExploreBoard";
 import { MarketPanel } from "./src/ui/MarketPanel";
@@ -104,7 +105,7 @@ function App() {
   );
 }
 
-type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "town" | "shop" | "letters" | "achievements" | "memories" | "help";
+type Overlay = "quests" | "daily" | "album" | "stats" | "photo" | "settings" | "town" | "shop" | "letters" | "achievements" | "memories" | "help" | "kitchen";
 
 function Shell({ world, storage, problems }: { world: World; storage: NativeStorage; problems: string[] }) {
   TEXT.k = world.settings.values.bigText ? 1.15 : 1;                     // Ayarlar › Büyük yazı
@@ -327,7 +328,8 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
         if (!r.ok) showToast(r.message, 2400);                                                                                   // (a sale is announced by the 'customer' event below)
       } else {
         const area = AREAS.find((a: any) => a.id === hit);
-        if (area?.panel) { scene.select(area.id); setOverlay(null); setPanel({ id: area.panel, side: "right" }); }
+        if (area?.id === "counter") { scene.select(area.id); setPanel(null); setOverlay("kitchen"); }      // the prep counter: the kitchen counter, where the player may prepare orders by hand
+        else if (area?.panel) { scene.select(area.id); setOverlay(null); setPanel({ id: area.panel, side: "right" }); }
         else { act.closePanel(); showToast("Müşteri masaları yakında!"); }
       }
     }
@@ -362,6 +364,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
           <Present show={overlay === "achievements"}><PanelBoundary onFail={failPanel}><AchievementsPanel /></PanelBoundary></Present>
           <Present show={overlay === "memories"}><PanelBoundary onFail={failPanel}><MemoriesPanel /></PanelBoundary></Present>
           <Present show={overlay === "help"}><PanelBoundary onFail={failPanel}><HelpPanel /></PanelBoundary></Present>
+          <Present show={overlay === "kitchen"}><PanelBoundary onFail={failPanel}><KitchenPanel onRecipes={() => { setOverlay(null); setPanel({ id: "counter", side: "right" }); }} /></PanelBoundary></Present>
           <Present show={overlay === "stats"}><PanelBoundary onFail={failPanel}><StatsPanel /></PanelBoundary></Present>
           <Present show={overlay === "settings"}><PanelBoundary onFail={failPanel}><SettingsPanel onReset={reset} /></PanelBoundary></Present>
           <Present show={overlay === "shop" && !peeking}><PanelBoundary onFail={failPanel}><ShopPanel request={shopReq} onClose={() => setOverlay(null)} /></PanelBoundary></Present>
