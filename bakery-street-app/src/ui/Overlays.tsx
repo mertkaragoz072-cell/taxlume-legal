@@ -36,7 +36,7 @@ export function QuestPanel() {
   const rewardText = (r: any) => [r.gold ? `💰 ${fmt(r.gold)}` : "", ...Object.entries(r.ingredients ?? {}).map(([id, n]) => `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${n}`)].filter(Boolean).join(" · ");
   return (
     <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
-      <Meta text={`${rainy ? "🌧 Bugün yağmurlu: sıcak içecekler daha çok istenir, müşteri biraz az gelir" : "☀ Bugün hava açık"} · Kafe puanı: ★ ${rating.stars.toFixed(1)}${rating.total < 5 ? " (henüz yeni)" : ""}`} />
+      <Meta text={`${rainy ? "🌧 Bugün yağmurlu: sıcak içecekler daha çok istenir, müşteri biraz az gelir" : "☀ Bugün hava açık"} · Kafe puanı: ★ ${rating.stars.toFixed(1).replace(".", ",")}${rating.total < 5 ? " (henüz yeni)" : ""}`} />
       {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
       <CollectAll />
       <PopularityCard />

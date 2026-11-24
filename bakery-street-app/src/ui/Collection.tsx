@@ -51,7 +51,7 @@ export function StatsPanel() {
       {line("⚡", "En iyi servis serisi", `${st.bestCombo ?? 0} satış`)}
       {line("♥", "Favori servisi", fmt(st.favoritesServed ?? 0))}
       {line("🏆", "En çok satan ürün", bestDef ? `${bestDef.icon} ${bestDef.name} · ${fmt(best[1])}` : "—")}
-      {line("⭐", "Kafe puanı", `★ ${rating.stars.toFixed(1)} (son ${rating.total} müşteri)`)}
+      {line("⭐", "Kafe puanı", `★ ${rating.stars.toFixed(1).replace(".", ",")} (son ${rating.total} müşteri)`)}
       {line("📖", "Müşteri albümü", `${album.count()}/${album.looks.length}`)}
     </Sheet>
   );

@@ -43,7 +43,7 @@ export class DecorLayer {
     if (sl) return { x: sl.x, y: sl.y - (sl.h ?? 40) * perspScale(sl.y) * 0.5 };
     if (d.type === 'tabletop') return mid(area('table1'));
     if (d.type === 'theme') return { x: CAM.w / 2, y: 420 };
-    if (d.kind === 'upgrade') return mid(area(`table${d.level + 2}`));
+    if (d.kind === 'upgrade') return d.upgrade === 'cafeTables' ? mid(area(`table${d.level + 2}`)) : d.upgrade === 'waiterTraining' ? mid(area('showcase')) : mid(area('oven'));   // the chef and the kitchen helper at the oven
     if (d.line === 'waiting') return { x: QUEUE_SPOTS[0].x, y: QUEUE_SPOTS[0].y - 90 };
     if (d.line === 'vip') return { x: CAM.w / 2, y: 1200 };
     if (d.effect?.area === 'aisle') return { x: 450, y: 1150 };

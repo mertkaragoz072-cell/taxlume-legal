@@ -276,7 +276,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
           </View>
         </>
       ) : tickets.length ? (
-        <View style={[paper, { position: "absolute", left: u0 * 8, right: u0 * 8, top: bowlCy - u * 10, alignItems: "center", gap: u * 0.6, padding: u * 1.6 }]}>
+        <View style={[paper, { position: "absolute", left: u0 * 8, right: u0 * 8, bottom: box.h - jarTop + u0 * 3, alignItems: "center", gap: u * 0.6, padding: u * 1.6 }]}>
           <Text allowFontScaling={false} style={{ fontSize: u * 7 }}>👆</Text>
           <Text allowFontScaling={false} style={{ textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>Bir sipariş fişi seç</Text>
           <Text allowFontScaling={false} style={{ textAlign: "center", color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.body) }}>Malzemeleri kaseye at, karıştır ve servis et.</Text>

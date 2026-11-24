@@ -191,7 +191,7 @@ export function GoalPill({ onPress }: { onPress: (tab: string) => void }) {
       <Pressable onPress={() => onPress(tab)} accessibilityRole="button" accessibilityLabel={`Hedef: ${g.item.name}`} style={({ pressed }) => ({ maxWidth: u * 50, minHeight: Math.max(44, u * 7.4), paddingVertical: u * 0.7, paddingHorizontal: u * 1.8, borderRadius: u * 3.2, borderWidth: u * 0.4, borderColor: ready ? C.green : C.brown, backgroundColor: C.cream, flexDirection: "row", alignItems: "center", gap: u * 1.2, transform: [{ scale: pressed ? 0.97 : 1 }], shadowColor: C.brownDark, shadowOffset: { width: 0, height: u * 0.4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 })}>
         <GameIcon id={ready ? "gift" : "q-target"} size={u * 4.4} />
         <View style={{ flexShrink: 1, gap: u * 0.4 }}>
-          <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
+          <Text allowFontScaling={false} numberOfLines={2} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{ready ? "Alınabilir: " : "Hedef: "}{g.item.name}</Text>
           <View style={{ height: u * 1, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}><View style={{ width: `${Math.round(g.progress * 100)}%`, height: "100%", backgroundColor: ready ? C.green : C.honey }} /></View>
           <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>{g.kind === "level" ? g.text.split(": ")[1] : ready ? `${fmt(g.price)} altın` : `${fmt(g.missingGold)} altın kaldı${sales ? ` · ≈${sales} satış` : ""}`}</Text>
         </View>
