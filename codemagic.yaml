@@ -148,6 +148,10 @@ workflows:
       vars:
         BUNDLE_ID: com.goldentown.app
         XCODE_SCHEME: GoldenTown
+        # Rewarded ads (AdMob). These ids are not secrets: they are compiled into
+        # the app. EXPO_PUBLIC_ADS=1 switches the ads on; without it none is shown.
+        EXPO_PUBLIC_ADS: "1"
+        EXPO_PUBLIC_ADMOB_REWARDED_IOS: ca-app-pub-8053543499343532/4713455298
 
     scripts:
       - name: Install dependencies

@@ -75,8 +75,9 @@ BUILD A LEGACY
   daily boost that runs your town at double speed
 • Back up your progress any time with a simple save code
 
-Golden Town is completely free to play — no ads, no in-app purchases, no
-account required. Everything happens locally on your device. Play in
+Golden Town is completely free to play — no in-app purchases and no account
+required. Optional ads you choose to watch can shorten waiting times. Playing
+alone happens locally on your device. Play in
 Turkish or English, switch anytime.
 
 Can you out-manage inflation and build the richest town around?
@@ -177,9 +178,10 @@ BİR MİRAS BIRAK
   kasabanı iki kat hızlandıran ücretsiz günlük hızlandırma seni bekliyor
 • İlerlemeni istediğin an basit bir kodla yedekle
 
-Golden Town tamamen ücretsizdir — reklam yok, uygulama içi satın alma yok,
-hesap gerektirmez. Her şey cihazında yerel olarak gerçekleşir. Türkçe ya
-da İngilizce oyna, istediğin zaman değiştir.
+Golden Town tamamen ücretsizdir — uygulama içi satın alma yok, hesap
+gerektirmez. İzlemeyi seçtiğin isteğe bağlı reklamlar bekleme sürelerini
+kısaltabilir. Tek başına oynarken her şey cihazında yerel olarak gerçekleşir.
+Türkçe ya da İngilizce oyna, istediğin zaman değiştir.
 
 Enflasyonu yönetip en zengin kasabayı sen mi kuracaksın?
 ```
