@@ -8,6 +8,8 @@ export interface QuestTemplate {
   target: number;
   reward: number;
   progress: (daily: DailyProgress) => number;
+  /** needs inter-city trade, which opens at a net worth the first day does not reach */
+  requiresTrade?: boolean;
 }
 
 export const QUEST_TEMPLATES: QuestTemplate[] = [
@@ -37,6 +39,7 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
     target: 1,
     reward: 25,
     progress: (d) => d.caravansSent,
+    requiresTrade: true,
   },
   {
     id: "daily_two_towns",
@@ -46,6 +49,7 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
     target: 2,
     reward: 35,
     progress: (d) => d.townsTraded.length,
+    requiresTrade: true,
   },
   {
     id: "daily_earnings",
@@ -73,12 +77,25 @@ export const QUEST_TEMPLATES_BY_ID = Object.fromEntries(QUEST_TEMPLATES.map((q) 
 >;
 
 export function makeInitialDailyProgress(): DailyProgress {
-  return { trades: 0, caravansSent: 0, townsTraded: [], cashEarned: 0, upgradesBought: 0 };
+  return {
+    trades: 0,
+    caravansSent: 0,
+    townsTraded: [],
+    cashEarned: 0,
+    upgradesBought: 0,
+    profitMade: 0,
+    goodsHeld: 0,
+    tradeStreak: 0,
+  };
 }
 
 /** Deterministically picks `count` distinct templates for a given date, so
  * reloading the same day always shows the same quests. */
-export function pickDailyQuestTemplates(dateSeed: string, count: number): QuestTemplate[] {
+export function pickDailyQuestTemplates(
+  dateSeed: string,
+  count: number,
+  tradeUnlocked = true
+): QuestTemplate[] {
   let seed = 0;
   for (let i = 0; i < dateSeed.length; i++) {
     seed = (seed * 31 + dateSeed.charCodeAt(i)) >>> 0;
@@ -88,7 +105,8 @@ export function pickDailyQuestTemplates(dateSeed: string, count: number): QuestT
     return seed / 0xffffffff;
   };
 
-  const pool = [...QUEST_TEMPLATES];
+  // Never hand out a task the player cannot do yet (a caravan, while trade is locked).
+  const pool = QUEST_TEMPLATES.filter((tpl) => tradeUnlocked || !tpl.requiresTrade);
   const picked: QuestTemplate[] = [];
   const n = Math.min(count, pool.length);
   for (let i = 0; i < n; i++) {

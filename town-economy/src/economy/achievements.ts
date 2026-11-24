@@ -1,4 +1,5 @@
 import { PROPERTIES } from "./properties";
+import { RESEARCH_NODES } from "./research";
 import { TOWNS_BY_ID } from "./towns";
 import { EconomyState } from "./types";
 
@@ -28,7 +29,23 @@ export type AchievementId =
   | "real_estate_mogul"
   | "skilled_ruler"
   | "speculator"
-  | "hot_hand";
+  | "hot_hand"
+  | "rank_capital"
+  | "rank_kingdom"
+  | "rank_empire"
+  | "rank_goldenAge"
+  | "rank_legendaryMarket"
+  | "rank_worldPower"
+  | "rank_tradeDynasty"
+  | "rank_immortalLegend"
+  | "trader_200"
+  | "trader_1000"
+  | "caravan_master_50"
+  | "streak_100"
+  | "survive_1000"
+  | "prestige_5"
+  | "researcher_all"
+  | "speculator_10";
 
 export interface AchievementDef {
   id: AchievementId;
@@ -293,6 +310,163 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: 40,
     target: 5,
     progress: (s) => s.stats.bestTradeStreak,
+  },
+  // --- Rank ladder ---------------------------------------------------------
+  // The rest of the list tops out at net_20000 — tier 2 on the town rank
+  // ladder (see TOWN_RANK_TIERS in townRanks.ts) — so a run that outgrows
+  // that in its first few days has nothing left to chase here. These pick
+  // up right where net_20000 leaves off, one per named rank, all the way
+  // to the top of the list.
+  {
+    id: "rank_capital",
+    titleKey: "achievement.rank_capital.title",
+    descriptionKey: "achievement.rank_capital.description",
+    icon: "👑",
+    reward: 300,
+    target: 5,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_kingdom",
+    titleKey: "achievement.rank_kingdom.title",
+    descriptionKey: "achievement.rank_kingdom.description",
+    icon: "🏰",
+    reward: 500,
+    target: 6,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_empire",
+    titleKey: "achievement.rank_empire.title",
+    descriptionKey: "achievement.rank_empire.description",
+    icon: "⚜️",
+    reward: 800,
+    target: 7,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_goldenAge",
+    titleKey: "achievement.rank_goldenAge.title",
+    descriptionKey: "achievement.rank_goldenAge.description",
+    icon: "✨",
+    reward: 1300,
+    target: 8,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_legendaryMarket",
+    titleKey: "achievement.rank_legendaryMarket.title",
+    descriptionKey: "achievement.rank_legendaryMarket.description",
+    icon: "🌟",
+    reward: 2200,
+    target: 9,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_worldPower",
+    titleKey: "achievement.rank_worldPower.title",
+    descriptionKey: "achievement.rank_worldPower.description",
+    icon: "🌍",
+    reward: 3800,
+    target: 10,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_tradeDynasty",
+    titleKey: "achievement.rank_tradeDynasty.title",
+    descriptionKey: "achievement.rank_tradeDynasty.description",
+    icon: "💎",
+    reward: 6500,
+    target: 11,
+    progress: (s) => s.townRankIndex,
+  },
+  {
+    id: "rank_immortalLegend",
+    titleKey: "achievement.rank_immortalLegend.title",
+    descriptionKey: "achievement.rank_immortalLegend.description",
+    icon: "🔱",
+    reward: 11000,
+    target: 12,
+    progress: (s) => s.townRankIndex,
+  },
+  // --- Extended grind ladder -------------------------------------------------
+  // Same idea for the non-rank achievements: trader_50, caravan_master_10,
+  // streak_30, survive_300, researcher and speculator all cap at targets a
+  // long-running town clears early. These extend each of those ladders
+  // further for a run that's still going.
+  {
+    id: "trader_200",
+    titleKey: "achievement.trader_200.title",
+    descriptionKey: "achievement.trader_200.description",
+    icon: "🎯",
+    reward: 150,
+    target: 200,
+    progress: (s) => s.stats.totalTrades,
+  },
+  {
+    id: "trader_1000",
+    titleKey: "achievement.trader_1000.title",
+    descriptionKey: "achievement.trader_1000.description",
+    icon: "🏅",
+    reward: 500,
+    target: 1000,
+    progress: (s) => s.stats.totalTrades,
+  },
+  {
+    id: "caravan_master_50",
+    titleKey: "achievement.caravan_master_50.title",
+    descriptionKey: "achievement.caravan_master_50.description",
+    icon: "🚛",
+    reward: 300,
+    target: 50,
+    progress: (s) => s.stats.totalCaravansCompleted,
+  },
+  {
+    id: "streak_100",
+    titleKey: "achievement.streak_100.title",
+    descriptionKey: "achievement.streak_100.description",
+    icon: "🌙",
+    reward: 800,
+    target: 100,
+    progress: (s) => s.streak.count,
+  },
+  {
+    id: "survive_1000",
+    titleKey: "achievement.survive_1000.title",
+    descriptionKey: "achievement.survive_1000.description",
+    icon: "⏳",
+    reward: 400,
+    // 25 in-game days — see survive_100's comment above for why this is
+    // hardcoded rather than imported.
+    target: 1000,
+    progress: (s) => s.tick,
+  },
+  {
+    id: "prestige_5",
+    titleKey: "achievement.prestige_5.title",
+    descriptionKey: "achievement.prestige_5.description",
+    icon: "🔁",
+    reward: 600,
+    target: 5,
+    progress: (s) => s.prestigeLevel,
+  },
+  {
+    id: "researcher_all",
+    titleKey: "achievement.researcher_all.title",
+    descriptionKey: "achievement.researcher_all.description",
+    icon: "🧪",
+    reward: 350,
+    target: RESEARCH_NODES.length,
+    progress: (s) => s.researched.length,
+  },
+  {
+    id: "speculator_10",
+    titleKey: "achievement.speculator_10.title",
+    descriptionKey: "achievement.speculator_10.description",
+    icon: "📜",
+    reward: 250,
+    target: 10,
+    progress: (s) => s.stats.contractsWon,
   },
 ];
 

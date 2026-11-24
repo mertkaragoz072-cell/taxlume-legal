@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from "react";
+import { setUiLanguage } from "../utils/uiLanguage";
 import { useEconomy } from "./useEconomy";
 
 type EconomyContextValue = ReturnType<typeof useEconomy>;
@@ -7,6 +8,7 @@ const EconomyContext = createContext<EconomyContextValue | null>(null);
 
 export function EconomyProvider({ children }: { children: React.ReactNode }) {
   const economy = useEconomy();
+  setUiLanguage(economy.state.language);
   return <EconomyContext.Provider value={economy}>{children}</EconomyContext.Provider>;
 }
 

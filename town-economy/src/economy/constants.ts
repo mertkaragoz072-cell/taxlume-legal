@@ -5,6 +5,7 @@
  * here has behaviour; changing a value here changes the game's balance. */
 
 import { DifficultyId } from "./difficulty";
+import { townRankThreshold } from "./townRanks";
 
 export const HISTORY_LEN = 40;
 export const TICK_MS = 3000;
@@ -19,21 +20,49 @@ export const BOOSTED_TICK_MS = Math.round(TICK_MS / SPEED_BOOST_MULTIPLIER);
 export const EVENT_LOG_CAP = 30;
 export const DEFAULT_DIFFICULTY: DifficultyId = "normal";
 export const TOWN_NAME_MAX_LENGTH = 24;
+// --- Rank-gated feature unlocks ---------------------------------------------
+// A new town starts with just the market, inventory and basic town-hall
+// upgrades — everything else used to have its own bespoke net-worth number,
+// clustered so tightly (500 to 10,000) that a normal run unlocked the whole
+// game within its first few minutes and then had nothing new to reveal for
+// every order of magnitude after that. These now read straight off the town
+// rank ladder (see townRanks.ts) instead: each one fires at a *named* rank's
+// own threshold, so reaching that rank and gaining the feature are the same
+// moment — a rank-up event and (where one exists) this system's own unlock
+// event fire together, instead of a silent number crossing separately from
+// the title changing.
+//
+// Deliberately left off this ladder: Research and Invest stay available
+// from tick one (the guided "First Steps" onboarding — see onboarding.ts —
+// walks a brand-new player through both within their first session, so
+// gating them behind a rank would strand that tutorial), and Loans stay
+// available from tick one too (a doctrine choice changes future loan rates —
+// see doctrines.ts' loanRateMult — so the player should be able to have
+// already felt how credit behaves before locking that choice in, not after).
+//
 // A new town starts local-market-only; once its net worth proves the
 // player can run an economy, inter-city trade (and the caravan/foreign-
 // town system) opens up. Sticky once crossed — see applyTradeUnlock.
-export const TRADE_UNLOCK_NET_WORTH = 500;
+// Reaching "Town", the first named rank past the start.
+export const TRADE_UNLOCK_NET_WORTH = townRankThreshold(1);
 // A further milestone past ordinary inter-city trade: once the town has
 // grown enough, the far-off metropolises (see towns.ts' "metropol" tier —
 // pricier caravans, but far better payoff for the luxury goods) open up.
-// Sticky once crossed — see applyMetropolUnlock.
-export const METROPOL_UNLOCK_NET_WORTH = 3000;
+// Sticky once crossed — see applyMetropolUnlock. Reaching "Trade Hub" — the
+// rank's own name is what earned it this slot on the ladder.
+export const METROPOL_UNLOCK_NET_WORTH = townRankThreshold(4);
+// Staffing a good's production for a recurring wage (see workers.ts) — the
+// one system here that had no gate at all before this pass, available from
+// tick one same as research/invest/loans above, which buried it in the pile
+// of things a new town could already do. Sticky once crossed — see
+// applyWorkersUnlock. Reaching "Capital".
+export const WORKERS_UNLOCK_NET_WORTH = townRankThreshold(5);
 // --- Town doctrine ---------------------------------------------------------
 // The run's one irreversible choice (see doctrines.ts), offered between the
 // trade and metropol milestones: late enough that the player has felt how
 // tariffs, production and credit actually behave, early enough that the
-// choice still shapes most of the run.
-export const DOCTRINE_UNLOCK_NET_WORTH = 2000;
+// choice still shapes most of the run. Reaching "City".
+export const DOCTRINE_UNLOCK_NET_WORTH = townRankThreshold(2);
 // The one content gate tied to prestigeLevel rather than the current run's
 // net worth — see towns.ts' "legendary" tier and applyLegendaryUnlock.
 export const LEGENDARY_UNLOCK_PRESTIGE_LEVEL = 3;
@@ -53,8 +82,11 @@ export const TICKS_PER_GAME_DAY = 40;
 // --- Prestige ------------------------------------------------------------
 // The "end of a run" milestone: cash in a well-grown town for a permanent,
 // stacking bonus that survives every future reset (see PRESTIGE below and
-// the RESET case, which both carry prestigeLevel forward).
-export const PRESTIGE_UNLOCK_NET_WORTH = 10000;
+// the RESET case, which both carry prestigeLevel forward). Reaching
+// "Metropolis" — also rank-tied now (was a standalone 10,000), but kept
+// close to its old value: prestige is meant to be loopable early and often
+// across repeat runs, not a single late-game finish line.
+export const PRESTIGE_UNLOCK_NET_WORTH = townRankThreshold(3);
 export const PRESTIGE_PRODUCTION_BONUS_PER_LEVEL = 0.08;
 export const PRESTIGE_CASH_BONUS_PER_LEVEL = 60;
 // Points earned each prestige, spent on prestigePerks.ts — a player-chosen
@@ -67,6 +99,40 @@ export const PRESTIGE_POINTS_PER_PRESTIGE = 1;
 // is always a next rank worth chasing within a single run, not just across
 // resets like prestige.
 export const TOWN_RANK_PRODUCTION_BONUS_PER_RANK = 0.004;
+// The same "always a next rank worth chasing" idea applied to capacity
+// rather than output — a bigger warehouse and a bank that trusts a
+// well-ranked town with more credit, both earned passively just by
+// growing, on top of (not instead of) the Ambar upgrade and the loan's own
+// net-worth-scaled cap. See storageCapacity/loanCap in formulas.ts.
+export const TOWN_RANK_STORAGE_BONUS_PER_RANK = 40;
+export const TOWN_RANK_LOAN_CAP_BONUS_PER_RANK = 0.015;
+// How many ranks it takes to earn one more slot on each of these — every
+// one of them was a flat cap regardless of how far the town had come, so a
+// rank-1 town and a rank-12 one were juggling the exact same three auto-
+// trade rules, three contracts, three workers per good. Small, capped-
+// feeling caps stay small forever; these now grow (slowly — this isn't
+// meant to be the headline reward for ranking up, just one more thing
+// that quietly gets easier) alongside everything else rank already
+// touches. See the matching effective*() functions in formulas.ts.
+export const AUTO_TRADE_RULES_PER_RANK = 2;
+export const CONTRACT_SLOTS_PER_RANK = 2;
+export const BULK_CONTRACT_SLOTS_PER_RANK = 2;
+export const WORKER_SLOTS_PER_RANK = 3;
+// The rank a research node's third tier requires on top of its own
+// prerequisite chain (tier 1 -> tier 2 -> tier 3) — see research.ts'
+// tier3(). Reaching "Kingdom", the rank right after workers (Capital)
+// open up, continuing the same one-new-thing-per-rank cadence.
+export const RESEARCH_TIER3_UNLOCK_RANK = 6;
+/** The rank (index) at which guilds open: City, two promotions in. */
+export const GUILD_UNLOCK_RANK = 2;
+// Time-limited goals (daily/mini quests, the weekly challenge, rival
+// bounties) used to hand out the exact same target and reward regardless
+// of rank — "make 3 trades today" never got harder or more lucrative no
+// matter how far a run went, so late-game these stopped being goals and
+// became something to tap through. Both grow with townRankIndex now; see
+// scaledGoalTarget/scaledGoalReward in formulas.ts.
+export const RANK_GOAL_TARGET_SCALE_PER_RANK = 0.08;
+export const RANK_GOAL_REWARD_SCALE_PER_RANK = 0.14;
 // --- Banking / loans -------------------------------------------------------
 // A loan is cash now against interest that compounds every tick until
 // repaid — real leverage, real risk. At most one outstanding at a time.
@@ -97,7 +163,7 @@ export const LOAN_TERM_RATE_PER_MONTH_PER_DAY = 0.0015;
 export const LOAN_TERM_DAYS_PER_MONTH = 20;
 // How much an all-consuming debt (balance ≈ net worth) drags down the
 // villagers' target happiness, on top of whatever the tax rate is already doing.
-export const DEBT_HAPPINESS_DRAG = 20;
+export const DEBT_HAPPINESS_DRAG = 28;
 // --- Forward contracts ---------------------------------------------------
 // A cash-settled bet on a good's home price at signing vs. its price at
 // maturity — "long" pays off if it rose, "short" if it fell. Margin is
@@ -132,13 +198,39 @@ export const SCARCITY_MIN = 0.5;
 export const SCARCITY_MAX = 2.2;
 export const SUPPLY_MIN_FACTOR = 0.15;
 export const SUPPLY_MAX_FACTOR = 3;
-export const PRODUCTION_NOISE = 0.2; // ± fraction of baseProduction, random per tick
+export const PRODUCTION_NOISE = 1.1; // ± fraction of baseProduction, random per tick
 export const PRODUCTION_PENALTY_FACTOR = 0.7; // unhappy villagers produce down to 30% of normal
 export const PRODUCTION_BONUS_FACTOR = 0.15; // content villagers produce up to 15% more
 export const EFFICIENCY_MIN = 0.3;
 export const EFFICIENCY_MAX = 1.15;
 export const FOREIGN_SUPPLY_REVERSION = 0.06; // foreign markets restock toward equilibrium each tick
-export const FOREIGN_NOISE = 0.15;
+export const FOREIGN_NOISE = 0.65;
+// Caps how far a good's price can move in a single tick, regardless of how
+// hard the supply-driven scarcity curve and demand pressure want to swing
+// it. Without this, a high-noise tick landing while supply already sits far
+// from baseSupply gets exponentiated by scarcityFactor's power curve into a
+// jarring one-tick jump — a spike that reads as a bug, not a market. This
+// keeps every step small enough to feel like normal jitter while still
+// letting the noise above keep the price in near-constant motion.
+export const MAX_PRICE_STEP_PCT = 0.26;
+// A small, un-accumulated wobble applied straight to price, on top of
+// everything above. Supply is a slow accumulator (each tick only nudges it
+// by that tick's production noise), so even a large PRODUCTION_NOISE mostly
+// shows up as a gradual multi-tick drift rather than a number that visibly
+// moves every single tick — repeated rounds of turning up the knobs above
+// never fixed "prices feel too fixed" for exactly that reason. This jitter
+// is freshly rolled every tick rather than carried forward, so it can't
+// itself drift the price anywhere; it just makes the display flicker
+// convincingly tick to tick on top of the real supply-driven trend.
+export const PRICE_JITTER_PCT = 0.05;
+// How much of an input's own price swing carries over to the price of the
+// good made from it (bread from grain, cloth from wool, cheese from milk,
+// paper and glass from wood, jewellery from iron — see inputCostFactor in
+// formulas.ts). 0.5 means an input sitting 20% above its base price pushes
+// the output's own base upward by 10% before its usual supply/demand pricing
+// runs on top of that. Kept well under 1 (full cost pass-through) so the
+// output still has a market of its own rather than just tracking its input.
+export const INPUT_COST_PASS_THROUGH = 0.5;
 // --- Demand pressure ------------------------------------------------------
 // Supply alone drifts back toward (and past) baseSupply within a tick or two
 // once villagers are happy and producing above baseline — too fast for a
@@ -148,9 +240,9 @@ export const FOREIGN_NOISE = 0.15;
 // the price and that bend lingers for a couple minutes of real play before
 // fading — long enough to feel like your trade mattered, short enough that
 // the market always finds its own level again.
-export const DEMAND_PRESSURE_DECAY = 0.98; // per tick (TICK_MS=3000ms) => ~50-tick / ~150s half-life
-export const DEMAND_PRESSURE_SENSITIVITY = 0.35; // price swing per "one baseSupply's worth" traded, before market depth
-export const DEMAND_PRESSURE_MAX = 0.4; // clamp so no single order can send price to an absurd multiple
+export const DEMAND_PRESSURE_DECAY = 0.94; // per tick (TICK_MS=3000ms) => ~165-tick / ~500s half-life (slower decay for longer-lasting price swings)
+export const DEMAND_PRESSURE_SENSITIVITY = 0.6; // price swing per "one baseSupply's worth" traded, before market depth
+export const DEMAND_PRESSURE_MAX = 0.18; // clamp so no single order can send price to an absurd multiple
 // --- Bid/ask spread ---------------------------------------------------------
 // Real markets charge a toll on every round trip — without one, buying and
 // immediately selling back is free, so profit is pure luck rather than a
@@ -183,8 +275,20 @@ export const TAX_OUTPUT_FACTOR = 0.008;
 export const INFLATION_REVERSION_RATE = 0.035; // pull toward the difficulty's baseline drift, per tick
 export const HAPPINESS_TARGET_SLOPE = 220;
 export const HAPPINESS_EASE = 0.04;
-export const PRODUCTION_INFLATION_FACTOR = 0.003;
-export const CONTENT_BONUS_FACTOR = 0.001;
+export const PRODUCTION_INFLATION_FACTOR = 0.005; // unhappy, under-producing villagers push inflation harder
+export const CONTENT_BONUS_FACTOR = 0.005; // mutlu halk enflasyonu azaltabiliyor
+// inflationRate is itself bounded (config.inflationMin/Max) and mean-reverting,
+// so it can never "run away" tick to tick — but a sustained-happy town sits at
+// a negative inflationTarget indefinitely, and inflationIndex is that rate's
+// running PRODUCT (index *= 1 + rate), which has no equivalent reversion: even
+// a mild, perfectly stable -0.35%/tick target compounds toward zero over a
+// long enough session, dragging every good's price down with it (through the
+// inflationIndex/100 term in priceFromSupply) with no way back, since the
+// same happiness that caused it also keeps the target negative. There's
+// already an upper collapse bound (difficulty.hyperinflationIndex); this is
+// its missing lower counterpart — not a loss condition, just a floor under
+// how much a content town's prices can ease.
+export const INFLATION_INDEX_FLOOR = 40;
 export const ANGRY_THRESHOLD = 20;
 export const ANGRY_EVENT_CHANCE = 0.1;
 export const ANGRY_CASH_PENALTY = 25;
@@ -196,29 +300,65 @@ export const CONTENT_CASH_BONUS = 15;
 // either freeze the UI simulating tens of thousands of ticks or hand out
 // unbounded free progress; a modest, always-fast catch-up is the goal.
 export const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000; // 8 hours
+// The town keeps working while the app is shut, just slower than a live
+// session — 1 real minute away only costs 6 simulated seconds. A flat
+// per-absence cap (the old design) meant every gap past ~12 minutes
+// produced the exact same catch-up regardless of whether the player was
+// gone for 20 minutes or 8 hours, which read as production silently
+// stopping. Scaling by this rate keeps "away longer" meaning "more
+// caught up" throughout the whole cap.
+export const OFFLINE_RATE = 0.1;
 // Kept deliberately modest: baseInflationDrift compounds every tick, so
 // thousands of simulated ticks would compound even the mild live-session
 // drift into hyperinflation almost every time — turning "welcome back"
-// into "sorry, it's all gone" regardless of policy. This cap keeps the
+// into "sorry, it's all gone" regardless of policy. This cap (derived from
+// MAX_OFFLINE_MS and OFFLINE_RATE, so the two stay consistent) keeps the
 // catch-up meaningful (tax income, a caravan or two, a little price
 // drift) without exposing an absence to a crash a live player wouldn't
 // have hit in the same stretch either.
-export const MAX_OFFLINE_TICKS = 240;
+export const MAX_OFFLINE_TICKS = Math.floor((MAX_OFFLINE_MS / TICK_MS) * OFFLINE_RATE);
 export const MIN_OFFLINE_MS_TO_SHOW = 60 * 1000; // don't pop up for a quick app switch
 // Rarer than passive news (EVENT_TEMPLATES) so each one feels like a
 // distinct moment; freezes the tick loop until answered (see the guard
 // at the top of tick()).
-export const DECISION_EVENT_CHANCE = 0.02;
+export const DECISION_EVENT_CHANCE = 0.011;
 // A separate, simpler kind of interruption from decisions: a villager just
 // wants some of one good, not a policy choice with varied outcomes.
-export const VILLAGER_REQUEST_CHANCE = 0.018;
+export const VILLAGER_REQUEST_CHANCE = 0.01;
 // Rarer still — a rival trader's bulk-buy offer pays a premium over market
 // price, so it should feel like an occasional windfall, not a routine ask.
-export const RIVAL_OFFER_CHANCE = 0.014;
+export const RIVAL_OFFER_CHANCE = 0.007;
+/** Ticks that must pass after one blocking modal before another may fire.
+ *
+ * The three of them were rolled independently, and independence is the
+ * problem: a game day is 40 ticks of 3s, so at the old rates something
+ * froze the clock and demanded an answer roughly every 60 seconds of real
+ * play. Nothing in the town was broken — there was simply never a stretch
+ * long enough to do anything in.
+ *
+ * Halving the rates thins them out; this stops the remaining ones
+ * clustering, which is what actually reads as "constant". At 30 ticks no
+ * more than one interruption can land per ~75 seconds however the dice
+ * fall, and in practice they arrive about once a game day.
+ */
+export const INTERRUPTION_COOLDOWN_TICKS = 30;
+/** A new town gets a quiet start: for its first three minutes no decision,
+ * villager, rival offer, crisis or flash deal turns up, so the first trades are
+ * made at the player's own pace instead of between pop-ups. */
+export const NEWBIE_GRACE_TICKS = 60;
+/** A production-quota bonus below this many coins is logged without a banner. */
+export const QUOTA_BANNER_MIN_BONUS = 10;
 // Unlike a decision or villager request, a mini quest never freezes the
 // tick loop — it just runs in the background against a short deadline
 // (see miniQuests.ts) while the player keeps playing normally.
-export const MINI_QUEST_CHANCE = 0.02;
+export const MINI_QUEST_CHANCE = 0.25;
+/** A flash quest comes in a rhythm: once one ends there is a breather first,
+ * longer when it ran out unnoticed (the player is busy or away) than when it
+ * was done, then a new one turns up within a few ticks. */
+export const MINI_QUEST_COOLDOWN_DONE_TICKS = 16; // ~48 s
+export const MINI_QUEST_COOLDOWN_EXPIRED_TICKS = 30; // ~90 s
+/** The very first one waits a little so a new game is not interrupted. */
+export const MINI_QUEST_FIRST_DELAY_TICKS = 20;
 // Much rarer than a mini quest — a seasonal event runs far longer (tens of
 // ticks) so overlapping spawns would just mean "always some price boost
 // active," which defeats the "special occasion" feel (see seasonalEvents.ts).
@@ -242,6 +382,13 @@ export const LOST_TREASURE_MIN_AMOUNT = 20;
 // a rough backdrop pace) so the player has something to race against
 // besides their own past runs. Purely a flavor comparison; nothing the
 // player does affects it directly.
+// How many in-game days a new town is left alone before the rival's lead is
+// ever mentioned. A town starts worth roughly what the rival does, so the
+// lead changes hands within seconds of a first launch — and the very first
+// thing the game would say to someone who has not bought anything yet is
+// that they are losing. Overtaking the rival is still announced from day
+// one; it is only the discouraging half that waits.
+export const RIVAL_TOWN_GRACE_DAYS = 3;
 export const RIVAL_TOWN_GROWTH_RATE = 0.0015;
 export const RIVAL_TOWN_GROWTH_JITTER = 0.002;
 // A generous default so this never binds during ordinary early/mid-game

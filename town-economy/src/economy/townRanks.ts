@@ -4,6 +4,9 @@ export interface TownRankTier {
   icon: string;
   /** net worth required to reach this tier */
   threshold: number;
+  /** i18n key for a one-line flavor sentence shown in Merve's rank-up
+   * congratulations — purely narrative, never read anywhere mechanical */
+  loreKey: string;
 }
 
 // A long, named ladder of net-worth milestones — well past anything the
@@ -13,19 +16,49 @@ export interface TownRankTier {
 // Reaching a new tier is sticky (see townRankIndex in types.ts): net worth
 // can fall back afterwards without losing the rank already earned.
 export const TOWN_RANK_TIERS: TownRankTier[] = [
-  { nameKey: "townRank.village.name", icon: "🏘️", threshold: 0 },
-  { nameKey: "townRank.town.name", icon: "🏡", threshold: 1_000 },
-  { nameKey: "townRank.city.name", icon: "🏙️", threshold: 5_000 },
-  { nameKey: "townRank.metropolis.name", icon: "🌆", threshold: 15_000 },
-  { nameKey: "townRank.tradeHub.name", icon: "🏛️", threshold: 40_000 },
-  { nameKey: "townRank.capital.name", icon: "👑", threshold: 100_000 },
-  { nameKey: "townRank.kingdom.name", icon: "🏰", threshold: 300_000 },
-  { nameKey: "townRank.empire.name", icon: "⚜️", threshold: 1_000_000 },
-  { nameKey: "townRank.goldenAge.name", icon: "✨", threshold: 3_000_000 },
-  { nameKey: "townRank.legendaryMarket.name", icon: "🌟", threshold: 10_000_000 },
-  { nameKey: "townRank.worldPower.name", icon: "🌍", threshold: 30_000_000 },
-  { nameKey: "townRank.tradeDynasty.name", icon: "💎", threshold: 100_000_000 },
-  { nameKey: "townRank.immortalLegend.name", icon: "🔱", threshold: 300_000_000 },
+  { nameKey: "townRank.village.name", icon: "🏘️", threshold: 0, loreKey: "townRank.village.lore" },
+  { nameKey: "townRank.town.name", icon: "🏡", threshold: 1_000, loreKey: "townRank.town.lore" },
+  { nameKey: "townRank.city.name", icon: "🏙️", threshold: 5_000, loreKey: "townRank.city.lore" },
+  {
+    nameKey: "townRank.metropolis.name",
+    icon: "🌆",
+    threshold: 15_000,
+    loreKey: "townRank.metropolis.lore",
+  },
+  { nameKey: "townRank.tradeHub.name", icon: "🏛️", threshold: 40_000, loreKey: "townRank.tradeHub.lore" },
+  { nameKey: "townRank.capital.name", icon: "👑", threshold: 100_000, loreKey: "townRank.capital.lore" },
+  { nameKey: "townRank.kingdom.name", icon: "🏰", threshold: 300_000, loreKey: "townRank.kingdom.lore" },
+  { nameKey: "townRank.empire.name", icon: "⚜️", threshold: 1_000_000, loreKey: "townRank.empire.lore" },
+  {
+    nameKey: "townRank.goldenAge.name",
+    icon: "✨",
+    threshold: 3_000_000,
+    loreKey: "townRank.goldenAge.lore",
+  },
+  {
+    nameKey: "townRank.legendaryMarket.name",
+    icon: "🌟",
+    threshold: 10_000_000,
+    loreKey: "townRank.legendaryMarket.lore",
+  },
+  {
+    nameKey: "townRank.worldPower.name",
+    icon: "🌍",
+    threshold: 30_000_000,
+    loreKey: "townRank.worldPower.lore",
+  },
+  {
+    nameKey: "townRank.tradeDynasty.name",
+    icon: "💎",
+    threshold: 100_000_000,
+    loreKey: "townRank.tradeDynasty.lore",
+  },
+  {
+    nameKey: "townRank.immortalLegend.name",
+    icon: "🔱",
+    threshold: 300_000_000,
+    loreKey: "townRank.immortalLegend.lore",
+  },
 ];
 
 // Beyond the last named tier, thresholds keep multiplying forever so the
@@ -50,6 +83,11 @@ export function townRankIcon(index: number): string {
 export function townRankNameKey(index: number): string {
   const lastIndex = TOWN_RANK_TIERS.length - 1;
   return TOWN_RANK_TIERS[Math.max(0, Math.min(index, lastIndex))].nameKey;
+}
+/** i18n key for a rank's lore sentence — same last-tier-repeats rule as townRankNameKey. */
+export function townRankLoreKey(index: number): string {
+  const lastIndex = TOWN_RANK_TIERS.length - 1;
+  return TOWN_RANK_TIERS[Math.max(0, Math.min(index, lastIndex))].loreKey;
 }
 
 /** How many steps past the last named tier this index is (0 = still a named tier, 1 = first "II", ...). */

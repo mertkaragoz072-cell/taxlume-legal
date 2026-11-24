@@ -1,24 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from "react-native-svg";
+import { Animated, Easing, Image, Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { useEconomyContext } from "../economy/EconomyContext";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-  withAlpha,
-} from "../theme";
+import { dailyBonusForStreak } from "../economy/formulas";
+import { cardShadow, COLORS, FONT, glowShadow, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 import { ConfettiBurst } from "./ConfettiBurst";
-import { GradientFill } from "./GradientFill";
+import medGift from "../../assets/ui/modal/med_gift.webp";
+import discArt from "../../assets/ui/wheel/disc.webp";
+import hubArt from "../../assets/ui/wheel/hub.webp";
+import icFerris from "../../assets/ui/wheel/ic_ferris.webp";
+import ringArt from "../../assets/ui/wheel/ring.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
-import { ScalePressable } from "./ScalePressable";
+import { BigButton, ModalShell } from "./ModalKit";
 
 interface Props {
   visible: boolean;
@@ -29,32 +23,57 @@ interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
 }
 
-const WHEEL_ICONS = ["🪙", "💰", "🎁", "🪙", "💰", "🎁", "🪙", "💰"];
-const SEGMENT_COUNT = WHEEL_ICONS.length;
-const SEGMENT_ANGLE = 360 / SEGMENT_COUNT;
-const WHEEL_RADIUS = 78;
-const ICON_SIZE = 22;
-// Two alternating warm wood tones (rather than a bright/casino palette) so
-// the wheel reads as a real carved object that belongs in this game's
-// world, not a neon slot machine.
-const SEGMENT_COLORS = ["#3a2a1c", "#4a3520"];
+// The sent wheel art, in its own pixels (square crop around the centre).
+const ART = 704;
+const DISC = 528;
+const HUB = 188;
 
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const angleRad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
-}
+/** A 7-pip strip showing where today sits in the current week of the
+ * streak, rather than the raw (and eventually large) streak count — a
+ * player on day 23 still just sees "day 2 of this week," which reads the
+ * same every week instead of needing ever-bigger numbers to feel legible.
+ * The streak itself never resets on a 7-day cycle (see dailyCheckIn), only
+ * this display does; day 8 is streak-day 8 same as day 1 was streak-day 1,
+ * just drawn as week 2's first pip.
+ *
+ * Each pip's amount comes from dailyBonusForStreak — the same formula that
+ * actually pays it — so a "future" pip previews the real number, not a
+ * placeholder that could drift from what the player gets on that day. */
+function StreakCalendar({ streakCount }: { streakCount: number }) {
+  const { t, state, formatCoins } = useEconomyContext();
+  const posInWeek = (streakCount - 1) % 7;
+  const weekStartCount = streakCount - posInWeek;
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const dayCount = weekStartCount + i;
+    const kind: "past" | "today" | "future" = i < posInWeek ? "past" : i === posInWeek ? "today" : "future";
+    return { dayCount, kind, amount: dailyBonusForStreak(state, dayCount) };
+  });
 
-function wedgePath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
-  const start = polarToCartesian(cx, cy, r, startAngle);
-  const end = polarToCartesian(cx, cy, r, endAngle);
-  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
-}
-
-function iconPosition(index: number) {
-  const midAngle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-  const pos = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.62, midAngle);
-  return { left: pos.x - ICON_SIZE / 2, top: pos.y - ICON_SIZE / 2 };
+  return (
+    <View style={styles.calendarWrap}>
+      <Text style={styles.calendarTitle}>{t("dailyWheel.streakCalendarTitle")}</Text>
+      <View style={styles.calendarRow}>
+        {days.map((d, i) => (
+          <View
+            key={i}
+            style={[
+              styles.calendarPip,
+              d.kind === "today" && styles.calendarPipToday,
+              d.kind === "future" && styles.calendarPipFuture,
+            ]}
+          >
+            <Text style={[styles.calendarPipDay, d.kind === "today" && styles.calendarPipDayToday]}>
+              {i + 1}
+            </Text>
+            <Text style={styles.calendarPipIcon}>{d.kind === "future" ? "🔒" : "🪙"}</Text>
+            <Text style={[styles.calendarPipAmount, d.kind === "future" && styles.calendarPipAmountFuture]}>
+              {formatCoins(d.amount, 0)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 /** A once-a-day spin-to-reveal wheel over the daily check-in bonus. The
@@ -75,6 +94,10 @@ export function DailyRewardWheelModal({
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const lastDegRef = useRef(0);
+  const [boxW, setBoxW] = useState(300);
+  // Bigger than the dialog body's content so the prizes read; the wheel art's
+  // own margins absorb the overhang.
+  const size = Math.min(350, boxW + 28);
 
   useEffect(() => {
     if (visible) {
@@ -114,95 +137,66 @@ export function DailyRewardWheelModal({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>{t("dailyWheel.title")}</Text>
-          <Text style={styles.subtitle}>
-            {revealed ? t("dailyWheel.streakLabel", { count: streakCount }) : t("dailyWheel.subtitle")}
-          </Text>
+        <ModalShell title={t("dailyWheel.title")} medallion={medGift}>
+          <View style={styles.inner} onLayout={(e) => setBoxW(e.nativeEvent.layout.width)}>
+            <Text style={styles.subtitle}>
+              {revealed ? t("dailyWheel.streakLabel", { count: streakCount }) : t("dailyWheel.subtitle")}
+            </Text>
 
-          <View style={styles.wheelWrap}>
-            <View style={styles.pointer} />
-            <Animated.View style={[styles.wheel, { transform: [{ rotate: rotateDeg }] }]}>
-              <Svg width={WHEEL_RADIUS * 2} height={WHEEL_RADIUS * 2} style={StyleSheet.absoluteFill}>
-                <Defs>
-                  <RadialGradient id="dailyWheelGloss" cx="35%" cy="28%" r="75%">
-                    <Stop offset="0" stopColor="#ffffff" stopOpacity={0.12} />
-                    <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
-                  </RadialGradient>
-                </Defs>
-                {WHEEL_ICONS.map((_, i) => (
-                  <Path
-                    key={i}
-                    d={wedgePath(
-                      WHEEL_RADIUS,
-                      WHEEL_RADIUS,
-                      WHEEL_RADIUS - 2,
-                      i * SEGMENT_ANGLE,
-                      (i + 1) * SEGMENT_ANGLE
-                    )}
-                    fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
-                  />
-                ))}
-                {WHEEL_ICONS.map((_, i) => {
-                  const angle = i * SEGMENT_ANGLE;
-                  const inner = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS * 0.2, angle);
-                  const outer = polarToCartesian(WHEEL_RADIUS, WHEEL_RADIUS, WHEEL_RADIUS - 2, angle);
-                  return (
-                    <Line
-                      key={i}
-                      x1={inner.x}
-                      y1={inner.y}
-                      x2={outer.x}
-                      y2={outer.y}
-                      stroke={withAlpha(COLORS.accent, 0.3)}
-                      strokeWidth={1}
-                    />
-                  );
-                })}
-                <Circle
-                  cx={WHEEL_RADIUS}
-                  cy={WHEEL_RADIUS}
-                  r={WHEEL_RADIUS - 2}
-                  fill="url(#dailyWheelGloss)"
-                />
-                <Circle
-                  cx={WHEEL_RADIUS}
-                  cy={WHEEL_RADIUS}
-                  r={WHEEL_RADIUS - 1.5}
-                  fill="none"
-                  stroke={withAlpha(COLORS.accent, 0.55)}
-                  strokeWidth={2.5}
-                />
-              </Svg>
-              {WHEEL_ICONS.map((icon, i) => (
-                <Text key={i} style={[styles.wedgeIcon, iconPosition(i)]}>
-                  {icon}
-                </Text>
-              ))}
-            </Animated.View>
-            <View style={styles.hubHalo} />
-            <View style={styles.hub} />
+            <View style={[styles.wheelWrap, { width: size, height: size, marginVertical: -size * 0.1 }]}>
+              <Animated.View
+                style={[
+                  styles.disc,
+                  {
+                    width: (size * DISC) / ART,
+                    height: (size * DISC) / ART,
+                    left: (size - (size * DISC) / ART) / 2,
+                    top: (size - (size * DISC) / ART) / 2,
+                    transform: [{ rotate: rotateDeg }],
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <Image source={discArt} style={styles.fillImg} resizeMode="stretch" />
+              </Animated.View>
+              <Image source={ringArt} style={styles.fillImg} resizeMode="stretch" />
+              <Image
+                source={hubArt}
+                style={{
+                  position: "absolute",
+                  width: (size * HUB) / ART,
+                  height: (size * HUB) / ART,
+                  left: (size - (size * HUB) / ART) / 2,
+                  top: (size - (size * HUB) / ART) / 2,
+                }}
+                resizeMode="stretch"
+              />
+            </View>
+
+            {!revealed && (
+              <View style={styles.prizeBox}>
+                <Text style={styles.prizeLabel}>{t("dailyWheel.todayPrize")}</Text>
+                <Text style={styles.prizeAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
+              </View>
+            )}
+
+            {revealed ? (
+              <>
+                <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
+                <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
+                <StreakCalendar streakCount={streakCount} />
+                <BigButton label={t("dailyWheel.claimBtn")} onPress={onDismiss} />
+              </>
+            ) : (
+              <BigButton
+                icon={icFerris}
+                label={spinning ? t("dailyWheel.spinning") : t("dailyWheel.spinBtn")}
+                disabled={spinning}
+                onPress={spin}
+              />
+            )}
           </View>
-
-          {revealed ? (
-            <>
-              <Text style={styles.wonTitle}>{t("dailyWheel.wonTitle")}</Text>
-              <Text style={styles.wonAmount}>{t("dailyWheel.wonAmount", { amount })}</Text>
-              <ScalePressable onPress={onDismiss} style={styles.spinBtn} scaleTo={0.96}>
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.spinBtnText}>{t("dailyWheel.claimBtn")}</Text>
-              </ScalePressable>
-            </>
-          ) : (
-            <ScalePressable disabled={spinning} onPress={spin} style={styles.spinBtn} scaleTo={0.96}>
-              <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-              <Text style={styles.spinBtnText}>
-                {spinning ? t("dailyWheel.spinning") : t("dailyWheel.spinBtn")}
-              </Text>
-            </ScalePressable>
-          )}
-        </View>
+        </ModalShell>
       </ModalBackdrop>
       <ConfettiBurst trigger={confettiTrigger} />
     </Modal>
@@ -213,72 +207,29 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 340,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 20,
     alignItems: "center",
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg, textAlign: "center" },
-  wheelWrap: {
-    width: WHEEL_RADIUS * 2,
-    height: WHEEL_RADIUS * 2,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SPACING.lg,
-    shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  pointer: {
-    position: "absolute",
-    top: -4,
-    zIndex: 2,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 7,
-    borderRightWidth: 7,
-    borderTopWidth: 12,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderTopColor: COLORS.accent,
-    shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  wheel: {
-    width: WHEEL_RADIUS * 2,
-    height: WHEEL_RADIUS * 2,
-    borderRadius: WHEEL_RADIUS,
-    overflow: "hidden",
-  },
-  wedgeIcon: {
-    position: "absolute",
-    fontSize: 16,
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    textAlign: "center",
-    lineHeight: ICON_SIZE,
-  },
-  hubHalo: {
-    position: "absolute",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: withAlpha(COLORS.accent, 0.18),
-  },
-  hub: {
-    position: "absolute",
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: COLORS.accent,
-    borderWidth: 2,
-    borderColor: "#2a2016",
+  inner: { alignItems: "center" },
+  title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
+  subtitle: { color: "#f4e8d0", fontSize: 14, marginBottom: SPACING.lg, textAlign: "center" },
+  fillImg: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  wheelWrap: { alignSelf: "center", alignItems: "center", justifyContent: "center" },
+  disc: { position: "absolute" },
+  prizeBox: { alignItems: "center", marginBottom: 10 },
+  prizeLabel: { color: "#f4e8d0", fontFamily: FONT.medium, fontSize: 13 },
+  prizeAmount: {
+    color: "#ffd75e",
+    fontFamily: FONT.black,
+    fontSize: 30,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   wonTitle: { color: "#ffd75e", fontSize: TYPE.title, fontWeight: WEIGHT.black, fontFamily: FONT.black },
   wonAmount: {
@@ -289,6 +240,45 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: SPACING.lg,
   },
+  calendarWrap: { width: "100%", alignItems: "center", marginBottom: SPACING.lg },
+  calendarTitle: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.label,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+    marginBottom: SPACING.xs + 2,
+  },
+  calendarRow: { flexDirection: "row", gap: 4 },
+  calendarPip: {
+    width: 38,
+    alignItems: "center",
+    paddingVertical: 6,
+    borderRadius: RADIUS.chip,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.25),
+    backgroundColor: withAlpha("#0c0704", 0.35),
+  },
+  calendarPipToday: {
+    borderColor: COLORS.accent,
+    backgroundColor: withAlpha(COLORS.accent, 0.2),
+    ...glowShadow(COLORS.accent),
+  },
+  calendarPipFuture: { opacity: 0.55 },
+  calendarPipDay: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.micro,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  calendarPipDayToday: { color: COLORS.accent },
+  calendarPipIcon: { fontSize: 14, marginVertical: 2 },
+  calendarPipAmount: {
+    color: COLORS.textPrimary,
+    fontSize: 9,
+    fontWeight: WEIGHT.bold,
+    fontFamily: FONT.bold,
+  },
+  calendarPipAmountFuture: { color: COLORS.textMuted },
   spinBtn: {
     width: "100%",
     borderRadius: RADIUS.card,
@@ -296,5 +286,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  spinBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
+  spinBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 14 },
 });

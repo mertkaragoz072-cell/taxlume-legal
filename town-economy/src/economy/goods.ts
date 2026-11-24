@@ -1,4 +1,4 @@
-import { Good } from "./types";
+import { Good, GoodId } from "./types";
 
 // price = basePrice * (townPriceIndex / 100) * scarcity, where scarcity comes
 // from how far current supply sits from baseSupply (see useEconomy's tick()).
@@ -7,15 +7,49 @@ import { Good } from "./types";
 // commodity prices behave relative to finished/staple goods.
 export const GOODS: Good[] = [
   {
+    id: "grain",
+    nameKey: "good.grain.name",
+    producerKey: "good.grain.producer",
+    icon: "🌾",
+    color: "#5fd068",
+    basePrice: 2.6,
+    baseSupply: 320,
+    baseProduction: 34,
+    elasticity: 0.5,
+  },
+  {
+    id: "wool",
+    nameKey: "good.wool.name",
+    producerKey: "good.wool.producer",
+    icon: "🐑",
+    color: "#f1efe8",
+    basePrice: 4.8,
+    baseSupply: 240,
+    baseProduction: 22,
+    elasticity: 0.55,
+  },
+  {
+    id: "sand",
+    nameKey: "good.sand.name",
+    producerKey: "good.sand.producer",
+    icon: "🏖️",
+    color: "#f2cf45",
+    basePrice: 2.1,
+    baseSupply: 300,
+    baseProduction: 30,
+    elasticity: 0.4,
+  },
+  {
     id: "bread",
     nameKey: "good.bread.name",
     producerKey: "good.bread.producer",
     icon: "🍞",
-    color: "#c97b3d",
+    color: "#f08a3a",
     basePrice: 6.4,
     baseSupply: 220,
     baseProduction: 22,
     elasticity: 0.45,
+    inputs: ["grain"],
   },
   {
     id: "milk",
@@ -60,6 +94,7 @@ export const GOODS: Good[] = [
     baseSupply: 170,
     baseProduction: 14,
     elasticity: 0.55,
+    inputs: ["wool"],
   },
   {
     id: "fish",
@@ -129,10 +164,13 @@ export const GOODS: Good[] = [
     baseSupply: 60,
     baseProduction: 4,
     elasticity: 0.95,
+    inputs: ["iron"],
   },
-  // Unlock over time (see gameDayFromTick/isGoodUnlocked in useEconomy.ts)
-  // rather than by net worth — a steady drip of new products to keep
-  // reopening the market screen worthwhile as a run goes on.
+  // Unlock as the town's rank climbs (see townRankIndex/isGoodUnlocked)
+  // rather than after a fixed number of days — a steady drip of new
+  // products tied to real progress instead of the clock, so a player who
+  // sets the game down for a while doesn't just find everything unlocked
+  // when they come back.
   {
     id: "honey",
     nameKey: "good.honey.name",
@@ -143,7 +181,7 @@ export const GOODS: Good[] = [
     baseSupply: 160,
     baseProduction: 10,
     elasticity: 0.6,
-    unlockDay: 2,
+    unlockRank: 1, // Town
   },
   {
     id: "cheese",
@@ -155,7 +193,8 @@ export const GOODS: Good[] = [
     baseSupply: 150,
     baseProduction: 10,
     elasticity: 0.55,
-    unlockDay: 4,
+    unlockRank: 2, // City
+    inputs: ["milk"],
   },
   {
     id: "paper",
@@ -167,7 +206,8 @@ export const GOODS: Good[] = [
     baseSupply: 190,
     baseProduction: 14,
     elasticity: 0.5,
-    unlockDay: 7,
+    unlockRank: 3, // Metropolis
+    inputs: ["wood"],
   },
   {
     id: "glass",
@@ -179,8 +219,34 @@ export const GOODS: Good[] = [
     baseSupply: 120,
     baseProduction: 8,
     elasticity: 0.7,
-    unlockDay: 10,
+    unlockRank: 4, // Trade Hub
+    inputs: ["sand", "wood"],
   },
 ];
 
 export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g])) as Record<string, Good>;
+
+/** What a good *is*, for every rule that treats a whole class of them alike.
+ *
+ * Seasons, crises and the production chains all want to say "food" or
+ * "crafted" rather than list ids again, and those lists were already being
+ * kept in two places (crises.ts had its own FOOD and CRAFTED). One copy,
+ * here, next to the goods themselves.
+ */
+export const FOOD_GOODS: GoodId[] = ["bread", "milk", "fish", "cheese", "honey", "wine", "grain"];
+export const RAW_GOODS: GoodId[] = ["wood", "iron", "wool", "sand"];
+export const CRAFTED_GOODS: GoodId[] = ["cloth", "leather", "paper", "glass"];
+export const LUXURY_GOODS: GoodId[] = ["spice", "silk", "jewelry"];
+
+export type GoodGroup = "food" | "raw" | "crafted" | "luxury";
+
+const GROUP_OF: Record<GoodId, GoodGroup> = Object.fromEntries([
+  ...FOOD_GOODS.map((id) => [id, "food"]),
+  ...RAW_GOODS.map((id) => [id, "raw"]),
+  ...CRAFTED_GOODS.map((id) => [id, "crafted"]),
+  ...LUXURY_GOODS.map((id) => [id, "luxury"]),
+]) as Record<GoodId, GoodGroup>;
+
+export function goodGroup(id: GoodId): GoodGroup {
+  return GROUP_OF[id];
+}

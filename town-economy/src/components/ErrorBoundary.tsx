@@ -1,5 +1,7 @@
+import { recordCrash } from "../utils/crashLog";
 import React from "react";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GradientFill } from "./GradientFill";
 import { ScalePressable } from "./ScalePressable";
@@ -33,6 +35,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: unknown, info: unknown) {
     console.error("Unhandled error caught by ErrorBoundary:", error, info);
+    void recordCrash(error);
   }
 
   handleRetry = () => {

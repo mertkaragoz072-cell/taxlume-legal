@@ -1,0 +1,519 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useEconomyContext } from "../economy/EconomyContext";
+import { guildStorageRoom } from "../economy/guildTrade";
+import { GoodId } from "../economy/types";
+import { getGuildApi } from "./getGuildApi";
+import { caravanPayout, drawRewardFor, duelRewardFor, guildRewardFor } from "./reward";
+import {
+  CaravanDest,
+  CheerCode,
+  GuildApi,
+  GuildErrorCode,
+  GuildError,
+  GuildInfo,
+  guildLevel,
+  HALL_PROJECTS,
+  RankedGuild,
+  ReportReason,
+} from "./types";
+
+const BASELINE_KEY = "guild.baseline.v1";
+// Set once the player has made or joined a guild. Until then the app never
+// talks to the server at all: no account is created just for having guilds.
+const MEMBER_KEY = "guild.member.v1";
+const SYNC_MS = 60_000;
+const HUB_REFRESH_MS = 20_000;
+
+type Status = "unavailable" | "loading" | "none" | "in";
+
+interface GuildContextValue {
+  status: Status;
+  guild: GuildInfo | null;
+  error: GuildErrorCode | null;
+  busy: boolean;
+  hubOpen: boolean;
+  openHub: () => void;
+  closeHub: () => void;
+  refresh: () => Promise<void>;
+  create: (name: string) => Promise<boolean>;
+  join: (code: string) => Promise<boolean>;
+  leave: () => Promise<void>;
+  cheer: (toUserId: string, emote: CheerCode) => Promise<void>;
+  claim: () => Promise<void>;
+  /** gives up to `qty` of this week's order good from the player's stock */
+  donate: (qty: number) => Promise<void>;
+  claimOrder: () => Promise<void>;
+  requestGood: (goodId: GoodId, qty: number) => Promise<boolean>;
+  cancelRequest: () => Promise<void>;
+  /** sends up to `qty` of a requested good to a friend, from the player's stock */
+  fulfill: (requestId: string, goodId: GoodId, qty: number) => Promise<void>;
+  startCaravan: (dest: CaravanDest) => Promise<void>;
+  /** puts up to `qty` of a good from the player's stock on the loading caravan */
+  loadCaravan: (goodId: GoodId, qty: number) => Promise<void>;
+  sendCaravan: () => Promise<void>;
+  /** collects the player's share of an arrived caravan and pays it in coins */
+  claimCaravan: (caravanId: string) => Promise<void>;
+  challenge: (opponentId: string) => Promise<void>;
+  respondDuel: (duelId: string, accept: boolean) => Promise<void>;
+  claimDuel: (duelId: string) => Promise<void>;
+  /** takes today's draw; resolves to its tier (null if it failed) and pays the prize */
+  draw: () => Promise<1 | 2 | 3 | null>;
+  /** gives up to `amount` coins to the guild hall */
+  donateHall: (amount: number) => Promise<void>;
+  ranking: RankedGuild[];
+  /** bumps whenever something worth a cheer happened (a prize, a finished building); big = a bigger one */
+  celebrate: { n: number; big: boolean };
+  /** the screen registers how a sound is played; the guild actions call it */
+  setFx: (fx: ((kind: "success" | "buy" | "tap") => void) | null) => void;
+  loadRanking: () => Promise<void>;
+  reportRanked: (guildId: string, reason: ReportReason) => Promise<boolean>;
+  report: (reason: ReportReason) => Promise<boolean>;
+  clearError: () => void;
+}
+
+const GuildContext = createContext<GuildContextValue | null>(null);
+
+function asCode(e: unknown): GuildErrorCode {
+  return e instanceof GuildError ? e.code : "network";
+}
+
+export function GuildProvider({
+  children,
+  api: apiProp,
+}: {
+  children: React.ReactNode;
+  api?: GuildApi | null;
+}) {
+  const {
+    state,
+    netWorth,
+    grantGuildReward,
+    guildGoodsOut,
+    guildGoodsIn,
+    setGuildLevel,
+    guildCashOut,
+    setGuildProjects,
+  } = useEconomyContext();
+  const api = useMemo(() => (apiProp !== undefined ? apiProp : getGuildApi()), [apiProp]);
+  const [status, setStatus] = useState<Status>(api ? "loading" : "unavailable");
+  const [remembered, setRemembered] = useState<boolean | null>(null);
+  const [guild, setGuild] = useState<GuildInfo | null>(null);
+  const [ranking, setRanking] = useState<RankedGuild[]>([]);
+  const [celebrate, setCelebrate] = useState({ n: 0, big: false });
+  const fxRef = useRef<((kind: "success" | "buy" | "tap") => void) | null>(null);
+  const fx = useCallback((kind: "success" | "buy" | "tap") => fxRef.current?.(kind), []);
+  const cheerUp = useCallback(
+    (big = false) => {
+      setCelebrate((c) => ({ n: c.n + 1, big }));
+      fx("success");
+    },
+    [fx]
+  );
+  const setFx = useCallback((f: ((kind: "success" | "buy" | "tap") => void) | null) => {
+    fxRef.current = f;
+  }, []);
+  const [error, setError] = useState<GuildErrorCode | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [hubOpen, setHubOpen] = useState(false);
+
+  // latest game numbers for the background sync, without restarting its timer
+  const live = useRef<{
+    trades: number;
+    name: string;
+    rank: number;
+    netWorth: number;
+    room: number;
+    cash: number;
+    streak: number;
+    held: Record<string, number>;
+    prices: Record<string, number>;
+  }>({ trades: 0, name: "", rank: 0, netWorth: 0, room: 0, cash: 0, streak: 0, held: {}, prices: {} });
+  live.current = {
+    trades: state.stats.totalTrades,
+    name: state.townName,
+    rank: state.townRankIndex,
+    netWorth,
+    room: guildStorageRoom(state),
+    cash: state.cash,
+    streak: guild?.streak ?? 0,
+    held: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, Math.floor(g.holding)])),
+    prices: Object.fromEntries(Object.entries(state.goods).map(([id, g]) => [id, g.price])),
+  };
+
+  const apply = useCallback(
+    (g: GuildInfo | null) => {
+      setGuild(g);
+      setStatus(g ? "in" : "none");
+      // the guild's level gives the town a small output bonus (see guildPerks.ts)
+      setGuildLevel(g ? guildLevel(g.totalContribution) : 0);
+      // ... and the hall's buildings add room and output (same file)
+      setGuildProjects(g ? g.projects.built : 0);
+    },
+    [setGuildLevel, setGuildProjects]
+  );
+
+  const setBaseline = useCallback(async (trades: number) => {
+    try {
+      await AsyncStorage.setItem(BASELINE_KEY, String(trades));
+    } catch {
+      // a lost baseline only means the next report starts from the current count
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (!api) return;
+    try {
+      apply(await api.getMyGuild());
+      setError(null);
+    } catch (e) {
+      setError(asCode(e));
+      setStatus((s) => (s === "loading" ? "none" : s));
+    }
+  }, [api, apply]);
+
+  const markMember = useCallback(async (on: boolean) => {
+    try {
+      if (on) await AsyncStorage.setItem(MEMBER_KEY, "1");
+      else await AsyncStorage.removeItem(MEMBER_KEY);
+    } catch {
+      // without the flag the player simply starts from "no guild" next launch
+    }
+    setRemembered(on);
+  }, []);
+
+  // On launch, only a player who already belongs to a guild contacts the server.
+  useEffect(() => {
+    if (!api) return;
+    let cancelled = false;
+    (async () => {
+      const flag = await AsyncStorage.getItem(MEMBER_KEY)
+        .then((v) => v === "1")
+        .catch(() => false);
+      if (cancelled) return;
+      setRemembered(flag);
+      if (flag) {
+        try {
+          const g = await api.getMyGuild();
+          if (cancelled) return;
+          apply(g);
+          if (!g) await markMember(false);
+        } catch (e) {
+          if (!cancelled) {
+            setError(asCode(e));
+            setStatus("none");
+          }
+        }
+      } else {
+        setStatus("none");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, apply, markMember]);
+
+  /** collects goods friends sent, as many as the warehouse has room for */
+  const collectDeliveries = useCallback(async () => {
+    if (!api || live.current.room <= 0) return;
+    const got = await api.claimDeliveries(live.current.room);
+    for (const d of got) guildGoodsIn(d.goodId as GoodId, d.qty, d.fromName);
+  }, [api, guildGoodsIn]);
+
+  /** reports finished trades since the last report and refreshes the profile */
+  const sync = useCallback(async () => {
+    if (!api) return;
+    try {
+      const raw = await AsyncStorage.getItem(BASELINE_KEY);
+      const baseline = raw === null ? live.current.trades : Number(raw);
+      const delta = live.current.trades - baseline;
+      if (delta > 0) await api.reportContribution(delta);
+      if (delta > 0 || raw === null) await setBaseline(live.current.trades);
+      await api.syncProfile({
+        displayName: live.current.name,
+        rankIndex: live.current.rank,
+        netWorth: live.current.netWorth,
+      });
+      await collectDeliveries();
+      apply(await api.getMyGuild());
+    } catch (e) {
+      setError(asCode(e));
+    }
+  }, [api, apply, setBaseline, collectDeliveries]);
+
+  /** puts the player's current name, rank and net worth on the server (so feed lines carry a real name) */
+  const syncMe = useCallback(async () => {
+    if (!api) return;
+    await api.syncProfile({
+      displayName: live.current.name,
+      rankIndex: live.current.rank,
+      netWorth: live.current.netWorth,
+    });
+  }, [api]);
+
+  const inGuild = status === "in";
+  useEffect(() => {
+    if (!inGuild) return;
+    void sync();
+    const id = setInterval(() => void sync(), SYNC_MS);
+    return () => clearInterval(id);
+  }, [inGuild, sync]);
+
+  useEffect(() => {
+    if (!hubOpen || !inGuild) return;
+    const id = setInterval(() => void refresh(), HUB_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [hubOpen, inGuild, refresh]);
+
+  const run = useCallback(async <T,>(fn: () => Promise<T>): Promise<T | null> => {
+    setBusy(true);
+    setError(null);
+    try {
+      return await fn();
+    } catch (e) {
+      setError(asCode(e));
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  // stable on purpose: the ranking panel loads it from an effect
+  const loadRanking = useCallback(async () => {
+    if (!api) return;
+    const list = await run(() => api.topGuilds());
+    if (list) setRanking(list);
+  }, [api, run]);
+
+  const value = useMemo<GuildContextValue>(
+    () => ({
+      status,
+      guild,
+      error,
+      busy,
+      hubOpen,
+      openHub: () => {
+        setHubOpen(true);
+        if (remembered) void collectDeliveries().then(refresh);
+      },
+      closeHub: () => setHubOpen(false),
+      refresh,
+      clearError: () => setError(null),
+      create: async (name) => {
+        if (!api) return false;
+        const g = await run(async () => {
+          await syncMe();
+          return api.createGuild(name);
+        });
+        if (!g) return false;
+        await setBaseline(live.current.trades);
+        await markMember(true);
+        apply(g);
+        return true;
+      },
+      join: async (code) => {
+        if (!api) return false;
+        const g = await run(async () => {
+          await syncMe();
+          return api.joinGuild(code);
+        });
+        if (!g) return false;
+        await setBaseline(live.current.trades);
+        await markMember(true);
+        apply(g);
+        return true;
+      },
+      leave: async () => {
+        if (!api) return;
+        // run() gives back null when the call failed: stay in the guild then
+        if ((await run(() => api.leaveGuild())) === null) return;
+        try {
+          await AsyncStorage.removeItem(BASELINE_KEY);
+        } catch {
+          // nothing to clean up
+        }
+        await markMember(false);
+        apply(null);
+      },
+      report: async (reason) => {
+        if (!api) return false;
+        return (await run(() => api.reportGuild(reason))) !== null;
+      },
+      cheer: async (toUserId, emote) => {
+        if (!api) return;
+        if ((await run(() => api.sendCheer(toUserId, emote))) !== null) fx("tap");
+        await refresh();
+      },
+      donate: async (qty) => {
+        if (!api || !guild) return;
+        const goodId = guild.order.goodId as GoodId;
+        const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
+        if (amount <= 0) return;
+        const accepted = await run(() => api.donateToOrder(amount));
+        // take from the player only what the server accepted
+        if (accepted && accepted > 0) {
+          guildGoodsOut(goodId, accepted, "order");
+          fx("buy");
+        }
+        await refresh();
+      },
+      claimOrder: async () => {
+        if (!api) return;
+        const took = await run(() => api.claimOrderReward());
+        if (took) {
+          grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
+          cheerUp();
+        }
+        await refresh();
+      },
+      requestGood: async (goodId, qty) => {
+        if (!api) return false;
+        const ok = (await run(() => api.createRequest(goodId, qty))) !== null;
+        await refresh();
+        return ok;
+      },
+      cancelRequest: async () => {
+        if (!api) return;
+        await run(() => api.cancelRequest());
+        await refresh();
+      },
+      fulfill: async (requestId, goodId, qty) => {
+        if (!api) return;
+        const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
+        if (amount <= 0) return;
+        const accepted = await run(() => api.fulfillRequest(requestId, amount));
+        if (accepted && accepted > 0) {
+          guildGoodsOut(goodId, accepted, "friend");
+          fx("buy");
+        }
+        await refresh();
+      },
+      startCaravan: async (dest) => {
+        if (!api) return;
+        await run(() => api.startCaravan(dest));
+        await refresh();
+      },
+      loadCaravan: async (goodId, qty) => {
+        if (!api) return;
+        const amount = Math.min(Math.floor(qty), live.current.held[goodId] ?? 0);
+        if (amount <= 0) return;
+        const accepted = await run(() => api.loadCaravan(goodId, amount));
+        // take from the player only what the server accepted
+        if (accepted && accepted > 0) {
+          guildGoodsOut(goodId, accepted, "caravan");
+          fx("buy");
+        }
+        await refresh();
+      },
+      sendCaravan: async () => {
+        if (!api) return;
+        if ((await run(() => api.sendCaravan())) !== null) fx("success");
+        await refresh();
+      },
+      claimCaravan: async (caravanId) => {
+        if (!api) return;
+        const share = await run(() => api.claimCaravan(caravanId));
+        if (share) {
+          const pay = caravanPayout(share, (id) => live.current.prices[id] ?? 0);
+          if (pay > 0) grantGuildReward(pay, "caravan");
+          cheerUp(share.tier === 3);
+        }
+        await refresh();
+      },
+      challenge: async (opponentId) => {
+        if (!api) return;
+        await run(() => api.challengeDuel(opponentId));
+        await refresh();
+      },
+      respondDuel: async (duelId, accept) => {
+        if (!api) return;
+        await run(() => api.respondDuel(duelId, accept));
+        await refresh();
+      },
+      claimDuel: async (duelId) => {
+        if (!api) return;
+        const took = await run(() => api.claimDuelReward(duelId));
+        if (took) {
+          grantGuildReward(duelRewardFor(live.current.rank), "duel");
+          cheerUp();
+        }
+        await refresh();
+      },
+      draw: async () => {
+        if (!api) return null;
+        const tier = await run(() => api.dailyDraw());
+        if (tier) {
+          grantGuildReward(drawRewardFor(live.current.rank, tier), "draw");
+          cheerUp(tier === 3);
+        }
+        await refresh();
+        return tier;
+      },
+      donateHall: async (amount) => {
+        if (!api) return;
+        const amountNow = Math.min(Math.floor(amount), live.current.cash);
+        if (amountNow <= 0) return;
+        const accepted = await run(() => api.donateCash(amountNow));
+        // take from the player only what the server accepted
+        if (accepted && accepted > 0) {
+          guildCashOut(accepted);
+          // a building that just got finished is worth a cheer
+          const left = guild ? (HALL_PROJECTS[guild.projects.built]?.cost ?? 0) - guild.projects.progress : 0;
+          if (left > 0 && accepted >= left) cheerUp(true);
+          else fx("buy");
+        }
+        await refresh();
+      },
+      ranking,
+      celebrate,
+      setFx,
+      loadRanking,
+      reportRanked: async (guildId, reason) => {
+        if (!api) return false;
+        return (await run(() => api.reportGuildById(guildId, reason))) !== null;
+      },
+      claim: async () => {
+        if (!api) return;
+        const took = await run(() => api.claimWeeklyReward());
+        if (took) {
+          grantGuildReward(guildRewardFor(live.current.rank, live.current.streak));
+          cheerUp();
+        }
+        await refresh();
+      },
+    }),
+    [
+      status,
+      guild,
+      error,
+      busy,
+      hubOpen,
+      api,
+      remembered,
+      refresh,
+      collectDeliveries,
+      run,
+      apply,
+      setBaseline,
+      markMember,
+      grantGuildReward,
+      guildGoodsOut,
+      guildCashOut,
+      cheerUp,
+      fx,
+      celebrate,
+      setFx,
+      ranking,
+      loadRanking,
+      syncMe,
+    ]
+  );
+
+  return <GuildContext.Provider value={value}>{children}</GuildContext.Provider>;
+}
+
+export function useGuild(): GuildContextValue {
+  const ctx = useContext(GuildContext);
+  if (!ctx) throw new Error("useGuild must be used within a GuildProvider");
+  return ctx;
+}

@@ -1,29 +1,41 @@
+import { backfillHistory } from "./priceHistory";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ACHIEVEMENTS } from "./achievements";
 import { ASSETS, ASSETS_BY_ID, AssetId } from "./assets";
 import { DECISION_TEMPLATES_BY_ID } from "./decisions";
+import { applyGuildGoodsIn, applyGuildGoodsOut } from "./guildTrade";
 import { DIFFICULTIES, DifficultyId } from "./difficulty";
 import { EMBLEM_COLORS, isEmblemUnlocked } from "./emblems";
 import { GOODS, GOODS_BY_ID } from "./goods";
-import { rollDemandCycle } from "./demandCycles";
+import { openingDemandCycles } from "./demandCycles";
+import { MENTOR_STEPS } from "./mentor";
 import { rollActivity, TRADING_HOUSES } from "./tradingHouses";
+import { TRADERS, TRADERS_BY_ID, reputationDelta, REPUTATION_TO_PRICE_MODIFIER } from "./traders";
+import { RIVAL_TRADERS, rollRivalActivity } from "./rivals";
+import { generateDailyQuotas } from "./productionQuotas";
 import { DOCTRINES_BY_ID, doctrineModifiers, isDoctrineId } from "./doctrines";
 import { loadEconomyState, saveEconomyState } from "./persist";
-import { PROPERTIES_BY_ID } from "./properties";
 import { perkHeadStartBonus, PRESTIGE_PERKS_BY_ID } from "./prestigePerks";
 import { makeInitialDailyProgress, pickDailyQuestTemplates, QUEST_TEMPLATES_BY_ID } from "./quests";
-import { RESEARCH_NODES_BY_ID } from "./research";
-import { WORKER_MAX_PER_GOOD } from "./workers";
 import {
   isoWeekKey,
   WEEKLY_CHALLENGE_TEMPLATES_BY_ID,
   weeklyChallengeTemplateForWeek,
 } from "./weeklyChallenges";
+import {
+  FESTIVAL_GOAL_TRADES,
+  FESTIVAL_REWARD_CASH,
+  festivalMetric,
+  festivalMonthKey,
+  isFestivalWindowOpen,
+} from "./townFestival";
 import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
-import { UPGRADES_BY_ID, upgradeCost } from "./upgrades";
+import { claimMerchantOffer, dismissMerchantOffer } from "./merchantOffer";
+import { finishDueImprovements, ImprovementKind, skipImprovement, startImprovement } from "./construction";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
-import { DEFAULT_LANGUAGE, Language, t, tPlural } from "../i18n/t";
+import { deviceLanguage } from "../i18n/deviceLanguage";
+import { DEFAULT_LANGUAGE, eventFields, Language, NestedKey, Params, t, tPlural } from "../i18n/t";
 import {
   formatCoins as formatCoinsUtil,
   formatCompactNumber as formatNumberUtil,
@@ -36,6 +48,7 @@ import {
   ContractDirection,
   EconomyEvent,
   EconomyState,
+  FestivalProgress,
   ForeignTownState,
   ForwardContract,
   Good,
@@ -45,19 +58,13 @@ import {
   WeeklyChallenge,
 } from "./types";
 import {
-  AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
   BOOSTED_TICK_MS,
   BULK_CONTRACT_BONUS_PCT,
-  BULK_CONTRACT_MAX_ACTIVE,
   BULK_CONTRACT_TERM_DAY_STEPS,
   CARAVAN_INSURANCE_COST_PCT,
   CONTRACT_MARGIN_PCT,
-  CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
-  DAILY_BONUS_BASE,
-  DAILY_BONUS_CAP,
-  DAILY_BONUS_PER_STREAK_DAY,
   DAILY_QUEST_COUNT,
   DEFAULT_DIFFICULTY,
   DOCTRINE_UNLOCK_NET_WORTH,
@@ -73,26 +80,34 @@ import {
   MAX_OFFLINE_TICKS,
   MIN_OFFLINE_MS_TO_SHOW,
   MS_PER_DAY,
+  OFFLINE_RATE,
   PRESTIGE_CASH_BONUS_PER_LEVEL,
   PRESTIGE_POINTS_PER_PRESTIGE,
   PRESTIGE_UNLOCK_NET_WORTH,
   SPEED_BOOST_DURATION_MS,
   TAX_RATE_MAX,
   TICKS_PER_GAME_DAY,
+  INTERRUPTION_COOLDOWN_TICKS,
   TICK_MS,
   TOWN_NAME_MAX_LENGTH,
 } from "./constants";
 import {
   clamp,
   computeNetWorth,
+  dailyBonusForStreak,
+  effectiveAutoTradeMaxRules,
+  effectiveBulkContractMaxActive,
+  effectiveContractMaxActive,
   effectiveTariffRate,
+  effectiveWorkerMaxPerGood,
   isGoodUnlocked,
   loanCap,
   loanInterestRatePerTick,
   marketDepthFactor,
   marketSpread,
   nextTradeStreak,
-  researchCost,
+  scaledGoalReward,
+  scaledGoalTarget,
   storageCapacity,
   supplyBounds,
   totalGoodsHolding,
@@ -100,12 +115,14 @@ import {
 import {
   applyAchievements,
   applyDailyQuests,
+  applyOnboarding,
   applyLegendaryUnlock,
   applyMetropolUnlock,
   applyMiniQuest,
   applyMythicUnlock,
   applyTownRankUp,
   applyTradeUnlock,
+  applyWorkersUnlock,
 } from "./progression";
 import { tick } from "./tick";
 
@@ -153,6 +170,7 @@ export {
   PRESTIGE_POINTS_PER_PRESTIGE,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
   PRESTIGE_UNLOCK_NET_WORTH,
+  RIVAL_TOWN_GRACE_DAYS,
   RIVAL_TOWN_GROWTH_RATE,
   SPEED_BOOST_DURATION_MS,
   SPEED_BOOST_MULTIPLIER,
@@ -165,14 +183,21 @@ export {
   TOWN_NAME_MAX_LENGTH,
   TOWN_RANK_PRODUCTION_BONUS_PER_RANK,
   TRADE_UNLOCK_NET_WORTH,
+  WORKERS_UNLOCK_NET_WORTH,
 } from "./constants";
 export {
   computeNetWorth,
+  effectiveAutoTradeMaxRules,
+  effectiveBulkContractMaxActive,
+  effectiveContractMaxActive,
+  effectiveLoanMaxNetWorthPct,
   effectiveMetropolUnlockNetWorth,
   effectiveTariffRate,
   effectiveTradeUnlockNetWorth,
+  effectiveWorkerMaxPerGood,
   estimateTaxIncomePerTick,
   gameDayFromTick,
+  inflationPressureBreakdown,
   isGoodUnlocked,
   loanCap,
   loanDayRateToTickRate,
@@ -224,12 +249,17 @@ type Action =
   | { type: "FIRE_WORKER"; goodId: GoodId }
   | { type: "HYDRATE"; state: EconomyState }
   | { type: "DAILY_CHECKIN"; today: string }
-  | { type: "UPGRADE"; upgradeId: UpgradeId }
-  | { type: "RESEARCH"; nodeId: string }
-  | { type: "BUY_PROPERTY"; propertyId: string }
+  | { type: "UPGRADE"; upgradeId: UpgradeId; now: number }
+  | { type: "FINISH_IMPROVEMENTS"; now: number }
+  | { type: "SKIP_IMPROVEMENT"; kind: ImprovementKind; now: number }
+  | { type: "RESEARCH"; nodeId: string; now: number }
+  | { type: "BUY_PROPERTY"; propertyId: string; now: number }
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
+  | { type: "CLAIM_MERCHANT_OFFER" }
+  | { type: "DISMISS_MERCHANT_OFFER" }
+  | { type: "DISMISS_MERVE_RANK_UP" }
   | { type: "RESOLVE_DECISION"; optionId: string }
   | { type: "RESOLVE_REQUEST"; give: boolean }
   | { type: "RESOLVE_RIVAL_OFFER"; accept: boolean }
@@ -238,11 +268,18 @@ type Action =
   | { type: "SET_EMBLEM"; emblemId: string }
   | { type: "SET_EMBLEM_COLOR"; color: string }
   | { type: "CLAIM_SPEED_BOOST" }
+  | { type: "GUILD_REWARD"; amount: number; source?: "chest" | "draw" | "duel" | "caravan" }
+  | { type: "GUILD_CASH_OUT"; amount: number }
+  | { type: "SET_GUILD_PROJECTS"; built: number }
+  | { type: "SET_GUILD_LEVEL"; level: number }
+  | { type: "GUILD_GOODS_OUT"; goodId: GoodId; qty: number; to: "order" | "friend" | "caravan" }
+  | { type: "GUILD_GOODS_IN"; goodId: GoodId; qty: number; from: string }
+  | { type: "ADVANCE_MENTOR"; to: number }
   | { type: "DISMISS_DAILY_BONUS" };
 function makeInitialGoodState(good: Good): GoodState {
   return {
     price: good.basePrice,
-    history: [good.basePrice],
+    history: backfillHistory(good.id, good.basePrice),
     supply: good.baseSupply,
     holding: 0,
     avgCost: 0,
@@ -250,7 +287,12 @@ function makeInitialGoodState(good: Good): GoodState {
   };
 }
 function makeInitialAssetState(asset: (typeof ASSETS)[number]): EconomyState["assets"][AssetId] {
-  return { price: asset.basePrice, history: [asset.basePrice], holding: 0, avgCost: 0 };
+  return {
+    price: asset.basePrice,
+    history: backfillHistory(asset.id, asset.basePrice),
+    holding: 0,
+    avgCost: 0,
+  };
 }
 function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   const town = TOWNS_BY_ID[townId];
@@ -262,12 +304,16 @@ function makeInitialForeignTownState(townId: TownId): ForeignTownState {
   }
   return { prices, supply };
 }
-function makeDailyQuests(dateSeed: string): EconomyState["dailyQuests"] {
-  return pickDailyQuestTemplates(dateSeed, DAILY_QUEST_COUNT).map((template) => ({
+function makeDailyQuests(
+  townRankIndex: number,
+  dateSeed: string,
+  tradeUnlocked: boolean
+): EconomyState["dailyQuests"] {
+  return pickDailyQuestTemplates(dateSeed, DAILY_QUEST_COUNT, tradeUnlocked).map((template) => ({
     id: `${dateSeed}-${template.id}`,
     templateId: template.id,
-    target: template.target,
-    reward: template.reward,
+    target: scaledGoalTarget(template.target, townRankIndex),
+    reward: scaledGoalReward(template.reward, townRankIndex),
     completed: false,
   }));
 }
@@ -289,9 +335,9 @@ export function initialState(
   for (const a of ASSETS) {
     assets[a.id] = makeInitialAssetState(a);
   }
-  const day1GoodIds = GOODS.filter((g) => !g.unlockDay).map((g) => g.id);
+  const day1GoodIds = GOODS.filter((g) => !g.unlockRank).map((g) => g.id);
   const allTownIds = TOWNS.map((tn) => tn.id);
-  const firstCycle = rollDemandCycle(0, TICKS_PER_GAME_DAY, day1GoodIds);
+  const opening = openingDemandCycles(TICKS_PER_GAME_DAY, day1GoodIds);
   return {
     townName: t(language, "app.defaultTownName"),
     selectedEmblem: "village",
@@ -330,9 +376,11 @@ export function initialState(
     unlockedAchievements: [],
     tradeUnlocked: false,
     metropolUnlocked: false,
+    workersUnlocked: false,
     legendaryUnlocked: false,
     mythicUnlocked: false,
     townRankIndex: 0,
+    merveRankUp: null,
     researched: [],
     assets,
     upgrades: {
@@ -348,11 +396,16 @@ export function initialState(
     happiness: 100,
     lastSavedAt: Date.now(),
     offlineSummary: null,
+    onboardingStep: 0,
+    mentorStep: 0,
     pendingDecision: null,
     pendingRequest: null,
     pendingRivalOffer: null,
+    // Negative, so the first interruption of a new town is not held back by
+    // a cooldown that has notionally been running since before tick 0.
+    lastInterruptionTick: -INTERRUPTION_COOLDOWN_TICKS,
     dailyProgress: makeInitialDailyProgress(),
-    dailyQuests: makeDailyQuests("init"),
+    dailyQuests: makeDailyQuests(0, "init", false),
     activeMiniQuest: null,
     prestigeLevel: 0,
     prestigePoints: 0,
@@ -362,6 +415,7 @@ export function initialState(
     priorBestNetWorth: 0,
     recordBrokenThisRun: false,
     activeSeasonalEvent: null,
+    activeFlashDeal: null,
     loan: null,
     workers: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     ownedProperties: [],
@@ -369,6 +423,9 @@ export function initialState(
     bulkContracts: [],
     autoTradeRules: [],
     weeklyChallenge: null,
+    activeBounties: [],
+    productionQuotas: generateDailyQuotas(),
+    productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     activeNgPlusModifiers: ngPlusModifierIds,
     speedBoostExpiresAt: null,
     speedBoostClaimedDate: null,
@@ -376,8 +433,8 @@ export function initialState(
     // Both cycles exist from tick 0, so a brand-new town already has a market
     // rhythm to read and a forecast to plan against. Only day-1 goods are
     // eligible; the later ones join the draw as they unlock.
-    demandCycle: firstCycle,
-    nextDemandCycle: rollDemandCycle(firstCycle.endTick, TICKS_PER_GAME_DAY, day1GoodIds),
+    demandCycle: opening.first,
+    nextDemandCycle: opening.next,
     pendingCrisis: null,
     doctrine: null,
     // Every house is already at work on day one, so the foreign markets
@@ -385,6 +442,15 @@ export function initialState(
     tradingHouses: TRADING_HOUSES.map((h) =>
       rollActivity(h.id, 0, TICKS_PER_GAME_DAY, allTownIds, day1GoodIds)
     ),
+    // Known traders start at neutral reputation (0); they will become known
+    // to the player through repeated trades, see traders.ts.
+    traderReputations: {},
+    // Rival traders start with activity on day 1, so the home market is contested
+    // from the beginning rather than only later, see rivals.ts.
+    rivalActivities: RIVAL_TRADERS.map((r) => rollRivalActivity(r.id, 0, TICKS_PER_GAME_DAY, day1GoodIds)),
+    firstCaravanSent: false,
+    festivalProgress: null,
+    festivalEmblemEarned: false,
   };
 }
 export function todayString(): string {
@@ -394,10 +460,21 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   if (state.gameOver) return state;
   const good = GOODS_BY_ID[goodId];
   const gs = state.goods[goodId];
-  const midPrice = gs.price;
+  let midPrice = gs.price;
   const marketDepth = marketDepthFactor(state);
   const spread = MARKET_SPREAD / marketDepth;
   const { min: minSupply, max: maxSupply } = supplyBounds(good);
+
+  // A random trader appears for each transaction, bringing their reputation into the price.
+  const traderId = TRADERS[Math.floor(Math.random() * TRADERS.length)].id;
+  const traderRep = state.traderReputations[traderId] ?? {
+    traderId,
+    reputation: 0,
+    tradeCount: 0,
+    metAtTick: state.tick,
+  };
+  const priceModifier = REPUTATION_TO_PRICE_MODIFIER(traderRep.reputation);
+  midPrice = midPrice * (1 + priceModifier);
 
   if (side === "buy") {
     const price = midPrice * (1 + spread / 2);
@@ -413,6 +490,14 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
       -DEMAND_PRESSURE_MAX,
       DEMAND_PRESSURE_MAX
     );
+    // Update trader reputation
+    const trader = TRADERS_BY_ID[traderId];
+    const repDelta = reputationDelta(goodId, "buy", amount, trader);
+    const updatedTraderRep: typeof traderRep = {
+      ...traderRep,
+      reputation: Math.max(-100, Math.min(100, traderRep.reputation + repDelta)),
+      tradeCount: traderRep.tradeCount + 1,
+    };
     return {
       ...state,
       cash: state.cash - cost,
@@ -426,8 +511,16 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
           supply: clamp(gs.supply - amount / marketDepth, minSupply, maxSupply),
         },
       },
+      traderReputations: {
+        ...state.traderReputations,
+        [traderId]: updatedTraderRep,
+      },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
-      dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
+      dailyProgress: {
+        ...state.dailyProgress,
+        trades: state.dailyProgress.trades + 1,
+        buys: (state.dailyProgress.buys ?? 0) + 1,
+      },
     };
   }
 
@@ -446,23 +539,33 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
   // above or below what was paid for it.
   const pnl = (price - gs.avgCost) * amount;
   const { streak: tradeStreak, bonus } = nextTradeStreak(state.tradeStreak, pnl);
-  const message =
-    bonus > 0
-      ? t(state.language, "msg.goodSoldProfitStreak", {
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...(bonus > 0
+      ? eventFields(state.language, "msg.goodSoldProfitStreak", {
           streak: tradeStreak,
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
           qty: amount,
           amount: formatNumberUtil(pnl + bonus, state.language),
           bonusPct: Math.round(
             clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100
           ),
         })
-      : t(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
-          good: t(state.language, good.nameKey),
+      : eventFields(state.language, pnl >= 0 ? "msg.goodSoldProfit" : "msg.goodSoldLoss", {
+          good: { key: good.nameKey },
           qty: amount,
           amount: formatNumberUtil(Math.abs(pnl), state.language),
-        });
-  const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
+        })),
+    tone: pnl >= 0 ? "good" : "bad",
+  };
+  // Update trader reputation
+  const trader = TRADERS_BY_ID[traderId];
+  const repDelta = reputationDelta(goodId, "sell", amount, trader);
+  const updatedTraderRep: typeof traderRep = {
+    ...traderRep,
+    reputation: Math.max(-100, Math.min(100, traderRep.reputation + repDelta)),
+    tradeCount: traderRep.tradeCount + 1,
+  };
   return {
     ...state,
     cash: state.cash + proceeds + bonus,
@@ -475,6 +578,10 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
         demandPressure,
         supply: clamp(gs.supply + amount / marketDepth, minSupply, maxSupply),
       },
+    },
+    traderReputations: {
+      ...state.traderReputations,
+      [traderId]: updatedTraderRep,
     },
     nextId: state.nextId + 1,
     lastEvent: event,
@@ -489,6 +596,7 @@ export function trade(state: EconomyState, goodId: GoodId, side: "buy" | "sell",
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,
+      sells: (state.dailyProgress.sells ?? 0) + 1,
       cashEarned: state.dailyProgress.cashEarned + proceeds + bonus,
     },
   };
@@ -510,7 +618,11 @@ function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell",
       cash: state.cash - cost,
       assets: { ...state.assets, [assetId]: { ...as, holding, avgCost } },
       stats: { ...state.stats, totalTrades: state.stats.totalTrades + 1 },
-      dailyProgress: { ...state.dailyProgress, trades: state.dailyProgress.trades + 1 },
+      dailyProgress: {
+        ...state.dailyProgress,
+        trades: state.dailyProgress.trades + 1,
+        investTrades: (state.dailyProgress.investTrades ?? 0) + 1,
+      },
     };
   }
 
@@ -524,23 +636,25 @@ function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell",
   const pnl = (price - as.avgCost) * amount;
   const asset = ASSETS_BY_ID[assetId];
   const { streak: tradeStreak, bonus } = nextTradeStreak(state.tradeStreak, pnl);
-  const message =
-    bonus > 0
-      ? t(state.language, "msg.investSoldProfitStreak", {
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...(bonus > 0
+      ? eventFields(state.language, "msg.investSoldProfitStreak", {
           streak: tradeStreak,
-          asset: t(state.language, asset.nameKey),
+          asset: { key: asset.nameKey },
           qty: amount,
           amount: formatNumberUtil(pnl + bonus, state.language),
           bonusPct: Math.round(
             clamp((tradeStreak - 1) * HOT_STREAK_BONUS_PER_TRADE, 0, HOT_STREAK_MAX_BONUS) * 100
           ),
         })
-      : t(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
-          asset: t(state.language, asset.nameKey),
+      : eventFields(state.language, pnl >= 0 ? "msg.investSoldProfit" : "msg.investSoldLoss", {
+          asset: { key: asset.nameKey },
           qty: amount,
           amount: formatNumberUtil(Math.abs(pnl), state.language),
-        });
-  const event: EconomyEvent = { id: state.nextId, message, tone: pnl >= 0 ? "good" : "bad" };
+        })),
+    tone: pnl >= 0 ? "good" : "bad",
+  };
   return {
     ...state,
     cash: state.cash + proceeds + bonus,
@@ -560,6 +674,7 @@ function tradeAsset(state: EconomyState, assetId: AssetId, side: "buy" | "sell",
     dailyProgress: {
       ...state.dailyProgress,
       trades: state.dailyProgress.trades + 1,
+      investTrades: (state.dailyProgress.investTrades ?? 0) + 1,
       cashEarned: state.dailyProgress.cashEarned + proceeds + bonus,
     },
   };
@@ -645,6 +760,7 @@ export function sendCaravan(
         caravansSent: state.dailyProgress.caravansSent + 1,
         townsTraded: townsTradedToday,
       },
+      firstCaravanSent: true,
     };
   }
 
@@ -692,6 +808,7 @@ export function sendCaravan(
       caravansSent: state.dailyProgress.caravansSent + 1,
       townsTraded: townsTradedToday,
     },
+    firstCaravanSent: true,
   };
 }
 function openContract(
@@ -702,7 +819,7 @@ function openContract(
   termDays: number
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
-  if (state.contracts.length >= CONTRACT_MAX_ACTIVE) return state;
+  if (state.contracts.length >= effectiveContractMaxActive(state)) return state;
   if (!CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
   const good = GOODS_BY_ID[goodId];
   if (!good || !isGoodUnlocked(good, state)) return state;
@@ -734,7 +851,7 @@ export function openBulkContract(
   termDays: number
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
-  if (state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE) return state;
+  if (state.bulkContracts.length >= effectiveBulkContractMaxActive(state)) return state;
   if (!BULK_CONTRACT_TERM_DAY_STEPS.includes(termDays)) return state;
   const good = GOODS_BY_ID[goodId];
   if (!good || !isGoodUnlocked(good, state)) return state;
@@ -764,7 +881,7 @@ export function addAutoTradeRule(
   qty: number
 ): EconomyState {
   if (state.gameOver || qty <= 0) return state;
-  if (state.autoTradeRules.length >= AUTO_TRADE_MAX_RULES) return state;
+  if (state.autoTradeRules.length >= effectiveAutoTradeMaxRules(state)) return state;
   if (!AUTO_TRADE_TRIGGER_PCT_STEPS.includes(triggerPct)) return state;
   const good = GOODS_BY_ID[goodId];
   if (!good || !isGoodUnlocked(good, state)) return state;
@@ -820,13 +937,32 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     count = 1;
   }
 
-  const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
-  const bonus =
-    Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) + bankBonus;
-  const message = prevDate
-    ? t(state.language, "msg.dailyCheckInReturning", { count, bonus })
-    : t(state.language, "msg.dailyCheckInFirst", { bonus });
-  const event: EconomyEvent = { id: state.nextId, message, tone: "good" };
+  // A first launch pays nothing and announces nothing. The streak starts,
+  // the quest board is set up, and that is all — a player opening this for
+  // the first time should be a trader with a purse and no patron, not
+  // someone handed a welcome bonus before they have bought anything. The
+  // daily reward is for coming back, and there is nothing yet to come back
+  // to; from tomorrow it pays, and the wheel shows up with it.
+  if (!prevDate) {
+    return {
+      ...state,
+      streak: { count: 1, lastOpenedDate: today },
+      dailyProgress: makeInitialDailyProgress(),
+      dailyQuests: makeDailyQuests(state.townRankIndex, today, state.tradeUnlocked),
+      activeMiniQuest: null,
+      productionQuotas: generateDailyQuotas(),
+      productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
+      weeklyChallenge: ensureWeeklyChallenge(state, today),
+      festivalProgress: ensureFestivalProgress(state, today),
+    };
+  }
+
+  const bonus = dailyBonusForStreak(state, count);
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...eventFields(state.language, "msg.dailyCheckInReturning", { count, bonus }),
+    tone: "good",
+  };
 
   return {
     ...state,
@@ -837,16 +973,20 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
     // The reward wheel modal spins to reveal this once the player next sees
     // the app; dismissDailyBonus clears it after they've watched it land.
+    // Only ever reached on a return visit — see the early return above.
     dailyBonusPending: bonus,
     // A genuinely new day (this function only reaches here when one
     // started) resets the daily quest board and its progress counters.
     dailyProgress: makeInitialDailyProgress(),
-    dailyQuests: makeDailyQuests(today),
+    dailyQuests: makeDailyQuests(state.townRankIndex, today, state.tradeUnlocked),
     // A mini quest's progress is measured against the daily counters above
     // via a baseline snapshot — resetting those out from under it would
     // make it unwinnable, so just drop it; a new one spawns again soon.
     activeMiniQuest: null,
+    productionQuotas: generateDailyQuotas(),
+    productionToday: Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>,
     weeklyChallenge: ensureWeeklyChallenge(state, today),
+    festivalProgress: ensureFestivalProgress(state, today),
   };
 }
 // Deterministic on the ISO week number, not RNG — every player sees the same
@@ -856,8 +996,15 @@ export function dailyCheckIn(state: EconomyState, today: string): EconomyState {
 function ensureWeeklyChallenge(state: EconomyState, today: string): WeeklyChallenge {
   const weekKey = isoWeekKey(today);
   if (state.weeklyChallenge && state.weeklyChallenge.weekKey === weekKey) return state.weeklyChallenge;
-  const template = weeklyChallengeTemplateForWeek(weekKey);
-  return { weekKey, templateId: template.id, startValue: template.metric(state.stats), claimed: false };
+  const template = weeklyChallengeTemplateForWeek(weekKey, state.tradeUnlocked);
+  return {
+    weekKey,
+    templateId: template.id,
+    startValue: template.metric(state.stats),
+    claimed: false,
+    target: scaledGoalTarget(template.target, state.townRankIndex),
+    reward: scaledGoalReward(template.reward, state.townRankIndex),
+  };
 }
 // Runs once per tick, right after tick() — auto-claims the moment progress
 // reaches the target, the same "no separate claim button" choice as bulk
@@ -868,65 +1015,64 @@ export function applyWeeklyChallengeClaim(state: EconomyState): EconomyState {
   const template = WEEKLY_CHALLENGE_TEMPLATES_BY_ID[wc.templateId];
   if (!template) return state;
   const progress = template.metric(state.stats) - wc.startValue;
-  if (progress < template.target) return state;
+  if (progress < wc.target) return state;
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.weeklyChallengeComplete", {
-      title: t(state.language, template.titleKey),
-      amount: formatNumberUtil(template.reward, state.language),
+    ...eventFields(state.language, "msg.weeklyChallengeComplete", {
+      title: { key: template.titleKey },
+      amount: formatNumberUtil(wc.reward, state.language),
     }),
     tone: "good",
   };
   return {
     ...state,
-    cash: state.cash + template.reward,
+    cash: state.cash + wc.reward,
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
     weeklyChallenge: { ...wc, claimed: true },
   };
 }
-function upgrade(state: EconomyState, upgradeId: UpgradeId): EconomyState {
-  if (state.gameOver) return state;
-  const def = UPGRADES_BY_ID[upgradeId];
-  const level = state.upgrades[upgradeId];
-  if (level >= def.maxLevel) return state;
-  const cost = upgradeCost(def, level);
-  if (state.cash < cost) return state;
+// Checked on every check-in, same as ensureWeeklyChallenge — only assigns a
+// goal while the window is open, and clears it the moment the window closes
+// so a stale, un-claimable goal never lingers on screen the other 27+ days
+// of the month.
+function ensureFestivalProgress(state: EconomyState, today: string): FestivalProgress | null {
+  if (!isFestivalWindowOpen(today)) return null;
+  const monthKey = festivalMonthKey(today);
+  if (state.festivalProgress && state.festivalProgress.monthKey === monthKey) return state.festivalProgress;
   return {
-    ...state,
-    cash: state.cash - cost,
-    upgrades: { ...state.upgrades, [upgradeId]: level + 1 },
-    dailyProgress: {
-      ...state.dailyProgress,
-      upgradesBought: state.dailyProgress.upgradesBought + 1,
-    },
+    monthKey,
+    startValue: festivalMetric(state.stats),
+    claimed: false,
+    target: scaledGoalTarget(FESTIVAL_GOAL_TRADES, state.townRankIndex),
+    reward: scaledGoalReward(FESTIVAL_REWARD_CASH, state.townRankIndex),
   };
 }
-function buyProperty(state: EconomyState, propertyId: string): EconomyState {
-  if (state.gameOver) return state;
-  if (state.ownedProperties.includes(propertyId)) return state;
-  const def = PROPERTIES_BY_ID[propertyId];
-  if (!def) return state;
-  if (state.cash < def.cost) return state;
-  return {
-    ...state,
-    cash: state.cash - def.cost,
-    ownedProperties: [...state.ownedProperties, propertyId],
+// Runs once per tick, right after tick() — auto-claims the moment progress
+// reaches the target, same as applyWeeklyChallengeClaim. Also sets the
+// sticky festivalEmblemEarned flag, since festivalProgress itself gets
+// replaced with null once the window closes.
+export function applyFestivalClaim(state: EconomyState): EconomyState {
+  const fp = state.festivalProgress;
+  if (!fp || fp.claimed) return state;
+  const progress = festivalMetric(state.stats) - fp.startValue;
+  if (progress < fp.target) return state;
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...eventFields(state.language, "msg.festivalComplete", {
+      amount: formatNumberUtil(fp.reward, state.language),
+    }),
+    tone: "good",
   };
-}
-function research(state: EconomyState, nodeId: string): EconomyState {
-  if (state.gameOver) return state;
-  if (state.researched.includes(nodeId)) return state;
-  const node = RESEARCH_NODES_BY_ID[nodeId];
-  if (!node) return state;
-  if (node.requires && !state.researched.includes(node.requires)) return state;
-  const cost = researchCost(state, node);
-  if (state.cash < cost) return state;
   return {
     ...state,
-    cash: state.cash - cost,
-    researched: [...state.researched, nodeId],
+    cash: state.cash + fp.reward,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+    festivalProgress: { ...fp, claimed: true },
+    festivalEmblemEarned: true,
   };
 }
 function setTaxRate(state: EconomyState, rate: number): EconomyState {
@@ -968,7 +1114,11 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
   }
   s = applyTownRankUp(
     applyMythicUnlock(
-      applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(s)))))
+      applyLegendaryUnlock(
+        applyWorkersUnlock(
+          applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(s)))))
+        )
+      )
     )
   );
 
@@ -1001,6 +1151,9 @@ function offlineAdvance(state: EconomyState, ticks: number, elapsedMs: number): 
 function dismissOfflineSummary(state: EconomyState): EconomyState {
   return { ...state, offlineSummary: null };
 }
+function dismissMerveRankUp(state: EconomyState): EconomyState {
+  return { ...state, merveRankUp: null };
+}
 function resolveDecision(state: EconomyState, optionId: string): EconomyState {
   if (!state.pendingDecision) return state;
   const template = DECISION_TEMPLATES_BY_ID[state.pendingDecision.templateId];
@@ -1015,11 +1168,15 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
 
   function outcome(
     messageKey: string,
-    params: Record<string, string | number> | undefined,
+    params: Params | undefined,
     tone: EconomyEvent["tone"],
     patch: Partial<EconomyState>
   ) {
-    const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+    const event: EconomyEvent = {
+      id: state.nextId,
+      ...eventFields(state.language, messageKey, params),
+      tone,
+    };
     return {
       ...state,
       ...patch,
@@ -1030,7 +1187,7 @@ function resolveVillagerRequest(state: EconomyState, give: boolean): EconomyStat
     };
   }
 
-  const goodName = t(state.language, good.nameKey);
+  const goodName: NestedKey = { key: good.nameKey };
 
   if (give) {
     if (gs.holding < request.qty) {
@@ -1056,15 +1213,19 @@ function resolveRivalOffer(state: EconomyState, accept: boolean): EconomyState {
   if (!offer) return state;
   const good = GOODS_BY_ID[offer.goodId];
   const gs = state.goods[offer.goodId];
-  const goodName = t(state.language, good.nameKey);
+  const goodName: NestedKey = { key: good.nameKey };
 
   function outcome(
     messageKey: string,
-    params: Record<string, string | number> | undefined,
+    params: Params | undefined,
     tone: EconomyEvent["tone"],
     patch: Partial<EconomyState>
   ) {
-    const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+    const event: EconomyEvent = {
+      id: state.nextId,
+      ...eventFields(state.language, messageKey, params),
+      tone,
+    };
     return {
       ...state,
       ...patch,
@@ -1101,7 +1262,7 @@ export function prestige(state: EconomyState): EconomyState {
   const bestNetWorthEver = Math.max(state.bestNetWorthEver, netWorthNow);
   const event: EconomyEvent = {
     id: base.nextId,
-    message: t(state.language, "msg.prestiged", { level: nextLevel }),
+    ...eventFields(state.language, "msg.prestiged", { level: nextLevel }),
     tone: "good",
   };
   return {
@@ -1154,9 +1315,9 @@ export function chooseDoctrine(state: EconomyState, doctrineId: string): Economy
   if (computeNetWorth(state) < DOCTRINE_UNLOCK_NET_WORTH) return state;
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.doctrineChosen", {
+    ...eventFields(state.language, "msg.doctrineChosen", {
       icon: DOCTRINES_BY_ID[doctrineId].icon,
-      name: t(state.language, DOCTRINES_BY_ID[doctrineId].nameKey),
+      name: { key: DOCTRINES_BY_ID[doctrineId].nameKey },
     }),
     tone: "good",
   };
@@ -1213,9 +1374,9 @@ export function repayLoan(state: EconomyState, amount: number): EconomyState {
   };
 }
 function hireWorker(state: EconomyState, goodId: GoodId): EconomyState {
-  if (state.gameOver) return state;
+  if (state.gameOver || !state.workersUnlocked) return state;
   const count = state.workers[goodId];
-  if (count >= WORKER_MAX_PER_GOOD) return state;
+  if (count >= effectiveWorkerMaxPerGood(state)) return state;
   return { ...state, workers: { ...state.workers, [goodId]: count + 1 } };
 }
 function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {
@@ -1226,7 +1387,7 @@ function fireWorker(state: EconomyState, goodId: GoodId): EconomyState {
 function baseReducer(state: EconomyState, action: Action): EconomyState {
   switch (action.type) {
     case "TICK":
-      return applyWeeklyChallengeClaim(applyAutoTradeRules(tick(state)));
+      return applyFestivalClaim(applyWeeklyChallengeClaim(applyAutoTradeRules(tick(state))));
     case "SELECT_GOOD":
       return { ...state, selectedGood: action.goodId };
     case "TRADE":
@@ -1247,6 +1408,60 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return state.gameOver ? state : { ...state, paused: !state.paused };
     case "CLAIM_SPEED_BOOST":
       return claimSpeedBoost(state);
+    case "SET_GUILD_PROJECTS": {
+      const built = Math.max(0, Math.floor(action.built));
+      return (state.guildProjects ?? 0) === built ? state : { ...state, guildProjects: built };
+    }
+    case "GUILD_CASH_OUT": {
+      // Coins given to the guild hall; the server decided how much it took.
+      const amount = Math.min(Math.max(0, Math.floor(action.amount)), Math.floor(state.cash));
+      if (amount <= 0) return state;
+      const event: EconomyEvent = {
+        id: state.nextId,
+        ...eventFields(state.language, "msg.guildCashGiven", { amount }),
+        tone: "good",
+      };
+      return {
+        ...state,
+        cash: state.cash - amount,
+        nextId: state.nextId + 1,
+        lastEvent: event,
+        eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+      };
+    }
+    case "SET_GUILD_LEVEL": {
+      const level = Math.max(0, Math.floor(action.level));
+      return (state.guildLevel ?? 0) === level ? state : { ...state, guildLevel: level };
+    }
+    case "GUILD_GOODS_OUT":
+      return applyGuildGoodsOut(state, action.goodId, action.qty, action.to);
+    case "GUILD_GOODS_IN":
+      return applyGuildGoodsIn(state, action.goodId, action.qty, action.from);
+    case "GUILD_REWARD": {
+      // The weekly guild chest: the server has already decided this player
+      // may take it once; here it only lands in the treasury and the log.
+      if (!(action.amount > 0)) return state;
+      const event: EconomyEvent = {
+        id: state.nextId,
+        ...eventFields(
+          state.language,
+          action.source === "draw"
+            ? "msg.guildDrawReward"
+            : action.source === "duel"
+              ? "msg.guildDuelReward"
+              : "msg.guildReward",
+          { amount: Math.round(action.amount) }
+        ),
+        tone: "good",
+      };
+      return {
+        ...state,
+        cash: state.cash + action.amount,
+        nextId: state.nextId + 1,
+        lastEvent: event,
+        eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+      };
+    }
     case "RESET": {
       // A new difficulty starts the economy over, but the player's chosen
       // town name, language, and any earned prestige bonus are identity,
@@ -1297,18 +1512,30 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return action.state;
     case "DAILY_CHECKIN":
       return dailyCheckIn(state, action.today);
+    // Upgrades, research and properties are paid for now and finished later
+    // (see construction.ts).
     case "UPGRADE":
-      return upgrade(state, action.upgradeId);
+      return startImprovement(state, "upgrade", action.upgradeId, action.now);
     case "RESEARCH":
-      return research(state, action.nodeId);
+      return startImprovement(state, "research", action.nodeId, action.now);
     case "BUY_PROPERTY":
-      return buyProperty(state, action.propertyId);
+      return startImprovement(state, "property", action.propertyId, action.now);
+    case "FINISH_IMPROVEMENTS":
+      return finishDueImprovements(state, action.now);
+    case "SKIP_IMPROVEMENT":
+      return skipImprovement(state, action.kind, action.now);
     case "SET_TAX_RATE":
       return setTaxRate(state, action.rate);
     case "OFFLINE_ADVANCE":
       return offlineAdvance(state, action.ticks, action.elapsedMs);
+    case "CLAIM_MERCHANT_OFFER":
+      return claimMerchantOffer(state);
+    case "DISMISS_MERCHANT_OFFER":
+      return dismissMerchantOffer(state);
     case "DISMISS_OFFLINE_SUMMARY":
       return dismissOfflineSummary(state);
+    case "DISMISS_MERVE_RANK_UP":
+      return dismissMerveRankUp(state);
     case "DISMISS_DAILY_BONUS":
       return state.dailyBonusPending === null ? state : { ...state, dailyBonusPending: null };
     case "RESOLVE_DECISION":
@@ -1317,6 +1544,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return resolveVillagerRequest(state, action.give);
     case "RESOLVE_RIVAL_OFFER":
       return resolveRivalOffer(state, action.accept);
+    case "ADVANCE_MENTOR":
+      // Clamped and monotonic: the tour only ever moves forward, and
+      // finishing and skipping are the same thing — both land on the end.
+      return { ...state, mentorStep: Math.max(state.mentorStep, Math.min(action.to, MENTOR_STEPS.length)) };
     case "SET_TOWN_NAME":
       return setTownName(state, action.name);
     case "SET_LANGUAGE":
@@ -1335,13 +1566,24 @@ function reducer(state: EconomyState, action: Action): EconomyState {
   return applyMiniQuest(
     applyTownRankUp(
       applyMythicUnlock(
-        applyLegendaryUnlock(applyMetropolUnlock(applyTradeUnlock(applyDailyQuests(applyAchievements(next)))))
+        applyLegendaryUnlock(
+          applyWorkersUnlock(
+            applyMetropolUnlock(applyTradeUnlock(applyOnboarding(applyDailyQuests(applyAchievements(next)))))
+          )
+        )
       )
     )
   );
 }
 export function useEconomy() {
-  const [state, dispatch] = useReducer(reducer, undefined, initialState);
+  // The device's language is read here rather than inside `initialState`, so
+  // the reducer stays pure and the tests keep their fixed Turkish default
+  // instead of depending on whatever locale the machine running them has.
+  // Overwritten a moment later by HYDRATE if there is a save — this only
+  // decides what a first launch looks like.
+  const [state, dispatch] = useReducer(reducer, undefined, () =>
+    initialState(DEFAULT_DIFFICULTY, deviceLanguage())
+  );
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [hydrated, setHydrated] = useState(false);
   // Whether the launch found a save to restore. Not the same question as
@@ -1358,14 +1600,25 @@ export function useEconomy() {
   const start = useCallback(() => setStarted(true), []);
 
   const isSpeedBoosted = state.speedBoostExpiresAt !== null;
+  const isMentorActive = state.mentorStep < MENTOR_STEPS.length;
   useEffect(() => {
-    if (!hydrated || !started) return;
+    if (!hydrated || !started || isMentorActive) return;
     const intervalMs = isSpeedBoosted ? BOOSTED_TICK_MS : TICK_MS;
     intervalRef.current = setInterval(() => dispatch({ type: "TICK" }), intervalMs);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isSpeedBoosted, hydrated, started]);
+  }, [isSpeedBoosted, hydrated, started, isMentorActive]);
+
+  // Finishes upgrades, properties and research whose time is up. Real time, so
+  // it keeps counting while the game is closed and a return finishes them at once.
+  useEffect(() => {
+    if (!hydrated) return;
+    const finish = () => dispatch({ type: "FINISH_IMPROVEMENTS", now: Date.now() });
+    finish();
+    const id = setInterval(finish, 1000);
+    return () => clearInterval(id);
+  }, [hydrated]);
 
   // Load any previous save once on mount, fast-forward the town through
   // however long the app was closed, then start persisting future changes.
@@ -1378,7 +1631,11 @@ export function useEconomy() {
         dispatch({ type: "HYDRATE", state: saved });
         const lastSavedAt = saved.lastSavedAt ?? Date.now();
         const elapsedMs = clamp(Date.now() - lastSavedAt, 0, MAX_OFFLINE_MS);
-        const ticks = Math.min(Math.floor(elapsedMs / TICK_MS), MAX_OFFLINE_TICKS);
+        // Slower than a live session (OFFLINE_RATE), not paused: a short
+        // absence still nets a little progress instead of rounding down to
+        // nothing, and a long one keeps accruing instead of flatlining at
+        // the same catch-up as a 12-minute gap.
+        const ticks = Math.min(Math.floor((elapsedMs * OFFLINE_RATE) / TICK_MS), MAX_OFFLINE_TICKS);
         if (ticks > 0 && elapsedMs >= MIN_OFFLINE_MS_TO_SHOW) {
           dispatch({ type: "OFFLINE_ADVANCE", ticks, elapsedMs });
         }
@@ -1392,9 +1649,18 @@ export function useEconomy() {
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
+    // Gated on `started`, not just `hydrated`: without it, a player who
+    // never gets past the title screen still gets a save written — the
+    // untouched default state (Day 1, the starting cash) — the moment load
+    // finishes. Their next launch would then show "Continue · Day 1" for a
+    // town they never actually played, exactly what hasSave's own comment
+    // above says this screen should avoid. A returning player with real
+    // history is unaffected: that save already exists from a previous
+    // session where they did press the button, so hasSave is already true
+    // from the load itself, before this effect ever runs again.
+    if (!hydrated || !started) return;
     saveEconomyState(state);
-  }, [state, hydrated]);
+  }, [state, hydrated, started]);
 
   const selectGood = useCallback((goodId: GoodId) => dispatch({ type: "SELECT_GOOD", goodId }), []);
   const trade_ = useCallback(
@@ -1457,14 +1723,24 @@ export function useEconomy() {
   const repayLoan_ = useCallback((amount: number) => dispatch({ type: "REPAY_LOAN", amount }), []);
   const hireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "HIRE_WORKER", goodId }), []);
   const fireWorker_ = useCallback((goodId: GoodId) => dispatch({ type: "FIRE_WORKER", goodId }), []);
-  const upgrade_ = useCallback((upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId }), []);
-  const research_ = useCallback((nodeId: string) => dispatch({ type: "RESEARCH", nodeId }), []);
+  const upgrade_ = useCallback(
+    (upgradeId: UpgradeId) => dispatch({ type: "UPGRADE", upgradeId, now: Date.now() }),
+    []
+  );
+  const skipImprovement_ = useCallback(
+    (kind: ImprovementKind) => dispatch({ type: "SKIP_IMPROVEMENT", kind, now: Date.now() }),
+    []
+  );
+  const research_ = useCallback(
+    (nodeId: string) => dispatch({ type: "RESEARCH", nodeId, now: Date.now() }),
+    []
+  );
   const hydrate_ = useCallback(
     (imported: EconomyState) => dispatch({ type: "HYDRATE", state: imported }),
     []
   );
   const buyProperty_ = useCallback(
-    (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId }),
+    (propertyId: string) => dispatch({ type: "BUY_PROPERTY", propertyId, now: Date.now() }),
     []
   );
   const tradeAsset_ = useCallback(
@@ -1473,7 +1749,10 @@ export function useEconomy() {
     []
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
+  const claimMerchantOffer_ = useCallback(() => dispatch({ type: "CLAIM_MERCHANT_OFFER" }), []);
+  const dismissMerchantOffer_ = useCallback(() => dispatch({ type: "DISMISS_MERCHANT_OFFER" }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
+  const dismissMerveRankUp = useCallback(() => dispatch({ type: "DISMISS_MERVE_RANK_UP" }), []);
   const dismissDailyBonus = useCallback(() => dispatch({ type: "DISMISS_DAILY_BONUS" }), []);
   const resolveDecision_ = useCallback(
     (optionId: string) => dispatch({ type: "RESOLVE_DECISION", optionId }),
@@ -1487,8 +1766,29 @@ export function useEconomy() {
   const setTownName = useCallback((name: string) => dispatch({ type: "SET_TOWN_NAME", name }), []);
   const setEmblem_ = useCallback((emblemId: string) => dispatch({ type: "SET_EMBLEM", emblemId }), []);
   const setEmblemColor_ = useCallback((color: string) => dispatch({ type: "SET_EMBLEM_COLOR", color }), []);
+  const advanceMentor = useCallback((to: number) => dispatch({ type: "ADVANCE_MENTOR", to }), []);
   const setLanguage_ = useCallback((language: Language) => dispatch({ type: "SET_LANGUAGE", language }), []);
   const claimSpeedBoost_ = useCallback(() => dispatch({ type: "CLAIM_SPEED_BOOST" }), []);
+  const setGuildLevel = useCallback((level: number) => dispatch({ type: "SET_GUILD_LEVEL", level }), []);
+  const guildGoodsOut = useCallback(
+    (goodId: GoodId, qty: number, to: "order" | "friend" | "caravan") =>
+      dispatch({ type: "GUILD_GOODS_OUT", goodId, qty, to }),
+    []
+  );
+  const guildGoodsIn = useCallback(
+    (goodId: GoodId, qty: number, from: string) => dispatch({ type: "GUILD_GOODS_IN", goodId, qty, from }),
+    []
+  );
+  const grantGuildReward = useCallback(
+    (amount: number, source: "chest" | "draw" | "duel" | "caravan" = "chest") =>
+      dispatch({ type: "GUILD_REWARD", amount, source }),
+    []
+  );
+  const guildCashOut = useCallback((amount: number) => dispatch({ type: "GUILD_CASH_OUT", amount }), []);
+  const setGuildProjects = useCallback(
+    (built: number) => dispatch({ type: "SET_GUILD_PROJECTS", built }),
+    []
+  );
   const translate = useCallback(
     (key: string, params?: Record<string, string | number>) => t(state.language, key, params),
     [state.language]
@@ -1531,20 +1831,31 @@ export function useEconomy() {
     hireWorker: hireWorker_,
     fireWorker: fireWorker_,
     upgrade: upgrade_,
+    skipImprovement: skipImprovement_,
     research: research_,
     buyProperty: buyProperty_,
     tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
+    claimMerchantOffer: claimMerchantOffer_,
+    dismissMerchantOffer: dismissMerchantOffer_,
+    dismissMerveRankUp,
     dismissDailyBonus,
     resolveDecision: resolveDecision_,
     resolveRequest,
     resolveRivalOffer: resolveRivalOffer_,
+    advanceMentor,
     setTownName,
     setEmblem: setEmblem_,
     setEmblemColor: setEmblemColor_,
     setLanguage: setLanguage_,
     claimSpeedBoost: claimSpeedBoost_,
+    grantGuildReward,
+    setGuildLevel,
+    guildCashOut,
+    setGuildProjects,
+    guildGoodsOut,
+    guildGoodsIn,
     t: translate,
     tPlural: translatePlural,
     formatCoins: (value: number, decimals?: number) => formatCoinsUtil(value, state.language, decimals),

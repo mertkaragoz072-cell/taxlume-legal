@@ -1,15 +1,15 @@
 import React from "react";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet } from "react-native";
+import medCase from "../../assets/ui/modal/med_case.webp";
+import icHand from "../../assets/ui/modal/ic_hand.webp";
+import icRedx from "../../assets/ui/modal/ic_redx.webp";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { GOODS_BY_ID } from "../economy/goods";
 import { GoodState, RivalTraderOffer } from "../economy/types";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT } from "../theme";
-import { GradientFill } from "./GradientFill";
-import { IconBadge } from "./IconBadge";
+import { FONT } from "../theme";
 import { ModalBackdrop } from "./ModalBackdrop";
-import { ScalePressable } from "./ScalePressable";
-
-const RIVAL_ACCENT = "#e0a13f";
+import { ModalShell, OptionBar } from "./ModalKit";
 
 interface Props {
   offer: RivalTraderOffer | null;
@@ -27,10 +27,7 @@ export function RivalTraderModal({ offer, holding, onResolve }: Props) {
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <IconBadge icon="💼" color={RIVAL_ACCENT} />
-          <Text style={styles.title}>{t("rivalOffer.title")}</Text>
+        <ModalShell title={t("rivalOffer.title")} medallion={medCase}>
           <Text style={styles.description}>
             {t("rivalOffer.description", {
               qty: offer.qty,
@@ -40,75 +37,39 @@ export function RivalTraderModal({ offer, holding, onResolve }: Props) {
               total: formatCoins(total),
             })}
           </Text>
-
-          <ScalePressable
-            onPress={() => onResolve(true)}
-            style={[
-              styles.option,
-              canAccept && { borderColor: RIVAL_ACCENT },
-              !canAccept && styles.optionDisabled,
-            ]}
-            scaleTo={0.96}
-          >
-            <Text style={styles.optionLabel}>{t("rivalOffer.acceptBtn")}</Text>
-            <Text style={styles.optionHint}>
-              {canAccept
+          <OptionBar
+            kind="optG"
+            title={t("rivalOffer.acceptBtn")}
+            hint={
+              canAccept
                 ? t("rivalOffer.acceptHint")
-                : t("rivalOffer.insufficientHint", { good: t(good.nameKey) })}
-            </Text>
-          </ScalePressable>
-
-          <ScalePressable onPress={() => onResolve(false)} style={styles.option} scaleTo={0.96}>
-            <Text style={styles.optionLabel}>{t("rivalOffer.declineBtn")}</Text>
-            <Text style={styles.optionHint}>{t("rivalOffer.declineHint")}</Text>
-          </ScalePressable>
-        </View>
+                : t("rivalOffer.insufficientHint", { good: t(good.nameKey) })
+            }
+            icon={icHand}
+            disabled={!canAccept}
+            onPress={() => onResolve(true)}
+          />
+          <OptionBar
+            kind="optR"
+            title={t("rivalOffer.declineBtn")}
+            hint={t("rivalOffer.declineHint")}
+            icon={icRedx}
+            onPress={() => onResolve(false)}
+          />
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: "100%",
-    maxWidth: 360,
-    borderRadius: 18,
-    padding: 20,
-    alignItems: "center",
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  title: {
-    color: COLORS.textPrimary,
-    fontSize: 17,
-    fontFamily: FONT.display,
-    marginBottom: 8,
-    textAlign: "center",
-  },
   description: {
-    color: COLORS.textMuted,
-    fontSize: 13,
+    color: "#f4e8d0",
+    fontFamily: FONT.medium,
+    fontSize: 13.5,
+    lineHeight: 19,
     textAlign: "center",
-    marginBottom: 18,
-    lineHeight: 18,
+    marginBottom: 14,
+    marginTop: 2,
   },
-  option: {
-    width: "100%",
-    backgroundColor: "#1a1410",
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: "#3a2d1e",
-  },
-  optionDisabled: { opacity: 0.5 },
-  optionLabel: {
-    color: COLORS.textPrimary,
-    fontWeight: "700",
-    fontFamily: FONT.bold,
-    fontSize: 14,
-    marginBottom: 3,
-  },
-  optionHint: { color: COLORS.textMuted, fontSize: 11 },
 });

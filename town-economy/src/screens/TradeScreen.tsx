@@ -1,11 +1,22 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "../components/AppText";
 import { useSoundEffects } from "../audio/useSoundEffects";
 import { BargainingModal } from "../components/BargainingModal";
 import { CaravanRoad } from "../components/CaravanRoad";
 import { GradientFill } from "../components/GradientFill";
 import { ScalePressable } from "../components/ScalePressable";
+import lockArt from "../../assets/ui/tradelock/panel.webp";
+import { BeamTitle, FixedPanel } from "../components/ImagePanels";
 import { SectionLabel } from "../components/SectionLabel";
+import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
+import { ProgressCard } from "../components/ProgressCard";
+import { BulkContractPanel } from "../components/BulkContractPanel";
+import { ContractPanel } from "../components/ContractPanel";
+import { SendPanel } from "../components/SendPanel";
+import { HeatmapPanel } from "../components/HeatmapPanel";
+import { LockedTierCard } from "../components/LockedTierCard";
+import { TownArtPills } from "../components/TownArtPills";
 import { TownMapView } from "../components/TownMapView";
 import { TradingHousesCard } from "../components/TradingHousesCard";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -14,12 +25,12 @@ import { ForeignTown, TOWNS, TOWNS_BY_ID, TownId } from "../economy/towns";
 import { CaravanDirection, ContractDirection, EconomyState, GoodId } from "../economy/types";
 import {
   BULK_CONTRACT_BONUS_PCT,
-  BULK_CONTRACT_MAX_ACTIVE,
   BULK_CONTRACT_TERM_DAY_STEPS,
   CARAVAN_INSURANCE_COST_PCT,
   CONTRACT_MARGIN_PCT,
-  CONTRACT_MAX_ACTIVE,
   CONTRACT_TERM_DAY_STEPS,
+  effectiveBulkContractMaxActive,
+  effectiveContractMaxActive,
   effectiveMetropolUnlockNetWorth,
   effectiveTariffRate,
   effectiveTradeUnlockNetWorth,
@@ -29,21 +40,27 @@ import {
   TICKS_PER_GAME_DAY,
 } from "../economy/useEconomy";
 import {
-  BLUE_GRADIENT,
   CARD_GRADIENT,
   cardShadow,
   COLORS,
   FONT,
-  GREEN_GRADIENT,
   RADIUS,
+  PANEL_GAP,
+  SCREEN_PADDING,
   SPACING,
   TYPE,
-  WEIGHT,
-  withAlpha,
+  WOOD_RIM,
+  glowShadow,
 } from "../theme";
+import { fixedUi } from "../utils/formatNumber";
 
 interface Props {
   sounds: ReturnType<typeof useSoundEffects>;
+  /** True only while the caravan tutorial is on its "where can you trade"
+   * beat, which docks a card right under this map — see TownMapView's own
+   * `maxHeight` prop for why that needs the map to shrink instead of just
+   * getting silently cropped by a shrunk scroll viewport. */
+  compactMap?: boolean;
 }
 
 type QtyOption = 1 | 5 | "ALL";
@@ -58,16 +75,6 @@ const LEGENDARY_TOWNS = TOWNS.filter((tn) => tn.tier === "legendary");
 const MYTHIC_TOWNS = TOWNS.filter((tn) => tn.tier === "mythic");
 const ALL_TOWNS = [...REGULAR_TOWNS, ...METROPOLISES, ...LEGENDARY_TOWNS, ...MYTHIC_TOWNS];
 
-// Green above the baseline, red below — same intensity-scales-with-magnitude
-// idea as a real heatmap, but built from the app's own warm palette (and a
-// ⭐ on the single best cell) so it reads as a game board, not a spreadsheet.
-function heatCellColor(pct: number): string {
-  const clamped = Math.max(-50, Math.min(50, pct));
-  const intensity = Math.abs(clamped) / 50;
-  const base = clamped >= 0 ? "#5fd884" : "#f0776a";
-  return withAlpha(base, 0.1 + intensity * 0.55);
-}
-
 interface TownPillProps {
   town: ForeignTown;
   selected: boolean;
@@ -78,19 +85,28 @@ interface TownPillProps {
 
 function TownPill({ town, selected, onPress, state, t }: TownPillProps) {
   const effectiveTariff = effectiveTariffRate(state, town);
+  const name = t(town.nameKey);
   return (
-    <ScalePressable onPress={onPress} style={[styles.townPill, selected && styles.townPillActive]}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <Text style={styles.townIcon}>{town.icon}</Text>
-      <Text style={styles.townName}>{t(town.nameKey)}</Text>
-      <Text style={styles.townMeta}>
+    <ScalePressable
+      onPress={onPress}
+      accessibilityLabel={name}
+      aria-selected={selected}
+      style={[styles.townPill, selected && styles.townPillActive]}
+    >
+      <View style={[styles.townIconWrap, selected && styles.townIconWrapActive]}>
+        <Text style={styles.townIcon}>{town.icon}</Text>
+      </View>
+      <Text style={styles.townName} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={styles.townMeta} numberOfLines={1}>
         {t("trade.townMeta", { days: town.distanceDays, tariff: (effectiveTariff * 100).toFixed(0) })}
       </Text>
     </ScalePressable>
   );
 }
 
-export function TradeScreen({ sounds }: Props) {
+export function TradeScreen({ sounds, compactMap }: Props) {
   const { state, sendCaravan, openContract, openBulkContract, t, tPlural, netWorth, formatCoins } =
     useEconomyContext();
   const [townId, setTownId] = useState<TownId>(TOWNS[0].id);
@@ -111,29 +127,87 @@ export function TradeScreen({ sounds }: Props) {
     qty: number;
     insured: boolean;
   } | null>(null);
+  const spotlightScroll = useSpotlightScroll();
 
   if (!state.tradeUnlocked) {
     const target = effectiveTradeUnlockNetWorth(state);
     const pct = Math.max(0, Math.min(1, netWorth / target));
     return (
       <ScrollView contentContainerStyle={styles.lockedBody} showsVerticalScrollIndicator={false}>
-        <View style={styles.lockedCard}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.lockedIcon}>🔒</Text>
-          <Text style={styles.lockedTitle}>{t("trade.locked.title")}</Text>
-          <Text style={styles.lockedDesc}>
-            {t("trade.locked.description", { target: Math.round(target) })}
-          </Text>
-          <View style={styles.lockedTrack}>
-            <View style={[styles.lockedFill, { width: `${pct * 100}%` }]} />
-          </View>
-          <Text style={styles.lockedProgress}>
-            {t("trade.locked.progress", {
-              current: Math.floor(netWorth),
-              target: Math.round(target),
-            })}
-          </Text>
-        </View>
+        {/* The sent lock-card art carries its own plaque, ribbon, parchment and
+            progress groove; the words and the gold fill are drawn over it. */}
+        <FixedPanel source={lockArt} aspect={900 / 932}>
+          {(w) => {
+            const px = (v: number) => `${(v / 1199) * 100}%` as const;
+            const py = (v: number) => `${(v / 1242) * 100}%` as const;
+            return (
+              <>
+                <Text
+                  style={[
+                    styles.lockPlaque,
+                    {
+                      left: px(335),
+                      width: px(530),
+                      top: py(110),
+                      height: py(85),
+                      fontSize: w * 0.052,
+                      lineHeight: w * 0.07,
+                    },
+                  ]}
+                  numberOfLines={1}
+                  accessibilityRole="header"
+                >
+                  {t("tabs.trade")}
+                </Text>
+                <Text
+                  style={[
+                    styles.lockRibbon,
+                    {
+                      left: px(260),
+                      width: px(680),
+                      top: py(566),
+                      height: py(80),
+                      fontSize: Math.min(w * 0.04, (w * 0.54) / (t("trade.locked.title").length * 0.95)),
+                      lineHeight: w * 0.07,
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {t("trade.locked.title")}
+                </Text>
+                <Text
+                  style={[
+                    styles.lockDesc,
+                    {
+                      left: px(175),
+                      width: px(850),
+                      top: py(690),
+                      fontSize: w * 0.034,
+                      lineHeight: w * 0.047,
+                    },
+                  ]}
+                  numberOfLines={4}
+                >
+                  {t("trade.locked.description", { target: Math.round(target) })}
+                </Text>
+                <View
+                  style={[styles.lockTrack, { left: px(192), width: px(816), top: py(918), height: py(44) }]}
+                >
+                  <View style={[styles.lockFill, { width: `${pct * 100}%` }]} />
+                </View>
+                <Text
+                  style={[
+                    styles.lockProgress,
+                    { left: px(175), width: px(850), top: py(992), fontSize: w * 0.04 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {t("trade.locked.progress", { current: Math.floor(netWorth), target: Math.round(target) })}
+                </Text>
+              </>
+            );
+          }}
+        </FixedPanel>
       </ScrollView>
     );
   }
@@ -159,7 +233,14 @@ export function TradeScreen({ sounds }: Props) {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={spotlightScroll?.ref}
+        onScroll={spotlightScroll?.onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+      >
+        <BeamTitle title={t("tabs.trade")} />
         {state.caravans.length > 0 && (
           <View style={styles.roadBanner}>
             <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
@@ -190,33 +271,36 @@ export function TradeScreen({ sounds }: Props) {
         <TradingHousesCard activities={state.tradingHouses} />
 
         <SectionLabel text={t("trade.mapSectionLabel")} color="#5fd884" />
-        <TownMapView
-          townName={state.townName}
-          selectedEmblem={state.selectedEmblem}
-          towns={ALL_TOWNS}
-          selectedTownId={townId}
-          onSelectTown={setTownId}
-          metropolUnlocked={state.metropolUnlocked}
-          legendaryUnlocked={state.legendaryUnlocked}
-          mythicUnlocked={state.mythicUnlocked}
-          caravans={state.caravans}
-          tick={state.tick}
-          t={t}
-        />
+        <SpotlightTarget id="caravanMap">
+          <TownMapView
+            townName={state.townName}
+            selectedEmblem={state.selectedEmblem}
+            towns={ALL_TOWNS}
+            selectedTownId={townId}
+            onSelectTown={setTownId}
+            metropolUnlocked={state.metropolUnlocked}
+            legendaryUnlocked={state.legendaryUnlocked}
+            mythicUnlocked={state.mythicUnlocked}
+            caravans={state.caravans}
+            tick={state.tick}
+            t={t}
+            maxHeight={compactMap ? 210 : undefined}
+          />
+        </SpotlightTarget>
 
         <SectionLabel text={t("trade.neighborsSectionLabel")} color="#6fb8f2" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.townRow}>
-          {REGULAR_TOWNS.map((tn) => (
-            <TownPill
-              key={tn.id}
-              town={tn}
-              selected={tn.id === townId}
-              onPress={() => setTownId(tn.id)}
-              state={state}
-              t={t}
-            />
-          ))}
-        </ScrollView>
+        <TownArtPills
+          towns={REGULAR_TOWNS}
+          selectedTownId={townId}
+          onSelect={setTownId}
+          nameOf={(tn) => t(tn.nameKey)}
+          metaOf={(tn) =>
+            t("trade.townMeta", {
+              days: tn.distanceDays,
+              tariff: (effectiveTariffRate(state, tn) * 100).toFixed(0),
+            })
+          }
+        />
 
         <SectionLabel text={t("trade.metropolSectionLabel")} color="#c58ee0" />
         {state.metropolUnlocked ? (
@@ -233,36 +317,17 @@ export function TradeScreen({ sounds }: Props) {
             ))}
           </ScrollView>
         ) : (
-          <View style={styles.metropolLockedCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.metropolLockedIcon}>🔒</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.metropolLockedTitle}>{t("trade.metropolLocked.title")}</Text>
-              <Text style={styles.metropolLockedDesc}>
-                {t("trade.metropolLocked.description", {
-                  target: Math.round(effectiveMetropolUnlockNetWorth(state)),
-                })}
-              </Text>
-              <View style={styles.lockedTrack}>
-                <View
-                  style={[
-                    styles.lockedFill,
-                    {
-                      width: `${
-                        Math.max(0, Math.min(1, netWorth / effectiveMetropolUnlockNetWorth(state))) * 100
-                      }%`,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.metropolLockedProgress}>
-                {t("trade.metropolLocked.progress", {
-                  current: Math.floor(netWorth),
-                  target: Math.round(effectiveMetropolUnlockNetWorth(state)),
-                })}
-              </Text>
-            </View>
-          </View>
+          <LockedTierCard
+            title={t("trade.metropolLocked.title")}
+            description={t("trade.metropolLocked.description", {
+              target: Math.round(effectiveMetropolUnlockNetWorth(state)),
+            })}
+            progressText={t("trade.metropolLocked.progress", {
+              current: Math.floor(netWorth),
+              target: Math.round(effectiveMetropolUnlockNetWorth(state)),
+            })}
+            progress={netWorth / effectiveMetropolUnlockNetWorth(state)}
+          />
         )}
 
         <SectionLabel text={t("trade.legendarySectionLabel")} color="#f0776a" />
@@ -280,34 +345,15 @@ export function TradeScreen({ sounds }: Props) {
             ))}
           </ScrollView>
         ) : (
-          <View style={styles.metropolLockedCard}>
-            <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-            <Text style={styles.metropolLockedIcon}>🔒</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.metropolLockedTitle}>{t("trade.legendaryLocked.title")}</Text>
-              <Text style={styles.metropolLockedDesc}>
-                {t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
-              </Text>
-              <View style={styles.lockedTrack}>
-                <View
-                  style={[
-                    styles.lockedFill,
-                    {
-                      width: `${
-                        Math.max(0, Math.min(1, state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL)) * 100
-                      }%`,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.metropolLockedProgress}>
-                {t("trade.legendaryLocked.progress", {
-                  current: state.prestigeLevel,
-                  target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
-                })}
-              </Text>
-            </View>
-          </View>
+          <LockedTierCard
+            title={t("trade.legendaryLocked.title")}
+            description={t("trade.legendaryLocked.description", { target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL })}
+            progressText={t("trade.legendaryLocked.progress", {
+              current: state.prestigeLevel,
+              target: LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+            })}
+            progress={state.prestigeLevel / LEGENDARY_UNLOCK_PRESTIGE_LEVEL}
+          />
         )}
 
         {state.legendaryUnlocked && (
@@ -327,35 +373,15 @@ export function TradeScreen({ sounds }: Props) {
                 ))}
               </ScrollView>
             ) : (
-              <View style={styles.metropolLockedCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <Text style={styles.metropolLockedIcon}>🔒</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.metropolLockedTitle}>{t("trade.mythicLocked.title")}</Text>
-                  <Text style={styles.metropolLockedDesc}>
-                    {t("trade.mythicLocked.description", { target: MYTHIC_UNLOCK_LEGENDARY_POINTS })}
-                  </Text>
-                  <View style={styles.lockedTrack}>
-                    <View
-                      style={[
-                        styles.lockedFill,
-                        {
-                          width: `${
-                            Math.max(0, Math.min(1, state.legendaryPoints / MYTHIC_UNLOCK_LEGENDARY_POINTS)) *
-                            100
-                          }%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.metropolLockedProgress}>
-                    {t("trade.mythicLocked.progress", {
-                      current: state.legendaryPoints,
-                      target: MYTHIC_UNLOCK_LEGENDARY_POINTS,
-                    })}
-                  </Text>
-                </View>
-              </View>
+              <LockedTierCard
+                title={t("trade.mythicLocked.title")}
+                description={t("trade.mythicLocked.description", { target: MYTHIC_UNLOCK_LEGENDARY_POINTS })}
+                progressText={t("trade.mythicLocked.progress", {
+                  current: state.legendaryPoints,
+                  target: MYTHIC_UNLOCK_LEGENDARY_POINTS,
+                })}
+                progress={state.legendaryPoints / MYTHIC_UNLOCK_LEGENDARY_POINTS}
+              />
             )}
           </>
         )}
@@ -387,157 +413,68 @@ export function TradeScreen({ sounds }: Props) {
             }
           }
           return (
-            <View style={styles.heatmapCard}>
-              <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-              <View style={styles.heatmapHeaderRow}>
-                <View style={styles.heatmapCornerCell} />
-                {ALL_TOWNS.map((tn) => (
-                  <View key={tn.id} style={styles.heatmapTownHeader}>
-                    <Text style={styles.heatmapTownIcon}>{tn.icon}</Text>
-                  </View>
-                ))}
-              </View>
-              {unlockedGoods.map((g) => (
-                <View key={g.id} style={styles.heatmapRow}>
-                  <ScalePressable
-                    onPress={() => setGoodId(g.id)}
-                    style={[styles.heatmapGoodCell, g.id === goodId && { borderColor: g.color }]}
-                    scaleTo={0.95}
-                  >
-                    <Text style={styles.heatmapGoodIcon}>{g.icon}</Text>
-                  </ScalePressable>
-                  {ALL_TOWNS.map((tn) => {
-                    const pct = cellPct(g, tn);
-                    const isBest = g.id === bestGoodId && tn.id === bestTownId;
-                    const isSelected = g.id === goodId && tn.id === townId;
-                    if (pct === null) {
-                      return (
-                        <View key={tn.id} style={styles.heatmapCellLocked}>
-                          <Text style={styles.heatmapLockIcon}>🔒</Text>
-                        </View>
-                      );
-                    }
-                    return (
-                      <ScalePressable
-                        key={tn.id}
-                        onPress={() => {
-                          setGoodId(g.id);
-                          setTownId(tn.id);
-                          setDirection("export");
-                        }}
-                        style={[
-                          styles.heatmapCell,
-                          { backgroundColor: heatCellColor(pct) },
-                          isSelected && styles.heatmapCellSelected,
-                        ]}
-                        scaleTo={0.95}
-                      >
-                        {isBest && <Text style={styles.heatmapStar}>⭐</Text>}
-                        <Text style={styles.heatmapCellText}>
-                          {pct >= 0 ? "+" : ""}
-                          {pct.toFixed(0)}%
-                        </Text>
-                      </ScalePressable>
-                    );
-                  })}
-                </View>
-              ))}
-            </View>
+            <HeatmapPanel
+              towns={ALL_TOWNS.map((tn) => ({ id: tn.id, icon: tn.icon }))}
+              rows={unlockedGoods.map((g) => ({
+                goodId: g.id,
+                fallbackIcon: g.icon,
+                color: g.color,
+                selected: g.id === goodId,
+                cells: ALL_TOWNS.map((tn) => cellPct(g, tn)),
+              }))}
+              selectedTownId={townId}
+              best={bestGoodId && bestTownId ? { goodId: bestGoodId, townId: bestTownId } : null}
+              onPickGood={setGoodId}
+              onPickCell={(gid, tid) => {
+                setGoodId(gid);
+                setTownId(tid as TownId);
+                setDirection("export");
+              }}
+            />
           );
         })()}
 
-        <View style={styles.panel}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={styles.sideToggle}>
-            <ScalePressable
-              style={[styles.sideBtn, direction === "export" && styles.sideBtnActiveExport]}
-              onPress={() => setDirection("export")}
-            >
-              <Text style={[styles.sideBtnText, direction === "export" && styles.sideBtnTextActive]}>
-                {t("trade.export")}
-              </Text>
-            </ScalePressable>
-            <ScalePressable
-              style={[styles.sideBtn, direction === "import" && styles.sideBtnActiveImport]}
-              onPress={() => setDirection("import")}
-            >
-              <Text style={[styles.sideBtnText, direction === "import" && styles.sideBtnTextActive]}>
-                {t("trade.import")}
-              </Text>
-            </ScalePressable>
-          </View>
-
-          <View style={styles.qtyRow}>
-            {([1, 5, "ALL"] as QtyOption[]).map((q) => (
-              <ScalePressable
-                key={String(q)}
-                style={[styles.qtyBtn, qtyOption === q && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setQtyOption(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q === "ALL" ? t("common.all") : q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>
-              {t("trade.summaryLine", {
-                qty: resolvedQty,
-                good: t(good.nameKey),
-                price: theirPrice.toFixed(2),
-                town: t(town.nameKey),
-              })}
-            </Text>
-            <Text style={styles.summaryTotal}>
-              {direction === "export" ? "+" : "-"}
-              {formatCoins(net)}
-            </Text>
-          </View>
-          <Text style={styles.etaText}>
-            {t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}
-            {tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""}
-          </Text>
-
-          <ScalePressable
-            onPress={() => setInsureCaravan((v) => !v)}
-            style={[styles.insuranceRow, insureCaravan && styles.insuranceRowActive]}
-            scaleTo={0.98}
-          >
-            <Text style={styles.insuranceLabel}>
-              🛡️ {t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}
-            </Text>
-            <Text style={styles.insuranceHint}>
-              {insureCaravan && !canAffordInsurance
-                ? t("trade.insuranceUnaffordable")
-                : t("trade.insuranceHint")}
-            </Text>
-          </ScalePressable>
-
-          <ScalePressable
-            disabled={disabled}
-            onPress={() => {
-              if (Math.random() < BARGAIN_CHANCE) {
-                setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
-                setBargainVisible(true);
-                return;
-              }
-              sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
-              if (direction === "export") sounds.playSell();
-              else sounds.playBuy();
-            }}
-            style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-            scaleTo={0.97}
-          >
-            <GradientFill
-              colors={direction === "export" ? GREEN_GRADIENT : BLUE_GRADIENT}
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="1"
-            />
-            <Text style={styles.confirmBtnText}>{t("trade.sendCaravanBtn", { icon: good.icon })}</Text>
-          </ScalePressable>
-        </View>
+        <SendPanel
+          direction={direction}
+          onDirection={setDirection}
+          exportLabel={t("trade.export")}
+          importLabel={t("trade.import")}
+          qtyOptions={([1, 5, "ALL"] as QtyOption[]).map((q) => ({
+            key: String(q),
+            label: q === "ALL" ? t("common.all") : String(q),
+            selected: qtyOption === q,
+            onPress: () => setQtyOption(q),
+          }))}
+          accent={good.color}
+          summary={t("trade.summaryLine", {
+            qty: resolvedQty,
+            good: t(good.nameKey),
+            price: fixedUi(theirPrice, 2),
+            town: t(town.nameKey),
+          })}
+          total={`${direction === "export" ? "+" : "-"}${formatCoins(net)}`}
+          eta={`${t("trade.eta", { days: town.distanceDays, tariff: (tariffRate * 100).toFixed(0) })}${
+            tariffRate < town.tariffRate ? t("trade.etaDiscountSuffix") : ""
+          }`}
+          insuranceLabel={`🛡️ ${t("trade.insuranceLabel", { amount: formatCoins(insurancePremium) })}`}
+          insuranceHint={
+            insureCaravan && !canAffordInsurance ? t("trade.insuranceUnaffordable") : t("trade.insuranceHint")
+          }
+          insured={insureCaravan}
+          onToggleInsurance={() => setInsureCaravan((v) => !v)}
+          sendLabel={t("trade.sendCaravanBtn", { icon: good.icon })}
+          sendDisabled={disabled}
+          onSend={() => {
+            if (Math.random() < BARGAIN_CHANCE) {
+              setPendingCaravan({ townId, goodId, direction, qty: resolvedQty, insured: insureCaravan });
+              setBargainVisible(true);
+              return;
+            }
+            sendCaravan(townId, goodId, direction, resolvedQty, insureCaravan);
+            if (direction === "export") sounds.playSell();
+            else sounds.playBuy();
+          }}
+        />
 
         <SectionLabel text={t("trade.activeCaravansSectionLabel")} color="#5fd884" />
         {state.caravans.length === 0 && <Text style={styles.emptyText}>{t("trade.noCaravans")}</Text>}
@@ -551,118 +488,60 @@ export function TradeScreen({ sounds }: Props) {
             const progress = total > 0 ? clamp01(elapsed / total) : 1;
             const daysLeft = Math.max(0, Math.ceil((c.arrivesAtTick - state.tick) / TICKS_PER_GAME_DAY));
             return (
-              <View key={c.id} style={styles.caravanCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.caravanAccent, { backgroundColor: g.color }]} />
-                <View style={styles.caravanHeader}>
-                  <Text style={styles.caravanTitle}>
-                    {c.direction === "export" ? "📤" : "📥"} {cTown.icon} {t(cTown.nameKey)}
-                    {c.insured ? " 🛡️" : ""}
-                  </Text>
-                  <Text style={styles.caravanEta}>
-                    {tPlural("trade.turnsLeft", daysLeft, { n: daysLeft })}
-                  </Text>
-                </View>
-                <Text style={styles.caravanSub}>
-                  {c.direction === "export"
+              <ProgressCard
+                key={c.id}
+                color={g.color}
+                title={`${c.direction === "export" ? "📤" : "📥"} ${cTown.icon} ${t(cTown.nameKey)}${c.insured ? " 🛡️" : ""}`}
+                right={tPlural("trade.turnsLeft", daysLeft, { n: daysLeft })}
+                sub={
+                  c.direction === "export"
                     ? t("trade.caravanSentSub", { qty: c.qty, good: t(g.nameKey) })
-                    : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })}
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
+                    : t("trade.caravanImportingSub", { qty: c.qty, good: t(g.nameKey) })
+                }
+                progress={progress}
+              />
             );
           })}
 
         <SectionLabel text={t("trade.contract.sectionLabel")} color="#f0776a" />
         <Text style={styles.contractDesc}>{t("trade.contract.description")}</Text>
-        <View style={styles.panel}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={styles.sideToggle}>
-            <ScalePressable
-              style={[styles.sideBtn, contractDirection === "long" && styles.sideBtnActiveExport]}
-              onPress={() => setContractDirection("long")}
-            >
-              <Text style={[styles.sideBtnText, contractDirection === "long" && styles.sideBtnTextActive]}>
-                {t("trade.contract.directionLong")}
-              </Text>
-            </ScalePressable>
-            <ScalePressable
-              style={[styles.sideBtn, contractDirection === "short" && styles.sideBtnActiveImport]}
-              onPress={() => setContractDirection("short")}
-            >
-              <Text style={[styles.sideBtnText, contractDirection === "short" && styles.sideBtnTextActive]}>
-                {t("trade.contract.directionShort")}
-              </Text>
-            </ScalePressable>
-          </View>
-
-          <View style={styles.qtyRow}>
-            {([1, 5, 10] as const).map((q) => (
-              <ScalePressable
-                key={q}
-                style={[styles.qtyBtn, contractQty === q && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setContractQty(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <Text style={styles.contractTermLabel}>{t("trade.contract.termLabel")}</Text>
-          <View style={styles.qtyRow}>
-            {CONTRACT_TERM_DAY_STEPS.map((days) => (
-              <ScalePressable
-                key={days}
-                style={[
-                  styles.qtyBtn,
-                  contractTermDays === days && { borderColor: good.color, borderWidth: 2 },
-                ]}
-                onPress={() => setContractTermDays(days)}
-              >
-                <Text style={styles.qtyBtnText}>{t("trade.contract.termDays", { days })}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          {(() => {
-            const strikePreview = state.goods[goodId].price;
-            const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
-            const contractDisabled =
-              state.contracts.length >= CONTRACT_MAX_ACTIVE ||
-              state.cash < margin ||
-              !isGoodUnlocked(good, state);
-            return (
-              <>
-                <Text style={styles.summaryLabel}>
-                  {t("trade.contract.marginPreview", { amount: margin.toFixed(1) })}
-                </Text>
-                <Text style={styles.contractMaxNote}>
-                  {t("trade.contract.maxActiveNote", { max: CONTRACT_MAX_ACTIVE })}
-                </Text>
-                <ScalePressable
-                  disabled={contractDisabled}
-                  onPress={() => {
-                    openContract(goodId, contractDirection, contractQty, contractTermDays);
-                    sounds.playBuy();
-                  }}
-                  style={[styles.confirmBtn, contractDisabled && styles.confirmBtnDisabled]}
-                  scaleTo={0.97}
-                >
-                  <GradientFill
-                    colors={contractDirection === "long" ? GREEN_GRADIENT : BLUE_GRADIENT}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  />
-                  <Text style={styles.confirmBtnText}>{t("trade.contract.openBtn")}</Text>
-                </ScalePressable>
-              </>
-            );
-          })()}
-        </View>
+        {(() => {
+          const strikePreview = state.goods[goodId].price;
+          const margin = Math.round(strikePreview * contractQty * CONTRACT_MARGIN_PCT * 100) / 100;
+          const maxContracts = effectiveContractMaxActive(state);
+          const contractDisabled =
+            state.contracts.length >= maxContracts || state.cash < margin || !isGoodUnlocked(good, state);
+          return (
+            <ContractPanel
+              direction={contractDirection}
+              onDirection={setContractDirection}
+              longLabel={t("trade.contract.directionLong")}
+              shortLabel={t("trade.contract.directionShort")}
+              qty={([1, 5, 10] as const).map((q) => ({
+                key: String(q),
+                label: String(q),
+                selected: contractQty === q,
+                onPress: () => setContractQty(q),
+              }))}
+              termLabel={t("trade.contract.termLabel")}
+              terms={CONTRACT_TERM_DAY_STEPS.map((days) => ({
+                key: String(days),
+                label: t("trade.contract.termDays", { days }),
+                selected: contractTermDays === days,
+                onPress: () => setContractTermDays(days),
+              }))}
+              accent={good.color}
+              note={t("trade.contract.marginPreview", { amount: fixedUi(margin, 1) })}
+              maxNote={t("trade.contract.maxActiveNote", { max: maxContracts })}
+              openLabel={t("trade.contract.openBtn")}
+              openDisabled={contractDisabled}
+              onOpen={() => {
+                openContract(goodId, contractDirection, contractQty, contractTermDays);
+                sounds.playBuy();
+              }}
+            />
+          );
+        })()}
 
         <SectionLabel text={t("trade.contract.activeSectionLabel")} color={COLORS.accent} />
         {state.contracts.length === 0 && (
@@ -677,26 +556,18 @@ export function TradeScreen({ sounds }: Props) {
             const progress = total > 0 ? clamp01(elapsed / total) : 1;
             const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
             return (
-              <View key={c.id} style={styles.caravanCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
-                <View style={styles.caravanHeader}>
-                  <Text style={styles.caravanTitle}>
-                    {c.direction === "long" ? "📈" : "📉"} {cGood.icon} {t(cGood.nameKey)}
-                  </Text>
-                  <Text style={styles.caravanEta}>{t("trade.contract.daysLeft", { days: daysLeft })}</Text>
-                </View>
-                <Text style={styles.caravanSub}>
-                  {t("trade.contract.contractRow", {
-                    qty: c.qty,
-                    good: t(cGood.nameKey),
-                    price: c.strikePrice.toFixed(2),
-                  })}
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
+              <ProgressCard
+                key={c.id}
+                color={cGood.color}
+                title={`${c.direction === "long" ? "📈" : "📉"} ${cGood.icon} ${t(cGood.nameKey)}`}
+                right={t("trade.contract.daysLeft", { days: daysLeft })}
+                sub={t("trade.contract.contractRow", {
+                  qty: c.qty,
+                  good: t(cGood.nameKey),
+                  price: fixedUi(c.strikePrice, 2),
+                })}
+                progress={progress}
+              />
             );
           })}
 
@@ -704,70 +575,45 @@ export function TradeScreen({ sounds }: Props) {
         <Text style={styles.contractDesc}>
           {t("trade.bulkContract.description", { pct: Math.round(BULK_CONTRACT_BONUS_PCT * 100) })}
         </Text>
-        <View style={styles.panel}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <View style={styles.qtyRow}>
-            {([1, 5, 10] as const).map((q) => (
-              <ScalePressable
-                key={q}
-                style={[styles.qtyBtn, bulkQty === q && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setBulkQty(q)}
-              >
-                <Text style={styles.qtyBtnText}>{q}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          <Text style={styles.contractTermLabel}>{t("trade.bulkContract.termLabel")}</Text>
-          <View style={styles.qtyRow}>
-            {BULK_CONTRACT_TERM_DAY_STEPS.map((days) => (
-              <ScalePressable
-                key={days}
-                style={[styles.qtyBtn, bulkTermDays === days && { borderColor: good.color, borderWidth: 2 }]}
-                onPress={() => setBulkTermDays(days)}
-              >
-                <Text style={styles.qtyBtnText}>{t("trade.bulkContract.termDays", { days })}</Text>
-              </ScalePressable>
-            ))}
-          </View>
-
-          {(() => {
-            const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
-            const payout = lockedPrice * bulkQty;
-            const hasEnough = state.goods[goodId].holding >= bulkQty;
-            const bulkDisabled =
-              state.bulkContracts.length >= BULK_CONTRACT_MAX_ACTIVE ||
-              !hasEnough ||
-              !isGoodUnlocked(good, state);
-            return (
-              <>
-                <Text style={styles.summaryLabel}>
-                  {t("trade.bulkContract.payoutPreview", { amount: payout.toFixed(1) })}
-                </Text>
-                {!hasEnough && (
-                  <Text style={styles.contractMaxNote}>
-                    {t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })}
-                  </Text>
-                )}
-                <Text style={styles.contractMaxNote}>
-                  {t("trade.bulkContract.maxActiveNote", { max: BULK_CONTRACT_MAX_ACTIVE })}
-                </Text>
-                <ScalePressable
-                  disabled={bulkDisabled}
-                  onPress={() => {
-                    openBulkContract(goodId, bulkQty, bulkTermDays);
-                    sounds.playBuy();
-                  }}
-                  style={[styles.confirmBtn, bulkDisabled && styles.confirmBtnDisabled]}
-                  scaleTo={0.97}
-                >
-                  <GradientFill colors={GREEN_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                  <Text style={styles.confirmBtnText}>{t("trade.bulkContract.openBtn")}</Text>
-                </ScalePressable>
-              </>
-            );
-          })()}
-        </View>
+        {(() => {
+          const lockedPrice = state.goods[goodId].price * (1 + BULK_CONTRACT_BONUS_PCT);
+          const payout = lockedPrice * bulkQty;
+          const hasEnough = state.goods[goodId].holding >= bulkQty;
+          const maxBulkContracts = effectiveBulkContractMaxActive(state);
+          const bulkDisabled =
+            state.bulkContracts.length >= maxBulkContracts || !hasEnough || !isGoodUnlocked(good, state);
+          return (
+            <BulkContractPanel
+              qty={([1, 5, 10] as const).map((q) => ({
+                key: String(q),
+                label: String(q),
+                selected: bulkQty === q,
+                onPress: () => setBulkQty(q),
+              }))}
+              termLabel={t("trade.bulkContract.termLabel")}
+              terms={BULK_CONTRACT_TERM_DAY_STEPS.map((days) => ({
+                key: String(days),
+                label: t("trade.bulkContract.termDays", { days }),
+                selected: bulkTermDays === days,
+                onPress: () => setBulkTermDays(days),
+              }))}
+              accent={good.color}
+              payout={t("trade.bulkContract.payoutPreview", { amount: fixedUi(payout, 1) })}
+              warning={
+                !hasEnough
+                  ? t("trade.bulkContract.insufficientHolding", { qty: bulkQty, good: t(good.nameKey) })
+                  : undefined
+              }
+              maxNote={t("trade.bulkContract.maxActiveNote", { max: maxBulkContracts })}
+              openLabel={t("trade.bulkContract.openBtn")}
+              openDisabled={bulkDisabled}
+              onOpen={() => {
+                openBulkContract(goodId, bulkQty, bulkTermDays);
+                sounds.playBuy();
+              }}
+            />
+          );
+        })()}
 
         <SectionLabel text={t("trade.bulkContract.activeSectionLabel")} color={COLORS.accent} />
         {state.bulkContracts.length === 0 && (
@@ -782,28 +628,18 @@ export function TradeScreen({ sounds }: Props) {
             const progress = total > 0 ? clamp01(elapsed / total) : 1;
             const daysLeft = Math.max(0, Math.ceil((c.maturesAtTick - state.tick) / TICKS_PER_GAME_DAY));
             return (
-              <View key={c.id} style={styles.caravanCard}>
-                <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-                <View style={[styles.caravanAccent, { backgroundColor: cGood.color }]} />
-                <View style={styles.caravanHeader}>
-                  <Text style={styles.caravanTitle}>
-                    📦 {cGood.icon} {t(cGood.nameKey)}
-                  </Text>
-                  <Text style={styles.caravanEta}>
-                    {t("trade.bulkContract.daysLeft", { days: daysLeft })}
-                  </Text>
-                </View>
-                <Text style={styles.caravanSub}>
-                  {t("trade.bulkContract.contractRow", {
-                    qty: c.qty,
-                    good: t(cGood.nameKey),
-                    price: c.lockedPricePerUnit.toFixed(2),
-                  })}
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
+              <ProgressCard
+                key={c.id}
+                color={cGood.color}
+                title={`📦 ${cGood.icon} ${t(cGood.nameKey)}`}
+                right={t("trade.bulkContract.daysLeft", { days: daysLeft })}
+                sub={t("trade.bulkContract.contractRow", {
+                  qty: c.qty,
+                  good: t(cGood.nameKey),
+                  price: fixedUi(c.lockedPricePerUnit, 2),
+                })}
+                progress={progress}
+              />
             );
           })}
       </ScrollView>
@@ -835,266 +671,67 @@ function clamp01(v: number): number {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SPACING.lg, paddingBottom: 40 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
   roadBanner: {
+    ...WOOD_RIM,
     borderRadius: RADIUS.card,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: PANEL_GAP,
     overflow: "hidden",
     ...cardShadow,
   },
-  lockedBody: { flexGrow: 1, padding: SPACING.lg, justifyContent: "center" },
-  lockedCard: {
-    borderRadius: 20,
-    padding: 28,
-    alignItems: "center",
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  lockedIcon: { fontSize: 40, marginBottom: SPACING.sm + 2 },
-  lockedTitle: {
-    color: COLORS.textPrimary,
-    fontSize: TYPE.heading,
-    fontWeight: WEIGHT.black,
-    fontFamily: FONT.black,
-    marginBottom: SPACING.sm,
+  lockedBody: { flexGrow: 1, padding: SCREEN_PADDING, justifyContent: "flex-start" },
+  lockPlaque: {
+    position: "absolute",
     textAlign: "center",
+    color: "#f3d27a",
+    fontFamily: FONT.display,
+    letterSpacing: 2,
   },
-  lockedDesc: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.body,
+  lockRibbon: {
+    position: "absolute",
     textAlign: "center",
-    lineHeight: 18,
-    marginBottom: SPACING.lg + 2,
+    color: "#f4e8ce",
+    fontFamily: FONT.display,
+    letterSpacing: 1,
   },
-  lockedTrack: {
-    width: "100%",
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.onLight,
-    overflow: "hidden",
-    marginBottom: SPACING.sm,
-  },
-  lockedFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 4 },
-  lockedProgress: {
-    color: COLORS.accent,
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
-  metropolLockedCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md + 2,
-    marginBottom: SPACING.xl - 4,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  metropolLockedIcon: { fontSize: 24, marginRight: SPACING.md },
-  metropolLockedTitle: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
-  },
-  metropolLockedDesc: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    marginTop: 3,
-    marginBottom: SPACING.sm,
-    lineHeight: 15,
-  },
-  metropolLockedProgress: {
-    color: COLORS.accent,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-  },
-  townRow: { marginBottom: SPACING.xl - 4 },
+  lockDesc: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
+  lockTrack: { position: "absolute", borderRadius: 999, overflow: "hidden", padding: 2 },
+  lockFill: { height: "100%", backgroundColor: "#f2b630", borderRadius: 999 },
+  lockProgress: { position: "absolute", textAlign: "center", color: "#4a2f1a", fontFamily: FONT.serif },
+  townRow: { marginBottom: PANEL_GAP },
   townPill: {
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
+    width: 132,
     marginRight: SPACING.sm + 2,
-    width: 128,
+    borderRadius: 14,
     borderWidth: 2,
-    borderColor: "transparent",
-    overflow: "hidden",
-    ...cardShadow,
+    borderColor: "rgba(200,130,70,0.55)",
+    backgroundColor: "rgba(44,26,15,0.92)",
+    paddingVertical: SPACING.sm + 2,
+    paddingHorizontal: SPACING.sm,
+    alignItems: "center",
   },
-  townPillActive: { borderColor: COLORS.accent },
-  townIcon: { fontSize: 22, marginBottom: SPACING.xs },
-  townName: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.body,
+  townPillActive: {
+    borderColor: "#f6d36a",
+    backgroundColor: "rgba(70,44,20,0.95)",
+    ...glowShadow("#f6d36a"),
   },
-  townMeta: { color: COLORS.textMuted, fontSize: TYPE.micro, marginTop: SPACING.xs },
+  townIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderWidth: 1.5,
+    borderColor: "rgba(200,130,70,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  townIconWrapActive: { borderColor: "#f6d36a" },
+  townIcon: { fontSize: 24 },
+  townName: { color: "#fbeccb", fontFamily: FONT.serif, fontSize: 14, textAlign: "center" },
+  townMeta: { color: "#d8c394", fontFamily: FONT.medium, fontSize: TYPE.micro, marginTop: 2 },
   heatmapHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm, lineHeight: 15 },
-  heatmapCard: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.sm + 2,
-    marginBottom: SPACING.xl - 4,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  heatmapHeaderRow: { flexDirection: "row", marginBottom: 6 },
-  heatmapCornerCell: { width: 34 },
-  heatmapTownHeader: { flex: 1, alignItems: "center" },
-  heatmapTownIcon: { fontSize: 16 },
-  heatmapRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  heatmapGoodCell: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.chip,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
-    marginRight: 2,
-  },
-  heatmapGoodIcon: { fontSize: 17 },
-  heatmapCell: {
-    flex: 1,
-    height: 34,
-    marginHorizontal: 2,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heatmapCellSelected: { borderWidth: 2, borderColor: COLORS.accent },
-  heatmapCellText: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.micro,
-  },
-  heatmapStar: { fontSize: 9, position: "absolute", top: 1, right: 2 },
-  heatmapCellLocked: {
-    flex: 1,
-    height: 34,
-    marginHorizontal: 2,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-  heatmapLockIcon: { fontSize: TYPE.label, opacity: 0.4 },
-  panel: {
-    borderRadius: RADIUS.feature,
-    padding: SPACING.md,
-    marginBottom: SPACING.xl - 4,
-    overflow: "hidden",
-    ...cardShadow,
-  },
-  sideToggle: {
-    flexDirection: "row",
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.chip,
-    padding: 3,
-    marginBottom: SPACING.sm + 2,
-  },
-  sideBtn: { flex: 1, paddingVertical: SPACING.sm, borderRadius: RADIUS.chip - 2, alignItems: "center" },
-  sideBtnActiveExport: { backgroundColor: COLORS.positive },
-  sideBtnActiveImport: { backgroundColor: "#4a90c9" },
-  sideBtnText: {
-    color: COLORS.textMuted,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
-  },
-  sideBtnTextActive: { color: "#fff" },
-  qtyRow: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.sm + 2 },
-  qtyBtn: {
-    flex: 1,
-    backgroundColor: COLORS.onLight,
-    borderRadius: RADIUS.chip,
-    paddingVertical: SPACING.sm,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
-    marginRight: SPACING.sm,
-  },
-  qtyBtnText: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 2 },
-  summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.caption, flex: 1, marginRight: SPACING.sm },
-  summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
-  etaText: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    marginTop: 6,
-    marginBottom: SPACING.sm + 2,
-    paddingHorizontal: 2,
-  },
-  insuranceRow: {
-    backgroundColor: "#1a1410",
-    borderRadius: RADIUS.card,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 2,
-    borderColor: "#3a2d1e",
-  },
-  insuranceRowActive: { borderColor: COLORS.accent },
-  insuranceLabel: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  insuranceHint: { color: COLORS.textMuted, fontSize: TYPE.caption, marginTop: 2 },
-  confirmBtn: {
-    borderRadius: RADIUS.card,
-    paddingVertical: SPACING.md,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  confirmBtnDisabled: { opacity: 0.35 },
-  confirmBtnText: { color: "#fff", fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: TYPE.body },
   emptyText: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.sm + 2 },
   contractDesc: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: SPACING.md, lineHeight: 17 },
-  contractTermLabel: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  contractMaxNote: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.micro,
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.sm + 2,
-  },
-  caravanCard: {
-    borderRadius: RADIUS.card,
-    padding: SPACING.md,
-    paddingLeft: SPACING.md + 3,
-    marginBottom: SPACING.sm + 2,
-    overflow: "hidden",
-  },
-  caravanAccent: { position: "absolute", top: 0, bottom: 0, left: 0, width: 4 },
-  caravanHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.xs },
-  caravanTitle: {
-    color: COLORS.textPrimary,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.label,
-  },
-  caravanEta: {
-    color: COLORS.accent,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    fontSize: TYPE.caption,
-  },
-  caravanSub: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm },
-  progressTrack: { height: 5, borderRadius: 3, backgroundColor: COLORS.onLight, overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 3 },
 });

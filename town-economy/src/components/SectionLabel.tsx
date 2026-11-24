@@ -1,36 +1,27 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { COLORS, FONT, SPACING, TYPE, WEIGHT } from "../theme";
+import { StyleSheet, View } from "react-native";
+import { SheetHeader } from "./SheetHeader";
 
 interface Props {
   text: string;
+  /** Unused now — every section label hangs on the same carved beam with a
+   * green plaque, so there is nothing left to tint. Kept in the type purely
+   * so none of this component's call sites, each passing their own accent
+   * color, need to change. */
   color?: string;
 }
 
-/** A small colored dot in front of a section header — used throughout the
- * app so every screen's section labels read as part of the same system
- * rather than plain gray caps text. */
-export function SectionLabel({ text, color = COLORS.accent }: Props) {
+/** Every section heading in the game: the carved beam with the wheat-wreathed
+ * green plaque, centred over the panel it titles and tucked a little under
+ * it. */
+export function SectionLabel({ text }: Props) {
   return (
-    <View style={styles.row}>
-      <View aria-hidden style={[styles.dot, { backgroundColor: color }]} />
-      {/* Marked as a header so screen-reader users can jump between the
-          sections of a long screen instead of swiping through every row. */}
-      <Text style={styles.label} accessibilityRole="header">
-        {text}
-      </Text>
+    <View style={styles.wrap}>
+      <SheetHeader text={text} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm, marginTop: SPACING.xs + 2 },
-  dot: { width: 6, height: 6, borderRadius: 3, marginRight: SPACING.xs + 2 },
-  label: {
-    color: COLORS.textMuted,
-    fontSize: TYPE.caption,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    letterSpacing: 1,
-  },
+  wrap: { alignSelf: "stretch", marginTop: 2, marginBottom: 3, zIndex: 2 },
 });

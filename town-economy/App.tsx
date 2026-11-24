@@ -1,4 +1,6 @@
 import { Cinzel_700Bold } from "@expo-google-fonts/cinzel";
+import { CinzelDecorative_900Black } from "@expo-google-fonts/cinzel-decorative";
+import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display";
 import {
   Manrope_500Medium,
   Manrope_600SemiBold,
@@ -7,9 +9,19 @@ import {
 } from "@expo-google-fonts/manrope";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import { ScreenFade } from "./src/components/ScreenFade";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import {
+  Image,
+  LayoutChangeEvent,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import appBackgroundImage from "./assets/ui/app-background-wood.webp";
 import { useSoundEffects } from "./src/audio/useSoundEffects";
 import { ComboBanner } from "./src/components/ComboBanner";
 import { CrisisWarningBanner } from "./src/components/CrisisWarningBanner";
@@ -19,10 +31,22 @@ import { DecisionModal } from "./src/components/DecisionModal";
 import { DifficultyModal } from "./src/components/DifficultyModal";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { EventBanner } from "./src/components/EventBanner";
+import { FlashDealBanner } from "./src/components/FlashDealBanner";
+import { MerchantOfferModal } from "./src/components/MerchantOfferModal";
+import { MiniQuestStrip } from "./src/components/MiniQuestStrip";
 import { GradientFill } from "./src/components/GradientFill";
 import { InflationHeader } from "./src/components/InflationHeader";
+import { MerveRankUpModal } from "./src/components/MerveRankUpModal";
 import { OfflineSummaryModal } from "./src/components/OfflineSummaryModal";
+import { QuestBadge } from "./src/components/QuestBadge";
+import { GuildHub } from "./src/components/GuildHub";
+import { QuestHub } from "./src/components/QuestHub";
+import { AmbientGlow } from "./src/components/AmbientGlow";
 import { RivalTraderModal } from "./src/components/RivalTraderModal";
+import { CARAVAN_STEPS, CaravanTutorialModal } from "./src/components/CaravanTutorialModal";
+import { MentorCoach } from "./src/components/MentorCoach";
+import { SpotlightOverlay, SpotlightProvider, SpotlightTarget } from "./src/components/Spotlight";
+import { currentMentorStep, MENTOR_STEPS } from "./src/economy/mentor";
 import { ScreenId, TabBar } from "./src/components/TabBar";
 import { DoctrineModal } from "./src/components/DoctrineModal";
 import { SpeedBoostModal } from "./src/components/SpeedBoostModal";
@@ -30,11 +54,13 @@ import { TownNameModal } from "./src/components/TownNameModal";
 import { TutorialModal } from "./src/components/TutorialModal";
 import { VillagerRequestModal } from "./src/components/VillagerRequestModal";
 import { EconomyProvider, useEconomyContext } from "./src/economy/EconomyContext";
-import { TOWN_EMBLEMS_BY_ID } from "./src/economy/emblems";
+import { AdsProvider } from "./src/ads/AdsContext";
+import { GuildProvider } from "./src/guild/GuildContext";
 import { townRankIcon, townRankTitle } from "./src/economy/townRanks";
+import { effectiveTradeUnlockNetWorth } from "./src/economy/formulas";
 import { DOCTRINE_UNLOCK_NET_WORTH, gameDayFromTick } from "./src/economy/useEconomy";
 import { useLocalNotifications } from "./src/notifications/useLocalNotifications";
-import { seasonalBackgroundGradient } from "./src/theme";
+import { CONTENT_MAX_WIDTH, seasonalBackgroundGradient, withAlpha } from "./src/theme";
 import { AchievementsScreen } from "./src/screens/AchievementsScreen";
 import { InventoryScreen } from "./src/screens/InventoryScreen";
 import { InvestScreen } from "./src/screens/InvestScreen";
@@ -51,7 +77,14 @@ import { maybeRequestReview } from "./src/utils/reviewPrompt";
 // before that happens; expo-audio's web shim doesn't await that promise,
 // so the rejection surfaces here instead of at our call site — swallow
 // just that expected case rather than letting it look like a crash.
-if (typeof window !== "undefined") {
+//
+// The guard tests for the *method*, not for `window`. React Native defines
+// `window` as an alias for the global object, so `typeof window !==
+// "undefined"` is true on a phone — and then `window.addEventListener` is
+// undefined and calling it throws. This runs at module scope, so that
+// TypeError took the whole bundle down before a single frame was drawn, and
+// the app sat on its splash screen with nothing to say. It cost a day.
+if (Platform.OS === "web" && typeof window?.addEventListener === "function") {
   window.addEventListener("unhandledrejection", (event) => {
     const message = event.reason?.message ?? "";
     if (typeof message === "string" && message.includes("play() failed")) {
@@ -75,10 +108,12 @@ function Game() {
     togglePause,
     reset,
     dismissOfflineSummary,
+    dismissMerveRankUp,
     dismissDailyBonus,
     resolveDecision,
     resolveRequest,
     resolveRivalOffer,
+    advanceMentor,
     setTownName,
     setLanguage,
     t,
@@ -87,6 +122,7 @@ function Game() {
   } = useEconomyContext();
   const sounds = useSoundEffects();
   const [screen, setScreen] = useState<ScreenId>("market");
+  const [questHubOpen, setQuestHubOpen] = useState(false);
   // The title screen stands in front of the game until the player taps
   // through it. It is Game's own state rather than App's so the economy
   // is already mounted and hydrating behind it — by the time the button is
@@ -94,6 +130,22 @@ function Game() {
   const [titleVisible, setTitleVisible] = useState(true);
   const [difficultyModalVisible, setDifficultyModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
+  // How far the notch / status bar and the home-indicator strip eat into the
+  // screen. Measured from where the safe-area box puts its first child (iOS
+  // pads it natively; Android has no SafeAreaView, so the status-bar height
+  // stands in). The header scene and the tab bar are pulled out into those
+  // strips so the game fills the whole screen instead of floating inside a
+  // bare frame.
+  const { height: screenH } = useWindowDimensions();
+  const [insets, setInsets] = useState({ top: 0, bottom: 0 });
+  const onSafeLayout = (e: LayoutChangeEvent) => {
+    const { y, height } = e.nativeEvent.layout;
+    const top = y;
+    const bottom = Math.max(0, Math.round(screenH - (y + height)));
+    setInsets((prev) =>
+      prev.top === Math.round(top) && prev.bottom === bottom ? prev : { top: Math.round(top), bottom }
+    );
+  };
   const [nameModalVisible, setNameModalVisible] = useState(false);
   const [speedBoostModalVisible, setSpeedBoostModalVisible] = useState(false);
   const [doctrineModalVisible, setDoctrineModalVisible] = useState(false);
@@ -114,9 +166,16 @@ function Game() {
 
   const lastEventId = useRef<number | null>(null);
   const wasGameOver = useRef(false);
+  const hadMerveRankUp = useRef(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
+  // Set alongside confettiTrigger, read by ConfettiBurst at the same trigger
+  // — see the effect below and the "big is read at the moment" note on
+  // ConfettiBurst itself for why this isn't just another piece of state the
+  // burst watches on its own.
+  const [confettiBig, setConfettiBig] = useState(false);
   const prevAchievementCount = useRef(state.unlockedAchievements.length);
   const prevPrestigeLevel = useRef(state.prestigeLevel);
+  const prevRecordBroken = useRef(state.recordBrokenThisRun);
 
   // A trade streak crossing a milestone earns a brief, self-dismissing
   // combo banner — purely a celebratory flourish over the existing
@@ -137,14 +196,23 @@ function Game() {
 
   useLocalNotifications(state);
 
-  // A "big win" — a new achievement or a fresh prestige — earns a
-  // celebratory confetti pop on top of whatever screen the player is on.
+  // A "big win" — a new achievement, a fresh prestige, or beating this
+  // run's own best net worth — earns a celebratory confetti pop on top of
+  // whatever screen the player is on. A prestige gets the bigger version
+  // (see ConfettiBurst's `big` prop): it is the rarer, more deliberate
+  // moment of the three — an achievement can pop from routine play, a
+  // record can fall several times early in a run just from playing
+  // normally, but a prestige is a player choosing to reset for a permanent
+  // bonus, and it should read as a bigger deal on screen than those.
   useEffect(() => {
     const grewAchievements = state.unlockedAchievements.length > prevAchievementCount.current;
     const prestiged = state.prestigeLevel > prevPrestigeLevel.current;
+    const recordBroken = state.recordBrokenThisRun && !prevRecordBroken.current;
     prevAchievementCount.current = state.unlockedAchievements.length;
     prevPrestigeLevel.current = state.prestigeLevel;
-    if (grewAchievements || prestiged) {
+    prevRecordBroken.current = state.recordBrokenThisRun;
+    if (grewAchievements || prestiged || recordBroken) {
+      setConfettiBig(prestiged);
       setConfettiTrigger((n) => n + 1);
       sounds.playSuccess();
     }
@@ -156,34 +224,131 @@ function Game() {
       maybeRequestReview();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.unlockedAchievements.length, state.prestigeLevel]);
+  }, [state.unlockedAchievements.length, state.prestigeLevel, state.recordBrokenThisRun]);
 
+  // A first launch no longer opens the slide deck; Merve does the
+  // introducing (see MentorCoach). The stored flag still decides *whether*
+  // she runs, rather than mentorStep alone: that lives in the save, so a
+  // player who starts a new game on a different difficulty would otherwise
+  // be walked around their own town again.
+  const [mentorAllowed, setMentorAllowed] = useState(false);
   useEffect(() => {
-    let cancelled = false;
-    hasSeenTutorial().then((seen) => {
-      if (!cancelled && !seen) setTutorialVisible(true);
-    });
-    return () => {
-      cancelled = true;
+    let settled = false;
+    const resolve = (seen: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (!seen) {
+        setMentorAllowed(true);
+        return;
+      }
+      // She won't run for this player (see above), but the economy's own
+      // tick loop gates on mentorStep reaching the end regardless of
+      // whether her UI ever shows it — without this, a returning player's
+      // fresh town (mentorStep starts at 0 again on RESET) would sit
+      // frozen forever with nothing on screen to advance it.
+      advanceMentor(MENTOR_STEPS.length);
     };
+    hasSeenTutorial()
+      .then(resolve)
+      .catch(() => resolve(true));
+    // A local storage read is not supposed to take anywhere near this long,
+    // but this whole screen depends on it answering: until it does, the
+    // economy sits paused with nothing on screen to explain why (see above).
+    // If it has not settled shortly, treat it as "already seen" and let the
+    // game start anyway — a skipped first-run tour is a far smaller loss
+    // than a town that never starts ticking.
+    const timer = setTimeout(() => resolve(true), 3000);
+    return () => {
+      settled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const mentorActive = mentorAllowed && state.mentorStep < MENTOR_STEPS.length;
+  const mentorStepDef = mentorActive ? currentMentorStep(state.mentorStep) : null;
+  const mentorScreen = mentorStepDef?.screen ?? null;
+  const mentorSpotlight = mentorStepDef?.spotlight ?? null;
+
+  // She walks the player to the tab she is describing rather than telling
+  // them to go there themselves. Keyed on the screen, not the step, so the
+  // two market beats in a row don't yank a player who has scrolled away.
+  useEffect(() => {
+    if (mentorScreen) setScreen(mentorScreen);
+  }, [mentorScreen]);
+
+  // A beat that asks for an action moves on by itself the moment the action
+  // lands, so the player is never left having done the thing and still
+  // looking for a button to press about it.
+  const mentorDone = mentorStepDef?.isDone?.(state) ?? false;
+  useEffect(() => {
+    if (!mentorActive || !mentorDone) return;
+    const timer = setTimeout(() => {
+      advanceMentor(state.mentorStep + 1);
+      if (state.mentorStep + 1 >= MENTOR_STEPS.length) markTutorialSeen();
+    }, 700);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mentorActive, mentorDone, state.mentorStep]);
+
+  const nextMentorBeat = () => {
+    const next = state.mentorStep + 1;
+    advanceMentor(next);
+    if (next >= MENTOR_STEPS.length) markTutorialSeen();
+  };
+  const skipMentor = () => {
+    advanceMentor(MENTOR_STEPS.length);
+    markTutorialSeen();
+  };
 
   const finishTutorial = () => {
     setTutorialVisible(false);
     markTutorialSeen();
   };
 
+  // The kervan guide, docked the same way Merve is: the trade screen stays
+  // live behind him and SpotlightOverlay cuts a hole over the control he is
+  // talking about. Gated on firstCaravanSent (economy state, so a real send
+  // — bargained or not — dismisses it on its own) rather than a one-shot
+  // flag, plus a session-only skip so declining it doesn't bring it back
+  // every time the player revisits the Trade tab.
+  const [caravanTutorialStep, setCaravanTutorialStep] = useState(0);
+  const [caravanTutorialSkipped, setCaravanTutorialSkipped] = useState(false);
+  const caravanTutorialActive =
+    screen === "trade" &&
+    state.tradeUnlocked &&
+    !state.firstCaravanSent &&
+    !caravanTutorialSkipped &&
+    !mentorActive;
+  const caravanStepDef = caravanTutorialActive ? CARAVAN_STEPS[caravanTutorialStep] : null;
+  const caravanSpotlight = caravanStepDef?.spotlight ?? null;
+
+  const nextCaravanStep = () => {
+    const next = caravanTutorialStep + 1;
+    if (next >= CARAVAN_STEPS.length) setCaravanTutorialSkipped(true);
+    else setCaravanTutorialStep(next);
+  };
+  const skipCaravanTutorial = () => setCaravanTutorialSkipped(true);
+
   useEffect(() => {
+    // A rank-up just landing (merveRankUp going null -> set) is the one
+    // event that gets its own sound instead of the generic blip every other
+    // notification shares — see playFanfare's own comment.
+    const isNewRankUp = Boolean(state.merveRankUp) && !hadMerveRankUp.current;
     if (state.lastEvent && state.lastEvent.id !== lastEventId.current) {
       lastEventId.current = state.lastEvent.id;
-      if (!wasGameOver.current) sounds.playEvent();
+      if (!wasGameOver.current) {
+        if (isNewRankUp) sounds.playFanfare();
+        else sounds.playEvent();
+      }
     }
     if (state.gameOver && !wasGameOver.current) {
       sounds.playCrash();
     }
     wasGameOver.current = state.gameOver;
+    hadMerveRankUp.current = Boolean(state.merveRankUp);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.lastEvent, state.gameOver]);
+  }, [state.lastEvent, state.gameOver, state.merveRankUp]);
 
   // Returned before the game's own tree so nothing behind the title can
   // claim the screen first — the offline summary and the tutorial both open
@@ -197,6 +362,7 @@ function Game() {
           <TitleScreen
             onStart={() => {
               start();
+              sounds.startMusic();
               setTitleVisible(false);
             }}
           />
@@ -205,137 +371,286 @@ function Game() {
     );
   }
 
+  // Decisions, requests and rival offers interrupt whatever the player is
+  // doing — that is the point of them — but not while something that has to
+  // be answered first is already up. The daily wheel belongs on this list
+  // beside the tutorial and the offline summary: it opens on hydrate, and
+  // react-native-web portals modals in mount order, so an event that spawns
+  // a few seconds later lands *on top* of the wheel and buries the claim
+  // button under a villager asking for honey.
+  const holdInterruptions =
+    Boolean(state.offlineSummary) ||
+    tutorialVisible ||
+    mentorActive ||
+    caravanTutorialActive ||
+    state.dailyBonusPending !== null;
+  // Merve's rank-up congratulations is itself an interruption, so it waits
+  // behind the others above, but it also shouldn't get buried under a
+  // villager request the instant it's clear to show — same reasoning as
+  // the comment above, just one layer further in.
+  const holdForOtherInterruptions = holdInterruptions || Boolean(state.merveRankUp);
+
   return (
-    <SafeAreaView style={styles.safe}>
+    // The wood backdrop and season scrim fill the whole screen, notch and home
+    // bar included; only the content sits inside the safe area. Before, the
+    // background lived inside SafeAreaView, so the status-bar and home-bar
+    // strips showed the bare dark base colour and the game looked inset.
+    <View style={styles.safe}>
       <StatusBar style="light" />
-      <GradientFill colors={seasonalBackgroundGradient()} x1="0" y1="0" x2="0" y2="1" />
-      <View style={styles.content}>
-        <InflationHeader
-          townName={state.townName}
-          emblem={TOWN_EMBLEMS_BY_ID[state.selectedEmblem]?.icon ?? "🏘️"}
-          emblemColor={state.selectedEmblemColor}
-          rankIcon={townRankIcon(state.townRankIndex)}
-          rankTitle={rankTitle}
-          cash={state.cash}
-          netWorth={netWorth}
-          inflationIndex={state.inflationIndex}
-          inflationRate={state.inflationRate}
-          inflationHistory={state.inflationHistory}
-          paused={state.paused}
-          muted={sounds.muted}
-          streakCount={state.streak.count}
-          gameDay={gameDayFromTick(state.tick)}
-          tick={state.tick}
-          difficulty={state.difficulty}
-          language={state.language}
-          t={t}
-          onTogglePause={togglePause}
-          onToggleMuted={sounds.toggleMuted}
-          onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
-          onReset={() => setDifficultyModalVisible(true)}
-          onHelp={() => setTutorialVisible(true)}
-          onEditName={() => setNameModalVisible(true)}
-          onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
-        />
-        {/* Above the screens rather than inside one: a crisis lands on the
+      {/* A weathered wood-plank backdrop behind the whole app rather than a
+          flat gradient — most of it sits under opaque cards and only shows
+          at the gaps and scroll overscroll, but it's there everywhere
+          instead of just the header (which draws its own market-street
+          scene on top of this, same as before). The market screen briefly
+          swapped this for its own illustrated town-square image, but that
+          busy photo behind an already-illustrated quest card and goods
+          grid read as cluttered rather than inviting, so every screen is
+          back to this one background. The seasonal mood gradient used to
+          be the background itself (solid, no alpha); now it's a
+          translucent scrim over the wood instead, at the same two stops,
+          so it still darkens toward the bottom and still shifts with the
+          season without simply hiding the texture it sits on. */}
+      <Image
+        source={appBackgroundImage}
+        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+        resizeMode="cover"
+      />
+      {/* Eased from 0.82 — that strength was tuned for the much brighter
+          sky/castle photo this used to sit over; stacked on the wood
+          background's own already-dark brown, it read as muddy rather
+          than moody. */}
+      <GradientFill
+        colors={seasonalBackgroundGradient().map((c) => withAlpha(c, 0.08)) as [string, string]}
+        x1="0"
+        y1="0"
+        x2="0"
+        y2="1"
+      />
+      <AmbientGlow />
+      <SafeAreaView style={styles.insetFill}>
+        <View style={{ flex: 1 }} onLayout={onSafeLayout}>
+          <SpotlightProvider style={styles.content}>
+            <View style={{ marginTop: -insets.top }}>
+              <SpotlightTarget id="inflation">
+                <InflationHeader
+                  topInset={insets.top}
+                  townRankIndex={state.townRankIndex}
+                  townName={state.townName}
+                  rankIcon={townRankIcon(state.townRankIndex)}
+                  rankTitle={rankTitle}
+                  cash={state.cash}
+                  netWorth={netWorth}
+                  inflationIndex={state.inflationIndex}
+                  inflationRate={state.inflationRate}
+                  inflationHistory={state.inflationHistory}
+                  paused={state.paused}
+                  muted={sounds.muted}
+                  streakCount={state.streak.count}
+                  gameDay={gameDayFromTick(state.tick)}
+                  tick={state.tick}
+                  difficulty={state.difficulty}
+                  language={state.language}
+                  t={t}
+                  onTogglePause={togglePause}
+                  onToggleMuted={sounds.toggleMuted}
+                  onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
+                  onReset={() => setDifficultyModalVisible(true)}
+                  onHelp={() => setTutorialVisible(true)}
+                  onEditName={() => setNameModalVisible(true)}
+                  onOpenSpeedBoost={() => setSpeedBoostModalVisible(true)}
+                />
+              </SpotlightTarget>
+            </View>
+            {/* Above the screens rather than inside one: a crisis lands on the
             whole town, so the countdown has to follow the player wherever
             they are preparing — market, trade or town hall. */}
-        <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
-        <EventBanner event={state.lastEvent} />
-        <ComboBanner event={comboEvent} />
-        <ConfettiBurst trigger={confettiTrigger} />
+            <CrisisWarningBanner crisis={state.pendingCrisis} tick={state.tick} />
+            <FlashDealBanner deal={state.activeFlashDeal} tick={state.tick} />
+            {screen !== "achievements" && !mentorActive && (
+              <MiniQuestStrip onOpen={() => setScreen("achievements")} />
+            )}
+            <EventBanner event={state.lastEvent} language={state.language} />
+            <ComboBanner event={comboEvent} />
+            <ConfettiBurst trigger={confettiTrigger} big={confettiBig} />
 
-        {screen === "market" && <MarketScreen sounds={sounds} />}
-        {screen === "inventory" && <InventoryScreen />}
-        {screen === "trade" && <TradeScreen sounds={sounds} />}
-        {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
-        {screen === "research" && <ResearchScreen />}
-        {screen === "invest" && <InvestScreen sounds={sounds} />}
-        {screen === "achievements" && <AchievementsScreen />}
+            <ScreenFade key={screen}>
+              {screen === "market" && <MarketScreen sounds={sounds} />}
+              {screen === "inventory" && <InventoryScreen />}
+              {screen === "trade" && (
+                <TradeScreen
+                  sounds={sounds}
+                  compactMap={caravanTutorialActive && caravanSpotlight === "caravanMap"}
+                />
+              )}
+              {screen === "town" && <TownScreen onOpenDoctrine={() => setDoctrineModalVisible(true)} />}
+              {screen === "research" && <ResearchScreen />}
+              {screen === "invest" && <InvestScreen sounds={sounds} />}
+              {screen === "achievements" && <AchievementsScreen />}
+            </ScreenFade>
 
-        <TabBar active={screen} onChange={setScreen} />
+            {/* Zero-height so it takes no room: the badge floats just above the tab
+            bar, over the bottom of whichever screen is showing. */}
+            <View style={styles.badgeDock} pointerEvents="box-none">
+              <QuestBadge onOpen={() => setQuestHubOpen(true)} hidden={holdInterruptions} />
+            </View>
+            {!holdForOtherInterruptions && <MerchantOfferModal />}
+            <QuestHub visible={questHubOpen} onClose={() => setQuestHubOpen(false)} />
+            <GuildHub sounds={sounds} />
 
-        <DifficultyModal
-          visible={difficultyModalVisible}
-          currentDifficulty={state.difficulty}
-          prestigeLevel={state.prestigeLevel}
-          onSelect={(difficulty, ngPlusModifiers) => {
-            reset(difficulty, ngPlusModifiers);
-            setDifficultyModalVisible(false);
-          }}
-          onCancel={() => setDifficultyModalVisible(false)}
-        />
+            {/* She sits above the tab bar in the layout but paints above the dim
+            as well, which is what the zIndex on her dock is for — source
+            order alone cannot give her both. */}
+            {mentorActive && <MentorCoach onNext={nextMentorBeat} onSkip={skipMentor} />}
+            {caravanTutorialActive && (
+              <CaravanTutorialModal
+                visible
+                stepIndex={caravanTutorialStep}
+                language={state.language}
+                tradeUnlockThreshold={Math.round(effectiveTradeUnlockNetWorth(state))}
+                onNext={nextCaravanStep}
+                onSkip={skipCaravanTutorial}
+              />
+            )}
 
-        <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
+            <View style={{ marginBottom: -insets.bottom }}>
+              <TabBar
+                active={screen}
+                onChange={(next) => {
+                  if (next !== screen) sounds.playTap();
+                  setScreen(next);
+                }}
+                spotlight={mentorScreen}
+                muted={sounds.muted}
+                bottomInset={insets.bottom}
+              />
+            </View>
 
-        <DecisionModal
-          decision={!state.offlineSummary && !tutorialVisible ? state.pendingDecision : null}
-          onResolve={resolveDecision}
-        />
+            {/* Over everything the tour is not pointing at, including the tab
+            bar. The lit area is a gap in the dim rather than a hole punched
+            through it, so the control inside it is the real one, still
+            live, with nothing forwarding touches on its behalf. */}
+            {mentorActive && <SpotlightOverlay target={mentorSpotlight} />}
+            {caravanTutorialActive && <SpotlightOverlay target={caravanSpotlight} />}
 
-        <VillagerRequestModal
-          request={!state.offlineSummary && !tutorialVisible ? state.pendingRequest : null}
-          holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
-          onResolve={resolveRequest}
-        />
+            <DifficultyModal
+              visible={difficultyModalVisible}
+              currentDifficulty={state.difficulty}
+              prestigeLevel={state.prestigeLevel}
+              onSelect={(difficulty, ngPlusModifiers) => {
+                reset(difficulty, ngPlusModifiers);
+                setDifficultyModalVisible(false);
+              }}
+              onCancel={() => setDifficultyModalVisible(false)}
+            />
 
-        <RivalTraderModal
-          offer={!state.offlineSummary && !tutorialVisible ? state.pendingRivalOffer : null}
-          holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
-          onResolve={resolveRivalOffer}
-        />
+            <OfflineSummaryModal summary={state.offlineSummary} onDismiss={dismissOfflineSummary} />
 
-        <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
+            <MerveRankUpModal
+              rankUp={holdInterruptions ? null : state.merveRankUp}
+              onDismiss={dismissMerveRankUp}
+              sounds={sounds}
+            />
 
-        <TownNameModal
-          visible={nameModalVisible}
-          currentName={state.townName}
-          onSave={(name) => {
-            setTownName(name);
-            setNameModalVisible(false);
-          }}
-          onCancel={() => setNameModalVisible(false)}
-        />
+            <DecisionModal
+              decision={holdForOtherInterruptions ? null : state.pendingDecision}
+              onResolve={resolveDecision}
+            />
 
-        <DoctrineModal visible={doctrineModalVisible} onClose={() => setDoctrineModalVisible(false)} />
-        <SpeedBoostModal
-          visible={speedBoostModalVisible}
-          onClose={() => setSpeedBoostModalVisible(false)}
-          sounds={sounds}
-        />
+            <VillagerRequestModal
+              request={holdForOtherInterruptions ? null : state.pendingRequest}
+              holding={state.pendingRequest ? state.goods[state.pendingRequest.goodId] : null}
+              onResolve={resolveRequest}
+            />
 
-        <DailyRewardWheelModal
-          visible={!state.offlineSummary && !tutorialVisible && state.dailyBonusPending !== null}
-          amount={state.dailyBonusPending ?? 0}
-          streakCount={state.streak.count}
-          onDismiss={dismissDailyBonus}
-          onRevealed={() => setConfettiTrigger((n) => n + 1)}
-          sounds={sounds}
-        />
-      </View>
-    </SafeAreaView>
+            <RivalTraderModal
+              offer={holdForOtherInterruptions ? null : state.pendingRivalOffer}
+              holding={state.pendingRivalOffer ? state.goods[state.pendingRivalOffer.goodId] : null}
+              onResolve={resolveRivalOffer}
+            />
+
+            <TutorialModal visible={tutorialVisible} onFinish={finishTutorial} />
+
+            <TownNameModal
+              visible={nameModalVisible}
+              currentName={state.townName}
+              onSave={(name) => {
+                setTownName(name);
+                setNameModalVisible(false);
+              }}
+              onCancel={() => setNameModalVisible(false)}
+            />
+
+            <DoctrineModal visible={doctrineModalVisible} onClose={() => setDoctrineModalVisible(false)} />
+            <SpeedBoostModal
+              visible={speedBoostModalVisible}
+              onClose={() => setSpeedBoostModalVisible(false)}
+              sounds={sounds}
+            />
+
+            <DailyRewardWheelModal
+              visible={
+                !state.offlineSummary &&
+                !state.merveRankUp &&
+                !tutorialVisible &&
+                state.dailyBonusPending !== null
+              }
+              amount={state.dailyBonusPending ?? 0}
+              streakCount={state.streak.count}
+              onDismiss={dismissDailyBonus}
+              onRevealed={() => setConfettiTrigger((n) => n + 1)}
+              sounds={sounds}
+            />
+          </SpotlightProvider>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Cinzel_700Bold,
+    CinzelDecorative_900Black,
+    PlayfairDisplay_700Bold,
     Manrope_500Medium,
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
 
+  // Waiting for fonts must not be a state the app can never leave. The splash
+  // screen is only hidden once we are ready, so anything that leaves
+  // `fontsLoaded` false forever leaves the player looking at the splash with
+  // no way out — which reads as "the game doesn't open", with nothing on
+  // screen to say otherwise.
+  //
+  // Two ways out, because there are two ways to get stuck: the hook reports
+  // an error, or it reports nothing at all and simply never settles. A few
+  // seconds of patience covers a slow first launch; past that, go in. The
+  // display face falling back to the system font is a worse-looking game.
+  // Not starting is not a game.
+  const [waitedLongEnough, setWaitedLongEnough] = useState(false);
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded]);
+    const timer = setTimeout(() => setWaitedLongEnough(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (!fontsLoaded) return null;
+  const ready = fontsLoaded || fontError !== null || waitedLongEnough;
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
+  if (!ready) return null;
 
   return (
     <ErrorBoundary>
       <EconomyProvider>
-        <Game />
+        <GuildProvider>
+          <AdsProvider>
+            <Game />
+          </AdsProvider>
+        </GuildProvider>
       </EconomyProvider>
     </ErrorBoundary>
   );
@@ -343,8 +658,10 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#140f0a" },
+  insetFill: { flex: 1, backgroundColor: "transparent" },
   // The UI was designed for a phone-width column; on a wide screen (iPad,
   // web desktop) let it grow to a comfortable max width and center it
   // instead of stretching cards edge-to-edge.
-  content: { flex: 1, width: "100%", maxWidth: 480, alignSelf: "center" },
+  badgeDock: { height: 0, zIndex: 6 },
+  content: { flex: 1, width: "100%", maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
 });

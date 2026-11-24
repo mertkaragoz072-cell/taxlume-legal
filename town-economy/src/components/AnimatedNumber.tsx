@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextProps } from "react-native";
+import { TextProps } from "react-native";
+import { Text } from "./AppText";
+import { fixedUi } from "../utils/formatNumber";
 
 interface Props extends TextProps {
   value: number;
@@ -38,7 +40,7 @@ export function AnimatedNumber({ value, formatter, duration = 500, style, ...res
 
   return (
     <Text style={style} {...rest}>
-      {formatter ? formatter(display) : display.toFixed(1)}
+      {formatter ? formatter(display) : fixedUi(display, 1)}
     </Text>
   );
 }

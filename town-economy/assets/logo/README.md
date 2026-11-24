@@ -78,12 +78,74 @@ half-convincing character is worse than a confident object.
 Both `icon-coin*.svg` are hand-authored and are **not** produced by
 `scripts/build-logo.js` — edit them directly.
 
+`logo-illustrated-<lang>-1000.webp` (`en`: "GOLDEN TOWN", `tr`: "ALTIN
+KASABA") are also hand-supplied, not generated: painted artwork lettered
+directly into the image, each language cropped independently rather than
+sharing one master file the way the SVG family does. They don't fit this
+family's build pipeline and were supplied as separate finished pieces, not
+a base file plus a translation pass.
+
+Both are now the same "castle on a hill" crest composition — `en` was
+replaced first, and `tr` followed once a matching crest was supplied,
+retiring the original wide market-square panorama both languages used to
+share. Keep replacing them as a pair: a future art pass that changes one
+composition without the other silently splits the two languages' title
+screens again the way this one briefly did.
+
+Both needed their background cut out by hand — the source had no real alpha
+channel, only a checkerboard *pattern* baked into flat RGB (the visual
+convention an editor uses to preview transparency, rendered as pixels
+instead of an actual alpha channel). A plain colour-distance threshold
+doesn't work on it: the checker's mid-gray tiles sit close enough to the
+art's own white sail fills and cream cloud tones that any threshold loose
+enough to also catch a low-contrast "ghost" patch (a section of checker
+with a faint darker swirl under it, present in both source images, likely a
+compression artifact) ate into the sails too. The cutout instead detects
+the checkerboard's own signature — comparing each pixel to its neighbours
+one tile-period away in *x* and *y*, since a true checker tile matches its
+same-parity neighbour closely and its opposite-parity neighbour by roughly
+the tile contrast, which smooth painted content never does regardless of
+its own tone — closes small gaps in that detection, and keeps only sizeable
+regions.
+
+That still isn't the whole story: closing bridges *any* gap up to its
+kernel radius, which includes a thin foreground detail entirely surrounded
+by checker within that radius — both source images have a small flag on a
+tower, and the first cutout pass silently erased it along with the
+checker it was closing over, since nothing distinguished "a real gap that
+should be background" from "a background gap punctuated by something
+real." The fix is a saturation floor carved back out after closing: checker
+and its ghost-swirl variant never exceed roughly saturation 40–45 in either
+source image, so anything more saturated than that is real paint and stays
+opaque regardless of what the closing pass decided.
+
+That first pass still left checker behind in both files, shipped for a
+while before anyone noticed: a thin fringe tracing the cloud/hillside
+silhouette in `tr`, and a whole strip of it in the gap between "N" and "T"
+in `en`'s wordmark — both fully opaque (alpha 255), not the soft
+antialiased kind, so a plain lightness/alpha threshold can't tell them
+apart from real content by looking at one pixel alone. What does: they're
+solid multi-pixel blobs of near-zero saturation (`max(r,g,b) - min(r,g,b)
+<= 25`) sitting at full opacity, where genuine antialiasing between a
+saturated fill and the transparent background is at most a pixel wide and
+partially transparent. Filtering to only connected components of that
+description four pixels or larger (real antialiasing edges never form one
+that big), then growing a few pixels outward through neighbouring
+low-saturation territory to catch each blob's own soft fringe, cleared
+both files without touching a single already-opaque, already-colourful
+pixel anywhere in either wordmark — verified by diffing before and after:
+zero visible pixels changed colour, only already-broken ones went
+transparent. If a future re-export of either file (or a new language)
+shows the same jagged checker halo, that's what to run again — the
+original hand-rolled cutout above is a good first pass, not a guarantee.
+
 ## Which file to use
 
 | File                          | Use                                                          |
 | ----------------------------- | ------------------------------------------------------------ |
-| `logo-stacked-<lang>.svg`     | The main logo. Title screen, splash, store art, press.        |
+| `logo-stacked-<lang>.svg`     | The main logo. Splash, store art, press.                      |
 | `logo-horizontal-<lang>.svg`  | Wide spaces: headers, footers, banners. Flat baseline.        |
+| `logo-illustrated-<lang>-1000.webp` | The title screen wordmark — see note above.            |
 | `icon-art-merchant.webp`      | **The shipping app icon's source art.** Feeds build-app-icon.py. |
 | `icon.svg` / `icon-1024.png`  | Alternate: relief icon — the mark on the dark plate.           |
 | `icon-coin.svg`               | Alternate: 3D gold coin on indigo.                            |
@@ -92,7 +154,7 @@ Both `icon-coin*.svg` are hand-authored and are **not** produced by
 | `mark-mono.svg`               | Flat, one colour via `currentColor`. Favicons, print, stamps. |
 | `mark-dark.svg`               | Flat dark, for light backgrounds.                             |
 
-`<lang>` is `tr` (ALTIN KASABA) or `en` (GOLDEN TOWN).
+`<lang>` is `tr` or `en`: the wordmark reads GOLDEN TOWN in both, only the subtitle is translated.
 
 ## Rules
 

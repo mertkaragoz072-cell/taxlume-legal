@@ -1,101 +1,307 @@
-import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
-import { CARD_GRADIENT, cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
-import { Bobbing } from "./Bobbing";
-import { GradientFill } from "./GradientFill";
-import { TownSquareBackdrop } from "./TownSquareBackdrop";
-import { VillagerIllustration } from "./VillagerIllustration";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  View,
+  Image,
+  ImageSourcePropType,
+  LayoutChangeEvent,
+} from "react-native";
+import { Text } from "./AppText";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import angryMarketplaceImage from "../../assets/angry-marketplace.webp";
+import happyMarketplaceImage from "../../assets/happy-marketplace.webp";
+import mixedMarketplaceImage from "../../assets/mixed-marketplace.webp";
+import summerAngryMarketplaceImage from "../../assets/summer-angry-marketplace.webp";
+import summerHappyMarketplaceImage from "../../assets/summer-happy-marketplace.webp";
+import summerMixedMarketplaceImage from "../../assets/summer-mixed-marketplace.webp";
+import winterAngryMarketplaceImage from "../../assets/winter-angry-marketplace.webp";
+import winterHappyMarketplaceImage from "../../assets/winter-happy-marketplace.webp";
+import winterMixedMarketplaceImage from "../../assets/winter-mixed-marketplace.webp";
+import tier2HappyMarketplaceImage from "../../assets/tier2-happy-marketplace.webp";
+import tier2MixedMarketplaceImage from "../../assets/tier2-mixed-marketplace.webp";
+import tier2AngryMarketplaceImage from "../../assets/tier2-angry-marketplace.webp";
+import tier3HappyMarketplaceImage from "../../assets/tier3-happy-marketplace.webp";
+import tier3MixedMarketplaceImage from "../../assets/tier3-mixed-marketplace.webp";
+import tier3AngryMarketplaceImage from "../../assets/tier3-angry-marketplace.webp";
+import tier4HappyMarketplaceImage from "../../assets/tier4-happy-marketplace.webp";
+import tier4MixedMarketplaceImage from "../../assets/tier4-mixed-marketplace.webp";
+import tier4AngryMarketplaceImage from "../../assets/tier4-angry-marketplace.webp";
+import { seasonFromTick, SeasonId } from "../economy/seasons";
+import { RankAtmosphere } from "./RankAtmosphere";
+import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT } from "../theme";
 
 interface Props {
   happiness: number;
+  /** picks a season-specific scene below (see SEASON_SCENE_IMAGES) for this
+   * happiness tier when the current season has one; every other season/tier
+   * combination falls back to the three plain scenes. */
+  tick: number;
+  /** how far the town has grown (see townRankIndex) — picks which *size* of
+   * square (see sceneTierForRank) is shown, independent of mood/season. */
+  townRankIndex: number;
   label: string;
   moodLabel: string;
   moodColor: string;
 }
 
-const SCENE_WIDTH = Math.min(Dimensions.get("window").width - 64, 340);
-const SCENE_HEIGHT = Math.round((SCENE_WIDTH * 128) / 320);
+// All three scenes share the source photo's ratio (1774×887 px). Height is
+// computed from a measured width in JS rather than left to CSS
+// `aspectRatio`: react-native-web resolves that against the
+// absolutely-positioned <Image> inside it and grows the box to the
+// picture's raw pixel size instead of the row's width, which is what was
+// turning "cover" into a tiny corner of the photo.
+const IMAGE_RATIO = 1774 / 887;
 
-function moodForHappiness(happiness: number): "happy" | "neutral" | "sad" {
-  if (happiness >= 70) return "happy";
-  if (happiness < 45) return "sad";
-  return "neutral";
+export type MoodTier = "angry" | "mixed" | "happy";
+
+// Three bands, not happinessFor's five — a mood swing has to be fairly
+// large before it's worth a different picture of the square, or the scene
+// would flicker between near-identical art on every small happiness dip.
+export function moodTierFor(h: number): MoodTier {
+  if (h < 45) return "angry";
+  if (h < 70) return "mixed";
+  return "happy";
 }
 
-/** An ambient "town square" scene atop the Town screen: a painted backdrop of
- * the square with a small crowd standing in it, whose expressions track the
- * town's current happiness. Purely visual, no mechanical effect.
- *
- * The crowd is three different wardrobes rather than one villager three times,
- * and the backdrop's lit windows warm up with happiness too — so a thriving
- * town and a miserable one read differently at a glance, before the caption. */
-export function TownSquareScene({ happiness, label, moodLabel, moodColor }: Props) {
-  const mood = moodForHappiness(happiness);
-  const warmth = Math.max(0, Math.min(1, happiness / 100));
+const SCENE_IMAGES: Record<MoodTier, ImageSourcePropType> = {
+  angry: angryMarketplaceImage,
+  mixed: mixedMarketplaceImage,
+  happy: happyMarketplaceImage,
+};
+
+// Every mood tier has its own winter and summer scene now; spring and
+// autumn have none of their own yet. A season/tier combination missing
+// here just falls back to SCENE_IMAGES above.
+const SEASON_SCENE_IMAGES: Partial<Record<SeasonId, Partial<Record<MoodTier, ImageSourcePropType>>>> = {
+  winter: {
+    angry: winterAngryMarketplaceImage,
+    mixed: winterMixedMarketplaceImage,
+    happy: winterHappyMarketplaceImage,
+  },
+  summer: {
+    angry: summerAngryMarketplaceImage,
+    mixed: summerMixedMarketplaceImage,
+    happy: summerHappyMarketplaceImage,
+  },
+};
+
+// The same square, redrawn bigger and busier as the town actually grows —
+// day 1 and day 30 are supposed to look different, not just say a bigger
+// number in the header. Tier 1 is the original three-mood/seasonal set
+// above; 2-4 live here, filled in incrementally as each mood's art arrives
+// (same partial-coverage pattern as UPGRADE_IMAGES) — a tier/mood not
+// illustrated yet falls back to tier 1's plain scene for that mood rather
+// than a broken image.
+export type SceneTier = 1 | 2 | 3 | 4;
+
+const TIER_SCENE_IMAGES: Partial<Record<SceneTier, Partial<Record<MoodTier, ImageSourcePropType>>>> = {
+  2: {
+    happy: tier2HappyMarketplaceImage,
+    mixed: tier2MixedMarketplaceImage,
+    angry: tier2AngryMarketplaceImage,
+  },
+  3: {
+    happy: tier3HappyMarketplaceImage,
+    mixed: tier3MixedMarketplaceImage,
+    angry: tier3AngryMarketplaceImage,
+  },
+  4: {
+    happy: tier4HappyMarketplaceImage,
+    mixed: tier4MixedMarketplaceImage,
+    angry: tier4AngryMarketplaceImage,
+  },
+};
+
+/** Level 0/1 (Village, Town) keeps the original art; each further band
+ * covers a few more rank tiers — see townRanks.ts for what's actually in
+ * each band (2: City..Trade Hub, 3: Capital..Empire, 4: Golden Age+). */
+export function sceneTierForRank(townRankIndex: number): SceneTier {
+  if (townRankIndex >= 8) return 4;
+  if (townRankIndex >= 5) return 3;
+  if (townRankIndex >= 2) return 2;
+  return 1;
+}
+
+// A few flakes falling straight through the frame, winter only. Unlike a
+// mote's drift-and-fade (removed — read as sparkles/glimmer over the art
+// rather than ambient motion), a snowflake just falls top to bottom and
+// loops; the scene's own overflow:hidden clips it at both ends, so the loop
+// seam never shows. Kept to five and modest in size — falling snow that
+// actually fills the frame reads as a blizzard, not "barely there."
+interface SnowflakeSpec {
+  leftPct: number;
+  size: number;
+  delay: number;
+  duration: number;
+  drift: number;
+}
+const SNOWFLAKES: SnowflakeSpec[] = [
+  { leftPct: 8, size: 3, delay: 0, duration: 6200, drift: 10 },
+  { leftPct: 26, size: 2.5, delay: 1400, duration: 7400, drift: -8 },
+  { leftPct: 48, size: 3.5, delay: 2600, duration: 5800, drift: 9 },
+  { leftPct: 68, size: 2, delay: 700, duration: 7000, drift: -6 },
+  { leftPct: 88, size: 3, delay: 2000, duration: 6600, drift: 8 },
+];
+
+function Snowflake({ leftPct, size, delay, duration, drift, height }: SnowflakeSpec & { height: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(anim, { toValue: 1, duration, delay, easing: Easing.linear, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim, delay, duration]);
+
+  // Starts a little above the frame and falls a little past its bottom, so
+  // it's never abruptly visible or invisible right at the clipped edge.
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [-16, height + 16] });
+  const translateX = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, drift, 0] });
 
   return (
-    <View style={styles.card}>
-      <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-      <Text style={styles.label}>{label}</Text>
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: `${leftPct}%`,
+        top: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: "#ffffff",
+        opacity: 0.8,
+        transform: [{ translateY }, { translateX }],
+      }}
+    />
+  );
+}
 
-      <View style={styles.scene}>
-        <View aria-hidden style={styles.backdrop}>
-          <TownSquareBackdrop width={SCENE_WIDTH} height={SCENE_HEIGHT} warmth={warmth} />
-        </View>
-        <View style={styles.crowd}>
-          <Bobbing delay={0}>
-            <VillagerIllustration size={46} mood={mood} variant={1} />
-          </Bobbing>
-          <Bobbing delay={220}>
-            <VillagerIllustration size={60} mood={mood} variant={0} />
-          </Bobbing>
-          <Bobbing delay={440}>
-            <VillagerIllustration size={42} mood={mood} variant={2} />
-          </Bobbing>
-        </View>
-      </View>
+// Legible over any part of the photo without a card behind it to guarantee
+// contrast — the picture is meant to fill the space on its own, not sit in
+// a card's dark mat.
+const onArt = {
+  textShadowColor: "rgba(0, 0, 0, 0.75)",
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 4,
+} as const;
 
-      <Text style={[styles.moodCaption, { color: moodColor }]}>{moodLabel}</Text>
+/** How to label the square: the word for this mood and the colour that goes
+ * with it. Lives here rather than in a screen because two of them caption
+ * the same scene — the Town tab, and the Market tab during the guided first
+ * session. */
+export function happinessFor(h: number): { labelKey: string; emoji: string; color: string } {
+  if (h < 20) return { labelKey: "town.happiness.revolt", emoji: "😡", color: "#c94b4b" };
+  if (h < 45) return { labelKey: "town.happiness.unrest", emoji: "😠", color: "#e0693f" };
+  if (h < 70) return { labelKey: "town.happiness.coping", emoji: "😐", color: "#e0a13f" };
+  if (h < 90) return { labelKey: "town.happiness.content", emoji: "🙂", color: "#a8c777" };
+  return { labelKey: "town.happiness.veryContent", emoji: "😄", color: "#3fae5c" };
+}
+
+/** Kasaba meydanı görseli — kimin resmi gösterildiği köylülerin moraline
+ * (happiness) göre değişir: mutlu, karışık, sinirli. Kart arka planı/
+ * çerçevesi yok: resim kendi başına duruyor, etiket ve ruh hali onun
+ * üzerine yazılıyor. */
+export function TownSquareScene({ happiness, tick, townRankIndex, label, moodLabel, moodColor }: Props) {
+  const [width, setWidth] = useState(0);
+  // Rounded rather than the raw float onLayout reports — a fractional
+  // target size (e.g. 379.33px) means the native Image has to resample to a
+  // size that doesn't land on a whole device pixel, which is exactly the
+  // kind of scale that reads as soft/blurred at the fine detail in this art
+  // (awning stripes, roof tiles) even though a plain screenshot comparison
+  // on web never showed it — web's compositor resamples on every paint, a
+  // native Image view doesn't necessarily redo that work once it has a
+  // bitmap for the size it was first asked to render at.
+  const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
+  const mood = moodTierFor(happiness);
+  const season = seasonFromTick(tick).id;
+  const sceneTier = sceneTierForRank(townRankIndex);
+  // Seasonal art only exists for tier 1's square — once the town has
+  // grown into a later tier, which size of square it is outweighs which
+  // season it is, so seasonal variants don't apply there (see
+  // TIER_SCENE_IMAGES' own comment on why a later tier can still be
+  // missing a mood and fall back to tier 1's plain scene for it).
+  const image =
+    sceneTier === 1
+      ? (SEASON_SCENE_IMAGES[season]?.[mood] ?? SCENE_IMAGES[mood])
+      : (TIER_SCENE_IMAGES[sceneTier]?.[mood] ?? SCENE_IMAGES[mood]);
+  const height = Math.round(width / IMAGE_RATIO);
+
+  return (
+    <View style={styles.scene} onLayout={onLayout}>
+      {width > 0 && (
+        <>
+          {/* key={width}: forces a fresh native Image view (and a fresh
+              decode at the current target size) if the measured width ever
+              changes after the first layout — e.g. once safe-area insets or
+              a rotation settle a frame or two later. Without it the same
+              Image instance keeps whatever bitmap it decoded for its first
+              size and just stretches it, which is a second, independent way
+              to end up with a soft image on top of the rounding above. */}
+          <Image key={width} source={image} style={{ width, height }} resizeMode="cover" />
+          {/* A soft scrim in the two corners the captions sit in, not a flat
+           * tint over the whole photo — the text needs a dark patch behind it
+           * to stay legible over any part of the scene, but the painted art
+           * is the point, so the scrim fades out well short of the middle. */}
+          <Svg pointerEvents="none" width={width} height={height} style={StyleSheet.absoluteFill}>
+            <Defs>
+              <LinearGradient id="sceneTopScrim" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#0c0704" stopOpacity={0.5} />
+                <Stop offset="1" stopColor="#0c0704" stopOpacity={0} />
+              </LinearGradient>
+              <LinearGradient id="sceneBottomScrim" x1="0" y1="1" x2="0" y2="0">
+                <Stop offset="0" stopColor="#0c0704" stopOpacity={0.58} />
+                <Stop offset="1" stopColor="#0c0704" stopOpacity={0} />
+              </LinearGradient>
+            </Defs>
+            <Rect x={0} y={0} width={width} height={height * 0.32} fill="url(#sceneTopScrim)" />
+            <Rect
+              x={0}
+              y={height * 0.68}
+              width={width}
+              height={height * 0.32}
+              fill="url(#sceneBottomScrim)"
+            />
+          </Svg>
+          <RankAtmosphere rankIndex={townRankIndex} width={width} height={height} />
+          {season === "winter" && SNOWFLAKES.map((s, i) => <Snowflake key={i} {...s} height={height} />)}
+        </>
+      )}
+      <Text style={[styles.label, onArt]}>{label}</Text>
+      <Text style={[styles.moodCaption, { color: moodColor }, onArt]}>{moodLabel}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  scene: {
+    width: "100%",
+    // Callers that centre their children (MarketScreen's onboardingScene
+    // wrapper) don't stretch them across the cross-axis by default, which
+    // left `width: "100%"` resolving against nothing and the box sizing to
+    // the image's own intrinsic pixel size instead. This pins it full-width
+    // regardless of what the parent does.
+    alignSelf: "stretch",
     borderRadius: RADIUS.feature,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
     overflow: "hidden",
-    alignItems: "center",
-    ...cardShadow,
+    marginBottom: SPACING.lg,
   },
   label: {
-    alignSelf: "flex-start",
-    color: COLORS.textMuted,
+    position: "absolute",
+    top: SPACING.sm,
+    left: SPACING.sm,
+    color: COLORS.textPrimary,
     fontSize: TYPE.caption,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
     letterSpacing: 0.5,
-    marginBottom: SPACING.sm,
-  },
-  scene: {
-    width: SCENE_WIDTH,
-    height: SCENE_HEIGHT,
-    borderRadius: RADIUS.card,
-    overflow: "hidden",
-    justifyContent: "flex-end",
-  },
-  backdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  crowd: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "center",
-    gap: SPACING.lg,
-    // the crowd stands on the square's ground line rather than the card's edge
-    paddingBottom: 4,
   },
   moodCaption: {
-    marginTop: SPACING.md,
+    position: "absolute",
+    bottom: SPACING.sm,
+    left: SPACING.sm,
     fontSize: TYPE.label,
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,

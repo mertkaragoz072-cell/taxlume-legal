@@ -1,5 +1,8 @@
-import { t } from "../i18n/t";
+import { eventFields, Params } from "../i18n/t";
+import { DecreeEffect, ERAS } from "./eras";
 import { GOODS } from "./goods";
+import { townRankReward } from "./townRanks";
+import { UPGRADES_BY_ID } from "./upgrades";
 import { RESEARCH_NODES } from "./research";
 import { EconomyEvent, EconomyState } from "./types";
 
@@ -21,11 +24,11 @@ function clampSupply(supply: number, baseSupply: number): number {
 function outcome(
   state: EconomyState,
   messageKey: string,
-  params: Record<string, string | number> | undefined,
+  params: Params | undefined,
   tone: "good" | "bad" | "neutral",
   patch: Partial<EconomyState>
 ): EconomyState {
-  const event: EconomyEvent = { id: state.nextId, message: t(state.language, messageKey, params), tone };
+  const event: EconomyEvent = { id: state.nextId, ...eventFields(state.language, messageKey, params), tone };
   return {
     ...state,
     ...patch,
@@ -160,8 +163,7 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
           const good = randomGood();
           const gs = state.goods[good.id];
           const amount = Math.max(1, Math.round(80 / gs.price));
-          const goodName = t(state.language, good.nameKey);
-          return outcome(state, "msg.merchantHonest", { good: goodName, amount }, "good", {
+          return outcome(state, "msg.merchantHonest", { good: { key: good.nameKey }, amount }, "good", {
             cash: afterCash,
             goods: { ...state.goods, [good.id]: { ...gs, holding: gs.holding + amount } },
           });
@@ -240,8 +242,7 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
       if (Math.random() < 0.5) {
         const good = randomGood();
         const gs = state.goods[good.id];
-        const goodName = t(state.language, good.nameKey);
-        return outcome(state, "msg.workerStrike", { good: goodName }, "bad", {
+        return outcome(state, "msg.workerStrike", { good: { key: good.nameKey } }, "bad", {
           goods: { ...state.goods, [good.id]: { ...gs, supply: Math.max(1, gs.supply * 0.8) } },
         });
       }
@@ -315,22 +316,96 @@ export const DECISION_TEMPLATES: DecisionTemplate[] = [
           return outcome(state, "msg.mysteryStrangerNothingLeft", undefined, "neutral", {});
         }
         const node = eligible[Math.floor(Math.random() * eligible.length)];
-        return outcome(
-          state,
-          "msg.mysteryStrangerSuccess",
-          { research: t(state.language, node.nameKey) },
-          "good",
-          {
-            cash: afterCash,
-            researched: [...state.researched, node.id],
-          }
-        );
+        return outcome(state, "msg.mysteryStrangerSuccess", { research: { key: node.nameKey } }, "good", {
+          cash: afterCash,
+          researched: [...state.researched, node.id],
+        });
       }
       return outcome(state, "msg.mysteryStrangerRefuse", undefined, "neutral", {});
     },
   },
 ];
 
+// --- Era charters -----------------------------------------------------------
+// Entering a new era hands the player one two-sided decree to sign (see
+// eras.ts). They are real DecisionTemplates so the existing modal and save
+// format carry them, but they are NOT in DECISION_TEMPLATES: that array is
+// the random-event pool, and a charter must only ever appear on promotion.
+
+const FESTIVAL_HAPPINESS = 25;
+const FESTIVAL_CASH_SHARE = 0.5;
+
+function applyDecree(state: EconomyState, effect: DecreeEffect): EconomyState {
+  // Scales with the rank the town holds when the charter is signed.
+  const reward = townRankReward(state.townRankIndex);
+  if (effect.kind === "upgrade") {
+    const def = UPGRADES_BY_ID[effect.id];
+    const level = state.upgrades[effect.id];
+    if (level >= def.maxLevel) {
+      return outcome(
+        state,
+        "msg.eraDecreeUpgradeMaxed",
+        { icon: def.icon, upgrade: { key: def.nameKey }, amount: Math.round(reward) },
+        "good",
+        { cash: state.cash + reward }
+      );
+    }
+    return outcome(state, "msg.eraDecreeUpgrade", { icon: def.icon, upgrade: { key: def.nameKey } }, "good", {
+      upgrades: { ...state.upgrades, [effect.id]: level + 1 },
+    });
+  }
+  if (effect.kind === "research") {
+    const eligible = RESEARCH_NODES.filter(
+      (n) =>
+        !state.researched.includes(n.id) &&
+        (!n.requires || state.researched.includes(n.requires)) &&
+        (n.requiresRank === undefined || state.townRankIndex >= n.requiresRank)
+    );
+    if (eligible.length === 0) {
+      return outcome(state, "msg.eraDecreeResearchNone", { amount: Math.round(reward) }, "good", {
+        cash: state.cash + reward,
+      });
+    }
+    const node = eligible[Math.floor(Math.random() * eligible.length)];
+    return outcome(state, "msg.eraDecreeResearch", { research: { key: node.nameKey } }, "good", {
+      researched: [...state.researched, node.id],
+    });
+  }
+  if (effect.kind === "festival") {
+    const cash = Math.round(reward * FESTIVAL_CASH_SHARE);
+    return outcome(state, "msg.eraDecreeFestival", { happy: FESTIVAL_HAPPINESS, amount: cash }, "good", {
+      cash: state.cash + cash,
+      happiness: clamp(state.happiness + FESTIVAL_HAPPINESS, 0, 100),
+    });
+  }
+  const amount = Math.round(reward * effect.mult);
+  return outcome(state, "msg.eraDecreeCash", { amount }, "good", { cash: state.cash + amount });
+}
+
+function decreeHintKey(effect: DecreeEffect): string {
+  return effect.kind === "upgrade" ? `eraDecree.hint.${effect.id}` : `eraDecree.hint.${effect.kind}`;
+}
+
+export const ERA_DECISION_TEMPLATES: DecisionTemplate[] = ERAS.flatMap((era) => {
+  const decree = era.decree;
+  if (!decree) return [];
+  const base = `era.${era.key}.decree`;
+  return [
+    {
+      id: `era_${era.key}`,
+      icon: "📜",
+      titleKey: `${base}.title`,
+      descriptionKey: `${base}.description`,
+      options: [
+        { id: "a", labelKey: `${base}.a`, hintKey: decreeHintKey(decree.a) },
+        { id: "b", labelKey: `${base}.b`, hintKey: decreeHintKey(decree.b) },
+      ],
+      resolve: (state: EconomyState, optionId: string) =>
+        applyDecree(state, optionId === "a" ? decree.a : decree.b),
+    },
+  ];
+});
+
 export const DECISION_TEMPLATES_BY_ID = Object.fromEntries(
-  DECISION_TEMPLATES.map((d) => [d.id, d])
+  [...DECISION_TEMPLATES, ...ERA_DECISION_TEMPLATES].map((d) => [d.id, d])
 ) as Record<string, DecisionTemplate>;

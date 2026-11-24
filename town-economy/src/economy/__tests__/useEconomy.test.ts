@@ -1,12 +1,11 @@
+import { CRISIS_TEMPLATES, CRISIS_TEMPLATES_BY_ID } from "../crises";
 import { GOODS_BY_ID } from "../goods";
+import { t } from "../../i18n/t";
 import { TOWNS } from "../towns";
 import { EconomyStats } from "../types";
 import { UPGRADES_BY_ID } from "../upgrades";
 import { WEEKLY_CHALLENGE_TEMPLATES_BY_ID } from "../weeklyChallenges";
 import {
-  addAutoTradeRule,
-  applyAutoTradeRules,
-  applyWeeklyChallengeClaim,
   AUTO_TRADE_MAX_RULES,
   AUTO_TRADE_TRIGGER_PCT_STEPS,
   BULK_CONTRACT_BONUS_PCT,
@@ -18,20 +17,32 @@ import {
   CARAVAN_RAID_LOSS_MIN,
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
+  LEGENDARY_POINTS_PER_PRESTIGE,
+  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
   LOAN_MAX_INTEREST_RATE_PER_DAY,
   LOAN_MIN_CAP,
   LOAN_MIN_INTEREST_RATE_PER_DAY,
   LOAN_TERM_MONTHS_STEPS,
+  MYTHIC_UNLOCK_LEGENDARY_POINTS,
+  PRESTIGE_POINTS_PER_PRESTIGE,
+  PRESTIGE_UNLOCK_NET_WORTH,
+  RIVAL_TOWN_GRACE_DAYS,
   RIVAL_TOWN_GROWTH_RATE,
-  STORAGE_BASE_CAPACITY,
   SPEED_BOOST_DURATION_MS,
+  STORAGE_BASE_CAPACITY,
   TICKS_PER_GAME_DAY,
+  addAutoTradeRule,
+  applyAutoTradeRules,
+  applyFestivalClaim,
+  applyMythicUnlock,
+  applyWeeklyChallengeClaim,
+  chooseDoctrine,
+  claimSpeedBoost,
   computeNetWorth,
   dailyCheckIn,
   effectiveTariffRate,
   estimateTaxIncomePerTick,
   gameDayFromTick,
-  claimSpeedBoost,
   initialState,
   isGoodUnlocked,
   loanCap,
@@ -39,16 +50,11 @@ import {
   loanInterestRatePerDay,
   loanTickRateToDayRate,
   marketSpread,
-  applyMythicUnlock,
-  LEGENDARY_POINTS_PER_PRESTIGE,
-  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
-  MYTHIC_UNLOCK_LEGENDARY_POINTS,
   openBulkContract,
   prestige,
-  PRESTIGE_POINTS_PER_PRESTIGE,
-  PRESTIGE_UNLOCK_NET_WORTH,
   removeAutoTradeRule,
   repayLoan,
+  researchCost,
   sendCaravan,
   storageCapacity,
   takeLoan,
@@ -56,8 +62,6 @@ import {
   toggleAutoTradeRule,
   totalGoodsHolding,
   trade,
-  chooseDoctrine,
-  researchCost,
 } from "../useEconomy";
 
 describe("gameDayFromTick", () => {
@@ -70,18 +74,18 @@ describe("gameDayFromTick", () => {
 });
 
 describe("isGoodUnlocked", () => {
-  it("treats a good with no unlockDay as always available", () => {
+  it("treats a good with no unlockRank as always available", () => {
     const state = initialState();
     expect(isGoodUnlocked(GOODS_BY_ID.bread, state)).toBe(true);
   });
 
-  it("gates a time-locked good until its unlock day is reached", () => {
+  it("gates a rank-locked good until the town reaches that rank", () => {
     const honey = GOODS_BY_ID.honey;
-    expect(honey.unlockDay).toBe(2);
-    const day1 = { ...initialState(), tick: 0 };
-    const day2 = { ...initialState(), tick: TICKS_PER_GAME_DAY };
-    expect(isGoodUnlocked(honey, day1)).toBe(false);
-    expect(isGoodUnlocked(honey, day2)).toBe(true);
+    expect(honey.unlockRank).toBe(1);
+    const village = { ...initialState(), townRankIndex: 0 };
+    const town = { ...initialState(), townRankIndex: 1 };
+    expect(isGoodUnlocked(honey, village)).toBe(false);
+    expect(isGoodUnlocked(honey, town)).toBe(true);
   });
 });
 
@@ -235,13 +239,20 @@ describe("openBulkContract", () => {
 
     it("pays out the locked price per unit at maturity via tick()", () => {
       Math.random = () => 0.999999; // clears every chance check in tick() so only the settlement itself moves cash
-      const bought = trade({ ...initialState(), cash: 100000, happiness: 50 }, "bread", "buy", 10);
+      // productionQuotas cleared: a hit quota pays its own cash bonus mid-run
+      const bought = trade(
+        { ...initialState(), cash: 100000, happiness: 50, productionQuotas: [] },
+        "bread",
+        "buy",
+        10
+      );
       const opened = openBulkContract(bought, "bread", 10, BULK_CONTRACT_TERM_DAY_STEPS[0]);
       const termTicks = BULK_CONTRACT_TERM_DAY_STEPS[0] * TICKS_PER_GAME_DAY;
       let state = { ...opened, paused: false };
       const expectedPayout = opened.bulkContracts[0].qty * opened.bulkContracts[0].lockedPricePerUnit;
       for (let i = 0; i < termTicks; i++) {
-        state = tick(state);
+        // quotas are regenerated each new game day; keep them out of the cash total
+        state = { ...tick(state), productionQuotas: [] };
       }
       expect(state.bulkContracts).toHaveLength(0);
       expect(state.cash).toBeCloseTo(opened.cash + expectedPayout, 1);
@@ -611,25 +622,31 @@ describe("lost treasure", () => {
   // Happiness sits strictly between ANGRY_THRESHOLD and CONTENT_THRESHOLD so
   // neither of those happiness-driven cash events (which fire on their own,
   // much larger, chance) can stack with the treasure roll and throw off the
-  // exact-cash assertions below.
+  // exact-cash assertions below. productionQuotas is cleared for the same
+  // reason: initialState() generates it with Math.random already mocked to a
+  // fixed value, and a big enough PRODUCTION_NOISE swing at that fixed value
+  // can push a good's output over its quota target within this one tick,
+  // awarding its own cash bonus alongside (or instead of) the treasure roll.
   it("does not add anything when the roll misses", () => {
     Math.random = () => 0.999999;
-    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false };
+    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(1000, 6);
   });
 
   it("adds a cash windfall sized off current cash when the rare roll hits", () => {
     Math.random = () => 0; // clears every chance check in tick(), including LOST_TREASURE_CHANCE
-    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false };
+    const state = { ...initialState(), cash: 1000, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(1000 + 1000 * 0.05, 6);
-    expect(next.lastEvent?.message).toMatch(/hazine|treasure/i);
+    // Later systems (bounties) can post their own event in the same tick and take
+    // lastEvent, so look for the treasure in the whole log.
+    expect(next.eventLog.some((e) => /hazine|treasure/i.test(e.message))).toBe(true);
   });
 
   it("floors the windfall so it's still meaningful with little cash", () => {
     Math.random = () => 0;
-    const state = { ...initialState(), cash: 10, happiness: 50, paused: false };
+    const state = { ...initialState(), cash: 10, happiness: 50, paused: false, productionQuotas: [] };
     const next = tick(state);
     expect(next.cash).toBeCloseTo(10 + 20, 6);
   });
@@ -656,19 +673,40 @@ describe("telegraphed crises", () => {
 
   it("announces a crisis for later rather than striking on the spot", () => {
     Math.random = () => 0.001;
-    const next = tick({ ...initialState(), happiness: 50, paused: false });
+    const next = tick({ ...initialState(), tick: 200, happiness: 50, paused: false });
     expect(next.pendingCrisis).not.toBeNull();
     expect(next.pendingCrisis!.strikesAtTick).toBeGreaterThan(next.tick);
     // The warning is the whole feature: the damage must not land with it.
-    expect(next.eventLog.some((e) => /geliyor|strikes in/i.test(e.message))).toBe(true);
-    expect(next.eventLog.some((e) => /vurdu|hit!/i.test(e.message))).toBe(false);
+    // Both checks are built from the same strings the game renders, rather
+    // than from a phrase copied out of them — the last rewording of the
+    // warning broke this test while the behaviour was perfectly fine.
+    const struckHere = (state: { eventLog: { message: string }[] }) =>
+      state.eventLog.some((e) =>
+        CRISIS_TEMPLATES.some(
+          (c) =>
+            e.message ===
+            t("tr", "msg.crisisStruck", {
+              icon: c.icon,
+              title: t("tr", c.titleKey),
+              pct: Number(e.message.match(/%(\d+)/)?.[1] ?? -1),
+            })
+        )
+      );
+    const warnedHere = next.eventLog.some((e) =>
+      CRISIS_TEMPLATES.some((c) => e.message.includes(t("tr", c.warningTitleKey)))
+    );
+    expect(warnedHere).toBe(true);
+    expect(struckHere(next)).toBe(false);
   });
 
   it("strikes once the scheduled tick arrives, then clears itself", () => {
     Math.random = () => 0.999999;
     const base = { ...initialState(), happiness: 50, paused: false };
     const next = tick({ ...base, pendingCrisis: scheduled("earthquake") });
-    expect(next.eventLog.some((e) => /vurdu|hit!/i.test(e.message))).toBe(true);
+    const quake = CRISIS_TEMPLATES_BY_ID.earthquake;
+    expect(
+      next.eventLog.some((e) => e.message.includes(t("tr", quake.titleKey)) && /%\d+/.test(e.message))
+    ).toBe(true);
     expect(next.pendingCrisis).toBeNull();
     expect(next.goods.bread.supply).toBeLessThan(base.goods.bread.supply);
   });
@@ -723,17 +761,30 @@ describe("personal net-worth record", () => {
   });
 
   it("fires a new-record event once net worth crosses priorBestNetWorth, and stays quiet after", () => {
-    const state = { ...initialState(), cash: 1000, priorBestNetWorth: 500, paused: false };
+    // productionQuotas cleared for the same reason "lost treasure" clears it
+    // above: an unrelated quota bonus landing in this same tick can win the
+    // race for lastEvent over the record-break celebration this test checks.
+    const state = {
+      ...initialState(),
+      cash: 1000,
+      priorBestNetWorth: 500,
+      paused: false,
+      productionQuotas: [],
+    };
     const next = tick(state);
     expect(next.recordBrokenThisRun).toBe(true);
-    expect(next.lastEvent?.message).toMatch(/record|rekor/i);
+    // Read the event log, not lastEvent: a random event rolled in the same
+    // tick can take the lastEvent slot without the record being lost.
+    const isRecord = (e: { message: string }) => /record|rekor/i.test(e.message);
+    const recordEvents = next.eventLog.filter(isRecord).length;
+    expect(recordEvents).toBeGreaterThan(0);
     expect(next.bestNetWorthEver).toBeGreaterThanOrEqual(computeNetWorth(next));
 
     // A second tick shouldn't re-fire the celebration even though net worth
     // is still comfortably above the old record.
     const afterSecondTick = tick({ ...next, lastEvent: { id: -1, message: "", tone: "neutral" } });
     expect(afterSecondTick.recordBrokenThisRun).toBe(true);
-    expect(afterSecondTick.lastEvent?.message).not.toMatch(/record|rekor/i);
+    expect(afterSecondTick.eventLog.filter(isRecord).length).toBe(recordEvents);
   });
 });
 
@@ -750,9 +801,13 @@ describe("ghost rival town", () => {
     expect(next.rivalNetWorth).toBeCloseTo(state.rivalNetWorth * (1 + RIVAL_TOWN_GROWTH_RATE), 6);
   });
 
-  it("fires an event when the rival overtakes the player, then stays quiet while still ahead", () => {
+  // Past the opening grace period, where the rival's lead is announced at
+  // all. Every test below that expects the "you were overtaken" message has
+  // to start here; on day one the game deliberately says nothing.
+  const pastGrace = (RIVAL_TOWN_GRACE_DAYS + 1) * TICKS_PER_GAME_DAY;
+
+  it("says nothing about the rival's lead during the opening days", () => {
     Math.random = () => 0.5;
-    // Rival starts just below the player's net worth, so growth pushes it ahead this tick.
     const state = {
       ...initialState(),
       cash: 1000,
@@ -760,6 +815,48 @@ describe("ghost rival town", () => {
       paused: false,
       rivalNetWorth: 999,
       rivalCurrentlyAhead: false,
+      // See "personal net-worth record" above: an unrelated quota bonus
+      // landing in this same tick can win the race for lastEvent.
+      productionQuotas: [],
+    };
+    const next = tick(state);
+
+    // The flag still tracks the truth — only the announcement waits, so the
+    // player is never later told about a change from before they started.
+    expect(next.rivalCurrentlyAhead).toBe(true);
+    expect(next.lastEvent?.message ?? "").not.toMatch(/rakip|rival/i);
+  });
+
+  it("still cheers the player for overtaking during the opening days", () => {
+    // The grace period holds back the discouraging half only.
+    Math.random = () => 0.5;
+    const state = {
+      ...initialState(),
+      cash: 100000,
+      happiness: 50,
+      paused: false,
+      rivalNetWorth: 500,
+      rivalCurrentlyAhead: true,
+      productionQuotas: [],
+    };
+    const next = tick(state);
+
+    expect(next.rivalCurrentlyAhead).toBe(false);
+    expect(next.lastEvent?.message).toMatch(/rakip|rival/i);
+  });
+
+  it("fires an event when the rival overtakes the player, then stays quiet while still ahead", () => {
+    Math.random = () => 0.5;
+    // Rival starts just below the player's net worth, so growth pushes it ahead this tick.
+    const state = {
+      ...initialState(),
+      tick: pastGrace,
+      cash: 1000,
+      happiness: 50,
+      paused: false,
+      rivalNetWorth: 999,
+      rivalCurrentlyAhead: false,
+      productionQuotas: [],
     };
     const next = tick(state);
     expect(next.rivalCurrentlyAhead).toBe(true);
@@ -774,11 +871,13 @@ describe("ghost rival town", () => {
     Math.random = () => 0.5;
     const state = {
       ...initialState(),
+      tick: pastGrace,
       cash: 100000,
       happiness: 50,
       paused: false,
       rivalNetWorth: 500,
       rivalCurrentlyAhead: true,
+      productionQuotas: [],
     };
     const next = tick(state);
     expect(next.rivalCurrentlyAhead).toBe(false);
@@ -880,6 +979,38 @@ describe("applyAutoTradeRules", () => {
 });
 
 describe("dailyCheckIn / weekly challenge assignment", () => {
+  it("gives a first launch nothing at all — no cash, no wheel, no banner", () => {
+    // A player opening this for the first time should be a trader with a
+    // purse and no patron. The daily reward is for coming back, and on day
+    // one there is nothing to come back to.
+    const fresh = initialState();
+    const first = dailyCheckIn(fresh, "2026-01-05");
+
+    expect(first.cash).toBe(fresh.cash);
+    expect(first.dailyBonusPending).toBeNull();
+    expect(first.lastEvent).toBe(fresh.lastEvent);
+  });
+
+  it("still starts the streak and the quest board on a first launch", () => {
+    // Silent, but not inert: without this, day two would read as day one
+    // again and the wheel would never arrive.
+    const first = dailyCheckIn(initialState(), "2026-01-05");
+
+    expect(first.streak).toEqual({ count: 1, lastOpenedDate: "2026-01-05" });
+    expect(first.dailyQuests.length).toBeGreaterThan(0);
+    expect(first.weeklyChallenge).not.toBeNull();
+  });
+
+  it("opens the wheel from the second day on", () => {
+    const returning = dailyCheckIn(
+      { ...initialState(), streak: { count: 1, lastOpenedDate: "2026-01-05" } },
+      "2026-01-06"
+    );
+
+    expect(returning.dailyBonusPending).toBeGreaterThan(0);
+    expect(returning.streak.count).toBe(2);
+  });
+
   it("assigns a weekly challenge on the very first check-in", () => {
     const state = initialState();
     expect(state.weeklyChallenge).toBeNull();
@@ -947,6 +1078,91 @@ describe("applyWeeklyChallengeClaim", () => {
     const claimed = applyWeeklyChallengeClaim(withProgress);
     const next = applyWeeklyChallengeClaim(claimed);
     expect(next).toBe(claimed);
+  });
+});
+
+describe("dailyCheckIn / festival assignment", () => {
+  it("assigns a festival goal on a check-in inside the window", () => {
+    const next = dailyCheckIn(initialState(), "2026-03-02");
+    expect(next.festivalProgress).not.toBeNull();
+    expect(next.festivalProgress!.claimed).toBe(false);
+    expect(next.festivalProgress!.monthKey).toBe("2026-03");
+  });
+
+  it("assigns nothing outside the window", () => {
+    const next = dailyCheckIn(initialState(), "2026-03-10");
+    expect(next.festivalProgress).toBeNull();
+  });
+
+  it("keeps the same festival goal across check-ins within the window", () => {
+    const first = dailyCheckIn(initialState(), "2026-03-01");
+    const second = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-03-01" } },
+      "2026-03-02"
+    );
+    expect(second.festivalProgress!.startValue).toBe(first.festivalProgress!.startValue);
+  });
+
+  it("clears the festival goal once the window closes", () => {
+    const first = dailyCheckIn(initialState(), "2026-03-02");
+    const after = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-03-02" } },
+      "2026-03-10"
+    );
+    expect(after.festivalProgress).toBeNull();
+  });
+
+  it("assigns a fresh festival goal once next month's window opens", () => {
+    const first = dailyCheckIn(initialState(), "2026-03-01");
+    const nextMonth = dailyCheckIn(
+      { ...first, streak: { count: 1, lastOpenedDate: "2026-03-01" } },
+      "2026-04-01"
+    );
+    expect(nextMonth.festivalProgress).not.toBeNull();
+    expect(nextMonth.festivalProgress!.monthKey).toBe("2026-04");
+    expect(nextMonth.festivalProgress!.claimed).toBe(false);
+  });
+});
+
+describe("applyFestivalClaim", () => {
+  it("does nothing before the target is reached", () => {
+    const state = dailyCheckIn(initialState(), "2026-03-02");
+    const next = applyFestivalClaim(state);
+    expect(next.festivalProgress!.claimed).toBe(false);
+    expect(next.festivalEmblemEarned).toBe(false);
+    expect(next.cash).toBe(state.cash);
+  });
+
+  it("pays out the reward and unlocks the emblem once trades cross the target", () => {
+    const checkedIn = dailyCheckIn(initialState(), "2026-03-02");
+    const target = checkedIn.festivalProgress!.target;
+    const state = {
+      ...checkedIn,
+      stats: { ...checkedIn.stats, totalTrades: checkedIn.festivalProgress!.startValue + target },
+    };
+    const next = applyFestivalClaim(state);
+    expect(next.festivalProgress!.claimed).toBe(true);
+    expect(next.festivalEmblemEarned).toBe(true);
+    expect(next.cash).toBeCloseTo(state.cash + checkedIn.festivalProgress!.reward, 6);
+  });
+
+  it("is a no-op once already claimed", () => {
+    const checkedIn = dailyCheckIn(initialState(), "2026-03-02");
+    const target = checkedIn.festivalProgress!.target;
+    const withProgress = {
+      ...checkedIn,
+      stats: { ...checkedIn.stats, totalTrades: checkedIn.festivalProgress!.startValue + target },
+    };
+    const claimed = applyFestivalClaim(withProgress);
+    const next = applyFestivalClaim(claimed);
+    expect(next).toBe(claimed);
+  });
+
+  it("does nothing while no festival is active", () => {
+    const state = dailyCheckIn(initialState(), "2026-03-10");
+    expect(state.festivalProgress).toBeNull();
+    const next = applyFestivalClaim(state);
+    expect(next).toBe(state);
   });
 });
 
@@ -1096,9 +1312,17 @@ describe("doctrine effects on the economy", () => {
   });
 
   it("makes an artisan town out-produce a merchant one", () => {
+    // Each tick() call rolls its own independent noise, so without this the
+    // artisan and merchant runs get uncorrelated jitter on top of the real
+    // doctrine effect — PRODUCTION_NOISE's ±55% range can swamp the smaller,
+    // deterministic production bonus this test is actually about. 0.5 zeroes
+    // out every symmetric (rand - 0.5) jitter term identically for both.
+    const originalRandom = Math.random;
+    Math.random = () => 0.5;
     const base = { ...initialState(), paused: false, happiness: 80 };
     const artisan = tick({ ...base, doctrine: "artisans" });
     const merchant = tick({ ...base, doctrine: "merchants" });
+    Math.random = originalRandom;
     expect(artisan.goods.bread.supply).toBeGreaterThan(merchant.goods.bread.supply);
   });
 

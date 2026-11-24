@@ -81,7 +81,12 @@ export default tseslint.config(
   // which requires a literal `require()` — an ESM import does not produce an
   // asset reference. This is the framework's contract, not a style choice.
   {
-    files: ["src/audio/**/*.ts"],
+    files: [
+      "src/audio/**/*.ts",
+      "src/economy/goodImages.ts",
+      "src/economy/achievementImages.ts",
+      "src/economy/upgradeImages.ts",
+    ],
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
 
@@ -92,12 +97,13 @@ export default tseslint.config(
     rules: { "no-console": "off" },
   },
 
-  // Build/tooling scripts are plain CommonJS running under Node.
+  // Build/tooling scripts are plain CommonJS running under Node — and so are
+  // the Expo config plugins, which prebuild requires() the same way.
   {
-    files: ["scripts/**/*.js"],
+    files: ["scripts/**/*.js", "backend/scripts/**/*.js", "plugins/**/*.js", "test/**/*.js"],
     languageOptions: {
       sourceType: "commonjs",
-      globals: { ...globals.node },
+      globals: { ...globals.node, ...globals.jest },
     },
     rules: { "no-console": "off", "@typescript-eslint/no-require-imports": "off" },
   },

@@ -1,18 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, Modal, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { COLORS, FONT } from "../theme";
+import { upperForUi } from "../utils/uiLanguage";
+import frameArt from "../../assets/ui/modal/barg_frame.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
 import { ScalePressable } from "./ScalePressable";
 
@@ -21,7 +13,6 @@ interface Props {
   onResolve: (tariffDiscountBonus: number) => void;
 }
 
-const BAR_WIDTH = 280;
 const MARKER_SIZE = 20;
 const PASS_MS = 950;
 
@@ -44,6 +35,8 @@ export function BargainingModal({ visible, onResolve }: Props) {
   const anim = useRef(new Animated.Value(0)).current;
   const animLoop = useRef<Animated.CompositeAnimation | null>(null);
   const positionRef = useRef(0);
+  const [barW, setBarW] = useState(250);
+  const [frameW, setFrameW] = useState(340);
 
   useEffect(() => {
     if (!visible) return;
@@ -94,7 +87,7 @@ export function BargainingModal({ visible, onResolve }: Props) {
 
   const markerLeft = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, BAR_WIDTH - MARKER_SIZE],
+    outputRange: [0, barW - MARKER_SIZE],
   });
 
   const resultText =
@@ -106,91 +99,114 @@ export function BargainingModal({ visible, onResolve }: Props) {
           ? t("bargain.resultMiss")
           : "";
 
+  const k = frameW / ART_W;
+  const box = (x: number, y: number, bw: number, bh: number) => ({
+    position: "absolute" as const,
+    left: x * k,
+    top: y * k,
+    width: bw * k,
+    height: bh * k,
+  });
+  const title = upperForUi(t("bargain.title").replace(/^[^\p{L}\p{N}]+/u, ""));
+  const titleSize = Math.min(40 * k, (430 * k * 0.95) / (title.length * 0.7));
+  const btnLabel = (result ? t("bargain.continueBtn") : t("bargain.stopBtn")).replace(/^[^\p{L}\p{N}]+/u, "");
+  const btnSize = Math.min(56 * k, (250 * k * 0.95) / (btnLabel.length * 0.52));
+  const subtitleText = result ? resultText : t("bargain.subtitle");
+  const subColor = !result
+    ? "#f6e8c8"
+    : result.tier === "perfect"
+      ? "#9cf0b0"
+      : result.tier === "good"
+        ? "#f4c43c"
+        : "#e8dcc0";
+  const subSize = Math.min(
+    16 * Math.max(0.85, Math.min(1.1, frameW / 360)),
+    (620 * k * 0.97) / (subtitleText.length * 0.52)
+  );
+
   return (
     <Modal visible transparent animationType="fade">
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>{t("bargain.title")}</Text>
-          <Text style={styles.subtitle}>{t("bargain.subtitle")}</Text>
+        <View
+          style={[styles.frame, { width: frameW }]}
+          onLayout={(e) => setFrameW(e.nativeEvent.layout.width)}
+        >
+          <View style={{ width: "100%", aspectRatio: ART_W / ART_H }}>
+            <Image source={frameArt} style={styles.fill} resizeMode="stretch" />
 
-          <View style={styles.barTrack}>
-            <View style={styles.goodZone} />
-            <View style={styles.perfectZoneHalo} />
-            <View style={styles.perfectZone} />
-            <Animated.View style={[styles.marker, { left: markerLeft }]} />
-          </View>
-
-          {result ? (
-            <>
+            <View style={[box(150, 160, 450, 64), styles.center]} pointerEvents="none">
               <Text
-                style={[
-                  styles.resultText,
-                  {
-                    color:
-                      result.tier === "perfect"
-                        ? COLORS.positive
-                        : result.tier === "good"
-                          ? "#e0a13f"
-                          : COLORS.textMuted,
-                  },
-                ]}
+                style={[styles.title, { fontSize: titleSize }]}
+                numberOfLines={1}
+                accessibilityRole="header"
               >
-                {resultText}
+                {title}
               </Text>
+            </View>
+            <View style={[box(50, 240, 645, 44), styles.center]} pointerEvents="none">
+              <Text style={[styles.sub, { fontSize: subSize, color: subColor }]} numberOfLines={1}>
+                {subtitleText}
+              </Text>
+            </View>
+
+            <View style={box(60, 326, 625, 66)} onLayout={(e) => setBarW(e.nativeEvent.layout.width)}>
+              <View style={[styles.goodZone, { left: barW * 0.3, width: barW * 0.4 }]} />
+              <View style={[styles.perfectZoneHalo, { left: barW * 0.4, width: barW * 0.2 }]} />
+              <View style={[styles.perfectZone, { left: barW * 0.44, width: barW * 0.12 }]} />
+              <Animated.View style={[styles.marker, { left: markerLeft, top: (66 * k - MARKER_SIZE) / 2 }]} />
+            </View>
+
+            <ScalePressable
+              onPress={result ? () => onResolve(result.bonus) : stop}
+              scaleTo={0.97}
+              accessibilityLabel={result ? t("bargain.continueBtn") : t("bargain.stopBtn")}
+              style={box(105, 423, 525, 108)}
+            >
+              <View style={[styles.btnTextBox, { left: 245 * k, right: 28 * k }]}>
+                <Text style={[styles.btnText, { fontSize: btnSize }]} numberOfLines={1}>
+                  {(result ? t("bargain.continueBtn") : t("bargain.stopBtn")).replace(/^[^\p{L}\p{N}]+/u, "")}
+                </Text>
+              </View>
+            </ScalePressable>
+
+            {!result && (
               <ScalePressable
-                onPress={() => onResolve(result.bonus)}
-                style={styles.continueBtn}
-                scaleTo={0.96}
+                onPress={() => onResolve(0)}
+                scaleTo={0.97}
+                style={[box(150, 538, 450, 44), styles.center]}
               >
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.continueBtnText}>{t("bargain.continueBtn")}</Text>
+                <Text style={styles.skipText} numberOfLines={1}>
+                  {t("bargain.skipBtn")}
+                </Text>
               </ScalePressable>
-            </>
-          ) : (
-            <>
-              <ScalePressable onPress={stop} style={styles.stopBtn} scaleTo={0.94}>
-                <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-                <Text style={styles.stopBtnText}>{t("bargain.stopBtn")}</Text>
-              </ScalePressable>
-              <ScalePressable onPress={() => onResolve(0)} style={styles.skipBtn} scaleTo={0.97}>
-                <Text style={styles.skipBtnText}>{t("bargain.skipBtn")}</Text>
-              </ScalePressable>
-            </>
-          )}
+            )}
+          </View>
         </View>
       </ModalBackdrop>
     </Modal>
   );
 }
 
+const ART_W = 745;
+const ART_H = 655;
+
 const styles = StyleSheet.create({
-  card: {
-    width: "100%",
-    maxWidth: 340,
-    borderRadius: 18,
-    padding: 20,
-    alignItems: "center",
-    overflow: "hidden",
-    ...cardShadow,
+  frame: { maxWidth: 400, alignSelf: "center" },
+  fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+  center: { alignItems: "center", justifyContent: "center" },
+  title: { color: "#4a2a12", fontFamily: FONT.serif, textAlign: "center" },
+  sub: { fontFamily: FONT.medium, textAlign: "center" },
+  btnTextBox: { position: "absolute", top: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
+  btnText: {
+    color: "#fbeccb",
+    fontFamily: FONT.serif,
+    textShadowColor: "rgba(40,20,0,0.7)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 2,
   },
-  title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4, textAlign: "center" },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: SPACING.lg, textAlign: "center" },
-  barTrack: {
-    width: BAR_WIDTH,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#1a1410",
-    borderWidth: 2,
-    borderColor: "#3a2d1e",
-    justifyContent: "center",
-    marginBottom: SPACING.lg,
-    overflow: "hidden",
-  },
+  skipText: { color: "#f6e8c8", fontFamily: FONT.medium, fontSize: 14, lineHeight: 20 },
   goodZone: {
     position: "absolute",
-    left: BAR_WIDTH * 0.3,
-    width: BAR_WIDTH * 0.4,
     height: "70%",
     top: "15%",
     borderRadius: 999,
@@ -198,8 +214,6 @@ const styles = StyleSheet.create({
   },
   perfectZoneHalo: {
     position: "absolute",
-    left: BAR_WIDTH * 0.4,
-    width: BAR_WIDTH * 0.2,
     height: "88%",
     top: "6%",
     borderRadius: 999,
@@ -207,8 +221,6 @@ const styles = StyleSheet.create({
   },
   perfectZone: {
     position: "absolute",
-    left: BAR_WIDTH * 0.44,
-    width: BAR_WIDTH * 0.12,
     height: "70%",
     top: "15%",
     borderRadius: 999,
@@ -227,30 +239,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     elevation: 4,
   },
-  resultText: {
-    fontSize: TYPE.label,
-    fontWeight: WEIGHT.bold,
-    fontFamily: FONT.bold,
-    marginBottom: SPACING.md,
-    textAlign: "center",
-  },
-  stopBtn: {
-    width: "100%",
-    borderRadius: RADIUS.card,
-    paddingVertical: 14,
-    alignItems: "center",
-    overflow: "hidden",
-    marginBottom: SPACING.sm,
-  },
-  stopBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 16 },
-  skipBtn: { alignItems: "center", paddingVertical: 8 },
-  skipBtnText: { color: "#a0917a", fontSize: 12, fontWeight: "600", fontFamily: FONT.medium },
-  continueBtn: {
-    width: "100%",
-    borderRadius: RADIUS.card,
-    paddingVertical: 12,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  continueBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
 });

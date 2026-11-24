@@ -7,3 +7,4 @@ ios
 assets
 store-assets
 package-lock.json
+scripts/fixtures/

@@ -1,4 +1,4 @@
-/* A 15-second ad for Altın Kasaba, drawn in the game's own colours, type and
+/* A 15-second ad for Golden Town, drawn in the game's own colours, type and
  * artwork rather than out of its screens — it is a trailer, not a capture.
  *
  * Every visible property is a pure function of one number, the timeline

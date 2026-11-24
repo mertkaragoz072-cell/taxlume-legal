@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { CRISIS_TEMPLATES_BY_ID, ScheduledCrisis } from "../economy/crises";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { TICKS_PER_GAME_DAY } from "../economy/useEconomy";
-import { COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import { COLORS, FONT, RADIUS, SCREEN_PADDING, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 
 const ALERT = "#f0776a";
 
@@ -62,7 +63,7 @@ export function CrisisWarningBanner({ crisis, tick }: Props) {
       </Text>
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={1}>
-          {t("crisis.warningPrefix")} {t(template.titleKey)}
+          {t("crisis.warningPrefix")} {t(template.warningTitleKey)}
         </Text>
         <Text style={styles.advice} numberOfLines={2}>
           {t(template.adviceKey)}
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: SPACING.lg,
+    marginHorizontal: SCREEN_PADDING,
     marginBottom: SPACING.sm,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,

@@ -11,6 +11,8 @@ export interface WeeklyChallengeTemplate {
    * taken when the challenge is assigned for the week — see
    * ensureWeeklyChallenge in useEconomy.ts */
   metric: (stats: EconomyStats) => number;
+  /** needs inter-city trade */
+  requiresTrade?: boolean;
 }
 
 export const WEEKLY_CHALLENGE_TEMPLATES: WeeklyChallengeTemplate[] = [
@@ -31,6 +33,7 @@ export const WEEKLY_CHALLENGE_TEMPLATES: WeeklyChallengeTemplate[] = [
     target: 5,
     reward: 350,
     metric: (s) => s.totalCaravansCompleted,
+    requiresTrade: true,
   },
   {
     id: "weekly_profiteer",
@@ -58,8 +61,12 @@ export function isoWeekKey(dateStr: string): string {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-export function weeklyChallengeTemplateForWeek(weekKey: string): WeeklyChallengeTemplate {
+export function weeklyChallengeTemplateForWeek(
+  weekKey: string,
+  tradeUnlocked = true
+): WeeklyChallengeTemplate {
+  const pool = WEEKLY_CHALLENGE_TEMPLATES.filter((c) => tradeUnlocked || !c.requiresTrade);
   let hash = 0;
   for (let i = 0; i < weekKey.length; i++) hash = (hash * 31 + weekKey.charCodeAt(i)) >>> 0;
-  return WEEKLY_CHALLENGE_TEMPLATES[hash % WEEKLY_CHALLENGE_TEMPLATES.length];
+  return pool[hash % pool.length];
 }

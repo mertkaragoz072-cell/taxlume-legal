@@ -1,21 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { EMBLEM_COLORS, isEmblemUnlocked, TOWN_EMBLEMS } from "../economy/emblems";
 import { TOWN_NAME_MAX_LENGTH } from "../economy/useEconomy";
-import {
-  CARD_GRADIENT,
-  cardShadow,
-  COLORS,
-  FONT,
-  GOLD_GRADIENT,
-  RADIUS,
-  SPACING,
-  TYPE,
-  WEIGHT,
-} from "../theme";
-import { GradientFill } from "./GradientFill";
+import { cardShadow, COLORS, FONT, RADIUS, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
+import icCastle from "../../assets/ui/modal/ic_castle.webp";
 import { ModalBackdrop } from "./ModalBackdrop";
+import { BigButton, ModalShell } from "./ModalKit";
 import { ScalePressable } from "./ScalePressable";
 
 interface Props {
@@ -47,9 +39,7 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onCancel}>
       <ModalBackdrop>
-        <View style={styles.card}>
-          <GradientFill colors={CARD_GRADIENT} x1="0" y1="0" x2="1" y2="1" />
-          <Text style={styles.title}>{t("townNameModal.title")}</Text>
+        <ModalShell title={t("townNameModal.title")} plateIcon={icCastle} onClose={onCancel}>
           <Text style={styles.subtitle}>{t("townNameModal.subtitle")}</Text>
 
           <TextInput
@@ -107,20 +97,12 @@ export function TownNameModal({ visible, currentName, onSave, onCancel }: Props)
             ))}
           </View>
 
-          <ScalePressable
-            disabled={disabled}
-            onPress={() => onSave(trimmed)}
-            style={[styles.saveBtn, disabled && styles.saveBtnDisabled]}
-            scaleTo={0.96}
-          >
-            <GradientFill colors={GOLD_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-            <Text style={styles.saveBtnText}>{t("common.save")}</Text>
-          </ScalePressable>
+          <BigButton label={t("common.save")} disabled={disabled} onPress={() => onSave(trimmed)} />
 
           <ScalePressable onPress={onCancel} style={styles.cancelBtn} scaleTo={0.96}>
             <Text style={styles.cancelBtnText}>{t("common.cancel")}</Text>
           </ScalePressable>
-        </View>
+        </ModalShell>
       </ModalBackdrop>
     </Modal>
   );
@@ -130,26 +112,28 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 340,
-    borderRadius: 18,
+    borderRadius: RADIUS.feature,
+    borderWidth: 1,
+    borderColor: withAlpha(COLORS.accent, 0.3),
     padding: 20,
     overflow: "hidden",
     ...cardShadow,
   },
-  title: { color: "#f0e3c8", fontSize: 16, fontFamily: FONT.display, marginBottom: 4 },
-  subtitle: { color: "#a0917a", fontSize: 12, marginBottom: 14 },
+  title: { color: COLORS.textPrimary, fontSize: TYPE.title, fontFamily: FONT.display, marginBottom: 4 },
+  subtitle: { color: "#f4e8d0", fontSize: TYPE.label, marginBottom: 12, textAlign: "center" },
   input: {
-    backgroundColor: "#1a1410",
-    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.28)",
+    borderRadius: 14,
     borderWidth: 2,
-    borderColor: "#3a2d1e",
+    borderColor: "#c8843c",
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: "#f0e3c8",
+    color: COLORS.textPrimary,
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
   },
-  counter: { color: "#6b5f4d", fontSize: 10, textAlign: "right", marginTop: 4, marginBottom: 14 },
+  counter: { color: "#a89c82", fontSize: 12, textAlign: "right", marginTop: 4, marginBottom: 14 },
   emblemSectionLabel: {
     color: COLORS.textMuted,
     fontSize: TYPE.micro,
@@ -158,15 +142,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 2,
   },
-  emblemDisclaimer: { color: "#6b5f4d", fontSize: TYPE.micro, marginBottom: SPACING.sm },
+  emblemDisclaimer: { color: "#a89c82", fontSize: TYPE.micro, marginBottom: SPACING.sm },
   emblemGrid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginBottom: SPACING.xs },
   emblemChip: {
     width: 44,
     height: 44,
     borderRadius: RADIUS.chip,
-    backgroundColor: "#1a1410",
+    backgroundColor: "rgba(0,0,0,0.28)",
     borderWidth: 2,
-    borderColor: "transparent",
+    borderColor: "rgba(200,132,60,0.7)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -190,7 +174,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { color: "#1a1410", fontWeight: "800", fontFamily: FONT.black, fontSize: 14 },
+  saveBtnText: { color: COLORS.onLight, fontWeight: WEIGHT.black, fontFamily: FONT.black, fontSize: 14 },
   cancelBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
-  cancelBtnText: { color: "#a0917a", fontSize: 13, fontWeight: "600", fontFamily: FONT.medium },
+  cancelBtnText: {
+    color: COLORS.textMuted,
+    fontSize: TYPE.body,
+    fontWeight: WEIGHT.medium,
+    fontFamily: FONT.medium,
+  },
 });

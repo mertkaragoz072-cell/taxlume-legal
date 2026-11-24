@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GestureResponderEvent, View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
+import { fixedUi } from "../utils/formatNumber";
 
 interface Props {
   history: number[];
@@ -10,6 +11,11 @@ interface Props {
   strokeWidth?: number;
   /** the gradient area fill under the curve — off gives a plain, airier line */
   filled?: boolean;
+  /** false draws straight segments between ticks instead of the rounded
+   * curve — the jagged, candle-ish look of the market cards */
+  smooth?: boolean;
+  /** the faint dashed line at the latest price — off for a bare line */
+  baseline?: boolean;
   /** shows min/max price labels and enables a press-and-drag crosshair —
    * meant for the big standalone charts, not the small sparklines on cards */
   interactive?: boolean;
@@ -40,12 +46,14 @@ function smoothLinePath(points: Point[]): string {
 }
 
 export function PriceChart({
-  history,
+  history: rawHistory,
   color,
   width,
   height,
   strokeWidth = 2.5,
   filled = true,
+  smooth = true,
+  baseline = true,
   interactive = false,
 }: Props) {
   // Wrapped in a plain View rather than returning the <Svg> bare: on web,
@@ -58,8 +66,12 @@ export function PriceChart({
   const gradientId = React.useId().replace(/:/g, "");
   const [touchIndex, setTouchIndex] = useState<number | null>(null);
 
-  if (history.length === 0) {
-    return <View style={{ width, height }} />;
+  // A not-yet-measured box (NaN / 0 size) or a stray NaN in the series would
+  // otherwise reach the SVG path as "NaN" and spam the console with errors.
+  const history = rawHistory.filter((v) => Number.isFinite(v));
+  const sized = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
+  if (history.length === 0 || !sized) {
+    return <View style={{ width: sized ? width : 0, height: sized ? height : 0 }} />;
   }
 
   // Right at the start (or the moment a good unlocks) there's only the
@@ -95,7 +107,9 @@ export function PriceChart({
     y: height - padY - ((value - min) / span) * (height - padY * 2),
   }));
 
-  const linePath = smoothLinePath(points);
+  const linePath = smooth
+    ? smoothLinePath(points)
+    : `M ${points.map((pt) => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(" L ")}`;
   // Same curve, closed down to the baseline — a soft gradient fill under
   // the line is what makes a chart read as "financial" rather than a bare
   // line plot (Robinhood/Yahoo Finance-style area chart).
@@ -137,16 +151,18 @@ export function PriceChart({
             <Path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
           </>
         )}
-        <Line
-          x1={0}
-          y1={lastY}
-          x2={width}
-          y2={lastY}
-          stroke={color}
-          strokeWidth={1}
-          strokeDasharray="3,4"
-          opacity={0.25}
-        />
+        {baseline && (
+          <Line
+            x1={0}
+            y1={lastY}
+            x2={width}
+            y2={lastY}
+            stroke={color}
+            strokeWidth={1}
+            strokeDasharray="3,4"
+            opacity={0.25}
+          />
+        )}
         <Path
           d={linePath}
           fill="none"
@@ -165,10 +181,10 @@ export function PriceChart({
               fontWeight="700"
               opacity={0.8}
             >
-              {max.toFixed(2)}
+              {fixedUi(max, 2)}
             </SvgText>
             <SvgText x={2} y={height - padY + 14} fill={color} fontSize={10} fontWeight="700" opacity={0.8}>
-              {min.toFixed(2)}
+              {fixedUi(min, 2)}
             </SvgText>
           </>
         )}
@@ -193,7 +209,7 @@ export function PriceChart({
               strokeWidth={1.5}
             />
             {(() => {
-              const label = touchValue.toFixed(2);
+              const label = fixedUi(touchValue, 2);
               const bubbleWidth = 14 + label.length * 6.5;
               const bubbleX = Math.min(Math.max(touchPoint.x - bubbleWidth / 2, 0), width - bubbleWidth);
               const bubbleY = Math.max(touchPoint.y - 26, 0);

@@ -1,8 +1,14 @@
+import { Params } from "../i18n/t";
 import { AssetId } from "./assets";
 import { DemandCycle } from "./demandCycles";
 import { ScheduledCrisis } from "./crises";
 import { DoctrineId } from "./doctrines";
 import { TradingHouseActivity } from "./tradingHouses";
+import { TraderReputation } from "./traders";
+import { RivalTraderActivity } from "./rivals";
+import { ActiveBounty } from "./bounties";
+import { FlashDealInstance } from "./flashDeals";
+import { ProductionQuota } from "./productionQuotas";
 import { DifficultyId } from "./difficulty";
 import { Language } from "../i18n/t";
 import { TownId } from "./towns";
@@ -22,7 +28,10 @@ export type GoodId =
   | "honey"
   | "cheese"
   | "paper"
-  | "glass";
+  | "glass"
+  | "grain"
+  | "wool"
+  | "sand";
 
 export type UpgradeId =
   "market" | "caravanserai" | "townhall" | "bank" | "guardTower" | "earthquakeFund" | "storageYard";
@@ -42,9 +51,13 @@ export interface Good {
   baseProduction: number;
   /** how strongly a supply shortfall/surplus moves price: price ∝ (baseSupply/supply)^elasticity */
   elasticity: number;
-  /** in-game day (see gameDayFromTick in useEconomy.ts) this good first
-   * becomes tradeable; omitted/undefined means available from day 1 */
-  unlockDay?: number;
+  /** town rank index (see townRankIndex in types.ts / townRanks.ts) the
+   * town must have reached for this good to become tradeable; omitted/
+   * undefined means available from the start. */
+  unlockRank?: number;
+  /** goods this one is made from. Their supply throttles this one's
+   * production — see productionInputFactor in formulas.ts. */
+  inputs?: GoodId[];
 }
 
 export interface GoodState {
@@ -70,7 +83,18 @@ export interface AssetState {
 
 export interface EconomyEvent {
   id: number;
+  /** Resolved in whatever language was active when this event fired —
+   * what a local push notification needs (scheduled immediately, may show
+   * later with the app backgrounded) and the fallback for an event loaded
+   * from a save written before `key`/`params` existed. */
   message: string;
+  /** The translation key (and its params, if any) `message` was built
+   * from — present on every event created after this field was added, so
+   * a still-open screen can re-resolve it in the *current* language rather
+   * than showing whatever language was active when it first fired. Absent
+   * on an event loaded from an older save, which falls back to `message`. */
+  key?: string;
+  params?: Params;
   tone: "good" | "bad" | "neutral";
 }
 
@@ -232,6 +256,13 @@ export interface DailyProgress {
   townsTraded: TownId[];
   cashEarned: number;
   upgradesBought: number;
+  profitMade: number;
+  goodsHeld: number;
+  tradeStreak: number;
+  /** goods bought / goods sold / investment trades today (older saves lack them) */
+  buys?: number;
+  sells?: number;
+  investTrades?: number;
 }
 
 export interface DailyQuest {
@@ -241,6 +272,8 @@ export interface DailyQuest {
   reward: number;
   completed: boolean;
 }
+
+import type { PendingImprovement } from "./construction";
 
 export interface EconomyState {
   townName: string;
@@ -285,12 +318,29 @@ export interface EconomyState {
   tradeUnlocked: boolean;
   /** set once the town's net worth first crosses METROPOL_UNLOCK_NET_WORTH; sticky, never re-locks */
   metropolUnlocked: boolean;
+  /** set once the town's net worth first crosses WORKERS_UNLOCK_NET_WORTH; sticky, never re-locks */
+  workersUnlocked: boolean;
   /** set once prestigeLevel first reaches LEGENDARY_UNLOCK_PRESTIGE_LEVEL; sticky, never re-locks */
   legendaryUnlocked: boolean;
   /** set once legendaryPoints first reaches MYTHIC_UNLOCK_LEGENDARY_POINTS; sticky, never re-locks */
   mythicUnlocked: boolean;
   /** highest town-rank tier (see townRanks.ts) this town's net worth has ever reached; sticky, never re-locks */
   townRankIndex: number;
+  /** level of the guild the player belongs to (0 = none), kept current by the
+   * guild screen; gives a small output bonus (see guildPerks.ts). Optional so
+   * saves from before guilds load unchanged. */
+  guildLevel?: number;
+  /** how many hall projects the player's guild has built (0 = none); each adds
+   * warehouse room or output (see guildPerks.ts). Optional like guildLevel. */
+  guildProjects?: number;
+  /** upgrades, properties and research being built right now, one of each kind at
+   * most (see construction.ts). Optional so saves from before it load unchanged. */
+  construction?: PendingImprovement[];
+  /** set right after townRankIndex climbs, so Merve can step in and
+   * congratulate the player on the new title; null once dismissed. Carries
+   * the already-resolved icon/title rather than a rank index so the modal
+   * doesn't need to re-derive "beyond the named ladder" text itself. */
+  merveRankUp: { icon: string; title: string; lore: string } | null;
   /** ids of purchased research.ts nodes — each permanently boosts one good's production and/or value */
   researched: string[];
   /** speculative assets (gold, oil, stocks) — separate random-walk market, see assets.ts */
@@ -310,10 +360,28 @@ export interface EconomyState {
   pendingRequest: VillagerRequest | null;
   /** a rival trader's bulk-buy offer; freezes the tick loop until accepted or declined */
   pendingRivalOffer: RivalTraderOffer | null;
+  /** tick at which the last clock-freezing modal fired — decisions, villager
+   * requests and rival offers share one cooldown off this so they cannot
+   * arrive back to back (see INTERRUPTION_COOLDOWN_TICKS) */
+  lastInterruptionTick: number;
+  /** index into ONBOARDING_STEPS (see onboarding.ts); equal to its length
+   * once the guided first session is finished, and never moves again */
+  onboardingStep: number;
+  /** index into MENTOR_STEPS (see mentor.ts) — how far through Merve's
+   * walk-through the player is. Equal to its length once she has finished
+   * or been skipped, and never moves again */
+  mentorStep: number;
   dailyProgress: DailyProgress;
   dailyQuests: DailyQuest[];
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */
   activeMiniQuest: MiniQuestInstance | null;
+  /** no new flash quest before this tick, so they come in a rhythm, not a flood */
+  miniQuestCooldownTick?: number;
+  /** a travelling merchant's offer of coins for watching an ad (see merchantOffer.ts) */
+  merchantOffer?: import("./merchantOffer").MerchantOffer | null;
+  merchantCooldownTick?: number;
+  /** the flash quest that ran last, so the same one does not come twice in a row */
+  lastMiniQuestId?: string;
   /** times the player has cashed in a run for a permanent bonus (see PRESTIGE
    * in useEconomy.ts) — survives every reset, including a plain difficulty restart */
   prestigeLevel: number;
@@ -340,6 +408,7 @@ export interface EconomyState {
   recordBrokenThisRun: boolean;
   /** a temporary town-wide price event; see seasonalEvents.ts */
   activeSeasonalEvent: SeasonalEventInstance | null;
+  activeFlashDeal: FlashDealInstance | null;
   /** at most one outstanding town loan at a time */
   loan: Loan | null;
   /** hired staff per good (0-WORKER_MAX_PER_GOOD); each costs a per-tick wage
@@ -357,6 +426,12 @@ export interface EconomyState {
   /** the calendar week's challenge, re-assigned deterministically whenever the
    * ISO week rolls over — see ensureWeeklyChallenge in useEconomy.ts */
   weeklyChallenge: WeeklyChallenge | null;
+  /** active rival bounty contracts (max 2); each offers bonus money for buy/sell quantity */
+  activeBounties: ActiveBounty[];
+  /** today's production quotas per good; regenerated each game day */
+  productionQuotas: ProductionQuota[];
+  /** amount each good was produced today (reset each day) */
+  productionToday: Record<GoodId, number>;
   /** optional New Game Plus difficulty modifiers chosen for this run, each
    * boosting the prestige point payout at the cost of a harsher run — see
    * effectiveDifficultyConfig/ngPlusPrestigeMultiplier in ngPlusModifiers.ts */
@@ -395,6 +470,22 @@ export interface EconomyState {
    * tradingHouses.ts. They move the same foreign markets the player does,
    * which is what stops a good route from staying good forever. */
   tradingHouses: TradingHouseActivity[];
+  /** the player's reputation with each known trader — see traders.ts. Each
+   * trader remembers past trades and offers price adjustments based on
+   * relationship. Maps trader id to reputation state. */
+  traderReputations: Record<string, TraderReputation>;
+  /** rival traders currently active on your home market — see rivals.ts.
+   * Unlike trading houses (foreign markets), rivals compete on your turf,
+   * creating price volatility and opportunities. */
+  rivalActivities: RivalTraderActivity[];
+  /** whether the player has sent their first caravan; triggers tutorial on initial send */
+  firstCaravanSent: boolean;
+  /** this month's festival goal while its window is open; null otherwise —
+   * see ensureFestivalProgress in useEconomy.ts */
+  festivalProgress: FestivalProgress | null;
+  /** set for good once a festival goal is ever cleared; sticky, never
+   * re-locks, and the only way to unlock the "festival" emblem */
+  festivalEmblemEarned: boolean;
 }
 
 export interface WeeklyChallenge {
@@ -404,6 +495,27 @@ export interface WeeklyChallenge {
    * the current value of that same metric minus this baseline */
   startValue: number;
   claimed: boolean;
+  /** the template's target/reward, scaled by rank at assignment time (see
+   * scaledGoalTarget/scaledGoalReward) and snapshotted here — like a daily
+   * quest's own target/reward, so a mid-week rank-up can't move the goal. */
+  target: number;
+  reward: number;
+}
+
+/** this real calendar month's festival goal — only assigned while the
+ * window is open (see isFestivalWindowOpen in townFestival.ts); null the
+ * rest of the month. Clearing it before the window closes sets
+ * festivalEmblemEarned, a separate lifetime flag, since this itself gets
+ * replaced (and the un-claimed state lost) once the window reopens next month. */
+export interface FestivalProgress {
+  monthKey: string;
+  /** festivalMetric(stats) read when the window opened — progress is the
+   * current value of that same metric minus this baseline */
+  startValue: number;
+  claimed: boolean;
+  /** scaled by rank at assignment time, like WeeklyChallenge's own target/reward */
+  target: number;
+  reward: number;
 }
 
 /** a standing order that re-fires trade() every tick its condition holds — see

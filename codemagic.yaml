@@ -1,0 +1,249 @@
+# Codemagic build definitions for Golden Town.
+#
+# The app lives in town-economy/, not at the root of this repository, so every
+# workflow sets `working_directory` and every path below is relative to that.
+#
+# Neither workflow has a `triggering:` block: builds are started by hand from
+# the Codemagic UI. This is a game that ships when it is ready, not on every
+# push, and a build minute costs money.
+#
+# Both workflows run on mac_mini_m2, Android included. Not a preference —
+# linux_x2 is not on this account's plan, and the build fails before it starts
+# with "instance type is not available". The macOS images carry the Android SDK
+# and a JDK, so an AAB builds there exactly the same way.
+#
+# Before the first run, in Codemagic:
+#   Android — Teams/Personal settings → Code signing identities → Android
+#             keystores → upload the upload keystore with reference name
+#             `golden_town_upload`. If you name it anything else, change the
+#             name under environment.android_signing below to match.
+#           — Environment variables → group `ios_signing`, one secure
+#             variable `CERTIFICATE_PRIVATE_KEY` holding an RSA private key
+#             in PEM form. The signing step below hands it to Apple, which
+#             issues the distribution certificate against it; every later
+#             build reuses the same pair. Without it the CLI can download an
+#             existing certificate but not its private key, and then reports
+#             "Cannot save Signing Certificates without certificate private
+#             key" and leaves the build with nothing to sign with.
+#   iOS     — Teams/Personal settings → Integrations → Developer Portal →
+#             the App Store Connect API key named `taxlume-admin`, which is
+#             the name `integrations.app_store_connect` asks for below. An
+#             App Store Connect key is account-wide, not per-app, so the one
+#             already connected there covers this bundle identifier too.
+#
+# Both workflows run `expo prebuild`, which generates ios/ and android/ from
+# app.json. Those folders are gitignored on purpose — they are build output,
+# and regenerating them each run means app.json stays the single place the
+# app is configured.
+
+workflows:
+  android-release:
+    name: Golden Town — Android (AAB for Play)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: town-economy
+
+    # Codemagic persists these paths between builds on its own storage, separate
+    # from the fresh checkout each run starts from. None of them are project
+    # output — expo prebuild --clean below wipes android/ every run regardless,
+    # on purpose (see the top-of-file note) — these are the *download* caches
+    # npm and Gradle keep elsewhere on disk, so a second build with an
+    # unchanged lockfile reuses already-fetched packages instead of pulling
+    # them over the network again. First build after adding this is not
+    # faster (nothing cached yet); every one after it should be.
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+
+    environment:
+      java: 17
+      node: 22
+      android_signing:
+        - golden_town_upload
+      vars:
+        PACKAGE_NAME: com.goldentown.app
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      # Cheap relative to a 20-minute Gradle build, and it fails in seconds
+      # rather than at the end. Only on this workflow — running it on the mac
+      # too would pay for the same 190 tests twice.
+      - name: Typecheck, lint and test
+        script: npm run verify
+
+      - name: Stamp the build number
+        script: node scripts/ci/set-build-number.js
+
+      - name: Generate the native project
+        script: npx expo prebuild --platform android --no-install --clean
+
+      # Must run after prebuild and before gradle. prebuild signs the release
+      # buildType with the debug key; this points it at the uploaded keystore
+      # and fails the build if the credentials are not there, so a debug-signed
+      # bundle cannot reach Play quietly.
+      - name: Point release signing at the upload keystore
+        script: node scripts/ci/patch-android-signing.js
+
+      # bundleRelease makes the .aab Play wants. assembleRelease makes an
+      # .apk, which Play has no use for and a phone does: an .aab cannot be
+      # installed directly, so testing a build otherwise means a round trip
+      # through Play Console. Both come out of the same compile and the same
+      # signing config, so the extra minute buys a build you can put on a
+      # device by copying a file to it.
+      - name: Build the app bundle and a sideloadable APK
+        script: |
+          chmod +x android/gradlew
+          cd android && ./gradlew bundleRelease assembleRelease
+
+    artifacts:
+      - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/*.aab
+      - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/*.apk
+      - $CM_BUILD_DIR/town-economy/android/app/build/outputs/**/mapping.txt
+
+    # Uploading to Play needs a Google Play service account JSON stored as a
+    # secure environment variable. Until that exists, download the .aab from
+    # the build page and upload it in Play Console by hand — which is what you
+    # want for the very first release anyway, since Play will not accept an
+    # automated upload before the listing is complete.
+    #
+    # publishing:
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal
+
+  ios-release:
+    name: Golden Town — iOS (IPA for TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: town-economy
+
+    # Same reasoning as android-release's own cache block. CocoaPods' cache is
+    # its global download cache (~/Library/Caches/CocoaPods) — not ios/Pods,
+    # the per-project folder expo prebuild --clean deletes every run, which
+    # would make caching it pointless. Caching the global one still lets `pod
+    # install` skip re-downloading each pod's source after the first build.
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/Library/Caches/CocoaPods
+
+    integrations:
+      app_store_connect: taxlume-admin
+
+    environment:
+      groups:
+        - ios_signing # supplies CERTIFICATE_PRIVATE_KEY
+      node: 22
+      xcode: latest
+      cocoapods: default
+      # No `ios_signing:` block here on purpose. That one only *fetches*
+      # profiles that already exist, and fails with "No matching profiles
+      # found" when the bundle identifier has never been signed for App Store
+      # distribution — which is every first release. The signing step below
+      # creates what is missing instead.
+      vars:
+        BUNDLE_ID: com.goldentown.app
+        XCODE_SCHEME: GoldenTown
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Stamp the build number
+        script: node scripts/ci/set-build-number.js
+
+      # --no-install because pods are installed in the next step, where a
+      # failure is legible instead of buried inside prebuild's output.
+      - name: Generate the native project
+        script: npx expo prebuild --platform ios --no-install --clean
+
+      - name: Install pods
+        script: cd ios && pod install
+
+      # Creates the distribution certificate and the App Store provisioning
+      # profile if the account does not have them yet, then installs both so
+      # Xcode can find them. `--create` is the whole point: without it this
+      # fails on a bundle identifier that has never been signed before.
+      #
+      # --certificate-key is what makes this work unattended. Apple hands
+      # out the public half of a certificate and keeps no copy of the private
+      # half, so a certificate created on someone else's Mac is useless here:
+      # the CLI downloads it, finds no private key, and says so before
+      # carrying on to produce an unsigned, profile-less build. Supplying our
+      # own key means the certificate is issued against a key we hold, and
+      # every later build reuses the same pair.
+      #
+      # Apple allows three distribution certificates per account. If that
+      # limit is ever hit, revoke an unused one in the Developer Portal
+      # rather than adding a fourth.
+      - name: Set up code signing
+        script: |
+          # Without this the step limps on after a failed command and reports
+          # success: fetch-signing-files rejected its own arguments once
+          # ("Environment variable CERTIFICATE_PRIVATE_KEY is not defined")
+          # and the build still spent two more minutes before failing
+          # somewhere that could not explain itself.
+          set -e
+
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+          # use-profiles can finish without matching a single profile — it
+          # says "Did not find matching provisioning profiles for code
+          # signing!", writes an empty list, and exits 0. The build then runs
+          # on and fails at the archive with "requires a provisioning
+          # profile", which names a symptom in Xcode's words and cannot
+          # explain itself.
+          #
+          # So check the export options use-profiles just wrote, because that
+          # is the file the archive actually reads. An earlier version of
+          # this counted .mobileprovision files in a directory instead and
+          # failed a build whose signing had worked perfectly — a guess about
+          # where the CLI keeps its files, where the real answer was sitting
+          # in the file it had named on the line above.
+          if ! grep -q "$BUNDLE_ID" "$HOME/export_options.plist" 2>/dev/null; then
+            echo "No provisioning profile for $BUNDLE_ID reached the export" >&2
+            echo "options. Read the fetch-signing-files output above: it will" >&2
+            echo "name the reason, usually a certificate it could not use." >&2
+            exit 1
+          fi
+          echo "✅ signing ready for $BUNDLE_ID"
+
+      # The workspace, not the project: pod install created it, and building
+      # the .xcodeproj directly misses every pod dependency.
+      - name: Archive and export
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/GoldenTown.xcworkspace" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - $CM_BUILD_DIR/town-economy/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $CM_BUILD_DIR/town-economy/build/ios/xcarchive/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Upload only. The build lands in App Store Connect, finishes
+        # processing, and is immediately installable by internal testers —
+        # that is the whole point of a TestFlight build and it needs no
+        # review.
+        #
+        # `submit_to_testflight: true` went further and sent it to *external*
+        # beta review, which failed the post-processing step for want of a
+        # feedback email and a review contact. Nothing was wrong with the
+        # build; it had already uploaded and processed. Handing out a build
+        # to strangers is a decision to make in App Store Connect, with the
+        # forms in front of you, not a thing a green build should trigger.
+        submit_to_testflight: false
+        submit_to_app_store: false

@@ -83,7 +83,8 @@ const SHOTS = [
       // Pick one, so the frame shows the choice being made rather than the
       // confirm button greyed out reading "pick a path".
       await page
-        .locator(`text=${lang === "tr" ? "Tüccar Loncası" : "Merchants' Guild"}`)
+        // the card is a button labelled with the guild name; its text sits under it
+        .locator(`[aria-label="${lang === "tr" ? "Tüccar Loncası" : "Merchants' Guild"}"]`)
         .first()
         .click({ timeout: 8_000 });
       await page.waitForTimeout(900);
@@ -99,6 +100,14 @@ async function main() {
   // Boot once with empty storage to get a real initialState to patch.
   const probe = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: SCALE });
   await probe.goto(APP_URL, { waitUntil: "networkidle" });
+  // The game only writes a save once the title screen has been left (an
+  // untouched default state is not worth keeping), so press the button first.
+  await probe
+    .getByText(/^(BAŞLA|START)$/, { exact: true })
+    .click({ timeout: 30_000 })
+    .catch((err) => {
+      throw new Error("could not leave the title screen to get a save", { cause: err });
+    });
   await probe.waitForFunction((k) => localStorage.getItem(k) !== null, SAVE_KEY, { timeout: 90_000 });
   const raw = await probe.evaluate((k) => localStorage.getItem(k), SAVE_KEY);
   await probe.close();
@@ -121,6 +130,9 @@ async function main() {
       // capture takes minutes, and a save that looks minutes old trips the
       // "while you were away" summary, which then covers the tab bar.
       state.lastSavedAt = Date.now();
+      // Already opened today: the seed says "yesterday" (a returning player),
+      // which would put the daily wheel over the tab bar in every frame.
+      state.streak = { ...state.streak, lastOpenedDate: new Date().toISOString().slice(0, 10) };
       if (shot.patch) shot.patch(state);
 
       const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: SCALE });
@@ -185,6 +197,10 @@ async function main() {
       }
       // Long enough for the entry animations and the SVG map to settle.
       await page.waitForTimeout(2_500);
+      // Merve's task bubble opens over the lower right for seven seconds after
+      // the game starts and hides what is under it; wait until it has gone,
+      // leaving her round badge (which is part of the game) in place.
+      await page.waitForTimeout(6_000);
       if (shot.after) await shot.after(page, lang);
 
       const file = path.join(outDir, `${shot.name}.png`);

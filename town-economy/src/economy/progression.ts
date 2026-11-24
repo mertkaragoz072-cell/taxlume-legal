@@ -7,19 +7,30 @@
  * reducer can chain them without caring which one fired. */
 
 import { ACHIEVEMENTS } from "./achievements";
+import { eraDecreeId, eraForRank } from "./eras";
+import { GOODS } from "./goods";
 import { MINI_QUEST_TEMPLATES_BY_ID } from "./miniQuests";
+import { ONBOARDING_STEPS } from "./onboarding";
 import { QUEST_TEMPLATES_BY_ID } from "./quests";
 import {
   townRankBeyondCount,
   townRankIcon,
   townRankIndexForNetWorth,
+  townRankLoreKey,
   townRankNameKey,
   townRankReward,
 } from "./townRanks";
-import { t } from "../i18n/t";
+import { eventFields, NestedKey, t } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { EconomyEvent, EconomyState } from "./types";
-import { EVENT_LOG_CAP, LEGENDARY_UNLOCK_PRESTIGE_LEVEL, MYTHIC_UNLOCK_LEGENDARY_POINTS } from "./constants";
+import {
+  EVENT_LOG_CAP,
+  LEGENDARY_UNLOCK_PRESTIGE_LEVEL,
+  MINI_QUEST_COOLDOWN_DONE_TICKS,
+  MINI_QUEST_COOLDOWN_EXPIRED_TICKS,
+  MYTHIC_UNLOCK_LEGENDARY_POINTS,
+  WORKERS_UNLOCK_NET_WORTH,
+} from "./constants";
 import { computeNetWorth, effectiveMetropolUnlockNetWorth, effectiveTradeUnlockNetWorth } from "./formulas";
 
 export function applyAchievements(state: EconomyState): EconomyState {
@@ -36,9 +47,9 @@ export function applyAchievements(state: EconomyState): EconomyState {
     cash += a.reward;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.achievementUnlocked", {
+      ...eventFields(state.language, "msg.achievementUnlocked", {
         icon: a.icon,
-        title: t(state.language, a.titleKey),
+        title: { key: a.titleKey },
         reward: a.reward,
       }),
       tone: "good",
@@ -60,7 +71,7 @@ export function applyTradeUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.tradeUnlocked"),
+    ...eventFields(state.language, "msg.tradeUnlocked"),
     tone: "good",
   };
   return {
@@ -77,12 +88,29 @@ export function applyMetropolUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.metropolUnlocked"),
+    ...eventFields(state.language, "msg.metropolUnlocked"),
     tone: "good",
   };
   return {
     ...state,
     metropolUnlocked: true,
+    nextId: state.nextId + 1,
+    lastEvent: event,
+    eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
+  };
+}
+export function applyWorkersUnlock(state: EconomyState): EconomyState {
+  if (state.workersUnlocked) return state;
+  if (computeNetWorth(state) < WORKERS_UNLOCK_NET_WORTH) return state;
+
+  const event: EconomyEvent = {
+    id: state.nextId,
+    ...eventFields(state.language, "msg.workersUnlocked"),
+    tone: "good",
+  };
+  return {
+    ...state,
+    workersUnlocked: true,
     nextId: state.nextId + 1,
     lastEvent: event,
     eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
@@ -98,7 +126,7 @@ export function applyLegendaryUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.legendaryUnlocked"),
+    ...eventFields(state.language, "msg.legendaryUnlocked"),
     tone: "good",
   };
   return {
@@ -118,7 +146,7 @@ export function applyMythicUnlock(state: EconomyState): EconomyState {
 
   const event: EconomyEvent = {
     id: state.nextId,
-    message: t(state.language, "msg.mythicUnlocked"),
+    ...eventFields(state.language, "msg.mythicUnlocked"),
     tone: "good",
   };
   return {
@@ -141,25 +169,68 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
   let nextId = state.nextId;
   let cash = state.cash;
   const newEvents: EconomyEvent[] = [];
+  let finalTitle = "";
+  let finalLore = "";
   for (let index = state.townRankIndex + 1; index <= targetIndex; index++) {
     const reward = townRankReward(index);
     cash += reward;
     const beyond = townRankBeyondCount(index);
-    const title =
+    // NestedKey recurses: "Beyond X (n)" nests the rank's own name-key
+    // inside the count-suffixed template, so both re-resolve live rather
+    // than only the outer one.
+    const titleParam: NestedKey =
       beyond > 0
-        ? t(state.language, "townRank.beyondTitle", {
-            base: t(state.language, townRankNameKey(index)),
-            n: beyond + 1,
-          })
-        : t(state.language, townRankNameKey(index));
+        ? { key: "townRank.beyondTitle", params: { base: { key: townRankNameKey(index) }, n: beyond + 1 } }
+        : { key: townRankNameKey(index) };
+    // merveRankUp (below) stores an already-resolved plain string, not a
+    // NestedKey — Merve's congratulations shows once, immediately, in
+    // whatever language is active right then, and is dismissed by the
+    // player before a later language switch could make it stale.
+    if (index === targetIndex) {
+      finalTitle = t(state.language, titleParam.key, titleParam.params);
+      finalLore = t(state.language, townRankLoreKey(index));
+    }
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.townRankUp", {
+      ...eventFields(state.language, "msg.townRankUp", {
         icon: townRankIcon(index),
-        title,
+        title: titleParam,
         reward: formatNumberUtil(reward, state.language),
       }),
       tone: "good",
+    });
+
+    // A tier this jump passed through can unlock a good (see goods.ts'
+    // unlockRank) — called out as its own event, separate from the rank-up
+    // line itself, so a new product actually register as a new thing
+    // rather than disappearing into the reward number.
+    for (const good of GOODS) {
+      if (good.unlockRank !== index) continue;
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(state.language, "msg.newGoodUnlocked", {
+          icon: good.icon,
+          good: { key: good.nameKey },
+        }),
+        tone: "good",
+      });
+    }
+  }
+
+  // Every promotion opens a new era, and an era opens with a charter to sign
+  // (see eras.ts). It replaces any random decision still waiting — those are
+  // routine, this one is the player's first act in the new age — and the
+  // modal queue holds it back until Merve's rank-up scene has been closed.
+  const decreeId = eraDecreeId(targetIndex);
+  let pendingDecision = state.pendingDecision;
+  if (decreeId) {
+    pendingDecision = { id: nextId++, templateId: decreeId, triggeredAtTick: state.tick };
+    newEvents.push({
+      id: nextId++,
+      ...eventFields(state.language, "msg.decisionPending", {
+        title: { key: `era.${eraForRank(targetIndex).key}.decree.title` },
+      }),
+      tone: "neutral",
     });
   }
 
@@ -167,11 +238,58 @@ export function applyTownRankUp(state: EconomyState): EconomyState {
     ...state,
     cash,
     nextId,
+    pendingDecision,
     townRankIndex: targetIndex,
+    // Merve steps in for this one specifically — a personal congratulation
+    // on the highest tier reached, on top of (not instead of) the event
+    // log entries above, which still record every tier a big jump skipped.
+    merveRankUp: { icon: townRankIcon(targetIndex), title: finalTitle, lore: finalLore },
     lastEvent: newEvents[newEvents.length - 1],
     eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
   };
 }
+/** Advances the guided first session (see onboarding.ts) and pays out.
+ *
+ * A loop rather than a single check, because one action can finish more than
+ * one step: the sale that first turns a profit can also be the one that
+ * carries the town past 500. Stopping after the first would leave a step
+ * showing as outstanding that the player had already done.
+ */
+export function applyOnboarding(state: EconomyState): EconomyState {
+  let step = state.onboardingStep;
+  if (step >= ONBOARDING_STEPS.length) return state;
+
+  let cash = state.cash;
+  let nextId = state.nextId;
+  const newEvents: EconomyEvent[] = [];
+
+  while (step < ONBOARDING_STEPS.length && ONBOARDING_STEPS[step].isDone(state)) {
+    const done = ONBOARDING_STEPS[step];
+    cash += done.reward;
+    newEvents.push({
+      id: nextId++,
+      ...eventFields(state.language, "msg.onboardingStepDone", {
+        icon: done.icon,
+        title: { key: done.titleKey },
+        reward: done.reward,
+      }),
+      tone: "good",
+    });
+    step++;
+  }
+
+  if (newEvents.length === 0) return state;
+
+  return {
+    ...state,
+    cash,
+    nextId,
+    onboardingStep: step,
+    lastEvent: newEvents[newEvents.length - 1],
+    eventLog: [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP),
+  };
+}
+
 export function applyDailyQuests(state: EconomyState): EconomyState {
   const newlyCompleted = state.dailyQuests.filter((q) => {
     if (q.completed) return false;
@@ -189,9 +307,9 @@ export function applyDailyQuests(state: EconomyState): EconomyState {
     cash += q.reward;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.questCompleted", {
+      ...eventFields(state.language, "msg.questCompleted", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
         reward: q.reward,
       }),
       tone: "good",
@@ -221,9 +339,9 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
   if (progress >= mq.target) {
     const event: EconomyEvent = {
       id: state.nextId,
-      message: t(state.language, "msg.miniQuestCompleted", {
+      ...eventFields(state.language, "msg.miniQuestCompleted", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
         reward: mq.reward,
       }),
       tone: "good",
@@ -232,6 +350,8 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
       ...state,
       cash: state.cash + mq.reward,
       activeMiniQuest: null,
+      miniQuestCooldownTick: state.tick + MINI_QUEST_COOLDOWN_DONE_TICKS,
+      lastMiniQuestId: mq.templateId,
       nextId: state.nextId + 1,
       lastEvent: event,
       eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),
@@ -241,15 +361,17 @@ export function applyMiniQuest(state: EconomyState): EconomyState {
   if (state.tick >= mq.expiresAtTick) {
     const event: EconomyEvent = {
       id: state.nextId,
-      message: t(state.language, "msg.miniQuestExpired", {
+      ...eventFields(state.language, "msg.miniQuestExpired", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
       }),
       tone: "neutral",
     };
     return {
       ...state,
       activeMiniQuest: null,
+      miniQuestCooldownTick: state.tick + MINI_QUEST_COOLDOWN_EXPIRED_TICKS,
+      lastMiniQuestId: mq.templateId,
       nextId: state.nextId + 1,
       lastEvent: event,
       eventLog: [event, ...state.eventLog].slice(0, EVENT_LOG_CAP),

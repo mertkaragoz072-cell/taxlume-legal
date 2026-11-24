@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { HOT_STREAK_BONUS_PER_TRADE, HOT_STREAK_MAX_BONUS } from "../economy/useEconomy";
 import {
@@ -7,17 +8,20 @@ import {
   cardShadow,
   COLORS,
   FONT,
-  GREEN_GRADIENT,
+  glowShadow,
   RADIUS,
-  RED_GRADIENT,
   SPACING,
   TYPE,
   WEIGHT,
   withAlpha,
 } from "../theme";
 import { CoinPop } from "./CoinPop";
+import { InvestTradePanel } from "./InvestPanels";
 import { GradientFill } from "./GradientFill";
-import { ScalePressable } from "./ScalePressable";
+import { BigButton } from "./ModalKit";
+import { TradeDialog } from "./TradeDialog";
+import { SpotlightTarget } from "./Spotlight";
+import { fixedUi } from "../utils/formatNumber";
 
 // Loosened to the fields this panel actually needs (rather than the full
 // Good/GoodState shape) so it can double as an asset buy/sell panel in
@@ -29,13 +33,34 @@ interface Props {
   onTrade: (side: "buy" | "sell", qty: number) => void;
   /** total round-trip bid/ask spread as a fraction of the quoted price (e.g. 0.03 = 3%); omit for no spread */
   spreadPct?: number;
+  /** render as the painted trade dialog (panel art, plaque buttons) instead of the dark card; needs goodId and onClose */
+  dialog?: boolean;
+  /** render on the sent Invest-screen panel art (only the Invest screen sets it) */
+  painted?: boolean;
+  goodId?: string;
+  onClose?: () => void;
 }
 
-type Qty = 1 | 5 | "ALL";
+// A number is any amount the player typed or stepped to; the dark card only
+// ever offers 1, 5 and ALL, the dialog also takes a free amount.
+type Qty = number | "ALL";
 
-export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Props) {
+export function BuySellPanel({
+  good,
+  state,
+  cash,
+  onTrade,
+  spreadPct = 0,
+  dialog = false,
+  painted = false,
+  goodId,
+  onClose,
+}: Props) {
   const { t, formatCoins, state: economyState } = useEconomyContext();
   const [side, setSide] = useState<"buy" | "sell">("buy");
+  // Only for a player who has never traded — `totalTrades` is a lifetime
+  // count, so this cannot come back later.
+  const nudge = economyState.stats.totalTrades === 0 && side === "buy";
   const [qtyOption, setQtyOption] = useState<Qty>(1);
   const [coinPopTrigger, setCoinPopTrigger] = useState(0);
 
@@ -51,6 +76,67 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
   const resolvedQty = qtyOption === "ALL" ? (side === "buy" ? affordableAll : state.holding) : qtyOption;
   const total = resolvedQty * execPrice;
   const disabled = resolvedQty <= 0 || (side === "buy" ? total > cash + 0.001 : resolvedQty > state.holding);
+
+  if (dialog) {
+    return (
+      <TradeDialog
+        good={good}
+        goodId={goodId ?? ""}
+        holding={state.holding}
+        side={side}
+        setSide={setSide}
+        qtyOption={qtyOption}
+        setQtyOption={setQtyOption}
+        resolvedQty={resolvedQty}
+        execPrice={execPrice}
+        total={total}
+        disabled={disabled}
+        onClose={onClose}
+        onConfirm={() => {
+          onTrade(side, resolvedQty);
+          setCoinPopTrigger((n) => n + 1);
+        }}
+        coinPopTrigger={coinPopTrigger}
+      />
+    );
+  }
+
+  if (painted) {
+    return (
+      <View>
+        {tradeStreak >= 2 && (
+          <View style={styles.streakBadge}>
+            <Text style={styles.streakBadgeText}>
+              {t("market.hotStreak", { streak: tradeStreak, bonusPct: streakBonusPct })}
+            </Text>
+          </View>
+        )}
+        <InvestTradePanel
+          side={side}
+          onSide={setSide}
+          buyLabel={t("market.buyShort")}
+          sellLabel={t("market.sellShort")}
+          qty={([1, 5, "ALL"] as Qty[]).map((q) => ({
+            key: String(q),
+            label: q === "ALL" ? t("common.all") : String(q),
+            selected: qtyOption === q,
+            onPress: () => setQtyOption(q),
+          }))}
+          accent={good.color}
+          summary={`${resolvedQty} x ${t(good.nameKey)} @ ${fixedUi(execPrice, 2)}`}
+          total={formatCoins(total)}
+          confirmLabel={`${side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} ${good.icon}`}
+          disabled={disabled}
+          onConfirm={() => {
+            onTrade(side, resolvedQty);
+            setCoinPopTrigger((n) => n + 1);
+          }}
+        >
+          <CoinPop trigger={coinPopTrigger} />
+        </InvestTradePanel>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrap}>
@@ -95,28 +181,29 @@ export function BuySellPanel({ good, state, cash, onTrade, spreadPct = 0 }: Prop
 
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>
-          {resolvedQty} x {t(good.nameKey)} @ {execPrice.toFixed(2)}
+          {resolvedQty} x {t(good.nameKey)} @ {fixedUi(execPrice, 2)}
         </Text>
         <Text style={styles.summaryTotal}>{formatCoins(total)}</Text>
       </View>
 
-      <View style={styles.confirmBtnWrap}>
-        <ScalePressable
+      {/* A ring around the trade button until the player has made their
+          first one. The guided card says "buy any good in the Market"; this
+          is the part of the market it means. It costs nothing to anyone past
+          their first trade, because it is gone by then. */}
+      <SpotlightTarget id="buy" style={[styles.confirmBtnWrap, nudge && styles.confirmBtnNudge]}>
+        <BigButton
+          tone={side === "buy" ? "green" : "red"}
+          height={52}
+          fontSize={18}
           disabled={disabled}
+          label={`${side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} ${good.icon}`}
           onPress={() => {
             onTrade(side, resolvedQty);
             setCoinPopTrigger((n) => n + 1);
           }}
-          style={[styles.confirmBtn, disabled && styles.confirmBtnDisabled]}
-          scaleTo={0.97}
-        >
-          <GradientFill colors={side === "buy" ? GREEN_GRADIENT : RED_GRADIENT} x1="0" y1="0" x2="0" y2="1" />
-          <Text style={styles.confirmBtnText}>
-            {side === "buy" ? t("market.buyConfirm") : t("market.sellConfirm")} {good.icon}
-          </Text>
-        </ScalePressable>
+        />
         <CoinPop trigger={coinPopTrigger} />
-      </View>
+      </SpotlightTarget>
     </View>
   );
 }
@@ -184,6 +271,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: { color: COLORS.textMuted, fontSize: TYPE.label },
   summaryTotal: { color: COLORS.accent, fontSize: TYPE.body, fontWeight: WEIGHT.bold, fontFamily: FONT.bold },
+  confirmBtnNudge: {
+    borderWidth: 2,
+    borderColor: withAlpha("#5fd884", 0.9),
+    borderRadius: RADIUS.feature,
+    ...glowShadow("#5fd884"),
+  },
   confirmBtnWrap: { position: "relative" },
   confirmBtn: {
     borderRadius: RADIUS.card,

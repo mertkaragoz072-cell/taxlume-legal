@@ -5,19 +5,36 @@
  * a number or a boolean, so both the reducer and the screens can call them and
  * never disagree about a figure. */
 
+import { hallStorageBonus } from "./guildPerks";
 import { ASSETS } from "./assets";
+import { DIFFICULTIES } from "./difficulty";
 import { GOODS } from "./goods";
+import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { propertyCaravanTariffDiscount, propertyLoanRateDiscountPerDay } from "./properties";
 import {
   perkCaravanTariffDiscount,
   perkLoanRateDiscountPerDay,
+  perkTaxHappinessRelief,
   perkUnlockThresholdMult,
 } from "./prestigePerks";
 import { ForeignTown } from "./towns";
 import { doctrineModifiers } from "./doctrines";
 import { UPGRADES_BY_ID } from "./upgrades";
-import { EconomyState, Good } from "./types";
+import { WORKER_MAX_PER_GOOD } from "./workers";
+import { EconomyState, Good, GoodId } from "./types";
 import {
+  AUTO_TRADE_MAX_RULES,
+  AUTO_TRADE_RULES_PER_RANK,
+  BULK_CONTRACT_MAX_ACTIVE,
+  BULK_CONTRACT_SLOTS_PER_RANK,
+  CONTENT_BONUS_FACTOR,
+  CONTRACT_MAX_ACTIVE,
+  CONTRACT_SLOTS_PER_RANK,
+  DAILY_BONUS_BASE,
+  DAILY_BONUS_CAP,
+  DAILY_BONUS_PER_STREAK_DAY,
+  DEBT_HAPPINESS_DRAG,
+  HAPPINESS_TARGET_SLOPE,
   HOT_STREAK_BONUS_PER_TRADE,
   HOT_STREAK_MAX_BONUS,
   LOAN_BANK_DISCOUNT_PER_LEVEL_PER_DAY,
@@ -31,6 +48,9 @@ import {
   LOAN_TERM_RATE_PER_MONTH_PER_DAY,
   MARKET_SPREAD,
   METROPOL_UNLOCK_NET_WORTH,
+  PRODUCTION_INFLATION_FACTOR,
+  RANK_GOAL_REWARD_SCALE_PER_RANK,
+  RANK_GOAL_TARGET_SCALE_PER_RANK,
   SCARCITY_MAX,
   SCARCITY_MIN,
   STORAGE_BASE_CAPACITY,
@@ -38,18 +58,22 @@ import {
   SUPPLY_MIN_FACTOR,
   TAX_OUTPUT_FACTOR,
   TICKS_PER_GAME_DAY,
+  TOWN_RANK_LOAN_CAP_BONUS_PER_RANK,
+  TOWN_RANK_STORAGE_BONUS_PER_RANK,
   TRADE_UNLOCK_NET_WORTH,
+  WORKER_SLOTS_PER_RANK,
 } from "./constants";
 
 export function gameDayFromTick(tick: number): number {
   return Math.floor(tick / TICKS_PER_GAME_DAY) + 1;
 }
-/** A good with no unlockDay is available from the start; one with an
- * unlockDay only becomes tradeable once the town has been running that
- * many in-game days — it still simulates quietly in the background before
- * that, so it isn't starting from scratch once revealed. */
+/** A good with no unlockRank is available from the start; one with an
+ * unlockRank only becomes tradeable once the town has reached that rank —
+ * real progress, not the clock, so leaving the game idle for days doesn't
+ * unlock anything by itself. It still simulates quietly in the background
+ * before that, so it isn't starting from scratch once revealed. */
 export function isGoodUnlocked(good: Good, state: EconomyState): boolean {
-  return !good.unlockDay || gameDayFromTick(state.tick) >= good.unlockDay;
+  return !good.unlockRank || state.townRankIndex >= good.unlockRank;
 }
 /** Given a just-realized pnl, returns the next streak count and the bonus
  * cash (on top of pnl) that streak earns — shared by trade() and
@@ -62,6 +86,15 @@ export function nextTradeStreak(currentStreak: number, pnl: number): { streak: n
 }
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+/** The cash a check-in on the given streak day pays, bank upgrade included —
+ * shared by dailyCheckIn (which pays it) and the reward-wheel modal's streak
+ * calendar (which previews it for days not reached yet), so a projected
+ * number never drifts from what the player actually gets when they get
+ * there. `count` is the streak length that day would represent, 1-based. */
+export function dailyBonusForStreak(state: EconomyState, count: number): number {
+  const bankBonus = state.upgrades.bank * UPGRADES_BY_ID.bank.effectPerLevel;
+  return Math.min(DAILY_BONUS_BASE + (count - 1) * DAILY_BONUS_PER_STREAK_DAY, DAILY_BONUS_CAP) + bankBonus;
 }
 export function scarcityFactor(supply: number, baseSupply: number, elasticity: number): number {
   const ratio = baseSupply / Math.max(supply, 1);
@@ -119,14 +152,107 @@ export function computeNetWorth(state: EconomyState): number {
     (state.loan ? state.loan.remainingBalance : 0)
   );
 }
+export interface InflationPressure {
+  /** the difficulty's own baseline drift — present even with 0% tax and no debt */
+  baseline: number;
+  /** how many happiness points the current tax rate is costing, before debt */
+  taxHappinessDrag: number;
+  /** how many happiness points an outstanding loan is costing, on top of tax */
+  debtHappinessDrag: number;
+  /** the daily inflation rate today's unhappiness is adding, if it holds */
+  unhappinessDrag: number;
+  /** the daily inflation rate today's contentment is easing, if it holds */
+  contentRelief: number;
+  /** baseline + unhappinessDrag - contentRelief, clamped to the difficulty's band */
+  target: number;
+}
+/** What is currently pushing tomorrow's inflation rate up or down, broken
+ * into the pieces tick()'s own inflationTarget math folds together — so the
+ * Town screen can show the player *why*, not just the number. Reads
+ * state.happiness (this tick's already-settled value) rather than
+ * re-deriving the target happiness tick() computes internally, since a
+ * one-tick lag between "what's shown" and "what happens next" is the same
+ * lag the player already sees between raising taxes and villagers reacting. */
+export function inflationPressureBreakdown(state: EconomyState): InflationPressure {
+  const config = effectiveDifficultyConfig(DIFFICULTIES[state.difficulty], state.activeNgPlusModifiers);
+  const debtBurden = state.loan
+    ? clamp(state.loan.remainingBalance / Math.max(computeNetWorth(state), 1), 0, 1)
+    : 0;
+  const taxHappinessDrag =
+    state.taxRate * HAPPINESS_TARGET_SLOPE * (1 - perkTaxHappinessRelief(state.prestigePerks));
+  const debtHappinessDrag = debtBurden * DEBT_HAPPINESS_DRAG;
+  const productionPenalty = clamp((50 - state.happiness) / 50, 0, 1);
+  const contentBonus = clamp((state.happiness - 70) / 30, 0, 1);
+  const unhappinessDrag = productionPenalty * PRODUCTION_INFLATION_FACTOR;
+  const contentRelief = contentBonus * CONTENT_BONUS_FACTOR;
+  const target = clamp(
+    config.baseInflationDrift + unhappinessDrag - contentRelief,
+    config.inflationMin,
+    config.inflationMax
+  );
+  return {
+    baseline: config.baseInflationDrift,
+    taxHappinessDrag,
+    debtHappinessDrag,
+    unhappinessDrag,
+    contentRelief,
+    target,
+  };
+}
 export function totalGoodsHolding(state: EconomyState): number {
   return GOODS.reduce((sum, g) => sum + state.goods[g.id].holding, 0);
 }
 export function storageCapacity(state: EconomyState): number {
-  return STORAGE_BASE_CAPACITY + state.upgrades.storageYard * UPGRADES_BY_ID.storageYard.effectPerLevel;
+  return (
+    STORAGE_BASE_CAPACITY +
+    state.upgrades.storageYard * UPGRADES_BY_ID.storageYard.effectPerLevel +
+    state.townRankIndex * TOWN_RANK_STORAGE_BONUS_PER_RANK +
+    // warehouses in the guild hall, for every member
+    hallStorageBonus(state.guildProjects)
+  );
+}
+/** LOAN_MAX_NET_WORTH_PCT, a little more generous every rank — a well-ranked
+ * town's credit is worth more than its net worth alone already buys it
+ * through loanCap's own multiplication. */
+export function effectiveLoanMaxNetWorthPct(state: EconomyState): number {
+  return LOAN_MAX_NET_WORTH_PCT + state.townRankIndex * TOWN_RANK_LOAN_CAP_BONUS_PER_RANK;
 }
 export function loanCap(state: EconomyState): number {
-  return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * LOAN_MAX_NET_WORTH_PCT));
+  return Math.max(LOAN_MIN_CAP, Math.round(computeNetWorth(state) * effectiveLoanMaxNetWorthPct(state)));
+}
+/** AUTO_TRADE_MAX_RULES, one more slot every AUTO_TRADE_RULES_PER_RANK ranks. */
+export function effectiveAutoTradeMaxRules(state: EconomyState): number {
+  return AUTO_TRADE_MAX_RULES + Math.floor(state.townRankIndex / AUTO_TRADE_RULES_PER_RANK);
+}
+/** CONTRACT_MAX_ACTIVE, one more slot every CONTRACT_SLOTS_PER_RANK ranks. */
+export function effectiveContractMaxActive(state: EconomyState): number {
+  return CONTRACT_MAX_ACTIVE + Math.floor(state.townRankIndex / CONTRACT_SLOTS_PER_RANK);
+}
+/** BULK_CONTRACT_MAX_ACTIVE, one more slot every BULK_CONTRACT_SLOTS_PER_RANK ranks. */
+export function effectiveBulkContractMaxActive(state: EconomyState): number {
+  return BULK_CONTRACT_MAX_ACTIVE + Math.floor(state.townRankIndex / BULK_CONTRACT_SLOTS_PER_RANK);
+}
+/** A time-limited goal's target scaled up by rank, so it stays a real ask
+ * instead of trivial busywork once production and automation have grown —
+ * see RANK_GOAL_TARGET_SCALE_PER_RANK. A target of 1 (send a caravan, buy
+ * an upgrade) is left alone: it's a single action, not a count to inflate,
+ * and inflating it would make the quest text read wrong.
+ *
+ * Takes the rank index itself rather than EconomyState — initialState()
+ * needs this to build the very first day's quest board before a full
+ * state object exists to read townRankIndex off of. */
+export function scaledGoalTarget(target: number, townRankIndex: number): number {
+  if (target <= 1) return target;
+  return Math.max(target, Math.round(target * (1 + townRankIndex * RANK_GOAL_TARGET_SCALE_PER_RANK)));
+}
+/** The matching reward-side scale-up — every rank-gated goal's payout grows
+ * too, including the target=1 ones scaledGoalTarget leaves untouched. */
+export function scaledGoalReward(reward: number, townRankIndex: number): number {
+  return Math.round(reward * (1 + townRankIndex * RANK_GOAL_REWARD_SCALE_PER_RANK));
+}
+/** WORKER_MAX_PER_GOOD, one more slot (per good) every WORKER_SLOTS_PER_RANK ranks. */
+export function effectiveWorkerMaxPerGood(state: EconomyState): number {
+  return WORKER_MAX_PER_GOOD + Math.floor(state.townRankIndex / WORKER_SLOTS_PER_RANK);
 }
 /** The per-DAY rate a loan of the given term would carry if signed right
  * now: the base rate, discounted by the Banka upgrade level, plus a
@@ -185,4 +311,71 @@ export function effectiveMetropolUnlockNetWorth(state: EconomyState): number {
  * quotes the price, so the two can never disagree. */
 export function researchCost(state: EconomyState, node: { cost: number }): number {
   return Math.round(node.cost * doctrineModifiers(state.doctrine).researchCostMult);
+}
+
+/** How much of its normal output a good can manage, given what it is made
+ * from.
+ *
+ * Six goods are now downstream of another: bread of grain, cloth of wool,
+ * cheese of milk, paper and glass of wood, jewellery of iron. When an input
+ * runs short its output follows, which is the whole point — a drought hits
+ * grain on the day, and bread two days later, and a player who saw the
+ * first coming can be holding bread before the second arrives. Fifteen
+ * independent random walks become a market with a shape to read.
+ *
+ * It throttles rather than consumes. Consumption is the more realistic
+ * model and also the one that can run away: a chain that eats its input
+ * faster than the input is produced collapses permanently and the good
+ * never comes back, which is a bug report, not a mechanic. Scarcity slows
+ * the workshop; it does not close it — hence the floor. The ceiling is
+ * small on purpose, so a glut of wool is a modest tailwind for cloth and
+ * not a way to print it.
+ */
+export const INPUT_FACTOR_MIN = 0.3;
+export const INPUT_FACTOR_MAX = 1.1;
+
+export function productionInputFactor(
+  good: Good,
+  supplyOf: (id: GoodId) => number,
+  baseSupplyOf: (id: GoodId) => number
+): number {
+  if (!good.inputs || good.inputs.length === 0) return 1;
+  let factor = INPUT_FACTOR_MAX;
+  for (const input of good.inputs) {
+    const base = baseSupplyOf(input);
+    const ratio = base > 0 ? supplyOf(input) / base : 1;
+    factor = Math.min(factor, clamp(ratio, INPUT_FACTOR_MIN, INPUT_FACTOR_MAX));
+  }
+  return factor;
+}
+
+/** What an input's own price is doing to the price of the good made from it —
+ * the other half of a chain, alongside productionInputFactor above. That one
+ * throttles how much a workshop can make when its input runs short; this one
+ * is the separate, more immediate fact that the input is a cost: when grain
+ * gets dearer a baker pays more for it, so bread should get dearer too on
+ * the very same tick rather than only once the shortage eventually shows up
+ * as bread's own scarcity days later. Without this a good and everything
+ * made from it were fifteen independent random walks that could easily move
+ * in opposite directions — grain up, bread down — which reads as broken
+ * rather than as a market with any shape to it.
+ *
+ * Each input's ratio to its own base price is clamped before averaging, so
+ * one input spiking hard cannot alone send the output's price into an
+ * unreasonable multiple; multiple inputs average out rather than stack. */
+export const COST_FACTOR_MIN = 0.5;
+export const COST_FACTOR_MAX = 2;
+
+export function inputCostFactor(
+  good: Good,
+  priceOf: (id: GoodId) => number,
+  basePriceOf: (id: GoodId) => number
+): number {
+  if (!good.inputs || good.inputs.length === 0) return 1;
+  const ratios = good.inputs.map((input) => {
+    const base = basePriceOf(input);
+    const ratio = base > 0 ? priceOf(input) / base : 1;
+    return clamp(ratio, COST_FACTOR_MIN, COST_FACTOR_MAX);
+  });
+  return ratios.reduce((sum, r) => sum + r, 0) / ratios.length;
 }

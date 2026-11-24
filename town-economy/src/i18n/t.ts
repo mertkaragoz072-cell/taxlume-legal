@@ -3,7 +3,25 @@ import { STRINGS } from "./strings";
 export type Language = "tr" | "en";
 export const DEFAULT_LANGUAGE: Language = "tr";
 
-type Params = Record<string, string | number>;
+/** A translation key to resolve live rather than a value already baked to a
+ * string — see the big comment on ParamValue below for why this exists. */
+export interface NestedKey {
+  key: string;
+  params?: Params;
+}
+/** Almost every param is a plain value (a number, an already-locale-
+ * formatted amount, an emoji literal) that never needs translating and is
+ * fine baked into an event forever. But some params — a good's name, an
+ * achievement's title, a town's name — are themselves the *result* of an
+ * inner `t()` call, and baking only the resolved string throws away which
+ * language it came from. A NestedKey carries that inner key (and its own
+ * params, recursively — town rank's "Beyond X (n)" nests a country name
+ * inside a count-suffixed template) instead of a pre-resolved string, so
+ * `t()` can resolve it in the *current* language every time it's called —
+ * the same key can be an event's param today and read correctly again
+ * after a language switch, with no new event needing to fire first. */
+export type ParamValue = string | number | NestedKey;
+export type Params = Record<string, ParamValue>;
 
 function getByPath(obj: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, key) => {
@@ -12,9 +30,16 @@ function getByPath(obj: unknown, path: string): unknown {
   }, obj);
 }
 
-function interpolate(template: string, params?: Params): string {
+function resolveParamValue(lang: Language, value: ParamValue): string {
+  if (typeof value === "object") return t(lang, value.key, value.params);
+  return String(value);
+}
+
+function interpolate(lang: Language, template: string, params?: Params): string {
   if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (match, key) => (key in params ? String(params[key]) : match));
+  return template.replace(/\{(\w+)\}/g, (match, key) =>
+    key in params ? resolveParamValue(lang, params[key]) : match
+  );
 }
 
 /** A pure, hook-free translator so it can be called both from React
@@ -23,9 +48,9 @@ function interpolate(template: string, params?: Params): string {
  * etc.) — those already carry `state.language`, so no context is needed. */
 export function t(lang: Language, key: string, params?: Params): string {
   const value = getByPath(STRINGS[lang], key);
-  if (typeof value === "string") return interpolate(value, params);
+  if (typeof value === "string") return interpolate(lang, value, params);
   const fallback = getByPath(STRINGS[DEFAULT_LANGUAGE], key);
-  if (typeof fallback === "string") return interpolate(fallback, params);
+  if (typeof fallback === "string") return interpolate(lang, fallback, params);
   return key;
 }
 
@@ -40,4 +65,32 @@ export function t(lang: Language, key: string, params?: Params): string {
  * "0 day left", so a `< 2` test would be wrong. */
 export function tPlural(lang: Language, key: string, count: number, params?: Params): string {
   return t(lang, count === 1 ? `${key}One` : key, params);
+}
+
+/** Builds the shared fields of an EconomyEvent: a `message` resolved in
+ * whatever language is active right now (what a local push notification
+ * needs — it's scheduled immediately and may fire later with the app
+ * backgrounded, so it has to carry a fixed string, not a lazy lookup) plus
+ * the raw `key`/`params` that made it, so a still-open screen can re-resolve
+ * the same event in whatever language is active *then* instead of a stale
+ * banner sitting in the language it first fired in after a language switch. */
+export function eventFields(
+  lang: Language,
+  key: string,
+  params?: Params
+): { key: string; params?: Params; message: string } {
+  return { key, params, message: t(lang, key, params) };
+}
+
+/** The other half of eventFields: re-resolves an already-built event in
+ * whatever language is active *now*. Falls back to the event's own baked
+ * `message` when there's no `key` to resolve from — an event loaded from a
+ * save written before this existed. Takes a duck-typed shape rather than
+ * the concrete EconomyEvent type to avoid economy/types.ts <-> this file
+ * becoming a circular import. */
+export function resolveEventMessage(
+  lang: Language,
+  event: { key?: string; params?: Params; message: string }
+): string {
+  return event.key ? t(lang, event.key, event.params) : event.message;
 }

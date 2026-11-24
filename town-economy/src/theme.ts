@@ -1,15 +1,37 @@
 import { ViewStyle } from "react-native";
 
+// The whole app's content column was capped at a phone-sized 480 so a wide
+// phone (or a browser window) wouldn't stretch cards into absurd single-row
+// layouts. On an iPad that same cap left most of the screen as bare gradient
+// on both sides — "bordered" edges and, with every chart's own width formula
+// keyed off the *raw* screen width, charts that stopped partway across their
+// card instead of filling it. 680 comfortably fills an iPad in portrait
+// without the per-screen layouts (built for a phone-width column) stretching
+// thin, and is a no-op on every phone, which is already narrower than this.
+export const CONTENT_MAX_WIDTH = 680;
+
+/** Side/top padding of every screen's scroll body. Kept small so cards and
+ * panels run nearly edge to edge and the screen reads as full. */
+export const SCREEN_PADDING = 6;
+
+/** The wooden rim every card-like panel wears, matching the Inventory plank
+ * rows and storage bar: a warm bronze border instead of a bare dark box. */
+export const WOOD_RIM = { borderWidth: 2, borderColor: "#7a5532" } as const;
+
+/** Gap between stacked panels/cards on a screen — kept tight so the screen
+ * reads as one dense, full layout instead of floating boxes. */
+export const PANEL_GAP = 8;
+
 // --- Design tokens ---------------------------------------------------------
 // A single small scale for text size/weight and spacing so every screen
 // draws from the same ruler instead of each one picking its own numbers —
 // the difference between "handmade" and "designed." Prefer these over a
 // bare fontSize/margin literal in new or touched code.
 export const TYPE = {
-  micro: 10, // fine print: chart axis labels, tiny meta text
-  caption: 11, // captions, secondary meta (badges, sub-labels)
-  label: 12, // stat labels, form labels
-  body: 13, // default body/paragraph text
+  micro: 11, // fine print: chart axis labels, tiny meta text
+  caption: 12, // captions, secondary meta (badges, sub-labels)
+  label: 13, // stat labels, form labels
+  body: 14, // default body/paragraph text
   title: 16, // card/row titles, emphasized values
   heading: 18, // section headings, prominent prices
   display: 24, // hero numbers (rare — one per screen at most)
@@ -35,6 +57,14 @@ export const FONT = {
   bold: "Manrope_700Bold",
   black: "Manrope_800ExtraBold",
   display: "Cinzel_700Bold",
+  // The ornate, chunky-serif sibling of `display` — reserved for text that
+  // sits directly on carved wood/metal art (a sign, a plaque) rather than a
+  // plain card background, where the extra flourish reads as part of the
+  // engraving instead of just a heavier weight.
+  signage: "CinzelDecorative_900Black",
+  // A readable lowercase serif (Cinzel only has capitals) for names and
+  // prices on parchment, where the cards read as printed labels.
+  serif: "PlayfairDisplay_700Bold",
 } as const;
 
 export const SPACING = {
@@ -47,24 +77,46 @@ export const SPACING = {
 
 /** corner radius scale — chip/pill, a normal row or button, and a big
  * feature card, so "how rounded" reads as three deliberate sizes instead
- * of a dozen near-identical ones. */
+ * of a dozen near-identical ones. A touch softer than the original scale
+ * (10/14/18) — the extra couple of pixels is what reads as a current app
+ * rather than one from several years ago; card content didn't need to
+ * change to feel it. */
 export const RADIUS = {
-  chip: 10,
-  card: 14,
-  feature: 18,
+  chip: 12,
+  card: 16,
+  feature: 20,
 } as const;
 
 /** the app's recurring text/semantic colors, named once instead of re-typed
  * as bare hex in every screen — see the "restraint" note on cardShadow et al.
- * below for why so few colors carry so much of the UI. */
+ * below for why so few colors carry so much of the UI.
+ *
+ * Each was pulled a little toward gray from its original, more neon-leaning
+ * version — same hue and close to the same lightness (so text contrast on
+ * the dark background is unaffected), just less saturated. A screen full of
+ * fully-saturated red/green/gold against a near-black backdrop is what was
+ * actually making this read as tiring rather than the darkness itself. */
 export const COLORS = {
   textPrimary: "#f0e3c8",
-  textMuted: "#a0917a",
-  accent: "#e8c777",
+  textMuted: "#c9bb9a",
+  accent: "#e1c58c",
   onLight: "#1a1410",
-  positive: "#3fae5c",
-  negative: "#c94b4b",
-  warning: "#e0a13f",
+  positive: "#4ea56a",
+  negative: "#c15c58",
+  warning: "#d1a25c",
+} as const;
+
+// A small cream/wood palette for the handful of surfaces that sit on real
+// parchment/timber art (the header's stat card) rather than the dark theme's
+// own gradient cards — not a second full theme, just the tokens those
+// surfaces need so their colors live here instead of as hex literals.
+export const PARCHMENT = {
+  paper: "#ead9ae",
+  wood: "#6b4426",
+  woodDark: "#3d2415",
+  ink: "#3d2415",
+  inkMuted: "#7a5c3e",
+  negative: "#a33f3a",
 } as const;
 
 /** shared warm gradient stops for the app's dark-brown card background,
@@ -72,25 +124,35 @@ export const COLORS = {
 export const CARD_GRADIENT: [string, string] = ["#332619", "#211a11"];
 /** a warm, muted gold-brown wash for cards that mark something earned */
 export const UNLOCKED_CARD_GRADIENT: [string, string] = ["#4a3a1c", "#26200f"];
-export const GOLD_GRADIENT: [string, string] = ["#ffdf8e", "#e0a637"];
-export const GREEN_GRADIENT: [string, string] = ["#5fd884", "#2a9c53"];
-export const RED_GRADIENT: [string, string] = ["#f0776a", "#c73f3a"];
-export const BLUE_GRADIENT: [string, string] = ["#6fb8f2", "#3a7ecc"];
+// The four gradients below carry the same desaturation as COLORS above —
+// each was the brightest, most saturated version of its hue in the app
+// (a button fill or a "look at this" glow reads best filled edge-to-edge in
+// its own color, unlike text, so these started further from gray than
+// COLORS did) and got pulled back the furthest for it.
+export const GOLD_GRADIENT: [string, string] = ["#f0d494", "#d1a04f"];
+export const GREEN_GRADIENT: [string, string] = ["#80c495", "#448a5d"];
+export const RED_GRADIENT: [string, string] = ["#dd8b7f", "#b0554d"];
+export const BLUE_GRADIENT: [string, string] = ["#84b0d9", "#4f76a3"];
 
 /** the app's base backdrop — a subtle top-to-bottom wash instead of a flat
- * fill, so every screen has a little depth behind its cards */
-export const APP_BACKGROUND_GRADIENT: [string, string] = ["#2a2013", "#140f0a"];
+ * fill, so every screen has a little depth behind its cards. Floor lifted
+ * off near-black (#140f0a) — true black next to the saturated gradients
+ * above is the other half of the harsh-contrast combination that made the
+ * app tiring to look at for long sessions; a dark backdrop doesn't need to
+ * be *that* dark to still read as night. */
+export const APP_BACKGROUND_GRADIENT: [string, string] = ["#271f18", "#1c1710"];
 
 /** the same warm-dark backdrop, lightly retinted per real-world calendar
  * season — a quiet bit of ambient variety that costs nothing in gameplay
  * terms, purely a display-layer choice (not tied to any game state, so it
  * never needs a save-version bump). Each stays close enough to the base
- * gradient that cards and text contrast are unaffected. */
+ * gradient that cards and text contrast are unaffected. Floors lifted the
+ * same way as APP_BACKGROUND_GRADIENT above, for the same reason. */
 const SEASON_BACKGROUND_GRADIENTS: Record<"spring" | "summer" | "autumn" | "winter", [string, string]> = {
-  spring: ["#243318", "#10140b"],
-  summer: ["#332619", "#1a1409"],
+  spring: ["#253420", "#181f14"],
+  summer: ["#302518", "#211a10"],
   autumn: APP_BACKGROUND_GRADIENT,
-  winter: ["#1a2233", "#0c0f16"],
+  winter: ["#1c2531", "#171c24"],
 };
 
 export function seasonalBackgroundGradient(date: Date = new Date()): [string, string] {
@@ -101,23 +163,35 @@ export function seasonalBackgroundGradient(date: Date = new Date()): [string, st
   return SEASON_BACKGROUND_GRADIENTS.winter;
 }
 
-/** a soft lifted-card shadow; RN Web reads shadow*, native reads elevation too */
+/** a soft lifted-card shadow; RN Web reads shadow*, native reads elevation too.
+ *
+ * Wider and lower-opacity than the original (offset 4 / opacity 0.28 /
+ * radius 10) — a shadow that close and that dark reads as a hard-edged drop
+ * shadow, the one detail that most says "a few years old" about a card-heavy
+ * screen. Spreading the same shadow over a larger, softer radius at lower
+ * opacity gives the same sense that a card is lifted off the background
+ * without the dark ring around its edge. */
 export const cardShadow: ViewStyle = {
   shadowColor: "#000",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.28,
-  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.18,
+  shadowRadius: 16,
   elevation: 4,
 };
 
 /** a colored glow shadow for game-y "pop" — pass a good/action's own hue so
- * buttons and highlighted cards feel lit from within rather than flat */
+ * buttons and highlighted cards feel lit from within rather than flat.
+ * Softer than the original (opacity 0.55) for the same reason the palette
+ * above got desaturated: a fully-opaque colored glow next to the app's dark
+ * backdrop is loud on its own, and the app has several of these live on
+ * screen at once (a hot inflation stat, a selected good, a ready prestige
+ * card) — 0.55 each stacked up fast. */
 export function glowShadow(color: string): ViewStyle {
   return {
     shadowColor: color,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 10,
+    shadowOpacity: 0.38,
+    shadowRadius: 9,
     elevation: 6,
   };
 }

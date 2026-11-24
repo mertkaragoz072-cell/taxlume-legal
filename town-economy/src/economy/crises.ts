@@ -16,7 +16,16 @@ import { GoodId } from "./types";
 export interface CrisisTemplate {
   id: string;
   icon: string;
+  /** the disaster itself, used when it lands */
   titleKey: string;
+  /** the sign that precedes it, used while it is still coming.
+   *
+   * A town cannot be told that an earthquake will happen in two days, and
+   * it certainly cannot be told that a workshop will catch fire — that was
+   * the nonsense here. What a town can notice is a foreshock, or a week of
+   * dry wind, or the sound of a crowd in the square. The warning names the
+   * sign; the strike names the disaster. */
+  warningTitleKey: string;
   /** shown on the warning banner: what to do with the days you have */
   adviceKey: string;
   /** goods whose home supply the strike destroys; empty means every good */
@@ -29,16 +38,23 @@ export interface CrisisTemplate {
   /** true when the Earthquake Fund upgrade softens this one — it insures
    * against physical damage to stores, not against unrest or banditry */
   softenedByFund: boolean;
+  /** town rank (see townRankIndex) a crisis needs before it can be rolled
+   * at all — undefined means it's always in the pool, same as rank 0. A
+   * village has never heard of a "trade war"; the problems a town faces
+   * are supposed to change shape as it grows, not just hit harder. */
+  minRank?: number;
 }
 
 const FOOD: GoodId[] = ["bread", "milk", "fish", "cheese", "honey"];
 const CRAFTED: GoodId[] = ["cloth", "leather", "silk", "paper", "glass"];
+const LUXURY: GoodId[] = ["spice", "silk", "jewelry"];
 
 export const CRISIS_TEMPLATES: CrisisTemplate[] = [
   {
     id: "earthquake",
     icon: "🌋",
     titleKey: "crisis.earthquake.title",
+    warningTitleKey: "crisis.earthquake.warningTitle",
     adviceKey: "crisis.earthquake.advice",
     affectedGoods: [],
     supplyLossMin: 0.1,
@@ -50,6 +66,7 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "drought",
     icon: "🌵",
     titleKey: "crisis.drought.title",
+    warningTitleKey: "crisis.drought.warningTitle",
     adviceKey: "crisis.drought.advice",
     affectedGoods: FOOD,
     supplyLossMin: 0.25,
@@ -61,6 +78,7 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "fire",
     icon: "🔥",
     titleKey: "crisis.fire.title",
+    warningTitleKey: "crisis.fire.warningTitle",
     adviceKey: "crisis.fire.advice",
     affectedGoods: CRAFTED,
     supplyLossMin: 0.3,
@@ -72,12 +90,43 @@ export const CRISIS_TEMPLATES: CrisisTemplate[] = [
     id: "unrest",
     icon: "🪧",
     titleKey: "crisis.unrest.title",
+    warningTitleKey: "crisis.unrest.warningTitle",
     adviceKey: "crisis.unrest.advice",
     affectedGoods: [],
     supplyLossMin: 0.05,
     supplyLossMax: 0.12,
     happinessLoss: 18,
     softenedByFund: false,
+  },
+  // The two below only enter the pool once the town is big enough to have
+  // this kind of problem — a trade war or a royal levy isn't a thing a
+  // handful of farmhouses can have. Reaching them is itself a sign the town
+  // has grown into a different, harder game than day one's.
+  {
+    id: "tradeWar",
+    icon: "⚔️",
+    titleKey: "crisis.tradeWar.title",
+    warningTitleKey: "crisis.tradeWar.warningTitle",
+    adviceKey: "crisis.tradeWar.advice",
+    affectedGoods: LUXURY,
+    supplyLossMin: 0.2,
+    supplyLossMax: 0.35,
+    happinessLoss: 8,
+    softenedByFund: false,
+    minRank: 5, // Capital
+  },
+  {
+    id: "royalDecree",
+    icon: "👑",
+    titleKey: "crisis.royalDecree.title",
+    warningTitleKey: "crisis.royalDecree.warningTitle",
+    adviceKey: "crisis.royalDecree.advice",
+    affectedGoods: [],
+    supplyLossMin: 0.08,
+    supplyLossMax: 0.15,
+    happinessLoss: 20,
+    softenedByFund: false,
+    minRank: 7, // Empire
   },
 ];
 
@@ -98,8 +147,12 @@ export const CRISIS_WARNING_DAYS = 2;
  * make one a non-event. */
 export const CRISIS_LOSS_FLOOR = 0.02;
 
-export function rollCrisisTemplate(): CrisisTemplate {
-  return CRISIS_TEMPLATES[Math.floor(Math.random() * CRISIS_TEMPLATES.length)];
+// Defaults to "every rank" rather than requiring a townRankIndex, so a
+// caller that doesn't care about rank-gating (tests, mainly) can still ask
+// for any known crisis without passing one.
+export function rollCrisisTemplate(townRankIndex: number = Number.POSITIVE_INFINITY): CrisisTemplate {
+  const pool = CRISIS_TEMPLATES.filter((c) => (c.minRank ?? 0) <= townRankIndex);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /** Which goods a crisis actually damages — an empty affectedGoods list on the

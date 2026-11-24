@@ -64,7 +64,43 @@ const ACHIEVEMENT_IDS = [
   "skilled_ruler",
   "speculator",
   "hot_hand",
+  "rank_capital",
+  "rank_kingdom",
+  "rank_empire",
+  "rank_goldenAge",
+  "rank_legendaryMarket",
+  "rank_worldPower",
+  "rank_tradeDynasty",
+  "rank_immortalLegend",
+  "trader_200",
+  "trader_1000",
+  "caravan_master_50",
+  "streak_100",
+  "survive_1000",
+  "prestige_5",
+  "researcher_all",
+  "speculator_10",
 ];
+
+// What the seeded town has genuinely not earned: left locked so nothing
+// unlocks the moment the app boots, and so the Goals screen has something
+// to chase.
+const STILL_LOCKED = new Set([
+  "streak_30",
+  "streak_100",
+  "real_estate_mogul",
+  "trader_1000",
+  "prestige_5",
+  "researcher_all",
+  "speculator_10",
+  "rank_kingdom",
+  "rank_empire",
+  "rank_goldenAge",
+  "rank_legendaryMarket",
+  "rank_worldPower",
+  "rank_tradeDynasty",
+  "rank_immortalLegend",
+]);
 
 function assertAchievementsInSync() {
   const source = fs.readFileSync(path.join(ROOT, "src/economy/achievements.ts"), "utf8");
@@ -209,12 +245,15 @@ function seed(base) {
   // Everything the seeded town has already earned. It has to be exhaustive:
   // an achievement whose target the seed meets but whose id is missing here
   // unlocks the moment the app boots, and the celebration lands over the tab
-  // bar. The two left out are genuinely unmet (a 30-day streak, three
+  // bar. The ones left out (STILL_LOCKED) are genuinely unmet (a 30-day streak, three
   // prestige perks), so the Goals screen still shows something to chase.
-  state.unlockedAchievements = ACHIEVEMENT_IDS.filter(
-    (id) => id !== "streak_30" && id !== "real_estate_mogul"
-  );
-  state.streak = { count: 7, lastOpenedDate: state.streak.lastOpenedDate };
+  state.unlockedAchievements = ACHIEVEMENT_IDS.filter((id) => !STILL_LOCKED.has(id));
+  // Yesterday, so this is a returning player and not a first launch. The
+  // daily wheel only opens for someone coming back, and a fixture with no
+  // last-opened date reads as day one — which made the "saved" scenarios
+  // silently skip the wheel they exist to exercise.
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  state.streak = { count: 7, lastOpenedDate: yesterday };
   state.tradeStreak = 4;
 
   // The weekly challenge measures a stat against where it stood when the week
@@ -299,7 +338,7 @@ function seed(base) {
  * duplicated here.
  *
  * The capture boots the app to get a real initialState, and that boot is in
- * the app's default language — so `townName` comes back "Altın Kasaba" no
+ * the app's default language — so `townName` comes back as the default name no
  * matter which language the shot is for. Flipping `state.language` afterwards
  * does not rename the town, and it should not: renaming a player's own town
  * on a language switch would be wrong. The seed has to set it explicitly, or

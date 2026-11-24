@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
+import { Text } from "./AppText";
 import { TICK_MS } from "../economy/useEconomy";
 import { COLORS, FONT, SPACING, TYPE, WEIGHT, withAlpha } from "../theme";
 

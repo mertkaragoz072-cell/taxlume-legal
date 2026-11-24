@@ -5,6 +5,7 @@
  * settlement, random events, and the in-game day roll. Kept in its own module
  * because it is by far the largest single transition in the game. */
 
+import { guildProductionBonus, hallOutputBonus } from "./guildPerks";
 import { ASSETS } from "./assets";
 import { DECISION_TEMPLATES } from "./decisions";
 import { DIFFICULTIES } from "./difficulty";
@@ -12,6 +13,15 @@ import { GOODS, GOODS_BY_ID } from "./goods";
 import { demandPriceMultiplier, demandSupplyDelta, rollDemandCycle } from "./demandCycles";
 import { doctrineModifiers } from "./doctrines";
 import { houseSupplyDelta, rollActivity } from "./tradingHouses";
+import { RIVAL_TRADERS_BY_ID, rivalSupplyDelta, rollRivalActivity } from "./rivals";
+import {
+  BOUNTY_SPAWN_CHANCE,
+  BOUNTY_MAX_ACTIVE,
+  BOUNTY_DURATION_TICKS,
+  BOUNTY_REWARD_BONUS,
+  generateBountyId,
+} from "./bounties";
+import { generateDailyQuotas } from "./productionQuotas";
 import {
   CRISIS_CHANCE,
   CRISIS_TEMPLATES_BY_ID,
@@ -21,6 +31,8 @@ import {
   rollCrisisTemplate,
 } from "./crises";
 import { EVENT_TEMPLATES } from "./events";
+import { MENTOR_DONE } from "./mentor";
+import { makeMerchantOffer, MERCHANT_CHANCE, merchantMayAppear } from "./merchantOffer";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
 import {
   propertyHappinessBonus,
@@ -31,12 +43,19 @@ import { perkProductionBonus, perkTaxHappinessRelief } from "./prestigePerks";
 import { researchMultiplier } from "./research";
 import { rollRivalTraderOffer } from "./rivalTrader";
 import { SEASONAL_EVENT_TEMPLATES, SEASONAL_EVENT_TEMPLATES_BY_ID } from "./seasonalEvents";
+import {
+  FLASH_DEAL_CHANCE,
+  FLASH_DEAL_DURATION_TICKS,
+  FlashDealDirection,
+  flashDealMultiplier,
+} from "./flashDeals";
+import { seasonFromTick, seasonProductionMultiplier } from "./seasons";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
 import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
 import { UPGRADES_BY_ID } from "./upgrades";
 import { rollVillagerRequest } from "./villagerRequests";
-import { t, tPlural } from "../i18n/t";
+import { eventFields } from "../i18n/t";
 import { formatCompactNumber as formatNumberUtil } from "../utils/formatNumber";
 import { BulkContract, Caravan, EconomyEvent, EconomyState, ForwardContract, GoodId } from "./types";
 import {
@@ -66,18 +85,27 @@ import {
   HAPPINESS_EASE,
   HAPPINESS_TARGET_SLOPE,
   HISTORY_LEN,
+  INFLATION_INDEX_FLOOR,
   INFLATION_REVERSION_RATE,
+  INPUT_COST_PASS_THROUGH,
   LOST_TREASURE_CHANCE,
   LOST_TREASURE_MIN_AMOUNT,
   LOST_TREASURE_PCT_OF_CASH,
+  MAX_PRICE_STEP_PCT,
   MINI_QUEST_CHANCE,
+  QUOTA_BANNER_MIN_BONUS,
+  NEWBIE_GRACE_TICKS,
+  MINI_QUEST_FIRST_DELAY_TICKS,
   PRESTIGE_PRODUCTION_BONUS_PER_LEVEL,
+  PRICE_JITTER_PCT,
   PRODUCTION_BONUS_FACTOR,
   PRODUCTION_INFLATION_FACTOR,
   PRODUCTION_NOISE,
   PRODUCTION_PENALTY_FACTOR,
   RIVAL_OFFER_CHANCE,
+  INTERRUPTION_COOLDOWN_TICKS,
   RIVAL_TOWN_GROWTH_JITTER,
+  RIVAL_TOWN_GRACE_DAYS,
   RIVAL_TOWN_GROWTH_RATE,
   SEASONAL_EVENT_CHANCE,
   TICKS_PER_GAME_DAY,
@@ -88,9 +116,14 @@ import {
   clamp,
   computeNetWorth,
   estimateTaxIncomePerTick,
+  gameDayFromTick,
+  inputCostFactor,
   isGoodUnlocked,
   priceFromSupply,
+  productionInputFactor,
   pushCapped,
+  scaledGoalReward,
+  scaledGoalTarget,
   supplyBounds,
 } from "./formulas";
 
@@ -166,6 +199,11 @@ export function tick(state: EconomyState): EconomyState {
   // below need a number from it.
   const doctrineMods = doctrineModifiers(state.doctrine);
 
+  // The season is a function of the clock, not a stored field — see
+  // seasons.ts. Read once here so every good is produced in the same season
+  // even on a tick that happens to straddle the turn of one.
+  const season = seasonFromTick(state.tick);
+
   let nextId = state.nextId;
   const newEvents: EconomyEvent[] = [];
   const supplyShocks: Partial<Record<GoodId, number>> = {};
@@ -185,7 +223,7 @@ export function tick(state: EconomyState): EconomyState {
     }
     newEvents.push({
       id: nextId++,
-      message: t(state.language, template.messageKey),
+      ...eventFields(state.language, template.messageKey),
       tone: template.tone,
     });
   }
@@ -207,9 +245,9 @@ export function tick(state: EconomyState): EconomyState {
       crisisHappinessLoss = template.happinessLoss;
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.crisisStruck", {
+        ...eventFields(state.language, "msg.crisisStruck", {
           icon: template.icon,
-          title: t(state.language, template.titleKey),
+          title: { key: template.titleKey },
           pct: Math.round(lossPct * 100),
         }),
         tone: "bad",
@@ -217,8 +255,9 @@ export function tick(state: EconomyState): EconomyState {
     }
     pendingCrisis = null;
   }
-  if (!pendingCrisis && Math.random() < CRISIS_CHANCE) {
-    const template = rollCrisisTemplate();
+  const settling = state.tick < NEWBIE_GRACE_TICKS;
+  if (!pendingCrisis && !settling && Math.random() < CRISIS_CHANCE) {
+    const template = rollCrisisTemplate(state.townRankIndex);
     pendingCrisis = {
       id: nextId,
       templateId: template.id,
@@ -227,81 +266,141 @@ export function tick(state: EconomyState): EconomyState {
     };
     newEvents.push({
       id: nextId++,
-      message: tPlural(state.language, "msg.crisisWarned", CRISIS_WARNING_DAYS, {
-        icon: template.icon,
-        title: t(state.language, template.titleKey),
-        days: CRISIS_WARNING_DAYS,
-      }),
+      // tPlural just picks between a key and its `One` sibling before
+      // resolving — replicated here so the *resolved* key (already the
+      // right one for this count) is what gets saved for later
+      // re-resolution, rather than needing eventFields to know about
+      // pluralization too. Widened to `number` first: CRISIS_WARNING_DAYS
+      // is a fixed constant (currently 2), so comparing its literal type to
+      // 1 directly is a always-false comparison TS rightly flags — this
+      // stays correct if that constant is ever changed to 1.
+      ...eventFields(
+        state.language,
+        (CRISIS_WARNING_DAYS as number) === 1 ? "msg.crisisWarnedOne" : "msg.crisisWarned",
+        {
+          icon: template.icon,
+          // The sign the town can actually see, and separately the thing it
+          // portends — a fire cannot be scheduled, but dry winds can be felt.
+          warning: { key: template.warningTitleKey },
+          event: { key: template.titleKey },
+          days: CRISIS_WARNING_DAYS,
+        }
+      ),
       tone: "bad",
     });
   }
 
+  // One clock for all three blocking modals. Rolled independently they used
+  // to cluster, and a cluster is what the player experiences as "these keep
+  // coming" — answering one only to meet the next is worse than either on
+  // its own. Whichever fires first stamps this, and the other two stay
+  // quiet until the cooldown is up.
+  let lastInterruptionTick = state.lastInterruptionTick;
+  const interruptionReady = !settling && state.tick - lastInterruptionTick >= INTERRUPTION_COOLDOWN_TICKS;
+
   let pendingDecision: EconomyState["pendingDecision"] = state.pendingDecision;
-  if (!pendingDecision && Math.random() < DECISION_EVENT_CHANCE) {
+  if (!pendingDecision && interruptionReady && Math.random() < DECISION_EVENT_CHANCE) {
+    lastInterruptionTick = state.tick + 1;
     const template = DECISION_TEMPLATES[Math.floor(Math.random() * DECISION_TEMPLATES.length)];
     pendingDecision = { id: nextId, templateId: template.id, triggeredAtTick: state.tick + 1 };
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.decisionPending", { title: t(state.language, template.titleKey) }),
+      ...eventFields(state.language, "msg.decisionPending", { title: { key: template.titleKey } }),
       tone: "neutral",
     });
   }
 
   let pendingRequest: EconomyState["pendingRequest"] = state.pendingRequest;
-  if (!pendingDecision && !pendingRequest && Math.random() < VILLAGER_REQUEST_CHANCE) {
-    const { goodId, qty } = rollVillagerRequest();
+  if (!pendingDecision && !pendingRequest && interruptionReady && Math.random() < VILLAGER_REQUEST_CHANCE) {
+    lastInterruptionTick = state.tick + 1;
+    const { goodId, qty } = rollVillagerRequest(state);
     pendingRequest = { id: nextId, goodId, qty, triggeredAtTick: state.tick + 1 };
     const good = GOODS_BY_ID[goodId];
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.villagerRequestPending", {
+      ...eventFields(state.language, "msg.villagerRequestPending", {
         qty,
-        good: t(state.language, good.nameKey),
+        good: { key: good.nameKey },
       }),
       tone: "neutral",
     });
   }
 
   let pendingRivalOffer: EconomyState["pendingRivalOffer"] = state.pendingRivalOffer;
-  if (!pendingDecision && !pendingRequest && !pendingRivalOffer && Math.random() < RIVAL_OFFER_CHANCE) {
-    const { goodId, qty, pricePerUnit } = rollRivalTraderOffer(state);
-    pendingRivalOffer = { id: nextId, goodId, qty, pricePerUnit, triggeredAtTick: state.tick + 1 };
-    const good = GOODS_BY_ID[goodId];
-    newEvents.push({
-      id: nextId++,
-      message: t(state.language, "msg.rivalOfferPending", {
-        qty,
-        good: t(state.language, good.nameKey),
-      }),
-      tone: "neutral",
-    });
+  if (
+    !pendingDecision &&
+    !pendingRequest &&
+    !pendingRivalOffer &&
+    interruptionReady &&
+    Math.random() < RIVAL_OFFER_CHANCE
+  ) {
+    // null when the warehouse has nothing a wholesaler would come for, in
+    // which case no trader calls at all — see rollRivalTraderOffer.
+    const offer = rollRivalTraderOffer(state);
+    if (offer) {
+      lastInterruptionTick = state.tick + 1;
+      const { goodId, qty, pricePerUnit } = offer;
+      pendingRivalOffer = { id: nextId, goodId, qty, pricePerUnit, triggeredAtTick: state.tick + 1 };
+      const good = GOODS_BY_ID[goodId];
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(state.language, "msg.rivalOfferPending", {
+          qty,
+          good: { key: good.nameKey },
+        }),
+        tone: "neutral",
+      });
+    }
   }
 
   // Mini quests run passively alongside everything else, so they don't
   // check pendingDecision/pendingRequest — only that none is already active.
   let activeMiniQuest: EconomyState["activeMiniQuest"] = state.activeMiniQuest;
-  if (!activeMiniQuest && Math.random() < MINI_QUEST_CHANCE) {
-    const candidates = MINI_QUEST_TEMPLATES.filter((tpl) => !tpl.requiresTrade || state.tradeUnlocked);
+  // Never while something else is asking for the player's attention (a
+  // decision, a villager, a rival's offer, the tutorial), only after the
+  // breather that follows the last one, and never the same one twice in a row.
+  const nothingWaiting =
+    !pendingDecision && !pendingRequest && !pendingRivalOffer && state.mentorStep >= MENTOR_DONE;
+  const quietForQuest =
+    nothingWaiting && state.tick + 1 >= (state.miniQuestCooldownTick ?? MINI_QUEST_FIRST_DELAY_TICKS);
+  if (!activeMiniQuest && quietForQuest && Math.random() < MINI_QUEST_CHANCE) {
+    const candidates = MINI_QUEST_TEMPLATES.filter(
+      (tpl) => (!tpl.requiresTrade || state.tradeUnlocked) && tpl.id !== state.lastMiniQuestId
+    );
     if (candidates.length > 0) {
       const template = candidates[Math.floor(Math.random() * candidates.length)];
       activeMiniQuest = {
         id: nextId,
         templateId: template.id,
-        target: template.target,
-        reward: template.reward,
+        target: scaledGoalTarget(template.target, state.townRankIndex),
+        reward: scaledGoalReward(template.reward, state.townRankIndex),
         triggeredAtTick: state.tick + 1,
         expiresAtTick: state.tick + 1 + template.durationTicks,
         baseline: template.metric(state.dailyProgress),
       };
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.miniQuestPending", {
+        ...eventFields(state.language, "msg.miniQuestPending", {
           icon: template.icon,
-          title: t(state.language, template.titleKey),
+          title: { key: template.titleKey },
         }),
         tone: "neutral",
       });
     }
+  }
+
+  // The travelling merchant: an optional gift for watching an ad. Same quiet
+  // rules as a flash quest (nothing waiting on the player, tutorial over), and
+  // a long breather between visits.
+  let merchantOffer = state.merchantOffer ?? null;
+  const merchantCooldownTick = state.merchantCooldownTick;
+  if (
+    !merchantOffer &&
+    nothingWaiting &&
+    merchantMayAppear({ ...state, merchantOffer, merchantCooldownTick }) &&
+    Math.random() < MERCHANT_CHANCE
+  ) {
+    merchantOffer = makeMerchantOffer(state, nextId++);
   }
 
   // The demand cycle rolls over on its own fixed schedule (unlike the random
@@ -317,7 +416,7 @@ export function tick(state: EconomyState): EconomyState {
     nextDemandCycle = rollDemandCycle(demandCycle.endTick, TICKS_PER_GAME_DAY, eligible);
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.demandCycleStarted", {
+      ...eventFields(state.language, "msg.demandCycleStarted", {
         hot: demandCycle.hotGoodIds.map((id) => GOODS_BY_ID[id].icon).join(" "),
         glut: GOODS_BY_ID[demandCycle.gluttedGoodId].icon,
       }),
@@ -334,9 +433,9 @@ export function tick(state: EconomyState): EconomyState {
     if (endedTemplate) {
       newEvents.push({
         id: nextId++,
-        message: t(state.language, "msg.seasonalEventEnded", {
+        ...eventFields(state.language, "msg.seasonalEventEnded", {
           icon: endedTemplate.icon,
-          title: t(state.language, endedTemplate.titleKey),
+          title: { key: endedTemplate.titleKey },
         }),
         tone: "neutral",
       });
@@ -353,12 +452,51 @@ export function tick(state: EconomyState): EconomyState {
     };
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.seasonalEventStarted", {
+      ...eventFields(state.language, "msg.seasonalEventStarted", {
         icon: template.icon,
-        title: t(state.language, template.titleKey),
+        title: { key: template.titleKey },
       }),
       tone: "good",
     });
+  }
+
+  // Flash deals run purely on ticks, same reasoning as seasonal events above
+  // — no player action starts, extends, or interrupts one.
+  let activeFlashDeal: EconomyState["activeFlashDeal"] = state.activeFlashDeal;
+  if (activeFlashDeal && state.tick + 1 >= activeFlashDeal.expiresAtTick) {
+    const endedGood = GOODS_BY_ID[activeFlashDeal.goodId];
+    newEvents.push({
+      id: nextId++,
+      ...eventFields(state.language, "msg.flashDealEnded", {
+        good: { key: endedGood.nameKey },
+      }),
+      tone: "neutral",
+    });
+    activeFlashDeal = null;
+  }
+  if (!activeFlashDeal && !settling && Math.random() < FLASH_DEAL_CHANCE) {
+    const eligible = GOODS.filter((g) => isGoodUnlocked(g, state));
+    if (eligible.length > 0) {
+      const good = eligible[Math.floor(Math.random() * eligible.length)];
+      const direction: FlashDealDirection = Math.random() < 0.5 ? "crash" : "spike";
+      activeFlashDeal = {
+        id: nextId,
+        goodId: good.id,
+        direction,
+        triggeredAtTick: state.tick + 1,
+        expiresAtTick: state.tick + 1 + FLASH_DEAL_DURATION_TICKS,
+      };
+      const pct = Math.round(Math.abs(1 - flashDealMultiplier(direction)) * 100);
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(
+          state.language,
+          direction === "crash" ? "msg.flashDealStartedCrash" : "msg.flashDealStartedSpike",
+          { icon: good.icon, good: { key: good.nameKey }, pct }
+        ),
+        tone: "good",
+      });
+    }
   }
 
   let taxCashDelta = estimateTaxIncomePerTick({ ...state, happiness }) * doctrineMods.taxIncomeMult;
@@ -367,7 +505,7 @@ export function tick(state: EconomyState): EconomyState {
     taxCashDelta -= penalty;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.angryUprising", {
+      ...eventFields(state.language, "msg.angryUprising", {
         amount: formatNumberUtil(penalty, state.language),
       }),
       tone: "bad",
@@ -376,12 +514,19 @@ export function tick(state: EconomyState): EconomyState {
     taxCashDelta += CONTENT_CASH_BONUS;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.contentDonation", { amount: CONTENT_CASH_BONUS }),
+      ...eventFields(state.language, "msg.contentDonation", { amount: CONTENT_CASH_BONUS }),
       tone: "good",
     });
   }
 
-  const inflationIndex = state.inflationIndex * (1 + inflationRate);
+  // inflationRate is bounded and mean-reverting (see the comment where
+  // inflationTarget is computed above), but the index is that rate's
+  // running PRODUCT — a sustained-happy town sits at a negative target
+  // indefinitely, and compounding even a mild, stable negative rate for
+  // long enough decays the index toward zero with no way back, dragging
+  // every good's price down through priceFromSupply's inflationIndex/100
+  // term. See INFLATION_INDEX_FLOOR.
+  const inflationIndex = Math.max(INFLATION_INDEX_FLOOR, state.inflationIndex * (1 + inflationRate));
   const inflationHistory = pushCapped(state.inflationHistory, inflationIndex, HISTORY_LEN);
 
   // Permanent, run-independent bonus from past prestiges (see PRESTIGE).
@@ -392,7 +537,10 @@ export function tick(state: EconomyState): EconomyState {
     // Every town rank ever reached (see townRanks.ts) adds a small sliver
     // too — sticky like prestige, but earned within a single run instead
     // of requiring a reset, so there's always a next rank worth chasing.
-    state.townRankIndex * TOWN_RANK_PRODUCTION_BONUS_PER_RANK;
+    state.townRankIndex * TOWN_RANK_PRODUCTION_BONUS_PER_RANK +
+    // A leveled guild adds a little more (see guildPerks.ts).
+    guildProductionBonus(state.guildLevel) +
+    hallOutputBonus(state.guildProjects);
   const seasonalTemplate = activeSeasonalEvent
     ? SEASONAL_EVENT_TEMPLATES_BY_ID[activeSeasonalEvent.templateId]
     : null;
@@ -417,12 +565,13 @@ export function tick(state: EconomyState): EconomyState {
   if (laidOff > 0) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.workersLaidOff", { count: laidOff }),
+      ...eventFields(state.language, "msg.workersLaidOff", { count: laidOff }),
       tone: "bad",
     });
   }
 
   const goods = { ...state.goods };
+  let productionToday = { ...state.productionToday };
   for (const good of GOODS) {
     const gs = goods[good.id];
     const { min: minSupply, max: maxSupply } = supplyBounds(good);
@@ -432,6 +581,10 @@ export function tick(state: EconomyState): EconomyState {
     const seasonalMult =
       seasonalTemplate && seasonalTemplate.affectedGoods.includes(good.id)
         ? seasonalTemplate.priceMultiplier
+        : 1;
+    const flashMult =
+      activeFlashDeal && activeFlashDeal.goodId === good.id
+        ? flashDealMultiplier(activeFlashDeal.direction)
         : 1;
     // A demand cycle bites twice: once directly on the price, and once through
     // supply below, which the scarcity curve then prices in again. Neither half
@@ -448,8 +601,24 @@ export function tick(state: EconomyState): EconomyState {
       prestigeProductionMult *
       workerProductionMult *
       propertyProductionMult *
-      doctrineProductionMult;
-    let supply = gs.supply + (production - good.baseProduction) + demandSupplyDelta(demandCycle, good);
+      doctrineProductionMult *
+      seasonProductionMultiplier(season, good.id) *
+      // What it is made from, if anything: a workshop short of its raw
+      // material cannot make its quota however happy the town is. Read off
+      // last tick's shelves, which is what gives the chain its lag — the
+      // shortage upstream shows up downstream a day or two later, and that
+      // gap is the whole trade.
+      productionInputFactor(
+        good,
+        (id) => state.goods[id].supply,
+        (id) => GOODS_BY_ID[id].baseSupply
+      );
+    productionToday[good.id] = (productionToday[good.id] ?? 0) + production;
+    let supply =
+      gs.supply +
+      (production - good.baseProduction) +
+      demandSupplyDelta(demandCycle, good) +
+      rivalSupplyDelta(state.rivalActivities, good.id, good.baseProduction, RIVAL_TRADERS_BY_ID);
     const shockPct = supplyShocks[good.id];
     if (shockPct) supply *= 1 + shockPct;
     supply = clamp(supply, minSupply, maxSupply);
@@ -458,15 +627,34 @@ export function tick(state: EconomyState): EconomyState {
       -DEMAND_PRESSURE_MAX,
       DEMAND_PRESSURE_MAX
     );
-    const price =
+    const priceJitter = 1 + (Math.random() - 0.5) * 2 * PRICE_JITTER_PCT;
+    // What grain, wool, milk, wood, iron and sand cost feeds straight into
+    // what's made from them — read off last tick's prices for the same
+    // reason productionInputFactor reads off last tick's supply above: it's
+    // the one order every good in the loop can agree on regardless of where
+    // either one falls in GOODS.
+    const costFactor = inputCostFactor(
+      good,
+      (id) => state.goods[id].price,
+      (id) => GOODS_BY_ID[id].basePrice
+    );
+    const inputCostMult = 1 + INPUT_COST_PASS_THROUGH * (costFactor - 1);
+    const rawPrice =
       priceFromSupply(
-        good.basePrice * researchedValueMult * seasonalMult * demandMult,
+        good.basePrice * researchedValueMult * seasonalMult * flashMult * demandMult * inputCostMult,
         good.baseSupply,
         good.elasticity,
         supply,
         inflationIndex
       ) *
-      (1 + demandPressure);
+      (1 + demandPressure) *
+      priceJitter;
+    // scarcityFactor is a power curve, so a noisy tick landing while supply
+    // already sits far from baseSupply gets exponentiated into a jarring
+    // one-tick jump. Stepping toward rawPrice instead of jumping to it keeps
+    // the market constantly moving (the noise above still pushes every
+    // tick) without any single tick reading as a spike or a bug.
+    const price = clamp(rawPrice, gs.price * (1 - MAX_PRICE_STEP_PCT), gs.price * (1 + MAX_PRICE_STEP_PCT));
 
     goods[good.id] = {
       ...gs,
@@ -485,6 +673,14 @@ export function tick(state: EconomyState): EconomyState {
   const tradingHouses = state.tradingHouses.map((a) =>
     state.tick + 1 >= a.untilTick
       ? rollActivity(a.houseId, state.tick + 1, TICKS_PER_GAME_DAY, allTownIds, eligibleGoodIds)
+      : a
+  );
+
+  // Rivals also work on rotating goods, but they're on your home market
+  // instead of foreign markets. When they move on, roll new activities.
+  const rivalActivities = state.rivalActivities.map((a) =>
+    state.tick + 1 >= a.untilTick
+      ? rollRivalActivity(a.rivalId, state.tick + 1, TICKS_PER_GAME_DAY, eligibleGoodIds)
       : a
   );
 
@@ -565,11 +761,11 @@ export function tick(state: EconomyState): EconomyState {
       dailyCashEarned += deliveredAmount;
       newEvents.push({
         id: nextId++,
-        message: t(state.language, wasRaided ? "msg.caravanRaidedExport" : "msg.caravanReturnedExport", {
-          town: t(state.language, town.nameKey),
+        ...eventFields(state.language, wasRaided ? "msg.caravanRaidedExport" : "msg.caravanReturnedExport", {
+          town: { key: town.nameKey },
           amount: formatNumberUtil(deliveredAmount, state.language),
           qty: caravan.qty,
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
         }),
         tone: wasRaided ? "bad" : "good",
       });
@@ -578,10 +774,10 @@ export function tick(state: EconomyState): EconomyState {
       goods[caravan.goodId] = { ...gs, holding: gs.holding + deliveredAmount };
       newEvents.push({
         id: nextId++,
-        message: t(state.language, wasRaided ? "msg.caravanRaidedImport" : "msg.caravanReturnedImport", {
-          town: t(state.language, town.nameKey),
+        ...eventFields(state.language, wasRaided ? "msg.caravanRaidedImport" : "msg.caravanReturnedImport", {
+          town: { key: town.nameKey },
           qty: Math.round(deliveredAmount),
-          good: t(state.language, good.nameKey),
+          good: { key: good.nameKey },
         }),
         tone: wasRaided ? "bad" : "good",
       });
@@ -594,7 +790,7 @@ export function tick(state: EconomyState): EconomyState {
     dailyCashEarned += treasureAmount;
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.lostTreasureFound", {
+      ...eventFields(state.language, "msg.lostTreasureFound", {
         amount: formatNumberUtil(treasureAmount, state.language),
       }),
       tone: "good",
@@ -621,8 +817,8 @@ export function tick(state: EconomyState): EconomyState {
     const contractGood = GOODS_BY_ID[contract.goodId];
     newEvents.push({
       id: nextId++,
-      message: t(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
-        good: t(state.language, contractGood.nameKey),
+      ...eventFields(state.language, payoff >= 0 ? "msg.contractProfit" : "msg.contractLoss", {
+        good: { key: contractGood.nameKey },
         amount: formatNumberUtil(Math.abs(payoff), state.language),
       }),
       tone: payoff >= 0 ? "good" : "bad",
@@ -641,9 +837,9 @@ export function tick(state: EconomyState): EconomyState {
     const contractGood = GOODS_BY_ID[contract.goodId];
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.bulkContractDelivered", {
+      ...eventFields(state.language, "msg.bulkContractDelivered", {
         qty: contract.qty,
-        good: t(state.language, contractGood.nameKey),
+        good: { key: contractGood.nameKey },
         amount: formatNumberUtil(payout, state.language),
       }),
       tone: "good",
@@ -654,7 +850,7 @@ export function tick(state: EconomyState): EconomyState {
   if (gameOver && !state.gameOver) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.hyperinflationGameOver"),
+      ...eventFields(state.language, "msg.hyperinflationGameOver"),
       tone: "bad",
     });
   }
@@ -670,7 +866,7 @@ export function tick(state: EconomyState): EconomyState {
   if (beatPersonalRecord) {
     newEvents.push({
       id: nextId++,
-      message: t(state.language, "msg.newNetWorthRecord", {
+      ...eventFields(state.language, "msg.newNetWorthRecord", {
         amount: formatNumberUtil(netWorthNow, state.language),
       }),
       tone: "good",
@@ -680,10 +876,14 @@ export function tick(state: EconomyState): EconomyState {
   const rivalNetWorth =
     state.rivalNetWorth * (1 + RIVAL_TOWN_GROWTH_RATE + (Math.random() - 0.5) * RIVAL_TOWN_GROWTH_JITTER);
   const rivalCurrentlyAhead = rivalNetWorth > netWorthNow;
-  if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead) {
+  // The flag tracks the truth either way — only the announcement waits, so
+  // a player past the grace period is not told about a lead change that
+  // happened while they were still finding the buy button.
+  const announceRival = !rivalCurrentlyAhead || gameDayFromTick(state.tick) > RIVAL_TOWN_GRACE_DAYS;
+  if (rivalCurrentlyAhead !== state.rivalCurrentlyAhead && announceRival) {
     newEvents.push({
       id: nextId++,
-      message: t(
+      ...eventFields(
         state.language,
         rivalCurrentlyAhead ? "msg.rivalTownOvertookYou" : "msg.rivalTownOvertaken",
         {
@@ -694,7 +894,83 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
-  const lastEvent = newEvents.length > 0 ? newEvents[newEvents.length - 1] : state.lastEvent;
+  // Bounty system: filter expired, spawn new ones
+  const activeBounties = state.activeBounties.filter((b) => b.expiresAt > nextTick);
+  if (activeBounties.length < BOUNTY_MAX_ACTIVE && Math.random() < BOUNTY_SPAWN_CHANCE) {
+    const rivalId =
+      Object.keys(RIVAL_TRADERS_BY_ID)[Math.floor(Math.random() * Object.keys(RIVAL_TRADERS_BY_ID).length)];
+    const goodId = GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id)[
+      Math.floor(Math.random() * GOODS.filter((g) => isGoodUnlocked(g, state)).map((g) => g.id).length)
+    ];
+    const good = GOODS_BY_ID[goodId];
+    const side = Math.random() < 0.5 ? "buying" : "selling";
+    const quantity = Math.round(good.baseProduction * (2 + Math.random() * 2));
+    const priceMultiplier = 1 + (side === "buying" ? -0.2 : 0.2);
+    const reward = scaledGoalReward(
+      Math.round(quantity * good.basePrice * priceMultiplier * BOUNTY_REWARD_BONUS),
+      state.townRankIndex
+    );
+    activeBounties.push({
+      id: generateBountyId(),
+      rivalId,
+      goodId,
+      side,
+      quantity,
+      priceMultiplier,
+      reward,
+      expiresAt: nextTick + BOUNTY_DURATION_TICKS,
+      fulfilled: 0,
+    });
+    newEvents.push({
+      id: nextId++,
+      ...eventFields(state.language, "msg.bountyAppeared", {
+        rivalName: { key: RIVAL_TRADERS_BY_ID[rivalId]?.nameKey || "rival.unknown" },
+        good: { key: good.nameKey },
+        side: { key: side === "buying" ? "bounty.buying" : "bounty.selling" },
+        qty: quantity,
+        reward: formatNumberUtil(reward, state.language),
+      }),
+      tone: "good",
+    });
+  }
+
+  // Production quota system: check if day just changed
+  const currentDay = gameDayFromTick(nextTick);
+  const previousDay = gameDayFromTick(state.tick);
+  let productionQuotas = state.productionQuotas;
+  if (currentDay > previousDay) {
+    productionQuotas = generateDailyQuotas();
+    productionToday = Object.fromEntries(GOODS.map((g) => [g.id, 0])) as Record<GoodId, number>;
+  }
+
+  // Award bonuses for completed quotas
+  let quotaBonusCash = 0;
+  const quietEventIds = new Set<number>();
+  for (const quota of state.productionQuotas) {
+    // Only for goods the town can actually trade: a "Paper target reached" bonus
+    // on day one, for a good that is still behind a locked door, means nothing
+    // to the player and reads as a mistake.
+    if (!isGoodUnlocked(GOODS_BY_ID[quota.goodId], state)) continue;
+    const produced = productionToday[quota.goodId] ?? 0;
+    if (produced >= quota.target && state.productionToday[quota.goodId] < quota.target) {
+      quotaBonusCash += quota.bonus;
+      // A few coins for one good is bookkeeping, not news: it goes in the
+      // event log but does not pop a banner over the screen (fourteen goods
+      // used to mean fourteen banners a day).
+      if (quota.bonus < QUOTA_BANNER_MIN_BONUS) quietEventIds.add(nextId);
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(state.language, "msg.quotaMet", {
+          good: { key: GOODS_BY_ID[quota.goodId].nameKey },
+          bonus: formatNumberUtil(quota.bonus, state.language),
+        }),
+        tone: "good",
+      });
+    }
+  }
+
+  const loud = newEvents.filter((e) => !quietEventIds.has(e.id));
+  const lastEvent = loud.length > 0 ? loud[loud.length - 1] : state.lastEvent;
   const eventLog =
     newEvents.length > 0
       ? [...newEvents].reverse().concat(state.eventLog).slice(0, EVENT_LOG_CAP)
@@ -712,7 +988,10 @@ export function tick(state: EconomyState): EconomyState {
     caravans: stillTraveling,
     contracts: stillOpenContracts,
     bulkContracts: stillOpenBulkContracts,
-    cash,
+    cash: cash + quotaBonusCash,
+    activeBounties,
+    productionQuotas,
+    productionToday,
     // A crisis knocks the villagers' mood down on the tick it lands, on top
     // of the supply damage; it eases back up from there at the usual rate.
     happiness: clamp(happiness - crisisHappinessLoss, 0, 100),
@@ -726,13 +1005,18 @@ export function tick(state: EconomyState): EconomyState {
     pendingDecision,
     pendingRequest,
     pendingRivalOffer,
+    lastInterruptionTick,
     activeMiniQuest,
+    merchantOffer,
+    merchantCooldownTick,
     activeSeasonalEvent,
+    activeFlashDeal,
     demandCycle,
     nextDemandCycle,
     pendingCrisis,
     doctrine: state.doctrine,
     tradingHouses,
+    rivalActivities,
     loan,
     workers,
     bestNetWorthEver: Math.max(state.bestNetWorthEver, netWorthNow),

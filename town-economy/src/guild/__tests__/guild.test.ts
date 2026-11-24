@@ -1,0 +1,397 @@
+import { isGuildCode, normalizeGuildCode, validateGuildName } from "../guildName";
+import { createMockGuildApi, KeyValueStore, MOCK_DEMO_CODE } from "../mockApi";
+import { guildProductionBonus } from "../../economy/guildPerks";
+import { GUILD_BADGES } from "../badges";
+import { caravanPayout, guildRewardFor } from "../reward";
+import { GuildError, goalTargetFor, guildLevel, streakMultiplier, weekStartOf } from "../types";
+
+function memoryStore(): KeyValueStore {
+  const m = new Map<string, string>();
+  return {
+    getItem: async (k) => m.get(k) ?? null,
+    setItem: async (k, v) => void m.set(k, v),
+    removeItem: async (k) => void m.delete(k),
+  };
+}
+
+const MONDAY = Date.UTC(2026, 10, 16, 12); // a Monday at noon UTC
+const DAY = 86_400_000;
+
+describe("guild names and codes", () => {
+  it("accepts ordinary names and rejects bad ones", () => {
+    expect(validateGuildName("Altın Tüccarlar")).toBe(true);
+    expect(validateGuildName("ab")).toBe(false);
+    expect(validateGuildName("x".repeat(21))).toBe(false);
+    expect(validateGuildName("Lonca <3 !!")).toBe(false);
+    expect(validateGuildName("fuck guild")).toBe(false);
+    expect(validateGuildName("Sik Kardeşler")).toBe(false);
+    expect(validateGuildName("Musiki Loncası")).toBe(true);
+    expect(validateGuildName("Gotham Capital")).toBe(true);
+  });
+
+  it("normalises invite codes", () => {
+    expect(normalizeGuildCode(" demo-42x ")).toBe("DEMO42");
+    expect(isGuildCode("demo42")).toBe(true);
+    expect(isGuildCode("demo")).toBe(false);
+  });
+});
+
+describe("guild maths", () => {
+  it("scales the goal with members and levels with total trades", () => {
+    expect(goalTargetFor(1)).toBe(120);
+    expect(goalTargetFor(5)).toBe(600);
+    expect(guildLevel(0)).toBe(1);
+    expect(guildLevel(60)).toBe(2);
+    expect(guildLevel(100000)).toBeGreaterThan(guildLevel(1000));
+  });
+
+  it("weeks start on Monday 00:00 UTC", () => {
+    const start = weekStartOf(MONDAY + 3 * DAY);
+    expect(new Date(start).getUTCDay()).toBe(1);
+    expect(start).toBe(Date.UTC(2026, 10, 16));
+    expect(weekStartOf(start - 1)).toBe(start - 7 * DAY);
+  });
+
+  it("pays more at higher ranks", () => {
+    expect(guildRewardFor(5)).toBeGreaterThan(guildRewardFor(1));
+  });
+});
+
+describe("mock guild backend", () => {
+  it("creates a guild with you as the only member", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    expect(await api.getMyGuild()).toBeNull();
+    const g = await api.createGuild("Dostlar");
+    expect(g.memberCount).toBe(1);
+    expect(g.members[0].isYou && g.members[0].isOwner).toBe(true);
+    expect(g.goalTarget).toBe(120);
+    await expect(api.createGuild("Baska")).rejects.toMatchObject({ code: "already_in_guild" });
+  });
+
+  it("rejects bad names and unknown codes", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await expect(api.createGuild("ab")).rejects.toBeInstanceOf(GuildError);
+    await expect(api.joinGuild("ZZZZZZ")).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("joins the demo guild, counts your trades and pays the chest once", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    expect(g.memberCount).toBe(5);
+    expect(g.goalTarget).toBe(600);
+    expect(await api.claimWeeklyReward()).toBe(false); // goal not reached yet
+
+    await api.reportContribution(400);
+    const after = await api.getMyGuild();
+    expect(after!.goalProgress).toBeGreaterThanOrEqual(600);
+    expect(after!.members.find((m) => m.isYou)!.weekContribution).toBe(400);
+
+    expect(await api.claimWeeklyReward()).toBe(true);
+    expect(await api.claimWeeklyReward()).toBe(false); // only once
+    expect((await api.getMyGuild())!.rewardClaimed).toBe(true);
+
+    now += 7 * DAY; // a new week starts with a fresh goal and a fresh chest
+    const next = await api.getMyGuild();
+    expect(next!.rewardClaimed).toBe(false);
+    expect(next!.members.find((m) => m.isYou)!.weekContribution).toBe(0);
+  });
+
+  it("records cheers and lets you leave", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.sendCheer("b1", "🎉");
+    const g = await api.getMyGuild();
+    expect(g!.cheers[0]).toMatchObject({ emote: "🎉", toYou: false });
+    await api.leaveGuild();
+    expect(await api.getMyGuild()).toBeNull();
+    await expect(api.leaveGuild()).rejects.toMatchObject({ code: "not_in_guild" });
+  });
+
+  it("only accepts a report from a guild member", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await expect(api.reportGuild("other")).rejects.toMatchObject({ code: "not_in_guild" });
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await expect(api.reportGuild("member_name")).resolves.toBeUndefined();
+  });
+
+  it("keeps your profile current in the member list", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.syncProfile({ displayName: "Kasaba X", rankIndex: 3, netWorth: 12345 });
+    const me = (await api.getMyGuild())!.members.find((m) => m.isYou)!;
+    expect(me).toMatchObject({ name: "Kasaba X", rankIndex: 3, netWorth: 12345 });
+  });
+});
+
+describe("guild trade (mock backend)", () => {
+  it("shows a weekly order the guild fills together, capped at its target", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    expect(g.order.target).toBe(200); // 40 per member, 5 members
+    expect(g.order.progress).toBe(21);
+    expect(await api.claimOrderReward()).toBe(false); // not complete
+    expect(await api.donateToOrder(50)).toBe(50);
+    expect(await api.donateToOrder(500)).toBe(200 - 21 - 50); // never past what it needs
+    expect(await api.donateToOrder(10)).toBe(0);
+    const done = await api.getMyGuild();
+    expect(done!.order.progress).toBe(200);
+    expect(done!.order.myDonated).toBe(179);
+    expect(await api.claimOrderReward()).toBe(true);
+    expect(await api.claimOrderReward()).toBe(false);
+  });
+
+  it("only pays the order chest to someone who gave something", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    now += 6 * DAY; // the guild's computer players keep chipping in
+    for (let i = 0; i < 3; i++) {
+      now += 1000;
+      await api.getMyGuild();
+    }
+    await api.donateToOrder(0);
+    // nobody can claim without giving
+    expect(await api.claimOrderReward()).toBe(false);
+  });
+
+  it("lets you ask for a good, once at a time, and cancel", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.createRequest("grain", 10);
+    await expect(api.createRequest("wool", 5)).rejects.toMatchObject({ code: "request_open" });
+    await expect(api.createRequest("diamond", 5)).rejects.toMatchObject({ code: "request_invalid" });
+    const mine = (await api.getMyGuild())!.requests.find((r) => r.isMine)!;
+    expect(mine).toMatchObject({ goodId: "grain", qty: 10, filled: 0 });
+    await api.cancelRequest();
+    expect((await api.getMyGuild())!.requests.some((r) => r.isMine)).toBe(false);
+    await api.createRequest("wool", 5); // a new one is allowed again
+  });
+
+  it("sends goods to a friend's request and refuses your own", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    const theirs = g.requests.find((r) => !r.isMine)!;
+    const need = theirs.qty - theirs.filled;
+    expect(await api.fulfillRequest(theirs.id, 1000)).toBe(need); // at most what is still needed
+    await expect(api.fulfillRequest(theirs.id, 1)).rejects.toMatchObject({ code: "request_gone" });
+    const me = (await api.getMyGuild())!.members.find((m) => m.isYou)!;
+    expect(me.gifted).toBe(need);
+    await api.createRequest("sand", 5);
+    const own = (await api.getMyGuild())!.requests.find((r) => r.isMine)!;
+    await expect(api.fulfillRequest(own.id, 1)).rejects.toMatchObject({ code: "own_request" });
+  });
+
+  it("delivers goods friends sent, as many whole deliveries as fit", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.createRequest("grain", 10);
+    expect(await api.claimDeliveries(100)).toEqual([]); // nobody has answered yet
+    now += 25_000;
+    const first = await api.claimDeliveries(100);
+    expect(first).toHaveLength(1);
+    expect(first[0]).toMatchObject({ goodId: "grain", qty: 5 });
+    now += 25_000;
+    expect(await api.claimDeliveries(3)).toEqual([]); // no room: it waits
+    const later = await api.claimDeliveries(100);
+    expect(later[0].qty).toBe(5);
+    expect((await api.getMyGuild())!.requests.some((r) => r.isMine)).toBe(false); // filled, so closed
+  });
+});
+
+describe("guild perks", () => {
+  it("pays streaks more, up to +50%", () => {
+    expect(streakMultiplier(0)).toBe(1);
+    expect(streakMultiplier(3)).toBeCloseTo(1.3);
+    expect(streakMultiplier(99)).toBeCloseTo(1.5);
+    expect(guildRewardFor(2, 5)).toBeGreaterThan(guildRewardFor(2, 0));
+  });
+
+  it("gives a small output bonus from guild level 2, capped", () => {
+    expect(guildProductionBonus(undefined)).toBe(0);
+    expect(guildProductionBonus(0)).toBe(0);
+    expect(guildProductionBonus(1)).toBe(0);
+    expect(guildProductionBonus(2)).toBeCloseTo(0.005);
+    expect(guildProductionBonus(500)).toBeCloseTo(0.05);
+  });
+
+  it("counts a streak of finished weeks in the demo guild and earns badges", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    expect(g.streak).toBe(2);
+    const badge = (id: string, level = 1) => GUILD_BADGES.find((b) => b.id === id)!.earned(g, level);
+    expect(badge("streak")).toBe(false); // two weeks is not yet three
+    expect(badge("trader")).toBe(false);
+    expect(badge("veteran", 5)).toBe(true);
+    await api.reportContribution(150);
+    await api.donateToOrder(60);
+    const after = (await api.getMyGuild())!;
+    expect(after.myTotals).toMatchObject({ trades: 150, donated: 60 });
+    expect(GUILD_BADGES.find((b) => b.id === "trader")!.earned(after, 1)).toBe(true);
+    expect(GUILD_BADGES.find((b) => b.id === "giver")!.earned(after, 1)).toBe(true);
+  });
+
+  it("sends fixed phrases like emoji, and refuses anything else", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    await api.sendCheer("b1", "thanks");
+    await api.sendCheer("b1", "not a phrase" as never);
+    const cheers = (await api.getMyGuild())!.cheers;
+    expect(cheers[0].emote).toBe("thanks");
+    expect(cheers.some((c) => (c.emote as string) === "not a phrase")).toBe(false);
+  });
+});
+
+describe("guild fun (mock backend)", () => {
+  it("dares a friend to a duel, counts trades for both, settles and pays the winner once", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    // the demo guild comes with a challenge from Elif waiting for you
+    const asked = g.duels.find((d) => d.status === "pending")!;
+    expect(asked).toMatchObject({ challengerName: "Elif", opponentName: expect.any(String) });
+    await expect(api.respondDuel(asked.id, true)).resolves.toBeUndefined();
+    await expect(api.challengeDuel("b1")).rejects.toMatchObject({ code: "duel_busy" });
+    await api.reportContribution(500); // you trade a lot
+    now += 25 * 3_600_000; // 24 hours pass; the computer players traded too
+    const after = (await api.getMyGuild())!;
+    const done = after.duels.find((d) => d.id === asked.id)!;
+    expect(done.status).toBe("done");
+    expect(done.winnerId).toBe(done.oTrades > done.cTrades ? done.opponentId : done.challengerId);
+    expect(after.feed.some((f) => f.kind === "duel_won")).toBe(true);
+    if (done.canClaim) {
+      expect(await api.claimDuelReward(done.id)).toBe(true);
+      expect(await api.claimDuelReward(done.id)).toBe(false);
+    } else {
+      expect(await api.claimDuelReward(done.id)).toBe(false);
+    }
+  });
+
+  it("refuses bad duels: yourself, a stranger, withdrawing is allowed, accepting your own is not", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    await api.respondDuel(g.duels[0].id, false); // decline Elif's challenge
+    await expect(api.challengeDuel("me")).rejects.toMatchObject({ code: "duel_invalid" });
+    await expect(api.challengeDuel("nobody")).rejects.toMatchObject({ code: "duel_invalid" });
+    await api.challengeDuel("b1");
+    const mine = (await api.getMyGuild())!.duels.find((d) => d.status === "pending")!;
+    await expect(api.respondDuel(mine.id, true)).rejects.toMatchObject({ code: "duel_invalid" });
+    await api.respondDuel(mine.id, false); // withdraw
+    await expect(api.respondDuel(mine.id, false)).rejects.toMatchObject({ code: "duel_gone" });
+  });
+
+  it("gives one draw a day and announces big prizes", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    expect((await api.getMyGuild())!.drawnToday).toBe(false);
+    const tier = await api.dailyDraw();
+    expect([1, 2, 3]).toContain(tier);
+    await expect(api.dailyDraw()).rejects.toMatchObject({ code: "already_drawn" });
+    expect((await api.getMyGuild())!.drawnToday).toBe(true);
+    now += 24 * 3_600_000;
+    expect((await api.getMyGuild())!.drawnToday).toBe(false);
+    await expect(api.dailyDraw()).resolves.toBeDefined();
+  });
+
+  it("builds hall projects in order from members' coins, never accepting more than needed", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    expect(g.projects).toEqual({ built: 1, progress: 1800 }); // the demo hall has one building
+    expect(await api.donateCash(1_000)).toBe(1_000);
+    expect(await api.donateCash(1_000_000)).toBe(25_000 - 2_800); // project 2 costs 25000
+    const after = (await api.getMyGuild())!;
+    expect(after.projects).toEqual({ built: 2, progress: 0 });
+    expect(after.feed.some((f) => f.kind === "project_done" && f.detail === "2")).toBe(true);
+    expect(after.members.find((m) => m.isYou)!.cashGiven).toBe(1_000 + 22_200);
+    expect(await api.donateCash(-5)).toBe(0);
+  });
+
+  it("ranks guilds by this week's activity and lets you report one", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.joinGuild(MOCK_DEMO_CODE);
+    const top = await api.topGuilds();
+    expect(top.length).toBeLessThanOrEqual(10);
+    expect(top.some((x) => x.isMine)).toBe(true);
+    expect(top.every((x, i, a) => i === 0 || a[i - 1].score >= x.score)).toBe(true);
+    await expect(api.reportGuildById(top[0].id, "guild_name")).resolves.toBeUndefined();
+  });
+});
+
+describe("guild caravan (mock backend)", () => {
+  it("is loaded by several players, sent, travels and pays each loader their own share", async () => {
+    let now = MONDAY;
+    const api = createMockGuildApi(memoryStore(), () => now);
+    const g = await api.joinGuild(MOCK_DEMO_CODE);
+    // the demo guild already has a caravan to Ironforge being loaded
+    expect(g.caravan).toMatchObject({
+      dest: "ironforge",
+      status: "loading",
+      capacity: 150,
+      loaded: 52,
+      myLoaded: 0,
+    });
+    await expect(api.startCaravan("portcity")).rejects.toMatchObject({ code: "caravan_busy" });
+    await expect(api.loadCaravan("dragon", 5)).rejects.toMatchObject({ code: "caravan_invalid" });
+    expect(await api.loadCaravan("iron", 30)).toBe(30);
+    expect(await api.loadCaravan("iron", 500)).toBe(150 - 52 - 30); // only what still fits
+    expect(await api.loadCaravan("iron", 5)).toBe(0);
+    const full = (await api.getMyGuild())!.caravan!;
+    expect(full.loaded).toBe(150);
+    expect(full.myLoaded).toBe(98);
+
+    await api.sendCaravan();
+    const onRoad = (await api.getMyGuild())!.caravan!;
+    expect(onRoad.status).toBe("travelling");
+    expect(onRoad.arrivesAt! - now).toBe(3 * 3_600_000);
+    await expect(api.loadCaravan("iron", 1)).rejects.toMatchObject({ code: "caravan_none" });
+    expect((await api.getMyGuild())!.claimable).toEqual([]);
+
+    now += 3 * 3_600_000 + 1000;
+    const home = (await api.getMyGuild())!;
+    expect(home.caravan).toBeNull();
+    expect(home.feed.some((f) => f.kind === "caravan_arrived" && f.detail === "ironforge")).toBe(true);
+    expect(home.claimable).toHaveLength(1);
+    const share = home.claimable[0];
+    expect(share.loads).toEqual([{ goodId: "iron", qty: 98 }]);
+    expect([1, 2, 3]).toContain(share.tier);
+    expect(await api.claimCaravan(share.id)).toMatchObject({
+      dest: "ironforge",
+      loads: [{ goodId: "iron", qty: 98 }],
+    });
+    expect(await api.claimCaravan(share.id)).toBeNull(); // only once
+    expect((await api.getMyGuild())!.claimable).toEqual([]);
+    await expect(api.startCaravan("windyhill")).resolves.toBeUndefined(); // a new one can start
+  });
+
+  it("will not send an empty caravan or start one to nowhere", async () => {
+    const api = createMockGuildApi(memoryStore(), () => MONDAY);
+    await api.createGuild("Dostlar");
+    await expect(api.sendCaravan()).rejects.toMatchObject({ code: "caravan_none" });
+    await expect(api.startCaravan("moon" as never)).rejects.toMatchObject({ code: "caravan_invalid" });
+    await api.startCaravan("windyhill");
+    expect((await api.getMyGuild())!.caravan).toMatchObject({ capacity: 30, loaded: 0 });
+    await expect(api.sendCaravan()).rejects.toMatchObject({ code: "caravan_empty" });
+  });
+});
+
+describe("caravan payout", () => {
+  it("is the goods' value times the trip's luck and the town's bonus", () => {
+    const share = {
+      id: "k",
+      dest: "windyhill" as const,
+      tier: 2 as const,
+      loads: [
+        { goodId: "grain", qty: 10 },
+        { goodId: "wool", qty: 5 },
+      ],
+    };
+    const price = (id: string) => (id === "grain" ? 3 : 5);
+    expect(caravanPayout(share, price)).toBe(Math.round((10 * 3 + 5 * 5) * 1.6 * 1));
+    expect(caravanPayout({ ...share, dest: "grandbazaar", tier: 3 }, price)).toBe(
+      Math.round(55 * 2.2 * 1.35)
+    );
+    expect(caravanPayout({ ...share, loads: [] }, price)).toBe(0);
+  });
+});
