@@ -49,3 +49,18 @@ A **rewarded ad** takes 5 minutes off a waiting improvement, or finishes it when
    provider should resolve `false` and the button can be hidden for a while.
 
 Nothing in the game depends on which network is used: only the provider changes.
+
+## Status: wired, switched off
+
+The AdMob provider is in the code (`src/ads/admobProvider.native.ts`, config plugin in
+`app.json`). It is used only when the build sets `EXPO_PUBLIC_ADS=1`; the release build
+does not, so nothing changes for players until the steps above (privacy copy, store
+forms) are done. To enable it:
+
+1. Replace the two **sample app ids** in `app.json` (`androidAppId`, `iosAppId`, Google's
+   public test ids) with your real AdMob app ids.
+2. Set `EXPO_PUBLIC_ADMOB_REWARDED_IOS` and `EXPO_PUBLIC_ADMOB_REWARDED_ANDROID` to your
+   rewarded ad unit ids, and `EXPO_PUBLIC_ADS=1`, in Codemagic.
+3. In a development build (`__DEV__`) Google's test ad unit is always used, so real ads
+   never run while developing. Ads are requested as non-personalised only.
+4. Make a new native build; the library needs one (it does not run in Expo Go or on web).

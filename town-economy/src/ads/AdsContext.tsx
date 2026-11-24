@@ -3,6 +3,7 @@ import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "../components/AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { FONT } from "../theme";
+import { createAdmobProvider } from "./admobProvider";
 
 /** Rewarded ads, as the game needs them: ask for one, find out whether the
  * player watched it to the end. Which ad network answers is decided in one
@@ -26,6 +27,9 @@ const AdsContext = createContext<AdsValue>({ available: false, showRewarded: asy
  * here later (see docs/ADS.md). */
 export function getAdProvider(): "mock" | RewardedAdProvider | null {
   if (process.env.EXPO_PUBLIC_ADS_MOCK === "1") return "mock";
+  // Real ads only when the build says so (EXPO_PUBLIC_ADS=1): the privacy policy and the
+  // store forms have to say "ads" before any release carries them (see docs/ADS.md).
+  if (process.env.EXPO_PUBLIC_ADS === "1") return createAdmobProvider();
   return null;
 }
 
