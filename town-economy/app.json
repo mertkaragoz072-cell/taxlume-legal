@@ -2,7 +2,7 @@
   "expo": {
     "name": "Golden Town",
     "slug": "golden-town",
-    "version": "1.0.2",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
