@@ -20,7 +20,7 @@ export const WOOD_RIM = { borderWidth: 2, borderColor: "#7a5532" } as const;
 
 /** Gap between stacked panels/cards on a screen — kept tight so the screen
  * reads as one dense, full layout instead of floating boxes. */
-export const PANEL_GAP = 8;
+export const PANEL_GAP = 6;
 
 // --- Design tokens ---------------------------------------------------------
 // A single small scale for text size/weight and spacing so every screen

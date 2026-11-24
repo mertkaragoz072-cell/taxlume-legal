@@ -93,7 +93,7 @@ export function GoalFrame({ children, lit, style, contentStyle, gap = PANEL_GAP 
       )}
       <View
         style={[
-          { paddingHorizontal: Math.max(12, cap * 0.55), paddingVertical: Math.max(8, cap * 0.4) },
+          { paddingHorizontal: Math.max(10, cap * 0.45), paddingVertical: Math.max(6, cap * 0.28) },
           contentStyle,
         ]}
       >
@@ -119,10 +119,10 @@ export function GoalPanel({
 }) {
   return (
     <View style={[{ alignSelf: "stretch", marginBottom: PANEL_GAP }, style]}>
-      <View style={{ zIndex: 2, marginBottom: -26 }}>
+      <View style={{ zIndex: 2, marginBottom: -20 }}>
         <SheetHeader text={title} />
       </View>
-      <GoalFrame gap={0} contentStyle={{ paddingTop: 30, paddingHorizontal: padX }}>
+      <GoalFrame gap={0} contentStyle={{ paddingTop: 22, paddingHorizontal: padX }}>
         {children}
       </GoalFrame>
     </View>

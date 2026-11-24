@@ -29,7 +29,7 @@ interface Props {
  * so the plaque grows with its label and the beam fills the rest of the row.
  * The label's size is computed from its length, because phone fonts run wider
  * than a browser's and shrink-to-fit does not exist on web. */
-export function SheetHeader({ text, height = 44 }: Props) {
+export function SheetHeader({ text, height = 36 }: Props) {
   const [rowW, setRowW] = useState(360);
   const k = height / ART_H;
   const letter = 0.6;
