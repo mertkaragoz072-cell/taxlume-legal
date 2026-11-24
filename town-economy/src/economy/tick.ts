@@ -32,7 +32,7 @@ import {
 } from "./crises";
 import { EVENT_TEMPLATES } from "./events";
 import { MENTOR_DONE } from "./mentor";
-import { expireMerchantOffer, makeMerchantOffer, MERCHANT_CHANCE, merchantMayAppear } from "./merchantOffer";
+import { makeMerchantOffer, MERCHANT_CHANCE, merchantMayAppear } from "./merchantOffer";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
 import {
   propertyHappinessBonus,
@@ -393,12 +393,7 @@ export function tick(state: EconomyState): EconomyState {
   // rules as a flash quest (nothing waiting on the player, tutorial over), and
   // a long breather between visits.
   let merchantOffer = state.merchantOffer ?? null;
-  let merchantCooldownTick = state.merchantCooldownTick;
-  const afterExpiry = expireMerchantOffer(state);
-  if (afterExpiry !== state) {
-    merchantOffer = afterExpiry.merchantOffer ?? null;
-    merchantCooldownTick = afterExpiry.merchantCooldownTick;
-  }
+  const merchantCooldownTick = state.merchantCooldownTick;
   if (
     !merchantOffer &&
     nothingWaiting &&

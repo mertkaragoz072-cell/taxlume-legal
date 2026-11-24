@@ -2,10 +2,8 @@ import { MENTOR_DONE } from "../mentor";
 import {
   claimMerchantOffer,
   dismissMerchantOffer,
-  expireMerchantOffer,
   MERCHANT_COOLDOWN_TICKS,
   MERCHANT_FIRST_DELAY_TICKS,
-  MERCHANT_OFFER_TICKS,
   merchantReward,
 } from "../merchantOffer";
 import { tick } from "../tick";
@@ -61,17 +59,15 @@ describe("the travelling merchant", () => {
     expect(paid.merchantCooldownTick).toBe(paid.tick + MERCHANT_COOLDOWN_TICKS);
   });
 
-  it("leaves by itself, and 'no thanks' pays nothing", () => {
+  it("stays until answered, and 'no thanks' pays nothing", () => {
     jest.spyOn(Math, "random").mockReturnValue(0);
     const offered = tick(ready());
-    expect(expireMerchantOffer({ ...offered, tick: offered.tick + 1 })).toEqual({
-      ...offered,
-      tick: offered.tick + 1,
-    });
-    const late = expireMerchantOffer({ ...offered, tick: offered.tick + MERCHANT_OFFER_TICKS + 2 });
-    expect(late.merchantOffer).toBeNull();
+    let later = offered;
+    for (let i = 0; i < 60; i++) later = tick({ ...later, paused: false });
+    expect(later.merchantOffer).not.toBeNull();
     const no = dismissMerchantOffer(offered);
     expect(no.merchantOffer).toBeNull();
     expect(no.cash).toBe(offered.cash);
+    expect(no.merchantCooldownTick).toBe(offered.tick + MERCHANT_COOLDOWN_TICKS);
   });
 });

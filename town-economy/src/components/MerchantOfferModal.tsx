@@ -4,7 +4,6 @@ import { useAds } from "../ads/AdsContext";
 import cardArt from "../../assets/ui/mervecard/merchant.webp";
 import characterArt from "../../assets/ui/mervecard/merchant_char.webp";
 import { useEconomyContext } from "../economy/EconomyContext";
-import { TICK_MS } from "../economy/useEconomy";
 import { FONT } from "../theme";
 import { Text } from "./AppText";
 import { ModalBackdrop } from "./ModalBackdrop";
@@ -23,9 +22,9 @@ const SKIP = { x: 842, y: 660, w: 218, h: 93 };
 const NEXT = { x: 1093, y: 637, w: 414, h: 128 };
 
 /** The travelling merchant's offer, as a pop-up in Merve's style: his portrait,
- * the name plaque, the time he stays, what he offers and two buttons — "no"
+ * the name plaque, the gift, what he offers and two buttons — "no"
  * and "watch an ad". Nothing is paid unless the ad is watched to the end, and
- * the pop-up leaves by itself when the time is up. It is never shown when no ad
+ * "no" simply closes it. It is never shown when no ad
  * can be played (the shipped app, until an ad network is connected). */
 export function MerchantOfferModal() {
   const { state, t, claimMerchantOffer, dismissMerchantOffer } = useEconomyContext();
@@ -34,7 +33,6 @@ export function MerchantOfferModal() {
   const offer = state.merchantOffer;
   if (!offer || !ads.available) return null;
 
-  const seconds = Math.max(0, Math.ceil(((offer.expiresAtTick - state.tick) * TICK_MS) / 1000));
   const cardW = Math.min(windowWidth - 16, 480);
   const s = cardW / ART_W;
   const cardH = ART_H * s;
@@ -46,7 +44,7 @@ export function MerchantOfferModal() {
   const headline = t("merchant.headline");
   const body = t("merchant.offer", { reward: offer.reward });
   const tip = t("merchant.tip");
-  const timeLeft = t("merchant.seconds", { seconds });
+  const gift = `+${offer.reward} 🪙`;
   const watch = t("merchant.watch", { reward: offer.reward });
   const no = t("merchant.no");
 
@@ -90,10 +88,10 @@ export function MerchantOfferModal() {
           </View>
           <View style={[styles.field, box(TAG)]}>
             <Text
-              style={[styles.tag, { fontSize: fit(timeLeft, w(TAG.w), w(TAG.h) * 0.46, 0.62) }]}
+              style={[styles.tag, { fontSize: fit(gift, w(TAG.w), w(TAG.h) * 0.46, 0.62) }]}
               numberOfLines={1}
             >
-              {timeLeft}
+              {gift}
             </Text>
           </View>
           <View style={[styles.field, box(TITLE)]}>

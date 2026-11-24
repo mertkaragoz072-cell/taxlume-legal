@@ -1000,7 +1000,6 @@ export const STRINGS = {
       tip: "Reklam bitince hediye hemen kasana girer.",
       watch: "İzle  +{reward} 🪙",
       no: "Hayır",
-      seconds: "{seconds} sn",
     },
     ads: {
       mockTitle: "Reklam (deneme)",
@@ -2933,7 +2932,6 @@ export const STRINGS = {
       tip: "When the ad ends the gift goes straight into your purse.",
       watch: "Watch  +{reward} 🪙",
       no: "No",
-      seconds: "{seconds}s",
     },
     ads: {
       mockTitle: "Ad (test)",
