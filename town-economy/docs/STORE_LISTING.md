@@ -385,7 +385,10 @@ test names the overlay rather than printing a Playwright timeout.
   "watch an ad" buttons that ran a fake timer with no ad SDK behind them,
   which contradicted both documents until they were removed. If ads, IAP
   or a backend are ever genuinely added, this copy and `PRIVACY.md` have
-  to change in the same commit as the code.
+  to change in the same commit as the code. **Guilds (anonymous account and
+  server calls) and rewarded ads now exist in the code but are off in a build
+  without their variables** (see `RELEASE.md`, "App Privacy"): this copy stays
+  true only for such a build.
 - Category suggestion: Games → Simulation (App Store) / Simulation (Play
   Store).
 - Age rating: no violence, gambling-style mechanics are limited to a

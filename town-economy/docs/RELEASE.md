@@ -161,6 +161,14 @@ has no account, no analytics, no ads, no network calls at all — this is the
 same claim the privacy policy and the store description both make, and all
 three have to agree.
 
+> **Only while guilds and ads are switched off.** A build with the guild server
+> configured (`EXPO_PUBLIC_SUPABASE_URL` / `_ANON_KEY`) makes network calls and
+> creates an anonymous account, so for that build the App Privacy answers,
+> the Play Data safety form, the privacy policy and the "no account, everything
+> local" lines in `STORE_LISTING.md` must say so first. The same goes for the
+> rewarded ads (the travelling merchant, the skip buttons): see `ADS.md`. Release
+> the store build without these variables until that copy is updated.
+
 ## 3. Google Play Console
 
 | Field            | Value                                                                                                                                                           |
