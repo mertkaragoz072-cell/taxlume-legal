@@ -57,7 +57,7 @@ interface PaintedProps {
 /** Height of the heading plaque that covers the painted banner: the banners
  * are too small and sit crooked, so every panel wears the same plaque instead
  * and only the part of the art below it shows. */
-const HEAD_H = 44;
+const HEAD_H = 36;
 
 /** A painted panel at its own aspect ratio; children are laid out in the art's
  * own pixels (they receive the px-per-art-px scale). */

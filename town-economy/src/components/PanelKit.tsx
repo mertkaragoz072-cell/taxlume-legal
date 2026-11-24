@@ -80,7 +80,7 @@ function useBoxWidth(): [number, (e: LayoutChangeEvent) => void] {
 }
 
 /** Height of the heading plaque every panel wears. */
-const HEAD_H = 44;
+const HEAD_H = 36;
 
 interface PanelProps {
   frame: FrameName;

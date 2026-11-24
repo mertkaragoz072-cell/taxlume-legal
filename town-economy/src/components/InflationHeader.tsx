@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     // Roomy on purpose: phone fonts (iOS especially) set taller than the
     // browser's, and the inflation column stacks three lines.
-    paddingVertical: 13,
+    paddingVertical: 16,
     paddingHorizontal: 14,
     overflow: "hidden",
   },
@@ -628,13 +628,14 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(PARCHMENT.woodDark, 0.3),
   },
   statTextCol: { flexShrink: 1, minWidth: 0 },
-  statLabel: { color: "#5c3f26", fontFamily: FONT.bold, fontSize: 11, marginBottom: 2 },
-  statValueCompact: { fontSize: TYPE.title },
-  statValueRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  statLabel: { color: "#5c3f26", fontFamily: FONT.bold, fontSize: 11, lineHeight: 14, marginBottom: 1 },
+  statValueCompact: { fontSize: TYPE.title, lineHeight: 20 },
+  statValueRow: { flexDirection: "row", alignItems: "center", gap: 3, height: 22 },
   statBullet: { width: 12, height: 12 },
   statValue: {
     color: PARCHMENT.ink,
     fontSize: TYPE.title + 1,
+    lineHeight: 22,
     fontVariant: ["tabular-nums"],
     fontWeight: WEIGHT.bold,
     fontFamily: FONT.bold,
@@ -647,6 +648,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   inflationTextCol: { flex: 1 },
-  inflationRate: { fontSize: TYPE.caption, fontFamily: FONT.bold },
+  inflationRate: { fontSize: 11, lineHeight: 14, fontFamily: FONT.bold },
   hotGlow: { backgroundColor: "#e0693f", borderRadius: 10 },
 });
