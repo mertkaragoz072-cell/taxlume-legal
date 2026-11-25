@@ -152,47 +152,80 @@ interface RankProps {
   label: string;
   title: string;
   icon: string;
-  nextIcon: string;
-  nextLabel: string;
+  /** "Next: Metropolis" */
+  nextText: string;
+  /** "198K / 300K" */
+  progressText: string;
   /** 0..1 progress inside the current tier */
   pct: number;
+  /** the rank's own colour for the bar and the title */
+  accent: string;
 }
 
-export function RankPanel({ label, title, icon, nextIcon, nextLabel, pct }: RankProps) {
+/** The town's rank on the Town screen: the rank in a round gold-ringed medallion
+ * with its name big beside it, then a thick bar with the figures on it and the
+ * next rank's name under it. */
+export function RankPanel({ label, title, icon, nextText, progressText, pct, accent }: RankProps) {
+  const fill = Math.max(0, Math.min(1, pct));
   return (
     <Painted title={label} banner={84} source={rankArt} artW={853} artH={247}>
       {(s) => (
         <>
-          <View style={[box(s, 338, 64, 70, 80), styles.center]}>
-            <Text aria-hidden style={{ fontSize: 52 * s }}>
+          <View
+            style={[
+              box(s, 322, 66, 92, 92),
+              styles.center,
+              {
+                borderRadius: 46 * s,
+                backgroundColor: "#3a2616",
+                borderWidth: Math.max(2, 4 * s),
+                borderColor: "#d9a548",
+              },
+            ]}
+          >
+            <Text aria-hidden style={{ fontSize: 50 * s }}>
               {icon}
             </Text>
           </View>
-          <View style={[box(s, 412, 64, 215, 80), { justifyContent: "center" }]}>
+          <View style={[box(s, 432, 62, 380, 100), { justifyContent: "center" }]}>
             <Text
-              style={[styles.display, { color: INK, fontSize: fit(title, 215, 44, 0.86) * s }]}
-              numberOfLines={2}
+              style={[styles.display, { color: INK, fontSize: fit(title, 380, 54, 0.86) * s }]}
+              numberOfLines={1}
             >
               {title}
             </Text>
-          </View>
-          <View style={[box(s, 640, 62, 150, 84), styles.center]}>
-            <Text aria-hidden style={{ fontSize: 36 * s }}>
-              {nextIcon}
-            </Text>
-            <Text style={[styles.small, { fontSize: 22 * s }]} numberOfLines={1}>
-              {nextLabel}
+            <Text style={[styles.rankNext, { fontSize: 24 * s }]} numberOfLines={1}>
+              {nextText}
             </Text>
           </View>
-          <View style={[box(s, 311, 166, 481, 19), { borderRadius: 10 * s, overflow: "hidden" }]}>
+          <View
+            style={[
+              box(s, 322, 176, 490, 30),
+              {
+                borderRadius: 15 * s,
+                overflow: "hidden",
+                backgroundColor: "#4a3320",
+                borderWidth: Math.max(1, 2 * s),
+                borderColor: "#2a190c",
+                justifyContent: "center",
+              },
+            ]}
+          >
             <View
               style={{
-                width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
-                height: "100%",
-                backgroundColor: "#f0b72e",
-                borderRadius: 10 * s,
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: `${fill * 100}%`,
+                minWidth: fill > 0 ? 14 * s : 0,
+                backgroundColor: accent,
+                borderRadius: 15 * s,
               }}
             />
+            <Text style={[styles.rankBar, { fontSize: 19 * s }]} numberOfLines={1}>
+              {progressText}
+            </Text>
           </View>
         </>
       )}
@@ -533,6 +566,15 @@ const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   center: { alignItems: "center", justifyContent: "center" },
   display: { fontFamily: FONT.display },
+  rankNext: { color: INK_SOFT, fontFamily: FONT.bold },
+  rankBar: {
+    color: "#fff6d8",
+    fontFamily: FONT.black,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.65)",
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
+  },
   black: { fontFamily: FONT.black },
   small: { color: INK_SOFT, fontFamily: FONT.medium },
   body: { fontFamily: FONT.medium },

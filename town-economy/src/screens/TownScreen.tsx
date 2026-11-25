@@ -1,7 +1,8 @@
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
 import { MENTOR_STEPS } from "../economy/mentor";
 import React, { useEffect, useRef, useState } from "react";
-import { formatPercent, fixedUi } from "../utils/formatNumber";
+import { formatCompactNumber, formatPercent, fixedUi } from "../utils/formatNumber";
+import { rankTheme } from "../economy/rankTheme";
 import { Animated, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../components/AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -150,9 +151,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         label={t("town.rankLabel")}
         title={rankTitle}
         icon={townRankIcon(state.townRankIndex)}
-        nextIcon={townRankIcon(state.townRankIndex + 1)}
-        nextLabel={t("town.rankNext")}
+        nextText={`${t("town.rankNext")}: ${townRankTitle(state.townRankIndex + 1, t)}`}
+        progressText={`${formatCompactNumber(netWorth, state.language, 0)} / ${formatCompactNumber(rankNextThreshold, state.language, 0)}`}
         pct={rankPct}
+        accent={rankTheme(state.townRankIndex).accent}
       />
 
       <MoodPanel
