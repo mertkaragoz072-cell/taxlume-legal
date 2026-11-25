@@ -4,10 +4,10 @@ import bankArt from "../../assets/ui/town/bank.webp";
 import chartArt from "../../assets/ui/town/chart.webp";
 import happyArt from "../../assets/ui/town/happy.webp";
 import moodArt from "../../assets/ui/town/mood.webp";
-import rankArt from "../../assets/ui/town/rank.webp";
 import taxArt from "../../assets/ui/town/tax.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
+import { StretchPanel } from "./PanelKit";
 import { ScalePressable } from "./ScalePressable";
 import { SheetHeader } from "./SheetHeader";
 
@@ -151,85 +151,61 @@ function Well({
 interface RankProps {
   label: string;
   title: string;
-  icon: string;
   /** "Next: Metropolis" */
   nextText: string;
   /** "198K / 300K" */
   progressText: string;
   /** 0..1 progress inside the current tier */
   pct: number;
-  /** the rank's own colour for the bar and the title */
+  /** the rank's own colour for the bar */
   accent: string;
 }
 
-/** The town's rank on the Town screen: the rank in a round gold-ringed medallion
- * with its name big beside it, then a thick bar with the figures on it and the
- * next rank's name under it. */
-export function RankPanel({ label, title, icon, nextText, progressText, pct, accent }: RankProps) {
+/** The town's rank on the Town screen, as lettering: the rank's name large between
+ * two gold rules, the next rank spelled out under it, and a thick bar with the
+ * figures on it. No picture: the name is the picture. */
+export function RankPanel({ label, title, nextText, progressText, pct, accent }: RankProps) {
+  const [w, setW] = useState(360);
   const fill = Math.max(0, Math.min(1, pct));
+  const size = Math.max(18, Math.min(34, ((w - 70) * 0.94) / (Math.max(1, title.length) * 0.82)));
   return (
-    <Painted title={label} banner={84} source={rankArt} artW={853} artH={247}>
-      {(s) => (
-        <>
+    <StretchPanel frame="upgrades" title={label}>
+      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={styles.rankBox}>
+        <View style={styles.rankRuleRow}>
+          <View style={styles.rankRule} />
+          <Text aria-hidden style={styles.rankStar}>
+            ✦
+          </Text>
+          <View style={styles.rankRule} />
+        </View>
+        <Text
+          style={[styles.display, styles.rankTitle, { fontSize: size, lineHeight: size * 1.25 }]}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+        <Text style={styles.rankNext} numberOfLines={1}>
+          {nextText}
+        </Text>
+        <View style={styles.rankTrack}>
           <View
-            style={[
-              box(s, 322, 66, 92, 92),
-              styles.center,
-              {
-                borderRadius: 46 * s,
-                backgroundColor: "#3a2616",
-                borderWidth: Math.max(2, 4 * s),
-                borderColor: "#d9a548",
-              },
-            ]}
-          >
-            <Text aria-hidden style={{ fontSize: 50 * s }}>
-              {icon}
-            </Text>
-          </View>
-          <View style={[box(s, 432, 62, 380, 100), { justifyContent: "center" }]}>
-            <Text
-              style={[styles.display, { color: INK, fontSize: fit(title, 380, 54, 0.86) * s }]}
-              numberOfLines={1}
-            >
-              {title}
-            </Text>
-            <Text style={[styles.rankNext, { fontSize: 24 * s }]} numberOfLines={1}>
-              {nextText}
-            </Text>
-          </View>
-          <View
-            style={[
-              box(s, 322, 176, 490, 30),
-              {
-                borderRadius: 15 * s,
-                overflow: "hidden",
-                backgroundColor: "#4a3320",
-                borderWidth: Math.max(1, 2 * s),
-                borderColor: "#2a190c",
-                justifyContent: "center",
-              },
-            ]}
-          >
-            <View
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${fill * 100}%`,
-                minWidth: fill > 0 ? 14 * s : 0,
-                backgroundColor: accent,
-                borderRadius: 15 * s,
-              }}
-            />
-            <Text style={[styles.rankBar, { fontSize: 19 * s }]} numberOfLines={1}>
-              {progressText}
-            </Text>
-          </View>
-        </>
-      )}
-    </Painted>
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: `${fill * 100}%`,
+              minWidth: fill > 0 ? 12 : 0,
+              backgroundColor: accent,
+              borderRadius: 10,
+            }}
+          />
+          <Text style={styles.rankBar} numberOfLines={1}>
+            {progressText}
+          </Text>
+        </View>
+      </View>
+    </StretchPanel>
   );
 }
 
@@ -566,10 +542,26 @@ const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   center: { alignItems: "center", justifyContent: "center" },
   display: { fontFamily: FONT.display },
-  rankNext: { color: INK_SOFT, fontFamily: FONT.bold },
+  rankBox: { alignItems: "center", paddingVertical: 4, paddingHorizontal: 6 },
+  rankRuleRow: { flexDirection: "row", alignItems: "center", alignSelf: "stretch", gap: 8 },
+  rankRule: { flex: 1, height: 2, borderRadius: 1, backgroundColor: "#c99a3a" },
+  rankStar: { color: "#b8741a", fontSize: 14 },
+  rankTitle: { color: INK, letterSpacing: 2, textAlign: "center", marginTop: 2 },
+  rankNext: { color: INK_SOFT, fontFamily: FONT.bold, fontSize: 14, marginTop: 0, marginBottom: 8 },
+  rankTrack: {
+    alignSelf: "stretch",
+    height: 22,
+    borderRadius: 11,
+    overflow: "hidden",
+    backgroundColor: "#4a3320",
+    borderWidth: 1.5,
+    borderColor: "#2a190c",
+    justifyContent: "center",
+  },
   rankBar: {
     color: "#fff6d8",
     fontFamily: FONT.black,
+    fontSize: 12,
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.65)",
     textShadowRadius: 2,

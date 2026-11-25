@@ -30,7 +30,7 @@ import { DOCTRINES_BY_ID } from "../economy/doctrines";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { BuildStatus } from "../components/BuildStatus";
 import { formatWait, improvementWaitMs, pendingOf } from "../economy/construction";
-import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
+import { townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "../economy/workers";
@@ -150,7 +150,6 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       <RankPanel
         label={t("town.rankLabel")}
         title={rankTitle}
-        icon={townRankIcon(state.townRankIndex)}
         nextText={`${t("town.rankNext")}: ${townRankTitle(state.townRankIndex + 1, t)}`}
         progressText={`${formatCompactNumber(netWorth, state.language, 0)} / ${formatCompactNumber(rankNextThreshold, state.language, 0)}`}
         pct={rankPct}
