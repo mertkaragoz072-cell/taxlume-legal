@@ -3,7 +3,6 @@ import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from 
 import bankArt from "../../assets/ui/town/bank.webp";
 import chartArt from "../../assets/ui/town/chart.webp";
 import happyArt from "../../assets/ui/town/happy.webp";
-import moodArt from "../../assets/ui/town/mood.webp";
 import taxArt from "../../assets/ui/town/tax.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
@@ -13,8 +12,6 @@ import { SheetHeader } from "./SheetHeader";
 
 const INK = "#3d2415";
 const INK_SOFT = "#5a3d22";
-const GOLD = "#f6e2a0";
-const CREAM = "#f3e3b5";
 
 /** "💰 Vergi Politikası" -> "Vergi Politikası": the painted banner has its own
  * medallion, so a leading emoji in the label would double up. */
@@ -220,55 +217,32 @@ interface MoodProps {
 }
 
 export function MoodPanel({ label, mood, emoji, index, indexLabel }: MoodProps) {
+  const [w, setW] = useState(360);
+  const size = Math.max(18, Math.min(30, ((w - 190) * 0.94) / (Math.max(1, mood.length) * 0.82)));
   return (
-    <Painted title={label} banner={80} source={moodArt} artW={853} artH={200}>
-      {(s) => (
-        <>
-          {/* The art's own face is painted out; the live mood sits on a round
-              wood-and-gold badge in its place. */}
-          <View
-            style={[
-              box(s, 112 - 50, 122 - 50, 100, 100),
-              styles.center,
-              {
-                borderRadius: 50 * s,
-                backgroundColor: "#3a2616",
-                borderWidth: Math.max(2, 4 * s),
-                borderColor: "#c99a3a",
-              },
-            ]}
+    <StretchPanel frame="upgrades" title={label}>
+      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={styles.moodLine}>
+        <View style={styles.moodRow}>
+          <Text aria-hidden style={styles.moodEmoji}>
+            {emoji}
+          </Text>
+          <Text
+            style={[styles.display, styles.moodTitle, { fontSize: size, lineHeight: size * 1.25 }]}
+            numberOfLines={1}
           >
-            <Text aria-hidden style={{ fontSize: 58 * s }}>
-              {emoji}
-            </Text>
-          </View>
-          <View style={[box(s, 205, 72, 285, 86), { justifyContent: "center" }]}>
-            <Text
-              style={[styles.display, { color: CREAM, fontSize: fit(mood, 280, 46, 0.86) * s }]}
-              numberOfLines={1}
-            >
-              {mood}
-            </Text>
-          </View>
-          <View style={[box(s, 490, 62, 175, 60), { alignItems: "flex-end", justifyContent: "center" }]}>
-            <Text
-              style={[styles.black, { color: GOLD, fontSize: fit(index, 175, 50, 0.6) * s }]}
-              numberOfLines={1}
-            >
-              {index}
-            </Text>
-          </View>
-          <View style={[box(s, 440, 120, 225, 40), { alignItems: "flex-end", justifyContent: "center" }]}>
-            <Text
-              style={[styles.small, { color: "#d8c690", fontSize: fit(indexLabel, 225, 24) * s }]}
-              numberOfLines={1}
-            >
-              {indexLabel}
-            </Text>
-          </View>
-        </>
-      )}
-    </Painted>
+            {mood}
+          </Text>
+        </View>
+        <View style={styles.indexCol}>
+          <Text style={styles.indexValue} numberOfLines={1}>
+            {index}
+          </Text>
+          <Text style={styles.indexLabel} numberOfLines={1}>
+            {indexLabel}
+          </Text>
+        </View>
+      </View>
+    </StretchPanel>
   );
 }
 
@@ -542,6 +516,28 @@ const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   center: { alignItems: "center", justifyContent: "center" },
   display: { fontFamily: FONT.display },
+  moodLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  indexCol: { alignItems: "flex-end" },
+  moodRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, minWidth: 0 },
+  moodEmoji: { fontSize: 30 },
+  moodTitle: { color: INK, letterSpacing: 2, flexShrink: 1 },
+  indexRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  indexLabel: { color: INK_SOFT, fontFamily: FONT.bold, fontSize: 12 },
+  indexValue: { color: "#8a5a14", fontFamily: FONT.black, fontSize: 26, lineHeight: 30 },
   rankBox: { alignItems: "center", paddingVertical: 4, paddingHorizontal: 6 },
   rankRuleRow: { flexDirection: "row", alignItems: "center", alignSelf: "stretch", gap: 8 },
   rankRule: { flex: 1, height: 2, borderRadius: 1, backgroundColor: "#c99a3a" },
