@@ -263,6 +263,7 @@ export const STRINGS = {
       storageUsage: "{used} / {capacity}",
       storageFull: "Ambar dolu — daha fazla mal almadan önce Ambar geliştirmesi yap.",
       rowSub: "{qty} adet @ {price} 🪙",
+      perishable: "bozulur",
     },
     trade: {
       mapSectionLabel: "KASABA HARİTASI",
@@ -356,6 +357,7 @@ export const STRINGS = {
         baseline: "Zorluk tabanı",
         unhappiness: "Mutsuzluk etkisi",
         content: "Memnuniyet rahatlığı",
+        money: "Para arzı",
         tax: "Vergi baskısı",
         debt: "Borç baskısı",
         happinessSuffix: "mutluluk puanı",
@@ -2195,6 +2197,7 @@ export const STRINGS = {
       storageUsage: "{used} / {capacity}",
       storageFull: "Storage full — upgrade the Storage Yard before buying more.",
       rowSub: "{qty} units @ {price} 🪙",
+      perishable: "spoils",
     },
     trade: {
       mapSectionLabel: "TOWN MAP",
@@ -2288,6 +2291,7 @@ export const STRINGS = {
         baseline: "Difficulty baseline",
         unhappiness: "Unhappiness effect",
         content: "Contentment relief",
+        money: "Money supply",
         tax: "Tax pressure",
         debt: "Debt pressure",
         happinessSuffix: "happiness pts",

@@ -77,7 +77,7 @@ const IGNORE_CONSOLE = /navigator\.vibrate/;
             sessionStorage.setItem("seeded", "1");
           }
         },
-        [KEY, JSON.stringify({ version: 58, state: st })]
+        [KEY, JSON.stringify({ version: 59, state: st })]
       );
       await page.goto(APP_URL + "?cb=" + Date.now(), { waitUntil: "load", timeout: 90000 });
       await page.waitForTimeout(3500);

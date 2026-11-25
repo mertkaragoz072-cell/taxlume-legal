@@ -272,11 +272,15 @@ export const TAX_RATE_STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 // GDP-style base) rather than a flat number, so revenue naturally scales
 // with both prices and how much villagers are actually producing.
 export const TAX_OUTPUT_FACTOR = 0.008;
+// Tick-to-tick wobble of the inflation rate. Kept small: with the rate bounded below
+// it would otherwise push the average up (every wobble that would go under the
+// bound is cut off, every one above it is kept).
+export const INFLATION_NOISE = 0.0004;
 export const INFLATION_REVERSION_RATE = 0.035; // pull toward the difficulty's baseline drift, per tick
 export const HAPPINESS_TARGET_SLOPE = 220;
 export const HAPPINESS_EASE = 0.04;
 export const PRODUCTION_INFLATION_FACTOR = 0.005; // unhappy, under-producing villagers push inflation harder
-export const CONTENT_BONUS_FACTOR = 0.005; // mutlu halk enflasyonu azaltabiliyor
+export const CONTENT_BONUS_FACTOR = 0.003; // mutlu halk enflasyonu azaltabiliyor
 // inflationRate is itself bounded (config.inflationMin/Max) and mean-reverting,
 // so it can never "run away" tick to tick — but a sustained-happy town sits at
 // a negative inflationTarget indefinitely, and inflationIndex is that rate's
@@ -288,7 +292,9 @@ export const CONTENT_BONUS_FACTOR = 0.005; // mutlu halk enflasyonu azaltabiliyo
 // already an upper collapse bound (difficulty.hyperinflationIndex); this is
 // its missing lower counterpart — not a loss condition, just a floor under
 // how much a content town's prices can ease.
-export const INFLATION_INDEX_FLOOR = 40;
+// Prices can ease, but not collapse: real deflation is slow, and a town whose
+// prices halve would not be a realistic one.
+export const INFLATION_INDEX_FLOOR = 70;
 export const ANGRY_THRESHOLD = 20;
 export const ANGRY_EVENT_CHANCE = 0.1;
 export const ANGRY_CASH_PENALTY = 25;

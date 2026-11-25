@@ -50,7 +50,8 @@ import {
   flashDealMultiplier,
 } from "./flashDeals";
 import { seasonFromTick, seasonProductionMultiplier } from "./seasons";
-import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
+import { afterSpoilage, moneySupplyPressure, workerWagePerTick } from "./realism";
+import { WORKER_PRODUCTION_BONUS_PER_WORKER } from "./workers";
 import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
 import { UPGRADES_BY_ID } from "./upgrades";
@@ -86,6 +87,7 @@ import {
   HAPPINESS_TARGET_SLOPE,
   HISTORY_LEN,
   INFLATION_INDEX_FLOOR,
+  INFLATION_NOISE,
   INFLATION_REVERSION_RATE,
   INPUT_COST_PASS_THROUGH,
   LOST_TREASURE_CHANCE,
@@ -183,14 +185,16 @@ export function tick(state: EconomyState): EconomyState {
   const inflationTarget = clamp(
     config.baseInflationDrift +
       productionPenalty * PRODUCTION_INFLATION_FACTOR -
-      contentBonus * CONTENT_BONUS_FACTOR,
+      contentBonus * CONTENT_BONUS_FACTOR +
+      // money in the treasury relative to what the town makes (see realism.ts)
+      moneySupplyPressure(state),
     config.inflationMin,
     config.inflationMax
   );
   let inflationRate = clamp(
     state.inflationRate +
       (inflationTarget - state.inflationRate) * INFLATION_REVERSION_RATE +
-      (Math.random() - 0.5) * 0.0012,
+      (Math.random() - 0.5) * INFLATION_NOISE,
     config.inflationMin,
     config.inflationMax
   );
@@ -551,7 +555,10 @@ export function tick(state: EconomyState): EconomyState {
   // rather than letting cash go negative.
   let workers = state.workers;
   let totalWorkers = GOODS.reduce((sum, g) => sum + workers[g.id], 0);
-  let workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+  // wages follow the town price index, so a payroll costs the same share of the
+  // economy at any price level
+  const wagePerTick = workerWagePerTick(state.inflationIndex);
+  let workerWageCost = totalWorkers * wagePerTick;
   const availableForWages = state.cash + taxCashDelta;
   let laidOff = 0;
   while (workerWageCost > availableForWages && totalWorkers > 0) {
@@ -559,7 +566,7 @@ export function tick(state: EconomyState): EconomyState {
     if (!g) break;
     workers = { ...workers, [g.id]: workers[g.id] - 1 };
     totalWorkers -= 1;
-    workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+    workerWageCost = totalWorkers * wagePerTick;
     laidOff++;
   }
   if (laidOff > 0) {
@@ -658,6 +665,8 @@ export function tick(state: EconomyState): EconomyState {
 
     goods[good.id] = {
       ...gs,
+      // food keeps badly: a little of the stock spoils every tick
+      holding: afterSpoilage(good.id, gs.holding, Math.random()),
       price,
       supply,
       demandPressure,

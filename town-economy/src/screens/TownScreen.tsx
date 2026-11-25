@@ -33,7 +33,8 @@ import { formatWait, improvementWaitMs, pendingOf } from "../economy/constructio
 import { townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
-import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "../economy/workers";
+import { workerWagePerTick } from "../economy/realism";
+import { WORKER_PRODUCTION_BONUS_PER_WORKER } from "../economy/workers";
 import { PriceChart } from "../components/PriceChart";
 import { SectionLabel } from "../components/SectionLabel";
 import { StretchPanel, GoldButton } from "../components/PanelKit";
@@ -177,6 +178,14 @@ export function TownScreen({ onOpenDoctrine }: Props) {
             value={`+${formatPercent(dailyPct(inflationPressure.unhappinessDrag), state.language, 2)}`}
             up
             good={false}
+          />
+        )}
+        {Math.abs(inflationPressure.moneySupply) > 0.00005 && (
+          <FactorRow
+            label={t("town.inflationFactors.money")}
+            value={`${inflationPressure.moneySupply > 0 ? "+" : "-"}${formatPercent(dailyPct(Math.abs(inflationPressure.moneySupply)), state.language, 2)}`}
+            up={inflationPressure.moneySupply > 0}
+            good={inflationPressure.moneySupply < 0}
           />
         )}
         {inflationPressure.contentRelief > 0 && (
@@ -510,7 +519,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
               info={
                 count > 0
                   ? `${t("town.workerWage", {
-                      amount: fixedUi(count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY, 1),
+                      amount: fixedUi(
+                        count * workerWagePerTick(state.inflationIndex) * TICKS_PER_GAME_DAY,
+                        1
+                      ),
                     })} · ${t("town.workerBonus", {
                       pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
                     })}`

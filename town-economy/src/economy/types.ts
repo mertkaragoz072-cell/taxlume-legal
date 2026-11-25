@@ -58,6 +58,8 @@ export interface Good {
   /** goods this one is made from. Their supply throttles this one's
    * production — see productionInputFactor in formulas.ts. */
   inputs?: GoodId[];
+  /** food: a little of the stock spoils every tick (see realism.ts) */
+  perishable?: boolean;
 }
 
 export interface GoodState {
