@@ -237,7 +237,6 @@ export function AchievementsScreen() {
                     numberOfLines={1}
                   >
                     {t(townRankNameKey(i))}
-                    {i === now ? `  ·  ${t("achievements.eraPathNow")}` : ""}
                   </Text>
                   <Text style={styles.eraSub} numberOfLines={2}>
                     {reached
@@ -245,6 +244,13 @@ export function AchievementsScreen() {
                       : t("achievements.eraPathLocked", { amount: formatCoins(townRankThreshold(i), 0) })}
                   </Text>
                 </View>
+                {i === now ? (
+                  <View style={styles.eraNow}>
+                    <Text style={styles.eraNowText} numberOfLines={1}>
+                      {t("achievements.eraPathNow")}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             );
           });
@@ -689,6 +695,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  eraNow: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: "rgba(246,226,160,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(246,226,160,0.55)",
+  },
+  eraNowText: { color: "#f6e2a0", fontFamily: FONT.bold, fontSize: 11 },
   eraName: { fontFamily: FONT.display, fontSize: 17, letterSpacing: 0.4 },
   eraSub: { color: "#eadcb6", fontFamily: FONT.medium, fontSize: 14, lineHeight: 19, marginTop: 1 },
   body: { padding: SCREEN_PADDING, paddingBottom: 96 },
