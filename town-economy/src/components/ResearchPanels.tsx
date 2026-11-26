@@ -139,7 +139,7 @@ export function GoodTab({ goodId, icon, name, selected, width, progress, onPress
       accessibilityState={{ selected }}
       accessibilityLabel={name}
       scaleTo={0.96}
-      style={{ width, height, marginBottom: 4 }}
+      style={{ width, minHeight: height, maxHeight: height * 1.7, flexGrow: 1, marginBottom: 4 }}
     >
       <Image source={selected ? tabOn : tabOff} style={styles.fill} resizeMode="stretch" />
       <View style={[styles.tabRow, { paddingLeft: 9, paddingRight: 8 }]} pointerEvents="none">
@@ -214,11 +214,11 @@ export function ResearchCard(p: ResearchCardProps) {
   );
 
   return (
-    <View style={{ alignSelf: "stretch", marginBottom: PANEL_GAP - 2 }} onLayout={onLayout}>
+    <View style={{ alignSelf: "stretch", marginBottom: PANEL_GAP - 2, flexGrow: 1 }} onLayout={onLayout}>
       <View style={{ width: "100%", height: cap }}>
         <Image source={cardTop} style={styles.fill} resizeMode="stretch" />
       </View>
-      <View>
+      <View style={{ flexGrow: 1, justifyContent: "center" }}>
         <View style={styles.midFill} pointerEvents="none">
           <Image source={cardMid} style={styles.fill} resizeMode="stretch" />
         </View>

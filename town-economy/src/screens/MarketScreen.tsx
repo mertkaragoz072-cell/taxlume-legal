@@ -650,7 +650,7 @@ export function MarketScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   sheetBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",

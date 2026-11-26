@@ -600,6 +600,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
 });

@@ -106,7 +106,9 @@ export function ResearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: PANEL_GAP - 4 },
+  // flexGrow: when the lists are shorter than the screen they stretch to fill it, so
+  // the page never ends in bare wood above the tab bar.
+  body: { padding: SCREEN_PADDING, paddingBottom: 60, flexGrow: 1 },
+  row: { flex: 1, flexDirection: "row", alignItems: "stretch", gap: PANEL_GAP - 4 },
   cards: { flex: 1, minWidth: 0 },
 });

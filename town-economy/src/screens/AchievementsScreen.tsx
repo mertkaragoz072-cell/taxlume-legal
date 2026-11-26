@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   eraNowText: { color: "#f6e2a0", fontFamily: FONT.bold, fontSize: 11 },
   eraName: { fontFamily: FONT.display, fontSize: 17, letterSpacing: 0.4 },
   eraSub: { color: "#eadcb6", fontFamily: FONT.medium, fontSize: 14, lineHeight: 19, marginTop: 1 },
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   summaryCard: {
     borderRadius: RADIUS.feature,
     padding: SPACING.lg,

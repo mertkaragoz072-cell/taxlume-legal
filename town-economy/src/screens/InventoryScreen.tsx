@@ -237,7 +237,7 @@ export function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   sumRow: {
     position: "absolute",
     left: "10%",
