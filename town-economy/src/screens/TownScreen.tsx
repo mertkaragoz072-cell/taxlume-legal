@@ -47,6 +47,7 @@ import {
   RankPanel,
   TaxPanel,
 } from "../components/TownPanels";
+import { TownPlan } from "../components/TownPlan";
 import { DoctrinePanel } from "../components/DoctrinePanel";
 import { WorkerCard } from "../components/WorkerCard";
 import { WorkersLockedPanel } from "../components/WorkersLockedPanel";
@@ -164,6 +165,8 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         index={fixedUi(state.inflationIndex, 1)}
         indexLabel={t("town.priceIndexLabel")}
       />
+
+      <TownPlan />
 
       <StretchPanel frame="wheat" title={t("town.inflationFactors.title")}>
         <FactorRow

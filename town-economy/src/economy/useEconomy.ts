@@ -32,6 +32,7 @@ import {
 import { effectiveDifficultyConfig, ngPlusBonusPrestigePoints } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID, TownId } from "./towns";
 import { claimMerchantOffer, dismissMerchantOffer } from "./merchantOffer";
+import { autoLayout, placeBuilding } from "./townLayout";
 import { finishDueImprovements, ImprovementKind, skipImprovement, startImprovement } from "./construction";
 import { VILLAGER_REQUEST_GIVE_HAPPINESS, VILLAGER_REQUEST_REFUSE_HAPPINESS } from "./villagerRequests";
 import { deviceLanguage } from "../i18n/deviceLanguage";
@@ -257,6 +258,8 @@ type Action =
   | { type: "SET_TAX_RATE"; rate: number }
   | { type: "OFFLINE_ADVANCE"; ticks: number; elapsedMs: number }
   | { type: "DISMISS_OFFLINE_SUMMARY" }
+  | { type: "PLACE_BUILDING"; plot: number; id: string | null }
+  | { type: "AUTO_LAYOUT" }
   | { type: "CLAIM_MERCHANT_OFFER" }
   | { type: "DISMISS_MERCHANT_OFFER" }
   | { type: "DISMISS_MERVE_RANK_UP" }
@@ -1528,6 +1531,10 @@ function baseReducer(state: EconomyState, action: Action): EconomyState {
       return setTaxRate(state, action.rate);
     case "OFFLINE_ADVANCE":
       return offlineAdvance(state, action.ticks, action.elapsedMs);
+    case "PLACE_BUILDING":
+      return placeBuilding(state, action.plot, action.id);
+    case "AUTO_LAYOUT":
+      return autoLayout(state);
     case "CLAIM_MERCHANT_OFFER":
       return claimMerchantOffer(state);
     case "DISMISS_MERCHANT_OFFER":
@@ -1749,6 +1756,11 @@ export function useEconomy() {
     []
   );
   const setTaxRate_ = useCallback((rate: number) => dispatch({ type: "SET_TAX_RATE", rate }), []);
+  const placeBuilding_ = useCallback(
+    (plot: number, id: string | null) => dispatch({ type: "PLACE_BUILDING", plot, id }),
+    []
+  );
+  const autoLayout_ = useCallback(() => dispatch({ type: "AUTO_LAYOUT" }), []);
   const claimMerchantOffer_ = useCallback(() => dispatch({ type: "CLAIM_MERCHANT_OFFER" }), []);
   const dismissMerchantOffer_ = useCallback(() => dispatch({ type: "DISMISS_MERCHANT_OFFER" }), []);
   const dismissOfflineSummary = useCallback(() => dispatch({ type: "DISMISS_OFFLINE_SUMMARY" }), []);
@@ -1837,6 +1849,8 @@ export function useEconomy() {
     tradeAsset: tradeAsset_,
     setTaxRate: setTaxRate_,
     dismissOfflineSummary,
+    placeBuilding: placeBuilding_,
+    autoLayout: autoLayout_,
     claimMerchantOffer: claimMerchantOffer_,
     dismissMerchantOffer: dismissMerchantOffer_,
     dismissMerveRankUp,

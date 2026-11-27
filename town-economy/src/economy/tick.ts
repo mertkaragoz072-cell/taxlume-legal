@@ -32,6 +32,7 @@ import {
 } from "./crises";
 import { EVENT_TEMPLATES } from "./events";
 import { applyLoanDue } from "./loanDue";
+import { layoutHappinessBonus } from "./townLayout";
 import { todayKey, weeklyThemeForDate, weeklyThemeMultiplier } from "./weeklyTheme";
 import { MENTOR_DONE } from "./mentor";
 import { makeMerchantOffer, MERCHANT_CHANCE, merchantMayAppear } from "./merchantOffer";
@@ -162,7 +163,11 @@ export function tick(state: EconomyState): EconomyState {
   const taxHappinessDrag =
     state.taxRate * HAPPINESS_TARGET_SLOPE * (1 - perkTaxHappinessRelief(state.prestigePerks));
   const targetHappiness = clamp(
-    100 - taxHappinessDrag - debtBurden * DEBT_HAPPINESS_DRAG + propertyHappinessBonus(state.ownedProperties),
+    100 -
+      taxHappinessDrag -
+      debtBurden * DEBT_HAPPINESS_DRAG +
+      propertyHappinessBonus(state.ownedProperties) +
+      layoutHappinessBonus(state),
     0,
     100
   );

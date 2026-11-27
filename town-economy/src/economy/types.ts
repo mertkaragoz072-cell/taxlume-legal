@@ -378,6 +378,8 @@ export interface EconomyState {
   /** a short-lived side objective running in the background; doesn't freeze the tick loop */
   activeMiniQuest: MiniQuestInstance | null;
   /** no new flash quest before this tick, so they come in a rhythm, not a flood */
+  /** the town plan: building id (or null) per plot (see townLayout.ts) */
+  townLayout?: (string | null)[];
   miniQuestCooldownTick?: number;
   /** a travelling merchant's offer of coins for watching an ad (see merchantOffer.ts) */
   merchantOffer?: import("./merchantOffer").MerchantOffer | null;
