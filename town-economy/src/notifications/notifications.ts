@@ -197,6 +197,35 @@ export async function scheduleBackgroundNotifications(state: EconomyState): Prom
         minute: 0,
       },
     });
+    await scheduleWinBack(state);
+  }
+}
+
+/** Win-back: a player who has not opened the game for 3 and for 7 days gets one
+ * message each, about what is waiting rather than a generic "come back". */
+async function scheduleWinBack(state: EconomyState): Promise<void> {
+  const day = 24 * 60 * 60;
+  const lines: { seconds: number; title: string; body: string }[] = [
+    {
+      seconds: 3 * day,
+      title: t(state.language, "notif.comeBack3Title"),
+      body: t(state.language, "notif.comeBack3Body"),
+    },
+    {
+      seconds: 7 * day,
+      title: t(state.language, "notif.comeBack7Title"),
+      body: t(state.language, "notif.comeBack7Body"),
+    },
+  ];
+  for (const l of lines) {
+    await scheduleSafely({
+      content: { title: l.title, body: l.body },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: l.seconds,
+        repeats: false,
+      },
+    });
   }
 }
 

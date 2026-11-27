@@ -31,6 +31,9 @@ import {
   rollCrisisTemplate,
 } from "./crises";
 import { EVENT_TEMPLATES } from "./events";
+import { applyLoanDue } from "./loanDue";
+import { layoutHappinessBonus } from "./townLayout";
+import { todayKey, weeklyThemeForDate, weeklyThemeMultiplier } from "./weeklyTheme";
 import { MENTOR_DONE } from "./mentor";
 import { makeMerchantOffer, MERCHANT_CHANCE, merchantMayAppear } from "./merchantOffer";
 import { MINI_QUEST_TEMPLATES } from "./miniQuests";
@@ -50,7 +53,8 @@ import {
   flashDealMultiplier,
 } from "./flashDeals";
 import { seasonFromTick, seasonProductionMultiplier } from "./seasons";
-import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "./workers";
+import { afterSpoilage, moneySupplyPressure, workerWagePerTick } from "./realism";
+import { WORKER_PRODUCTION_BONUS_PER_WORKER } from "./workers";
 import { effectiveDifficultyConfig } from "./ngPlusModifiers";
 import { TOWNS, TOWNS_BY_ID } from "./towns";
 import { UPGRADES_BY_ID } from "./upgrades";
@@ -86,6 +90,7 @@ import {
   HAPPINESS_TARGET_SLOPE,
   HISTORY_LEN,
   INFLATION_INDEX_FLOOR,
+  INFLATION_NOISE,
   INFLATION_REVERSION_RATE,
   INPUT_COST_PASS_THROUGH,
   LOST_TREASURE_CHANCE,
@@ -158,7 +163,11 @@ export function tick(state: EconomyState): EconomyState {
   const taxHappinessDrag =
     state.taxRate * HAPPINESS_TARGET_SLOPE * (1 - perkTaxHappinessRelief(state.prestigePerks));
   const targetHappiness = clamp(
-    100 - taxHappinessDrag - debtBurden * DEBT_HAPPINESS_DRAG + propertyHappinessBonus(state.ownedProperties),
+    100 -
+      taxHappinessDrag -
+      debtBurden * DEBT_HAPPINESS_DRAG +
+      propertyHappinessBonus(state.ownedProperties) +
+      layoutHappinessBonus(state),
     0,
     100
   );
@@ -183,14 +192,16 @@ export function tick(state: EconomyState): EconomyState {
   const inflationTarget = clamp(
     config.baseInflationDrift +
       productionPenalty * PRODUCTION_INFLATION_FACTOR -
-      contentBonus * CONTENT_BONUS_FACTOR,
+      contentBonus * CONTENT_BONUS_FACTOR +
+      // money in the treasury relative to what the town makes (see realism.ts)
+      moneySupplyPressure(state),
     config.inflationMin,
     config.inflationMax
   );
   let inflationRate = clamp(
     state.inflationRate +
       (inflationTarget - state.inflationRate) * INFLATION_REVERSION_RATE +
-      (Math.random() - 0.5) * 0.0012,
+      (Math.random() - 0.5) * INFLATION_NOISE,
     config.inflationMin,
     config.inflationMax
   );
@@ -551,7 +562,10 @@ export function tick(state: EconomyState): EconomyState {
   // rather than letting cash go negative.
   let workers = state.workers;
   let totalWorkers = GOODS.reduce((sum, g) => sum + workers[g.id], 0);
-  let workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+  // wages follow the town price index, so a payroll costs the same share of the
+  // economy at any price level
+  const wagePerTick = workerWagePerTick(state.inflationIndex);
+  let workerWageCost = totalWorkers * wagePerTick;
   const availableForWages = state.cash + taxCashDelta;
   let laidOff = 0;
   while (workerWageCost > availableForWages && totalWorkers > 0) {
@@ -559,7 +573,7 @@ export function tick(state: EconomyState): EconomyState {
     if (!g) break;
     workers = { ...workers, [g.id]: workers[g.id] - 1 };
     totalWorkers -= 1;
-    workerWageCost = totalWorkers * WORKER_WAGE_PER_TICK;
+    workerWageCost = totalWorkers * wagePerTick;
     laidOff++;
   }
   if (laidOff > 0) {
@@ -570,6 +584,7 @@ export function tick(state: EconomyState): EconomyState {
     });
   }
 
+  const weeklyTheme = weeklyThemeForDate(todayKey());
   const goods = { ...state.goods };
   let productionToday = { ...state.productionToday };
   for (const good of GOODS) {
@@ -582,6 +597,7 @@ export function tick(state: EconomyState): EconomyState {
       seasonalTemplate && seasonalTemplate.affectedGoods.includes(good.id)
         ? seasonalTemplate.priceMultiplier
         : 1;
+    const themeMult = weeklyThemeMultiplier(weeklyTheme, good.id);
     const flashMult =
       activeFlashDeal && activeFlashDeal.goodId === good.id
         ? flashDealMultiplier(activeFlashDeal.direction)
@@ -641,7 +657,13 @@ export function tick(state: EconomyState): EconomyState {
     const inputCostMult = 1 + INPUT_COST_PASS_THROUGH * (costFactor - 1);
     const rawPrice =
       priceFromSupply(
-        good.basePrice * researchedValueMult * seasonalMult * flashMult * demandMult * inputCostMult,
+        good.basePrice *
+          researchedValueMult *
+          seasonalMult *
+          themeMult *
+          flashMult *
+          demandMult *
+          inputCostMult,
         good.baseSupply,
         good.elasticity,
         supply,
@@ -658,6 +680,8 @@ export function tick(state: EconomyState): EconomyState {
 
     goods[good.id] = {
       ...gs,
+      // food keeps badly: a little of the stock spoils every tick
+      holding: afterSpoilage(good.id, gs.holding, Math.random()),
       price,
       supply,
       demandPressure,
@@ -728,7 +752,7 @@ export function tick(state: EconomyState): EconomyState {
     assets[asset.id] = { ...as, price, history: pushCapped(as.history, price, HISTORY_LEN) };
   }
 
-  const loan = state.loan
+  let loan = state.loan
     ? { ...state.loan, remainingBalance: state.loan.remainingBalance * (1 + state.loan.interestRatePerTick) }
     : null;
 
@@ -737,6 +761,27 @@ export function tick(state: EconomyState): EconomyState {
   const propertyIncomePerTick =
     propertyPassiveIncomePerTick(state.ownedProperties) * doctrineMods.propertyIncomeMult;
   let cash = state.cash + taxCashDelta + propertyIncomePerTick - workerWageCost;
+  if (loan) {
+    // The loan has a term (see loanDue.ts): warnings as it falls due, then the bank
+    // collects from the treasury if it stays unpaid.
+    const due = applyLoanDue(loan, cash, state.tick);
+    cash = due.cash;
+    loan = due.loan;
+    if (due.notice) {
+      const key =
+        due.notice === "dueSoon"
+          ? "msg.loanDueSoon"
+          : due.notice === "overdue"
+            ? "msg.loanOverdue"
+            : "msg.loanCollected";
+      newEvents.push({
+        id: nextId++,
+        ...eventFields(state.language, key, { amount: formatNumberUtil(due.taken, state.language) }),
+        tone: "bad",
+      });
+    }
+    if (loan.remainingBalance <= 0.01) loan = null;
+  }
   let dailyCashEarned = state.dailyProgress.cashEarned + Math.max(0, taxCashDelta) + propertyIncomePerTick;
   let totalCaravansCompleted = state.stats.totalCaravansCompleted;
   for (const caravan of state.caravans) {

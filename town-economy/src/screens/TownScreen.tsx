@@ -1,7 +1,8 @@
 import { SpotlightTarget, useSpotlightScroll } from "../components/Spotlight";
 import { MENTOR_STEPS } from "../economy/mentor";
 import React, { useEffect, useRef, useState } from "react";
-import { formatPercent, fixedUi } from "../utils/formatNumber";
+import { formatCompactNumber, formatPercent, fixedUi } from "../utils/formatNumber";
+import { rankTheme } from "../economy/rankTheme";
 import { Animated, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../components/AppText";
 import { useEconomyContext } from "../economy/EconomyContext";
@@ -29,10 +30,11 @@ import { DOCTRINES_BY_ID } from "../economy/doctrines";
 import { UPGRADES, upgradeCost } from "../economy/upgrades";
 import { BuildStatus } from "../components/BuildStatus";
 import { formatWait, improvementWaitMs, pendingOf } from "../economy/construction";
-import { townRankIcon, townRankThreshold, townRankTitle } from "../economy/townRanks";
+import { townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
-import { WORKER_PRODUCTION_BONUS_PER_WORKER, WORKER_WAGE_PER_TICK } from "../economy/workers";
+import { workerWagePerTick } from "../economy/realism";
+import { WORKER_PRODUCTION_BONUS_PER_WORKER } from "../economy/workers";
 import { PriceChart } from "../components/PriceChart";
 import { SectionLabel } from "../components/SectionLabel";
 import { StretchPanel, GoldButton } from "../components/PanelKit";
@@ -45,6 +47,7 @@ import {
   RankPanel,
   TaxPanel,
 } from "../components/TownPanels";
+import { TownPlan } from "../components/TownPlan";
 import { DoctrinePanel } from "../components/DoctrinePanel";
 import { WorkerCard } from "../components/WorkerCard";
 import { WorkersLockedPanel } from "../components/WorkersLockedPanel";
@@ -149,10 +152,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
       <RankPanel
         label={t("town.rankLabel")}
         title={rankTitle}
-        icon={townRankIcon(state.townRankIndex)}
-        nextIcon={townRankIcon(state.townRankIndex + 1)}
-        nextLabel={t("town.rankNext")}
+        nextText={`${t("town.rankNext")}: ${townRankTitle(state.townRankIndex + 1, t)}`}
+        progressText={`${formatCompactNumber(netWorth, state.language, 0)} / ${formatCompactNumber(rankNextThreshold, state.language, 0)}`}
         pct={rankPct}
+        accent={rankTheme(state.townRankIndex).accent}
       />
 
       <MoodPanel
@@ -162,6 +165,8 @@ export function TownScreen({ onOpenDoctrine }: Props) {
         index={fixedUi(state.inflationIndex, 1)}
         indexLabel={t("town.priceIndexLabel")}
       />
+
+      <TownPlan />
 
       <StretchPanel frame="wheat" title={t("town.inflationFactors.title")}>
         <FactorRow
@@ -176,6 +181,14 @@ export function TownScreen({ onOpenDoctrine }: Props) {
             value={`+${formatPercent(dailyPct(inflationPressure.unhappinessDrag), state.language, 2)}`}
             up
             good={false}
+          />
+        )}
+        {Math.abs(inflationPressure.moneySupply) > 0.00005 && (
+          <FactorRow
+            label={t("town.inflationFactors.money")}
+            value={`${inflationPressure.moneySupply > 0 ? "+" : "-"}${formatPercent(dailyPct(Math.abs(inflationPressure.moneySupply)), state.language, 2)}`}
+            up={inflationPressure.moneySupply > 0}
+            good={inflationPressure.moneySupply < 0}
           />
         )}
         {inflationPressure.contentRelief > 0 && (
@@ -509,7 +522,10 @@ export function TownScreen({ onOpenDoctrine }: Props) {
               info={
                 count > 0
                   ? `${t("town.workerWage", {
-                      amount: fixedUi(count * WORKER_WAGE_PER_TICK * TICKS_PER_GAME_DAY, 1),
+                      amount: fixedUi(
+                        count * workerWagePerTick(state.inflationIndex) * TICKS_PER_GAME_DAY,
+                        1
+                      ),
                     })} · ${t("town.workerBonus", {
                       pct: Math.round(count * WORKER_PRODUCTION_BONUS_PER_WORKER * 100),
                     })}`
@@ -587,6 +603,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   eventsToggle: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   workersNote: { color: COLORS.textMuted, fontSize: TYPE.caption, marginBottom: SPACING.sm + 2 },
 });

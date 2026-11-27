@@ -20,6 +20,7 @@ import {
 import { ForeignTown } from "./towns";
 import { doctrineModifiers } from "./doctrines";
 import { UPGRADES_BY_ID } from "./upgrades";
+import { moneySupplyPressure, taxBaseFactor } from "./realism";
 import { WORKER_MAX_PER_GOOD } from "./workers";
 import { EconomyState, Good, GoodId } from "./types";
 import {
@@ -122,7 +123,9 @@ export function supplyBounds(good: Good): { min: number; max: number } {
 }
 export function estimateTaxIncomePerTick(state: EconomyState): number {
   const taxableOutput = GOODS.reduce((sum, g) => sum + g.baseProduction * state.goods[g.id].price, 0);
-  return state.taxRate * taxableOutput * TAX_OUTPUT_FACTOR * (state.happiness / 100);
+  return (
+    state.taxRate * taxBaseFactor(state.taxRate) * taxableOutput * TAX_OUTPUT_FACTOR * (state.happiness / 100)
+  );
 }
 export function pushCapped(arr: number[], value: number, cap: number): number[] {
   const next = [...arr, value];
@@ -164,6 +167,8 @@ export interface InflationPressure {
   /** the daily inflation rate today's contentment is easing, if it holds */
   contentRelief: number;
   /** baseline + unhappinessDrag - contentRelief, clamped to the difficulty's band */
+  /** pressure from the money in the treasury (negative when money is scarce) */
+  moneySupply: number;
   target: number;
 }
 /** What is currently pushing tomorrow's inflation rate up or down, broken
@@ -185,8 +190,9 @@ export function inflationPressureBreakdown(state: EconomyState): InflationPressu
   const contentBonus = clamp((state.happiness - 70) / 30, 0, 1);
   const unhappinessDrag = productionPenalty * PRODUCTION_INFLATION_FACTOR;
   const contentRelief = contentBonus * CONTENT_BONUS_FACTOR;
+  const moneySupply = moneySupplyPressure(state);
   const target = clamp(
-    config.baseInflationDrift + unhappinessDrag - contentRelief,
+    config.baseInflationDrift + unhappinessDrag - contentRelief + moneySupply,
     config.inflationMin,
     config.inflationMax
   );
@@ -196,6 +202,7 @@ export function inflationPressureBreakdown(state: EconomyState): InflationPressu
     debtHappinessDrag,
     unhappinessDrag,
     contentRelief,
+    moneySupply,
     target,
   };
 }

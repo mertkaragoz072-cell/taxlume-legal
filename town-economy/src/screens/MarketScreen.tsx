@@ -21,6 +21,7 @@ import { BuySellPanel } from "../components/BuySellPanel";
 import { DemandForecastCard, GoodChip } from "../components/DemandForecastCard";
 import { WoodPanel } from "../components/WoodPanel";
 import { SeasonStrip } from "../components/SeasonStrip";
+import { WeeklyThemeStrip } from "../components/WeeklyThemeStrip";
 import { GoodCard } from "../components/GoodCard";
 import { GoodIcon } from "../components/GoodIcon";
 import { GradientFill } from "../components/GradientFill";
@@ -275,6 +276,7 @@ export function MarketScreen({ sounds }: Props) {
       )}
 
       <SeasonStrip />
+      <WeeklyThemeStrip />
 
       {state.demandCycle && (
         <DemandForecastCard cycle={state.demandCycle} next={state.nextDemandCycle} tick={state.tick} />
@@ -650,7 +652,7 @@ export function MarketScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   sheetBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",

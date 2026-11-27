@@ -50,6 +50,7 @@ export const GOODS: Good[] = [
     baseProduction: 22,
     elasticity: 0.45,
     inputs: ["grain"],
+    perishable: true,
   },
   {
     id: "milk",
@@ -61,6 +62,7 @@ export const GOODS: Good[] = [
     baseSupply: 220,
     baseProduction: 22,
     elasticity: 0.5,
+    perishable: true,
   },
   {
     id: "wood",
@@ -106,6 +108,7 @@ export const GOODS: Good[] = [
     baseSupply: 200,
     baseProduction: 20,
     elasticity: 0.5,
+    perishable: true,
   },
   {
     id: "wine",
@@ -195,6 +198,7 @@ export const GOODS: Good[] = [
     elasticity: 0.55,
     unlockRank: 2, // City
     inputs: ["milk"],
+    perishable: true,
   },
   {
     id: "paper",

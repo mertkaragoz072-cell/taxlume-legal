@@ -19,6 +19,8 @@ const EMOJI_RE = new RegExp(`(${Object.keys(GOOD_EMOJI).join("|")})`, "u");
 // Largest Dynamic Type / font-scale multiplier the painted panels were laid
 // out for; beyond this their fixed frames would clip the words.
 const MAX_FONT_SCALE = 1.25;
+// default line height as a share of the font size
+const LINE_RATIO = 1.3;
 
 /** The app's Text. Identical to react-native's, except that every 🪙 in a
  * plain string child is drawn as the game's silver coin image, sized to the
@@ -58,8 +60,17 @@ export function Text({ children, style, ...rest }: TextProps) {
       );
     });
   });
+  // Every Text gets an explicit line height unless its style sets one. Without it each
+  // platform uses the font's own line metrics, and on iPhone this face sets much taller
+  // than in a browser, which pushed lines out of the painted frames sized from a
+  // browser. One rule makes the web build, iOS and Android lay text out the same way.
+  const lineHeight = flat?.lineHeight === undefined ? Math.round(fontSize * LINE_RATIO) : undefined;
   return (
-    <RNText style={style} maxFontSizeMultiplier={MAX_FONT_SCALE} {...rest}>
+    <RNText
+      style={lineHeight === undefined ? style : [{ lineHeight }, style]}
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
+      {...rest}
+    >
       {mapped}
     </RNText>
   );

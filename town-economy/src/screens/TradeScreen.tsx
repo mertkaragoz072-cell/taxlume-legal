@@ -671,7 +671,7 @@ function clamp01(v: number): number {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   roadBanner: {
     ...WOOD_RIM,
     borderRadius: RADIUS.card,

@@ -195,6 +195,7 @@ export function InventoryScreen() {
                   >
                     {t("inventory.rowSub", { qty: gs.holding, price: fixedUi(gs.price, 2) })} ·{" "}
                     {formatPercent(share, state.language)}
+                    {good.perishable ? ` · 🍂 ${t("inventory.perishable")}` : ""}
                   </Text>
                   <View style={styles.barTrack}>
                     <View style={[styles.barFill, { width: `${share}%`, backgroundColor: good.color }]} />
@@ -236,7 +237,7 @@ export function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   sumRow: {
     position: "absolute",
     left: "10%",

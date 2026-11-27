@@ -141,7 +141,7 @@ export function InvestScreen({ sounds }: Props) {
 }
 
 const styles = StyleSheet.create({
-  body: { padding: SCREEN_PADDING, paddingBottom: 96 },
+  body: { padding: SCREEN_PADDING, paddingBottom: 60 },
   sectionNote: { color: COLORS.textMuted, fontSize: TYPE.label, marginBottom: PANEL_GAP, lineHeight: 17 },
   assetsRow: { marginBottom: PANEL_GAP },
 });
