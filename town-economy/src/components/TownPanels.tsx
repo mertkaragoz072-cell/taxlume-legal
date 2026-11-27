@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from "react-native";
 import bankArt from "../../assets/ui/town/bank.webp";
 import chartArt from "../../assets/ui/town/chart.webp";
-import happyArt from "../../assets/ui/town/happy.webp";
-import taxArt from "../../assets/ui/town/tax.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
 import { StretchPanel } from "./PanelKit";
@@ -259,58 +257,41 @@ interface HappyProps {
 }
 
 export function HappinessPanel({ label, status, emoji, value, outOf, color }: HappyProps) {
+  const fill = Math.max(0, Math.min(100, value));
   return (
-    <Painted title={label} banner={84} source={happyArt} artW={853} artH={267}>
-      {(s) => (
-        <>
-          <View style={[box(s, 292, 70, 340, 80), { flexDirection: "row", alignItems: "center" }]}>
-            <Text aria-hidden style={{ fontSize: 44 * s, marginRight: 10 * s }}>
-              {emoji}
-            </Text>
-            <Text
-              style={[
-                styles.display,
-                { color: INK, fontSize: fit(status, 265, 44, 0.86) * s, flexShrink: 1 },
-              ]}
-              numberOfLines={1}
-            >
-              {status}
-            </Text>
+    <StretchPanel frame="upgrades" title={label}>
+      <View style={styles.happyBox}>
+        <View style={styles.happyHead}>
+          <Text aria-hidden style={styles.moodEmoji}>
+            {emoji}
+          </Text>
+          <Text style={[styles.display, styles.happyStatus]} numberOfLines={1}>
+            {status}
+          </Text>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.happyValue}>{Math.round(value)}</Text>
+            <Text style={styles.indexLabel}>{outOf}</Text>
           </View>
-          <View style={[box(s, 636, 66, 140, 84), { alignItems: "flex-end", justifyContent: "center" }]}>
-            <Text style={[styles.black, { color: INK, fontSize: 50 * s }]} numberOfLines={1}>
-              {Math.round(value)}
-            </Text>
-            <Text style={[styles.small, { fontSize: 22 * s }]} numberOfLines={1}>
-              {outOf}
-            </Text>
-          </View>
-          <View style={[box(s, 288, 168, 477, 19), { borderRadius: 10 * s, overflow: "hidden" }]}>
-            <View
-              style={{
-                width: `${Math.max(0, Math.min(100, value))}%`,
-                height: "100%",
-                backgroundColor: color,
-                borderRadius: 10 * s,
-              }}
-            />
-          </View>
-        </>
-      )}
-    </Painted>
+        </View>
+        <View style={styles.rankTrack}>
+          <View
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: `${fill}%`,
+              backgroundColor: color,
+              borderRadius: 10,
+            }}
+          />
+        </View>
+      </View>
+    </StretchPanel>
   );
 }
 
 // ---------------------------------------------------------------- Tax
-
-const TAX_WELLS = [
-  [68, 112],
-  [190, 110],
-  [311, 110],
-  [433, 110],
-  [554, 110],
-  [675, 111],
-];
 
 interface TaxProps {
   title: string;
@@ -322,55 +303,30 @@ interface TaxProps {
 
 export function TaxPanel({ title, rateLabel, description, income, rates }: TaxProps) {
   return (
-    <Painted title={title} banner={96} source={taxArt} artW={852} artH={535}>
-      {(s) => (
-        <>
-          <View style={[box(s, 360, 92, 425, 182), { justifyContent: "center" }]}>
-            <Text
-              style={[
-                styles.body,
-                {
-                  color: INK_SOFT,
-                  fontSize: fitBlock(description, 425, 182, 28) * s,
-                  lineHeight: fitBlock(description, 425, 182, 28) * s * 1.28,
-                },
-              ]}
-            >
-              {description}
-            </Text>
-          </View>
-          <View style={[box(s, 80, 294, 160, 36), styles.center]}>
-            <Text style={[styles.chip, { fontSize: fit(rateLabel, 150, 22, 0.84) * s }]} numberOfLines={1}>
-              {rateLabel}
-            </Text>
-          </View>
+    <StretchPanel frame="upgrades" title={title}>
+      <View style={styles.taxBox}>
+        <Text style={styles.taxDesc}>{description}</Text>
+        <Text style={styles.taxRateLabel}>{rateLabel}</Text>
+        <View style={styles.taxRates}>
           {rates.map((r, i) => (
-            <Well
+            <ScalePressable
               key={i}
-              s={s}
-              x={TAX_WELLS[i][0]}
-              y={341}
-              w={TAX_WELLS[i][1]}
-              h={65}
-              label={r.label}
-              selected={r.selected}
               onPress={r.onPress}
-            />
-          ))}
-          <View style={[box(s, 150, 428, 628, 70), { justifyContent: "center" }]}>
-            <Text
-              style={[
-                styles.body,
-                { color: INK, fontFamily: FONT.bold, fontSize: fit(income, 620, 30, 0.58) * s },
-              ]}
-              numberOfLines={1}
+              accessibilityRole="button"
+              accessibilityLabel={r.label}
+              aria-selected={r.selected}
+              style={[styles.taxChip, r.selected ? styles.taxChipOn : styles.taxChipOff]}
+              scaleTo={0.94}
             >
-              {income}
-            </Text>
-          </View>
-        </>
-      )}
-    </Painted>
+              <Text style={r.selected ? styles.taxChipTextOn : styles.taxChipTextOff} numberOfLines={1}>
+                {r.label}
+              </Text>
+            </ScalePressable>
+          ))}
+        </View>
+        <Text style={styles.taxIncome}>{income}</Text>
+      </View>
+    </StretchPanel>
   );
 }
 
@@ -516,6 +472,27 @@ const styles = StyleSheet.create({
   fill: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   center: { alignItems: "center", justifyContent: "center" },
   display: { fontFamily: FONT.display },
+  happyBox: { paddingHorizontal: 6, paddingVertical: 2 },
+  happyHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  happyStatus: { flex: 1, color: INK, fontSize: 24, letterSpacing: 1.5 },
+  happyValue: { color: "#8a5a14", fontFamily: FONT.black, fontSize: 28, lineHeight: 32 },
+  taxBox: { paddingHorizontal: 6, paddingVertical: 2 },
+  taxDesc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 14, lineHeight: 19 },
+  taxRateLabel: { color: INK, fontFamily: FONT.bold, fontSize: 14, marginTop: 10, marginBottom: 6 },
+  taxRates: { flexDirection: "row", gap: 6 },
+  taxChip: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+  },
+  taxChipOn: { backgroundColor: "#f5c85a", borderColor: "#3b2514" },
+  taxChipOff: { backgroundColor: "#3b2514", borderColor: "#2a190c" },
+  taxChipTextOn: { color: "#4a2a0e", fontFamily: FONT.black, fontSize: 14 },
+  taxChipTextOff: { color: "#f1dcaa", fontFamily: FONT.bold, fontSize: 14 },
+  taxIncome: { color: INK, fontFamily: FONT.bold, fontSize: 14, marginTop: 10 },
   moodLine: {
     flexDirection: "row",
     alignItems: "center",
