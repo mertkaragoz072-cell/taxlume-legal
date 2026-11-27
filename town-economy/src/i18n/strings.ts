@@ -352,6 +352,14 @@ export const STRINGS = {
       happinessLabel: "Halk Memnuniyeti",
       outOf100: "/ 100",
       squareLabel: "KASABA MEYDANI",
+      estate: {
+        title: "MÜLKLERİM",
+        none: "Henüz mülkün yok. Aşağıdan ilk mülkünü satın al.",
+        summary: "{owned}/{total} mülk sende · Toplam değer {value}",
+        deed: "TAPU",
+        value: "Değeri: {value}",
+        seal: "SENİN MÜLKÜN",
+      },
       plan: {
         title: "KASABA PLANI",
         empty: "Boş arsa",
@@ -2317,6 +2325,14 @@ export const STRINGS = {
       happinessLabel: "Public Happiness",
       outOf100: "/ 100",
       squareLabel: "TOWN SQUARE",
+      estate: {
+        title: "MY ESTATE",
+        none: "You own no property yet. Buy your first one below.",
+        summary: "{owned}/{total} properties owned · Total value {value}",
+        deed: "TITLE DEED",
+        value: "Worth: {value}",
+        seal: "YOURS",
+      },
       plan: {
         title: "TOWN PLAN",
         empty: "Empty plot",

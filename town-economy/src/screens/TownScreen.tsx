@@ -32,6 +32,7 @@ import { BuildStatus } from "../components/BuildStatus";
 import { formatWait, improvementWaitMs, pendingOf } from "../economy/construction";
 import { townRankThreshold, townRankTitle } from "../economy/townRanks";
 import { PROPERTIES } from "../economy/properties";
+import { PropertyShowcase } from "../components/PropertyShowcase";
 import { PRESTIGE_PERKS } from "../economy/prestigePerks";
 import { workerWagePerTick } from "../economy/realism";
 import { WORKER_PRODUCTION_BONUS_PER_WORKER } from "../economy/workers";
@@ -467,6 +468,8 @@ export function TownScreen({ onOpenDoctrine }: Props) {
           );
         })}
       </StretchPanel>
+
+      <PropertyShowcase />
 
       <StretchPanel frame="properties" title={t("town.propertiesSectionLabel")}>
         {PROPERTIES.map((p) => {
