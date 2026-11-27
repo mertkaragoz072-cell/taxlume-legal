@@ -1271,6 +1271,10 @@ export const STRINGS = {
     asset: {
       gold: { name: "Altın", description: "Güvenli liman — yavaş ama istikrarlı değer kazanır." },
       oil: { name: "Petrol", description: "Yüksek oynaklık — sert iniş çıkışlar yaşar." },
+      bond: { name: "Devlet Tahvili", description: "Çok düşük risk — küçük ama düzenli getiri." },
+      realEstate: { name: "Gayrimenkul Fonu", description: "Orta risk — kira gelirleriyle yavaşça büyür." },
+      grain: { name: "Tahıl Vadelisi", description: "Hasada bağlı iniş çıkışlar — mevsime göre oynar." },
+      crypto: { name: "Kripto Para", description: "Aşırı oynak — bir günde ikiye katlanır ya da erir." },
       techStock: {
         name: "Teknoloji Hissesi",
         description: "Yüksek risk, yüksek getiri potansiyeli olan büyüme hissesi.",
@@ -1587,7 +1591,7 @@ export const STRINGS = {
     },
     invest: {
       sectionNote:
-        "Altın, petrol ve hisselere yatırım yap. Fiyatlar arzdan bağımsız dalgalanır — kâr da edebilirsin, zarar da.",
+        "Altın, tahvil, gayrimenkul, petrol, tahıl, hisse ve kriptoya yatırım yap. Fiyatlar arzdan bağımsız dalgalanır — kâr da edebilirsin, zarar da.",
       portfolioLabel: "Yatırım Değeri",
       holdingLabel: "Elinde: {qty}",
       avgCostLabel: "Ort. maliyet {price} 🪙",
@@ -3231,6 +3235,10 @@ export const STRINGS = {
     asset: {
       gold: { name: "Gold", description: "A safe haven — slow but steady value growth." },
       oil: { name: "Oil", description: "High volatility — sharp swings up and down." },
+      bond: { name: "Government Bond", description: "Very low risk — small but steady returns." },
+      realEstate: { name: "Real Estate Fund", description: "Medium risk — grows slowly on rental income." },
+      grain: { name: "Grain Futures", description: "Swings with the harvest — moves with the seasons." },
+      crypto: { name: "Crypto Coin", description: "Extremely volatile — can double or crash in a day." },
       techStock: { name: "Tech Stock", description: "A high-risk, high-reward growth stock." },
       bankStock: { name: "Bank Stock", description: "Moderate volatility, steady returns." },
     },
@@ -3524,7 +3532,7 @@ export const STRINGS = {
     },
     invest: {
       sectionNote:
-        "Invest in gold, oil, and stocks. Prices move independently of supply — you can profit, or you can lose.",
+        "Invest in gold, bonds, real estate, oil, grain, stocks and crypto. Prices move independently of supply — you can profit, or you can lose.",
       portfolioLabel: "Investment Value",
       holdingLabel: "You own: {qty}",
       avgCostLabel: "Avg. cost {price} 🪙",

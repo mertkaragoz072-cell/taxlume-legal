@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from "react-native";
-import bankArt from "../../assets/ui/town/bank.webp";
 import chartArt from "../../assets/ui/town/chart.webp";
 import { FONT, PANEL_GAP } from "../theme";
 import { Text } from "./AppText";
@@ -15,27 +14,6 @@ const INK_SOFT = "#5a3d22";
  * medallion, so a leading emoji in the label would double up. */
 export function plainTitle(s: string): string {
   return s.replace(/^[\p{Extended_Pictographic}️‍\s]+/u, "");
-}
-
-/** Lettering size (in art pixels) that keeps `text` inside `boxW` however wide
- * the phone's font runs. */
-function fit(text: string, boxW: number, maxSize: number, em = 0.62): number {
-  return Math.max(10, Math.min(maxSize, (boxW * 0.94) / (Math.max(1, text.length) * em)));
-}
-
-/** Largest size (art px) at which `text` wraps to fit a `boxW` x `boxH` block;
- * phone letters average ~0.52em. */
-function fitBlock(
-  text: string,
-  boxW: number,
-  boxH: number,
-  maxSize: number,
-  minSize = 14,
-  lh = 1.28
-): number {
-  let size = maxSize;
-  while (size > minSize && Math.ceil((text.length * 0.52 * size) / boxW) * size * lh > boxH) size -= 0.5;
-  return size;
 }
 
 interface PaintedProps {
@@ -84,61 +62,6 @@ function Painted({ source, artW, artH, title, banner, children }: PaintedProps) 
 
 function box(s: number, x: number, y: number, w: number, h: number) {
   return { position: "absolute" as const, left: x * s, top: y * s, width: w * s, height: h * s };
-}
-
-/** A selectable (or plain) dark/gold slot, drawn like the sent art's wells. */
-function Well({
-  s,
-  x,
-  y,
-  w,
-  h,
-  label,
-  selected,
-  onPress,
-  ariaLabel,
-}: {
-  s: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  label: string;
-  selected?: boolean;
-  onPress?: () => void;
-  ariaLabel?: string;
-}) {
-  const inner = (
-    <View
-      style={[
-        styles.well,
-        selected ? styles.wellOn : styles.wellOff,
-        { borderRadius: 14 * s, borderWidth: Math.max(1.5, 2.5 * s) },
-      ]}
-    >
-      <Text
-        style={[
-          selected ? styles.wellTextOn : styles.wellTextOff,
-          { fontSize: fit(label, w - 16, h * 0.42, 0.6) * s },
-        ]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-  if (!onPress) return <View style={box(s, x, y, w, h)}>{inner}</View>;
-  return (
-    <ScalePressable
-      onPress={onPress}
-      accessibilityLabel={ariaLabel ?? label}
-      aria-selected={selected}
-      style={box(s, x, y, w, h)}
-      scaleTo={0.96}
-    >
-      {inner}
-    </ScalePressable>
-  );
 }
 
 // ---------------------------------------------------------------- Rank
@@ -332,18 +255,6 @@ export function TaxPanel({ title, rateLabel, description, income, rates }: TaxPr
 
 // ---------------------------------------------------------------- Bank
 
-const BANK_WELLS = [
-  [65, 173],
-  [248, 172],
-  [435, 171],
-  [619, 173],
-];
-const BANK_PILLS = [
-  [58, 235],
-  [311, 234],
-  [562, 234],
-];
-
 interface BankProps {
   title: string;
   description: string;
@@ -360,91 +271,60 @@ interface BankProps {
 
 export function BankPanel({ title, description, cap, chipLabel, terms, info, rateLine, pills }: BankProps) {
   return (
-    <Painted title={title} banner={100} source={bankArt} artW={852} artH={612}>
-      {(s) => (
-        <>
-          <View style={[box(s, 388, 90, 410, cap ? 150 : 190), { justifyContent: "center" }]}>
-            <Text
-              style={[
-                styles.body,
-                {
-                  color: INK_SOFT,
-                  fontSize: fitBlock(description, 410, cap ? 150 : 190, 27) * s,
-                  lineHeight: fitBlock(description, 410, cap ? 150 : 190, 27) * s * 1.28,
-                },
-              ]}
-            >
-              {description}
-            </Text>
-          </View>
-          {cap ? (
-            <View style={[box(s, 388, 244, 410, 44), { justifyContent: "center" }]}>
-              <Text
-                style={[
-                  styles.body,
-                  { color: "#1f6b32", fontFamily: FONT.bold, fontSize: fit(cap, 410, 28, 0.58) * s },
-                ]}
-                numberOfLines={1}
+    <StretchPanel frame="upgrades" title={title}>
+      <View style={styles.taxBox}>
+        <Text style={styles.taxDesc}>{description}</Text>
+        {cap ? <Text style={styles.bankCap}>{cap}</Text> : null}
+        <Text style={styles.taxRateLabel}>{chipLabel}</Text>
+        {terms ? (
+          <View style={styles.taxRates}>
+            {terms.map((tm, i) => (
+              <ScalePressable
+                key={i}
+                onPress={tm.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={tm.label}
+                aria-selected={tm.selected}
+                style={[styles.taxChip, tm.selected ? styles.taxChipOn : styles.taxChipOff]}
+                scaleTo={0.94}
               >
-                {cap}
-              </Text>
-            </View>
-          ) : null}
-          <View style={[box(s, 80, 312, 150, 36), styles.center]}>
-            <Text style={[styles.chip, { fontSize: fit(chipLabel, 150, 22, 0.84) * s }]} numberOfLines={1}>
-              {chipLabel}
-            </Text>
+                <Text style={tm.selected ? styles.taxChipTextOn : styles.taxChipTextOff} numberOfLines={1}>
+                  {tm.label}
+                </Text>
+              </ScalePressable>
+            ))}
           </View>
-          {terms?.map((t, i) => (
-            <Well
-              key={i}
-              s={s}
-              x={BANK_WELLS[i][0]}
-              y={358}
-              w={BANK_WELLS[i][1]}
-              h={67}
-              label={t.label}
-              selected={t.selected}
-              onPress={t.onPress}
-            />
-          ))}
-          {info ? (
-            <>
-              <Well s={s} x={65} y={358} w={356} h={67} label={info[0]} />
-              <Well s={s} x={435} y={358} w={357} h={67} label={info[1]} />
-            </>
-          ) : null}
-          {rateLine ? (
-            <View style={[box(s, 70, 434, 712, 44), styles.center]}>
-              <Text
-                style={[styles.body, { color: INK_SOFT, fontSize: fitBlock(rateLine, 700, 44, 26) * s }]}
-                numberOfLines={2}
-              >
-                {rateLine}
-              </Text>
-            </View>
-          ) : null}
-          {pills.map((p, i) => (
-            <ScalePressable
-              key={i}
-              onPress={p.onPress}
-              accessibilityLabel={p.label}
-              style={box(s, BANK_PILLS[i][0], 487, BANK_PILLS[i][1], 95)}
-              scaleTo={0.96}
-            >
-              <View style={[styles.pillText, { left: 112 * s, right: 8 * s }]}>
-                <Text
-                  style={[styles.black, { color: "#4a2a0e", fontSize: fit(p.label, 118, 30, 0.74) * s }]}
-                  numberOfLines={1}
-                >
-                  {p.label}
+        ) : null}
+        {info ? (
+          <View style={styles.taxRates}>
+            {info.map((label, i) => (
+              <View key={i} style={[styles.taxChip, styles.taxChipOff]}>
+                <Text style={styles.taxChipTextOff} numberOfLines={1}>
+                  {label}
                 </Text>
               </View>
+            ))}
+          </View>
+        ) : null}
+        {rateLine ? <Text style={styles.taxIncome}>{rateLine}</Text> : null}
+        <View style={[styles.taxRates, { marginTop: 10 }]}>
+          {pills.map((pl, i) => (
+            <ScalePressable
+              key={i}
+              onPress={pl.onPress}
+              accessibilityRole="button"
+              accessibilityLabel={pl.label}
+              style={[styles.taxChip, styles.taxChipOn]}
+              scaleTo={0.94}
+            >
+              <Text style={styles.taxChipTextOn} numberOfLines={1}>
+                {pl.label}
+              </Text>
             </ScalePressable>
           ))}
-        </>
-      )}
-    </Painted>
+        </View>
+      </View>
+    </StretchPanel>
   );
 }
 
@@ -476,6 +356,7 @@ const styles = StyleSheet.create({
   happyHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   happyStatus: { flex: 1, color: INK, fontSize: 24, letterSpacing: 1.5 },
   happyValue: { color: "#8a5a14", fontFamily: FONT.black, fontSize: 28, lineHeight: 32 },
+  bankCap: { color: "#1f6b32", fontFamily: FONT.bold, fontSize: 14, marginTop: 6 },
   taxBox: { paddingHorizontal: 6, paddingVertical: 2 },
   taxDesc: { color: INK_SOFT, fontFamily: FONT.medium, fontSize: 14, lineHeight: 19 },
   taxRateLabel: { color: INK, fontFamily: FONT.bold, fontSize: 14, marginTop: 10, marginBottom: 6 },
