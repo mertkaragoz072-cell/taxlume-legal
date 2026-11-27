@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, Modal, ScrollView, StyleSheet, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { PROPERTIES_BY_ID } from "../economy/properties";
 import {
@@ -18,12 +18,16 @@ import { ModalBackdrop } from "./ModalBackdrop";
 import { ModalShell } from "./ModalKit";
 import { GoldButton, StretchPanel } from "./PanelKit";
 import { ScalePressable } from "./ScalePressable";
-import { BUILDING_ART, INK_SOFT } from "./TownCards";
+import { BuildingPic, INK_SOFT } from "./TownCards";
 
 const COLS = 4;
 
 function nameKeyOf(id: string): string {
   return UPGRADES_BY_ID[id as UpgradeId]?.nameKey ?? PROPERTIES_BY_ID[id]?.nameKey ?? id;
+}
+
+function iconOf(id: string): string {
+  return PROPERTIES_BY_ID[id]?.icon ?? "🏠";
 }
 
 /** The town plan: a grid of plots. Tap an empty plot to put one of the built
@@ -61,7 +65,7 @@ export function TownPlan() {
                 >
                   {id ? (
                     <>
-                      <Image source={BUILDING_ART[id]} style={styles.art} resizeMode="contain" />
+                      <BuildingPic id={id} icon={iconOf(id)} style={styles.art} />
                       {UPGRADES_BY_ID[id as UpgradeId] ? (
                         <View style={styles.lv}>
                           <Text style={styles.lvText}>{state.upgrades[id as UpgradeId]}</Text>
@@ -112,7 +116,7 @@ export function TownPlan() {
                   style={styles.row}
                   scaleTo={0.97}
                 >
-                  <Image source={BUILDING_ART[id]} style={styles.rowArt} resizeMode="contain" />
+                  <BuildingPic id={id} icon={iconOf(id)} style={styles.rowArt} />
                   <Text style={styles.rowName} numberOfLines={2}>
                     {t(nameKeyOf(id))}
                   </Text>

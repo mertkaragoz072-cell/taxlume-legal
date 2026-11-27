@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, Modal, StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { PROPERTIES, PropertyDef } from "../economy/properties";
 import { FONT } from "../theme";
@@ -8,7 +8,7 @@ import { ModalBackdrop } from "./ModalBackdrop";
 import { ModalShell } from "./ModalKit";
 import { StretchPanel } from "./PanelKit";
 import { ScalePressable } from "./ScalePressable";
-import { BUILDING_ART, INK, INK_GREEN, INK_SOFT } from "./TownCards";
+import { BuildingPic, INK, INK_GREEN, INK_SOFT } from "./TownCards";
 
 const COLS = 3;
 
@@ -41,11 +41,7 @@ export function PropertyShowcase() {
                   style={[styles.cell, has ? styles.cellOwned : styles.cellLocked]}
                   scaleTo={0.95}
                 >
-                  <Image
-                    source={BUILDING_ART[p.id]}
-                    style={[styles.art, !has && styles.artDim]}
-                    resizeMode="contain"
-                  />
+                  <BuildingPic id={p.id} icon={p.icon} style={[styles.art, !has && styles.artDim]} />
                   <Text style={[styles.name, !has && styles.nameDim]} numberOfLines={2}>
                     {t(p.nameKey)}
                   </Text>
@@ -74,7 +70,7 @@ export function PropertyShowcase() {
             {open ? (
               <View style={styles.deed}>
                 <View style={styles.deedFrame}>
-                  <Image source={BUILDING_ART[open.id]} style={styles.deedArt} resizeMode="contain" />
+                  <BuildingPic id={open.id} icon={open.icon} style={styles.deedArt} />
                 </View>
                 <Text style={styles.deedName}>{t(open.nameKey)}</Text>
                 <Text style={styles.deedDesc}>{t(open.descriptionKey)}</Text>

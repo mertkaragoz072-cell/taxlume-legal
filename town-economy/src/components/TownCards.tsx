@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, ImageSourcePropType, StyleSheet, View } from "react-native";
+import { Image, ImageSourcePropType, ImageStyle, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import bld00 from "../../assets/ui/town/bld00.webp";
 import bld01 from "../../assets/ui/town/bld01.webp";
 import bld02 from "../../assets/ui/town/bld02.webp";
@@ -188,3 +188,36 @@ const styles = StyleSheet.create({
   eventMark: { fontSize: 16, width: 26, textAlign: "center" },
   eventText: { flex: 1, color: INK, fontFamily: FONT.medium, fontSize: 12, lineHeight: 16 },
 });
+
+/** A building picture: the painting when there is one, otherwise a big emblem on a
+ * parchment disc (newer properties that have no painting yet). */
+export function BuildingPic({
+  id,
+  icon,
+  style,
+}: {
+  id: string;
+  icon: string;
+  style?: StyleProp<ImageStyle>;
+}) {
+  const art = BUILDING_ART[id];
+  if (art) return <Image source={art} style={style} resizeMode="contain" />;
+  return (
+    <View style={[{ alignItems: "center", justifyContent: "center", aspectRatio: 1 }, style as ViewStyle]}>
+      <View
+        style={{
+          width: "82%",
+          height: "82%",
+          borderRadius: 999,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(246,226,160,0.75)",
+          borderWidth: 2,
+          borderColor: "#b8892f",
+        }}
+      >
+        <Text style={{ fontSize: 30 }}>{icon}</Text>
+      </View>
+    </View>
+  );
+}

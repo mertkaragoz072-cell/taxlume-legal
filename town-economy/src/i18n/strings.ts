@@ -1422,6 +1422,36 @@ export const STRINGS = {
         description: "Kasabanın gururu; halkın mutluluğunu kalıcı olarak yükseltir.",
         effect: "+{amount} mutluluk hedefi",
       },
+      shop: {
+        name: "Dükkan",
+        description: "Kasabalıya mal satar; her gün düzenli kira geliri getirir.",
+        effect: "+{amount} nakit / gün",
+      },
+      mill: {
+        name: "Değirmen",
+        description: "Buğdayı una çevirir; gıda üretimini hızlandırır.",
+        effect: "+%{pct} gıda üretimi",
+      },
+      library: {
+        name: "Kütüphane",
+        description: "Halk okur, öğrenir ve daha huzurlu yaşar.",
+        effect: "+{amount} mutluluk hedefi",
+      },
+      port: {
+        name: "Liman",
+        description: "Gemiler kasabana uğrar; gümrük masraflarını düşürür.",
+        effect: "-%{pct} gümrük oranı",
+      },
+      mint: {
+        name: "Darphane",
+        description: "Kendi paranı bastırırsın; büyük ve düzenli gelir sağlar.",
+        effect: "+{amount} nakit / gün",
+      },
+      palace: {
+        name: "Saray",
+        description: "Kasabanın tacı; tüm üretimi kalıcı olarak artırır.",
+        effect: "+%{pct} tüm üretim",
+      },
     },
     prestige: {
       perk: {
@@ -3391,6 +3421,36 @@ export const STRINGS = {
         name: "Mansion",
         description: "The town's pride; permanently raises the villagers' happiness target.",
         effect: "+{amount} happiness target",
+      },
+      shop: {
+        name: "Shop",
+        description: "Sells to the villagers; pays steady rent every day.",
+        effect: "+{amount} cash / day",
+      },
+      mill: {
+        name: "Windmill",
+        description: "Grinds grain into flour; speeds up food production.",
+        effect: "+{pct}% food production",
+      },
+      library: {
+        name: "Library",
+        description: "The villagers read, learn and live more peacefully.",
+        effect: "+{amount} happiness target",
+      },
+      port: {
+        name: "Harbor",
+        description: "Ships call at your town; lowers customs costs.",
+        effect: "-{pct}% tariff rate",
+      },
+      mint: {
+        name: "Mint",
+        description: "Strike your own coins; a large, steady income.",
+        effect: "+{amount} cash / day",
+      },
+      palace: {
+        name: "Palace",
+        description: "The crown of the town; permanently boosts all production.",
+        effect: "+{pct}% all production",
       },
     },
     prestige: {
