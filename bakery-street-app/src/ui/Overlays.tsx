@@ -1,13 +1,13 @@
 // Quest, daily reward, settings, town, research and exploration panels.
 import { weeklyProduct } from "../game/events.js";
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { NAME_MAX } from "../game/profile.js";
 import { timings } from "../runtime/startup";
 import { formatDuration } from "../game/exploration.js";
 import { EXPLORE_LIMIT } from "../data/economy.js";
 import { useRefresh, useWorld } from "../runtime/context";
-import { Bar, Btn, Card, Meta, Pips, Sheet, Title } from "./kit";
+import { Bar, Btn, Card, Chip, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon, Rich } from "./icons";
 import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
 import { BranchCard, CollectAll, DeliveryCard, LuckCard, PopularityCard, DishCard, SpecialOrderCard, ThemeCard, WeekendCard } from "./LifePanels";
@@ -25,6 +25,7 @@ export function QuestPanel() {
   const { world, act } = useWorld();
   const { game, quests, goals } = world, u = useU();
   useRefresh();
+  const [tab, setTab] = useState<"today" | "goals" | "quests">("today");
   const todays = goals.list() as any[];
   const week = goals.weekly() as any;
   const rating = world.cafe.rating() as { stars: number; total: number };
@@ -33,12 +34,32 @@ export function QuestPanel() {
   const rank = (s: any) => (s.claimed ? 2 : s.complete ? 0 : 1);
   const list = (quests.list() as any[]).slice().sort((a, b) => rank(a) - rank(b));
   const done = list.filter((s) => s.claimed).length;
+  const life = world.life, theme = life?.weekTheme(), del = life?.deliveryState();
+  const badgeToday = !!(life?.luckReady() || life?.special()?.ready || (theme?.complete && !theme.claimed) || del?.state === "back");
+  const badgeGoals = (goals.claimable() as any[]).length > 0;
+  const badgeQuests = quests.claimable().length > 0;
   const rewardText = (r: any) => [r.gold ? `💰 ${fmt(r.gold)}` : "", ...Object.entries(r.ingredients ?? {}).map(([id, n]) => `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${n}`)].filter(Boolean).join(" · ");
   return (
-    <Sheet title="Görevler" hint={`${done}/${list.length} görev tamamlandı ve ödülü alındı.`} onClose={() => act.openOverlay(null)}>
-      <Meta text={`${rainy ? "🌧 Bugün yağmurlu: sıcak içecekler daha çok istenir, müşteri biraz az gelir" : "☀ Bugün hava açık"} · Kafe puanı: ★ ${rating.stars.toFixed(1).replace(".", ",")}${rating.total < 5 ? " (henüz yeni)" : ""}`} />
-      {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
+    <Sheet title="Görevler" full onClose={() => act.openOverlay(null)} header={
+      <View style={{ paddingHorizontal: u * 1.6, gap: u * 1 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6 }}>
+          <Chip ok text={rainy ? "🌧 Yağmurlu" : "☀ Hava açık"} />
+          <Chip ok text={`★ ${rating.stars.toFixed(1).replace(".", ",")} memnuniyet`} />
+          {star ? <Chip ok text={`⭐ Haftanın ürünü: ${game.productsDef[star].name} +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)}`} /> : null}
+        </View>
+        <View style={{ flexDirection: "row", gap: u * 0.8 }}>
+          {([["today", "Bugün", badgeToday], ["goals", "Hedefler", badgeGoals], ["quests", `Görevler ${done}/${list.length}`, badgeQuests]] as [typeof tab, string, boolean][]).map(([id, label, dot]) => (
+            <Pressable key={id} onPress={() => { act.sfx("tap"); setTab(id); }} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: tab === id }}
+              style={({ pressed }) => ({ flex: 1, minHeight: Math.max(44, u * 7.4), borderRadius: 99, borderWidth: u * 0.35, borderColor: tab === id ? C.honeyDark : C.brown, backgroundColor: tab === id ? C.honey : C.cream, alignItems: "center", justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
+              <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{label}</Text>
+              {dot ? <View style={{ position: "absolute", right: u * 1.4, top: u * 0.8, width: u * 2.2, height: u * 2.2, borderRadius: 99, backgroundColor: C.terracotta }} /> : null}
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    }>
       <CollectAll />
+      {tab === "today" ? <>
       <PopularityCard />
       <LuckCard />
       <DishCard />
@@ -46,6 +67,8 @@ export function QuestPanel() {
       <SpecialOrderCard />
       <DeliveryCard />
       <WeekendCard />
+      </> : null}
+      {tab === "goals" ? <>
       <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
       {todays.map((g) => (
         <Card key={g.id} tone={g.claimed ? "locked" : g.complete ? "ready" : undefined} left={<EmojiIcon emoji={g.icon} size={u * 7} />}
@@ -68,7 +91,8 @@ export function QuestPanel() {
           </Card>
         </>
       ) : null}
-      <Meta text="Görevler" />
+      </> : null}
+      {tab === "quests" ? <>
       {list.map((s) => {
         const q = s.def;
         return (
@@ -82,6 +106,7 @@ export function QuestPanel() {
         );
       })}
       <BranchCard />
+      </> : null}
     </Sheet>
   );
 }
