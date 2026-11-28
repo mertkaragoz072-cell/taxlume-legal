@@ -21,6 +21,52 @@ const fmtReward = (game: any, r: any) => [
 export const formatReward = fmtReward;
 
 // ---------------------------------------------------------------------------------------------------------------- quests
+/** A small soft label (weather, rating, star product). */
+function InfoPill({ text }: { text: string }) {
+  const u = useU();
+  return <View style={{ paddingHorizontal: u * 1.2, paddingVertical: u * 0.4, borderRadius: 99, backgroundColor: "rgba(201,154,97,.18)", borderWidth: u * 0.25, borderColor: "rgba(201,154,97,.45)" }}><Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{text}</Text></View>;
+}
+/** A section heading inside a panel: title, a fine line, a note on the right. */
+function Section({ title, note }: { title: string; note?: string }) {
+  const u = useU();
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: u, marginTop: u * 0.6, paddingRight: u * 1.2 }}>
+      <Text allowFontScaling={false} style={{ color: C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{title}</Text>
+      <View style={{ flex: 1, height: u * 0.3, borderRadius: 99, backgroundColor: "rgba(201,154,97,.4)" }} />
+      {note ? <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>{note}</Text> : null}
+    </View>
+  );
+}
+/** A goal or quest as a compact row: a round icon, the name with its reward, what to do and a slim progress bar; a big button only when it can be collected. */
+function GoalRow({ icon, name, text, progress, target, reward, complete, claimed, onClaim, big }: { icon: string; name: string; text: string; progress: number; target: number; reward: string; complete: boolean; claimed: boolean; onClaim: () => void; big?: boolean }) {
+  const u = useU(), f = Math.max(0, Math.min(1, progress / target)), ready = complete && !claimed;
+  return (
+    <View style={{ padding: u * 1.3, gap: u * 0.9, borderRadius: u * 2.2, backgroundColor: ready ? "#F4F8E8" : claimed ? "rgba(255,248,234,.6)" : "#FFFCF5", borderWidth: u * (ready ? 0.45 : 0.3), borderColor: ready ? C.green : big ? C.honey : "#EAD9B8", opacity: claimed ? 0.65 : 1,
+      shadowColor: "#5E3A20", shadowOpacity: claimed ? 0 : 0.12, shadowRadius: u * 0.8, shadowOffset: { width: 0, height: u * 0.4 } }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: u * 1.2 }}>
+        <View style={{ width: u * 9, height: u * 9, borderRadius: 99, alignItems: "center", justifyContent: "center", backgroundColor: ready ? C.greenPale : "#F6E8CC", borderWidth: u * 0.3, borderColor: ready ? C.green : "#E2C69B" }}>
+          <EmojiIcon emoji={icon} size={u * 5.6} />
+        </View>
+        <View style={{ flex: 1, gap: u * 0.4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: u * 0.8 }}>
+            <Text allowFontScaling={false} numberOfLines={1} style={{ flex: 1, color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{name}</Text>
+            <View style={{ paddingHorizontal: u * 1, paddingVertical: u * 0.25, borderRadius: 99, backgroundColor: claimed ? C.greenPale : "#FBEFD6", borderWidth: u * 0.25, borderColor: claimed ? C.greenLight : "#E8C98E" }}>
+              <Rich text={claimed ? "✓ Alındı" : reward} size={fs(u, TYPE.small)} style={{ color: claimed ? C.greenDark : C.honeyDark, fontFamily: FONT.bold }} />
+            </View>
+          </View>
+          <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>{text}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: u * 0.8 }}>
+            <View style={{ flex: 1, height: u * 1.6, borderRadius: 99, backgroundColor: "#EFE1C6", overflow: "hidden" }}>
+              <View style={{ width: `${f * 100}%`, height: "100%", borderRadius: 99, backgroundColor: complete ? C.green : C.honey }} />
+            </View>
+            <Text allowFontScaling={false} style={{ minWidth: u * 9, textAlign: "right", color: complete ? C.greenDark : C.brown, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{fmt(Math.min(progress, target))}/{fmt(target)}</Text>
+          </View>
+        </View>
+      </View>
+      {ready ? <Btn label="🎁 Ödülü Al" onPress={onClaim} /> : null}
+    </View>
+  );
+}
 export function QuestPanel() {
   const { world, act } = useWorld();
   const { game, quests, goals } = world, u = useU();
@@ -35,26 +81,31 @@ export function QuestPanel() {
   const list = (quests.list() as any[]).slice().sort((a, b) => rank(a) - rank(b));
   const done = list.filter((s) => s.claimed).length;
   const life = world.life, theme = life?.weekTheme(), del = life?.deliveryState();
-  const badgeToday = !!(life?.luckReady() || life?.special()?.ready || (theme?.complete && !theme.claimed) || del?.state === "back");
-  const badgeGoals = (goals.claimable() as any[]).length > 0;
-  const badgeQuests = quests.claimable().length > 0;
+  const badgeToday = [life?.luckReady(), life?.special()?.ready, theme?.complete && !theme.claimed, del?.state === "back"].filter(Boolean).length;
+  const badgeGoals = (goals.claimable() as any[]).length;
+  const badgeQuests = quests.claimable().length;
   const rewardText = (r: any) => [r.gold ? `💰 ${fmt(r.gold)}` : "", ...Object.entries(r.ingredients ?? {}).map(([id, n]) => `${game.ingredientsDef[id].icon} ${game.ingredientsDef[id].name} ×${n}`)].filter(Boolean).join(" · ");
   return (
     <Sheet title="Görevler" full onClose={() => act.openOverlay(null)} header={
-      <View style={{ paddingHorizontal: u * 1.6, gap: u * 1 }}>
+      <View style={{ paddingHorizontal: u * 1.6, gap: u * 1.1, paddingBottom: u * 0.4 }}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: u * 0.6 }}>
-          <Chip ok text={rainy ? "🌧 Yağmurlu" : "☀ Hava açık"} />
-          <Chip ok text={`★ ${rating.stars.toFixed(1).replace(".", ",")} memnuniyet`} />
-          {star ? <Chip ok text={`⭐ Haftanın ürünü: ${game.productsDef[star].name} +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)}`} /> : null}
+          <InfoPill text={rainy ? "🌧 Yağmurlu" : "☀ Hava açık"} />
+          <InfoPill text={`★ ${rating.stars.toFixed(1).replace(".", ",")}`} />
+          {star ? <InfoPill text={`⭐ ${game.productsDef[star].name} haftası +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)}`} /> : null}
         </View>
-        <View style={{ flexDirection: "row", gap: u * 0.8 }}>
-          {([["today", "Bugün", badgeToday], ["goals", "Hedefler", badgeGoals], ["quests", `Görevler ${done}/${list.length}`, badgeQuests]] as [typeof tab, string, boolean][]).map(([id, label, dot]) => (
-            <Pressable key={id} onPress={() => { act.sfx("tap"); setTab(id); }} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: tab === id }}
-              style={({ pressed }) => ({ flex: 1, minHeight: Math.max(44, u * 7.4), borderRadius: 99, borderWidth: u * 0.35, borderColor: tab === id ? C.honeyDark : C.brown, backgroundColor: tab === id ? C.honey : C.cream, alignItems: "center", justifyContent: "center", transform: [{ scale: pressed ? 0.96 : 1 }] })}>
-              <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{label}</Text>
-              {dot ? <View style={{ position: "absolute", right: u * 1.4, top: u * 0.8, width: u * 2.2, height: u * 2.2, borderRadius: 99, backgroundColor: C.terracotta }} /> : null}
-            </Pressable>
-          ))}
+        <View style={{ flexDirection: "row", padding: u * 0.5, gap: u * 0.4, borderRadius: 99, backgroundColor: "#8A5A36", borderWidth: u * 0.35, borderColor: "#5E3A20" }}>
+          {([["today", "☀", "Bugün", badgeToday], ["goals", "🎯", "Hedefler", badgeGoals], ["quests", "📜", "Görevler", badgeQuests]] as [typeof tab, string, string, number][]).map(([id, icon, label, count]) => {
+            const on = tab === id;
+            return (
+              <Pressable key={id} onPress={() => { act.sfx("tap"); setTab(id); }} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: on }}
+                style={({ pressed }) => ({ flex: 1, minHeight: Math.max(44, u * 7), borderRadius: 99, backgroundColor: on ? C.cream : "transparent", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: u * 0.5, transform: [{ scale: pressed ? 0.96 : 1 }],
+                  shadowColor: "#3B2412", shadowOpacity: on ? 0.3 : 0, shadowRadius: u * 0.5, shadowOffset: { width: 0, height: u * 0.3 } })}>
+                <Text allowFontScaling={false} style={{ fontSize: fs(u, TYPE.body) }}>{icon}</Text>
+                <Text allowFontScaling={false} numberOfLines={1} style={{ color: on ? C.brownDark : "#FFF1D8", fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>{label}</Text>
+                {count ? <View style={{ minWidth: u * 3.2, height: u * 3.2, paddingHorizontal: u * 0.6, borderRadius: 99, backgroundColor: C.terracotta, alignItems: "center", justifyContent: "center" }}><Text allowFontScaling={false} style={{ color: "#FFF", fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{count}</Text></View> : null}
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     }>
@@ -69,42 +120,19 @@ export function QuestPanel() {
       <WeekendCard />
       </> : null}
       {tab === "goals" ? <>
-      <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
-      {todays.map((g) => (
-        <Card key={g.id} tone={g.claimed ? "locked" : g.complete ? "ready" : undefined} left={<EmojiIcon emoji={g.icon} size={u * 7} />}
-          right={g.claimed ? <Btn label="✓ Alındı" disabled /> : g.complete ? <Btn label="Ödülü Al" onPress={() => { const r = goals.claim(g.id); if (r.ok) act.toast(`🎁 ${g.name}: +${fmt(r.gold)} altın`, 2200); else act.warn(r.message); }} /> : <Btn label="Devam ediyor" disabled />}>
-          <Title name={g.name} />
-          <Meta text={`Bugün ${g.text}`} />
-          <Bar value={g.progress / g.target} text={`${fmt(g.progress)}/${fmt(g.target)}`} />
-          <Meta tone="reward" text={`Ödül: 💰 ${fmt(g.gold)}`} />
-        </Card>
-      ))}
-      {week ? (
-        <>
-          <Meta text="Bu haftanın hedefi (Pazartesi yenilenir)" />
-          <Card tone={week.claimed ? "locked" : week.complete ? "ready" : undefined} left={<EmojiIcon emoji={week.icon} size={u * 7} />}
-            right={week.claimed ? <Btn label="✓ Alındı" disabled /> : week.complete ? <Btn label="Ödülü Al" onPress={() => { const r = goals.claimWeekly(); if (r.ok) act.toast(`🎁 ${week.name}: +${fmt(r.gold)} altın`, 2400); else act.warn(r.message); }} /> : <Btn label="Devam ediyor" disabled />}>
-            <Title name={week.name} />
-            <Meta text={`Bu hafta ${week.text}`} />
-            <Bar value={week.progress / week.target} text={`${fmt(week.progress)}/${fmt(week.target)}`} />
-            <Meta tone="reward" text={`Ödül: 💰 ${fmt(week.gold)}`} />
-          </Card>
-        </>
-      ) : null}
+      <Section title="Bugünün hedefleri" note={`${todays.filter((g) => g.claimed).length}/${todays.length} alındı`} />
+      {todays.map((g) => <GoalRow key={g.id} icon={g.icon} name={g.name} text={`Bugün ${g.text}`} progress={g.progress} target={g.target} reward={`💰 ${fmt(g.gold)}`} complete={g.complete} claimed={g.claimed}
+        onClaim={() => { const r = goals.claim(g.id); if (r.ok) act.toast(`🎁 ${g.name}: +${fmt(r.gold)} altın`, 2200); else act.warn(r.message); }} />)}
+      {week ? <>
+        <Section title="Haftanın hedefi" note="Pazartesi yenilenir" />
+        <GoalRow icon={week.icon} name={week.name} text={`Bu hafta ${week.text}`} progress={week.progress} target={week.target} reward={`💰 ${fmt(week.gold)}`} complete={week.complete} claimed={week.claimed} big
+          onClaim={() => { const r = goals.claimWeekly(); if (r.ok) act.toast(`🎁 ${week.name}: +${fmt(r.gold)} altın`, 2400); else act.warn(r.message); }} />
+      </> : null}
       </> : null}
       {tab === "quests" ? <>
-      {list.map((s) => {
-        const q = s.def;
-        return (
-          <Card key={q.id} tone={s.claimed ? "locked" : s.complete ? "ready" : undefined} left={<EmojiIcon emoji={q.icon} size={u * 7} />}
-            right={s.claimed ? <Btn label="✓ Alındı" disabled /> : s.complete ? <Btn label="Ödülü Al" onPress={() => { const r = quests.claim(q.id); if (r.ok) act.toast(`🎁 ${q.name}: ödül alındı${r.reward.gold ? ` · +${fmt(r.reward.gold)} altın` : ""}`, 2200); else act.warn(r.message); }} /> : <Btn label="Devam ediyor" disabled />}>
-            <Title name={q.name} />
-            <Meta text={q.condition} />
-            <Bar value={s.progress / q.target} text={`${s.progress}/${q.target}`} />
-            <Meta tone="reward" text={`Ödül: ${rewardText(q.reward)}`} />
-          </Card>
-        );
-      })}
+      <Section title="Görevler" note={`${done}/${list.length} tamamlandı`} />
+      {list.map((s) => <GoalRow key={s.def.id} icon={s.def.icon} name={s.def.name} text={s.def.condition} progress={s.progress} target={s.def.target} reward={rewardText(s.def.reward)} complete={s.complete} claimed={s.claimed}
+        onClaim={() => { const r = quests.claim(s.def.id); if (r.ok) act.toast(`🎁 ${s.def.name}: ödül alındı${r.reward.gold ? ` · +${fmt(r.reward.gold)} altın` : ""}`, 2200); else act.warn(r.message); }} />)}
       <BranchCard />
       </> : null}
     </Sheet>
