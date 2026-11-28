@@ -5,7 +5,7 @@
 //  - the special order board (one optional bigger order at a time, delivered from stock)
 //  - the Market's deal of the day (one ingredient cheaper; pure, worked out from the date)
 // Pure logic, clock from the Game. All gold goes through Game.earn.
-import { LIFE, ALBUM } from '../data/economy.js';
+import { LIFE, ALBUM, SECRETS } from '../data/economy.js';
 import { dateKey, dayNumber } from './daily.js';
 import { weekOf, weeklyProduct } from './events.js';
 
@@ -49,6 +49,8 @@ export class Life {
     this.cfg = cfg;
     this.rng = rng;
     game.life = this;
+    this.secrets = SECRETS;
+    for (const [id, def] of Object.entries(SECRETS)) game.registerProduct(id, def);     // secret recipes are products, locked until found
     this.reset();
     game.on('stage', ({ stage }) => this.remember('🏆', `Kafe büyüdü: Aşama ${stage.id} — ${stage.name}`));
     game.on('levelUp', ({ level }) => { if (level % 5 === 0) this.remember('⭐', `Seviye ${level}'e ulaştın`); });
@@ -212,6 +214,104 @@ export class Life {
     this.stories = {};                                // look -> steps collected (0..3)
     this.theme = { week: null, base: 0, claimed: false };
     this.popularity = this.cfg.popularity?.start ?? 0;
+    this.discovered = new Set();                      // secret recipes found
+    this.delivery = { req: null, sentAt: null, rest: 0, done: 0, next: 1 };
+    this.luckDate = null;                             // the day the surprise box was opened
+    this.pamuk = { fedAt: null, pets: { date: null, n: 0 } };
+  }
+
+  // ---- secret recipes ----------------------------------------------------------------------------------------------
+  isSecret(id) { return !!this.secrets[id]; }
+  /** The product whose recipe is exactly what is in the bowl (secret or not), or null. */
+  matchRecipe(bowl) {
+    const keys = Object.keys(bowl).filter((k) => bowl[k] > 0);
+    for (const [id, d] of Object.entries(this.game.productsDef)) {
+      const need = Object.entries(d.ingredients);
+      if (need.length === keys.length && need.every(([k, n]) => bowl[k] === n)) return id;
+    }
+    return null;
+  }
+  /** A secret recipe found: it can be made and ordered from now on. */
+  discover(id) {
+    if (!this.isSecret(id) || this.discovered.has(id)) return false;
+    this.discovered.add(id);
+    this.remember('🔍', `Gizli tarif bulundu: ${this.secrets[id].name}`);
+    this.game.emit('secret', { id, def: this.secrets[id] });
+    this.game.emit('change', { type: 'secret', id });
+    return true;
+  }
+
+  // ---- guest requests ----------------------------------------------------------------------------------------------
+  /** A note for a new order (or null): only from the level and with the chance in LIFE.requests. */
+  rollNote(rng) {
+    const c = this.cfg.requests;
+    if (!c || this.level() < c.minLevel || rng() >= c.chance) return null;
+    return c.notes[Math.floor(rng() * c.notes.length)];
+  }
+
+  // ---- deliveries --------------------------------------------------------------------------------------------------
+  /** { state: 'locked' | 'resting' | 'request' | 'out' | 'back', req, left } */
+  deliveryState() {
+    const c = this.cfg.delivery, d = this.delivery, now = this.game.clock();
+    if (!c || this.level() < c.minLevel) return { state: 'locked' };
+    if (d.sentAt != null) { const left = d.sentAt + c.minutes * 60_000 - now; return { state: left > 0 ? 'out' : 'back', req: d.req, left: Math.max(0, left) }; }
+    if (!d.req) {
+      if (now < d.rest) return { state: 'resting', left: d.rest - now };
+      const ids = this.unlocked(); if (!ids.length) return { state: 'resting', left: 0 };
+      const id = ids[Math.floor(this.rng() * ids.length)], n = 1 + Math.floor(this.rng() * 2);
+      d.req = { id: d.next++, from: c.from[Math.floor(this.rng() * c.from.length)], items: { [id]: n }, reward: Math.round(this.game.unitEconomics(id).customer * n * c.reward) };
+    }
+    return { state: 'request', req: d.req };
+  }
+  /** Sends the requested products with the courier (taken from stock now). */
+  sendDelivery() {
+    const s = this.deliveryState();
+    if (s.state !== 'request') return { ok: false, message: 'Şu an gönderilecek paket yok.' };
+    const short = Object.entries(s.req.items).find(([id, n]) => (this.game.products[id] ?? 0) < n);
+    if (short) return { ok: false, message: `Vitrinde ${short[1]} ${this.game.productsDef[short[0]].name} gerekli.` };
+    for (const [id, n] of Object.entries(s.req.items)) { this.game.products[id] -= n; this.game.recordSold(id, n); }
+    this.delivery.sentAt = this.game.clock();
+    this.game.emit('change', { type: 'delivery' });
+    return { ok: true };
+  }
+  /** The courier is back: collect the payment. */
+  collectDelivery() {
+    const s = this.deliveryState();
+    if (s.state !== 'back') return { ok: false, message: s.state === 'out' ? 'Kurye henüz dönmedi.' : 'Toplanacak ödeme yok.' };
+    const gold = this.game.earn(s.req.reward, 'delivery', `Paket servis: ${s.req.from}`);
+    this.delivery = { ...this.delivery, req: null, sentAt: null, rest: this.game.clock() + this.cfg.delivery.rest * 60_000, done: this.delivery.done + 1 };
+    this.game.emit('change', { type: 'delivery', gold });
+    return { ok: true, gold, from: s.req.from };
+  }
+
+  // ---- the daily surprise box --------------------------------------------------------------------------------------
+  luckReady() { return this.luckDate !== this.today(); }
+  openLuck() {
+    if (!this.luckReady()) return { ok: false, message: 'Bugünün kutusu açıldı. Yarın yine gel!' };
+    const c = this.cfg.luck, m = this.stage();
+    this.luckDate = this.today();
+    const roll = this.rng();
+    let out;
+    if (roll < c.gemsChance) { const gems = 1 + Math.floor(this.rng() * 3); this.game.player.gems = (this.game.player.gems ?? 0) + gems; out = { gems }; }
+    else if (roll < 0.45) {
+      const ids = Object.keys(this.game.ingredientsDef), id = ids[Math.floor(this.rng() * ids.length)], n = c.ingredients[0] + Math.floor(this.rng() * (c.ingredients[1] - c.ingredients[0] + 1));
+      this.game.ingredients[id] += n; out = { ingredient: id, n };
+    } else out = { gold: this.game.earn(Math.round((c.gold[0] + this.rng() * (c.gold[1] - c.gold[0])) * m), 'luck', 'Sürpriz kutusu') };
+    this.game.emit('change', { type: 'luck' });
+    return { ok: true, ...out };
+  }
+
+  // ---- Pamuk, the café cat -----------------------------------------------------------------------------------------
+  pamukHungry() { const f = this.pamuk.fedAt; return f == null || this.game.clock() - f > this.cfg.pamuk.hungryH * 3600_000 || f > this.game.clock() + 60_000; }
+  pamukShare() { return this.cfg.pamuk && !this.pamukHungry() ? this.cfg.pamuk.share : 0; }
+  feedPamuk() {
+    if (!this.pamukHungry()) return { ok: false, message: 'Pamuk tok, şimdi biraz uyumak istiyor.' };
+    if ((this.game.ingredients.milk ?? 0) < 1) return { ok: false, message: 'Pamuk süt istiyor ama depoda süt yok.' };
+    this.game.ingredients.milk -= 1;
+    this.pamuk.fedAt = this.game.clock();
+    if (!this.memories.some((m) => /Pamuk/.test(m.text))) this.remember('🐈', 'Kafenin kedisi Pamuk ile tanıştın');
+    this.game.emit('change', { type: 'pamuk' });
+    return { ok: true };
   }
 
   today() { return dateKey(this.game.clock()); }
@@ -346,14 +446,15 @@ export class Life {
       menu: { ...this.menu }, letters: this.letters.map((l) => ({ ...l })), nextLetter: this.nextLetter, lettersToday: { ...this.lettersToday },
       criticToday: this.criticToday, critics: this.critics, order: this.order ? { ...this.order, items: { ...this.order.items } } : null, orderRest: this.orderRest, ordersDone: this.ordersDone, nextOrder: this.nextOrder,
       pets: { ...this.pets }, petsTotal: this.petsTotal, day: this.day ? { ...this.day, per: { ...this.day.per } } : null, summary: this.summary ? { ...this.summary } : null,
-      memories: this.memories.map((m) => ({ ...m })), weekend: { ...this.weekend }, stories: { ...this.stories }, theme: { ...this.theme }, popularity: this.popularity,
+      memories: this.memories.map((m) => ({ ...m })), weekend: { ...this.weekend }, stories: { ...this.stories }, theme: { ...this.theme }, popularity: this.popularity, discovered: [...this.discovered], delivery: JSON.parse(JSON.stringify(this.delivery)), luckDate: this.luckDate, pamuk: JSON.parse(JSON.stringify(this.pamuk)),
     };
   }
   importState(s) {
     this.reset();
     if (!s) return;
     Object.assign(this, { menu: s.menu, letters: s.letters, nextLetter: s.nextLetter, lettersToday: s.lettersToday, criticToday: s.criticToday, critics: s.critics, order: s.order, orderRest: s.orderRest, ordersDone: s.ordersDone, nextOrder: s.nextOrder });
-    for (const k of ['pets', 'petsTotal', 'day', 'summary', 'memories', 'weekend', 'stories', 'theme', 'popularity']) if (s[k] !== undefined) this[k] = s[k];
+    for (const k of ['pets', 'petsTotal', 'day', 'summary', 'memories', 'weekend', 'stories', 'theme', 'popularity', 'delivery', 'luckDate', 'pamuk']) if (s[k] !== undefined) this[k] = s[k];
+    this.discovered = new Set(s.discovered ?? []);
   }
 }
 
@@ -381,6 +482,11 @@ export function validateLife(raw, game) {
     memories: (Array.isArray(raw.memories) ? raw.memories : []).filter((m) => m && typeof m.text === 'string').slice(0, 60).map((m) => ({ t: isInt(m.t, 1e14) ? m.t : 0, icon: str(m.icon, 4) || '•', text: str(m.text, 120) })),
     weekend: { date: date(raw.weekend?.date), n: isInt(raw.weekend?.n, 1e4) ? raw.weekend.n : 0 },
     stories: Object.fromEntries(Object.entries(raw.stories && typeof raw.stories === 'object' ? raw.stories : {}).filter(([l, n]) => ALBUM.names[l] && isInt(n, 4))),
+    discovered: (Array.isArray(raw.discovered) ? raw.discovered : []).filter((id) => SECRETS[id]),
+    delivery: (() => { const d = raw.delivery; if (!d || typeof d !== 'object') return undefined; const r = d.req && typeof d.req === 'object' && d.req.items && Object.keys(d.req.items).every((id) => game.productsDef[id]) && isInt(d.req.reward, 1e9) ? { id: isInt(d.req.id) ? d.req.id : 1, from: str(d.req.from, 30), items: Object.fromEntries(Object.entries(d.req.items).filter(([, n]) => isInt(n, 100))), reward: d.req.reward } : null;
+      return { req: r, sentAt: r && isInt(d.sentAt, 1e14) ? d.sentAt : null, rest: isInt(d.rest, 1e14) ? d.rest : 0, done: isInt(d.done) ? d.done : 0, next: isInt(d.next) && d.next > 0 ? d.next : 1 }; })(),
+    luckDate: date(raw.luckDate),
+    pamuk: { fedAt: isInt(raw.pamuk?.fedAt, 1e14) ? raw.pamuk.fedAt : null, pets: { date: date(raw.pamuk?.pets?.date), n: isInt(raw.pamuk?.pets?.n, 1e4) ? raw.pamuk.pets.n : 0 } },
     popularity: Number.isFinite(raw.popularity) ? Math.max(0, Math.min(LIFE.popularity?.max ?? 100, raw.popularity)) : (LIFE.popularity?.start ?? 0),
     theme: { week: Number.isInteger(raw.theme?.week) ? raw.theme.week : null, product: game.productsDef[raw.theme?.product] ? raw.theme.product : undefined, base: isInt(raw.theme?.base) ? raw.theme.base : 0, claimed: raw.theme?.claimed === true },
   };

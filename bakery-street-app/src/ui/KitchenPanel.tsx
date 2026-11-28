@@ -13,6 +13,7 @@ import { C, FONT, fmt, fs, navHeight, TYPE, useU } from "./theme";
 type Bowl = Record<string, number>;
 type Phase = "gather" | "stir" | "made";
 const STIRS: Record<string, number> = { oven: 6, coffee: 4 };
+const TRIAL = -1;                                                  // the sel value of the trial ticket
 const STIR_TEXT: Record<string, [string, string]> = { oven: ["Kaseye dokun, hamuru yoğur!", "🥣 Yoğur"], coffee: ["Kaseye dokun, kahveyi karıştır!", "☕ Karıştır"] };
 const RATING = [["Oldu!", 1], ["Çok güzel!", 2], ["Mükemmel!", 3]] as const;
 const WOOD = { top: "#C8925C", edge: "#7A4E2C", plank: "rgba(110,70,40,.28)", shelf: "rgba(90,56,30,.35)", text: "#FFF4DE" };
@@ -104,21 +105,25 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
   const [slips, setSlips] = useState(0);                        // wrong jars tapped for this order (only for the stars)
   const [wrong, setWrong] = useState<string | null>(null);
   const [book, setBook] = useState(false);                       // the recipe notebook is open
+  const [trialPid, setTrialPid] = useState<string | null>(null);   // "Deneme": the recipe the player's own mix turned out to be
+  const [noteChoice, setNoteChoice] = useState<string | null>(null);   // the touch the player gave a guest's wish ("az şekerli")
+  const life = world.life;
   const shake = useRef(new Animated.Value(0)).current, spin = useRef(new Animated.Value(0)).current, wob = useRef(new Animated.Value(0)).current;
   useEffect(() => () => { cafe.handOrder = null; }, []);       // eslint-disable-line react-hooks/exhaustive-deps -- closing the counter gives the order back to the waiter
 
   const seated = (cafe.customers as any[]).filter((c) => c.state === "seated" && c.orderId);
   const tickets = seated.map((c) => ({ c, o: cafe.orderOf(c) })).filter((t) => t.o && t.o.status === "open");
   const cur = tickets.find((t) => t.o.id === sel) ?? null;
-  const items: string[] = cur ? cafe.orderItems(cur.o) : [];
+  const trial = sel === TRIAL;                                   // the trial ticket: mix freely, find secret recipes
+  const items: string[] = cur ? cafe.orderItems(cur.o) : trial && trialPid ? [trialPid] : [];
   const pid = items[step], def = pid ? game.productsDef[pid] : null;
   const need: Record<string, number> = def?.ingredients ?? {};
   const complete = !!def && Object.entries(need).every(([k, n]) => (bowl[k] ?? 0) >= n);
   const stirNeed = def ? STIRS[def.station] ?? 5 : 5;
 
-  const reset = () => { setStep(0); setBowl({}); setPhase("gather"); setMade([]); setStirs(0); setSlips(0); };
+  const reset = () => { setStep(0); setBowl({}); setPhase("gather"); setMade([]); setStirs(0); setSlips(0); setTrialPid(null); setNoteChoice(null); };
   useEffect(() => {                                              // the guest left or was served by the waiter: start over, kindly
-    if (sel != null && !cur) { if (made.length) act.toast("Bu sipariş artık açık değil; hazırladığın ürünler vitrine kondu.", 2400); reset(); setSel(null); }
+    if (sel != null && sel !== TRIAL && !cur) { if (made.length) act.toast("Bu sipariş artık açık değil; hazırladığın ürünler vitrine kondu.", 2400); reset(); setSel(null); }
   }, [sel, cur]);                                                // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (sel == null && tickets.length === 1) { setSel(tickets[0].o.id); setBook(true); } }, [tickets.length]);   // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { cafe.handOrder = sel; }, [sel]);          // eslint-disable-line react-hooks/exhaustive-deps -- the waiter leaves the order the player is preparing alone
@@ -130,6 +135,14 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
     act.sfx("tap"); setSel(id); reset(); setBook(true);
   };
   const add = (ing: string) => {
+    if (trial && !def && phase === "gather") {                     // trial: any mix, at most 3 of each
+      const have = bowl[ing] ?? 0;
+      if (have >= 3) { act.toast("Bu malzemeden bu kadar yeter", 1100); return; }
+      if ((game.ingredients[ing] ?? 0) <= have) { act.warn(`${game.ingredientsDef[ing].name} bitti.`, 2000); return; }
+      act.sfx("tap"); act.buzz(8); setBowl({ ...bowl, [ing]: have + 1 });
+      wob.setValue(0); Animated.timing(wob, { toValue: 1, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+      return;
+    }
     if (!def || phase !== "gather") return;
     const n = need[ing] ?? 0, have = bowl[ing] ?? 0;
     if (!n || have >= n) {                                       // not in this recipe (or enough of it): a small no, nothing is lost
@@ -156,14 +169,24 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
     if (step + 1 < items.length) { setStep(step + 1); setBowl({}); setStirs(0); setPhase("gather"); setBook(true); act.toast(`${def.icon} ${def.name} hazır! Sıradaki: ${game.productsDef[items[step + 1]].name}`, 1600); }   // a set: on to the second product
     else setPhase("made");
   };
+  /** Trial: what does the mix in the bowl make? A secret is found, a known recipe is made, anything else just goes back on the shelf. */
+  const tryMix = () => {
+    const id = life?.matchRecipe(bowl) as string | null;
+    if (!id) { act.toast("Hmm… bir şey çıkmadı. Malzemeler rafa geri kondu, başka bir karışım dene.", 2600); setBowl({}); act.sfx("tap"); return; }
+    const d = game.productsDef[id];
+    if (life.isSecret(id) && !life.discovered.has(id)) { life.discover(id); act.sfx("claim"); act.buzz([40, 40, 80]); }
+    else if (!game.isUnlocked(id)) { act.toast(`${d.icon} Bu ${d.name} tarifi! Mağaza'dan açınca yapabilirsin.`, 2600); setBowl({}); return; }
+    else act.toast(`${d.icon} Bu bir ${d.name}! Karıştır, vitrine koy.`, 1800);
+    setTrialPid(id);                                               // the bowl already holds its recipe: stirring starts by itself
+  };
   const serve = () => {
     if (!cur) return;
     if (staff?.claims(cur.o.id)) { act.toast("Garson bu siparişi zaten götürüyor.", 1600); return; }
-    const r = cafe.deliver(cur.o.id);
+    const r = cafe.deliver(cur.o.id, { noteOk: !!cur.o.note && noteChoice === cur.o.note });
     if (!r.ok) { act.warn(r.message, 2400); return; }
     game.emit("fx", { type: "coins", at: { x: width / 2, y: height * 0.55 }, big: true });     // the coins fly to the gold counter
     act.sfx("coin");
-    act.toast(`${album.nameOf(cur.c.look)} çok mutlu! +${fmt(r.income)} altın`, 1800);
+    act.toast(`${album.nameOf(cur.c.look)} çok mutlu!${r.bonus?.noteOk ? ` Tam istediği gibi (${cur.o.note})!` : ""} +${fmt(r.income)} altın`, 2000);
     reset(); setSel(null); cafe.handOrder = null;
   };
   const fromStock = cur && phase === "gather" && step === 0 && !made.length && !Object.keys(bowl).length && cafe.orderReady(cur.o);
@@ -181,10 +204,19 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
         <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>{album.nameOf(c.look)}</Text>
         <View style={{ flexDirection: "row", gap: u * 0.5, alignItems: "center" }}>{cafe.orderItems(o).map((id: string, i: number) => <EmojiIcon key={i} emoji={game.productsDef[id].icon} size={u * 6} />)}</View>
         <View style={{ height: u * 0.9, borderRadius: 99, backgroundColor: C.vanillaDark, overflow: "hidden" }}><View style={{ width: `${Math.round(f * 100)}%`, height: "100%", backgroundColor: f > 0.5 ? C.green : f > 0.25 ? C.honey : C.terracotta }} /></View>
+        {o.note ? <Text allowFontScaling={false} numberOfLines={1} style={{ color: C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>✎ {o.note}</Text> : null}
         {coming ? <Text allowFontScaling={false} style={{ color: C.honeyDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>Garson götürüyor</Text> : null}
       </Pressable>
     );
   };
+
+  const trialTicket = (
+    <Pressable key="trial" onPress={() => { if (trial) return; act.sfx("tap"); setSel(TRIAL); reset(); setBook(true); }} accessibilityRole="button" accessibilityLabel="Deneme: gizli tarif ara" accessibilityState={{ selected: trial }}
+      style={({ pressed }) => ({ width: u * 18, paddingTop: u * 1.6, paddingBottom: u * 1, paddingHorizontal: u * 1, gap: u * 0.4, borderRadius: u * 1.2, borderWidth: u * 0.3, borderStyle: "dashed", borderColor: trial ? C.green : "#C9A06A", backgroundColor: trial ? "#F4F8E8" : "rgba(255,248,234,.92)", transform: [{ scale: pressed ? 0.96 : trial ? 1.04 : 1 }, { rotate: trial ? "0deg" : "1.5deg" }] })}>
+      <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>🧪 Deneme</Text>
+      <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.tiny) }}>Gizli tarif ara{life ? ` · ${life.discovered.size}/${Object.keys(life.secrets).length}` : ""}</Text>
+    </Pressable>
+  );
 
   // ---- the scene: the painted counter (assets/game/kitchen-counter.webp, 1024 x 1536) covers the screen between the top bar and the navigation;
   // everything stands where the picture has room for it: tickets on the wall, the recipe and the bowl on the counter top, the jars in the
@@ -223,12 +255,14 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
 
       {/* order tickets pinned on the wall */}
       <View style={{ position: "absolute", left: 0, right: 0, top: hud + u0 * 11, height: Math.max(u * 14, counterTop - hud - u0 * 12) }}>
-        {tickets.length
-          ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1.2, paddingVertical: u * 0.8, paddingHorizontal: u0 * 2, alignItems: "flex-start" }}>{tickets.map(({ c, o }) => ticket(c, o))}</ScrollView>
-          : <View style={[paper, { marginHorizontal: u0 * 4, padding: u * 1.2, alignItems: "center" }]}><Text allowFontScaling={false} style={{ textAlign: "center", color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>Şu an bekleyen sipariş yok. Müşteriler oturunca fişleri buraya asılır.</Text></View>}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: u * 1.2, paddingVertical: u * 0.8, paddingHorizontal: u0 * 2, alignItems: "flex-start" }}>
+          {tickets.map(({ c, o }) => ticket(c, o))}
+          {!tickets.length ? <View style={[paper, { width: u * 26, padding: u * 1 }]}><Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>Bekleyen sipariş yok. Müşteriler oturunca fişleri buraya asılır.</Text></View> : null}
+          {life ? trialTicket : null}
+        </ScrollView>
       </View>
 
-      {cur && def ? (
+      {(cur && def) || trial ? (
         <>
           {/* steps (the recipe itself is in the notebook) */}
           <View onLayout={(e) => { const h = e.nativeEvent.layout.height; if (Math.abs(h - cardH) > 1) setCardH(h); }} style={{ position: "absolute", left: u0 * 3, right: u0 * 3, top: counterTop + u0 * 1, gap: u * 0.7 }}>
@@ -262,15 +296,28 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
                     {phase === "gather" && !Object.keys(bowl).length && !made.length ? <Text allowFontScaling={false} style={{ color: "#A9774A", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small), textAlign: "center" }}>Kase boş</Text> : null}
                   </View>
                 </Animated.View>
-                {phase === "stir" ? Array.from({ length: stirs }, (_, i) => <Puff key={i} steam={def.station === "coffee"} u={u} seed={i + step * 7} />) : null}
+                {phase === "stir" ? Array.from({ length: stirs }, (_, i) => <Puff key={i} steam={def?.station === "coffee"} u={u} seed={i + step * 7} />) : null}
               </Pressable>
             )}
             {phase === "stir" ? (
               <View style={{ alignItems: "center", gap: u * 0.5, marginTop: u * 1.2 }}>
-                <Text allowFontScaling={false} style={[{ color: "#FFF8EA", fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }, shadowText]}>{STIR_TEXT[def.station]?.[0] ?? "Kaseye dokun, karıştır!"}</Text>
+                <Text allowFontScaling={false} style={[{ color: "#FFF8EA", fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }, shadowText]}>{STIR_TEXT[def?.station ?? "oven"]?.[0] ?? "Kaseye dokun, karıştır!"}</Text>
                 <View style={{ flexDirection: "row", gap: u * 0.7 }}>
                   {Array.from({ length: stirNeed }, (_, i) => <View key={i} style={{ width: u * 2.4, height: u * 2.4, borderRadius: 99, backgroundColor: i < stirs ? "#FFE08A" : "rgba(94,58,32,.55)", borderWidth: u * 0.3, borderColor: "#FFF4DE" }} />)}
                 </View>
+                {cur?.o.note && step === items.length - 1 ? (
+                  <View style={{ alignItems: "center", gap: u * 0.4 }}>
+                    <Text allowFontScaling={false} style={[{ color: "#FFF8EA", fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }, shadowText]}>Müşterinin isteği: “{cur.o.note}”. Son dokunuşu seç:</Text>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: u * 0.5 }}>
+                      {(life.cfg.requests.notes as string[]).map((n) => (
+                        <Pressable key={n} onPress={() => { setNoteChoice(n); act.sfx("tap"); }} accessibilityRole="button" accessibilityLabel={`Dokunuş: ${n}`} accessibilityState={{ selected: noteChoice === n }}
+                          style={{ paddingHorizontal: u * 1, paddingVertical: u * 0.4, borderRadius: 99, borderWidth: u * 0.3, borderColor: noteChoice === n ? C.green : "#E4CFA8", backgroundColor: noteChoice === n ? "#F4F8E8" : "rgba(255,248,234,.95)" }}>
+                          <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.tiny) }}>{noteChoice === n ? "✓ " : ""}{n}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -284,11 +331,11 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
       ) : null}
 
       {/* the ingredient jars, standing in the six hollows of the shelf */}
-      {phase === "made" ? null : (Object.keys(game.ingredientsDef) as string[]).slice(0, 6).map((k, i) => {   // (the result moment has the counter to itself)
-        const d = game.ingredientsDef[k], stock = (game.ingredients[k] ?? 0) - (bowl[k] ?? 0), useful = !!def && phase === "gather" && (need[k] ?? 0) > (bowl[k] ?? 0);
+      {phase !== "gather" ? null : (Object.keys(game.ingredientsDef) as string[]).slice(0, 6).map((k, i) => {   // (stirring and the result moment have the counter to themselves)
+        const d = game.ingredientsDef[k], stock = (game.ingredients[k] ?? 0) - (bowl[k] ?? 0), useful = (!!def && phase === "gather" && (need[k] ?? 0) > (bowl[k] ?? 0)) || (trial && !def && phase === "gather");
         return (
           <Animated.View key={k} style={{ position: "absolute", left: X(SLOTS[i]) - jarS / 2, top: Y(1252) - jarS * 0.62, width: jarS, alignItems: "center", transform: [{ translateX: wrong === k ? shake.interpolate({ inputRange: [-1, 1], outputRange: [-u * 1.2, u * 1.2] }) : 0 }] }}>
-            <Pressable onPress={() => add(k)} disabled={!def || phase !== "gather"} accessibilityRole="button" accessibilityLabel={`${d.name} ekle, ${stock} var`}
+            <Pressable onPress={() => add(k)} disabled={(!def && !trial) || phase !== "gather"} accessibilityRole="button" accessibilityLabel={`${d.name} ekle, ${stock} var`}
               style={({ pressed }) => ({ width: jarS, height: jarS, borderRadius: jarS * 0.3, alignItems: "center", justifyContent: "center", borderWidth: u * 0.45, borderColor: useful ? "#9CC46A" : "#E4CFA8", backgroundColor: useful ? "#F4F8E8" : "#FFFAF0", opacity: stock > 0 ? 1 : 0.5,
                 shadowColor: "#3B2412", shadowOpacity: 0.35, shadowRadius: u * 0.5, shadowOffset: { width: 0, height: u * 0.4 }, transform: [{ scale: pressed ? 0.88 : useful ? 1.04 : 1 }, { translateY: pressed ? u * 0.3 : 0 }] })}>
               <EmojiIcon emoji={d.icon} size={jarS * 0.56} />
@@ -301,6 +348,26 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
       })}
 
       {/* the recipe notebook: a paper page over the counter, opened by itself when an order is picked */}
+      {book && trial && !def && phase === "gather" ? (
+        <Pressable onPress={() => { setBook(false); act.sfx("tap"); }} accessibilityLabel="Tarif defterini kapat" style={{ position: "absolute", left: 0, right: 0, top: counterTop - u0 * 2, bottom: 0, zIndex: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,24,12,.35)" }}>
+          <View style={{ width: Math.min(box.w - u0 * 8, u0 * 80), padding: u * 1.6, gap: u * 0.9, borderRadius: u * 1.2, backgroundColor: "#FFF8E8", borderWidth: u * 0.4, borderColor: "#C9A06A", transform: [{ rotate: "-1.2deg" }] }}>
+            <Text allowFontScaling={false} style={{ color: C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.small) }}>📒 Tarif Defteri · Gizli tarifler</Text>
+            {(Object.entries(life.secrets) as [string, any][]).map(([id, sd]) => {
+              const got = life.discovered.has(id);
+              return (
+                <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: u * 1, paddingBottom: u * 0.5, borderBottomWidth: 1, borderColor: "rgba(150,120,80,.3)" }}>
+                  {got ? <EmojiIcon emoji={sd.icon} size={u * 6} /> : <Text allowFontScaling={false} style={{ fontSize: u * 5 }}>❔</Text>}
+                  <View style={{ flex: 1 }}>
+                    <Text allowFontScaling={false} style={{ color: C.brownDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.heading) }}>{got ? sd.name : "???"}</Text>
+                    <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>{got ? Object.entries(sd.ingredients).map(([k, n]) => `${n} ${game.ingredientsDef[k].name}`).join(", ") : `İpucu: ${sd.hint}`}</Text>
+                  </View>
+                </View>
+              );
+            })}
+            <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>Kaseye istediğin malzemeleri at ve "Dene"ye bas. Tutmazsa malzemeler rafa geri döner. Kapatmak için dokun.</Text>
+          </View>
+        </Pressable>
+      ) : null}
       {book && cur && def && phase === "gather" ? (
         <Pressable onPress={() => { setBook(false); act.sfx("tap"); }} accessibilityLabel="Tarif defterini kapat" style={{ position: "absolute", left: 0, right: 0, top: counterTop - u0 * 2, bottom: 0, zIndex: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,24,12,.35)" }}>
           <View style={{ width: Math.min(box.w - u0 * 8, u0 * 80), padding: u * 1.6, gap: u * 1, borderRadius: u * 1.2, backgroundColor: "#FFF8E8", borderWidth: u * 0.4, borderColor: "#C9A06A", transform: [{ rotate: "-1.2deg" }],
@@ -324,6 +391,7 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
                   </View>
                 );
               })}
+              {cur.o.note ? <Text allowFontScaling={false} style={{ color: C.terracottaDark, fontFamily: FONT.bold, fontSize: fs(u, TYPE.body) }}>✎ Müşterinin isteği: {cur.o.note} (karıştırırken seç)</Text> : null}
               <Text allowFontScaling={false} style={{ color: C.brown, fontFamily: FONT.regular, fontSize: fs(u, TYPE.small) }}>Malzemeleri raftan kaseye at, sonra karıştır. Kapatmak için dokun.</Text>
             </View>
           </View>
@@ -332,11 +400,13 @@ export function KitchenPanel({ onRecipes }: { onRecipes: () => void }) {
 
       {/* the drawer: the main action */}
       <View style={{ position: "absolute", left: u0 * 4, right: u0 * 4, top: drawerTop, bottom: u0 * 1.4, justifyContent: "center", gap: u0 * 0.8 }}>
-        {cur && def && phase === "stir" ? <KBtn u={u} label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} />
+        {def && phase === "stir" ? <KBtn u={u} label={STIR_TEXT[def.station]?.[1] ?? "Karıştır"} onPress={stir} />
           : cur && def && phase === "made" ? <KBtn u={u} label="🛎 Servis Et" sub={`${album.nameOf(cur.c.look)} bekliyor`} onPress={serve} />
+          : trial && phase === "made" ? <KBtn u={u} label="✓ Vitrine koy" sub={def ? `${def.icon} ${def.name}` : undefined} onPress={() => { act.toast(`${def?.icon ?? ""} ${def?.name ?? "Ürün"} vitrine kondu`, 1600); reset(); setSel(null); }} />
+          : trial && !def && Object.keys(bowl).length ? <View style={{ flexDirection: "row", gap: u0 }}><Btn small variant="plain" label="Kaseyi boşalt" onPress={() => { setBowl({}); act.sfx("tap"); }} /><View style={{ flex: 1 }}><KBtn u={u} label="🧪 Dene" onPress={tryMix} /></View></View>
           : (
             <View style={{ flexDirection: "row", gap: u0 * 1, flexWrap: "wrap", justifyContent: "center" }}>
-              {cur && def ? <Btn small variant="alt" label="📒 Tarif Defteri" onPress={() => { setBook(true); act.sfx("tap"); }} /> : null}
+              {(cur && def) || trial ? <Btn small variant="alt" label="📒 Tarif Defteri" onPress={() => { setBook(true); act.sfx("tap"); }} /> : null}
               {cur && Object.keys(bowl).length ? <Btn small variant="plain" label="Kaseyi boşalt" onPress={() => { setBowl({}); act.sfx("tap"); }} /> : null}
               {fromStock ? <Btn small variant="alt" label="Vitrinde hazır: hemen ver" onPress={serve} /> : null}
               <Btn small variant="plain" label="Makinede üret" onPress={onRecipes} />

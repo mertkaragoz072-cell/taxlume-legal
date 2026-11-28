@@ -73,6 +73,10 @@ export function playthrough({ days = 30, minutes = 30, seed: s0 = 1 } = {}) {
     if (life.weekTheme()?.complete) life.claimTheme();
     if (life.weekendOpen()) for (const id of Object.keys(game.productsDef)) if (game.products[id] > 6) life.sellWeekend(id, game.products[id] - 6);
     life.pet();
+    if (life.luckReady()) life.openLuck();
+    if (life.pamukHungry()) life.feedPamuk();
+    { const d = life.deliveryState(); if (d.state === 'back') life.collectDelivery(); else if (d.state === 'request') life.sendDelivery(); }
+    for (const id of Object.keys(life.secrets)) if (!life.discovered.has(id) && prog.level >= 6 && rng() < 0.02) life.discover(id);   // the player finds a secret now and then
     for (const a of ach.claimable()) { ach.claim(a.def.id); mile(`ach:${a.def.id}`, `Başarım: ${a.def.name}`); }
     if (!ex.active) { const open = ex.list().filter((r) => r.status === 'available' || r.status === 'idle' || r.missing.length === 0); const r = open[open.length - 1]; if (r) ex.start(r.def.id); }
   };

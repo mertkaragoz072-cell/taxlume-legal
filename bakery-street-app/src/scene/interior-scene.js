@@ -1,5 +1,6 @@
 // Cafe & bakery interior. Placeholder art drawn in code; every area is a tappable station (see interior-layout.js).
 import { Hearts } from './hearts.js';
+const PAMUK = { x: 160, y: 1415 };                                   // the café cat's spot: by the door, left of the doormat
 import { INK, rrect, poly, paint, vgrad, hgrad, shadow, lighten, darken, glowAt, label, clamp, fontCss, textFloor, gradeScreen, createCanvas } from '../util.js';
 import { PAL } from '../palette.js';
 import { AREAS, DRAW_ORDER, FLOOR_Y, FLOOR_K, ROOM_JOIN, CAM, ROOM, WAITER_LANE_Y, STAFF_LANE_Y, areaAt, depthOf, seatRect, perspScale } from './interior-layout.js';
@@ -145,6 +146,7 @@ export class InteriorScene {
     p.y = this.unwarp(p.y);
     const cust = this.customers.hitTest(p.x - f, p.y);
     if (cust) return cust;
+    if (this.game.life && Math.abs(p.x - f - PAMUK.x) < 100 && p.y > PAMUK.y - 220 && p.y < PAMUK.y + 30) return 'pamuk';   // the café cat
     const area = AREAS.find((a) => { const q = p.x - this.shift(this.planeOf(a)); return q >= a.x && q <= a.x + a.w && p.y >= a.y && p.y <= a.y + a.h; })?.id ?? null;
     if (area) return area;                                         // the machines keep their taps; the waiter can be petted anywhere else
     const w = this.staff.waiter;
@@ -168,6 +170,35 @@ export class InteriorScene {
     for (let i = 0; i < n; i++) this.sparks.push({ x: x + (Math.random() - 0.5) * spread, y: y + (Math.random() - 0.5) * spread * 0.5, vx: (Math.random() - 0.5) * 120, vy: -60 - Math.random() * 90, life: 1, r: 2 + Math.random() * 2.5 });
   }
   select(id) { this.selected = id; }
+
+  /** Pamuk, the café cat: curled up asleep by the door when fed, sitting up with a little milk bubble when hungry. Vector, white. */
+  drawPamuk(ctx) {
+    const life = this.game.life;
+    if (!life) return;
+    const { x, y } = PAMUK, t = this.t, hungry = life.pamukHungry(), br = Math.sin(t * (hungry ? 2 : 1.2)) * 0.03;
+    ctx.save(); ctx.translate(x, y); ctx.scale(1.55, 1.55);       // a big, soft cat: easy to see and to tap
+    shadow(ctx, 0, 4, 64, 14, 0.3);
+    ctx.lineWidth = 5; ctx.strokeStyle = '#6B4A34'; ctx.fillStyle = '#FFFBF4';
+    if (hungry) {                                                  // sitting up, looking at you
+      ctx.beginPath(); ctx.ellipse(0, -38, 34, 40 * (1 + br), 0, 0, 7); ctx.fill(); ctx.stroke();          // body
+      ctx.beginPath(); ctx.ellipse(28, -8, 30, 10, -0.4, 0, 7); ctx.fill(); ctx.stroke();                   // tail
+      ctx.beginPath(); ctx.arc(0, -92, 28, 0, 7); ctx.fill(); ctx.stroke();                                 // head
+      for (const sx of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sx * 24, -104); ctx.lineTo(sx * 18, -130); ctx.lineTo(sx * 6, -114); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#F6B9C2'; ctx.beginPath(); ctx.moveTo(sx * 19, -110); ctx.lineTo(sx * 17, -122); ctx.lineTo(sx * 11, -114); ctx.fill(); ctx.fillStyle = '#FFFBF4'; }
+      ctx.fillStyle = '#3B2618'; for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(sx * 10, -94, 4.5, 0, 7); ctx.fill(); }
+      ctx.fillStyle = '#E8838F'; ctx.beginPath(); ctx.arc(0, -86, 3.5, 0, 7); ctx.fill();
+      const by = -170 + Math.sin(t * 2) * 4;                       // the milk bubble
+      ctx.fillStyle = '#FFF8EA'; ctx.strokeStyle = '#C9A06A'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, by, 26, 0, 7); ctx.fill(); ctx.stroke();
+      if (!drawIconOrEmoji(ctx, 'milk', '🥛', 0, by, 34)) label(ctx, '!', 0, by, { font: '700 24px sans-serif', fill: PAL.brownDark, lw: 0 });
+    } else {                                                       // curled up asleep
+      ctx.beginPath(); ctx.ellipse(0, -24, 58, 30 * (1 + br), 0, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(36, -14, 30, 22, 0, 0, 7); ctx.fill(); ctx.stroke();                     // head tucked in
+      for (const sx of [24, 48]) { ctx.beginPath(); ctx.moveTo(sx - 8, -30); ctx.lineTo(sx, -48); ctx.lineTo(sx + 8, -30); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      ctx.strokeStyle = '#3B2618'; ctx.lineWidth = 3; for (const sx of [28, 46]) { ctx.beginPath(); ctx.arc(sx, -16, 5, 0.2, Math.PI - 0.2); ctx.stroke(); }
+      ctx.strokeStyle = '#6B4A34'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-54, -14); ctx.quadraticCurveTo(-30, 14, 20, 2); ctx.stroke();   // tail around
+      const zy = -70 - ((t * 12) % 30); ctx.globalAlpha *= 0.7; label(ctx, 'z', 60 + ((t * 6) % 10), zy, { font: '700 22px sans-serif', fill: PAL.brownDark, lw: 0 }); ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
   /** Petting the waiter or the chef: hearts over the cat (scene units). */
   pet(id) {
     const c = this.staff.waiter;
@@ -219,6 +250,7 @@ export class InteriorScene {
       if (v && v.sit > 0 && hasSitFrames(v.look) && !this.levelSetArt(+a.id.slice(5) - 1)) items.push({ y: depthOf(a) - 3, draw: () => this.shifted(ctx, 'floor', () => this.guestChair(ctx, a, v)) });
     }
     for (const it of this.shopDecor.items()) items.push({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) });
+    items.push({ y: PAMUK.y, draw: () => this.shifted(ctx, 'floor', () => this.drawPamuk(ctx)) });
     items.push({ y: this.staff.waiter.y, draw: () => this.shifted(ctx, 'floor', () => this.staff.drawWaiter(ctx)) }, ...this.customers.items(t).map((it) => ({ y: it.y, draw: (c2) => this.shifted(c2, 'floor', () => it.draw(c2)) })));
     items.map((it, i) => [it, i]).sort((p, q) => p[0].y - q[0].y || p[1] - q[1]).forEach(([it]) => { const d = this.warpAt(it.y); ctx.save(); ctx.translate(0, d); it.draw(ctx); ctx.restore(); });
     this.shifted(ctx, 'floor', () => this.staff.drawServed(ctx));

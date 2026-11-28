@@ -302,3 +302,12 @@ Kalıcı puan 0–100 (başlangıç 5). Mutlu müşteri +1, hızlı servis ayrı
 | 85 | Kasabanın Yıldızı | %28 daha sık |
 
 Yeni şubede popülerlik baştan başlar. Robot oyuncuda (30 gün) 10. gün satışı 167 → 215.
+
+## Gizli tarifler, istekler, paket servis, sürpriz kutusu, Pamuk
+
+- Gizli tarifler (SECRETS): Sütlaç (3 süt, 1 şeker), Türk Kahvesi (2 çekirdek, 1 şeker), Kaygana (1 un, 2 yumurta, 1 tereyağı). Mutfak tezgâhında 🧪 Deneme fişiyle bulunur, sonra sipariş edilir.
+- Müşteri istekleri: seviye 3+, siparişlerin %20'si; tezgâhta doğru dokunuş +%15.
+- Paket servis: seviye 4+, 1-2 ürün, kurye 6 dk, ödül ürün değeri ×1,5, ardından 20 dk ara.
+- Sürpriz kutusu: günde bir; altın (60-220 × aşama), malzeme (4-8) ya da %10 ihtimalle 1-3 elmas.
+- Pamuk: 1 süt ile beslenir, 6 saat tok kalır; tokken her satış +%3.
+- Kafe kartpostalı: İstatistikler'de, telefonun paylaşım menüsüyle yazı olarak gider.

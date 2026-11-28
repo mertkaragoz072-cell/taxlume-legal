@@ -10,7 +10,7 @@ import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Meta, Pips, Sheet, Title } from "./kit";
 import { EmojiIcon, GameIcon, Rich } from "./icons";
 import { C, FONT, fmt, fs, useU, TYPE } from "./theme";
-import { BranchCard, CollectAll, PopularityCard, DishCard, SpecialOrderCard, ThemeCard, WeekendCard } from "./LifePanels";
+import { BranchCard, CollectAll, DeliveryCard, LuckCard, PopularityCard, DishCard, SpecialOrderCard, ThemeCard, WeekendCard } from "./LifePanels";
 import { askPermission } from "../runtime/notify";
 
 const fmtReward = (game: any, r: any) => [
@@ -40,9 +40,11 @@ export function QuestPanel() {
       {star ? <Meta tone="reward" text={`⭐ Haftanın ürünü: ${game.productsDef[star].icon} ${game.productsDef[star].name} · daha sık sipariş edilir, +%${Math.round(world.cafe.cfg.bonuses.event.share * 100)} kazandırır`} /> : null}
       <CollectAll />
       <PopularityCard />
+      <LuckCard />
       <DishCard />
       <ThemeCard />
       <SpecialOrderCard />
+      <DeliveryCard />
       <WeekendCard />
       <Meta text={`Bugünün hedefleri · ${todays.filter((g) => g.claimed).length}/${todays.length} alındı (her gün yenilenir)`} />
       {todays.map((g) => (

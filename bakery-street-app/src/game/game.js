@@ -89,7 +89,7 @@ export class Game {
   }
 
   /** False for a shop recipe the player has not bought yet (every product is unlocked when there is no shop). */
-  isUnlocked(id) { return !this.shop || this.shop.recipeUnlocked(id); }
+  isUnlocked(id) { if (this.life?.isSecret(id)) return this.life.discovered.has(id); return !this.shop || this.shop.recipeUnlocked(id); }   // secret recipes: once found at the kitchen counter
 
   // ---- production -----------------------------------------------------------------------------
   /** Ingredients still missing for one unit of `id`: [{ id, need, have }] (empty when producible). */

@@ -1,5 +1,5 @@
 // The guest album and the statistics page (menu entries "Müşteri Albümü" and "İstatistikler").
-import { StoryLine } from "./LifePanels";
+import { ShareCard, StoryLine } from "./LifePanels";
 import React from "react";
 import { Text } from "react-native";
 import { useRefresh, useWorld } from "../runtime/context";
@@ -43,6 +43,7 @@ export function StatsPanel() {
   const line = (icon: string, name: string, value: string) => <Card key={name} left={<Text allowFontScaling={false} style={{ fontSize: u * 5 }}>{icon}</Text>}><Title name={name} note={value} /></Card>;
   return (
     <Sheet title="İstatistikler" hint={game.profile.name ? `🪧 ${game.profile.name}` : "Kafenin şimdiye kadarki hikâyesi"} onClose={() => act.openOverlay(null)}>
+      <ShareCard />
       {line("⏱", "Kafede geçen süre", clockText(st.playSec ?? 0))}
       {line("🧾", "Toplam satış", fmt(st.soldTotal))}
       {line("🏭", "Toplam üretim", fmt(st.producedTotal))}

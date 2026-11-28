@@ -233,6 +233,8 @@ export class Cafe {
     const order = { id: this.nextId++, product, price: this.game.productsDef[product].price, status: 'open', customerId: c.id };
     const extra = this.pairFor(product);
     if (extra) { order.extra = extra; order.extraPrice = this.game.productsDef[extra].price; }
+    const note = this.game.life?.rollNote(this.rng);                 // "az şekerli": honoured at the kitchen counter for a little extra
+    if (note) order.note = note;
     this.orders.push(order);
     this.trimOrders();
     return order;
@@ -255,7 +257,7 @@ export class Cafe {
 
   // ---- sales ----------------------------------------------------------------------------------
   /** Delivers the product of `orderId`. One atomic step: stock -1, gold +price, order paid, customer leaves the logic; the table is free again after `holdSec()`. */
-  deliver(orderId) {
+  deliver(orderId, opts = {}) {
     const order = this.orders.find((o) => o.id === orderId);
     if (!order) return fail('unknown', 'Sipariş bulunamadı.');
     if (order.status !== 'open') return fail('closed', 'Bu sipariş zaten kapandı.');
@@ -272,7 +274,7 @@ export class Cafe {
     let tip = 0;
     const tipChance = this.game.shop?.tipChance() ?? 0;                             // decoration: some guests leave a tip (the random number is only drawn when there is a chance)
     if (tipChance > 0 && this.rng() < tipChance) tip = Math.max(1, Math.round(income * this.game.shop.tipShare()));
-    const bonus = this.serviceBonus(c, order);                                      // combo / fast service / favourite, as extra percent of the income
+    const bonus = this.serviceBonus(c, order, opts);                                      // combo / fast service / favourite, as extra percent of the income
     const extra = Math.round(income * bonus.pct);
     income += extra;
     const name = order.extra ? `${def.name} + ${this.game.productsDef[order.extra].name} seti` : def.name;
@@ -294,7 +296,7 @@ export class Cafe {
    * Service bonuses for the sale being made now (see CAFE.bonuses). Also advances the combo streak, so call it exactly once per sale.
    * Returns { pct, combo, fast, favorite, event, variety }: pct is the total extra share of the income, the rest say which parts applied.
    */
-  serviceBonus(c, order) {
+  serviceBonus(c, order, opts = {}) {
     const b = this.cfg.bonuses;
     if (!b) return { pct: 0, combo: 0, fast: false, favorite: false, event: false, variety: false, guest: null };
     const fast = this.patienceFraction(c) >= b.fast.minPatience;
@@ -313,8 +315,9 @@ export class Cafe {
     if (favorite) stats.favoritesServed = (stats.favoritesServed ?? 0) + 1;
     const life = this.game.life, dish = !!life && order.product === life.dish(), set = !!order.extra && !!life;
     const friend = this.game.album?.friendShare?.(c.look) ?? 0;
-    const extraPct = (dish ? life.cfg.menu.share : 0) + (set ? life.cfg.set.share : 0) + friend;      // dish of the day, set menu and the guest's friendship
-    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0) + (variety ? b.variety.share : 0) + typed + extraPct, combo: this.combo, fast, favorite, event, variety, guest: c.type ?? null, dish, set, friend };
+    const noteOk = !!order.note && !!opts.noteOk && !!life, pamuk = life?.pamukShare() ?? 0;
+    const extraPct = (dish ? life.cfg.menu.share : 0) + (set ? life.cfg.set.share : 0) + friend + (noteOk ? life.cfg.requests.share : 0) + pamuk;   // + the guest's wish honoured, + a happy Pamuk      // dish of the day, set menu and the guest's friendship
+    return { pct: steps * b.combo.step + (fast ? b.fast.share : 0) + (favorite ? b.favorite.share : 0) + (event ? b.event.share : 0) + (variety ? b.variety.share : 0) + typed + extraPct, combo: this.combo, fast, favorite, event, variety, guest: c.type ?? null, dish, set, friend, noteOk, pamuk: pamuk > 0 };
   }
 
   deliverToCustomer(customerId) {
@@ -328,7 +331,7 @@ export class Cafe {
     return {
       nextId: this.nextId,
       customers: this.customers.map((c) => ({ id: c.id, look: c.look, state: c.state, table: c.table, orderId: c.orderId, patience: Math.round(c.patience), ...(c.vip ? { vip: true } : {}), ...(c.type ? { type: c.type } : {}), ...(c.critic ? { critic: true } : {}) })),
-      orders: this.orders.map((o) => ({ id: o.id, product: o.product, price: o.price, status: o.status, customerId: o.customerId, ...(o.extra ? { extra: o.extra, extraPrice: o.extraPrice } : {}) })),
+      orders: this.orders.map((o) => ({ id: o.id, product: o.product, price: o.price, status: o.status, customerId: o.customerId, ...(o.extra ? { extra: o.extra, extraPrice: o.extraPrice } : {}), ...(o.note ? { note: o.note } : {}) })),
     };
   }
 
@@ -367,7 +370,7 @@ export function validateCafe(raw, game, cfg = CAFE, looks = LOOKS, queueMax = cf
     if (!statuses.includes(status)) { status = 'cancelled'; repaired++; }
     orderIds.add(o.id);
     const extra = o.extra && o.extra !== o.product && game.productsDef[o.extra] ? { extra: o.extra, extraPrice: Number.isInteger(o.extraPrice) && o.extraPrice >= 0 ? o.extraPrice : game.productsDef[o.extra].price } : {};
-    orders.push({ id: o.id, product: o.product, price: o.price, status, customerId: o.customerId, ...extra });
+    orders.push({ id: o.id, product: o.product, price: o.price, status, customerId: o.customerId, ...extra, ...(typeof o.note === 'string' && o.note.length < 30 ? { note: o.note } : {}) });
   }
 
   const customers = [], custIds = new Set(), usedTables = new Set(), claimed = new Set();

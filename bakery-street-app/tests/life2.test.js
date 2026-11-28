@@ -227,3 +227,57 @@ test('popularity: happy guests raise it (fast ones more), guests who give up low
   const w2 = make(); new SaveManager(w2.game, st).load();
   assert.equal(w2.life.popularity, LIFE.popularity.max);
 });
+
+test('secret recipes: locked until the exact mix is found; then made, ordered and saved', () => {
+  const w = make();
+  assert.equal(w.game.isUnlocked('sutlac'), false);
+  assert.equal(w.life.matchRecipe({ milk: 3, sugar: 1 }), 'sutlac');
+  assert.equal(w.life.matchRecipe({ milk: 3 }), null);
+  assert.equal(w.life.matchRecipe({ flour: 2 }), 'bread');
+  for (let i = 0; i < 30; i++) { const c = w.cafe.arrive(); w.cafe.seatQueued(); assert.ok(!w.life.isSecret(w.cafe.orderOf(c).product)); w.cafe.leave(c, true); }
+  assert.ok(w.life.discover('sutlac'));
+  assert.equal(w.life.discover('sutlac'), false, 'once');
+  assert.ok(w.game.isUnlocked('sutlac'));
+  w.game.ingredients.milk = 5; w.game.ingredients.sugar = 5;
+  assert.ok(w.game.handMake('sutlac').ok);
+  const st = new FakeStorage(), saves = new SaveManager(w.game, st); saves.save();
+  const w2 = make(); new SaveManager(w2.game, st).load();
+  assert.ok(w2.game.isUnlocked('sutlac')); assert.equal(w2.game.products.sutlac, 1);
+});
+
+test('guest requests: a note honoured at the counter pays more; the waiter serves it without a bonus', () => {
+  const w = make({ level: 10 });
+  w.life.rng = () => 0.01;
+  w.cafe.rng = () => 0.5;
+  const n = w.life.rollNote(() => 0.01); assert.ok(n);
+  const serve = (ok) => { const c = w.cafe.arrive(); w.cafe.seatQueued(); const o = w.cafe.orderOf(c); o.product = 'bread'; delete o.extra; o.note = 'az şekerli'; w.game.products.bread = 1; return w.cafe.deliver(o.id, { noteOk: ok }); };
+  const a = serve(false), b = serve(true);
+  assert.ok(!a.bonus.noteOk && b.bonus.noteOk);
+  assert.ok(b.income > a.income);
+});
+
+test('deliveries: a request, sent from stock, the courier comes back with the pay; then a rest', () => {
+  const w = make({ level: 10 });
+  const s = w.life.deliveryState(); assert.equal(s.state, 'request');
+  const [[id, n]] = Object.entries(s.req.items);
+  w.game.products[id] = 0; assert.equal(w.life.sendDelivery().ok, false);
+  w.game.products[id] = n;
+  assert.ok(w.life.sendDelivery().ok);
+  assert.equal(w.game.products[id], 0);
+  assert.equal(w.life.collectDelivery().ok, false, 'still on the way');
+  w.clock.now += LIFE.delivery.minutes * 60_000 + 1;
+  const gold = w.game.gold, r = w.life.collectDelivery();
+  assert.ok(r.ok); assert.equal(w.game.gold - gold, s.req.reward);
+  assert.equal(w.life.deliveryState().state, 'resting');
+});
+
+test('surprise box once a day; Pamuk wants milk, a fed Pamuk adds a little to sales', () => {
+  const w = make();
+  assert.ok(w.life.openLuck().ok); assert.equal(w.life.openLuck().ok, false);
+  w.clock.now += 24 * 3600_000; assert.ok(w.life.luckReady());
+  assert.ok(w.life.pamukHungry()); assert.equal(w.life.pamukShare(), 0);
+  w.game.ingredients.milk = 0; assert.equal(w.life.feedPamuk().ok, false);
+  w.game.ingredients.milk = 2; assert.ok(w.life.feedPamuk().ok); assert.equal(w.game.ingredients.milk, 1);
+  assert.equal(w.life.pamukShare(), LIFE.pamuk.share);
+  w.clock.now += LIFE.pamuk.hungryH * 3600_000 + 1; assert.ok(w.life.pamukHungry());
+});

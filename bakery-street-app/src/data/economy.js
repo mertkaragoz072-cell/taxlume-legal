@@ -52,6 +52,16 @@ export const RECIPES = {
   turta: { name: 'Elmalı Turta', icon: '🥧', station: 'oven', time: 65, ingredients: { flour: 2, butter: 1, sugar: 2, egg: 1 }, price: 104, start: 0 },   // cost 48, net 56
 };
 
+/**
+ * Secret recipes: not sold in the shop and not in the notebook. The player finds them at the kitchen counter ("Deneme" ticket) by putting
+ * exactly these ingredients in the bowl. `hint` is what the notebook says before it is found.
+ */
+export const SECRETS = {
+  sutlac: { name: 'Sütlaç', icon: '🍚', station: 'oven', time: 35, ingredients: { milk: 3, sugar: 1 }, price: 56, start: 0, hint: 'Bol süt, biraz şeker' },
+  turkkahvesi: { name: 'Türk Kahvesi', icon: '🫖', station: 'coffee', time: 20, ingredients: { beans: 2, sugar: 1 }, price: 46, start: 0, hint: 'Çift kahve, bir şeker' },
+  kaygana: { name: 'Kaygana', icon: '🍳', station: 'oven', time: 34, ingredients: { flour: 1, egg: 2, butter: 1 }, price: 60, start: 0, hint: 'Yumurta, tereyağı, bir tutam un' },
+};
+
 /** Ingredient storage (only enforced once the Shop is attached): units of each ingredient that can be bought and kept. Rewards are never refused. */
 export const STORAGE = { base: 60 };
 
@@ -123,6 +133,14 @@ export const LIFE = {
    * Each title (from `at` points) brings guests more often: the gap between arrivals is x(1 - arrival[i]).
    */
   popularity: { start: 5, happy: 1, fast: 0.5, sad: 2, max: 100, at: [0, 15, 35, 60, 85], names: ['Yeni Kafe', 'Sevilen Kafe', 'Popüler Kafe', 'Çok Popüler', 'Kasabanın Yıldızı'], arrival: [0, 0.07, 0.14, 0.21, 0.28] },
+  /** guest requests: some guests add a note; preparing it right at the kitchen counter adds `share` to the sale (no penalty otherwise) */
+  requests: { minLevel: 3, chance: 0.2, share: 0.15, notes: ['az şekerli', 'bol köpüklü', 'sıcacık', 'tarçınlı'] },
+  /** deliveries: a building in town orders 1-2 of a product; a courier cat takes it (`minutes`), the reward comes back with them */
+  delivery: { minLevel: 4, minutes: 6, rest: 20, reward: 1.5, from: ['Kitapçı', 'Market', 'Çiçekçi', 'Okul', 'Belediye'] },
+  /** daily surprise box: one a day */
+  luck: { gold: [60, 220], gemsChance: 0.1, ingredients: [4, 8] },
+  /** Pamuk, the café cat: full after a meal (1 milk), hungry after `hungryH` hours; a happy Pamuk adds `share` to every sale */
+  pamuk: { hungryH: 6, share: 0.03, petsPerDay: 3 },
   /** petting a cat: the first `paid` pets of a day pay `gold` each (the rest are just for fun) */
   pet: { paid: 5, gold: 10 },
   /** weekend market (Saturday, Sunday): products sell at the guest price, up to `perDay` units a day */

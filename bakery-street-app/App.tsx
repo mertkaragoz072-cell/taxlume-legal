@@ -215,6 +215,7 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       if (up) { setCelebrate((prev) => prev ?? { icon: "🌟", title: `Kafen artık "${title.name}"!`, lines: ["Mutlu müşteriler kafeni herkese anlatıyor.", `Müşteriler %${Math.round(title.arrival * 100)} daha sık gelecek.`] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }
       else showToast(`Popülerlik biraz düştü: ${title.name}. Müşterileri bekletmemeye çalış.`, 2600);
     }));
+    offs.push(game.on("secret", ({ def }: any) => setCelebrate((prev) => prev ?? { icon: def.icon, title: `Gizli tarif: ${def.name}!`, lines: ["Kendi karışımınla yeni bir tarif buldun.", "Artık müşteriler de bunu isteyebilir."] })));
     offs.push(game.on("critic", (e: any) => { setCelebrate((prev) => prev ?? { icon: "🎩", title: "Gizemli eleştirmendi!", lines: [e.fast ? "Hızlı ve sıcak servisine bayıldı." : "Lezzetini çok beğendi.", `Ödül: +${fmt(e.gold)} altın${e.gems ? ` · +${e.gems} 💎` : ""}`, "Yorumu Mektuplar'da."] }); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); rewardCoins(); }));
     offs.push(game.on("album", (e: any) => { if (e.gold) rewardCoins(); }));
     offs.push(game.on("collection", (e: any) => { showToast(`🏅 Koleksiyon: ${e.group}${e.kind === "max" ? " (hepsi en üst seviyede)" : " tamamlandı"} · +${fmt(e.reward.gold)} altın`, 3400); feedback.sfx("claim"); feedback.buzz([40, 40, 80]); }));
@@ -326,6 +327,10 @@ function Shell({ world, storage, problems }: { world: World; storage: NativeStor
       if (hit) { scene.selected = hit; setExploreSel(hit); }
     } else if (id === "interior") {
       if (!hit) { act.closePanel(); }
+      else if (hit === "pamuk") {                                  // the café cat: fed when hungry, petted otherwise
+        if (world.life.pamukHungry()) { const r = world.life.feedPamuk(); if (r.ok) { feedback.sfx("claim"); showToast("🐈 Pamuk sütünü içti, mutlu! Satışlar biraz daha kazandırır.", 2400); } else showToast(r.message, 2400); }
+        else { scene.pet?.("staff:waiter"); (scene as any).hearts?.add(150, 1300); feedback.sfx("tap"); petted(); }
+      }
       else if (hit === "staff:waiter") { scene.pet(hit); feedback.sfx("tap"); petted(); }
       else if (hit.startsWith("customer:")) {
         const cust = world.cafe.customers.find((x: any) => x.id === +hit.slice(9));

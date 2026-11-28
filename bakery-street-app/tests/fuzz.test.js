@@ -89,6 +89,7 @@ test('fuzz: random play (production, shop, upgrades, quests, goals, service, tim
       else if (action === 16) { for (const l of w.life.letters) w.life.open(l.id); for (const a of w.achievements.claimable()) w.achievements.claim(a.def.id); }
       else if (action === 17) { const id = pick(rng, g.marketDef.items); g.purchase(id, 1 + Math.floor(rng() * 5)); }
       else if (action === 18) { w.life.pet(); w.life.sellWeekend(pick(rng, Object.keys(g.productsDef)), 1 + Math.floor(rng() * 4)); w.life.claimTheme(); }
+      else if (action === 19 && rng() < 0.5) { w.life.openLuck(); w.life.feedPamuk(); w.life.sendDelivery(); w.life.collectDelivery(); w.life.discover(pick(rng, Object.keys(w.life.secrets))); }
       else if (action === 19) { for (const l of w.album.looks) w.life.claimStory(l); w.life.takeSummary(); }
       else if (action === 13) { w.saves.save(); const before = keyState(w); const w2 = world(storage, clock, rng); assert.equal(w2.status.status, 'loaded', `${note}: save did not load (${w2.status.message ?? ''})`); same(keyState(w2), before, note); w = w2; }
       for (let i = 0; i < 1 + Math.floor(rng() * 6); i++) { clock.now += 1000 + Math.floor(rng() * 4000); g.tick(); w.goals.announce(); }

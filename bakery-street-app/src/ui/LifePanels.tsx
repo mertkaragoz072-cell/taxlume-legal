@@ -1,7 +1,7 @@
 // Café-life panels: the dish of the day and the special order (both shown in Görevler), guest letters and achievements (menu entries).
 // The rules live in game/life.js and game/achievements.js; these only show state and forward taps.
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Share, Text, View } from "react-native";
 import { useRefresh, useWorld } from "../runtime/context";
 import { Bar, Btn, Card, Meta, Sheet, Title } from "./kit";
 import { EmojiIcon } from "./icons";
@@ -218,6 +218,10 @@ const HELP: [string, string, string][] = [
   ["🥐", "Üretim", "Fırına, kahve makinesine ya da tezgâha dokun ve ürün seç. Makine meşgulken 3 ürünü sıraya ekleyebilirsin; sırası gelen kendiliğinden başlar, sen oyunda olmasan da."],
   ["☕", "Servis", "Müşteri oturunca sipariş balonu çıkar. Ürün vitrinde varsa garson götürür; acelen varsa müşteriye dokunup kendin servis et. Bazı müşteriler iki ürünlü set menü ister."],
   ["👨‍🍳", "Usta Şef", "Seviye 7'den sonra Mağaza › Genişletme'den bir usta şef işe al: bekleyen siparişleri makinede kendisi pişirir. Sonraki kademelerde vitrini hazır tutar ve eksik malzemeyi Market'ten alır. Makine panelinden molaya gönderebilirsin."],
+  ["🧪", "Gizli tarifler", "Mutfak tezgâhındaki 🧪 Deneme fişinde istediğin malzemeleri karıştır. Doğru karışımı bulursan gizli bir tarif açılır; ipuçları Tarif Defteri'nde."],
+  ["🐈", "Pamuk", "Kafenin kedisi Pamuk kapının yanında yaşar. Acıkınca süt ister: dokunup besle. Tok ve mutluyken satışlar biraz daha kazandırır."],
+  ["✎", "Müşteri istekleri", "Bazı müşteriler not ekler (\"az şekerli\"). Siparişi mutfak tezgâhında hazırlarken doğru dokunuşu seçersen ekstra kazanırsın."],
+  ["🛵", "Paket servis ve sürpriz kutusu", "Görevler'de kasabadan gelen paket siparişlerini kuryeyle gönder. Her gün bir sürpriz kutusu açabilirsin."],
   ["🥣", "Mutfak tezgâhı", "Üretim tezgâhına dokun: bekleyen siparişlerden birini seç, malzemeleri kaseye koy, hazırla ve servis et. İstersen hepsini garsona ve makinelere bırakabilirsin."],
   ["📋", "Günün menüsü", "Görevler'den her gün bir ürün seç: o gün daha sık sipariş edilir ve biraz daha çok kazandırır."],
   ["💛", "Dostluk ve hikâyeler", "Aynı müşteriye servis ettikçe dostluk kalpleri dolar: her kalp ödül ve daha çok bahşiş getirir. Albümde her müşterinin 3 bölümlük hikâyesi var."],
@@ -271,6 +275,61 @@ export function PopularityCard() {
       <Bar value={frac} color={C.honey} text={t.next == null ? `${Math.round(t.points)} · en üst unvan` : `${Math.round(t.points)}/${t.next} · sonraki: ${life.cfg.popularity.names[t.i + 1]}`} />
       <Meta tone={t.arrival ? "reward" : "muted"} text={t.arrival ? `Müşteriler %${Math.round(t.arrival * 100)} daha sık geliyor.` : "Mutlu müşteriler kafeni popüler yapar: daha çok müşteri gelir."} />
       <Meta tone="muted" text="Hızlı ve güler yüzlü servis puanı artırır; bekleyip giden müşteri biraz düşürür." />
+    </Card>
+  );
+}
+
+/** Delivery: a building in town orders a little; a courier cat takes it and brings the payment back. */
+export function DeliveryCard() {
+  const { world, act } = useWorld();
+  const { game, life } = world, u = useU();
+  useRefresh(1000);
+  if (!life?.cfg.delivery) return null;
+  const s = life.deliveryState() as any;
+  const what = s.req ? Object.entries(s.req.items).map(([id, n]: any) => `${n} ${game.productsDef[id].name}`).join(", ") : "";
+  if (s.state === "locked") return <Card tone="locked" left={<EmojiIcon emoji="🛵" size={u * 7} />}><Title name="Paket Servis" /><Meta tone="muted" text={`Seviye ${life.cfg.delivery.minLevel}'te açılır: kasabadan paket siparişleri gelir.`} /></Card>;
+  if (s.state === "resting") return <Card tone="locked" left={<EmojiIcon emoji="🛵" size={u * 7} />}><Title name="Paket Servis" /><Meta tone="muted" text={`Kurye dinleniyor, yeni sipariş yakında: ${hm(s.left)}`} /></Card>;
+  const ready = s.state === "request" && Object.entries(s.req.items).every(([id, n]: any) => (game.products[id] ?? 0) >= n);
+  return (
+    <Card tone={s.state === "back" || ready ? "ready" : undefined} left={<EmojiIcon emoji="🛵" size={u * 7} />}
+      right={s.state === "out" ? <Btn label="Yolda" sub={hm(s.left)} disabled />
+        : s.state === "back" ? <Btn label="Ödemeyi Al" sub={`💰 ${fmt(s.req.reward)}`} onPress={() => { const r = life.collectDelivery(); if (r.ok) act.toast(`🛵 ${r.from}: +${fmt(r.gold)} altın`, 2200); else act.warn(r.message); }} />
+        : <Btn label="Kuryeyle Gönder" sub={`💰 ${fmt(s.req.reward)}`} variant={ready ? "go" : "alt"} onPress={() => { const r = life.sendDelivery(); if (r.ok) act.toast("🛵 Kurye yola çıktı", 1600); else act.warn(r.message, 2400); }} />}>
+      <Title name={`Paket Servis · ${s.req.from}`} note={s.state === "out" ? "kurye yolda" : s.state === "back" ? "kurye döndü" : undefined} />
+      <Meta text={s.state === "request" ? `${s.req.from} ${what} istiyor. Vitrinden gönderilir.` : `${what} → ${s.req.from}`} />
+    </Card>
+  );
+}
+
+/** The daily surprise box. */
+export function LuckCard() {
+  const { world, act } = useWorld();
+  const { game, life } = world, u = useU();
+  if (!life?.cfg.luck) return null;
+  const ready = life.luckReady();
+  return (
+    <Card tone={ready ? "ready" : "locked"} left={<EmojiIcon emoji="🎁" size={u * 7} />}
+      right={ready ? <Btn label="Aç" onPress={() => { const r = life.openLuck(); if (!r.ok) { act.warn(r.message); return; }
+        act.sfx("claim"); act.toast(r.gems ? `🎁 Şanslı gün! +${r.gems} 💎` : r.ingredient ? `🎁 ${game.ingredientsDef[r.ingredient].icon} ${game.ingredientsDef[r.ingredient].name} ×${r.n}` : `🎁 +${fmt(r.gold)} altın`, 2400); }} /> : <Btn label="Yarın" disabled />}>
+      <Title name="Sürpriz Kutusu" note={ready ? "bugün açılmadı" : "bugün açıldı"} />
+      <Meta tone="muted" text="Her gün bir kez: biraz altın, malzeme ya da nadiren elmas." />
+    </Card>
+  );
+}
+
+/** "Kafeni paylaş": a little postcard text through the phone's share sheet. */
+export function ShareCard() {
+  const { world, act } = useWorld();
+  const { game, life, shop, cafe, album } = world, u = useU();
+  const share = async () => {
+    const name = game.profile?.name || shop.stage().name, t = life?.popTitle(), r = cafe.rating();
+    const message = [`☕🥐 ${name}`, `${t ? `${t.name} · ` : ""}★ ${r.stars.toFixed(1).replace(".", ",")} · Seviye ${world.progression.level}`, `${game.stats.soldTotal} ürün sattım, ${album.count()}/${album.looks.length} kedi müşteriyle tanıştım.`, "Fırın & Kafe'de seni de bekliyoruz! 🐾"].join("\n");
+    try { await Share.share({ message }); } catch { act.warn("Paylaşım açılamadı.", 2000); }
+  };
+  return (
+    <Card left={<EmojiIcon emoji="💌" size={u * 7} />} right={<Btn small label="Paylaş" onPress={share} />}>
+      <Title name="Kafe Kartpostalı" />
+      <Meta tone="muted" text="Kafenin adı, unvanı ve başarıları arkadaşlarına kısa bir kartpostal olarak gider." />
     </Card>
   );
 }
