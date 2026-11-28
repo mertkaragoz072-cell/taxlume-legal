@@ -138,7 +138,12 @@ export function HappinessPanel({ label, status, emoji, value, outOf, color }: Ha
           <Text aria-hidden style={styles.moodEmoji}>
             {emoji}
           </Text>
-          <Text style={[styles.display, styles.happyStatus]} numberOfLines={1}>
+          <Text
+            style={[styles.display, styles.happyStatus]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {status}
           </Text>
           <View style={{ alignItems: "flex-end" }}>
@@ -303,7 +308,7 @@ const styles = StyleSheet.create({
   display: { fontFamily: FONT.display },
   happyBox: { paddingHorizontal: 6, paddingVertical: 2 },
   happyHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
-  happyStatus: { flex: 1, color: INK, fontSize: 24, letterSpacing: 1.5 },
+  happyStatus: { flex: 1, color: INK, fontSize: 18, letterSpacing: 0.5 },
   happyValue: { color: "#8a5a14", fontFamily: FONT.black, fontSize: 28, lineHeight: 32 },
   bankCap: { color: "#1f6b32", fontFamily: FONT.bold, fontSize: 14, marginTop: 6 },
   taxBox: { paddingHorizontal: 6, paddingVertical: 2 },
