@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { Image, ImageSourcePropType, LayoutChangeEvent, StyleSheet, View } from "react-native";
-import chartArt from "../../assets/ui/town/chart.webp";
-import { FONT, PANEL_GAP } from "../theme";
+import { StyleSheet, View } from "react-native";
+import { FONT } from "../theme";
 import { Text } from "./AppText";
 import { StretchPanel } from "./PanelKit";
 import { ScalePressable } from "./ScalePressable";
-import { SheetHeader } from "./SheetHeader";
 
 const INK = "#3d2415";
 const INK_SOFT = "#5a3d22";
@@ -14,54 +12,6 @@ const INK_SOFT = "#5a3d22";
  * medallion, so a leading emoji in the label would double up. */
 export function plainTitle(s: string): string {
   return s.replace(/^[\p{Extended_Pictographic}️‍\s]+/u, "");
-}
-
-interface PaintedProps {
-  source: ImageSourcePropType;
-  artW: number;
-  artH: number;
-  /** the heading, drawn as the game's shared plaque over the painted banner */
-  title: string;
-  /** how much of the art's top (in art pixels) the painted banner takes up */
-  banner: number;
-  children: (s: number) => React.ReactNode;
-}
-
-/** Height of the heading plaque that covers the painted banner: the banners
- * are too small and sit crooked, so every panel wears the same plaque instead
- * and only the part of the art below it shows. */
-const HEAD_H = 36;
-
-/** A painted panel at its own aspect ratio; children are laid out in the art's
- * own pixels (they receive the px-per-art-px scale). */
-function Painted({ source, artW, artH, title, banner, children }: PaintedProps) {
-  const [w, setW] = useState(360);
-  const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
-  const s = w / artW;
-  const shift = HEAD_H - banner * s;
-  return (
-    <View
-      style={{
-        height: (artH - banner) * s + HEAD_H,
-        alignSelf: "stretch",
-        marginBottom: PANEL_GAP,
-        overflow: "hidden",
-      }}
-      onLayout={onLayout}
-    >
-      <View style={{ position: "absolute", left: 0, right: 0, top: shift, height: artH * s }}>
-        <Image source={source} style={styles.fill} resizeMode="stretch" />
-        {children(s)}
-      </View>
-      <View style={{ position: "absolute", left: 0, right: 0, top: 0, zIndex: 2 }}>
-        <SheetHeader text={plainTitle(title)} height={HEAD_H} />
-      </View>
-    </View>
-  );
-}
-
-function box(s: number, x: number, y: number, w: number, h: number) {
-  return { position: "absolute" as const, left: x * s, top: y * s, width: w * s, height: h * s };
 }
 
 // ---------------------------------------------------------------- Rank
@@ -337,14 +287,13 @@ export function ChartPanel({
   title: string;
   children: (w: number, h: number) => React.ReactNode;
 }) {
+  const [w, setW] = React.useState(0);
   return (
-    <Painted title={title} banner={66} source={chartArt} artW={853} artH={214}>
-      {(s) => (
-        <>
-          <View style={box(s, 62, 84, 750, 120)}>{children(750 * s, 120 * s)}</View>
-        </>
-      )}
-    </Painted>
+    <StretchPanel frame="upgrades" title={title}>
+      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ height: 120 }}>
+        {w > 0 ? children(w, 120) : null}
+      </View>
+    </StretchPanel>
   );
 }
 
