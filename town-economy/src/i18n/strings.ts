@@ -1,3 +1,7 @@
+import { de } from "./strings.de";
+import { es } from "./strings.es";
+import { fr } from "./strings.fr";
+
 export const STRINGS = {
   tr: {
     season: {
@@ -3986,4 +3990,7 @@ export const STRINGS = {
       selling: "selling",
     },
   },
+  de,
+  es,
+  fr,
 } as const;

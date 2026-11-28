@@ -33,6 +33,24 @@ const LANGS = {
     spin: /Spin the Wheel/,
     ok: /^Awesome!?$/,
   },
+  de: {
+    tabs: ["Markt", "Lager", "Handel", "Stadt", "Forschung", "Anlagen", "Ziele"],
+    cont: /^WEITER$/,
+    spin: /Rad drehen/,
+    ok: /^Super!?$/,
+  },
+  es: {
+    tabs: ["Mercado", "Almacén", "Comercio", "Ciudad", "Ciencia", "Inversión", "Metas"],
+    cont: /^CONTINUAR$/,
+    spin: /Girar la rueda/,
+    ok: /^¡Genial!?$/,
+  },
+  fr: {
+    tabs: ["Marché", "Stock", "Commerce", "Ville", "Recherche", "Bourse", "Objectifs"],
+    cont: /^CONTINUER$/,
+    spin: /Tourner la roue/,
+    ok: /^Super !?$/,
+  },
 };
 // Rows that scroll sideways on purpose are skipped by the edge check.
 const IGNORE_CONSOLE = /navigator\.vibrate/;
@@ -62,7 +80,7 @@ const IGNORE_CONSOLE = /navigator\.vibrate/;
       });
       const ctx = await browser.newContext({
         viewport: { width: W, height: W === 390 ? 844 : 740 },
-        locale: lang === "tr" ? "tr-TR" : "en-US",
+        locale: { tr: "tr-TR", en: "en-US", de: "de-DE", es: "es-ES", fr: "fr-FR" }[lang],
       });
       const page = await ctx.newPage();
       page.on("console", (m) => {

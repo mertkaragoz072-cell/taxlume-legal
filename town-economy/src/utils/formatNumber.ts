@@ -4,9 +4,18 @@ import { getUiLanguage } from "./uiLanguage";
 // Hand-rolled rather than Intl.NumberFormat so the exact separator choice
 // (TR: "." thousands / "," decimal, EN: the reverse) is guaranteed
 // regardless of the runtime's ICU locale data.
+function decimalSeparator(lang: Language): string {
+  return lang === "en" ? "." : ",";
+}
+function thousandsSeparator(lang: Language): string {
+  if (lang === "en") return ",";
+  if (lang === "fr") return "\u202f";
+  return ".";
+}
+
 export function formatNumber(value: number, lang: Language, decimals = 1): string {
-  const decimalSep = lang === "tr" ? "," : ".";
-  const thousandsSep = lang === "tr" ? "." : ",";
+  const decimalSep = decimalSeparator(lang);
+  const thousandsSep = thousandsSeparator(lang);
   const negative = value < 0;
   const fixed = Math.abs(value).toFixed(decimals);
   const [intPart, fracPart] = fixed.split(".");
@@ -39,7 +48,7 @@ export function formatCompactNumber(value: number, lang: Language, decimalsBelow
     rounded = Math.round((rounded / 1000) * 10) / 10;
     tier++;
   }
-  const decimalSep = lang === "tr" ? "," : ".";
+  const decimalSep = decimalSeparator(lang);
   const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(".", decimalSep);
   return `${negative ? "-" : ""}${text}${COMPACT_SUFFIXES[tier]}`;
 }
@@ -64,7 +73,10 @@ export function formatPercent(value: number, lang: Language, decimals = 0): stri
   // formatNumber, which would put it next to the digits.
   const n = formatNumber(Math.abs(value), lang, decimals);
   const sign = value < 0 ? "-" : "";
-  return lang === "tr" ? `${sign}%${n}` : `${sign}${n}%`;
+  if (lang === "tr") return `${sign}%${n}`;
+  // German, Spanish and French put a (non-breaking) space before the sign.
+  if (lang === "de" || lang === "es" || lang === "fr") return `${sign}${n}\u00a0%`;
+  return `${sign}${n}%`;
 }
 
 /** `value` to a fixed number of decimals, with the separator of the language

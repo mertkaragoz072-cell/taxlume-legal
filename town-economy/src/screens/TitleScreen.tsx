@@ -3,6 +3,7 @@ import { Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, Vi
 import { Text } from "../components/AppText";
 import titleEn from "../../assets/title/title-en.webp";
 import titleTr from "../../assets/title/title-tr.webp";
+import { nextLanguage } from "../i18n/t";
 import { useEconomyContext } from "../economy/EconomyContext";
 import { gameDayFromTick } from "../economy/useEconomy";
 import { FONT } from "../theme";
@@ -13,7 +14,7 @@ import { FONT } from "../theme";
 // changes is drawn live on top: the button's touch area, the language chip and
 // the line about a saved town. Positions are in the art's own pixels and
 // follow it as it scales.
-const ART = { tr: titleTr, en: titleEn } as const;
+const ART = { tr: titleTr, en: titleEn, de: titleEn, es: titleEn, fr: titleEn } as const;
 const AW = 941;
 const AH = 1672;
 
@@ -85,13 +86,13 @@ export function TitleScreen({ onStart }: Props) {
               height: Math.max(30, 56 * k),
             },
           ]}
-          onPress={() => setLanguage(state.language === "tr" ? "en" : "tr")}
+          onPress={() => setLanguage(nextLanguage(state.language))}
           accessibilityRole="button"
           accessibilityLabel={t("a11y.toggleLanguage")}
           hitSlop={8}
         >
           <Text style={[styles.chipText, { fontSize: Math.max(13, 38 * k) }]}>
-            {state.language === "tr" ? "TR" : "EN"}
+            {state.language.toUpperCase()}
           </Text>
         </Pressable>
 

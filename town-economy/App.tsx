@@ -1,3 +1,4 @@
+import { nextLanguage } from "./src/i18n/t";
 import { Cinzel_700Bold } from "@expo-google-fonts/cinzel";
 import { CinzelDecorative_900Black } from "@expo-google-fonts/cinzel-decorative";
 import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display";
@@ -453,7 +454,7 @@ function Game() {
                   t={t}
                   onTogglePause={togglePause}
                   onToggleMuted={sounds.toggleMuted}
-                  onToggleLanguage={() => setLanguage(state.language === "tr" ? "en" : "tr")}
+                  onToggleLanguage={() => setLanguage(nextLanguage(state.language))}
                   onReset={() => setDifficultyModalVisible(true)}
                   onHelp={() => setTutorialVisible(true)}
                   onEditName={() => setNameModalVisible(true)}

@@ -12,16 +12,15 @@ const Module = require("module");
 const STRINGS_PATH = path.join(__dirname, "..", "src", "i18n", "strings.ts");
 
 function loadStrings() {
-  const source = fs.readFileSync(STRINGS_PATH, "utf8");
-  const { outputText } = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019 },
-  });
-
-  const fakeModule = new Module(STRINGS_PATH, module);
-  fakeModule.filename = STRINGS_PATH;
-  fakeModule.paths = Module._nodeModulePaths(path.dirname(STRINGS_PATH));
-  fakeModule._compile(outputText, STRINGS_PATH);
-  return fakeModule.exports.STRINGS;
+  // strings.ts pulls the other languages in from sibling .ts files, so .ts
+  // files have to be requirable here.
+  Module._extensions[".ts"] = (mod, filename) => {
+    const { outputText } = ts.transpileModule(fs.readFileSync(filename, "utf8"), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019 },
+    });
+    mod._compile(outputText, filename);
+  };
+  return require(STRINGS_PATH).STRINGS;
 }
 
 // Collects every leaf (string-valued) key path, e.g. "tutorial.slide6Title".
@@ -43,16 +42,20 @@ function diff(a, b) {
 
 const STRINGS = loadStrings();
 const languages = Object.keys(STRINGS);
-if (languages.length !== 2) {
-  console.error(`Expected exactly 2 languages in STRINGS, found: ${languages.join(", ")}`);
-  process.exit(1);
-}
-const [langA, langB] = languages;
+const langA = languages[0];
 const keysA = collectKeys(STRINGS[langA]);
-const keysB = collectKeys(STRINGS[langB]);
-
-const missingInB = diff(keysA, keysB);
-const missingInA = diff(keysB, keysA);
+const problems = [];
+for (const lang of languages.slice(1)) {
+  const keys = collectKeys(STRINGS[lang]);
+  const missing = diff(keysA, keys);
+  const extra = diff(keys, keysA);
+  if (missing.length)
+    problems.push(
+      `\n❌ Missing in "${lang}" (present in "${langA}"):\n` + missing.map((k) => `   - ${k}`).join("\n")
+    );
+  if (extra.length)
+    problems.push(`\n❌ Only in "${lang}" (not in "${langA}"):\n` + extra.map((k) => `   - ${k}`).join("\n"));
+}
 
 // t() is also called with template literals built at runtime (t(`goods.${id}.name`)),
 // which cannot be checked statically — only plain string literals are collected.
@@ -100,22 +103,15 @@ function collectUsedKeys() {
 const usedKeys = collectUsedKeys();
 const unknownKeys = [...usedKeys].filter(([key]) => !keysA.has(key)).sort();
 
-if (missingInB.length === 0 && missingInA.length === 0 && unknownKeys.length === 0) {
+if (problems.length === 0 && unknownKeys.length === 0) {
   console.log(
-    `✅ i18n check passed — ${langA} and ${langB} have identical key structure (${keysA.size} keys), ` +
+    `✅ i18n check passed — ${languages.join(", ")} have identical key structure (${keysA.size} keys), ` +
       `and all ${usedKeys.size} literal t() keys resolve.`
   );
   process.exit(0);
 }
 
-if (missingInB.length > 0) {
-  console.error(`\n❌ Missing in "${langB}" (present in "${langA}"):`);
-  missingInB.forEach((key) => console.error(`   - ${key}`));
-}
-if (missingInA.length > 0) {
-  console.error(`\n❌ Missing in "${langA}" (present in "${langB}"):`);
-  missingInA.forEach((key) => console.error(`   - ${key}`));
-}
+problems.forEach((p) => console.error(p));
 if (unknownKeys.length > 0) {
   console.error(`\n❌ t() called with keys that are not in the translation tables:`);
   unknownKeys.forEach(([key, file]) => console.error(`   - ${key}  (${file})`));

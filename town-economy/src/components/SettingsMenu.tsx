@@ -61,7 +61,7 @@ export function SettingsMenu(props: Props) {
     {
       icon: icGlobe,
       label: t("a11y.toggleLanguage"),
-      right: language === "tr" ? "TR" : "EN",
+      right: language.toUpperCase(),
       onPress: run(props.onToggleLanguage),
     },
     { icon: icHelp, label: t("a11y.help"), onPress: run(props.onHelp) },

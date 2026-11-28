@@ -248,6 +248,9 @@ describe("mentor script", () => {
     const forbidden: Record<string, RegExp> = {
       tr: /bulanık|karart|ekran|buton|tıkla|menü/i,
       en: /blur|dimmed|the screen|button|click|menu/i,
+      de: /unscharf|abgedunkelt|bildschirm|schaltfläche|klick|menü/i,
+      es: /borroso|oscurec|la pantalla|botón|clic|menú/i,
+      fr: /flou|assombri|l'écran|bouton|clique|menu/i,
     };
     for (const lang of LANGS) {
       for (const step of MENTOR_STEPS) {

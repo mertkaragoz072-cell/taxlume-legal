@@ -349,12 +349,24 @@ export function InflationHeader({
             {rankIcon} {rankTitle}
           </Text>
         </Pressable>
-        <View style={[styles.streakBadge, { backgroundColor: "#1f4a78", borderColor: "#7db8ea" }]}>
+        <View
+          style={[
+            styles.streakBadge,
+            styles.keepWidth,
+            { backgroundColor: "#1f4a78", borderColor: "#7db8ea" },
+          ]}
+        >
           <Text style={styles.streakBadgeText} numberOfLines={1}>
             {difficultyConfig.icon} {t(difficultyConfig.labelKey)}
           </Text>
         </View>
-        <View style={[styles.streakBadge, { backgroundColor: "#2e5a2e", borderColor: "#8fd698" }]}>
+        <View
+          style={[
+            styles.streakBadge,
+            styles.keepWidth,
+            { backgroundColor: "#2e5a2e", borderColor: "#8fd698" },
+          ]}
+        >
           <Text style={styles.streakBadgeText} numberOfLines={1}>
             {seasonFromTick(tick).icon} {t("header.day", { day: gameDay })}
           </Text>
@@ -364,6 +376,7 @@ export function InflationHeader({
             style={[
               styles.streakBadge,
               styles.streakBadgeRow,
+              styles.keepWidth,
               { backgroundColor: "#6b1f1f", borderColor: "#f0776a" },
             ]}
           >
@@ -575,6 +588,8 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   streakBadgeRow: { flexDirection: "row", alignItems: "center" },
+  // The short chips keep their width; the rank chip is the one that gives way.
+  keepWidth: { flexShrink: 0 },
   flameEmoji: { fontSize: TYPE.caption, marginRight: 3 },
   // gap alone. Every button also carried a marginLeft, so the row was
   // spaced twice over and the name paid for it in width.

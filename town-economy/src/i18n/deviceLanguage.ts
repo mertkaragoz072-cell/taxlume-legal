@@ -1,5 +1,5 @@
 import { getLocales } from "expo-localization";
-import { Language } from "./t";
+import { Language, LANGUAGES } from "./t";
 
 /** Which language a brand-new install should open in.
  *
@@ -10,8 +10,9 @@ import { Language } from "./t";
  * lands in a Turkish menu has to find the small "EN" button on the title
  * screen before the game means anything.
  *
- * So: Turkish only when the device asks for Turkish. Every other locale, and
- * every case where the locale cannot be read at all, gets English — when we
+ * So: the device's own language when the game ships it (Turkish, English,
+ * German, Spanish, French). Every other locale, and every case where the
+ * locale cannot be read at all, gets English — when we
  * do not know, the wider audience is the safer guess.
  *
  * Only ever consulted for a fresh install. A save carries its own language,
@@ -19,7 +20,8 @@ import { Language } from "./t";
  */
 export function deviceLanguage(): Language {
   try {
-    return getLocales()[0]?.languageCode === "tr" ? "tr" : "en";
+    const code = getLocales()[0]?.languageCode;
+    return LANGUAGES.find((l) => l === code) ?? "en";
   } catch {
     return "en";
   }

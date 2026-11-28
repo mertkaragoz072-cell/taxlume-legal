@@ -12,6 +12,9 @@
       "buildNumber": "3",
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleLocalizations": ["en", "tr", "de", "es", "fr"]
       }
     },
     "android": {

@@ -1,7 +1,16 @@
 import { STRINGS } from "./strings";
 
-export type Language = "tr" | "en";
+export type Language = "tr" | "en" | "de" | "es" | "fr";
 export const DEFAULT_LANGUAGE: Language = "tr";
+/** Every language the game ships, in the order the language button cycles. */
+export const LANGUAGES: Language[] = ["tr", "en", "de", "es", "fr"];
+/** A string a translation lacks falls back to English first (the base of the
+ * newer translations), then Turkish. */
+const FALLBACKS: Language[] = ["en", "tr"];
+
+export function nextLanguage(lang: Language): Language {
+  return LANGUAGES[(LANGUAGES.indexOf(lang) + 1) % LANGUAGES.length];
+}
 
 /** A translation key to resolve live rather than a value already baked to a
  * string — see the big comment on ParamValue below for why this exists. */
@@ -49,8 +58,10 @@ function interpolate(lang: Language, template: string, params?: Params): string 
 export function t(lang: Language, key: string, params?: Params): string {
   const value = getByPath(STRINGS[lang], key);
   if (typeof value === "string") return interpolate(lang, value, params);
-  const fallback = getByPath(STRINGS[DEFAULT_LANGUAGE], key);
-  if (typeof fallback === "string") return interpolate(lang, fallback, params);
+  for (const fb of FALLBACKS) {
+    const fallback = getByPath(STRINGS[fb], key);
+    if (typeof fallback === "string") return interpolate(lang, fallback, params);
+  }
   return key;
 }
 
